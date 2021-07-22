@@ -10,16 +10,16 @@ import (
 	"os"
 )
 
-var GlobalVars *Globals
+var Global *Globals
 
 // where everything begins
 func main() {
 	showCopyright()
-	GlobalVars = initGlobals(os.Args[0])
+	Global = initGlobals(os.Args[0])
 
 	// during development, let's use the most verbose logging level
-	GlobalVars.logLevel = FINEST
-	Log("running program: "+GlobalVars.jacobinName, FINE)
+	Global.logLevel = FINEST
+	Log("running program: "+Global.jacobinName, FINE)
 }
 
 func showCopyright() {
