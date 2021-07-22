@@ -26,7 +26,7 @@ const (
 )
 
 // Log is the principal logging function. Note that it currently
-// logs to stderr. At some future point, this might become an option
+// logs to stderr. At some future point, this might become an option.
 func Log(msg string, level int) (err error) {
 	if len(msg) == 0 {
 		return errors.New("empty logging message")
@@ -38,13 +38,13 @@ func Log(msg string, level int) (err error) {
 
 	// if the message is for a finer logging level than currently being logged,
 	// simply return
-	if level > GlobalVars.logLevel {
+	if level > Global.logLevel {
 		return
 	}
 
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
-	duration := time.Since(GlobalVars.startTime)
+	duration := time.Since(Global.startTime)
 	var millis = duration.Milliseconds()
 
 	// lock the write to the logging stream to prevent overwrite issues
@@ -57,4 +57,14 @@ func Log(msg string, level int) (err error) {
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	mutex.Unlock()
 	return
+}
+
+// set the level of granularity.
+func SetLogLevel(level int) (err error) {
+	if level < SEVERE || level > FINEST {
+		return errors.New("invalid logging level")
+	} else {
+		Global.logLevel = level
+		return
+	}
 }
