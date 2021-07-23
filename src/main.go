@@ -27,7 +27,7 @@ func main() {
 		closedown(true)
 	}
 
-	closedown(false)
+	// closedown(false)
 }
 
 // the exit function. Later on, this will check a list of JVM shutdown hooks
