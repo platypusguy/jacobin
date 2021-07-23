@@ -21,9 +21,6 @@ type Globals struct {
 
 	// ---- classloading items ----
 	/*
-	   // ---- logging items ----
-	   var logLevel = Logger.Level.WARNING
-	   var startTime: DispatchTime
 
 	   // ---- command-line items ----
 	   var commandLine: String = ""
@@ -43,11 +40,11 @@ type Globals struct {
 	*/
 }
 
-// Initialize the global values that are known at start-up
+// initialize the global values that are known at start-up
 func initGlobals(progName string) *Globals {
 	globals := new(Globals)
+	globals.startTime = time.Now()
 	globals.jacobinName = progName
 	globals.logLevel = WARNING
-	globals.startTime = time.Now()
 	return globals
 }

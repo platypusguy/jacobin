@@ -8,3 +8,9 @@ package main
 func HandleCli() (err error) {
 	return
 }
+
+/*
+JAVA_TOOL_OPTIONS
+_JAVA_OPTIONS ☑
+JDK_JAVA_OPTIONS
+*/
