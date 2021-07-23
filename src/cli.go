@@ -21,28 +21,17 @@ func HandleCli() (err error) {
 // can override earlier ones. These are checked before any of the command-line
 // options are processed.
 func getEnvArgs() string {
-	jto := os.Getenv("JAVA_TOOL_OPTIONS")
-	jo := os.Getenv("_JAVA_OPTIONS")
-	jjo := os.Getenv("JDK_JAVA_OPTIONS")
-
 	envArgs := ""
-	if len(jto) > 0 {
-		envArgs += jto
-		if !strings.HasSuffix(envArgs, " ") {
-			envArgs += " "
+	javaEnvKeys := [3]string{"JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS"}
+
+	for i := 0; i < 3; i++ { // if string is found copy it and a trailing space
+		envString := os.Getenv(javaEnvKeys[i])
+		if len(envString) > 0 {
+			envArgs += envString
+			if !strings.HasSuffix(envArgs, " ") {
+				envArgs += " "
+			}
 		}
 	}
-
-	if len(jo) > 0 {
-		envArgs += jo
-		if !strings.HasSuffix(envArgs, " ") {
-			envArgs += " "
-		}
-	}
-
-	if len(jjo) > 0 {
-		envArgs += jjo
-	}
-
 	return strings.TrimSpace(envArgs)
 }
