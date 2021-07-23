@@ -1,4 +1,5 @@
 ![GitHub](https://img.shields.io/github/license/platypusguy/jacobin)
+![Workflow](https://github.com/platypusguy/jacobin/actions/workflows/go.yml/badge.svg)
 
 # jacobin
 
