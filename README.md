@@ -1,3 +1,4 @@
+![Go version](https://img.shields.io/github/go-mod/go-version/platypusguy/jacobin?filename=src%2Fgo.mod)
 ![Workflow](https://github.com/platypusguy/jacobin/actions/workflows/go.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/platypusguy/jacobin)
 
