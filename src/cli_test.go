@@ -6,7 +6,9 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -38,4 +40,51 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 	// clean up the environment
 	os.Unsetenv("_JAVA_OPTIONS")
 	os.Unsetenv("JDK_JAVA_OPTIONS")
+}
+
+// verify the output to stderr when only usage info is requested (i.e., jacobin -help)
+func TestHandleUserMessage(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	Global = initGlobals(os.Args[0])
+	SetLogLevel(WARNING)
+
+	// redirect stderr to capture writing to it
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	handleUserMessages("jacobin -help")
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStderr
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Usage:") ||
+		!strings.Contains(msg, "where options include") {
+		t.Error("jacobin -help did not generate the usage message to stderr. msg was: " + msg)
+	}
+}
+
+func TestHandleUserMessageSignalsShutdown(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	Global = initGlobals(os.Args[0])
+	SetLogLevel(WARNING)
+
+	// redirect stderr to capture writing to it
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	stopProcessing := handleUserMessages("jacobin -help")
+
+	// restore stderr to what it was before
+	w.Close()
+	os.Stdout = normalStderr
+
+	if stopProcessing != true {
+		t.Error("'jacobin -help' should have returned true to signal end of processing")
+	}
 }
