@@ -30,6 +30,6 @@ func TestMainFunc(t *testing.T) {
 
 	if !strings.Contains(msg, "All rights reserved.") ||
 		!strings.Contains(msg, "2021") {
-		t.Error("Copyright notice in main() does not appear or appears incorrectly")
+		t.Error("Copyright notice in main() does not appear or appears incorrectly. It is: " + msg)
 	}
 }
