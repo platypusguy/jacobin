@@ -27,17 +27,20 @@ func main() {
 		closedown(true)
 	}
 
+	Log("shutdown", FINE) // eventually move this to the closedown func
 	// closedown(false)
 }
 
 // the exit function. Later on, this will check a list of JVM shutdown hooks
 // before closing down in order to have an orderly exit
 func closedown(errorCondition bool) {
+	Log("shutdown", FINE)
 	if errorCondition {
 		os.Exit(1)
 	} else {
 		os.Exit(0)
 	}
+
 }
 
 func showCopyright() {
