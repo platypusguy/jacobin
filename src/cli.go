@@ -19,11 +19,13 @@ import (
 	"strings"
 )
 
-func HandleCli() (err error) {
+// handle all the args from the command line, including those from the enviroment
+// variables that the JVM recognizes and prepends to the command-line options
+func HandleCli(osArgs []string) (err error) {
 	var javaEnvOptions = getEnvArgs()
-	Log("Java environment variables: "+javaEnvOptions, FINEST)
+	Log("Java environment variables: "+javaEnvOptions, FINE)
 	cliArgs := javaEnvOptions + " "
-	for _, v := range os.Args[1:] {
+	for _, v := range osArgs[1:] {
 		cliArgs += v + " "
 	}
 	Global.commandLine = strings.TrimSpace(cliArgs)
@@ -32,8 +34,10 @@ func HandleCli() (err error) {
 	// handle options that request info but don't run the VM, such as:
 	// show version, show help, etc.
 	discontinue := handleUserMessages(cliArgs) // use cliArgs b/c we want the version with the final space (to ease search)
+
+	// some user messages require a shutdown after message is displayed (see Usage text for examples)
 	if discontinue == true {
-		return errors.New("discontinue")
+		return errors.New("end of processing")
 	}
 	return
 }
@@ -46,7 +50,7 @@ func getEnvArgs() string {
 	envArgs := ""
 	javaEnvKeys := [3]string{"JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS"}
 
-	for i := 0; i < 3; i++ { // if string is found copy it and a trailing space
+	for i := 0; i < 3; i++ { // if a string is found copy it and a trailing space
 		envString := os.Getenv(javaEnvKeys[i])
 		if len(envString) > 0 {
 			envArgs += envString
@@ -58,6 +62,7 @@ func getEnvArgs() string {
 	return strings.TrimSpace(envArgs)
 }
 
+// handle all the options that simply print messages for the user's benefit
 func handleUserMessages(allArgs string) bool {
 	if strings.Contains(allArgs, "-h") || strings.Contains(allArgs, "-help") ||
 		strings.Contains(allArgs, "-?") {
@@ -67,13 +72,16 @@ func handleUserMessages(allArgs string) bool {
 		showUsage(os.Stdout)
 		return true
 	}
-
 	return false
 }
 
+// show the usage info to the user (in response to errors or java -help and
+// similar command-line options). The text will be updated to conform closer
+// to the OpenJDK message as features are added to Jacobin
 func showUsage(outStream *os.File) {
 	userMessage :=
-		`Usage: jacobin [options] <mainclass> [args...]
+		`
+Usage: jacobin [options] <mainclass> [args...]
 	        (to execute a class)
    or jacobin [options] -jar <jarfile> [args...]
 	        (to execute a jar file)
