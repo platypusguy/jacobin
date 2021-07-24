@@ -22,18 +22,21 @@ func main() {
 	Log("running program: "+Global.jacobinName, FINE)
 
 	// handle the command-line interface (cli) -- that is, process the args
-	err := HandleCli()
+	err := HandleCli(os.Args)
 	if err != nil {
-		closedown(true)
+		if err.Error() == "end of processing" { // this is not an error but an end of processing
+			shutdown(false)
+		}
+		shutdown(true)
 	}
 
-	Log("shutdown", FINE) // eventually move this to the closedown func
-	// closedown(false)
+	Log("shutdown", FINE) // eventually move this to the shutdown func
+	// shutdown(false)
 }
 
 // the exit function. Later on, this will check a list of JVM shutdown hooks
 // before closing down in order to have an orderly exit
-func closedown(errorCondition bool) {
+func shutdown(errorCondition bool) {
 	Log("shutdown", FINE)
 	if errorCondition {
 		os.Exit(1)
