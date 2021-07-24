@@ -6,7 +6,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -14,7 +13,6 @@ var Global *Globals
 
 // where everything begins
 func main() {
-	showCopyright()
 	Global = initGlobals(os.Args[0])
 
 	// during development, let's use the most verbose logging level
@@ -43,9 +41,4 @@ func shutdown(errorCondition bool) {
 	} else {
 		os.Exit(0)
 	}
-
-}
-
-func showCopyright() {
-	fmt.Println("Jacobin VM, v. 0.1.0, © 2021 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
 }
