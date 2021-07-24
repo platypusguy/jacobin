@@ -4,7 +4,7 @@
  */
 
 /****
-Set up a table with all the supported switches:
+TODO: Set up a table with all the supported switches:
 	name(string), func
 		name should remove leading + or - anything after : or =
 	should first check for all the version / verbose / help options which just print out info
@@ -64,15 +64,34 @@ func getEnvArgs() string {
 
 // handle all the options that simply print messages for the user's benefit
 func handleUserMessages(allArgs string) bool {
+	const exitProcessing = true
+
+	// the order of the messages is important b/c -showversion and -help can both be requested,
+	// but in the reverse order, only -help is shown and then then Jacobin exits
+	if strings.Contains(allArgs, "-showversion") {
+		showVersion(os.Stderr)
+	} else if strings.Contains(allArgs, "--show-version") {
+		showVersion(os.Stdout)
+	} else if strings.Contains(allArgs, "-version") {
+		showVersion(os.Stderr)
+		return exitProcessing
+	} else if strings.Contains(allArgs, "--version") {
+		showVersion(os.Stdout)
+		return exitProcessing
+	} else {
+		showCopyright() // show copyright only if the version information is not requested
+	}
+
 	if strings.Contains(allArgs, "-h") || strings.Contains(allArgs, "-help") ||
 		strings.Contains(allArgs, "-?") {
 		showUsage(os.Stderr)
-		return true
+		return exitProcessing
 	} else if strings.Contains(allArgs, "--help") {
 		showUsage(os.Stdout)
-		return true
+		return exitProcessing
 	}
-	return false
+
+	return !exitProcessing
 }
 
 // show the usage info to the user (in response to errors or java -help and
@@ -100,26 +119,14 @@ where options include:
 	fmt.Fprintln(outStream, userMessage)
 }
 
-/**
-          allArgs.contains( "?" ) ||
-             allArgs.contains( "-h" ) ||
-             allArgs.contains( "-help" ) {
-      UserMsgs.showUsage( stream: Streams.serr );
-      return execStop
-  } else if allArgs.contains( "--help" ) {
-      UserMsgs.showUsage( stream: Streams.sout )
-      return execStop
-  } else if allArgs.contains( "-version" ) {
-      UserMsgs.showVersion( stream: Streams.serr )
-      return execStop
-  } else if allArgs.contains( "--version" ) {
-      UserMsgs.showVersion( stream: Streams.sout )
-      return execStop
-  } else if allArgs.contains( "-showversion" ) {
-      UserMsgs.showVersion( stream: Streams.serr )
-      return execContinue
-  } else if allArgs.contains( "--showversion" ) {
-      UserMsgs.showVersion( stream: Streams.sout )
-      return execContinue
-  }
-*/
+// show the Jacobin version
+func showVersion(outStream *os.File) {
+	ver := fmt.Sprintf(
+		"Jacobin VM v. %s 2021\n64-bit server JVM", Global.version)
+	fmt.Fprintln(outStream, ver)
+}
+
+func showCopyright() {
+	fmt.Println("Jacobin VM v. " + Global.version +
+		", © 2021 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+}

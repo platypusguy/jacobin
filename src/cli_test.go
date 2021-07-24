@@ -43,7 +43,7 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 }
 
 // verify the output to stderr when only usage info is requested (i.e., jacobin -help)
-func TestHandleUserMessage(t *testing.T) {
+func TestHandleUsageMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global = initGlobals(os.Args[0])
 	SetLogLevel(WARNING)
@@ -68,7 +68,7 @@ func TestHandleUserMessage(t *testing.T) {
 	}
 }
 
-func TestHandleUserMessageSignalsShutdown(t *testing.T) {
+func TestHandleUsageMessageSignalsShutdown(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global = initGlobals(os.Args[0])
 	SetLogLevel(WARNING)
@@ -86,5 +86,52 @@ func TestHandleUserMessageSignalsShutdown(t *testing.T) {
 
 	if stopProcessing != true {
 		t.Error("'jacobin -help' should have returned true to signal end of processing")
+	}
+}
+
+func TestHandleVersionMessage(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	Global = initGlobals(os.Args[0])
+	SetLogLevel(WARNING)
+
+	// redirect stderr to capture writing to it
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	stop := handleUserMessages("jacobin -version")
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStderr
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Jacobin VM v.") {
+		t.Error("jacobin -version did not generate the correct message to stderr. msg was: " + msg)
+	}
+
+	if stop != true {
+		t.Error("jacobin -version did not signal to stop processing, which it should have")
+	}
+}
+
+func TestShowCopyright(t *testing.T) {
+	normalStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	showCopyright()
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStdout
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "All rights reserved.") ||
+		!strings.Contains(msg, "2021") {
+		t.Error("Copyright does not contain expected terms")
 	}
 }
