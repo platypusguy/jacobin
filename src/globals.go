@@ -10,6 +10,10 @@ import "time"
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, pointers to classloaders, etc.
 type Globals struct {
+	// ---- jacobin version number ----
+	// note: all references to version number must come from this literal
+	version string
+
 	// ---- logging items ----
 	logLevel  int
 	startTime time.Time
@@ -35,8 +39,6 @@ type Globals struct {
 	   // 0 = no verification, 1=remote (non-bootloader classes), 2=all classes
 	   enum verifyLevel : Int { case none = 0, remote = 1, all = 2 }
 
-	   // ---- jacobin version info -----
-	   let version = "0.1.0"
 	*/
 }
 
@@ -45,6 +47,7 @@ func initGlobals(progName string) *Globals {
 	globals := new(Globals)
 	globals.startTime = time.Now()
 	globals.jacobinName = progName
+	globals.version = "0.1.0"
 	globals.logLevel = WARNING
 	return globals
 }
