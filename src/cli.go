@@ -24,6 +24,8 @@ import (
 func HandleCli(osArgs []string) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	Log("Java environment variables: "+javaEnvOptions, FINE)
+
+	// add command-line args to those extracted from the enviroment (if any)
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
 		cliArgs += v + " "
