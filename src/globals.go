@@ -40,6 +40,18 @@ type Globals struct {
 	   enum verifyLevel : Int { case none = 0, remote = 1, all = 2 }
 
 	*/
+
+	// ---- Command-line options ----
+	/*
+		Possibly set up a table with a key string: option name
+		 and the value being a struct containing:
+
+		 boolean: supported?
+		 boolean: set?
+		 int16: arguments it takes: 0 = none, 1 = value follows an :, 2= value follows an =,
+		                            4= value follows a space, 8= value has multiple ;-separated values
+		 function: processing routine (passing in the index to the arg)
+	*/
 }
 
 // initialize the global values that are known at start-up
@@ -50,4 +62,8 @@ func initGlobals(progName string) *Globals {
 	globals.version = "0.1.0"
 	globals.logLevel = WARNING
 	return globals
+}
+
+func initOptions() {
+
 }

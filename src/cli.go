@@ -28,6 +28,7 @@ func HandleCli(osArgs []string) (err error) {
 	// add command-line args to those extracted from the enviroment (if any)
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
+		fmt.Printf("\t%q\n", v)
 		cliArgs += v + " "
 	}
 	Global.commandLine = strings.TrimSpace(cliArgs)
@@ -41,6 +42,16 @@ func HandleCli(osArgs []string) (err error) {
 	if discontinue == true {
 		return errors.New("end of processing")
 	}
+
+	// pull out all the arguments into an array of strings. Note that an arg with spaces but within
+	// quotes is treated as a single arg
+	args := strings.Fields(javaEnvOptions)
+	for _, v := range osArgs[1:] {
+		fmt.Printf("\t%q\n", v)
+		args = append(args, v)
+	}
+
+	fmt.Printf("args are: %q\n", args)
 	return
 }
 
