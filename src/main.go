@@ -19,7 +19,8 @@ func main() {
 	Global.logLevel = FINEST
 	Log("running program: "+Global.jacobinName, FINE)
 
-	// handle the command-line interface (cli) -- that is, process the args
+	// handle the command-line interface (cli) -- i.e., process the args
+	LoadOptionsTable(Global)
 	err := HandleCli(os.Args)
 	if err != nil {
 		if err.Error() == "end of processing" { // this is not an error but an end of processing

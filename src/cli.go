@@ -54,7 +54,7 @@ func HandleCli(osArgs []string) (err error) {
 	for i := 0; i < len(osArgs); i++ {
 		opt, ok := Global.options[osArgs[i]]
 		if ok {
-			opt.f(i, osArgs[i])
+			opt.action(i, osArgs[i])
 		}
 	}
 
