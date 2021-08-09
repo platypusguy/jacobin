@@ -15,6 +15,10 @@ type Globals struct {
 	// ---- jacobin version number ----
 	// note: all references to version number must come from this literal
 	version string
+	vmModel string // "client" or "server" (both the same acc. to JVM docs)
+
+	// ---- processing stoppage? ----
+	exitNow bool
 
 	// ---- logging items ----
 	logLevel  int
@@ -42,8 +46,10 @@ type Globals struct {
 func initGlobals(progName string) *Globals {
 	globals := new(Globals)
 	globals.startTime = time.Now()
+	globals.exitNow = false
 	globals.jacobinName = progName
 	globals.version = "0.1.0"
+	globals.vmModel = "server"
 	globals.logLevel = WARNING
 
 	globals.options = make(map[string]Option)

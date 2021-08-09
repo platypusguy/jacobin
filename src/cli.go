@@ -4,10 +4,7 @@
  */
 
 /****
-TODO: Set up a table with all the supported switches:
-	name(string), func
-		name should remove leading + or - anything after : or =
-	should first check for all the version / verbose / help options which just print out info
+TODO: set up a tree for the various option spelling so they can look up in Options table
 */
 
 package main
@@ -43,11 +40,11 @@ func HandleCli(osArgs []string) (err error) {
 		return errors.New("end of processing")
 	}
 
-	// pull out all the arguments into an array of strings. Note that an arg with spaces but within
-	// quotes is treated as a single arg
+	// pull out all the arguments into an array of strings. Note that an arg with spaces but
+	// within quotes is treated as a single arg
 	args := strings.Fields(javaEnvOptions)
 	for _, v := range osArgs[1:] {
-		fmt.Printf("\t%q\n", v)
+		//		fmt.Printf("\t%q\n", v)
 		args = append(args, v)
 	}
 
@@ -58,7 +55,7 @@ func HandleCli(osArgs []string) (err error) {
 		}
 	}
 
-	//fmt.Printf("args are: %q\n", args)
+	// fmt.Printf("args are: %q\n", args)
 	return
 }
 
@@ -128,6 +125,9 @@ Arguments following the main class, source file, -jar <jarfile>,
 are passed as the arguments to main class.
 
 where options include:
+	-client       to select the "client" VM
+	-verbose:class  enable verbose output
+	-vverbose		enable very verbose output (Jacobin-specific option)
 	-? -h -help   print this help message to the error stream
 	--help        print this help message to the output stream
 	-version      print product version to the error stream and exit
@@ -142,7 +142,7 @@ where options include:
 // show the Jacobin version
 func showVersion(outStream *os.File) {
 	ver := fmt.Sprintf(
-		"Jacobin VM v. %s 2021\n64-bit server JVM", Global.version)
+		"Jacobin VM v. %s 2021\n64-bit %s JVM", Global.version, Global.vmModel)
 	fmt.Fprintln(outStream, ver)
 }
 
