@@ -48,15 +48,47 @@ func HandleCli(osArgs []string) (err error) {
 		args = append(args, v)
 	}
 
-	for i := 0; i < len(osArgs); i++ {
-		opt, ok := Global.options[osArgs[i]]
+	for i := 0; i < len(args); i++ {
+		// break the option into the option and any embedded arg values
+		option, arg, err := getArgLexeme(args[i])
+		if err != nil {
+			continue // skip the arg if there was a problem. Might want to revisit this.
+		}
+
+		opt, ok := Global.options[option]
 		if ok {
-			opt.action(i, osArgs[i])
+			opt.action(i, args[i]) //TODO: pass the arguments, if any
+		} else {
+			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
+		}
+
+		if len(arg) > 0 {
+			fmt.Printf("Option %s has argument value: %s\n", option, arg)
 		}
 	}
 
 	// fmt.Printf("args are: %q\n", args)
 	return
+}
+
+func getArgLexeme(option string) (string, string, error) {
+	if len(option) == 0 {
+		return "", "", errors.New("empty option error")
+	}
+
+	// if the option has an embedded arg value, it'll come after a : or an =
+	root := strings.Index(option, ":")
+	if root == -1 {
+		root = strings.Index(option, "=")
+	}
+
+	// if there's no embedded : or = then the option doesn't contain an arg value
+	if root == -1 {
+		return option, "", nil
+	}
+
+	return option[:root], option[root+1:], nil
+
 }
 
 // you can can set JVM options using the three environment variables that are

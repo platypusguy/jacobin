@@ -42,7 +42,7 @@ func LoadOptionsTable(Global *Globals) error {
 	dryRun.set = true
 
 	verboseClass := Option{true, false, 0, verbosityClassLevel}
-	Global.options["-verbose:class"] = verboseClass
+	Global.options["-verbose"] = verboseClass
 	verboseClass.set = true
 
 	veryVerbose := Option{true, false, 0, verbosityFinestLevel}
