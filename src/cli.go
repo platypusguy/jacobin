@@ -3,10 +3,6 @@
  * Licensed under Mozilla Public License 2.0 (MPL-2.0)
  */
 
-/****
-TODO: set up a tree for the various option spelling so they can look up in Options table
-*/
-
 package main
 
 import (
