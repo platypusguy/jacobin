@@ -50,14 +50,14 @@ func HandleCli(osArgs []string) (err error) {
 
 	for i := 0; i < len(args); i++ {
 		// break the option into the option and any embedded arg values
-		option, arg, err := getArgLexeme(args[i])
+		option, arg, err := getOptionRootAndArgs(args[i])
 		if err != nil {
-			continue // skip the arg if there was a problem. Might want to revisit this.
+			continue // skip the arg if there was a problem. (Might want to revisit this.)
 		}
 
 		opt, ok := Global.options[option]
 		if ok {
-			opt.action(i, args[i]) //TODO: pass the arguments, if any
+			opt.action(i, arg) //TODO: pass the arguments, if any
 		} else {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
@@ -71,23 +71,25 @@ func HandleCli(osArgs []string) (err error) {
 	return
 }
 
-func getArgLexeme(option string) (string, string, error) {
+// pass in the option potentially with embedded arguments and get back
+// the option name and the embedded argument(s), if any
+func getOptionRootAndArgs(option string) (string, string, error) {
 	if len(option) == 0 {
 		return "", "", errors.New("empty option error")
 	}
 
 	// if the option has an embedded arg value, it'll come after a : or an =
-	root := strings.Index(option, ":")
-	if root == -1 {
-		root = strings.Index(option, "=")
+	argMarker := strings.Index(option, ":")
+	if argMarker == -1 {
+		argMarker = strings.Index(option, "=")
 	}
 
 	// if there's no embedded : or = then the option doesn't contain an arg value
-	if root == -1 {
+	if argMarker == -1 {
 		return option, "", nil
 	}
 
-	return option[:root], option[root+1:], nil
+	return option[:argMarker], option[argMarker+1:], nil
 
 }
 

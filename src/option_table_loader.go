@@ -41,7 +41,7 @@ func LoadOptionsTable(Global *Globals) error {
 	Global.options["--dry-run"] = dryRun
 	dryRun.set = true
 
-	verboseClass := Option{true, false, 0, verbosityClassLevel}
+	verboseClass := Option{true, false, 1, verbosityLevel}
 	Global.options["-verbose"] = verboseClass
 	verboseClass.set = true
 
@@ -64,8 +64,18 @@ func notSupported(pos int, name string) error {
 	return nil
 }
 
-// set verbosity level to CLASS
-func verbosityClassLevel(pos int, name string) error { Global.logLevel = CLASS; return nil }
+// set verbosity level
+func verbosityLevel(pos int, argValue string) error {
+
+	if argValue == "class" {
+		Global.logLevel = CLASS
+		Log("Logging level set to CLASS", INFO)
+	} else if argValue == "finest" {
+		Global.logLevel = FINEST
+		Log("Logging level set to FINEST", INFO)
+	}
+	return nil
+}
 
 // set verbosity level to FINEST (this generates substantial output)
 func verbosityFinestLevel(pos int, name string) error { Global.logLevel = FINEST; return nil }
