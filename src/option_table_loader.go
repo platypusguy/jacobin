@@ -29,8 +29,8 @@ import (
 //
 // Every option Jacobin responds to (even if just to say it's not supported) requires an entry in
 // the Option table, except for these options:
-// 		-showversion, --show-version, -version, --version, -h, -help, --help, and -?
-// because these have all been handled prior to the use of this table.
+// 		-h, -help, --help, and -?
+// because these have been handled prior to the use of this table.
 
 func LoadOptionsTable(Global *Globals) error {
 
@@ -54,6 +54,14 @@ func LoadOptionsTable(Global *Globals) error {
 	Global.options["-verbose"] = verboseClass
 	verboseClass.set = true
 
+	version := Option{true, false, 1, versionStderrThenExit}
+	Global.options["-version"] = version
+	version.set = true
+
+	vversion := Option{true, false, 1, versionStdoutThenExit}
+	Global.options["--version"] = vversion
+	vversion.set = true
+
 	return nil
 }
 
@@ -76,6 +84,20 @@ func showVersionStderr(pos int, name string) error {
 
 func showVersionStdout(pos int, name string) error {
 	showVersion(os.Stdout)
+	return nil
+}
+
+// note that the -version option prints the version then exits the VM
+func versionStderrThenExit(pos int, name string) error {
+	showVersion(os.Stderr)
+	shutdown(false)
+	return nil
+}
+
+// note that the --version option prints the version info then exits the VM
+func versionStdoutThenExit(pos int, name string) error {
+	showVersion(os.Stdout)
+	shutdown(false)
 	return nil
 }
 

@@ -48,6 +48,7 @@ func HandleCli(osArgs []string) (err error) {
 		args = append(args, v)
 	}
 	Global.args = args
+	showCopyright()
 
 	for i := 0; i < len(args); i++ {
 		// break the option into the option and any embedded arg values
@@ -134,24 +135,6 @@ func getEnvArgs() string {
 func handleUserMessages(allArgs string) bool {
 	const exitProcessing = true
 
-	// the order of the messages is important b/c -showversion and -help can both be requested,
-	// but in the reverse order, only -help is shown and then then Jacobin exits
-	// if strings.Contains(allArgs, "-showversion") {
-	// 	showVersion(os.Stderr)
-	// } else
-	// if strings.Contains(allArgs, "--show-version") {
-	// 	showVersion(os.Stdout)
-	// } else
-	if strings.Contains(allArgs, "-version") {
-		showVersion(os.Stderr)
-		return exitProcessing
-	} else if strings.Contains(allArgs, "--version") {
-		showVersion(os.Stdout)
-		return exitProcessing
-	} else {
-		showCopyright() // show copyright only if the version information is not requested
-	}
-
 	if strings.Contains(allArgs, "-h") || strings.Contains(allArgs, "-help") ||
 		strings.Contains(allArgs, "-?") {
 		showUsage(os.Stderr)
@@ -201,7 +184,15 @@ func showVersion(outStream *os.File) {
 	fmt.Fprintln(outStream, ver)
 }
 
+// show the copyright. Because the various -version commands show much the
+// same data, rather than printing it twice, we skip showing the copyright
+// info when the -version option variants are specified
 func showCopyright() {
-	fmt.Println("Jacobin VM v. " + Global.version +
-		", © 2021 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+	if !strings.Contains(Global.commandLine, "-showversion") &&
+		!strings.Contains(Global.commandLine, "--show-version") &&
+		!strings.Contains(Global.commandLine, "-version") &&
+		!strings.Contains(Global.commandLine, "--version") {
+		fmt.Println("Jacobin VM v. " + Global.version +
+			", © 2021 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+	}
 }
