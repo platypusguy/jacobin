@@ -47,6 +47,7 @@ func HandleCli(osArgs []string) (err error) {
 		//		fmt.Printf("\t%q\n", v)
 		args = append(args, v)
 	}
+	Global.args = args
 
 	for i := 0; i < len(args); i++ {
 		// break the option into the option and any embedded arg values
@@ -55,9 +56,17 @@ func HandleCli(osArgs []string) (err error) {
 			continue // skip the arg if there was a problem. (Might want to revisit this.)
 		}
 
+		if strings.HasSuffix(option, ".class") {
+			Global.startingClass = option
+			for i = i + 1; i < len(args); i++ {
+				Global.appArgs = append(Global.appArgs, args[i])
+			}
+			break
+		}
+
 		opt, ok := Global.options[option]
 		if ok {
-			opt.action(i, arg) //TODO: pass the arguments, if any
+			opt.action(i, arg)
 		} else {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
@@ -65,6 +74,13 @@ func HandleCli(osArgs []string) (err error) {
 		if len(arg) > 0 {
 			fmt.Printf("Option %s has argument value: %s\n", option, arg)
 		}
+	}
+
+	if Global.startingClass == "" {
+		Log("Error: No executable program specified. Exiting.", SEVERE)
+		return errors.New("no executable specified")
+	} else {
+		Log("Starting execution with: "+Global.startingClass, INFO)
 	}
 
 	// fmt.Printf("args are: %q\n", args)

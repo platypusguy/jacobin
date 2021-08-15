@@ -29,9 +29,9 @@ type Globals struct {
 	args        []string
 	commandLine string
 
-	// var startingClass = ""
-	// var appArgs: [String] = [""]
-	options map[string]Option
+	startingClass string
+	appArgs       []string
+	options       map[string]Option
 
 	// ---- classloading items ----
 	/*
@@ -43,16 +43,18 @@ type Globals struct {
 }
 
 // initialize the global values that are known at start-up
+// listed in alpha order after the first two items
 func initGlobals(progName string) *Globals {
 	globals := new(Globals)
 	globals.startTime = time.Now()
+
 	globals.exitNow = false
 	globals.jacobinName = progName
+	globals.logLevel = WARNING
+	globals.options = make(map[string]Option)
+	globals.startingClass = ""
 	globals.version = "0.1.0"
 	globals.vmModel = "server"
-	globals.logLevel = WARNING
-
-	globals.options = make(map[string]Option)
 
 	return globals
 }
