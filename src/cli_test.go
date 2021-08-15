@@ -89,7 +89,7 @@ func TestHandleUsageMessageSignalsShutdown(t *testing.T) {
 	}
 }
 
-func TestHandleVersionMessage(t *testing.T) {
+func TestHandleShowVersionMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global = initGlobals(os.Args[0])
 	SetLogLevel(WARNING)
@@ -99,7 +99,12 @@ func TestHandleVersionMessage(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	stop := handleUserMessages("jacobin -version")
+	LoadOptionsTable(Global)
+	args := make([]string, 2)
+	args[0] = "jacobin"
+	args[1] = "-showversion"
+
+	HandleCli(args)
 
 	// restore stderr to what it was before
 	w.Close()
@@ -111,13 +116,12 @@ func TestHandleVersionMessage(t *testing.T) {
 	if !strings.Contains(msg, "Jacobin VM v.") {
 		t.Error("jacobin -version did not generate the correct message to stderr. msg was: " + msg)
 	}
-
-	if stop != true {
-		t.Error("jacobin -version did not signal to stop processing, which it should have")
-	}
 }
 
 func TestShowCopyright(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	SetLogLevel(WARNING)
+
 	normalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
