@@ -77,7 +77,8 @@ func HandleCli(osArgs []string) (err error) {
 	}
 
 	if Global.startingClass == "" {
-		Log("Error: No executable program specified. Exiting.", SEVERE)
+		Log("Error: No executable program specified. Exiting.", INFO)
+		showUsage(os.Stdout)
 		return errors.New("no executable specified")
 	} else {
 		Log("Starting execution with: "+Global.startingClass, INFO)
@@ -135,11 +136,13 @@ func handleUserMessages(allArgs string) bool {
 
 	// the order of the messages is important b/c -showversion and -help can both be requested,
 	// but in the reverse order, only -help is shown and then then Jacobin exits
-	if strings.Contains(allArgs, "-showversion") {
-		showVersion(os.Stderr)
-	} else if strings.Contains(allArgs, "--show-version") {
-		showVersion(os.Stdout)
-	} else if strings.Contains(allArgs, "-version") {
+	// if strings.Contains(allArgs, "-showversion") {
+	// 	showVersion(os.Stderr)
+	// } else
+	// if strings.Contains(allArgs, "--show-version") {
+	// 	showVersion(os.Stdout)
+	// } else
+	if strings.Contains(allArgs, "-version") {
 		showVersion(os.Stderr)
 		return exitProcessing
 	} else if strings.Contains(allArgs, "--version") {

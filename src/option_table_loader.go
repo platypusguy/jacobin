@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 // This set of routines loads the Global.options table with the various
@@ -41,6 +42,14 @@ func LoadOptionsTable(Global *Globals) error {
 	Global.options["--dry-run"] = dryRun
 	dryRun.set = true
 
+	showversion := Option{true, false, 0, showVersionStderr}
+	Global.options["-showversion"] = showversion
+	showversion.set = true
+
+	show_Version := Option{true, false, 0, showVersionStdout}
+	Global.options["--show-version"] = show_Version
+	show_Version.set = true
+
 	verboseClass := Option{true, false, 1, verbosityLevel}
 	Global.options["-verbose"] = verboseClass
 	verboseClass.set = true
@@ -57,6 +66,16 @@ func clientVM(pos int, name string) error { Global.vmModel = "client"; return ni
 // generic notification function that an option is not supported
 func notSupported(pos int, name string) error {
 	fmt.Printf("%s is not currently supported in Jacobin\n", name)
+	return nil
+}
+
+func showVersionStderr(pos int, name string) error {
+	showVersion(os.Stderr)
+	return nil
+}
+
+func showVersionStdout(pos int, name string) error {
+	showVersion(os.Stdout)
 	return nil
 }
 
