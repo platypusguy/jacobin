@@ -45,10 +45,6 @@ func LoadOptionsTable(Global *Globals) error {
 	Global.options["-verbose"] = verboseClass
 	verboseClass.set = true
 
-	veryVerbose := Option{true, false, 0, verbosityFinestLevel}
-	Global.options["-vverbose"] = veryVerbose
-	verboseClass.set = true
-
 	return nil
 }
 
@@ -64,18 +60,25 @@ func notSupported(pos int, name string) error {
 	return nil
 }
 
-// set verbosity level
+// set verbosity level. Note Jacobin starts up at WARNING level, so there is no
+// need to set it to that level. You cannot set the level to coarser than WARNING
+// which is why there is no way to set the verbosity to SEVERE only.
 func verbosityLevel(pos int, argValue string) error {
-
-	if argValue == "class" {
+	switch argValue {
+	case "class":
 		Global.logLevel = CLASS
 		Log("Logging level set to CLASS", INFO)
-	} else if argValue == "finest" {
+	case "info":
+		Global.logLevel = INFO
+		Log("Logging level set to INFO", INFO)
+	case "fine":
+		Global.logLevel = FINE
+		Log("Logging level set to FINE", INFO)
+	case "finest":
 		Global.logLevel = FINEST
 		Log("Logging level set to FINEST", INFO)
+	default:
+		Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", WARNING)
 	}
 	return nil
 }
-
-// set verbosity level to FINEST (this generates substantial output)
-func verbosityFinestLevel(pos int, name string) error { Global.logLevel = FINEST; return nil }

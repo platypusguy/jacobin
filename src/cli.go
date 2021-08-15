@@ -160,8 +160,10 @@ are passed as the arguments to main class.
 
 where options include:
 	-client       to select the "client" VM
-	-verbose:class  enable verbose output
-	-vverbose		enable very verbose output (Jacobin-specific option)
+	-verbose:[class|info|fine|finest]  enable verbose output
+                  info, fine, finest are Jacobin-specific options providing
+                    increasing amounts of detail. The finest level is used
+                    primarily for performance analysis.
 	-? -h -help   print this help message to the error stream
 	--help        print this help message to the output stream
 	-version      print product version to the error stream and exit
