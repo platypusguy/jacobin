@@ -25,7 +25,7 @@ type Globals struct {
 	startTime time.Time
 
 	// ---- command-line items ----
-	jacobinName string
+	jacobinName string // name of the executing Jacobin executable
 	args        []string
 	commandLine string
 

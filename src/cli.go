@@ -148,10 +148,18 @@ where options include:
 	fmt.Fprintln(outStream, userMessage)
 }
 
-// show the Jacobin version
+// show the Jacobin version and minor associated data
 func showVersion(outStream *os.File) {
+	// get the build date of the presently executing Jacobin executable
+	exeDate := ""
+	file, err := os.Stat(Global.jacobinName)
+	if err == nil {
+		date := file.ModTime()
+		exeDate = fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
+	}
+
 	ver := fmt.Sprintf(
-		"Jacobin VM v. %s 2021\n64-bit %s JVM", Global.version, Global.vmModel)
+		"Jacobin VM v. %s (Java 11.0.10) %s\n64-bit %s VM", Global.version, exeDate, Global.vmModel)
 	fmt.Fprintln(outStream, ver)
 }
 
