@@ -23,9 +23,6 @@ func main() {
 	LoadOptionsTable(Global)
 	err := HandleCli(os.Args)
 	if err != nil {
-		if err.Error() == "end of processing" { // this is not an error but an end of processing
-			shutdown(false)
-		}
 		shutdown(true)
 	}
 

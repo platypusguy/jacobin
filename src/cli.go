@@ -27,15 +27,6 @@ func HandleCli(osArgs []string) (err error) {
 	Global.commandLine = strings.TrimSpace(cliArgs)
 	Log("Commandline: "+Global.commandLine, FINE)
 
-	// handle options that request info but don't run the VM, such as:
-	// show version, show help, etc.
-	discontinue := handleUserMessages(cliArgs) // use cliArgs b/c we want the version with the final space (to ease search)
-
-	// some user messages require a shutdown after message is displayed (see Usage text for examples)
-	if discontinue == true {
-		return errors.New("end of processing")
-	}
-
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
 	args := strings.Fields(javaEnvOptions)
@@ -125,22 +116,6 @@ func getEnvArgs() string {
 		}
 	}
 	return strings.TrimSpace(envArgs)
-}
-
-// handle all the options that simply print messages for the user's benefit
-func handleUserMessages(allArgs string) bool {
-	const exitProcessing = true
-
-	if strings.Contains(allArgs, "-h") || strings.Contains(allArgs, "-help") ||
-		strings.Contains(allArgs, "-?") {
-		showUsage(os.Stderr)
-		return exitProcessing
-	} else if strings.Contains(allArgs, "--help") {
-		showUsage(os.Stdout)
-		return exitProcessing
-	}
-
-	return !exitProcessing
 }
 
 // show the usage info to the user (in response to errors or java -help and

@@ -32,7 +32,7 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
-func LoadOptionsTable(Global *Globals) error {
+func LoadOptionsTable(Global *Globals) {
 
 	client := Option{true, false, 0, clientVM}
 	Global.options["-client"] = client
@@ -41,6 +41,14 @@ func LoadOptionsTable(Global *Globals) error {
 	dryRun := Option{false, false, 0, notSupported}
 	Global.options["--dry-run"] = dryRun
 	dryRun.set = true
+
+	help := Option{true, false, 0, showHelpStderrAndExit}
+	Global.options["-h"] = help
+	Global.options["-help"] = help
+	Global.options["-?"] = help
+
+	helpp := Option{true, false, 0, showHelpStdoutAndExit}
+	Global.options["--help"] = helpp
 
 	showversion := Option{true, false, 0, showVersionStderr}
 	Global.options["-showversion"] = showversion
@@ -62,7 +70,6 @@ func LoadOptionsTable(Global *Globals) error {
 	Global.options["--version"] = vversion
 	vversion.set = true
 
-	return nil
 }
 
 // ---- the functions for the supported CLI options, in alphabetic order ----
@@ -74,6 +81,18 @@ func clientVM(pos int, name string) error { Global.vmModel = "client"; return ni
 // generic notification function that an option is not supported
 func notSupported(pos int, name string) error {
 	fmt.Printf("%s is not currently supported in Jacobin\n", name)
+	return nil
+}
+
+func showHelpStderrAndExit(pos int, name string) error {
+	showUsage(os.Stderr)
+	shutdown(false)
+	return nil
+}
+
+func showHelpStdoutAndExit(pos int, name string) error {
+	showUsage(os.Stdout)
+	shutdown(false)
 	return nil
 }
 
