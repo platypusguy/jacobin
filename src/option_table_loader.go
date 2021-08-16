@@ -86,13 +86,13 @@ func notSupported(pos int, name string) error {
 
 func showHelpStderrAndExit(pos int, name string) error {
 	showUsage(os.Stderr)
-	shutdown(false)
+	Global.exitNow = true
 	return nil
 }
 
 func showHelpStdoutAndExit(pos int, name string) error {
 	showUsage(os.Stdout)
-	shutdown(false)
+	Global.exitNow = true
 	return nil
 }
 
@@ -109,14 +109,14 @@ func showVersionStdout(pos int, name string) error {
 // note that the -version option prints the version then exits the VM
 func versionStderrThenExit(pos int, name string) error {
 	showVersion(os.Stderr)
-	shutdown(false)
+	Global.exitNow = true
 	return nil
 }
 
 // note that the --version option prints the version info then exits the VM
 func versionStdoutThenExit(pos int, name string) error {
 	showVersion(os.Stdout)
-	shutdown(false)
+	Global.exitNow = true
 	return nil
 }
 

@@ -25,6 +25,10 @@ func main() {
 	if err != nil {
 		shutdown(true)
 	}
+	// some commands, like -version show data and immediately exit. This tests for that.
+	if Global.exitNow == true {
+		shutdown(false)
+	}
 
 	Log("shutdown", FINE) // eventually move this to the shutdown func
 	// shutdown(false)
