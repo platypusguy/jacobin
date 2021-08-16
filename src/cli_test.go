@@ -117,7 +117,7 @@ func TestChangeLoggingLevel(t *testing.T) {
 func TestInvalidLoggingLevel(t *testing.T) {
 	Global = initGlobals(os.Args[0])
 	LoadOptionsTable(Global)
-	err := verbosityLevel(0, "severe")
+	_, err := verbosityLevel(0, "severe")
 	if err == nil {
 		t.Error("Setting log level to SEVERE via command line did not generate expected error")
 	}

@@ -30,6 +30,7 @@ type Globals struct {
 	commandLine string
 
 	startingClass string
+	startingJar   string
 	appArgs       []string
 	options       map[string]Option
 
@@ -53,6 +54,7 @@ func initGlobals(progName string) *Globals {
 	globals.logLevel = WARNING
 	globals.options = make(map[string]Option)
 	globals.startingClass = ""
+	globals.startingJar = ""
 	globals.version = "0.1.0"
 	globals.vmModel = "server"
 
@@ -65,5 +67,5 @@ type Option struct {
 	supported bool
 	set       bool
 	argStyle  int16
-	action    func(position int, name string) error
+	action    func(position int, name string) (int, error)
 }

@@ -51,6 +51,10 @@ func LoadOptionsTable(Global *Globals) {
 	helpp := Option{true, false, 0, showHelpStdoutAndExit}
 	Global.options["--help"] = helpp
 
+	jarFile := Option{true, false, 4, getJarFilename}
+	Global.options["-jar"] = jarFile
+	jarFile.set = true
+
 	showversion := Option{true, false, 0, showVersionStderr}
 	Global.options["-showversion"] = showversion
 	showversion.set = true
@@ -77,54 +81,65 @@ func LoadOptionsTable(Global *Globals) {
 
 // client VM function, simply changes the wording of the version
 // info. (This is the same behavior as the OpenJDK JVM.)
-func clientVM(pos int, name string) error { Global.vmModel = "client"; return nil }
+func clientVM(pos int, name string) (int, error) { Global.vmModel = "client"; return pos, nil }
+
+// for -jar option. Get the next arg, which must be the JAR filename
+func getJarFilename(pos int, name string) (int, error) {
+	if len(Global.args) > pos+1 {
+		Global.startingJar = Global.args[pos+1]
+		Log("Starting with JAR file: "+Global.startingJar, FINE)
+		return pos + 1, nil
+	} else {
+		return pos, os.ErrInvalid
+	}
+}
 
 // generic notification function that an option is not supported
-func notSupported(pos int, name string) error {
+func notSupported(pos int, name string) (int, error) {
 	fmt.Printf("%s is not currently supported in Jacobin\n", name)
-	return nil
+	return pos, nil
 }
 
-func showHelpStderrAndExit(pos int, name string) error {
+func showHelpStderrAndExit(pos int, name string) (int, error) {
 	showUsage(os.Stderr)
 	Global.exitNow = true
-	return nil
+	return pos, nil
 }
 
-func showHelpStdoutAndExit(pos int, name string) error {
+func showHelpStdoutAndExit(pos int, name string) (int, error) {
 	showUsage(os.Stdout)
 	Global.exitNow = true
-	return nil
+	return pos, nil
 }
 
-func showVersionStderr(pos int, name string) error {
+func showVersionStderr(pos int, name string) (int, error) {
 	showVersion(os.Stderr)
-	return nil
+	return pos, nil
 }
 
-func showVersionStdout(pos int, name string) error {
+func showVersionStdout(pos int, name string) (int, error) {
 	showVersion(os.Stdout)
-	return nil
+	return pos, nil
 }
 
 // note that the -version option prints the version then exits the VM
-func versionStderrThenExit(pos int, name string) error {
+func versionStderrThenExit(pos int, name string) (int, error) {
 	showVersion(os.Stderr)
 	Global.exitNow = true
-	return nil
+	return pos, nil
 }
 
 // note that the --version option prints the version info then exits the VM
-func versionStdoutThenExit(pos int, name string) error {
+func versionStdoutThenExit(pos int, name string) (int, error) {
 	showVersion(os.Stdout)
 	Global.exitNow = true
-	return nil
+	return pos, nil
 }
 
 // set verbosity level. Note Jacobin starts up at WARNING level, so there is no
 // need to set it to that level. You cannot set the level to coarser than WARNING
 // which is why there is no way to set the verbosity to SEVERE only.
-func verbosityLevel(pos int, argValue string) error {
+func verbosityLevel(pos int, argValue string) (int, error) {
 	switch argValue {
 	case "class":
 		Global.logLevel = CLASS
@@ -140,7 +155,7 @@ func verbosityLevel(pos int, argValue string) error {
 		Log("Logging level set to FINEST", INFO)
 	default:
 		Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", WARNING)
-		return errors.New("Invalid logging level specified: " + argValue)
+		return pos, errors.New("Invalid logging level specified: " + argValue)
 	}
-	return nil
+	return pos, nil
 }

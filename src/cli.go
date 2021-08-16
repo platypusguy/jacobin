@@ -44,6 +44,8 @@ func HandleCli(osArgs []string) (err error) {
 			continue // skip the arg if there was a problem. (Might want to revisit this.)
 		}
 
+		// if the option is the name of the class to execute, note that then get
+		// all successive arguments and store them as app args in Global
 		if strings.HasSuffix(option, ".class") {
 			Global.startingClass = option
 			for i = i + 1; i < len(args); i++ {
@@ -54,7 +56,7 @@ func HandleCli(osArgs []string) (err error) {
 
 		opt, ok := Global.options[option]
 		if ok {
-			opt.action(i, arg)
+			i, _ = opt.action(i, arg)
 		} else {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
