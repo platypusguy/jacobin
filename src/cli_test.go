@@ -60,7 +60,7 @@ func TestHandleUsageMessage(t *testing.T) {
 	// restore stderr to what it was before
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
-	os.Stdout = normalStderr
+	os.Stderr = normalStderr
 
 	msg := string(out[:])
 
@@ -85,21 +85,41 @@ func TestHandleShowVersionMessage(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(Global)
-	args := make([]string, 2)
-	args[0] = "jacobin"
-	args[1] = "-showversion"
+	args := []string{"jacobin", "-showversion"}
 
 	HandleCli(args)
 
 	// restore stderr to what it was before
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
-	os.Stdout = normalStderr
+	os.Stderr = normalStderr
 
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "Jacobin VM v.") {
 		t.Error("jacobin -version did not generate the correct message to stderr. msg was: " + msg)
+	}
+}
+
+func TestChangeLoggingLevel(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	SetLogLevel(WARNING)
+
+	LoadOptionsTable(Global)
+	args := []string{"jacobin", "-verbose:info"}
+	HandleCli(args)
+
+	if Global.logLevel != INFO {
+		t.Error("Setting log level to INFO via command line failed")
+	}
+}
+
+func TestInvalidLoggingLevel(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	err := verbosityLevel(0, "severe")
+	if err == nil {
+		t.Error("Setting log level to SEVERE via command line did not generate expected error")
 	}
 }
 

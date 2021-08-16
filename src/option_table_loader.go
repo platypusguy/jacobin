@@ -6,6 +6,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -139,6 +140,7 @@ func verbosityLevel(pos int, argValue string) error {
 		Log("Logging level set to FINEST", INFO)
 	default:
 		Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", WARNING)
+		return errors.New("Invalid logging level specified: " + argValue)
 	}
 	return nil
 }

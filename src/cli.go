@@ -59,9 +59,9 @@ func HandleCli(osArgs []string) (err error) {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
 
-		if len(arg) > 0 {
-			fmt.Printf("Option %s has argument value: %s\n", option, arg)
-		}
+		// if len(arg) > 0 {
+		// 	fmt.Printf("Option %s has argument value: %s\n", option, arg)
+		// }
 	}
 
 	if Global.startingClass == "" {
