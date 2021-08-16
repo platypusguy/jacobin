@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		shutdown(true)
 	}
-	// some commands, like -version show data and immediately exit. This tests for that.
+	// some CLI options, like -version, show data and immediately exit. This tests for that.
 	if Global.exitNow == true {
 		shutdown(false)
 	}
