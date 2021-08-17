@@ -83,12 +83,16 @@ func LoadOptionsTable(Global *Globals) {
 // info. (This is the same behavior as the OpenJDK JVM.)
 func clientVM(pos int, name string) (int, error) { Global.vmModel = "client"; return pos, nil }
 
-// for -jar option. Get the next arg, which must be the JAR filename
+// for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
+// are app args, which are duly added to Global.appArgs
 func getJarFilename(pos int, name string) (int, error) {
 	if len(Global.args) > pos+1 {
 		Global.startingJar = Global.args[pos+1]
 		Log("Starting with JAR file: "+Global.startingJar, FINE)
-		return pos + 1, nil
+		for i := pos + 2; i < len(Global.args); i++ {
+			Global.appArgs = append(Global.appArgs, Global.args[i])
+		}
+		return len(Global.args), nil
 	} else {
 		return pos, os.ErrInvalid
 	}
