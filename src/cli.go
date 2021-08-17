@@ -61,6 +61,10 @@ func HandleCli(osArgs []string) (err error) {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
 
+		// TODO: check for JAR specified and process the JAR. At present, it will
+		// recognize the JAR file and insert it into Global, and copy all succeeding args
+		// to app args. However, it does not recognize the JAR file as an executable.
+
 		// if len(arg) > 0 {
 		// 	fmt.Printf("Option %s has argument value: %s\n", option, arg)
 		// }
