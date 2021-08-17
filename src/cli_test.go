@@ -144,3 +144,30 @@ func TestShowCopyright(t *testing.T) {
 		t.Error("Copyright does not contain expected terms")
 	}
 }
+
+func TestGetJarFilename(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	args := []string{"jacobin", "-jar", "pinkle.jar", "appArg1"}
+
+	HandleCli(args)
+	if Global.startingJar != "pinkle.jar" {
+		t.Error("Name of JAR file not correctly extracted from CLI")
+	}
+
+	if Global.appArgs[0] != "appArg1" {
+		t.Error("JAR file arg not correctly extracted from CLI. Expected: appArg1, got: " +
+			Global.appArgs[0])
+	}
+}
+
+func TestMissingJARfilename(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	Global.args = []string{"jacobin", "-jar"}
+
+	_, err := getJarFilename(1, "-jar")
+	if err != os.ErrInvalid {
+		t.Error("Missing JAR filename after -jar did not trigger the right error")
+	}
+}
