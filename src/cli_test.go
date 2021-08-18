@@ -85,7 +85,7 @@ func TestHandleShowVersionMessage(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(Global)
-	args := []string{"jacobin", "-showversion"}
+	args := []string{"jacobin", "-showversion", "main.clas"}
 
 	HandleCli(args)
 
@@ -120,6 +120,56 @@ func TestInvalidLoggingLevel(t *testing.T) {
 	_, err := verbosityLevel(0, "severe")
 	if err == nil {
 		t.Error("Setting log level to SEVERE via command line did not generate expected error")
+	}
+}
+
+func TestSpecifyClientVM(t *testing.T) {
+
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	if Global.vmModel != "server" {
+		t.Error("Initialization of Global.vmModel was not set to 'server' Got: " +
+			Global.vmModel)
+	}
+
+	normalStdout := os.Stdout
+	_, w, _ := os.Pipe()
+	os.Stdout = w
+
+	args := []string{"jacobin", "-client"}
+	HandleCli(args)
+
+	// restore stderr to what it was before
+	w.Close()
+	os.Stdout = normalStdout
+
+	if Global.vmModel != "client" {
+		t.Error("Global.vmModel should be set to 'client'. Instead got: " +
+			Global.vmModel)
+	}
+}
+
+func TestSpecifyValidButUnsupportedOption(t *testing.T) {
+
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	args := []string{"jacobin", "--dry-run", "main.class"}
+	HandleCli(args)
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "not currently supported") {
+		t.Error("Unsupported but valid option not identified. Instead got" + msg)
 	}
 }
 
