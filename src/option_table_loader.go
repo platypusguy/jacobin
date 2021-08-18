@@ -81,7 +81,10 @@ func LoadOptionsTable(Global *Globals) {
 
 // client VM function, simply changes the wording of the version
 // info. (This is the same behavior as the OpenJDK JVM.)
-func clientVM(pos int, name string) (int, error) { Global.vmModel = "client"; return pos, nil }
+func clientVM(pos int, name string) (int, error) {
+	Global.vmModel = "client"
+	return pos, nil
+}
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
 // are app args, which are duly added to Global.appArgs
@@ -99,8 +102,9 @@ func getJarFilename(pos int, name string) (int, error) {
 }
 
 // generic notification function that an option is not supported
-func notSupported(pos int, name string) (int, error) {
-	fmt.Printf("%s is not currently supported in Jacobin\n", name)
+func notSupported(pos int, arg string) (int, error) {
+	name := Global.args[pos]
+	fmt.Fprintf(os.Stderr, "%s is not currently supported in Jacobin\n", name)
 	return pos, nil
 }
 
