@@ -145,6 +145,40 @@ func TestShowCopyright(t *testing.T) {
 	}
 }
 
+func TestFoundClassFileWithNoArgs(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	args := []string{"jacobin", "main.class"}
+	HandleCli(args)
+
+	if Global.startingClass != "main.class" {
+		t.Error("main.class not identified as starting class. Got: " +
+			Global.startingClass)
+	}
+
+	if len(Global.appArgs) != 0 {
+		t.Error("app arg to main.class should be empty, but got: " +
+			Global.appArgs[0])
+	}
+}
+
+func TestFoundClassFileWithArgs(t *testing.T) {
+	Global = initGlobals(os.Args[0])
+	LoadOptionsTable(Global)
+	args := []string{"jacobin", "main.class", "appArg1"}
+	HandleCli(args)
+
+	if Global.startingClass != "main.class" {
+		t.Error("main.class not identified as starting class. Got: " +
+			Global.startingClass)
+	}
+
+	if Global.appArgs[0] != "appArg1" {
+		t.Error("app arg to main.class not correct. Got: " +
+			Global.appArgs[0])
+	}
+}
+
 func TestGetJarFilename(t *testing.T) {
 	Global = initGlobals(os.Args[0])
 	LoadOptionsTable(Global)
