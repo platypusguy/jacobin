@@ -70,15 +70,6 @@ func HandleCli(osArgs []string) (err error) {
 		// 	fmt.Printf("Option %s has argument value: %s\n", option, arg)
 		// }
 	}
-
-	if Global.startingClass == "" {
-		Log("Error: No executable program specified. Exiting.", INFO)
-		showUsage(os.Stdout)
-		return errors.New("no executable specified")
-	} else {
-		Log("Starting execution with: "+Global.startingClass, INFO)
-	}
-
 	return nil
 }
 

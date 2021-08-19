@@ -30,6 +30,13 @@ func main() {
 		shutdown(false)
 	}
 
+	if Global.startingClass == "" {
+		Log("Error: No executable program specified. Exiting.", INFO)
+		showUsage(os.Stdout)
+	} else {
+		Log("Starting execution with: "+Global.startingClass, INFO)
+	}
+
 	Log("shutdown", FINE) // eventually move this to the shutdown func
 	// shutdown(false)
 }
