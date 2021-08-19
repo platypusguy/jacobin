@@ -143,9 +143,36 @@ func TestShowVersionMessage(t *testing.T) {
 	}
 }
 
+func TestShow__VersionUsingOptionTable(t *testing.T) {
+	Global = initGlobals("test")
+	LoadOptionsTable(Global)
+
+	normalStdout := os.Stdout
+	r, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	versionStdoutThenExit(0, "--version")
+
+	wout.Close()
+	os.Stdout = normalStdout
+	out, _ := ioutil.ReadAll(r)
+
+	os.Stdout = normalStdout
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Jacobin VM v.") {
+		t.Error("jacobin --version did not generate the correct msg to stdout. msg was: " + msg)
+	}
+
+	if Global.exitNow != true {
+		t.Error("--version did not set exitNow value to exit. Should be set.")
+	}
+}
+
 func TestChangeLoggingLevels(t *testing.T) {
 	Global = initGlobals("test")
 	SetLogLevel(WARNING)
+	LoadOptionsTable(Global)
 
 	normalStdout := os.Stdout
 	_, wout, _ := os.Pipe()
@@ -156,7 +183,6 @@ func TestChangeLoggingLevels(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	LoadOptionsTable(Global)
 	args := []string{"jacobin", "-verbose:info", "main.class"}
 	HandleCli(args)
 
