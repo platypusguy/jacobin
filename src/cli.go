@@ -40,7 +40,6 @@ func HandleCli(osArgs []string) (err error) {
 	for i := 0; i < len(args); i++ {
 		// break the option into the option and any embedded arg values
 		option, arg, err := getOptionRootAndArgs(args[i])
-		// 		option, _, err := getOptionRootAndArgs(args[i])
 
 		if err != nil {
 			continue // skip the arg if there was a problem. (Might want to revisit this.)
@@ -80,7 +79,6 @@ func HandleCli(osArgs []string) (err error) {
 		Log("Starting execution with: "+Global.startingClass, INFO)
 	}
 
-	// fmt.Printf("args are: %q\n", args)
 	return nil
 }
 
