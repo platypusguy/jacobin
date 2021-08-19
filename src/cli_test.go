@@ -45,7 +45,7 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 // verify the output to stderr -help option is used
 func TestHandleUsageMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	SetLogLevel(WARNING)
 	LoadOptionsTable(Global)
 
@@ -84,7 +84,7 @@ func TestHandleUsageMessage(t *testing.T) {
 
 func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	SetLogLevel(WARNING)
 	LoadOptionsTable(Global)
 
@@ -110,7 +110,7 @@ func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 
 func TestShowVersionMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	SetLogLevel(WARNING)
 
 	// to avoid cluttering the test results, redirect stdout
@@ -144,7 +144,7 @@ func TestShowVersionMessage(t *testing.T) {
 }
 
 func TestChangeLoggingLevels(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	SetLogLevel(WARNING)
 
 	normalStdout := os.Stdout
@@ -247,7 +247,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 }
 
 func TestInvalidLoggingLevel(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
 	SetLogLevel(WARNING)
 
@@ -274,7 +274,7 @@ func TestInvalidLoggingLevel(t *testing.T) {
 
 func TestSpecifyClientVM(t *testing.T) {
 
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
 	if Global.vmModel != "server" {
 		t.Error("Initialization of Global.vmModel was not set to 'server' Got: " +
@@ -300,7 +300,7 @@ func TestSpecifyClientVM(t *testing.T) {
 
 func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
 
 	// redirect stdout to avoid cluttering test results with copyright notice
@@ -332,7 +332,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 }
 
 func TestShowCopyright(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	SetLogLevel(WARNING)
 
 	normalStdout := os.Stdout
@@ -354,10 +354,19 @@ func TestShowCopyright(t *testing.T) {
 }
 
 func TestFoundClassFileWithNoArgs(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
+
+	// redirecting stdout to avoid clutter in the test results
+	normalStdout := os.Stdout
+	_, w, _ := os.Pipe()
+	os.Stdout = w
+
 	args := []string{"jacobin", "main.class"}
 	HandleCli(args)
+
+	w.Close()
+	os.Stdout = normalStdout
 
 	if Global.startingClass != "main.class" {
 		t.Error("main.class not identified as starting class. Got: " +
@@ -371,10 +380,19 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 }
 
 func TestFoundClassFileWithArgs(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
+
+	// redirecting stdout to avoid clutter in the test results
+	normalStdout := os.Stdout
+	_, w, _ := os.Pipe()
+	os.Stdout = w
+
 	args := []string{"jacobin", "main.class", "appArg1"}
 	HandleCli(args)
+
+	w.Close()
+	os.Stdout = normalStdout
 
 	if Global.startingClass != "main.class" {
 		t.Error("main.class not identified as starting class. Got: " +
@@ -388,6 +406,9 @@ func TestFoundClassFileWithArgs(t *testing.T) {
 }
 
 func TestGetJarFilename(t *testing.T) {
+	Global = initGlobals("test")
+	LoadOptionsTable(Global)
+
 	normalStdout := os.Stdout
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
@@ -396,8 +417,6 @@ func TestGetJarFilename(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Global = initGlobals("test")
-	LoadOptionsTable(Global)
 	args := []string{"jacobin", "-jar", "pinkle.jar", "appArg1"}
 
 	HandleCli(args)
@@ -418,7 +437,7 @@ func TestGetJarFilename(t *testing.T) {
 }
 
 func TestMissingJARfilename(t *testing.T) {
-	Global = initGlobals(os.Args[0])
+	Global = initGlobals("test")
 	LoadOptionsTable(Global)
 	Global.args = []string{"jacobin", "-jar"}
 
