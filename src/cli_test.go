@@ -446,3 +446,10 @@ func TestMissingJARfilename(t *testing.T) {
 		t.Error("Missing JAR filename after -jar did not trigger the right error")
 	}
 }
+
+func TestEmptyOptionForEmbeddedArg(t *testing.T) {
+	_, _, err := getOptionRootAndArgs("")
+	if err == nil {
+		t.Error("Empty option should fail test for embedded args, but did not.")
+	}
+}
