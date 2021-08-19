@@ -81,7 +81,7 @@ func HandleCli(osArgs []string) (err error) {
 	}
 
 	// fmt.Printf("args are: %q\n", args)
-	return
+	return nil
 }
 
 // pass in the option potentially with embedded arguments and get back
