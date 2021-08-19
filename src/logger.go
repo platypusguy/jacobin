@@ -61,7 +61,9 @@ func Log(msg string, level int) (err error) {
 
 // set the level of granularity.
 func SetLogLevel(level int) (err error) {
-	if level < SEVERE || level > FINEST {
+	// SEVERE is here just to fill the hierarchy. You cannot actually set the logging
+	// level coarser than WARNING. In other words, all warnings must be shown.
+	if level <= SEVERE || level > FINEST {
 		return errors.New("invalid logging level")
 	} else {
 		Global.logLevel = level
