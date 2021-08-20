@@ -33,12 +33,12 @@ func main() {
 	if Global.startingClass == "" {
 		Log("Error: No executable program specified. Exiting.", INFO)
 		showUsage(os.Stdout)
+		shutdown(true)
 	} else {
 		Log("Starting execution with: "+Global.startingClass, INFO)
 	}
 
-	Log("shutdown", FINE) // eventually move this to the shutdown func
-	// shutdown(false)
+	shutdown(false)
 }
 
 // the exit function. Later on, this will check a list of JVM shutdown hooks
