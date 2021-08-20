@@ -7,6 +7,7 @@ package main
 
 import (
 	"os"
+	"sync"
 )
 
 var Global *Globals
@@ -36,6 +37,7 @@ func main() {
 		shutdown(true)
 	} else {
 		Log("Starting execution with: "+Global.startingClass, INFO)
+		classloader.loadClassFromFile(Global.appCL, Global.startingClass)
 	}
 
 	shutdown(false)
@@ -44,7 +46,12 @@ func main() {
 // the exit function. Later on, this will check a list of JVM shutdown hooks
 // before closing down in order to have an orderly exit
 func shutdown(errorCondition bool) {
+
+	var mutex = sync.Mutex{}
+	mutex.Lock()
 	Log("shutdown", FINE)
+	mutex.Unlock()
+
 	if errorCondition {
 		os.Exit(1)
 	} else {

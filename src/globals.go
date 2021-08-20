@@ -35,12 +35,10 @@ type Globals struct {
 	options       map[string]Option
 
 	// ---- classloading items ----
-	/*
-		var bootstrapLoader = Classloader( name: "bootstrap", parent: "" )
-		var systemLoader    = Classloader( name: "system", parent: "bootstrap" )
-		var assertionStatus = true //default assertion status is that assertions are executed. This is only for start-up.
-		var verifyBytecode  = verifyLevel.remote
-	*/
+	bootstrapCL classloader
+	systemCL    classloader
+	appCL       classloader
+	verifyLevel int
 }
 
 // initialize the global values that are known at start-up
@@ -57,6 +55,19 @@ func initGlobals(progName string) *Globals {
 	globals.startingJar = ""
 	globals.version = "0.1.0"
 	globals.vmModel = "server"
+
+	// create the classloaders
+	globals.bootstrapCL.name = "bootstrap"
+	globals.bootstrapCL.parent = ""
+	globals.bootstrapCL.classes = make(map[string]loadedClass)
+
+	globals.systemCL.name = "system"
+	globals.systemCL.parent = "bootstrap"
+	globals.systemCL.classes = make(map[string]loadedClass)
+
+	globals.appCL.name = "app"
+	globals.appCL.parent = "system"
+	globals.appCL.classes = make(map[string]loadedClass)
 
 	return globals
 }
