@@ -8,10 +8,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
+	"jacobin/log"
 	"os"
 )
 
-// This set of routines loads the Global.options table with the various
+// This set of routines loads the Global.Options table with the various
 // JVM command-line options for use later by the CLI processing logic.
 //
 // The table is initially created in globals.go and its declaration contains a
@@ -33,47 +35,50 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
-func LoadOptionsTable(Global *Globals) {
+var gl globals.Globals
 
-	client := Option{true, false, 0, clientVM}
-	Global.options["-client"] = client
-	client.set = true
+func LoadOptionsTable(Global globals.Globals) {
+	gl = Global
 
-	dryRun := Option{false, false, 0, notSupported}
-	Global.options["--dry-run"] = dryRun
-	dryRun.set = true
+	client := globals.Option{true, false, 0, clientVM}
+	Global.Options["-client"] = client
+	client.Set = true
 
-	help := Option{true, false, 0, showHelpStderrAndExit}
-	Global.options["-h"] = help
-	Global.options["-help"] = help
-	Global.options["-?"] = help
+	dryRun := globals.Option{false, false, 0, notSupported}
+	Global.Options["--dry-run"] = dryRun
+	dryRun.Set = true
 
-	helpp := Option{true, false, 0, showHelpStdoutAndExit}
-	Global.options["--help"] = helpp
+	help := globals.Option{true, false, 0, showHelpStderrAndExit}
+	Global.Options["-h"] = help
+	Global.Options["-help"] = help
+	Global.Options["-?"] = help
 
-	jarFile := Option{true, false, 4, getJarFilename}
-	Global.options["-jar"] = jarFile
-	jarFile.set = true
+	helpp := globals.Option{true, false, 0, showHelpStdoutAndExit}
+	Global.Options["--help"] = helpp
 
-	showversion := Option{true, false, 0, showVersionStderr}
-	Global.options["-showversion"] = showversion
-	showversion.set = true
+	jarFile := globals.Option{true, false, 4, getJarFilename}
+	Global.Options["-jar"] = jarFile
+	jarFile.Set = true
 
-	show_Version := Option{true, false, 0, showVersionStdout}
-	Global.options["--show-version"] = show_Version
-	show_Version.set = true
+	showversion := globals.Option{true, false, 0, showVersionStderr}
+	Global.Options["-showversion"] = showversion
+	showversion.Set = true
 
-	verboseClass := Option{true, false, 1, verbosityLevel}
-	Global.options["-verbose"] = verboseClass
-	verboseClass.set = true
+	show_Version := globals.Option{true, false, 0, showVersionStdout}
+	Global.Options["--show-version"] = show_Version
+	show_Version.Set = true
 
-	version := Option{true, false, 1, versionStderrThenExit}
-	Global.options["-version"] = version
-	version.set = true
+	verboseClass := globals.Option{true, false, 1, verbosityLevel}
+	Global.Options["-verbose"] = verboseClass
+	verboseClass.Set = true
 
-	vversion := Option{true, false, 1, versionStdoutThenExit}
-	Global.options["--version"] = vversion
-	vversion.set = true
+	version := globals.Option{true, false, 1, versionStderrThenExit}
+	Global.Options["-version"] = version
+	version.Set = true
+
+	vversion := globals.Option{true, false, 1, versionStdoutThenExit}
+	Global.Options["--version"] = vversion
+	vversion.Set = true
 
 }
 
@@ -82,20 +87,20 @@ func LoadOptionsTable(Global *Globals) {
 // client VM function, simply changes the wording of the version
 // info. (This is the same behavior as the OpenJDK JVM.)
 func clientVM(pos int, name string) (int, error) {
-	Global.vmModel = "client"
+	gl.VmModel = "client"
 	return pos, nil
 }
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
 // are app args, which are duly added to Global.appArgs
 func getJarFilename(pos int, name string) (int, error) {
-	if len(Global.args) > pos+1 {
-		Global.startingJar = Global.args[pos+1]
-		Log("Starting with JAR file: "+Global.startingJar, FINE)
-		for i := pos + 2; i < len(Global.args); i++ {
-			Global.appArgs = append(Global.appArgs, Global.args[i])
+	if len(gl.Args) > pos+1 {
+		gl.StartingJar = gl.Args[pos+1]
+		log.Log("Starting with JAR file: "+gl.StartingJar, log.FINE)
+		for i := pos + 2; i < len(gl.Args); i++ {
+			gl.AppArgs = append(gl.AppArgs, gl.Args[i])
 		}
-		return len(Global.args), nil
+		return len(gl.Args), nil
 	} else {
 		return pos, os.ErrInvalid
 	}
@@ -103,20 +108,20 @@ func getJarFilename(pos int, name string) (int, error) {
 
 // generic notification function that an option is not supported
 func notSupported(pos int, arg string) (int, error) {
-	name := Global.args[pos]
+	name := gl.Args[pos]
 	fmt.Fprintf(os.Stderr, "%s is not currently supported in Jacobin\n", name)
 	return pos, nil
 }
 
 func showHelpStderrAndExit(pos int, name string) (int, error) {
 	showUsage(os.Stderr)
-	Global.exitNow = true
+	gl.ExitNow = true
 	return pos, nil
 }
 
 func showHelpStdoutAndExit(pos int, name string) (int, error) {
 	showUsage(os.Stdout)
-	Global.exitNow = true
+	gl.ExitNow = true
 	return pos, nil
 }
 
@@ -133,14 +138,14 @@ func showVersionStdout(pos int, name string) (int, error) {
 // note that the -version option prints the version then exits the VM
 func versionStderrThenExit(pos int, name string) (int, error) {
 	showVersion(os.Stderr)
-	Global.exitNow = true
+	gl.ExitNow = true
 	return pos, nil
 }
 
 // note that the --version option prints the version info then exits the VM
 func versionStdoutThenExit(pos int, name string) (int, error) {
 	showVersion(os.Stdout)
-	Global.exitNow = true
+	gl.ExitNow = true
 	return pos, nil
 }
 
@@ -150,19 +155,19 @@ func versionStdoutThenExit(pos int, name string) (int, error) {
 func verbosityLevel(pos int, argValue string) (int, error) {
 	switch argValue {
 	case "class":
-		Global.logLevel = CLASS
-		Log("Logging level set to CLASS", INFO)
+		log.LogLevel = log.CLASS
+		log.Log("Logging level set to CLASS", log.INFO)
 	case "info":
-		Global.logLevel = INFO
-		Log("Logging level set to INFO", INFO)
+		log.LogLevel = log.INFO
+		log.Log("Logging level set to log.INFO", log.INFO)
 	case "fine":
-		Global.logLevel = FINE
-		Log("Logging level set to FINE", INFO)
+		log.LogLevel = log.FINE
+		log.Log("Logging level set to FINE", log.INFO)
 	case "finest":
-		Global.logLevel = FINEST
-		Log("Logging level set to FINEST", INFO)
+		log.LogLevel = log.FINEST
+		log.Log("Logging level set to FINEST", log.INFO)
 	default:
-		Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", WARNING)
+		log.Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", log.WARNING)
 		return pos, errors.New("Invalid logging level specified: " + argValue)
 	}
 	return pos, nil

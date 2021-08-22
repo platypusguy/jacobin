@@ -8,15 +8,18 @@ package main
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
+	"jacobin/log"
 	"os"
 	"strings"
 )
 
 // handle all the args from the command line, including those from the enviroment
 // variables that the JVM recognizes and prepends to the command-line options
-func HandleCli(osArgs []string) (err error) {
+func HandleCli(osArgs []string, Global globals.Globals) (err error) {
+	global = Global
 	var javaEnvOptions = getEnvArgs()
-	Log("Java environment variables: "+javaEnvOptions, FINE)
+	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
 
 	// add command-line args to those extracted from the enviroment (if any)
 	cliArgs := javaEnvOptions + " "
@@ -24,8 +27,8 @@ func HandleCli(osArgs []string) (err error) {
 		//		fmt.Printf("\t%q\n", v)
 		cliArgs += v + " "
 	}
-	Global.commandLine = strings.TrimSpace(cliArgs)
-	Log("Commandline: "+Global.commandLine, FINE)
+	Global.CommandLine = strings.TrimSpace(cliArgs)
+	log.Log("Commandline: "+Global.CommandLine, log.FINE)
 
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
@@ -34,7 +37,7 @@ func HandleCli(osArgs []string) (err error) {
 		//		fmt.Printf("\t%q\n", v)
 		args = append(args, v)
 	}
-	Global.args = args
+	Global.Args = args
 	showCopyright()
 
 	for i := 0; i < len(args); i++ {
@@ -48,16 +51,16 @@ func HandleCli(osArgs []string) (err error) {
 		// if the option is the name of the class to execute, note that then get
 		// all successive arguments and store them as app args in Global
 		if strings.HasSuffix(option, ".class") {
-			Global.startingClass = option
+			Global.StartingClass = option
 			for i = i + 1; i < len(args); i++ {
-				Global.appArgs = append(Global.appArgs, args[i])
+				Global.AppArgs = append(Global.AppArgs, args[i])
 			}
 			break
 		}
 
-		opt, ok := Global.options[option]
+		opt, ok := Global.Options[option]
 		if ok {
-			i, _ = opt.action(i, arg)
+			i, _ = opt.Action(i, arg)
 		} else {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
@@ -149,14 +152,14 @@ where options include:
 func showVersion(outStream *os.File) {
 	// get the build date of the presently executing Jacobin executable
 	exeDate := ""
-	file, err := os.Stat(Global.jacobinName)
+	file, err := os.Stat(global.JacobinName)
 	if err == nil {
 		date := file.ModTime()
 		exeDate = fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
 	}
 
 	ver := fmt.Sprintf(
-		"Jacobin VM v. %s (Java 11.0.10) %s\n64-bit %s VM", Global.version, exeDate, Global.vmModel)
+		"Jacobin VM v. %s (Java 11.0.10) %s\n64-bit %s VM", global.Version, exeDate, global.VmModel)
 	fmt.Fprintln(outStream, ver)
 }
 
@@ -164,11 +167,11 @@ func showVersion(outStream *os.File) {
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
 func showCopyright() {
-	if !strings.Contains(Global.commandLine, "-showversion") &&
-		!strings.Contains(Global.commandLine, "--show-version") &&
-		!strings.Contains(Global.commandLine, "-version") &&
-		!strings.Contains(Global.commandLine, "--version") {
-		fmt.Println("Jacobin VM v. " + Global.version +
+	if !strings.Contains(global.CommandLine, "-showversion") &&
+		!strings.Contains(global.CommandLine, "--show-version") &&
+		!strings.Contains(global.CommandLine, "-version") &&
+		!strings.Contains(global.CommandLine, "--version") {
+		fmt.Println("Jacobin VM v. " + global.Version +
 			", © 2021 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
 	}
 }

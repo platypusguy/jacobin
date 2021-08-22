@@ -7,73 +7,75 @@ package main
 
 import (
 	"io/ioutil"
+	"jacobin/globals"
+	"jacobin/log"
 	"os"
 	"strings"
 	"testing"
 )
 
-func TestSetLogLevelTooLow(t *testing.T) {
-	Global = initGlobals("test")
-	err := SetLogLevel(0)
+func TestGlobalSetLogLevelTooLow(t *testing.T) {
+	globals.InitGlobals("test")
+	err := log.SetLogLevel(0)
 	if err == nil {
 		t.Error("setting logging level to 0 did not generate an error")
 	}
 }
 
-func TestSetLogLevelTooHigh(t *testing.T) {
-	Global = initGlobals("test")
-	err := SetLogLevel(99)
+func TestGlobalSetLogLevelTooHigh(t *testing.T) {
+	globals.InitGlobals("test")
+	err := log.SetLogLevel(99)
 	if err == nil {
 		t.Error("setting logging level to 99 did not generate an error")
 	}
 }
 
-// you cannot set logging level to SEVERE (which would hide warnings), so
+// you cannot set logging level to log.SEVERE (which would hide log.WARNINGs), so
 // attempting to do so should generate an error
-func TestSetLogLevelToSevere(t *testing.T) {
-	Global = initGlobals("test")
-	err := SetLogLevel(SEVERE)
+func TestlogSetLogLevelTologSevere(t *testing.T) {
+	globals.InitGlobals("test")
+	err := log.SetLogLevel(log.SEVERE)
 	if err == nil {
-		t.Error("setting logging level to SEVERE did not generate an error")
+		t.Error("setting logging level to log.SEVERE did not generate an error")
 	}
 }
 
 func TestSettingLogLevels(t *testing.T) {
-	Global = initGlobals("test") // this sets the LogLevel to WARNING (the default value)
-	err := SetLogLevel(CLASS)
-	if err != nil || (Global.logLevel != CLASS) {
+	globals.InitGlobals("test") // this sets the LogLevel to log.WARNING (the default value)
+	err := log.SetLogLevel(log.CLASS)
+	if err != nil || (log.LogLevel != log.CLASS) {
 		t.Error("setting logging level to CLASS did not work correctly")
 	}
-	err = SetLogLevel(FINE)
-	if err != nil || (Global.logLevel != FINE) {
+	err = log.SetLogLevel(log.FINE)
+	if err != nil || (log.LogLevel != log.FINE) {
 		t.Error("setting logging level to FINE did not work correctly")
 	}
 
-	err = SetLogLevel(FINEST)
-	if err != nil || (Global.logLevel != FINEST) {
+	err = log.SetLogLevel(log.FINEST)
+	if err != nil || (log.LogLevel != log.FINEST) {
 		t.Error("setting logging level to FINEST did not work correctly")
 	}
 }
 
 func TestEmptyLogMessage(t *testing.T) {
-	Global = initGlobals("test")
-	SetLogLevel(WARNING)
-	err := Log("", SEVERE)
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.WARNING)
+	err := log.Log("", log.SEVERE)
 	if err == nil {
 		t.Error("trying to log an empty message did not generate an error")
 	}
 }
 
 func TestValidLogMessageFineLevel(t *testing.T) {
-	Global = initGlobals("test")
-	SetLogLevel(FINE)
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.FINE)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Log("Test message (FINE)", FINE)
+	log.Log("Test message (FINE)", log.FINE)
 
 	// reset stderr to what it was before
 	w.Close()
@@ -88,16 +90,16 @@ func TestValidLogMessageFineLevel(t *testing.T) {
 	}
 }
 
-func TestValidLogMessageWarningLevel(t *testing.T) {
-	Global = initGlobals("test")
-	SetLogLevel(WARNING)
+func TestValidLogMessagelogWarningLevel(t *testing.T) {
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Log("Test message (WARNING)", WARNING)
+	log.Log("Test message (log.WARNING)", log.WARNING)
 
 	// reset stderr to what it was before
 	w.Close()
@@ -106,22 +108,22 @@ func TestValidLogMessageWarningLevel(t *testing.T) {
 
 	msg := string(out[:])
 
-	if !strings.Contains(msg, "Test message (WARNING)") ||
-		strings.HasPrefix(msg, "[") { // if the global log level is warning, no elapsed time should be logged
-		t.Error("valid WARNING logging message was not logged properly")
+	if !strings.Contains(msg, "Test message (log.WARNING)") ||
+		strings.HasPrefix(msg, "[") { // if the global log level is log.WARNING, no elapsed time should be logged
+		t.Error("valid log.WARNING logging message was not logged properly")
 	}
 }
 
 func TestLoggingMessageAtInvalidLoggingLevel(t *testing.T) {
-	Global = initGlobals("test")
-	SetLogLevel(WARNING)
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	err := Log("Test message (WARNING)", 0)
+	err := log.Log("Test message (log.WARNING)", 0)
 
 	// reset stderr to what it was before
 	w.Close()

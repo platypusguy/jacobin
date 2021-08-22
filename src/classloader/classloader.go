@@ -4,10 +4,11 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package classloader
 
 import (
 	"fmt"
+	"jacobin/log"
 	"os"
 )
 
@@ -15,14 +16,15 @@ import (
 // and moved to an execution role. Most of the comments and code presuppose some
 // familiarity with the role of classloaders. More information can be found at:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-5.html#jvms-5.3
-type classloader struct {
-	name    string
-	parent  string
-	classes map[string]loadedClass
+type Classloader struct {
+	Name    string
+	Parent  string
+	Classes map[string]Klass
 }
 
-type loadedClass struct {
-}
+var AppCL Classloader
+var BootstrapCL Classloader
+var ExtensionCL Classloader
 
 // first canonicalizes the filename, checks whether the class is already loaded,
 // and if not, then parses the class and loads it.
@@ -32,22 +34,35 @@ type loadedClass struct {
 // 3 TODO: determine which classloader should load the class, then
 // 4 TODO: have *it* parse and load the class.
 */
-func (cl classloader) loadClassFromFile(filename string) (loadedClass, error) {
+func (cl Classloader) LoadClassFromFile(filename string) (Klass, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
-		Log("Could not read file: "+filename+". Exiting.", SEVERE)
-		return loadedClass{}, fmt.Errorf("file I/O error")
+		log.Log("Could not read file: "+filename+". Exiting.", log.SEVERE)
+		return Klass{}, fmt.Errorf("file I/O error")
+	} else {
+		log.Log(filename+" read", log.FINE)
 	}
 
-	loadedKlass, err := cl.parseClass(rawBytes)
+	parsedClass, err := Parse(rawBytes)
 	if err != nil {
-		Log("error parsing "+filename+". Exiting.", SEVERE)
-		return loadedClass{}, fmt.Errorf("parsing error")
+		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
+		return Klass{}, fmt.Errorf("parsing error")
 	} else {
-		return loadedKlass, nil
+		return parsedClass, nil
 	}
 }
 
-func (cl classloader) parseClass(rawBytes []byte) (loadedClass, error) {
-	return loadedClass{}, nil
+func Init() error {
+	BootstrapCL.Name = "bootstrap"
+	BootstrapCL.Parent = ""
+	BootstrapCL.Classes = make(map[string]Klass)
+
+	ExtensionCL.Name = "extension"
+	ExtensionCL.Parent = "bootstrap"
+	ExtensionCL.Classes = make(map[string]Klass)
+
+	AppCL.Name = "app"
+	AppCL.Parent = "system"
+	AppCL.Classes = make(map[string]Klass)
+	return nil
 }

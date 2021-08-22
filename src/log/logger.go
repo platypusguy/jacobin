@@ -1,9 +1,10 @@
-/* Jacobin VM -- A Java virtual machine
- * (c) Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package log
 
 // The principal logging function. Note it currently logs to stderr.
 // At some future point, might allow the user to specify where logging should go.
@@ -25,6 +26,14 @@ const (
 	FINEST
 )
 
+var LogLevel int
+var StartTime time.Time
+
+func Init() {
+	LogLevel = WARNING
+	StartTime = time.Now()
+}
+
 // Log is the principal logging function. Note that it currently
 // logs to stderr. At some future point, this might become an option.
 func Log(msg string, level int) (err error) {
@@ -38,13 +47,13 @@ func Log(msg string, level int) (err error) {
 
 	// if the message is for a finer logging level than currently being logged,
 	// simply return
-	if level > Global.logLevel {
+	if level > LogLevel {
 		return
 	}
 
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
-	duration := time.Since(Global.startTime)
+	duration := time.Since(StartTime)
 	var millis = duration.Milliseconds()
 
 	// lock the write to the logging stream to prevent overwrite issues
@@ -66,7 +75,7 @@ func SetLogLevel(level int) (err error) {
 	if level <= SEVERE || level > FINEST {
 		return errors.New("invalid logging level")
 	} else {
-		Global.logLevel = level
+		LogLevel = level
 		return
 	}
 }
