@@ -1,22 +1,31 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package log
 
 import (
 	"io/ioutil"
 	"jacobin/globals"
-	"jacobin/log"
 	"os"
 	"strings"
 	"testing"
 )
 
+func TestLoggerInit(t *testing.T) {
+	globals.InitGlobals("test")
+	Init()
+
+	if LogLevel != WARNING {
+		t.Error("log init() did not set LogLevel to WARNING")
+	}
+}
+
 func TestGlobalSetLogLevelTooLow(t *testing.T) {
 	globals.InitGlobals("test")
-	err := log.SetLogLevel(0)
+	err := SetLogLevel(0)
 	if err == nil {
 		t.Error("setting logging level to 0 did not generate an error")
 	}
@@ -24,7 +33,7 @@ func TestGlobalSetLogLevelTooLow(t *testing.T) {
 
 func TestGlobalSetLogLevelTooHigh(t *testing.T) {
 	globals.InitGlobals("test")
-	err := log.SetLogLevel(99)
+	err := SetLogLevel(99)
 	if err == nil {
 		t.Error("setting logging level to 99 did not generate an error")
 	}
@@ -34,7 +43,7 @@ func TestGlobalSetLogLevelTooHigh(t *testing.T) {
 // attempting to do so should generate an error
 func TestlogSetLogLevelTologSevere(t *testing.T) {
 	globals.InitGlobals("test")
-	err := log.SetLogLevel(log.SEVERE)
+	err := SetLogLevel(SEVERE)
 	if err == nil {
 		t.Error("setting logging level to log.SEVERE did not generate an error")
 	}
@@ -42,25 +51,25 @@ func TestlogSetLogLevelTologSevere(t *testing.T) {
 
 func TestSettingLogLevels(t *testing.T) {
 	globals.InitGlobals("test") // this sets the LogLevel to log.WARNING (the default value)
-	err := log.SetLogLevel(log.CLASS)
-	if err != nil || (log.LogLevel != log.CLASS) {
+	err := SetLogLevel(CLASS)
+	if err != nil || (LogLevel != CLASS) {
 		t.Error("setting logging level to CLASS did not work correctly")
 	}
-	err = log.SetLogLevel(log.FINE)
-	if err != nil || (log.LogLevel != log.FINE) {
+	err = SetLogLevel(FINE)
+	if err != nil || (LogLevel != FINE) {
 		t.Error("setting logging level to FINE did not work correctly")
 	}
 
-	err = log.SetLogLevel(log.FINEST)
-	if err != nil || (log.LogLevel != log.FINEST) {
+	err = SetLogLevel(FINEST)
+	if err != nil || (LogLevel != FINEST) {
 		t.Error("setting logging level to FINEST did not work correctly")
 	}
 }
 
 func TestEmptyLogMessage(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
-	err := log.Log("", log.SEVERE)
+	SetLogLevel(WARNING)
+	err := Log("", SEVERE)
 	if err == nil {
 		t.Error("trying to log an empty message did not generate an error")
 	}
@@ -68,14 +77,14 @@ func TestEmptyLogMessage(t *testing.T) {
 
 func TestValidLogMessageFineLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.FINE)
+	SetLogLevel(FINE)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	log.Log("Test message (FINE)", log.FINE)
+	Log("Test message (FINE)", FINE)
 
 	// reset stderr to what it was before
 	w.Close()
@@ -92,14 +101,14 @@ func TestValidLogMessageFineLevel(t *testing.T) {
 
 func TestValidLogMessagelogWarningLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
+	SetLogLevel(WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	log.Log("Test message (log.WARNING)", log.WARNING)
+	Log("Test message (log.WARNING)", WARNING)
 
 	// reset stderr to what it was before
 	w.Close()
@@ -116,14 +125,14 @@ func TestValidLogMessagelogWarningLevel(t *testing.T) {
 
 func TestLoggingMessageAtInvalidLoggingLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
+	SetLogLevel(WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	err := log.Log("Test message (log.WARNING)", 0)
+	err := Log("Test message (log.WARNING)", 0)
 
 	// reset stderr to what it was before
 	w.Close()
