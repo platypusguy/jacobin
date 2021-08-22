@@ -31,10 +31,12 @@ type Globals struct {
 	VerifyLevel int
 }
 
+var global Globals
+
 // initialize the global values that are known at start-up
 // listed in alpha order after the first two items
 func InitGlobals(progName string) Globals {
-	global := Globals{
+	global = Globals{
 		Version:       "0.1.0",
 		VmModel:       "server",
 		ExitNow:       false,
@@ -46,11 +48,15 @@ func InitGlobals(progName string) Globals {
 	return global
 }
 
+func GetInstance() Globals {
+	return global
+}
+
 // the value portion of the globals.ptions table. This is described in more detail in
 // option_table_loader.go introductory comments
 type Option struct {
 	Supported bool
 	Set       bool
 	ArgStyle  int16
-	Action    func(position int, name string) (int, error)
+	Action    func(position int, name string, gl *Globals) (int, error)
 }

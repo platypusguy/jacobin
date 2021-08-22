@@ -62,7 +62,7 @@ func TestHandleUsageMessage(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "-help"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	// restore stderr to what it was before
 	w.Close()
@@ -99,7 +99,7 @@ func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	showHelpStdoutAndExit(0, "--help")
+	showHelpStdoutAndExit(0, "--help", &Global)
 
 	wout.Close()
 	os.Stdout = normalStdout
@@ -128,7 +128,7 @@ func TestShowVersionMessage(t *testing.T) {
 	LoadOptionsTable(Global)
 	args := []string{"jacobin", "-showversion", "main.clas"}
 
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	// restore stderr to what it was before
 	w.Close()
@@ -153,7 +153,7 @@ func TestShow__VersionUsingOptionTable(t *testing.T) {
 	r, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	versionStdoutThenExit(0, "--version")
+	versionStdoutThenExit(0, "--version", &Global)
 
 	wout.Close()
 	os.Stdout = normalStdout
@@ -186,7 +186,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "-verbose:info", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	// reset stdout and stderr to what they were before redirection
 	w.Close()
@@ -212,7 +212,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	LoadOptionsTable(Global)
 	args = []string{"jacobin", "-verbose:fine", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	wout.Close()
@@ -237,7 +237,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	LoadOptionsTable(Global)
 	args = []string{"jacobin", "-verbose:finest", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	wout.Close()
@@ -262,7 +262,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	LoadOptionsTable(Global)
 	args = []string{"jacobin", "-verbose:class", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	wout.Close()
@@ -288,7 +288,7 @@ func TestInvalidLoggingLevel(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	_, err := verbosityLevel(0, "severe")
+	_, err := verbosityLevel(0, "severe", &Global)
 
 	w.Close()
 	wout.Close()
@@ -314,7 +314,7 @@ func TestSpecifyClientVM(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "-client"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	// restore stdout to what it was before
 	w.Close()
@@ -342,7 +342,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "--dry-run", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	// restore stderr to what it was before
 	w.Close()
@@ -391,7 +391,7 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "main.class"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	os.Stdout = normalStdout
@@ -417,7 +417,7 @@ func TestFoundClassFileWithArgs(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "main.class", "appArg1"}
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	os.Stdout = normalStdout
@@ -447,7 +447,7 @@ func TestGetJarFilename(t *testing.T) {
 
 	args := []string{"jacobin", "-jar", "pinkle.jar", "appArg1"}
 
-	HandleCli(args, Global)
+	HandleCli(args, &Global)
 
 	w.Close()
 	wout.Close()
@@ -469,7 +469,7 @@ func TestMissingJARfilename(t *testing.T) {
 	LoadOptionsTable(Global)
 	Global.Args = []string{"jacobin", "-jar"}
 
-	_, err := getJarFilename(1, "-jar")
+	_, err := getJarFilename(1, "-jar", &Global)
 	if err != os.ErrInvalid {
 		t.Error("Missing JAR filename after -jar did not trigger the right error")
 	}

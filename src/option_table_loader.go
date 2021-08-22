@@ -35,10 +35,9 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
-var gl globals.Globals
+//var gl globals.Globals
 
 func LoadOptionsTable(Global globals.Globals) {
-	gl = Global
 
 	client := globals.Option{true, false, 0, clientVM}
 	Global.Options["-client"] = client
@@ -86,14 +85,14 @@ func LoadOptionsTable(Global globals.Globals) {
 
 // client VM function, simply changes the wording of the version
 // info. (This is the same behavior as the OpenJDK JVM.)
-func clientVM(pos int, name string) (int, error) {
+func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 	gl.VmModel = "client"
 	return pos, nil
 }
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
 // are app args, which are duly added to Global.appArgs
-func getJarFilename(pos int, name string) (int, error) {
+func getJarFilename(pos int, name string, gl *globals.Globals) (int, error) {
 	if len(gl.Args) > pos+1 {
 		gl.StartingJar = gl.Args[pos+1]
 		log.Log("Starting with JAR file: "+gl.StartingJar, log.FINE)
@@ -107,43 +106,43 @@ func getJarFilename(pos int, name string) (int, error) {
 }
 
 // generic notification function that an option is not supported
-func notSupported(pos int, arg string) (int, error) {
+func notSupported(pos int, arg string, gl *globals.Globals) (int, error) {
 	name := gl.Args[pos]
 	fmt.Fprintf(os.Stderr, "%s is not currently supported in Jacobin\n", name)
 	return pos, nil
 }
 
-func showHelpStderrAndExit(pos int, name string) (int, error) {
+func showHelpStderrAndExit(pos int, name string, gl *globals.Globals) (int, error) {
 	showUsage(os.Stderr)
 	gl.ExitNow = true
 	return pos, nil
 }
 
-func showHelpStdoutAndExit(pos int, name string) (int, error) {
+func showHelpStdoutAndExit(pos int, name string, gl *globals.Globals) (int, error) {
 	showUsage(os.Stdout)
 	gl.ExitNow = true
 	return pos, nil
 }
 
-func showVersionStderr(pos int, name string) (int, error) {
+func showVersionStderr(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stderr)
 	return pos, nil
 }
 
-func showVersionStdout(pos int, name string) (int, error) {
+func showVersionStdout(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stdout)
 	return pos, nil
 }
 
 // note that the -version option prints the version then exits the VM
-func versionStderrThenExit(pos int, name string) (int, error) {
+func versionStderrThenExit(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stderr)
 	gl.ExitNow = true
 	return pos, nil
 }
 
 // note that the --version option prints the version info then exits the VM
-func versionStdoutThenExit(pos int, name string) (int, error) {
+func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stdout)
 	gl.ExitNow = true
 	return pos, nil
@@ -152,7 +151,7 @@ func versionStdoutThenExit(pos int, name string) (int, error) {
 // set verbosity level. Note Jacobin starts up at WARNING level, so there is no
 // need to set it to that level. You cannot set the level to coarser than WARNING
 // which is why there is no way to set the verbosity to SEVERE only.
-func verbosityLevel(pos int, argValue string) (int, error) {
+func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) {
 	switch argValue {
 	case "class":
 		log.LogLevel = log.CLASS

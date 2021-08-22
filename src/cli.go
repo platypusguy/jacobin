@@ -14,10 +14,11 @@ import (
 	"strings"
 )
 
+var global = globals.GetInstance()
+
 // handle all the args from the command line, including those from the enviroment
 // variables that the JVM recognizes and prepends to the command-line options
-func HandleCli(osArgs []string, Global globals.Globals) (err error) {
-	global = Global
+func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
 
@@ -60,7 +61,7 @@ func HandleCli(osArgs []string, Global globals.Globals) (err error) {
 
 		opt, ok := Global.Options[option]
 		if ok {
-			i, _ = opt.Action(i, arg)
+			i, _ = opt.Action(i, arg, Global)
 		} else {
 			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
@@ -167,6 +168,7 @@ func showVersion(outStream *os.File) {
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
 func showCopyright() {
+	global = globals.GetInstance()
 	if !strings.Contains(global.CommandLine, "-showversion") &&
 		!strings.Contains(global.CommandLine, "--show-version") &&
 		!strings.Contains(global.CommandLine, "-version") &&

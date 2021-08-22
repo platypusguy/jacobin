@@ -27,7 +27,7 @@ func main() {
 
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(Global)
-	err := HandleCli(os.Args, Global)
+	err := HandleCli(os.Args, &Global)
 	if err != nil {
 		shutdown(true)
 	}
