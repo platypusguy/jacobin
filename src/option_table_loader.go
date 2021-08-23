@@ -35,8 +35,6 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
-//var gl globals.Globals
-
 func LoadOptionsTable(Global globals.Globals) {
 
 	client := globals.Option{true, false, 0, clientVM}
