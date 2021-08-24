@@ -6,11 +6,6 @@
 
 package classloader
 
-import (
-	"errors"
-	"jacobin/log"
-)
-
 type Klass struct {
 }
 
@@ -19,13 +14,25 @@ type Klass struct {
 // receives the rawBytes of the class that were previously read in
 //
 // ClassFormatError - if the parser finds anything unexpected
-func Parse(rawBytes []byte) (Klass, error) {
-	var parsedClass Klass
+func parse(rawBytes []byte) (parsedClass, error) {
+	var klass = parsedClass{}
 
-	if len(rawBytes) < 10 {
-		log.Log("Classfile format error.", log.SEVERE)
-		return Klass{}, errors.New("Class format error")
+	err := parseMagicNumber(rawBytes)
+	if err != nil {
+		// log.Log("Classfile format error: "+err.Error(), log.SEVERE);
+		return klass, err
 	}
+	return klass, nil
+}
 
-	return parsedClass, nil
+// all bytecode files start with 0xCAFEBABE ( it was the 90s!)
+// this checks for that.
+func parseMagicNumber(bytes []byte) error {
+	if len(bytes) < 4 {
+		return cfe("invalid magic number")
+	} else if (bytes[0] != 0xCA) || (bytes[1] != 0xFE) || (bytes[2] != 0xBA) || (bytes[3] != 0xBE) {
+		return cfe("invalid magic number")
+	} else {
+		return nil
+	}
 }
