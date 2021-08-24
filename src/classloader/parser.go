@@ -6,8 +6,10 @@
 
 package classloader
 
-type Klass struct {
-}
+import (
+	"jacobin/globals"
+	"strconv"
+)
 
 // reads in a class file, parses it, and puts the values into the fields of the
 // class that will be loaded into the classloader. Some verification performed
@@ -15,14 +17,19 @@ type Klass struct {
 //
 // ClassFormatError - if the parser finds anything unexpected
 func parse(rawBytes []byte) (parsedClass, error) {
-	var klass = parsedClass{}
+	var pClass = parsedClass{}
 
 	err := parseMagicNumber(rawBytes)
 	if err != nil {
-		// log.Log("Classfile format error: "+err.Error(), log.SEVERE);
-		return klass, err
+		return pClass, err
 	}
-	return klass, nil
+
+	err = parseJavaVersionNumber(rawBytes, pClass)
+	if err != nil {
+		return pClass, nil
+	}
+
+	return pClass, nil
 }
 
 // all bytecode files start with 0xCAFEBABE ( it was the 90s!)
@@ -35,4 +42,21 @@ func parseMagicNumber(bytes []byte) error {
 	} else {
 		return nil
 	}
+}
+
+func parseJavaVersionNumber(bytes []byte, klass parsedClass) error {
+	version, err := intFrom2Bytes(bytes, 6)
+	if err != nil {
+		return err
+	}
+
+	if version > globals.GetInstance().MaxJavaVersionRaw {
+		errMsg := "Jacobin supports only Java versions through Java " +
+			strconv.Itoa(globals.GetInstance().MaxJavaVersion)
+		return cfe(errMsg)
+	}
+
+	klass.javaVersion = version
+	println("Java version: " + strconv.Itoa(version))
+	return nil
 }

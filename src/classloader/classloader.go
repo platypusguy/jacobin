@@ -29,6 +29,7 @@ var ExtensionCL Classloader
 
 // the parsed class
 type parsedClass struct {
+	javaVersion int
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
@@ -84,26 +85,3 @@ func Init() error {
 func insert(class parsedClass) error {
 	return nil //TODO: fill out after finishing parser
 }
-
-// // the main parsing operation on the classfile. Drives the numberous functions that follow.
-// func parse(rawBytes []byte) (parsedClass, error) {
-// 	var klass = parsedClass{}
-// 	err := parseMagicNumber(rawBytes)
-// 	if err != nil {
-// 		return klass, err
-// 	}
-//
-// 	return klass, nil
-// }
-//
-// // all bytecode files start with 0xCAFEBABE ( it was the 90s!)
-// // this checks for that.
-// func parseMagicNumber(bytes []byte) error {
-// 	if len(bytes) < 4 {
-// 		return cfe("invalid magic number")
-// 	} else if (bytes[0] != 0xCA) || (bytes[1] != 0xFE) || (bytes[2] != 0xBA) || (bytes[3] != 0xBE) {
-// 		return cfe("invalid magic number")
-// 	} else {
-// 		return nil
-// 	}
-// }
