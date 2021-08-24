@@ -28,7 +28,9 @@ type Globals struct {
 	Options       map[string]Option
 
 	// ---- classloading items ----
-	VerifyLevel int
+	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
+	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
+	VerifyLevel       int
 }
 
 var global Globals
@@ -37,13 +39,15 @@ var global Globals
 // listed in alpha order after the first two items
 func InitGlobals(progName string) Globals {
 	global = Globals{
-		Version:       "0.1.0",
-		VmModel:       "server",
-		ExitNow:       false,
-		JacobinName:   progName,
-		Options:       make(map[string]Option),
-		StartingClass: "",
-		StartingJar:   "",
+		Version:           "0.1.0",
+		VmModel:           "server",
+		ExitNow:           false,
+		JacobinName:       progName,
+		Options:           make(map[string]Option),
+		StartingClass:     "",
+		StartingJar:       "",
+		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
 	}
 	return global
 }
