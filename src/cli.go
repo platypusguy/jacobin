@@ -42,8 +42,14 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	showCopyright()
 
 	for i := 0; i < len(args); i++ {
-		// break the option into the option and any embedded arg values
-		option, arg, err := getOptionRootAndArgs(args[i])
+		var option, arg string
+		// if it's a JVM option (so, it begins with a hyphen)
+		// break the option into the option and any embedded arg values, if any
+		if strings.HasPrefix(args[i], "-") {
+			option, arg, err = getOptionRootAndArgs(args[i])
+		} else {
+			option = args[i]
+		}
 
 		if err != nil {
 			continue // skip the arg if there was a problem. (Might want to revisit this.)
