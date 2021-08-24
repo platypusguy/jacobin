@@ -407,6 +407,35 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 	}
 }
 
+// make sure that if a file path to the executable has an embedded :
+// (as it might under Windows), that it's not mistaken for an option
+// with an embedded argument (JACOBIN-2)
+func TestClassFileColonIFilePath(t *testing.T) {
+	Global := globals.InitGlobals("test")
+	LoadOptionsTable(Global)
+
+	// redirecting stdout to avoid clutter in the test results
+	normalStdout := os.Stdout
+	_, w, _ := os.Pipe()
+	os.Stdout = w
+
+	args := []string{"jacobin", "d:main.class"}
+	HandleCli(args, &Global)
+
+	w.Close()
+	os.Stdout = normalStdout
+
+	if Global.StartingClass != "d:main.class" {
+		t.Error("d:main.class not identified as starting class. Got: " +
+			Global.StartingClass)
+	}
+
+	if len(Global.AppArgs) != 0 {
+		t.Error("app arg to main.class should be empty, but got: " +
+			Global.AppArgs[0])
+	}
+}
+
 func TestFoundClassFileWithArgs(t *testing.T) {
 	Global := globals.InitGlobals("test")
 	LoadOptionsTable(Global)
