@@ -17,6 +17,8 @@ import (
 //
 // ClassFormatError - if the parser finds anything unexpected
 func parse(rawBytes []byte) (parsedClass, error) {
+
+	// the parsed class as we'll give it to the classloader
 	var pClass = parsedClass{}
 
 	err := parseMagicNumber(rawBytes)
@@ -24,11 +26,12 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
-	err = parseJavaVersionNumber(rawBytes, pClass)
+	err = parseJavaVersionNumber(rawBytes, &pClass)
 	if err != nil {
-		return pClass, nil
+		return pClass, err
 	}
 
+	err = getConstantPoolCount(rawBytes, &pClass)
 	return pClass, nil
 }
 
@@ -44,7 +47,9 @@ func parseMagicNumber(bytes []byte) error {
 	}
 }
 
-func parseJavaVersionNumber(bytes []byte, klass parsedClass) error {
+// get the Java version number used in creating this class file. If it's higher than the
+// version Jacobin presently supports, report an error.
+func parseJavaVersionNumber(bytes []byte, klass *parsedClass) error {
 	version, err := intFrom2Bytes(bytes, 6)
 	if err != nil {
 		return err
@@ -59,4 +64,21 @@ func parseJavaVersionNumber(bytes []byte, klass parsedClass) error {
 	klass.javaVersion = version
 	println("Java version: " + strconv.Itoa(version))
 	return nil
+}
+
+// get the number of entries in the constant pool. This number will
+// be used later on to verify that the number of entries we fetch is
+// correct. Note that this number is technically 1 greater than the
+// number of actual entries, because the first entry in the constant
+// pool is an empty placeholder, rather than an actual entry.
+func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
+	cpEntryCount, err := intFrom2Bytes(bytes, 8)
+	if err != nil || cpEntryCount <= 2 {
+		return cfe("Invalid number of entries in constant pool: " +
+			strconv.Itoa(globals.GetInstance().MaxJavaVersion))
+	} else {
+		klass.cpCount = cpEntryCount
+		println("Number of CP entries: " + strconv.Itoa(cpEntryCount))
+		return nil
+	}
 }

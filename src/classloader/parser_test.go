@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -26,7 +27,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 	os.Stderr = w
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0xFF, 0xF0}
-	err := parseJavaVersionNumber(bytesToTest, parsedClass{})
+	err := parseJavaVersionNumber(bytesToTest, &parsedClass{})
 
 	// restore stderr to what it was before
 	w.Close()
@@ -49,8 +50,54 @@ func TestParseValidJavaVersion(t *testing.T) {
 	log.Init()
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30}
-	err := parseJavaVersionNumber(bytesToTest, parsedClass{})
+	err := parseJavaVersionNumber(bytesToTest, &parsedClass{})
 	if err != nil {
 		t.Error("valid Java version # generated an error in version # parser")
+	}
+}
+
+func TestConstantPoolCountValid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	pClass := parsedClass{}
+
+	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30, 0x00, 0x20}
+	err := getConstantPoolCount(bytesToTest, &pClass)
+	if err != nil {
+		t.Error("valid constant pool count generated an error in version # parser")
+	}
+
+	if pClass.cpCount != 32 {
+		t.Error("expected a pool count of 32, instead got: " +
+			strconv.Itoa(pClass.cpCount))
+	}
+}
+
+func TestConstantPoolCountInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30, 0x00, 0x01}
+	err := getConstantPoolCount(bytesToTest, &parsedClass{})
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if err == nil {
+		t.Error("Invalid constant pool entry count did not generate an error")
+	}
+
+	if !strings.Contains(msg, "Invalid number of entries in constant pool") {
+		t.Error("Did not get expected error msg for invalid number of entries in CP. Got: " + msg)
 	}
 }

@@ -30,6 +30,7 @@ var ExtensionCL Classloader
 // the parsed class
 type parsedClass struct {
 	javaVersion int
+	cpCount     int // count of constant pool entries
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
