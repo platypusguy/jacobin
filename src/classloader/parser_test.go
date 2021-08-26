@@ -16,6 +16,36 @@ import (
 	"testing"
 )
 
+// Magic number should be OxCAFEBABE in the first four bytes of the classfile
+func TestMagicNumber(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBA, 0x00, 0x00, 0xFF, 0xF0}
+	err := parseMagicNumber(bytesToTest)
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if err == nil {
+		t.Error("Invalid Java magic number did not generate an error")
+	}
+
+	if !strings.Contains(msg, "invalid magic number") {
+		t.Error("Did not get expected error msg for invalid magic number. Got: " + msg)
+	}
+}
+
 func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
