@@ -32,6 +32,15 @@ func parse(rawBytes []byte) (parsedClass, error) {
 	}
 
 	err = getConstantPoolCount(rawBytes, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
+	pos, err := parseConstantPool(rawBytes, &pClass)
+	if err != nil || pos < 10 {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
