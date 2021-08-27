@@ -44,7 +44,7 @@ type cpEntry struct {
 	posUdater
 }
 
-var cp []posUdater
+var cp = make([]posUdater, 10)
 
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	pos := 10 // position of the first byte of the constant pool
