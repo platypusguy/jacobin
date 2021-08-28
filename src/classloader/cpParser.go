@@ -36,49 +36,26 @@ type posUdater interface {
 	update(int) int
 }
 
-// each entry in the CP table consists of an identifying integer (see enums above)
-// and a structure that has varying fields and fulfills the posUdater interface.
-// all entries are defined at the end of this file
-type cpEntry struct {
-	cpType int
-	posUdater
-}
-
-var cp = make([]posUdater, 10)
+// the constant pool, which is an array of different record types. Each entry in the table
+// consists of an identifying integer (see enums above)
+// // and a structure that has varying fields and fulfills the posUdater interface.
+// // all entries are defined at the end of this file
+var cp []posUdater
 
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
+	cp = make([]posUdater, klass.cpCount)
 	pos := 10 // position of the first byte of the constant pool
 
-	// cpE := cpEntry{-1, dumbbell.updatePos(0) }
-	// cpDummyEntry := dummyEntry{-1,interface{cpEntry.update}}
-	cp[0] = cpEntry{cpType: -1}
-	cp[1] = dumbbell{i: -1}
+	cp[0] = dummyEntry{Invalid}
 	println(cp)
 
 	return pos, nil
 }
 
-type dumbbell struct {
+type dummyEntry struct {
 	i int
 }
 
-func (dumbbell) update(i int) int {
+func (dummyEntry) update(i int) int {
 	return 0
 }
-
-// d := dumbbell {i: -1, d.update: udpatePos, }
-
-// func (dumbbell) update( i int) int { return 0 }
-
-//
-// var dumdum posUdater
-func update(i int) int {
-	return 0
-}
-
-// type dummyEntry posUdater {
-//
-// }
-// func (dumbbell) update( i int ) int {
-// 	return 0
-// }
