@@ -6,6 +6,11 @@
 
 package classloader
 
+import (
+	"fmt"
+	"os"
+)
+
 // this file contains the parser for the constant pool and the verifier.
 // Refer to: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4-140
 
@@ -32,30 +37,62 @@ const (
 )
 
 // every CP entry must update the position in the classfile
-type posUdater interface {
-	update(int) int
+type cpTyper interface {
+	getType() int
 }
 
 // the constant pool, which is an array of different record types. Each entry in the table
 // consists of an identifying integer (see enums above)
-// // and a structure that has varying fields and fulfills the posUdater interface.
+// // and a structure that has varying fields and fulfills the cpTyper interface.
 // // all entries are defined at the end of this file
-var cp []posUdater
+var cp []cpTyper
 
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
-	cp = make([]posUdater, klass.cpCount)
-	pos := 10 // position of the first byte of the constant pool
+	cp = make([]cpTyper, klass.cpCount)
+	var i int
+	pos := 9 // position of the last byte before the constant pool
 
 	cp[0] = dummyEntry{Invalid}
-	println(cp)
+	for i = 1; i <= klass.cpCount-1; {
+		pos += 1
+		entryType := int(rawBytes[pos])
+		switch entryType {
+		case Method:
+			{
+				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+				mre := methodRefEntry{Method, classIndex, nameAndTypeIndex}
+				cp[i] = mre
+				pos += 4
+				i += 1
+			}
+		default:
+			klass.cpCount = i // just to get it over with for the moment
+		}
+	}
 
+	for j := 0; j < i; j += 1 {
+		fmt.Fprintf(os.Stderr, "CP entry: %d, type %d\n", j, cp[j].getType())
+		//TODO: see if I can retrieve an entry from cp and read its individual fields
+	}
 	return pos, nil
 }
 
-type dummyEntry struct {
-	i int
+// ==== the various entry types in the constant pool (listed in order of the enums above) ====
+type dummyEntry struct { // type -1 (invalid or dummy entry)
+	cpeType int
 }
 
-func (dummyEntry) update(i int) int {
-	return 0
+func (dummyEntry) getType() int {
+	return -1
+}
+
+type methodRefEntry struct { // type: 10 (method reference)
+	cpeType           int
+	nameIndex         int
+	classAndTypeIndex int
+}
+
+func (methodRefEntry) getType() int {
+	return 10
 }
