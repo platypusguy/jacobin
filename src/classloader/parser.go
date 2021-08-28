@@ -84,7 +84,7 @@ func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
 	cpEntryCount, err := intFrom2Bytes(bytes, 8)
 	if err != nil || cpEntryCount <= 2 {
 		return cfe("Invalid number of entries in constant pool: " +
-			strconv.Itoa(globals.GetInstance().MaxJavaVersion))
+			strconv.Itoa(cpEntryCount))
 	} else {
 		klass.cpCount = cpEntryCount
 		println("Number of CP entries: " + strconv.Itoa(cpEntryCount))
