@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"fmt"
+	"jacobin/log"
 	"os"
 )
 
@@ -45,18 +46,23 @@ type cpEntry struct {
 	slot      int
 }
 
+// the constant pool into which we place all the entries that point to the data
+// structures of parsed data that we've read
 var cpool []cpEntry
 
+var methodRefs []methodRefEntry
+
+// parse the CP entries in the class file and put references to their data in cpool
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	cpool = make([]cpEntry, klass.cpCount)
-	var i int
 	pos := 9 // position of the last byte before the constant pool
 
-	dummyEntry := cpEntry{Invalid, 0}
-	cpool[0] = dummyEntry
+	// the first entry in the CP is a dummy entry, so that all references are 1-based
+	cpool[0] = cpEntry{Invalid, 0}
 
-	type10 := []methodRefEntry{}
+	methodRefs = []methodRefEntry{}
 
+	i := 0
 	for i = 1; i <= klass.cpCount-1; {
 		pos += 1
 		entryType := int(rawBytes[pos])
@@ -66,8 +72,8 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
 				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
 				mre := methodRefEntry{classIndex, nameAndTypeIndex}
-				type10 = append(type10, mre)
-				cpool[i] = cpEntry{10, len(type10) - 1}
+				methodRefs = append(methodRefs, mre)
+				cpool[i] = cpEntry{10, len(methodRefs) - 1}
 				pos += 4
 				i += 1
 			}
@@ -76,18 +82,25 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		}
 	}
 
-	for j := 0; j < i; j += 1 {
+	if log.LogLevel == log.FINEST {
+		printCP(i)
+	}
+
+	return pos, nil
+}
+
+// prints the entries in the CP. Accepts the number of entries for the nonce.
+func printCP(entries int) {
+	for j := 0; j < entries; j += 1 {
 		entry := cpool[j]
 		fmt.Fprintf(os.Stderr, "CP entry: %d, type %d\n", j, entry.entryType)
 		if entry.entryType == Method {
 			k := entry.slot
 			fmt.Fprintf(os.Stderr, "\t\tname index: %d, classAndType index: %d\n",
-				type10[k].nameIndex, type10[k].classAndTypeIndex)
+				methodRefs[k].nameIndex, methodRefs[k].classAndTypeIndex)
 		}
 		//TODO: rename the fields so that everything is clear. Then also print out the CP table of entries
 	}
-
-	return pos, nil
 }
 
 // ==== the various entry types in the constant pool (listed in order of the enums above) ====
