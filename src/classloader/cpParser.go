@@ -25,8 +25,8 @@ const (
 	DoubleConst   = 6
 	ClassRef      = 7
 	String        = 8
-	Field         = 9
-	Method        = 10
+	FieldRef      = 9
+	MethodRef     = 10
 	Interface     = 11
 	NameAndType   = 12
 	MethodHandle  = 15
@@ -51,6 +51,7 @@ type cpEntry struct {
 var cpool []cpEntry
 
 var methodRefs []methodRefEntry
+var fieldRefs []fieldRefEntry
 
 // parse the CP entries in the class file and put references to their data in cpool
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
@@ -60,6 +61,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	// the first entry in the CP is a dummy entry, so that all references are 1-based
 	cpool[0] = cpEntry{Invalid, 0}
 
+	fieldRefs = []fieldRefEntry{}
 	methodRefs = []methodRefEntry{}
 
 	i := 0
@@ -67,7 +69,17 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		pos += 1
 		entryType := int(rawBytes[pos])
 		switch entryType {
-		case Method:
+		case FieldRef:
+			{
+				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+				fre := fieldRefEntry{classIndex, nameAndTypeIndex}
+				fieldRefs = append(fieldRefs, fre)
+				cpool[i] = cpEntry{9, len(fieldRefs) - 1}
+				pos += 4
+				i += 1
+			}
+		case MethodRef:
 			{
 				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
 				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
@@ -91,15 +103,24 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 
 // prints the entries in the CP. Accepts the number of entries for the nonce.
 func printCP(entries int) {
-	for j := 0; j < entries; j += 1 {
+	for j := 0; j < entries; j++ {
 		entry := cpool[j]
-		fmt.Fprintf(os.Stderr, "CP entry: %d, type %d\n", j, entry.entryType)
-		if entry.entryType == Method {
-			k := entry.slot
-			fmt.Fprintf(os.Stderr, "\t\tname index: %d, classAndType index: %d\n",
-				methodRefs[k].nameIndex, methodRefs[k].classAndTypeIndex)
+		fmt.Fprintf(os.Stderr, "CP entry: %02d, type %02d ", j, entry.entryType)
+		if entry.entryType == Invalid {
+			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
 		}
-		//TODO: rename the fields so that everything is clear. Then also print out the CP table of entries
+		if entry.entryType == FieldRef {
+			fmt.Fprintf(os.Stderr, "(field ref)      ")
+			k := entry.slot
+			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
+				fieldRefs[k].classIndex, fieldRefs[k].nameAndTypeIndex)
+		}
+		if entry.entryType == MethodRef {
+			fmt.Fprintf(os.Stderr, "(method ref)     ")
+			k := entry.slot
+			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
+				methodRefs[k].classIndex, methodRefs[k].nameAndTypeIndex)
+		}
 	}
 }
 
@@ -107,7 +128,12 @@ func printCP(entries int) {
 type dummyEntry struct { // type -1 (invalid or dummy entry)
 }
 
+type fieldRefEntry struct { // type: 09 (field reference)
+	classIndex       int
+	nameAndTypeIndex int
+}
+
 type methodRefEntry struct { // type: 10 (method reference)
-	nameIndex         int
-	classAndTypeIndex int
+	classIndex       int
+	nameAndTypeIndex int
 }
