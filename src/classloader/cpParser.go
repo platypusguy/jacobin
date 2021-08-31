@@ -108,6 +108,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 
 // prints the entries in the CP. Accepts the number of entries for the nonce.
 func printCP(entries int) {
+	fmt.Fprintf(os.Stderr, "Number of CP entries parsed: %02d\n", len(cpool))
 	for j := 0; j < entries; j++ {
 		entry := cpool[j]
 		fmt.Fprintf(os.Stderr, "CP entry: %02d, type %02d ", j, entry.entryType)
@@ -129,7 +130,7 @@ func printCP(entries int) {
 			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
 				methodRefs[k].classIndex, methodRefs[k].nameAndTypeIndex)
 		default:
-			fmt.Fprintf(os.Stderr, "invalid entry")
+			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}
 	}
 }
