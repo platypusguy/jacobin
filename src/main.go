@@ -54,7 +54,7 @@ func shutdown(errorCondition bool) {
 
 	var mutex = sync.Mutex{}
 	mutex.Lock()
-	log.Log("shutdown", log.FINE)
+	log.Log("shutdown", log.INFO)
 	mutex.Unlock()
 
 	if errorCondition {
