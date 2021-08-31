@@ -50,8 +50,9 @@ type cpEntry struct {
 // structures of parsed data that we've read
 var cpool []cpEntry
 
-var methodRefs []methodRefEntry
+var classRefs []classRefEntry
 var fieldRefs []fieldRefEntry
+var methodRefs []methodRefEntry
 var stringRefs []stringConstantEntry
 
 // parse the CP entries in the class file and put references to their data in cpool
@@ -62,6 +63,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	// the first entry in the CP is a dummy entry, so that all references are 1-based
 	cpool[0] = cpEntry{Invalid, 0}
 
+	classRefs = []classRefEntry{}
 	fieldRefs = []fieldRefEntry{}
 	methodRefs = []methodRefEntry{}
 	stringRefs = []stringConstantEntry{}
@@ -71,11 +73,18 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		pos += 1
 		entryType := int(rawBytes[pos])
 		switch entryType {
+		case ClassRef:
+			index, _ := intFrom2Bytes(rawBytes, pos+1)
+			cre := classRefEntry{index}
+			classRefs = append(classRefs, cre)
+			cpool[i] = cpEntry{ClassRef, len(classRefs) - 1}
+			pos += 2
+			i += 1
 		case StringConst:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
 			sce := stringConstantEntry{index}
 			stringRefs = append(stringRefs, sce)
-			cpool[i] = cpEntry{8, len(stringRefs) - 1}
+			cpool[i] = cpEntry{StringConst, len(stringRefs) - 1}
 			pos += 2
 			i += 1
 		case FieldRef:
@@ -83,7 +92,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
 			fre := fieldRefEntry{classIndex, nameAndTypeIndex}
 			fieldRefs = append(fieldRefs, fre)
-			cpool[i] = cpEntry{9, len(fieldRefs) - 1}
+			cpool[i] = cpEntry{FieldRef, len(fieldRefs) - 1}
 			pos += 4
 			i += 1
 		case MethodRef:
@@ -91,7 +100,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
 			mre := methodRefEntry{classIndex, nameAndTypeIndex}
 			methodRefs = append(methodRefs, mre)
-			cpool[i] = cpEntry{10, len(methodRefs) - 1}
+			cpool[i] = cpEntry{MethodRef, len(methodRefs) - 1}
 			pos += 4
 			i += 1
 		default:
@@ -115,6 +124,10 @@ func printCP(entries int) {
 		switch entry.entryType {
 		case Invalid:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
+		case ClassRef:
+			fmt.Fprintf(os.Stderr, "(class ref)        ")
+			c := entry.slot
+			fmt.Fprintf(os.Stderr, "index: %02d\n", classRefs[c].index)
 		case StringConst:
 			fmt.Fprintf(os.Stderr, "(string const ref) ")
 			s := entry.slot
@@ -137,6 +150,10 @@ func printCP(entries int) {
 
 // ==== the various entry types in the constant pool (listed in order of the enums above) ====
 type dummyEntry struct { // type -1 (invalid or dummy entry)
+}
+
+type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
+	index int
 }
 
 type stringConstantEntry struct { // type: 08 (string constant reference)
