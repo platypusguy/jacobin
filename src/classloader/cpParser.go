@@ -24,7 +24,7 @@ const (
 	LongConst     = 5
 	DoubleConst   = 6
 	ClassRef      = 7
-	String        = 8
+	StringConst   = 8
 	FieldRef      = 9
 	MethodRef     = 10
 	Interface     = 11
@@ -52,6 +52,7 @@ var cpool []cpEntry
 
 var methodRefs []methodRefEntry
 var fieldRefs []fieldRefEntry
+var stringRefs []stringConstantEntry
 
 // parse the CP entries in the class file and put references to their data in cpool
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
@@ -63,32 +64,36 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 
 	fieldRefs = []fieldRefEntry{}
 	methodRefs = []methodRefEntry{}
+	stringRefs = []stringConstantEntry{}
 
 	i := 0
 	for i = 1; i <= klass.cpCount-1; {
 		pos += 1
 		entryType := int(rawBytes[pos])
 		switch entryType {
+		case StringConst:
+			index, _ := intFrom2Bytes(rawBytes, pos+1)
+			sce := stringConstantEntry{index}
+			stringRefs = append(stringRefs, sce)
+			cpool[i] = cpEntry{8, len(stringRefs) - 1}
+			pos += 2
+			i += 1
 		case FieldRef:
-			{
-				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
-				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
-				fre := fieldRefEntry{classIndex, nameAndTypeIndex}
-				fieldRefs = append(fieldRefs, fre)
-				cpool[i] = cpEntry{9, len(fieldRefs) - 1}
-				pos += 4
-				i += 1
-			}
+			classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+			fre := fieldRefEntry{classIndex, nameAndTypeIndex}
+			fieldRefs = append(fieldRefs, fre)
+			cpool[i] = cpEntry{9, len(fieldRefs) - 1}
+			pos += 4
+			i += 1
 		case MethodRef:
-			{
-				classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
-				nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
-				mre := methodRefEntry{classIndex, nameAndTypeIndex}
-				methodRefs = append(methodRefs, mre)
-				cpool[i] = cpEntry{10, len(methodRefs) - 1}
-				pos += 4
-				i += 1
-			}
+			classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+			mre := methodRefEntry{classIndex, nameAndTypeIndex}
+			methodRefs = append(methodRefs, mre)
+			cpool[i] = cpEntry{10, len(methodRefs) - 1}
+			pos += 4
+			i += 1
 		default:
 			klass.cpCount = i // just to get it over with for the moment
 		}
@@ -106,26 +111,35 @@ func printCP(entries int) {
 	for j := 0; j < entries; j++ {
 		entry := cpool[j]
 		fmt.Fprintf(os.Stderr, "CP entry: %02d, type %02d ", j, entry.entryType)
-		if entry.entryType == Invalid {
+		switch entry.entryType {
+		case Invalid:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
-		}
-		if entry.entryType == FieldRef {
-			fmt.Fprintf(os.Stderr, "(field ref)      ")
+		case StringConst:
+			fmt.Fprintf(os.Stderr, "(string const ref) ")
+			s := entry.slot
+			fmt.Fprintf(os.Stderr, "index: %02d\n", stringRefs[s].index)
+		case FieldRef:
+			fmt.Fprintf(os.Stderr, "(field ref)        ")
 			k := entry.slot
 			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
 				fieldRefs[k].classIndex, fieldRefs[k].nameAndTypeIndex)
-		}
-		if entry.entryType == MethodRef {
-			fmt.Fprintf(os.Stderr, "(method ref)     ")
+		case MethodRef:
+			fmt.Fprintf(os.Stderr, "(method ref)       ")
 			k := entry.slot
 			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
 				methodRefs[k].classIndex, methodRefs[k].nameAndTypeIndex)
+		default:
+			fmt.Fprintf(os.Stderr, "invalid entry")
 		}
 	}
 }
 
 // ==== the various entry types in the constant pool (listed in order of the enums above) ====
 type dummyEntry struct { // type -1 (invalid or dummy entry)
+}
+
+type stringConstantEntry struct { // type: 08 (string constant reference)
+	index int
 }
 
 type fieldRefEntry struct { // type: 09 (field reference)
