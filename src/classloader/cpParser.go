@@ -54,6 +54,7 @@ var classRefs []classRefEntry
 var fieldRefs []fieldRefEntry
 var methodRefs []methodRefEntry
 var stringRefs []stringConstantEntry
+var utf8Refs []utf8Entry
 
 // parse the CP entries in the class file and put references to their data in cpool
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
@@ -67,12 +68,22 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	fieldRefs = []fieldRefEntry{}
 	methodRefs = []methodRefEntry{}
 	stringRefs = []stringConstantEntry{}
+	utf8Refs = []utf8Entry{}
 
 	i := 0
 	for i = 1; i <= klass.cpCount-1; {
 		pos += 1
 		entryType := int(rawBytes[pos])
 		switch entryType {
+		case UTF8:
+			length, _ := intFrom2Bytes(rawBytes, pos+1)
+			pos += 2
+			content := string(rawBytes[pos+1 : pos+length+1])
+			pos += length
+			utfe := utf8Entry{content}
+			utf8Refs = append(utf8Refs, utfe)
+			cpool[i] = cpEntry{UTF8, len(utf8Refs) - 1}
+			i += 1
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
 			cre := classRefEntry{index}
@@ -124,6 +135,9 @@ func printCP(entries int) {
 		switch entry.entryType {
 		case Invalid:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
+		case UTF8:
+			s := entry.slot
+			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", utf8Refs[s].content)
 		case ClassRef:
 			fmt.Fprintf(os.Stderr, "(class ref)        ")
 			c := entry.slot
@@ -168,4 +182,8 @@ type fieldRefEntry struct { // type: 09 (field reference)
 type methodRefEntry struct { // type: 10 (method reference)
 	classIndex       int
 	nameAndTypeIndex int
+}
+
+type utf8Entry struct { // type: 01 (UTF-8 string)
+	content string
 }
