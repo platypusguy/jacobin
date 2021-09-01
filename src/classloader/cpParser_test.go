@@ -13,6 +13,45 @@ import (
 	"testing"
 )
 
+func TestCPvalidUTF8Ref(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x01, 0x00, 0x04, 'J', 'A',
+		'C', 'O',
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP UTF-8 entry (01) generated an unexpected error")
+	}
+
+	if loc != 16 {
+		t.Error("Was expecting a new position of 16, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(utf8Refs) != 1 {
+		t.Error("Was expecting the UTF8 ref array to have 1 entry, but it has: " + strconv.Itoa(len(fieldRefs)))
+	}
+
+	ute := utf8Refs[0]
+	if ute.content != "JACO" {
+		t.Error("Was expecting a UTF-8 string of 'JACO', but got: " + ute.content)
+	}
+
+	if len(cpool) != 2 {
+		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	}
+}
+
 func TestCPvalidClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
