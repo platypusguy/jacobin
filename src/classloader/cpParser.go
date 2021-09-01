@@ -53,6 +53,7 @@ var cpool []cpEntry
 var classRefs []classRefEntry
 var fieldRefs []fieldRefEntry
 var methodRefs []methodRefEntry
+var nameAndTypes []nameAndTypeEntry
 var stringRefs []stringConstantEntry
 var utf8Refs []utf8Entry
 
@@ -67,6 +68,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	classRefs = []classRefEntry{}
 	fieldRefs = []fieldRefEntry{}
 	methodRefs = []methodRefEntry{}
+	nameAndTypes = []nameAndTypeEntry{}
 	stringRefs = []stringConstantEntry{}
 	utf8Refs = []utf8Entry{}
 
@@ -114,6 +116,14 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			cpool[i] = cpEntry{MethodRef, len(methodRefs) - 1}
 			pos += 4
 			i += 1
+		case NameAndType:
+			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			descriptorIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+			nte := nameAndTypeEntry{nameIndex, descriptorIndex}
+			nameAndTypes = append(nameAndTypes, nte)
+			cpool[i] = cpEntry{NameAndType, len(nameAndTypes) - 1}
+			pos += 4
+			i += 1
 		default:
 			klass.cpCount = i // just to get it over with for the moment
 		}
@@ -156,6 +166,11 @@ func printCP(entries int) {
 			k := entry.slot
 			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
 				methodRefs[k].classIndex, methodRefs[k].nameAndTypeIndex)
+		case NameAndType:
+			fmt.Fprintf(os.Stderr, "(name and type)    ")
+			n := entry.slot
+			fmt.Fprintf(os.Stderr, "name index: %02d, descriptor index: %02d\n",
+				nameAndTypes[n].nameIndex, nameAndTypes[n].descriptorIndex)
 		default:
 			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}
@@ -164,6 +179,10 @@ func printCP(entries int) {
 
 // ==== the various entry types in the constant pool (listed in order of the enums above) ====
 type dummyEntry struct { // type -1 (invalid or dummy entry)
+}
+
+type utf8Entry struct { // type: 01 (UTF-8 string)
+	content string
 }
 
 type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
@@ -184,6 +203,7 @@ type methodRefEntry struct { // type: 10 (method reference)
 	nameAndTypeIndex int
 }
 
-type utf8Entry struct { // type: 01 (UTF-8 string)
-	content string
+type nameAndTypeEntry struct { // type 12 (name and type reference
+	nameIndex       int
+	descriptorIndex int
 }
