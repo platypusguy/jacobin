@@ -211,3 +211,45 @@ func TestCPvalidMethodRef(t *testing.T) {
 		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
 	}
 }
+
+func TestCPvalidNameAndTypeEntry(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x0C, 0x00, 0x14, 0x01, 0x01,
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP NameAndType (12) generated an unexpected error")
+	}
+
+	if loc != 14 {
+		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(nameAndTypes) != 1 {
+		t.Error("Was expecting the nameAndTypes array to have 1 entry, but it has: " + strconv.Itoa(len(fieldRefs)))
+	}
+
+	nte := nameAndTypes[0]
+	if nte.nameIndex != 20 {
+		t.Error("Was expecting a nameAndType nameIndex of 20, but got: " + strconv.Itoa(nte.nameIndex))
+	}
+
+	if nte.descriptorIndex != 257 {
+		t.Error("Was expecting a nameAndType descriptor index of 257, but got: " + strconv.Itoa(nte.descriptorIndex))
+	}
+
+	if len(cpool) != 2 {
+		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	}
+}

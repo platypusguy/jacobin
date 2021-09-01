@@ -203,7 +203,7 @@ type methodRefEntry struct { // type: 10 (method reference)
 	nameAndTypeIndex int
 }
 
-type nameAndTypeEntry struct { // type 12 (name and type reference
+type nameAndTypeEntry struct { // type 12 (name and type reference)
 	nameIndex       int
 	descriptorIndex int
 }
