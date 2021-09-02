@@ -52,6 +52,7 @@ var cpool []cpEntry
 
 var classRefs []classRefEntry
 var fieldRefs []fieldRefEntry
+var intConsts []intConst
 var methodRefs []methodRefEntry
 var nameAndTypes []nameAndTypeEntry
 var stringRefs []stringConstantEntry
@@ -67,6 +68,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 
 	classRefs = []classRefEntry{}
 	fieldRefs = []fieldRefEntry{}
+	intConsts = []intConst{}
 	methodRefs = []methodRefEntry{}
 	nameAndTypes = []nameAndTypeEntry{}
 	stringRefs = []stringConstantEntry{}
@@ -85,6 +87,13 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			utfe := utf8Entry{content}
 			utf8Refs = append(utf8Refs, utfe)
 			cpool[i] = cpEntry{UTF8, len(utf8Refs) - 1}
+			i += 1
+		case IntConst:
+			intValue, _ := intFrom4Bytes(rawBytes, pos+1)
+			pos += 4
+			ice := intConst{intValue}
+			intConsts = append(intConsts, ice)
+			cpool[i] = cpEntry{IntConst, len(intConsts) - 1}
 			i += 1
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
@@ -145,6 +154,9 @@ func printCP(entries int) {
 		switch entry.entryType {
 		case Invalid:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
+		case IntConst:
+			ic := entry.slot
+			fmt.Fprintf(os.Stderr, "(int constant)     %d\n", intConsts[ic].value)
 		case UTF8:
 			s := entry.slot
 			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", utf8Refs[s].content)
@@ -183,6 +195,10 @@ type dummyEntry struct { // type -1 (invalid or dummy entry)
 
 type utf8Entry struct { // type: 01 (UTF-8 string)
 	content string
+}
+
+type intConst struct { // type 03 (integer constant)
+	value int
 }
 
 type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
