@@ -52,6 +52,44 @@ func TestCPvalidUTF8Ref(t *testing.T) {
 	}
 }
 
+func TestCPvalidIntConst(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x03, 0x01, 0x05, 0x20, 0x44,
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP integer constant generated an unexpected error")
+	}
+
+	if loc != 14 {
+		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(intConsts) != 1 {
+		t.Error("Was expecting the int const array to have 1 entry, but it has: " + strconv.Itoa(len(intConsts)))
+	}
+
+	ice := intConsts[0]
+	if ice.value != 17113156 {
+		t.Error("Was expecting an integer constant of 17113156, but got: " + strconv.Itoa(ice.value))
+	}
+
+	if len(cpool) != 2 {
+		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	}
+}
+
 func TestCPvalidClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
