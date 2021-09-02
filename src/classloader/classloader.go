@@ -29,8 +29,18 @@ var ExtensionCL Classloader
 
 // the parsed class
 type parsedClass struct {
-	javaVersion int
-	cpCount     int // count of constant pool entries
+	javaVersion       int
+	cpCount           int // count of constant pool entries
+	accessFlags       int // the following booleans interpret the access flags
+	classIsPublic     bool
+	classIsFinal      bool
+	classIsSuper      bool
+	classIsInterface  bool
+	classIsAbstract   bool
+	classIsSynthetic  bool
+	classIsAnnotation bool
+	classIsEnum       bool
+	classIsModule     bool
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
