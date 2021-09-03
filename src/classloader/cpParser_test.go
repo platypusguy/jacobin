@@ -291,3 +291,32 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
 	}
 }
+
+// Access flags consist of a 2-byte integer. In the parsing, a variety of booleans are set in
+// the parsed class to show what access is allowed by the access flags. Both the retrieval of
+// the value and setting of the booleans is tested here.
+func TestAccessFlags(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := parsedClass{}
+	bytes := []byte{0x00, 0x84, 0x21}
+	loc, err := parseAccessFlags(bytes, 0, &pc)
+
+	if err != nil {
+		t.Error("Unexpected error occurred testing parse of Access flags")
+	}
+
+	if loc != 2 {
+		t.Error("Expected location from parse of Access flags to be 2. Got: " + strconv.Itoa(loc))
+	}
+
+	if pc.classIsPublic == false ||
+		pc.classIsSuper == false ||
+		pc.classIsAbstract == false ||
+		pc.classIsModule == false {
+		t.Error("Access flags did not set expected values in the parsed class")
+	}
+}
