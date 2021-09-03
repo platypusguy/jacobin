@@ -38,17 +38,17 @@ func TestCPvalidUTF8Ref(t *testing.T) {
 		t.Error("Was expecting a new position of 16, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(utf8Refs) != 1 {
-		t.Error("Was expecting the UTF8 ref array to have 1 entry, but it has: " + strconv.Itoa(len(fieldRefs)))
+	if len(pc.utf8Refs) != 1 {
+		t.Error("Was expecting the UTF8 ref array to have 1 entry, but it has: " + strconv.Itoa(len(pc.utf8Refs)))
 	}
 
-	ute := utf8Refs[0]
+	ute := pc.utf8Refs[0]
 	if ute.content != "JACO" {
 		t.Error("Was expecting a UTF-8 string of 'JACO', but got: " + ute.content)
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -76,17 +76,17 @@ func TestCPvalidIntConst(t *testing.T) {
 		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(intConsts) != 1 {
-		t.Error("Was expecting the int const array to have 1 entry, but it has: " + strconv.Itoa(len(intConsts)))
+	if len(pc.intConsts) != 1 {
+		t.Error("Was expecting the int const array to have 1 entry, but it has: " + strconv.Itoa(len(pc.intConsts)))
 	}
 
-	ice := intConsts[0]
+	ice := pc.intConsts[0]
 	if ice.value != 17113156 {
 		t.Error("Was expecting an integer constant of 17113156, but got: " + strconv.Itoa(ice.value))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -114,17 +114,17 @@ func TestCPvalidClassRef(t *testing.T) {
 		t.Error("Was expecting a new position of 12, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(classRefs) != 1 {
-		t.Error("Was expecting the class ref array to have 1 entry, but it has: " + strconv.Itoa(len(classRefs)))
+	if len(pc.classRefs) != 1 {
+		t.Error("Was expecting the class ref array to have 1 entry, but it has: " + strconv.Itoa(len(pc.classRefs)))
 	}
 
-	cre := classRefs[0]
+	cre := pc.classRefs[0]
 	if cre.index != 517 {
 		t.Error("Was expecting a class ref index of 517, but got: " + strconv.Itoa(cre.index))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -152,17 +152,17 @@ func TestCPvalidStringConstRef(t *testing.T) {
 		t.Error("Was expecting a new position of 12, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(stringRefs) != 1 {
-		t.Error("Was expecting the string const ref array to have 1 entry, but it has: " + strconv.Itoa(len(stringRefs)))
+	if len(pc.stringRefs) != 1 {
+		t.Error("Was expecting the string const ref array to have 1 entry, but it has: " + strconv.Itoa(len(pc.stringRefs)))
 	}
 
-	sre := stringRefs[0]
+	sre := pc.stringRefs[0]
 	if sre.index != 32 {
 		t.Error("Was expecting a string ref index of 32, but got: " + strconv.Itoa(sre.index))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -190,11 +190,11 @@ func TestCPvalidFieldRef(t *testing.T) {
 		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(fieldRefs) != 1 {
-		t.Error("Was expecting the field ref array to have 1 entry, but it has: " + strconv.Itoa(len(fieldRefs)))
+	if len(pc.fieldRefs) != 1 {
+		t.Error("Was expecting the field ref array to have 1 entry, but it has: " + strconv.Itoa(len(pc.fieldRefs)))
 	}
 
-	fre := fieldRefs[0]
+	fre := pc.fieldRefs[0]
 	if fre.classIndex != 20 {
 		t.Error("Was expecting a field ref classIndex of 20, but got: " + strconv.Itoa(fre.classIndex))
 	}
@@ -203,8 +203,8 @@ func TestCPvalidFieldRef(t *testing.T) {
 		t.Error("Was expecting a field ref nameAndTypeIndex of 257, but got: " + strconv.Itoa(fre.nameAndTypeIndex))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -232,11 +232,11 @@ func TestCPvalidMethodRef(t *testing.T) {
 		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(methodRefs) != 1 {
-		t.Error("Was expecting the method ref array to have 1 entry, but it has: " + strconv.Itoa(len(methodRefs)))
+	if len(pc.methodRefs) != 1 {
+		t.Error("Was expecting the method ref array to have 1 entry, but it has: " + strconv.Itoa(len(pc.methodRefs)))
 	}
 
-	mre := methodRefs[0]
+	mre := pc.methodRefs[0]
 	if mre.classIndex != 21 {
 		t.Error("Was expecting a method ref classIndex of 21, but got: " + strconv.Itoa(mre.classIndex))
 	}
@@ -245,8 +245,8 @@ func TestCPvalidMethodRef(t *testing.T) {
 		t.Error("Was expecting a method ref nameAndType of 262, but got: " + strconv.Itoa(mre.nameAndTypeIndex))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -274,11 +274,11 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(nameAndTypes) != 1 {
-		t.Error("Was expecting the nameAndTypes array to have 1 entry, but it has: " + strconv.Itoa(len(fieldRefs)))
+	if len(pc.nameAndTypes) != 1 {
+		t.Error("Was expecting the nameAndTypes array to have 1 entry, but it has: " + strconv.Itoa(len(pc.nameAndTypes)))
 	}
 
-	nte := nameAndTypes[0]
+	nte := pc.nameAndTypes[0]
 	if nte.nameIndex != 20 {
 		t.Error("Was expecting a nameAndType nameIndex of 20, but got: " + strconv.Itoa(nte.nameIndex))
 	}
@@ -287,8 +287,8 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 		t.Error("Was expecting a nameAndType descriptor index of 257, but got: " + strconv.Itoa(nte.descriptorIndex))
 	}
 
-	if len(cpool) != 2 {
-		t.Error("Was expecting cpool to have 2 entries, but instead got: " + strconv.Itoa(len(cpool)))
+	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
