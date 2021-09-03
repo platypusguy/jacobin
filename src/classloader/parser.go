@@ -106,7 +106,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos += 2
 	if err != nil {
 		return pos, cfe("Invalid get of class access flags")
-	} else { //TODO: change klass.classIs ... to klass.accessIs...
+	} else {
 		klass.accessFlags = accessFlags
 		if accessFlags&0x0001 > 0 {
 			klass.classIsPublic = true
