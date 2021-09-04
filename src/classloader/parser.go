@@ -7,7 +7,6 @@
 package classloader
 
 import (
-	"errors"
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
@@ -90,7 +89,7 @@ func parseJavaVersionNumber(bytes []byte, klass *parsedClass) error {
 	}
 
 	klass.javaVersion = version
-	println("Java version: " + strconv.Itoa(version))
+	log.Log("Java version: "+strconv.Itoa(version), log.FINEST)
 	return nil
 }
 
@@ -106,7 +105,7 @@ func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
 			strconv.Itoa(cpEntryCount))
 	} else {
 		klass.cpCount = cpEntryCount
-		println("Number of CP entries: " + strconv.Itoa(cpEntryCount))
+		log.Log("Number of CP entries: "+strconv.Itoa(cpEntryCount), log.FINEST)
 		return nil
 	}
 }
@@ -149,7 +148,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		if accessFlags&0x8000 > 0 {
 			klass.classIsModule = true
 		}
-		println("Access flags: " + strconv.Itoa(accessFlags))
+		log.Log("Access flags: "+strconv.Itoa(accessFlags), log.FINEST)
 
 		if log.LogLevel == log.FINEST {
 			if klass.classIsPublic {
@@ -195,29 +194,29 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	var classNameIndex int
 	pos += 2
 	if err != nil {
-		return pos, errors.New("error obtaining index for class name")
+		return pos, cfe("error obtaining index for class name")
 	}
 
 	if index < 1 || index > (len(klass.cpIndex)-1) {
-		return pos, errors.New("invalid index into CP for class name")
+		return pos, cfe("invalid index into CP for class name")
 	}
 
 	pointedToClassRef := klass.cpIndex[index]
 	if pointedToClassRef.entryType != ClassRef {
-		return pos, errors.New("invalid entry for class name")
+		return pos, cfe("invalid entry for class name")
 	}
 
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
 	if klass.cpIndex[classNameIndex].entryType != UTF8 {
-		return pos, errors.New("error classRef in CP does not point to a UTF-8 string")
+		return pos, cfe("error classRef in CP does not point to a UTF-8 string")
 	}
 
 	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
 	utf8Index := klass.cpIndex[classNameIndex].slot
 	className := klass.utf8Refs[utf8Index].content
-	println("class name: " + className)
+	log.Log("class name: "+className, log.FINEST)
 	klass.className = className
 	return pos, nil
 }
@@ -230,23 +229,23 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	var classNameIndex int
 	pos += 2
 	if err != nil {
-		return pos, errors.New("error obtaining index for superclass name")
+		return pos, cfe("error obtaining index for superclass name")
 	}
 
 	if index < 1 || index > (len(klass.cpIndex)-1) {
-		return pos, errors.New("invalid index into CP for superclass name")
+		return pos, cfe("invalid index into CP for superclass name")
 	}
 
 	pointedToClassRef := klass.cpIndex[index]
 	if pointedToClassRef.entryType != ClassRef {
-		return pos, errors.New("invalid entry for superclass name")
+		return pos, cfe("invalid entry for superclass name")
 	}
 
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
 	if klass.cpIndex[classNameIndex].entryType != UTF8 {
-		return pos, errors.New("error classRef in CP does not point to a UTF-8 string")
+		return pos, cfe("error classRef in CP does not point to a UTF-8 string")
 	}
 
 	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
@@ -254,7 +253,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	superClassName := klass.utf8Refs[utf8Index].content
 
 	if superClassName == "" && klass.className != "java/lang/Object" {
-		return pos, errors.New("Invaild empty string for superclass name")
+		return pos, cfe("Invaild empty string for superclass name")
 	}
 
 	log.Log("superclass name: "+superClassName, log.FINEST)

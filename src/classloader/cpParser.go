@@ -130,7 +130,6 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		printCP(i, klass)
 	}
 
-	//TODO: add constant pool structures into klass.
 	return pos, nil
 }
 
