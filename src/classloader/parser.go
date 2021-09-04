@@ -252,7 +252,12 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
 	utf8Index := klass.cpIndex[classNameIndex].slot
 	superClassName := klass.utf8Refs[utf8Index].content
-	println("superclass name: " + superClassName)
+
+	if superClassName == "" && klass.className != "java/lang/Object" {
+		return pos, errors.New("Invaild empty string for superclass name")
+	}
+
+	log.Log("superclass name: "+superClassName, log.FINEST)
 	klass.superClass = superClassName
 	return pos, nil
 }
