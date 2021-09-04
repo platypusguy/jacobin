@@ -368,5 +368,71 @@ func TestClassNameValidUTF8(t *testing.T) {
 	if pc.shortName != "Hello" {
 		t.Error("Test of getting class name should get 'Hello' but got: " + pc.shortName)
 	}
+}
 
+// see notes about the setup in the previous test. Here, the record that is pointed to by the
+// class name field is not a ClassRef, but instead a string constant entry. This should generate
+// an error, for which we test.
+func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	bytes := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
+		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
+		0x08, 0x00, 0x02, // entry #1, should be a ClassRef entry, but is not
+		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
+	}
+
+	_, err := parseConstantPool(bytes, &pc)
+	if err != nil {
+		t.Error("Error parsing test CP for setup in testing ClassName")
+	}
+
+	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
+	_, err = parseClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Parse of class name field should have generated an error but it did not.")
+	}
+	if err.Error() != "invalid entry for class name" {
+		t.Error("Expected error msg about invalid entry for class name. Got: " + err.Error())
+	}
+}
+
+// see the previous tests for explanation of the setup. Here we test whether a class name entry
+// that points to a valid ClassRef record, but when that ClassRef record does not itself point
+// to an expected UTF-8 entry, that the right error is issued.
+func TestClassNameWithMissingUTF8(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	bytes := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
+		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
+		0x07, 0x00, 0x02, // entry #1, a ClassRef that should point to a UTF-8 entry
+		0x07, 0x00, 0x01, // entry #2, this should be a UTF-8 entry, but it's not
+	}
+
+	_, err := parseConstantPool(bytes, &pc)
+	if err != nil {
+		t.Error("Error parsing test CP for setup in testing ClassName")
+	}
+
+	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
+	_, err = parseClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Parse of class name field should have generated an error but it did not.")
+	}
+
+	if err.Error() != "error classRef in CP does not point to a UTF-8 string" {
+		t.Error("Expected error msg about invalid UTF-8 entry for class name. Got: " + err.Error())
+	}
 }
