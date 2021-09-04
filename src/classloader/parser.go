@@ -179,6 +179,11 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	}
 }
 
+// The value for this item points to a CP entry of type Class info. In turn,
+// that entry points to the UTF-8 name of the class. This name includes the
+// package name as a path, but not the extension of .class. So for example,
+// ParsePosition.class in the core Java string library has a class name of:
+// java/text/ParsePosition
 func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos := loc
 	index, err := intFrom2Bytes(bytes, pos+1)
@@ -188,16 +193,26 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		return pos, errors.New("error obtaining index for class name")
 	}
 
-	pointedTo := klass.cpIndex[index]
-	if pointedTo.entryType != ClassRef {
+	if index < 1 || index > (len(klass.cpIndex)-1) {
+		return pos, errors.New("invalid index into CP for class name")
+	}
+
+	pointedToClassRef := klass.cpIndex[index]
+	if pointedToClassRef.entryType != ClassRef {
 		return pos, errors.New("invalid entry for class name")
 	}
 
-	classNameIndex = klass.classRefs[pointedTo.slot].index
+	// the entry pointed to by pointedToClassRef holds an index to
+	// a UTF-8 string that holds the class name
+	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
+	if klass.cpIndex[classNameIndex].entryType != UTF8 {
+		return pos, errors.New("error classRef in CP does not point to a UTF-8 string")
+	}
+
+	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
 	utf8Index := klass.cpIndex[classNameIndex].slot
 	className := klass.utf8Refs[utf8Index].content
-	println("Class name: " + className)
+	println("class name: " + className)
 	klass.shortName = className
 	return pos, nil
-
 }
