@@ -365,8 +365,8 @@ func TestClassNameValidUTF8(t *testing.T) {
 		t.Error("Unexpected error in getting class name from the CP")
 	}
 
-	if pc.shortName != "Hello" {
-		t.Error("Test of getting class name should get 'Hello' but got: " + pc.shortName)
+	if pc.className != "Hello" {
+		t.Error("Test of getting class name should get 'Hello' but got: " + pc.className)
 	}
 }
 

@@ -30,7 +30,8 @@ var ExtensionCL Classloader
 // the parsed class
 type parsedClass struct {
 	javaVersion int
-	shortName   string // name of class without path and without .class
+	className   string // name of class without path and without .class
+	superClass  string // name of superclass for this class
 
 	// ---- constant pool data items ----
 	cpCount      int             // count of constant pool entries

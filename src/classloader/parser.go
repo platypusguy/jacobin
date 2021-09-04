@@ -55,6 +55,11 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	pos, err = parseSuperClassName(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
@@ -213,6 +218,41 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	utf8Index := klass.cpIndex[classNameIndex].slot
 	className := klass.utf8Refs[utf8Index].content
 	println("class name: " + className)
-	klass.shortName = className
+	klass.className = className
+	return pos, nil
+}
+
+// Get the name of the superclass. The logic is identical to that of parseClassName()
+// All classes, except java/lang/Object have superclasses.
+func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	index, err := intFrom2Bytes(bytes, pos+1)
+	var classNameIndex int
+	pos += 2
+	if err != nil {
+		return pos, errors.New("error obtaining index for superclass name")
+	}
+
+	if index < 1 || index > (len(klass.cpIndex)-1) {
+		return pos, errors.New("invalid index into CP for superclass name")
+	}
+
+	pointedToClassRef := klass.cpIndex[index]
+	if pointedToClassRef.entryType != ClassRef {
+		return pos, errors.New("invalid entry for superclass name")
+	}
+
+	// the entry pointed to by pointedToClassRef holds an index to
+	// a UTF-8 string that holds the class name
+	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
+	if klass.cpIndex[classNameIndex].entryType != UTF8 {
+		return pos, errors.New("error classRef in CP does not point to a UTF-8 string")
+	}
+
+	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
+	utf8Index := klass.cpIndex[classNameIndex].slot
+	superClassName := klass.utf8Refs[utf8Index].content
+	println("superclass name: " + superClassName)
+	klass.superClass = superClassName
 	return pos, nil
 }
