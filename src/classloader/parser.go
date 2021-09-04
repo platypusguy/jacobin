@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"errors"
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
@@ -45,6 +46,11 @@ func parse(rawBytes []byte) (parsedClass, error) {
 	}
 
 	pos, err = parseAccessFlags(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
+	pos, err = parseClassName(rawBytes, pos, &pClass)
 	if err != nil {
 		return pClass, err
 	}
@@ -100,6 +106,9 @@ func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
 	}
 }
 
+// decode the meaning of the class access flags and set the various getters
+// in the class. FromTable 4.1-B in the spec:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1-200-E.1
 func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos := loc
 	accessFlags, err := intFrom2Bytes(bytes, pos+1)
@@ -168,4 +177,27 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		}
 		return pos, nil
 	}
+}
+
+func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	index, err := intFrom2Bytes(bytes, pos+1)
+	var classNameIndex int
+	pos += 2
+	if err != nil {
+		return pos, errors.New("error obtaining index for class name")
+	}
+
+	pointedTo := klass.cpIndex[index]
+	if pointedTo.entryType != ClassRef {
+		return pos, errors.New("invalid entry for class name")
+	}
+
+	classNameIndex = klass.classRefs[pointedTo.slot].index
+	utf8Index := klass.cpIndex[classNameIndex].slot
+	className := klass.utf8Refs[utf8Index].content
+	println("Class name: " + className)
+	klass.shortName = className
+	return pos, nil
+
 }
