@@ -436,3 +436,40 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 		t.Error("Expected error msg about invalid UTF-8 entry for class name. Got: " + err.Error())
 	}
 }
+
+func TestErrorOnEmptySuperclass(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	bytes := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
+		0x00, 0x00, 0x37, 0x00, 0x04, // Java 8, CP with 4 entries (plus the dummy entry)
+		0x07, 0x00, 0x02, // entry #1, a ClassRef that points to the following UTF-8 record
+		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
+		0x07, 0x00, 0x04, // entry #3, a ClassRef that points to the following UTF-8 record
+		0x01, 0x00, 0x00, // emtry #4 an empty string
+
+	}
+
+	_, err := parseConstantPool(bytes, &pc)
+	if err != nil {
+		t.Error("Error parsing test CP for setup in testing ClassName")
+	}
+
+	testBytes := []byte{0x00, 0x00, 0x01, // 3 bytes b/c first byte is skipped. So, this points to entry 1
+		0x00, 0x03, // points to the superclass entry (entry #3)
+	}
+	_, err = parseClassName(testBytes, 0, &pc)
+	_, err = parseSuperClassName(testBytes, 2, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for superclass name that's empty")
+	} else {
+		if err.Error() != "Class Format Error: invaild empty string for superclass name" {
+			t.Error("Expected an invalid string for superclass error, but got: " + err.Error())
+		}
+	}
+}

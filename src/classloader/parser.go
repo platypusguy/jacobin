@@ -253,7 +253,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	superClassName := klass.utf8Refs[utf8Index].content
 
 	if superClassName == "" && klass.className != "java/lang/Object" {
-		return pos, cfe("Invaild empty string for superclass name")
+		return pos, cfe("invaild empty string for superclass name")
 	}
 
 	log.Log("superclass name: "+superClassName, log.FINEST)
