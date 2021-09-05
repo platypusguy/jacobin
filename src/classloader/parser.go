@@ -183,9 +183,10 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	}
 }
 
-// The value for this item points to a CP entry of type Class info. In turn,
-// that entry points to the UTF-8 name of the class. This name includes the
-// package name as a path, but not the extension of .class. So for example,
+// The value for this item points to a CP entry of type Class_info. (See:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.1 )
+// In turn, that entry points to the UTF-8 name of the class. This name includes
+// the package name as a path, but not the extension of .class. So, for example,
 // ParsePosition.class in the core Java string library has a class name of:
 // java/text/ParsePosition
 func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
@@ -257,6 +258,10 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	}
 
 	log.Log("superclass name: "+superClassName, log.FINEST)
+	if len(klass.superClass) > 0 {
+		return pos, cfe("Class can only have 1 superclass, found two: " + klass.superClass + " and: " + superClassName)
+	}
+
 	klass.superClass = superClassName
 	return pos, nil
 }
