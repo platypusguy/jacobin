@@ -282,7 +282,7 @@ func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error)
 	interfaceCount, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
 	if err != nil {
-		return pos, cfe("Invalid get of class access flags")
+		return pos, cfe("Invalid fetch of interface count")
 	}
 
 	log.Log("interface count: "+strconv.Itoa(interfaceCount), log.FINEST)
