@@ -35,15 +35,16 @@ type parsedClass struct {
 	interfaceCount int    // number of interfaces this class implements
 
 	// ---- constant pool data items ----
-	cpCount      int             // count of constant pool entries
-	cpIndex      []cpEntry       // the constant pool index to entries
-	classRefs    []classRefEntry // this and next slices hold CP entries
-	fieldRefs    []fieldRefEntry
-	intConsts    []intConst
-	methodRefs   []methodRefEntry
-	nameAndTypes []nameAndTypeEntry
-	stringRefs   []stringConstantEntry
-	utf8Refs     []utf8Entry
+	cpCount       int             // count of constant pool entries
+	cpIndex       []cpEntry       // the constant pool index to entries
+	classRefs     []classRefEntry // this and next slices hold CP entries
+	fieldRefs     []fieldRefEntry
+	intConsts     []intConst
+	interfaceRefs []interfaceRefEntry
+	methodRefs    []methodRefEntry
+	nameAndTypes  []nameAndTypeEntry
+	stringRefs    []stringConstantEntry
+	utf8Refs      []utf8Entry
 
 	// ---- access flags items ----
 	accessFlags       int // the following booleans interpret the access flags

@@ -118,6 +118,14 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{MethodRef, len(klass.methodRefs) - 1}
 			pos += 4
 			i += 1
+		case Interface:
+			classIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			nameAndTypeIndex, _ := intFrom2Bytes(rawBytes, pos+3)
+			ire := interfaceRefEntry{classIndex, nameAndTypeIndex}
+			klass.interfaceRefs = append(klass.interfaceRefs, ire)
+			klass.cpIndex[i] = cpEntry{Interface, len(klass.interfaceRefs) - 1}
+			pos += 4
+			i += 1
 		case NameAndType:
 			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
 			descriptorIndex, _ := intFrom2Bytes(rawBytes, pos+3)
@@ -171,6 +179,11 @@ func printCP(entries int, klass *parsedClass) {
 			k := entry.slot
 			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
 				klass.methodRefs[k].classIndex, klass.methodRefs[k].nameAndTypeIndex)
+		case Interface:
+			fmt.Fprintf(os.Stderr, "(interface ref)    ")
+			k := entry.slot
+			fmt.Fprintf(os.Stderr, "class index: %02d, nameAndType index: %02d\n",
+				klass.interfaceRefs[k].classIndex, klass.interfaceRefs[k].nameAndTypeIndex)
 		case NameAndType:
 			fmt.Fprintf(os.Stderr, "(name and type)    ")
 			n := entry.slot
@@ -208,6 +221,11 @@ type fieldRefEntry struct { // type: 09 (field reference)
 }
 
 type methodRefEntry struct { // type: 10 (method reference)
+	classIndex       int
+	nameAndTypeIndex int
+}
+
+type interfaceRefEntry struct { // type: 11 (interface reference)
 	classIndex       int
 	nameAndTypeIndex int
 }
