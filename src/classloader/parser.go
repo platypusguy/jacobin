@@ -289,3 +289,39 @@ func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error)
 	klass.interfaceCount = interfaceCount
 	return pos, nil
 }
+
+// these are actually interface references, simply indexes into the CP that point to
+// class entries for each of the implemented interfaces
+func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	for i := 0; i < klass.interfaceCount; i += 1 {
+		interfaceIndex, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("Invalid fetch of interface index")
+		}
+
+		if interfaceIndex < 1 || interfaceIndex > klass.cpCount-1 {
+			return pos, cfe("Interface index is out of range: " + strconv.Itoa(interfaceIndex))
+		}
+
+		// get the entry in the CP that the interface index points to
+		pointedTo := klass.cpIndex[interfaceIndex]
+		if pointedTo.entryType != ClassRef {
+			return pos, cfe("Interface index does not point to a class type. Got: " +
+				strconv.Itoa(pointedTo.entryType))
+		}
+
+		// get the class entry, which is an index into the CP pointing to a UTF-8
+		// string that contains the name of the interface.
+		classEntry := klass.classRefs[pointedTo.slot]
+
+		interfaceNameIndex := klass.cpIndex[classEntry.index]
+		j := interfaceNameIndex.slot
+		interfaceName := klass.utf8Refs[j]
+		println("Interface class: " + interfaceName.content) //TODO: log this
+		//TODO: add the interface class name to the parsed class.
+		//TODO: insert checks for ranges of all the indexes and the record types
+	}
+	return pos, nil
+}
