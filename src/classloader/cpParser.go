@@ -68,9 +68,14 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		entryType := int(rawBytes[pos])
 		switch entryType {
 		case UTF8:
+			var content string
 			length, _ := intFrom2Bytes(rawBytes, pos+1)
 			pos += 2
-			content := string(rawBytes[pos+1 : pos+length+1])
+			if length == 0 {
+				content = ""
+			} else {
+				content = string(rawBytes[pos+1 : pos+length+1])
+			}
 			pos += length
 			utfe := utf8Entry{content}
 			klass.utf8Refs = append(klass.utf8Refs, utfe)

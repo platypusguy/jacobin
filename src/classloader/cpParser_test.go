@@ -444,26 +444,26 @@ func TestErrorOnEmptySuperclass(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	pc := parsedClass{}
-	pc.cpCount = 3
+	pc.cpCount = 5
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
-		0x00, 0x00, 0x37, 0x00, 0x04, // Java 8, CP with 4 entries (plus the dummy entry)
+		0x00, 0x00, 0x37, 0x00, 0x05, // Java 8, CP with 5 entries (plus the dummy entry)
+		// entry #0, a dummy entry created by the JVM
 		0x07, 0x00, 0x02, // entry #1, a ClassRef that points to the following UTF-8 record
 		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
 		0x07, 0x00, 0x04, // entry #3, a ClassRef that points to the following UTF-8 record
 		0x01, 0x00, 0x00, // emtry #4 an empty string
-
 	}
 
 	_, err := parseConstantPool(bytes, &pc)
 	if err != nil {
-		t.Error("Error parsing test CP for setup in testing ClassName")
+		t.Error("Error parsing test CP for setup in testing superclassName")
 	}
 
 	testBytes := []byte{0x00, 0x00, 0x01, // 3 bytes b/c first byte is skipped. So, this points to entry 1
 		0x00, 0x03, // points to the superclass entry (entry #3)
 	}
-	_, err = parseClassName(testBytes, 0, &pc)
+
 	_, err = parseSuperClassName(testBytes, 2, &pc)
 	if err == nil {
 		t.Error("Expected but did not get an error for superclass name that's empty")
