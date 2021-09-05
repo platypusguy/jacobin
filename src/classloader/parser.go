@@ -59,6 +59,11 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	pos, err = parseInterfaceCount(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
@@ -268,5 +273,19 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	}
 
 	klass.superClass = superClassName
+	return pos, nil
+}
+
+// Get the count of the number of interfaces this class implements
+func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	interfaceCount, err := intFrom2Bytes(bytes, pos+1)
+	pos += 2
+	if err != nil {
+		return pos, cfe("Invalid get of class access flags")
+	}
+
+	log.Log("interface count: "+strconv.Itoa(interfaceCount), log.FINEST)
+	klass.interfaceCount = interfaceCount
 	return pos, nil
 }
