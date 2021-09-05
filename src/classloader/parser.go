@@ -218,6 +218,11 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	utf8Index := klass.cpIndex[classNameIndex].slot
 	className := klass.utf8Refs[utf8Index].content
 	log.Log("class name: "+className, log.FINEST)
+
+	if len(klass.className) > 0 {
+		return pos, cfe("Class appears to have two names: " + klass.className + " and: " + className)
+	}
+
 	klass.className = className
 	return pos, nil
 }
