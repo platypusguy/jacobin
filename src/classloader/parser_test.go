@@ -238,7 +238,7 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 	if err == nil {
 		t.Error("Parse of class name field should have generated an error but it did not.")
 	}
-	if err.Error() != "Class Format Error: invalid entry for class name" {
+	if !strings.HasPrefix(err.Error(), "Class Format Error: invalid entry for class name") {
 		t.Error("Expected error msg about invalid entry for class name. Got: " + err.Error())
 	}
 }
@@ -272,7 +272,7 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 		t.Error("Parse of class name field should have generated an error but it did not.")
 	}
 
-	if err.Error() != "Class Format Error: error classRef in CP does not point to a UTF-8 string" {
+	if !strings.HasPrefix(err.Error(), "Class Format Error: error classRef in CP does not point to a UTF-8 string") {
 		t.Error("Expected error msg about invalid UTF-8 entry for class name. Got: " + err.Error())
 	}
 }
@@ -308,7 +308,7 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 	if err == nil {
 		t.Error("Expected but did not get an error for superclass name that's empty")
 	} else {
-		if err.Error() != "Class Format Error: invaild empty string for superclass name" {
+		if !strings.HasPrefix(err.Error(), "Class Format Error: invaild empty string for superclass name") {
 			t.Error("Expected an invalid string for superclass error, but got: " + err.Error())
 		}
 	}

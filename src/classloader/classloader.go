@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"jacobin/log"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
 )
 
 // Classloaders hold the parsed bytecode in classes, where they can be retrieved
@@ -61,9 +64,23 @@ type parsedClass struct {
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
-// of the errors arising from malformed bytecode
+// of the errors arising from malformed bytecode. Prints out file and line# where
+// the call to cfe() occurred.
 func cfe(msg string) error {
 	errMsg := "Class Format Error: " + msg
+
+	// get the filename and line# of the function where the error occurred
+	// implementation note: Caller(0) would be this function. (1) is the
+	// previous function on the stack (so, the one calling this error routine)
+	// To traverse all the way back to the start of the program, set up a loop
+	// and exit when ok is no longer true.
+	pc, _, _, ok := runtime.Caller(1)
+	if ok {
+		fn := runtime.FuncForPC(pc)
+		fileName, fileLine := fn.FileLine(pc)
+		errMsg = errMsg + "\n  dectected by file: " + filepath.Base(fileName) +
+			", line: " + strconv.Itoa(fileLine)
+	}
 	log.Log(errMsg, log.SEVERE)
 	return errors.New(errMsg)
 }
