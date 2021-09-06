@@ -327,9 +327,13 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		interfaceNameIndex := klass.cpIndex[classEntry.index]
 		j := interfaceNameIndex.slot
 		interfaceName := klass.utf8Refs[j]
+		// interfaceName, err := fetchUTF8string(klass,j)
 		log.Log("Interface class: "+interfaceName.content, log.FINEST)
+		// log.Log("Interface class: "+interfaceName, log.FINEST)
 
 		klass.interfaces = append(klass.interfaces, interfaceName.content)
+		// klass.interfaces = append(klass.interfaces, interfaceName)
+		//TODO: figure out how to use fetchUTF8string (test by reversing // lines above.
 
 	}
 	return pos, nil

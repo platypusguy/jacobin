@@ -6,6 +6,8 @@
 
 package classloader
 
+import "strconv"
+
 // various utilities frequently used in parsing classfiles
 
 // read two bytes in big endian order and convert to an int
@@ -28,4 +30,23 @@ func intFrom4Bytes(bytes []byte, pos int) (int, error) {
 	value2 := (uint32(bytes[pos+2]) << 8) + uint32(bytes[pos+3])
 	retVal := int(value1<<16) + int(value2)
 	return retVal, nil
+}
+
+// finds and returns a UTF8 string when handed an index into the CP that points
+// to a UTF8 entry. Does extensive checking of values.
+func fetchUTF8string(klass *parsedClass, index int) (string, error) {
+	if index < 1 || index > klass.cpCount-1 {
+		return "", cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
+	}
+
+	if klass.cpIndex[index].entryType != UTF8 {
+		return "", cfe("attempt to fetch UTF8 string from non-UTF8 CP entry #" + strconv.Itoa(index))
+	}
+
+	i := klass.cpIndex[index].slot
+	if i < 0 || i > len(klass.utf8Refs)-1 {
+		return "", cfe("invalid index into UTF8 array of CP: " + strconv.Itoa(i))
+	}
+
+	return klass.utf8Refs[i].content, nil
 }
