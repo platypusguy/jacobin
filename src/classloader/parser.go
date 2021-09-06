@@ -327,9 +327,10 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		interfaceNameIndex := klass.cpIndex[classEntry.index]
 		j := interfaceNameIndex.slot
 		interfaceName := klass.utf8Refs[j]
-		println("Interface class: " + interfaceName.content) //TODO: log this
-		//TODO: add the interface class name to the parsed class.
-		//TODO: insert checks for ranges of all the indexes and the record types
+		log.Log("Interface class: "+interfaceName.content, log.FINEST)
+
+		klass.interfaces = append(klass.interfaces, interfaceName.content)
+
 	}
 	return pos, nil
 }

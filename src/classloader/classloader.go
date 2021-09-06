@@ -30,9 +30,10 @@ var ExtensionCL Classloader
 // the parsed class
 type parsedClass struct {
 	javaVersion    int
-	className      string // name of class without path and without .class
-	superClass     string // name of superclass for this class
-	interfaceCount int    // number of interfaces this class implements
+	className      string   // name of class without path and without .class
+	superClass     string   // name of superclass for this class
+	interfaceCount int      // number of interfaces this class implements
+	interfaces     []string // the interfaces this class implements
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries
