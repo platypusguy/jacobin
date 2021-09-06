@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"encoding/hex"
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
