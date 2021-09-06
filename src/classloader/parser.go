@@ -65,6 +65,13 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	if pClass.interfaceCount > 0 {
+		pos, err = parseInterfaces(rawBytes, pos, &pClass)
+		if err != nil {
+			return pClass, err
+		}
+	}
+
 	return pClass, nil
 }
 
@@ -154,7 +161,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		if accessFlags&0x8000 > 0 {
 			klass.classIsModule = true
 		}
-		log.Log("Access flags: "+strconv.Itoa(accessFlags), log.FINEST)
+		log.Log("Access flags: 0x"+hex.EncodeToString(bytes[pos-1:pos+1]), log.FINEST)
 
 		if log.LogLevel == log.FINEST {
 			if klass.classIsPublic {
