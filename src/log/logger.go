@@ -26,11 +26,13 @@ const (
 	FINEST
 )
 
-var LogLevel int
-var StartTime time.Time
+var Level int           // the level the logger currently supports. See the enums above.
+var StartTime time.Time // the start time of the Jacoby VM
 
+// Initialize the logger, which by default is set to WARNING. Note: that it cannot be
+// set any coarser. At all times SEVERE and WARNING messages must be visible to the user.
 func Init() {
-	LogLevel = WARNING
+	Level = WARNING
 	StartTime = time.Now()
 }
 
@@ -47,7 +49,7 @@ func Log(msg string, level int) (err error) {
 
 	// if the message is for a finer logging level than currently being logged,
 	// simply return
-	if level > LogLevel {
+	if level > Level {
 		return
 	}
 
@@ -75,7 +77,7 @@ func SetLogLevel(level int) (err error) {
 	if level <= SEVERE || level > FINEST {
 		return errors.New("invalid logging level")
 	} else {
-		LogLevel = level
-		return
+		Level = level
+		return nil
 	}
 }

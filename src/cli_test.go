@@ -23,7 +23,7 @@ func TestGetJVMenvVariablesWhenAbsent(t *testing.T) {
 
 	javaEnvVars := getEnvArgs()
 	if javaEnvVars != "" {
-		t.Error("getting non-existent Java enviroment options failed")
+		t.Error("getting non-existent Java environment options failed")
 	}
 }
 
@@ -36,7 +36,7 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 
 	javaEnvVars := getEnvArgs()
 	if javaEnvVars != "Hello, Jacobin!" {
-		t.Error("getting two set Java enviroment options failed: " + javaEnvVars)
+		t.Error("getting two set Java environment options failed: " + javaEnvVars)
 	}
 
 	// clean up the environment
@@ -194,7 +194,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if log.LogLevel != log.INFO {
+	if log.Level != log.INFO {
 		t.Error("Setting log level to INFO via command line failed")
 	}
 
@@ -219,7 +219,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if log.LogLevel != log.FINE {
+	if log.Level != log.FINE {
 		t.Error("Setting log level to FINE via command line failed")
 	}
 
@@ -244,7 +244,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if log.LogLevel != log.FINEST {
+	if log.Level != log.FINEST {
 		t.Error("Setting log level to FINEST via command line failed")
 	}
 
@@ -269,7 +269,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if log.LogLevel != log.CLASS {
+	if log.Level != log.CLASS {
 		t.Error("Setting log level to CLASS via command line failed")
 	}
 }

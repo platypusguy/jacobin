@@ -36,7 +36,6 @@ type Globals struct {
 var global Globals
 
 // initialize the global values that are known at start-up
-// listed in alpha order after the first two items
 func InitGlobals(progName string) Globals {
 	global = Globals{
 		Version:           "0.1.0",
@@ -52,12 +51,13 @@ func InitGlobals(progName string) Globals {
 	return global
 }
 
+// This function enables the singleton aspect of Globals
 func GetInstance() Globals {
 	return global
 }
 
-// the value portion of the globals.ptions table. This is described in more detail in
-// option_table_loader.go introductory comments
+// Option is the value portion of the globals.options table. This table is described in
+// more detail in option_table_loader.go introductory comments
 type Option struct {
 	Supported bool
 	Set       bool

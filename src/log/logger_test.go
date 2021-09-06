@@ -18,8 +18,8 @@ func TestLoggerInit(t *testing.T) {
 	globals.InitGlobals("test")
 	Init()
 
-	if LogLevel != WARNING {
-		t.Error("log init() did not set LogLevel to WARNING")
+	if Level != WARNING {
+		t.Error("log init() did not set Level to WARNING")
 	}
 }
 
@@ -50,18 +50,18 @@ func TestlogSetLogLevelTologSevere(t *testing.T) {
 }
 
 func TestSettingLogLevels(t *testing.T) {
-	globals.InitGlobals("test") // this sets the LogLevel to log.WARNING (the default value)
+	globals.InitGlobals("test") // this sets the Level to log.WARNING (the default value)
 	err := SetLogLevel(CLASS)
-	if err != nil || (LogLevel != CLASS) {
+	if err != nil || (Level != CLASS) {
 		t.Error("setting logging level to CLASS did not work correctly")
 	}
 	err = SetLogLevel(FINE)
-	if err != nil || (LogLevel != FINE) {
+	if err != nil || (Level != FINE) {
 		t.Error("setting logging level to FINE did not work correctly")
 	}
 
 	err = SetLogLevel(FINEST)
-	if err != nil || (LogLevel != FINEST) {
+	if err != nil || (Level != FINEST) {
 		t.Error("setting logging level to FINEST did not work correctly")
 	}
 }

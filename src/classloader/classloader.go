@@ -81,19 +81,22 @@ func (cl Classloader) LoadClassFromFile(filename string) error {
 	if err != nil {
 		log.Log("Could not read file: "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("file I/O error")
-	} else {
-		log.Log(filename+" read", log.FINE)
 	}
+
+	log.Log(filename+" read", log.FINE)
 
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("parsing error")
-	} else {
-		return insert(fullyParsedClass)
 	}
+
+	return insert(fullyParsedClass)
+
 }
 
+// Init() simply initializes the three classloaders and points them to each other
+// in the proper order. This function might be substantially revised later.
 func Init() error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""

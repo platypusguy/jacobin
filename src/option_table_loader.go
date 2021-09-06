@@ -152,16 +152,16 @@ func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, erro
 func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) {
 	switch argValue {
 	case "class":
-		log.LogLevel = log.CLASS
+		log.Level = log.CLASS
 		log.Log("Logging level set to CLASS", log.INFO)
 	case "info":
-		log.LogLevel = log.INFO
+		log.Level = log.INFO
 		log.Log("Logging level set to log.INFO", log.INFO)
 	case "fine":
-		log.LogLevel = log.FINE
+		log.Level = log.FINE
 		log.Log("Logging level set to FINE", log.INFO)
 	case "finest":
-		log.LogLevel = log.FINEST
+		log.Level = log.FINEST
 		log.Log("Logging level set to FINEST", log.INFO)
 	default:
 		log.Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", log.WARNING)

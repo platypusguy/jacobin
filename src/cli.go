@@ -16,13 +16,13 @@ import (
 
 var global = globals.GetInstance()
 
-// handle all the args from the command line, including those from the enviroment
-// variables that the JVM recognizes and prepends to the command-line options
+// HandleCli handles all args from the command line, including those from environment
+// variables that the JVM recognizes and prepends to the list of command-line options
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
 
-	// add command-line args to those extracted from the enviroment (if any)
+	// add command-line args to those extracted from the environment (if any)
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
 		//		fmt.Printf("\t%q\n", v)

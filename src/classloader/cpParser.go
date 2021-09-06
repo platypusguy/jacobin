@@ -139,7 +139,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		}
 	}
 
-	if log.LogLevel == log.FINEST {
+	if log.Level == log.FINEST {
 		printCP(i, klass)
 	}
 

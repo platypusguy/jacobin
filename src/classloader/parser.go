@@ -116,11 +116,11 @@ func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
 	if err != nil || cpEntryCount <= 2 {
 		return cfe("Invalid number of entries in constant pool: " +
 			strconv.Itoa(cpEntryCount))
-	} else {
-		klass.cpCount = cpEntryCount
-		log.Log("Number of CP entries: "+strconv.Itoa(cpEntryCount), log.FINEST)
-		return nil
 	}
+
+	klass.cpCount = cpEntryCount
+	log.Log("Number of CP entries: "+strconv.Itoa(cpEntryCount), log.FINEST)
+	return nil
 }
 
 // decode the meaning of the class access flags and set the various getters
@@ -163,7 +163,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		}
 		log.Log("Access flags: 0x"+hex.EncodeToString(bytes[pos-1:pos+1]), log.FINEST)
 
-		if log.LogLevel == log.FINEST {
+		if log.Level == log.FINEST {
 			if klass.classIsPublic {
 				fmt.Fprintf(os.Stderr, "access: public\n")
 			}
