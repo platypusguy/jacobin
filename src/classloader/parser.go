@@ -224,13 +224,11 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
-	if klass.cpIndex[classNameIndex].entryType != UTF8 {
-		return pos, cfe("error classRef in CP does not point to a UTF-8 string")
+	className, err := fetchUTF8string(klass, classNameIndex)
+	if err != nil {
+		return pos, errors.New("") // the error msg has already been show to user
 	}
 
-	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
-	utf8Index := klass.cpIndex[classNameIndex].slot
-	className := klass.utf8Refs[utf8Index].content
 	log.Log("class name: "+className, log.FINEST)
 
 	if len(klass.className) > 0 {
