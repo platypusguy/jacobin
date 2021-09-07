@@ -301,7 +301,7 @@ func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error)
 }
 
 // these are actually interface references, simply indexes into the CP that point to
-// class entries, which in turn point to the UTF-8 string holding the name of the
+// class name entries, which in turn point to the UTF-8 string holding the name of the
 // interface class.
 func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos := loc
@@ -334,7 +334,15 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		}
 
 		log.Log("Interface class: "+interfaceName, log.FINEST)
-		klass.interfaces = append(klass.interfaces, interfaceName)
+
+		// klass.interfaces is a slice that holds the index into utf8Refs for
+		// each of the interface class names. This avoids duplicating the name
+		// that's already in the CP and it allows the classloader to get the
+		// interface name in a single dereference.
+		klass.interfaces = append(klass.interfaces, klass.cpIndex[classEntry.index].slot)
+		// name := klass.utf8Refs[klass.cpIndex[classEntry.index].slot].content
+		// println( "utf8 name: "+name)
+		//TODO: add tests for this.
 	}
 	return pos, nil
 }
