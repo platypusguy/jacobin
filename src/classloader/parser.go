@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
@@ -263,13 +264,11 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
-	if klass.cpIndex[classNameIndex].entryType != UTF8 {
-		return pos, cfe("error classRef in CP does not point to a UTF-8 string")
-	}
 
-	// get the slot # in the UTF-8 slice for this name string, then retrieve it.
-	utf8Index := klass.cpIndex[classNameIndex].slot
-	superClassName := klass.utf8Refs[utf8Index].content
+	superClassName, err := fetchUTF8string(klass, classNameIndex)
+	if err != nil {
+		return pos, errors.New("") // error has already been reported to user
+	}
 
 	if superClassName == "" && klass.className != "java/lang/Object" {
 		return pos, cfe("invaild empty string for superclass name")
@@ -299,7 +298,8 @@ func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error)
 }
 
 // these are actually interface references, simply indexes into the CP that point to
-// class entries for each of the implemented interfaces
+// class entries, which in turn point to the UTF-8 string holding the name of the
+// interface class.
 func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos := loc
 	for i := 0; i < klass.interfaceCount; i += 1 {
@@ -313,28 +313,25 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			return pos, cfe("Interface index is out of range: " + strconv.Itoa(interfaceIndex))
 		}
 
-		// get the entry in the CP that the interface index points to
-		pointedTo := klass.cpIndex[interfaceIndex]
-		if pointedTo.entryType != ClassRef {
+		// get the entry in the CP that the interface index points to,
+		// which is a class reference entry that then points to a UTF-8 entry
+		classref := klass.cpIndex[interfaceIndex]
+		if classref.entryType != ClassRef {
 			return pos, cfe("Interface index does not point to a class type. Got: " +
-				strconv.Itoa(pointedTo.entryType))
+				strconv.Itoa(classref.entryType))
 		}
 
-		// get the class entry, which is an index into the CP pointing to a UTF-8
-		// string that contains the name of the interface.
-		classEntry := klass.classRefs[pointedTo.slot]
+		// get the class entry from classRefs slice
+		classEntry := klass.classRefs[classref.slot]
 
-		interfaceNameIndex := klass.cpIndex[classEntry.index]
-		j := interfaceNameIndex.slot
-		interfaceName := klass.utf8Refs[j]
-		// interfaceName, err := fetchUTF8string(klass,j)
-		log.Log("Interface class: "+interfaceName.content, log.FINEST)
-		// log.Log("Interface class: "+interfaceName, log.FINEST)
+		// use the class entry's index field to look up the UTF-8 string
+		interfaceName, err := fetchUTF8string(klass, classEntry.index)
+		if err != nil {
+			return pos, errors.New("") // error msg has already been shown
+		}
 
-		klass.interfaces = append(klass.interfaces, interfaceName.content)
-		// klass.interfaces = append(klass.interfaces, interfaceName)
-		//TODO: figure out how to use fetchUTF8string (test by reversing // lines above.
-
+		log.Log("Interface class: "+interfaceName, log.FINEST)
+		klass.interfaces = append(klass.interfaces, interfaceName)
 	}
 	return pos, nil
 }
