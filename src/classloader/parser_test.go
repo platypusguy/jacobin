@@ -309,3 +309,25 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 		}
 	}
 }
+
+func TestValidParseInterfaceCount(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := parsedClass{}
+
+	bytesToTest := []byte{
+		0x00, 0x00, 0x12,
+	}
+
+	_, err := parseInterfaceCount(bytesToTest, 0, &pc)
+	if err != nil {
+		t.Error("Unexpected error reading interface count")
+	}
+
+	if pc.interfaceCount != 18 {
+		t.Error("Expecting interface count of 18. Got: " + strconv.Itoa(pc.interfaceCount))
+	}
+}
