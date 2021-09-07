@@ -271,10 +271,6 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	if err == nil {
 		t.Error("Parse of class name field should have generated an error but it did not.")
 	}
-
-	if !strings.HasPrefix(err.Error(), "Class Format Error: error classRef in CP does not point to a UTF-8 string") {
-		t.Error("Expected error msg about invalid UTF-8 entry for class name. Got: " + err.Error())
-	}
 }
 
 func TestErrorOnEmptySuperclassName(t *testing.T) {
