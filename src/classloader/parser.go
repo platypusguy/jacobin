@@ -73,6 +73,11 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		}
 	}
 
+	pos, err = parseFieldCount(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
@@ -331,5 +336,19 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		log.Log("Interface class: "+interfaceName, log.FINEST)
 		klass.interfaces = append(klass.interfaces, interfaceName)
 	}
+	return pos, nil
+}
+
+// Get the number of fields in this class
+func parseFieldCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	fieldCount, err := intFrom2Bytes(bytes, pos+1)
+	pos += 2
+	if err != nil {
+		return pos, cfe("Invalid fetch of field count")
+	}
+
+	log.Log("field count: "+strconv.Itoa(fieldCount), log.FINEST)
+	klass.fieldCount = fieldCount
 	return pos, nil
 }

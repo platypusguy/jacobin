@@ -37,6 +37,7 @@ type parsedClass struct {
 	superClass     string   // name of superclass for this class
 	interfaceCount int      // number of interfaces this class implements
 	interfaces     []string // the interfaces this class implements
+	fieldCount     int      // number of fields in this class
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries
