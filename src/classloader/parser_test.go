@@ -372,3 +372,46 @@ func TestParseOfValidInterface(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestParseOfInvalidInterface(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // the invalid reference
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 3
+	klass.interfaceCount = 1
+
+	testBytes := []byte{0x00, 0x00, 0x02} // 3 bytes b/c first byte is skipped.
+	_, err := parseInterfaces(testBytes, 0, &klass)
+
+	if err == nil {
+		t.Error("Expected an error while testing parse of interface, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Interface index does not point to a class type") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
