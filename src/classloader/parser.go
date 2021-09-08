@@ -78,6 +78,13 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	if pClass.fieldCount > 0 {
+		pos, err = parseFields(rawBytes, pos, &pClass)
+		if err != nil {
+			return pClass, err
+		}
+	}
+
 	return pClass, nil
 }
 
@@ -358,5 +365,66 @@ func parseFieldCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 	log.Log("field count: "+strconv.Itoa(fieldCount), log.FINEST)
 	klass.fieldCount = fieldCount
+	return pos, nil
+}
+
+// parse the fields in a class. The contents of each field is explained here:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.5
+// The layout, per that spec:
+// field_info {
+//    u2             access_flags;
+//    u2             name_index;
+//    u2             descriptor_index;
+//    u2             attributes_count;
+//    attribute_info attributes[attributes_count];
+// }
+
+func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	for i := 0; i < klass.fieldCount; i += 1 {
+		f := field{}
+		accessFlags, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("error retrieving access flags for field " + strconv.Itoa(i))
+		}
+		f.accessFlags = accessFlags
+
+		nameIndex, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil || nameIndex < 1 || nameIndex > klass.cpCount-1 {
+			return pos, cfe("error retrieving name index for field")
+		}
+
+		f.name, err = fetchUTF8slot(klass, nameIndex)
+		if err != nil {
+			return pos, cfe("error fetching UTF-8 string for name of field")
+		}
+
+		descIndex, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil || descIndex < 1 || descIndex > klass.cpCount-1 {
+			return pos, cfe("error retrieving description index for field: " +
+				klass.utf8Refs[f.name].content)
+		}
+		f.description, err = fetchUTF8slot(klass, descIndex)
+		if err != nil {
+			return pos, cfe("error retrieving UTF8 slot for description of field: " +
+				klass.utf8Refs[f.name].content)
+		}
+
+		attrCount, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("error retrieving attribute count for field: " +
+				klass.utf8Refs[f.name].content)
+		}
+
+		for j := 0; j < attrCount; j++ {
+
+		}
+
+	}
+
 	return pos, nil
 }

@@ -38,6 +38,7 @@ type parsedClass struct {
 	interfaceCount int    // number of interfaces this class implements
 	interfaces     []int  // the interfaces this class implements, as indices into utf8Refs
 	fieldCount     int    // number of fields in this class
+	fields         []field
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries
@@ -62,6 +63,20 @@ type parsedClass struct {
 	classIsAnnotation bool
 	classIsEnum       bool
 	classIsModule     bool
+}
+
+type field struct {
+	accessFlags int
+	name        int // index of the UTF-8 entry in the CP
+	description int // index of the UTF-8 entry in the CP
+	attributes  []attr
+}
+
+// the structure of many attributes (field, class, etc.) The content is just the raw bytes.
+type attr struct {
+	attrName    int    // index of the UTF-8 entry in the CP
+	attrSize    int    // length of the following array of raw bytes
+	attrContent []byte // the raw data of the attribute
 }
 
 // cfe = class format error, which is the error thrown by the parser for most

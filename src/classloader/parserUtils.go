@@ -50,3 +50,26 @@ func fetchUTF8string(klass *parsedClass, index int) (string, error) {
 
 	return klass.utf8Refs[i].content, nil
 }
+
+// like the preceding function, except this returns the slot number in the utf8Refs
+// rather than the string that's in that slot.
+func fetchUTF8slot(klass *parsedClass, index int) (int, error) {
+	if index < 1 || index > klass.cpCount-1 {
+		return -1, cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
+	}
+
+	if klass.cpIndex[index].entryType != UTF8 {
+		return -1, cfe("attempt to fetch UTF8 string from non-UTF8 CP entry #" + strconv.Itoa(index))
+	}
+
+	slot := klass.cpIndex[index].slot
+	if slot < 0 || slot > len(klass.utf8Refs)-1 {
+		return -1, cfe("invalid index into UTF8 array of CP: " + strconv.Itoa(slot))
+	}
+	return slot, nil
+}
+
+func fetchAttribute(klass *parsedClass, index int) (attr, error) {
+	///>>>>>>>>>>>>>>>>>>>>>> resume here
+	return attr{}, nil
+}
