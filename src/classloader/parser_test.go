@@ -331,3 +331,44 @@ func TestValidParseInterfaceCount(t *testing.T) {
 		t.Error("Expecting interface count of 18. Got: " + strconv.Itoa(pc.interfaceCount))
 	}
 }
+
+func TestParseOfValidInterface(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // the UTF-8 reference
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 3
+	klass.interfaceCount = 1
+
+	testBytes := []byte{0x00, 0x00, 0x02} // 3 bytes b/c first byte is skipped.
+	_, err := parseInterfaces(testBytes, 0, &klass)
+
+	if err != nil {
+		t.Error("Unexpected error testing parse of interface")
+	}
+
+	i := klass.interfaces[0]
+	if klass.utf8Refs[i].content != "gherkin" {
+		t.Error("Expecting interface of 'gherkin' but got: " + klass.utf8Refs[i].content)
+	}
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
