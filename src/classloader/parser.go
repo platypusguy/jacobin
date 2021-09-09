@@ -421,9 +421,25 @@ func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		}
 
 		for j := 0; j < attrCount; j++ {
-
+			attribute, k, err := fetchAttribute(klass, bytes, pos)
+			if err != nil {
+				return pos, errors.New("") // error message will already have been displayed
+			}
+			f.attributes = append(f.attributes, attribute)
+			pos = k
 		}
 
+		if log.Level == log.FINEST {
+			fmt.Fprintf(os.Stderr, "\tField %s, desc: %s has %d attributes.",
+				klass.utf8Refs[f.name].content, klass.utf8Refs[f.description].content,
+				len(f.attributes))
+			if len(f.attributes) > 0 {
+				fmt.Fprintf(os.Stderr, "First attrib: %s\n",
+					klass.utf8Refs[f.attributes[0].attrName].content)
+			} else {
+				fmt.Fprintf(os.Stderr, "\n")
+			}
+		}
 	}
 
 	return pos, nil

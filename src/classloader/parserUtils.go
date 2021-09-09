@@ -69,7 +69,40 @@ func fetchUTF8slot(klass *parsedClass, index int) (int, error) {
 	return slot, nil
 }
 
-func fetchAttribute(klass *parsedClass, index int) (attr, error) {
-	///>>>>>>>>>>>>>>>>>>>>>> resume here
-	return attr{}, nil
+// fetches attribute info. Attributes are values associated with fields, methods, classes, and
+// code attributes (yes, the word 'attribute' is overloaded in JVM parlance). The spec is here:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7 and the general
+// layout is:
+// attribute_info {
+//    u2 attribute_name_index;  // the name of the attribute
+//    u4 attribute_length;
+//    u1 info[attribute_length];
+// }
+func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error) {
+	pos := loc
+	attribute := attr{}
+	nameIndex, err := intFrom2Bytes(bytes, pos+1)
+	if err != nil {
+		return attribute, pos, cfe("error fetching field attribute")
+	}
+	nameSlot, err := fetchUTF8slot(klass, nameIndex)
+	if err != nil {
+		return attribute, pos, cfe("error fetching name of field attribute")
+	}
+
+	attribute.attrName = nameSlot // slot in UTF-8 slice of CP
+
+	length, err := intFrom4Bytes(bytes, pos+1)
+	pos += 4
+	if err != nil {
+		return attribute, pos, cfe("error fetching lenght of field attribute")
+	}
+	attribute.attrSize = length
+
+	b := make([]byte, length)
+	copy(b, bytes[pos+1:pos+length])
+
+	attribute.attrContent = b
+
+	return attribute, pos + length, nil
 }

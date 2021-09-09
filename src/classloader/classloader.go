@@ -63,6 +63,8 @@ type parsedClass struct {
 	classIsAnnotation bool
 	classIsEnum       bool
 	classIsModule     bool
+
+	// ---- field attributes ----
 }
 
 type field struct {
