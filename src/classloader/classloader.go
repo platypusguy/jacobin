@@ -39,6 +39,8 @@ type parsedClass struct {
 	interfaces     []int  // the interfaces this class implements, as indices into utf8Refs
 	fieldCount     int    // number of fields in this class
 	fields         []field
+	methodCount    int
+	methods        []method
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries
@@ -72,6 +74,9 @@ type field struct {
 	name        int // index of the UTF-8 entry in the CP
 	description int // index of the UTF-8 entry in the CP
 	attributes  []attr
+}
+
+type method struct {
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.

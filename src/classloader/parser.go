@@ -85,6 +85,11 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		}
 	}
 
+	pos, err = parseMethodCount(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
@@ -441,6 +446,19 @@ func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			}
 		}
 	}
+	return pos, nil
+}
 
+// Get the number of methods in this class
+func parseMethodCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	fieldCount, err := intFrom2Bytes(bytes, pos+1)
+	pos += 2
+	if err != nil {
+		return pos, cfe("Invalid fetch of method count")
+	}
+
+	log.Log("method count: "+strconv.Itoa(fieldCount), log.FINEST)
+	klass.fieldCount = fieldCount
 	return pos, nil
 }
