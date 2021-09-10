@@ -69,6 +69,7 @@ type parsedClass struct {
 	// ---- field attributes ----
 }
 
+// the fields defined in the class
 type field struct {
 	accessFlags int
 	name        int // index of the UTF-8 entry in the CP
@@ -76,7 +77,12 @@ type field struct {
 	attributes  []attr
 }
 
+// the methods of the class, including the constructors
 type method struct {
+	accessFlags int
+	name        int // index of the UTF-8 entry in the CP
+	description int // index of the UTF-8 entry in the CP
+	attributes  []attr
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.

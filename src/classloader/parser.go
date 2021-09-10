@@ -90,6 +90,12 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	if pClass.methodCount > 0 {
+		pos, err = parseMethods(rawBytes, pos, &pClass)
+		if err != nil {
+			return pClass, err
+		}
+	}
 	return pClass, nil
 }
 
@@ -460,5 +466,75 @@ func parseMethodCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 	log.Log("method count: "+strconv.Itoa(methodCount), log.FINEST)
 	klass.methodCount = methodCount
+	return pos, nil
+}
+
+// Get the methods for this class. This can involve complex logic, but here
+// we're just grabbing the info about the class and the actual method bytecodes
+// as raw bytes. The description of the method entries in the spec is at:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.6
+// The layout of the entries is:
+// method_info {
+//    u2             access_flags;
+//    u2             name_index;
+//    u2             descriptor_index;
+//    u2             attributes_count;
+//    attribute_info attributes[attributes_count];
+// }
+func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	meth := method{}
+	for i := 0; i < klass.methodCount; i++ {
+		accessFlags, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("Invalid fetch of method access flags in class: " +
+				klass.className)
+		}
+
+		nameIndex, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("Invalid fetch of method name index in class: " +
+				klass.className)
+		}
+		nameSlot, err := fetchUTF8slot(klass, nameIndex)
+
+		descIndex, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("Invalid fetch of method description index in method: " +
+				klass.utf8Refs[nameSlot].content)
+		}
+		descSlot, err := fetchUTF8slot(klass, descIndex)
+
+		attrCount, err := intFrom2Bytes(bytes, pos+1)
+		pos += 2
+		if err != nil {
+			return pos, cfe("Invalid fetch of method attribute count in method: " +
+				klass.utf8Refs[nameSlot].content)
+		}
+
+		meth.accessFlags = accessFlags
+		meth.name = nameSlot
+		meth.description = descSlot
+
+		for j := 0; j < attrCount; j++ {
+			attrib, location, err := fetchAttribute(klass, bytes, pos)
+			pos = location
+			if err != nil {
+				meth.attributes = append(meth.attributes, attrib)
+			} else {
+				return pos, cfe("Error fetching method attribute in method: " +
+					klass.utf8Refs[nameSlot].content)
+			}
+		}
+		log.Log(
+			"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
+				klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
+			log.FINEST)
+	} //TODO: Fix this (line 527)  Error fetching method attribute in method: getIndex
+
+	klass.methods = append(klass.methods, meth)
 	return pos, nil
 }

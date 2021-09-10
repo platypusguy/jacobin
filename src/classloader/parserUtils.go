@@ -82,6 +82,7 @@ func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error
 	pos := loc
 	attribute := attr{}
 	nameIndex, err := intFrom2Bytes(bytes, pos+1)
+	pos += 2
 	if err != nil {
 		return attribute, pos, cfe("error fetching field attribute")
 	}
