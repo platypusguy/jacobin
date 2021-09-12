@@ -177,3 +177,66 @@ func TestFetchInvalidUTF8string(t *testing.T) {
 		t.Error("Expected different error msg on failed fetch of UTF-8 CP entry. Got: " + msg)
 	}
 }
+
+// test a valid class file attribute (which appear as the last group of entries in
+// the class file.
+func TestFetchValidAttribute(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0}) // UTF-8 rec w/ attribute name
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})
+	klass.cpCount = 2
+
+	// the attribute bytes. There's a leading dummy byte b/c the fetch routine starts
+	// at 1 byte after the passed-in position. So here we have a name index of 01, which
+	// points to the first entry in the CP above. That entry points to the first UTF-8
+	// record, which is in postion 0 in the utf8Refs and has a value of "SourceCode", which
+	// is a common attribute value. The next four bytes are the length of the remaining
+	// bytes in the attribute. In this case, that value is 2. And those two bytes follow
+	// right away with the values of 'A' and 'B' respectively.
+	bytes := []byte{00, 00, 01, 00, 00, 00, 02, 'A', 'B'}
+	attribute, _, err := fetchAttribute(&klass, bytes, 0)
+	if err != nil {
+		t.Error("Unexpected error in test of fetchAttribute")
+	}
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if len(errMsg) > 0 {
+		t.Error("Unexpected message to user in fetchAttribute(): " + errMsg)
+	}
+
+	if attribute.attrName != 0 {
+		t.Error("Unexpected value for attribute name: " + strconv.Itoa(attribute.attrName))
+	}
+
+	if attribute.attrSize != 2 {
+		t.Error("Unexpected value for attribute size. Expected 2, got: " +
+			strconv.Itoa(attribute.attrSize))
+	}
+
+	if attribute.attrContent[0] != 'A' || attribute.attrContent[1] != 'B' {
+		t.Error("Unexpected attribute content. Expecting A B, got: " +
+			string(attribute.attrContent[0]) + string(attribute.attrContent[1]))
+	}
+}

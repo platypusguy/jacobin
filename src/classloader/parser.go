@@ -17,7 +17,7 @@ import (
 )
 
 // reads in a class file, parses it, and puts the values into the fields of the
-// class that will be loaded into the classloader. Some verification performed
+// class that will be loaded into the classloader. Basic verification performed.
 // receives the rawBytes of the class that were previously read in
 //
 // ClassFormatError - if the parser finds anything unexpected
@@ -107,6 +107,10 @@ func parse(rawBytes []byte) (parsedClass, error) {
 	}
 	if err != nil {
 		return pClass, err
+	}
+
+	if pos != len(rawBytes)-1 {
+		return pClass, cfe("Unexpected bytes found at end of class file: " + pClass.className)
 	}
 	return pClass, nil
 }
