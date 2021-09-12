@@ -96,7 +96,7 @@ func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error
 	length, err := intFrom4Bytes(bytes, pos+1)
 	pos += 4
 	if err != nil {
-		return attribute, pos, cfe("error fetching lenght of field attribute")
+		return attribute, pos, cfe("error fetching length of field attribute")
 	}
 	attribute.attrSize = length
 
