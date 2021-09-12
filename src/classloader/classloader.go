@@ -41,6 +41,8 @@ type parsedClass struct {
 	fields         []field
 	methodCount    int
 	methods        []method
+	attribCount    int
+	attributes     []attr
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries

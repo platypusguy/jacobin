@@ -96,6 +96,12 @@ func parse(rawBytes []byte) (parsedClass, error) {
 			return pClass, err
 		}
 	}
+
+	pos, err = parseClassAttributeCount(rawBytes, pos, &pClass)
+	if err != nil {
+		return pClass, err
+	}
+
 	return pClass, nil
 }
 
@@ -536,5 +542,20 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	}
 
 	klass.methods = append(klass.methods, meth)
+	return pos, nil
+}
+
+// get the count of the class attributes (which form the last group of elements in
+// the class file).
+func parseClassAttributeCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	attributeCount, err := intFrom2Bytes(bytes, pos+1)
+	pos += 2
+	if err != nil {
+		return pos, cfe("Invalid fetch of class attribute count")
+	}
+
+	log.Log("class attribute count: "+strconv.Itoa(attributeCount), log.FINEST)
+	klass.attribCount = attributeCount
 	return pos, nil
 }
