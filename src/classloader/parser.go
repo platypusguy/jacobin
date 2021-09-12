@@ -522,7 +522,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		for j := 0; j < attrCount; j++ {
 			attrib, location, err := fetchAttribute(klass, bytes, pos)
 			pos = location
-			if err != nil {
+			if err == nil {
 				meth.attributes = append(meth.attributes, attrib)
 			} else {
 				return pos, cfe("Error fetching method attribute in method: " +
@@ -533,7 +533,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
 				klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
 			log.FINEST)
-	} //TODO: Fix this (line 527)  Error fetching method attribute in method: getIndex
+	}
 
 	klass.methods = append(klass.methods, meth)
 	return pos, nil
