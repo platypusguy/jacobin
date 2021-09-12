@@ -43,6 +43,7 @@ type parsedClass struct {
 	methods        []method
 	attribCount    int
 	attributes     []attr
+	sourceFile     string
 
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries

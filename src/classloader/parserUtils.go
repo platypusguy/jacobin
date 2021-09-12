@@ -101,7 +101,9 @@ func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error
 	attribute.attrSize = length
 
 	b := make([]byte, length)
-	copy(b, bytes[pos+1:pos+length])
+	for i := 0; i < length; i++ {
+		b[i] = bytes[pos+1+i]
+	}
 
 	attribute.attrContent = b
 

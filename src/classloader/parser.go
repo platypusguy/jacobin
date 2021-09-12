@@ -102,6 +102,12 @@ func parse(rawBytes []byte) (parsedClass, error) {
 		return pClass, err
 	}
 
+	if pClass.attribCount > 0 {
+		pos, err = parseClassAttributes(rawBytes, pos, &pClass)
+	}
+	if err != nil {
+		return pClass, err
+	}
 	return pClass, nil
 }
 
@@ -555,7 +561,35 @@ func parseClassAttributeCount(bytes []byte, loc int, klass *parsedClass) (int, e
 		return pos, cfe("Invalid fetch of class attribute count")
 	}
 
-	log.Log("class attribute count: "+strconv.Itoa(attributeCount), log.FINEST)
+	log.Log("Class attribute count: "+strconv.Itoa(attributeCount), log.FINEST)
 	klass.attribCount = attributeCount
+	return pos, nil
+}
+
+func parseClassAttributes(bytes []byte, loc int, klass *parsedClass) (int, error) {
+	pos := loc
+	for j := 0; j < klass.attribCount; j++ {
+		attrib, location, err := fetchAttribute(klass, bytes, pos)
+		pos = location
+		if err == nil {
+			klass.attributes = append(klass.attributes, attrib)
+		} else {
+			return pos, cfe("Error fetching class attribute in class: " +
+				klass.className)
+		}
+
+		log.Log("Class: "+klass.className+", attribute: "+klass.utf8Refs[attrib.attrName].content,
+			log.FINEST)
+
+		if klass.utf8Refs[attrib.attrName].content == "SourceFile" {
+			sourceNameIndex, _ := intFrom2Bytes(attrib.attrContent, 0)
+			utf8slot := klass.cpIndex[sourceNameIndex].slot
+			sourceFile := klass.utf8Refs[utf8slot].content // points to the name of the source file
+			klass.sourceFile = sourceFile
+			log.Log("Source file: "+sourceFile, log.FINEST)
+		}
+
+		klass.attributes = append(klass.attributes, attrib)
+	}
 	return pos, nil
 }
