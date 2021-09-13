@@ -240,3 +240,44 @@ func TestFetchValidAttribute(t *testing.T) {
 			string(attribute.attrContent[0]) + string(attribute.attrContent[1]))
 	}
 }
+
+func TestFetchInvalidAttribute(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})
+	klass.cpCount = 2
+
+	// see TestValidAttribute for info about this test data.
+	bytes := []byte{00, 00, 06, 00, 00, 00, 02, 'A', 'B'} // 06 should be 01.
+	_, _, err := fetchAttribute(&klass, bytes, 0)
+	if err == nil {
+		t.Error("Expected an error in test of fetchAttribute, but did not getone")
+	}
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if len(errMsg) <= 0 {
+		t.Error("Expected an error message but did not get one in fetchAttribute(): " + errMsg)
+	}
+}
