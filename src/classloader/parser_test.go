@@ -415,3 +415,107 @@ func TestParseOfInvalidInterface(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestParseOfInvalidFieldWithFaultyNameIndex(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 3
+	klass.fieldCount = 1
+
+	testBytes := []byte{0x00, 0x00, 0x02, 0x00, 0x10} //  first byte is skipped.
+	// last byte of testBytes says that the name index is in slot 16 (0x10), which
+	// exceeds the size of the CP (stored in klass.cpCount). This should generate error
+	_, err := parseFields(testBytes, 0, &klass)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err == nil {
+		t.Error("Expected an error while testing parse of field, but got none")
+	}
+}
+
+func TestParseOfFieldWithNoAttributes(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"pickle"})
+	klass.cpCount = 3
+	klass.fieldCount = 1
+
+	testBytes := []byte{
+		0x00,       // first byte is skipped
+		0x00, 0x02, // access flags
+		0x00, 0x01, // UTF-8 record for the nameIndex, i.e., "gherkin"
+		0x00, 0x02, // UTF-8 record for the descIndex, i.e., "pickle
+		0x00, 0x00, // attribute count: there are none here
+	}
+
+	_, err := parseFields(testBytes, 0, &klass)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err != nil {
+		t.Error("Expected no error in parsing field, but got one.")
+	}
+
+	if len(klass.fields) != 1 {
+		t.Error("Expected 1 field entry in parsed class, but got none")
+	}
+
+	f := klass.fields[0]
+	if f.accessFlags != 2 {
+		t.Error("Expected a field access flag of 2, got: " + strconv.Itoa(f.accessFlags))
+	}
+
+	if f.name != 0 {
+		t.Error("Expected a field name UTF entry at 0, got: " + strconv.Itoa(f.name))
+	}
+
+	if f.description != 1 {
+		t.Error("Expectef a field description UTF entry at 1, got: " + strconv.Itoa(f.description))
+	}
+
+	if len(f.attributes) != 0 {
+		t.Error("Expected a field attribute count of 0, got: " + strconv.Itoa(len(f.attributes)))
+	}
+}

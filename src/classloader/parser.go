@@ -456,6 +456,8 @@ func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			pos = k
 		}
 
+		klass.fields = append(klass.fields, f)
+
 		if log.Level == log.FINEST {
 			fmt.Fprintf(os.Stderr, "\tField %s, desc: %s has %d attributes.",
 				klass.utf8Refs[f.name].content, klass.utf8Refs[f.description].content,
