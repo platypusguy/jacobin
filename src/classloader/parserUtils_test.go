@@ -264,7 +264,7 @@ func TestFetchInvalidAttribute(t *testing.T) {
 	bytes := []byte{00, 00, 06, 00, 00, 00, 02, 'A', 'B'} // 06 should be 01.
 	_, _, err := fetchAttribute(&klass, bytes, 0)
 	if err == nil {
-		t.Error("Expected an error in test of fetchAttribute, but did not getone")
+		t.Error("Expected an error in test of fetchAttribute, but did not get one")
 	}
 
 	// restore stderr and stdout to what they were before
