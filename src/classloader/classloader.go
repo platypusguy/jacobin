@@ -49,6 +49,7 @@ type parsedClass struct {
 	cpCount   int             // count of constant pool entries
 	cpIndex   []cpEntry       // the constant pool index to entries
 	classRefs []classRefEntry // this and next slices hold CP entries
+	doubles   []float64
 	fieldRefs []fieldRefEntry
 	// intConsts     []intConst
 	intConsts     []int

@@ -7,8 +7,10 @@
 package classloader
 
 import (
+	"encoding/binary"
 	"fmt"
 	"jacobin/log"
+	"math"
 	"os"
 )
 
@@ -96,6 +98,20 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{LongConst, len(klass.longConsts) - 1}
 			i++
 			// long ints take up two slots in the CP, of which the second is just a dummy slot.
+			klass.cpIndex[i] = cpEntry{Invalid, 0}
+			i++
+		case DoubleConst:
+			bytes := make([]byte, 8)
+			for j := 0; j < 8; j++ {
+				bytes[j] = rawBytes[pos+1+j]
+			}
+			pos += 8
+			bits := binary.BigEndian.Uint64(bytes)
+			doubleValue := math.Float64frombits(bits)
+			klass.doubles = append(klass.doubles, doubleValue)
+			klass.cpIndex[i] = cpEntry{DoubleConst, len(klass.doubles) - 1}
+			i++
+			// doubles take up two slots in the CP, of which the second is just a dummy slot.
 			klass.cpIndex[i] = cpEntry{Invalid, 0}
 			i++
 		case ClassRef:
