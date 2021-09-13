@@ -56,14 +56,14 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 
 	klass.classRefs = []classRefEntry{}
 	klass.fieldRefs = []fieldRefEntry{}
-	klass.intConsts = []intConst{}
+	klass.intConsts = []int{}
 	klass.methodRefs = []methodRefEntry{}
 	klass.nameAndTypes = []nameAndTypeEntry{}
 	klass.stringRefs = []stringConstantEntry{}
 	klass.utf8Refs = []utf8Entry{}
 
-	i := 0
-	for i = 1; i <= klass.cpCount-1; {
+	var i int
+	for i = 1; i <= klass.cpCount-1; { // i starts at 1 due to the dummy entry at CP[0]
 		pos += 1
 		entryType := int(rawBytes[pos])
 		switch entryType {
@@ -84,10 +84,20 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 		case IntConst:
 			intValue, _ := intFrom4Bytes(rawBytes, pos+1)
 			pos += 4
-			ice := intConst{intValue}
-			klass.intConsts = append(klass.intConsts, ice)
+			klass.intConsts = append(klass.intConsts, intValue)
 			klass.cpIndex[i] = cpEntry{IntConst, len(klass.intConsts) - 1}
 			i += 1
+		case LongConst:
+			highBytes, _ := intFrom4Bytes(rawBytes, pos+1)
+			lowBytes, _ := intFrom4Bytes(rawBytes, pos+5)
+			pos += 8
+			longValue := int64((highBytes << 32) + lowBytes)
+			klass.longConsts = append(klass.longConsts, longValue)
+			klass.cpIndex[i] = cpEntry{LongConst, len(klass.longConsts) - 1}
+			i++
+			// long ints take up two slots in the CP, of which the second is just a dummy slot.
+			klass.cpIndex[i] = cpEntry{Invalid, 0}
+			i++
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
 			cre := classRefEntry{index}
@@ -157,7 +167,11 @@ func printCP(entries int, klass *parsedClass) {
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
 		case IntConst:
 			ic := entry.slot
-			fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic].value)
+			// fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic].value)
+			fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic])
+		case LongConst:
+			lc := entry.slot
+			fmt.Fprintf(os.Stderr, "(long constant)    %dL\n", klass.longConsts[lc])
 		case UTF8:
 			s := entry.slot
 			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", klass.utf8Refs[s].content)
@@ -203,9 +217,9 @@ type utf8Entry struct { // type: 01 (UTF-8 string)
 	content string
 }
 
-type intConst struct { // type 03 (integer constant)
-	value int
-}
+// type intConst struct { // type 03 (integer constant)
+// 	value int
+// }
 
 type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
 	index int

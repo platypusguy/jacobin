@@ -81,8 +81,9 @@ func TestCPvalidIntConst(t *testing.T) {
 	}
 
 	ice := pc.intConsts[0]
-	if ice.value != 17113156 {
-		t.Error("Was expecting an integer constant of 17113156, but got: " + strconv.Itoa(ice.value))
+	if ice != 17113156 {
+		t.Error("Was expecting an integer constant of 17113156, but got: " + strconv.Itoa(ice))
+
 	}
 
 	if len(pc.cpIndex) != 2 {
@@ -90,6 +91,46 @@ func TestCPvalidIntConst(t *testing.T) {
 	}
 }
 
+func TestCPvalidLongConst(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x05, 0x00, 0x00, 0x00, 0x01, // first four bytes of long
+		0x00, 0x00, 0x00, 0x02, // second four bytes of long
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3 // it's 3 b/c the long constant takes up two slots
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP long constant generated an unexpected error")
+	}
+
+	if loc != 18 {
+		t.Error("Was expecting a new position of 18, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.longConsts) != 1 {
+		t.Error("Was expecting the long const array to have 1 entry, but it has: " + strconv.Itoa(len(pc.intConsts)))
+	}
+
+	long := pc.longConsts[0]
+	if long != 4294967298 {
+		longInt := int(long)
+		t.Error("Was expecting an long constant of 4294967298, but got: " + strconv.Itoa(longInt))
+
+	}
+
+	if len(pc.cpIndex) != 3 { // the dummy entry + 2 slots for the long
+		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	}
+}
 func TestCPvalidClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")

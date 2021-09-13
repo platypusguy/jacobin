@@ -46,12 +46,14 @@ type parsedClass struct {
 	sourceFile     string
 
 	// ---- constant pool data items ----
-	cpCount       int             // count of constant pool entries
-	cpIndex       []cpEntry       // the constant pool index to entries
-	classRefs     []classRefEntry // this and next slices hold CP entries
-	fieldRefs     []fieldRefEntry
-	intConsts     []intConst
+	cpCount   int             // count of constant pool entries
+	cpIndex   []cpEntry       // the constant pool index to entries
+	classRefs []classRefEntry // this and next slices hold CP entries
+	fieldRefs []fieldRefEntry
+	// intConsts     []intConst
+	intConsts     []int
 	interfaceRefs []interfaceRefEntry
+	longConsts    []int64
 	methodRefs    []methodRefEntry
 	nameAndTypes  []nameAndTypeEntry
 	stringRefs    []stringConstantEntry
