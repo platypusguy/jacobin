@@ -188,6 +188,9 @@ func printCP(entries int, klass *parsedClass) {
 		case LongConst:
 			lc := entry.slot
 			fmt.Fprintf(os.Stderr, "(long constant)    %dL\n", klass.longConsts[lc])
+		case DoubleConst:
+			lc := entry.slot
+			fmt.Fprintf(os.Stderr, "(double constant)  %f\n", klass.doubles[lc])
 		case UTF8:
 			s := entry.slot
 			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", klass.utf8Refs[s].content)
