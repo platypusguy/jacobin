@@ -89,6 +89,17 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.intConsts = append(klass.intConsts, intValue)
 			klass.cpIndex[i] = cpEntry{IntConst, len(klass.intConsts) - 1}
 			i += 1
+		case FloatConst:
+			bytes := make([]byte, 4)
+			for j := 0; j < 4; j++ {
+				bytes[j] = rawBytes[pos+1+j]
+			}
+			pos += 4
+			bits := binary.BigEndian.Uint32(bytes)
+			floatValue := math.Float32frombits(bits)
+			klass.floats = append(klass.floats, floatValue)
+			klass.cpIndex[i] = cpEntry{FloatConst, len(klass.floats) - 1}
+			i++
 		case LongConst:
 			highBytes, _ := intFrom4Bytes(rawBytes, pos+1)
 			lowBytes, _ := intFrom4Bytes(rawBytes, pos+5)
@@ -185,12 +196,15 @@ func printCP(entries int, klass *parsedClass) {
 			ic := entry.slot
 			// fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic].value)
 			fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic])
+		case FloatConst:
+			fc := entry.slot
+			fmt.Fprintf(os.Stderr, "(float constant)   %f\n", klass.floats[fc])
 		case LongConst:
 			lc := entry.slot
 			fmt.Fprintf(os.Stderr, "(long constant)    %dL\n", klass.longConsts[lc])
 		case DoubleConst:
-			lc := entry.slot
-			fmt.Fprintf(os.Stderr, "(double constant)  %f\n", klass.doubles[lc])
+			dc := entry.slot
+			fmt.Fprintf(os.Stderr, "(double constant)  %f\n", klass.doubles[dc])
 		case UTF8:
 			s := entry.slot
 			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", klass.utf8Refs[s].content)
