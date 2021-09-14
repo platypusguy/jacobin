@@ -144,8 +144,11 @@ func TestCPvalidDoubleConst(t *testing.T) {
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
-		0x05, 0x00, 0x00, 0x00, 0x01, // first four bytes of long
-		0x00, 0x00, 0x00, 0x02, // second four bytes of long
+		0x06, // Double constant
+		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
+		//
+		0x40, 0x09, 0x21, 0xF9, // first four bytes of double
+		0xF0, 0x1B, 0x86, 0x6E, // second four bytes of double
 	}
 
 	pc := parsedClass{}
@@ -153,26 +156,22 @@ func TestCPvalidDoubleConst(t *testing.T) {
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
 	if err != nil {
-		t.Error("Parsing valid CP long constant generated an unexpected error")
+		t.Error("Parsing valid CP double constant generated an unexpected error")
 	}
 
 	if loc != 18 {
 		t.Error("Was expecting a new position of 18, but got: " + strconv.Itoa(loc))
 	}
 
-	if len(pc.longConsts) != 1 {
-		t.Error("Was expecting the long const array to have 1 entry, but it has: " + strconv.Itoa(len(pc.intConsts)))
+	if len(pc.doubles) != 1 {
+		t.Error("Was expecting the double const array to have 1 entry, but it has: " +
+			strconv.Itoa(len(pc.intConsts)))
 	}
 
-	long := pc.longConsts[0]
-	if long != 4294967298 {
-		longInt := int(long)
-		t.Error("Was expecting an long constant of 4294967298, but got: " + strconv.Itoa(longInt))
-
-	}
-
-	if len(pc.cpIndex) != 3 { // the dummy entry + 2 slots for the long
-		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	double := pc.doubles[0]
+	if double != 3.14159 { // because of the low precision, a direct comparison should work
+		t.Error("Was expecting a value of 3.14159, but got: " +
+			strconv.FormatFloat(double, 'E', -1, 64))
 	}
 }
 func TestCPvalidClassRef(t *testing.T) {
