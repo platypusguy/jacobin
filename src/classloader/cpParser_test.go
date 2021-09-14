@@ -133,10 +133,6 @@ func TestCPvalidLongConst(t *testing.T) {
 }
 
 func TestCPvalidDoubleConst(t *testing.T) {
-	// CURR: Resume here. Nothing has been touched in this test.
-	// Consult the little endian example here:
-	// https://stackoverflow.com/questions/22491876/convert-byte-slice-uint8-to-float64-in-golang
-	// and here: https://play.golang.org/p/gbQ8NpRPaHO
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.WARNING)
@@ -165,13 +161,52 @@ func TestCPvalidDoubleConst(t *testing.T) {
 
 	if len(pc.doubles) != 1 {
 		t.Error("Was expecting the double const array to have 1 entry, but it has: " +
-			strconv.Itoa(len(pc.intConsts)))
+			strconv.Itoa(len(pc.doubles)))
 	}
 
 	double := pc.doubles[0]
-	if double != 3.14159 { // because of the low precision, a direct comparison should work
+	if double != 3.14159 { // because of the low precision of the value, a direct comparison should work
 		t.Error("Was expecting a value of 3.14159, but got: " +
 			strconv.FormatFloat(double, 'E', -1, 64))
+	}
+}
+
+func TestCPvalidFloatConst(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x04, // Double constant
+		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
+		//
+		0x40, 0x09, 0x21, 0xF9, // ffour bytes of float
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2 //
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP float constant generated an unexpected error")
+	}
+
+	if loc != 14 {
+		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.floats) != 1 {
+		t.Error("Was expecting the double const array to have 1 entry, but it has: " +
+			strconv.Itoa(len(pc.floats)))
+	}
+
+	float := pc.floats[0]
+	if float != 2.14269853 { // precision of value is low enough that exact match is possible.
+		bigFloat := float64(float)
+		t.Error("Was expecting a value of 2.14269853, but got: " +
+			strconv.FormatFloat(bigFloat, 'E', -1, 32))
 	}
 }
 func TestCPvalidClassRef(t *testing.T) {
