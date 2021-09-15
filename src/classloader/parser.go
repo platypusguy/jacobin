@@ -542,6 +542,12 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			pos = location
 			if err == nil {
 				meth.attributes = append(meth.attributes, attrib)
+				if klass.utf8Refs[nameSlot].content == "Code" {
+					err = parseCodeAttribute(attrib, &meth)
+					if err != nil {
+						return pos, cfe("") //error message will already have been shown to user
+					}
+				}
 			} else {
 				return pos, cfe("Error fetching method attribute in method: " +
 					klass.utf8Refs[nameSlot].content)
@@ -555,6 +561,43 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 	klass.methods = append(klass.methods, meth)
 	return pos, nil
+}
+
+// parse the Code attribute and its sub-attributes. Details of the contents here:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.3
+func parseCodeAttribute(att attr, meth *method) error {
+	pos := -1
+	maxStack, err := intFrom2Bytes(att.attrContent, pos+1)
+	pos += 2
+	if err != nil {
+		return cfe("Error getting maxStack value in Code attribute")
+	}
+
+	maxLocals, err := intFrom2Bytes(att.attrContent, pos+1)
+	pos += 2
+	if err != nil {
+		return cfe("Error getting maxLocals value in Code attribute")
+	}
+
+	codeLength, err := intFrom4Bytes(att.attrContent, pos+1)
+	pos += 4
+	if err != nil {
+		return cfe("Error getting code length in Code attribute")
+	}
+
+	var code []byte
+	for i := 0; i < codeLength; i++ {
+		code = append(code, att.attrContent[pos+1+i])
+	}
+
+	// CURR: resume here with addition of exception table and other attributes.
+	ca := codeAttrib{}
+	ca.maxStack = maxStack
+	ca.maxLocals = maxLocals
+	ca.code = code
+	meth.codeAttr = ca
+
+	return nil
 }
 
 // get the count of the class attributes (which form the last group of elements in

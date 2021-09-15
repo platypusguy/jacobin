@@ -88,7 +88,14 @@ type method struct {
 	accessFlags int
 	name        int // index of the UTF-8 entry in the CP
 	description int // index of the UTF-8 entry in the CP
+	codeAttr    codeAttrib
 	attributes  []attr
+}
+
+type codeAttrib struct {
+	maxStack  int
+	maxLocals int
+	code      []byte
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.
