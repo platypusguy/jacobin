@@ -93,9 +93,10 @@ type method struct {
 }
 
 type codeAttrib struct {
-	maxStack  int
-	maxLocals int
-	code      []byte
+	maxStack   int
+	maxLocals  int
+	code       []byte
+	exceptions []exception // exception entries for this method
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.
@@ -103,6 +104,14 @@ type attr struct {
 	attrName    int    // index of the UTF-8 entry in the CP
 	attrSize    int    // length of the following array of raw bytes
 	attrContent []byte // the raw data of the attribute
+}
+
+// the exception-related data for each exception in a given method
+type exception struct {
+	startPc   int // first instruction covered by this exception (pc = program counter)
+	endPc     int // the last instruciton covered by this exception
+	handlerPc int // the place in the method code that has the exception instructions
+	catchType int // the type of exception, index to CP, which must point a ClassFref entry
 }
 
 // cfe = class format error, which is the error thrown by the parser for most

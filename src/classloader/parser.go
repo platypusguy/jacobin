@@ -543,9 +543,9 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			if err == nil {
 				meth.attributes = append(meth.attributes, attrib)
 				if klass.utf8Refs[nameSlot].content == "Code" {
-					err = parseCodeAttribute(attrib, &meth)
+					err = parseCodeAttribute(attrib, &meth, klass)
 					if err != nil {
-						return pos, cfe("") //error message will already have been shown to user
+						return pos, cfe("") // error message will already have been shown to user
 					}
 				}
 			} else {
@@ -565,24 +565,27 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 // parse the Code attribute and its sub-attributes. Details of the contents here:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.3
-func parseCodeAttribute(att attr, meth *method) error {
+func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
+	methodName := klass.utf8Refs[meth.name].content
+	ca := codeAttrib{}
+
 	pos := -1
 	maxStack, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting maxStack value in Code attribute")
+		return cfe("Error getting maxStack value in Code attribute" + klass.className)
 	}
 
 	maxLocals, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting maxLocals value in Code attribute")
+		return cfe("Error getting maxLocals value in Code attribute" + klass.className)
 	}
 
 	codeLength, err := intFrom4Bytes(att.attrContent, pos+1)
 	pos += 4
 	if err != nil {
-		return cfe("Error getting code length in Code attribute")
+		return cfe("Error getting code length in Code attribute" + klass.className)
 	}
 
 	var code []byte
@@ -590,8 +593,46 @@ func parseCodeAttribute(att attr, meth *method) error {
 		code = append(code, att.attrContent[pos+1+i])
 	}
 
+	exceptionCount, err := intFrom2Bytes(att.attrContent, pos+1)
+	pos += 2
+	if err != nil {
+		return cfe("Error getting count of exceptions in Code attribute" + klass.className)
+	}
+
+	if exceptionCount > 0 {
+		log.Log("Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
+			log.FINEST)
+		for k := 0; k < exceptionCount; k++ {
+			ex := exception{}
+			ex.startPc, err = intFrom2Bytes(att.attrContent, pos+1)
+			ex.endPc, err = intFrom2Bytes(att.attrContent, pos+3)
+			ex.handlerPc, err = intFrom2Bytes(att.attrContent, pos+5)
+			ex.catchType, err = intFrom2Bytes(att.attrContent, pos+7)
+			pos += 8
+
+			if err == nil && ex.catchType != 0 {
+				catchType := klass.cpIndex[ex.catchType]
+				if catchType.entryType != UTF8 {
+					return cfe("Invalid catchType in method " + methodName +
+						"in " + klass.className)
+				} else {
+					log.Log("Class: "+klass.className+", method: "+methodName+
+						"throws exception: "+klass.utf8Refs[catchType.slot].content,
+						log.FINEST)
+				}
+			}
+
+			if err != nil {
+				ca.exceptions = append(ca.exceptions, ex)
+			} else {
+				return cfe("Error getting catch type for exception in " + methodName +
+					"() of " + klass.className)
+			}
+		}
+	}
+
 	// CURR: resume here with addition of exception table and other attributes.
-	ca := codeAttrib{}
+
 	ca.maxStack = maxStack
 	ca.maxLocals = maxLocals
 	ca.code = code
