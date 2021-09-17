@@ -97,6 +97,7 @@ type codeAttrib struct {
 	maxLocals  int
 	code       []byte
 	exceptions []exception // exception entries for this method
+	attributes []attr      // the code attributes has its own sub-attributes(!)
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.

@@ -537,26 +537,32 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		meth.name = nameSlot
 		meth.description = descSlot
 
+		log.Log(
+			"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
+				klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
+			log.FINEST)
+
 		for j := 0; j < attrCount; j++ {
 			attrib, location, err := fetchAttribute(klass, bytes, pos)
 			pos = location
 			if err == nil {
 				meth.attributes = append(meth.attributes, attrib)
-				if klass.utf8Refs[nameSlot].content == "Code" {
+				if klass.utf8Refs[attrib.attrName].content == "Code" {
+					log.Log("    Attribute: Code", log.FINEST)
 					err = parseCodeAttribute(attrib, &meth, klass)
 					if err != nil {
 						return pos, cfe("") // error message will already have been shown to user
 					}
+				} else {
+					log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
+
 			} else {
 				return pos, cfe("Error fetching method attribute in method: " +
 					klass.utf8Refs[nameSlot].content)
 			}
 		}
-		log.Log(
-			"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
-				klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
-			log.FINEST)
+
 	}
 
 	klass.methods = append(klass.methods, meth)
@@ -592,6 +598,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	for i := 0; i < codeLength; i++ {
 		code = append(code, att.attrContent[pos+1+i])
 	}
+	pos += codeLength
 
 	exceptionCount, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
@@ -628,6 +635,28 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 				return cfe("Error getting catch type for exception in " + methodName +
 					"() of " + klass.className)
 			}
+		}
+	}
+
+	ca.attributes = []attr{}
+	attrCount, err := intFrom2Bytes(att.attrContent, pos)
+	if err != nil {
+		return cfe("Error getting attributes in Code attribute of" + methodName +
+			"() of " + klass.className)
+	}
+
+	if attrCount > 0 {
+		log.Log("Method: "+methodName+" code attribute has "+strconv.Itoa(attrCount)+
+			"attributes: ", log.FINEST)
+		for m := 0; m < attrCount; m++ {
+			cat, loc, err := fetchAttribute(klass, att.attrContent, pos+1)
+			if err != nil {
+				return cfe("Error retrieving attributes in Code attribute of" + methodName +
+					"() of " + klass.className)
+			}
+			pos = loc
+			log.Log("\t"+klass.utf8Refs[cat.attrName].content, log.FINEST)
+			ca.attributes = append(ca.attributes, cat)
 		}
 	}
 
