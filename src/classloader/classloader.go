@@ -90,6 +90,7 @@ type method struct {
 	description int // index of the UTF-8 entry in the CP
 	codeAttr    codeAttrib
 	attributes  []attr
+	exceptions  []int // indexes into Utf8Refs in the CP
 }
 
 type codeAttrib struct {
