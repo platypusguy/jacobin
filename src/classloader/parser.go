@@ -554,6 +554,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 						return pos, cfe("") // error message will already have been shown to user
 					}
 				} else {
+					// CURR: Resume here handling Exception attribute: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.5
 					log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
 
@@ -660,7 +661,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 		}
 	}
 
-	// CURR: resume here with addition of exception table and other attributes.
+	// TODO: resume here with addition of exception table and other attributes.
 
 	ca.maxStack = maxStack
 	ca.maxLocals = maxLocals
