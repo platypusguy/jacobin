@@ -70,22 +70,22 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			log.FINEST)
 
 		for j := 0; j < attrCount; j++ {
-			attrib, location, err := fetchAttribute(klass, bytes, pos)
+			attrib, location, err2 := fetchAttribute(klass, bytes, pos)
 			pos = location
-			if err == nil {
+			if err2 == nil {
 				meth.attributes = append(meth.attributes, attrib)
 				// switch on the name of the attribute (listed here in alpha order)
 				switch klass.utf8Refs[attrib.attrName].content {
 				case "Code":
 					log.Log("    Attribute: Code", log.FINEST)
-					err = parseCodeAttribute(attrib, &meth, klass)
+					err2 = parseCodeAttribute(attrib, &meth, klass)
 					if err != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "Exceptions":
 					log.Log("    Attribute: Exceptions", log.FINEST)
-					err := parseExceptionsMethodAttribute(attrib, &meth, klass)
-					if err != nil {
+					err2 = parseExceptionsMethodAttribute(attrib, &meth, klass)
+					if err2 != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				default:
@@ -183,8 +183,8 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 		log.Log("Method: "+methodName+" code attribute has "+strconv.Itoa(attrCount)+
 			"attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
-			cat, loc, err := fetchAttribute(klass, att.attrContent, pos+1)
-			if err != nil {
+			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos+1)
+			if err2 != nil {
 				return cfe("Error retrieving attributes in Code attribute of" + methodName +
 					"() of " + klass.className)
 			}
@@ -193,8 +193,6 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 			ca.attributes = append(ca.attributes, cat)
 		}
 	}
-
-	// TODO: resume here with addition of exception table and other attributes.
 
 	ca.maxStack = maxStack
 	ca.maxLocals = maxLocals
@@ -206,6 +204,15 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
 // can throw. See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.5
+// The structure of the Exceptions attribute of a method is: {
+// 		u2 attribute_name_index;
+// 		u4 attribute_length;
+// 		u2 number_of_exceptions;
+// 		u2 exception_index_table[number_of_exceptions];
+//   }
+// The last two entries are in attrContent, which is a []byte. The last entry, per the spec,
+// is a ClassRef entry, which consists of a CP index that points to UTF8 entry containing the
+// name of the checked exception class, e.g., java/io/IOException
 func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClass) error {
 	loc := -1
 	exceptionCount, err := intFrom2Bytes(attrib.attrContent, loc+1)
@@ -217,28 +224,33 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 
 	for ex := 0; ex < exceptionCount; ex++ {
 		// exception is an index into CP that points to a classRef
-		exception, _ := intFrom2Bytes(attrib.attrContent, loc+1)
+		cRefIndex, _ := intFrom2Bytes(attrib.attrContent, loc+1)
 		loc += 2
-		if klass.cpIndex[exception].entryType != ClassRef {
+		if klass.cpIndex[cRefIndex].entryType != ClassRef {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
 				"in method " + klass.utf8Refs[meth.name].content +
 				" does not point to a ClassRef CP entry")
 		}
 
-		// classRefSlot is the entry # in the classRefs array
-		classRefSlot := klass.cpIndex[exception].slot
-		// classRef points to a CP entry that should be a UTF8 string
-		classRef := klass.classRefs[classRefSlot].index
+		// whichClassRef is the entry # in the classRefs array
+		whichClassRef := klass.cpIndex[cRefIndex].slot
+		// get the classRef from the slice of classRefs in the parsedClass
+		classRef := klass.classRefs[whichClassRef].index
 
-		if klass.cpIndex[classRef].entryType != UTF8 {
+		// the classRef should point to a UTF8 record with the name of the exception class
+		exceptionName, err2 := fetchUTF8string(klass, classRef)
+		if err2 != nil {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
 				"in method " + klass.utf8Refs[meth.name].content +
 				" has a ClassRef CP entry that does not point to a UTF8 string")
 		}
 
-		utf8Rec := klass.cpIndex[classRef].slot
-		exceptionName := klass.utf8Refs[utf8Rec].content
-		meth.exceptions = append(meth.exceptions, utf8Rec)
+		// if the previous fetch of the UTF8 record succeeded, this one shouldn't fail
+		// so we don't check the error return
+		whichUtf8Rec, _ := fetchUTF8slot(klass, classRef)
+
+		// store the slot # of the utf8 entries into the method exceptions slice
+		meth.exceptions = append(meth.exceptions, whichUtf8Rec)
 		log.Log("        "+exceptionName, log.FINEST)
 	}
 	return nil

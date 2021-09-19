@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -74,5 +75,15 @@ func TestValidExceptionsMethodAttribute(t *testing.T) {
 
 	if !strings.Contains(msg, "java/io/IOException") {
 		t.Error("Output did not contain name of exception. Got: " + msg)
+	}
+
+	if len(meth.exceptions) != 1 {
+		t.Error("In test of Exceptions method attribute, attribute was not added to method struct")
+	}
+
+	me := meth.exceptions[0]
+	if me != 2 {
+		t.Error("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got:" +
+			strconv.Itoa(me))
 	}
 }
