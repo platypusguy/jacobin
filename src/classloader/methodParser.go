@@ -151,7 +151,13 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 			ex.catchType, err = intFrom2Bytes(att.attrContent, pos+7)
 			pos += 8
 
-			if err == nil && ex.catchType != 0 {
+			if err != nil {
+				return cfe("Error getting catch type for exception in " + methodName +
+					"() of " + klass.className + "\n at position: " + strconv.Itoa(pos) +
+					" in the method (after parse of start/endPC, handlerPc, and catch type)")
+			}
+
+			if ex.catchType != 0 {
 				catchType := klass.cpIndex[ex.catchType]
 				if catchType.entryType != UTF8 {
 					return cfe("Invalid catchType in method " + methodName +
@@ -162,13 +168,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 						log.FINEST)
 				}
 			}
-
-			if err != nil {
-				ca.exceptions = append(ca.exceptions, ex)
-			} else {
-				return cfe("Error getting catch type for exception in " + methodName +
-					"() of " + klass.className)
-			}
+			ca.exceptions = append(ca.exceptions, ex)
 		}
 	}
 
