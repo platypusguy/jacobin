@@ -225,7 +225,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 				" does not point to a ClassRef CP entry")
 		}
 
-		// classRefSlot is the entry # in the CP classRefs slice
+		// classRefSlot is the entry # in the classRefs array
 		classRefSlot := klass.cpIndex[exception].slot
 		// classRef points to a CP entry that should be a UTF8 string
 		classRef := klass.classRefs[classRefSlot].index
