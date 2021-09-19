@@ -64,10 +64,12 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		// The Code attribute has sub-attributes that are important to right execution
 		// The following code goes through those sub-attributes and processes them.
 
-		log.Log(
-			"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
-				klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
-			log.FINEST)
+		if attrCount > 1 {
+			log.Log(
+				"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
+					klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
+				log.FINEST)
+		}
 
 		for j := 0; j < attrCount; j++ {
 			attrib, location, err2 := fetchAttribute(klass, bytes, pos)
@@ -77,7 +79,13 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 				// switch on the name of the attribute (listed here in alpha order)
 				switch klass.utf8Refs[attrib.attrName].content {
 				case "Code":
-					log.Log("    Attribute: Code", log.FINEST)
+					if attrCount > 1 {
+						log.Log("    Attribute: Code", log.FINEST)
+					} else {
+						log.Log("Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
+							klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+
+							" attribute: Code", log.FINEST)
+					}
 					err2 = parseCodeAttribute(attrib, &meth, klass)
 					if err != nil {
 						return pos, cfe("") // error msg will already have been shown to user
