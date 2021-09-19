@@ -41,7 +41,7 @@ func TestGlobalSetLogLevelTooHigh(t *testing.T) {
 
 // you cannot set logging level to log.SEVERE (which would hide log.WARNINGs), so
 // attempting to do so should generate an error
-func TestlogSetLogLevelTologSevere(t *testing.T) {
+func TestLogSetLogLevelTologSevere(t *testing.T) {
 	globals.InitGlobals("test")
 	err := SetLogLevel(SEVERE)
 	if err == nil {
