@@ -91,6 +91,7 @@ type method struct {
 	codeAttr    codeAttrib
 	attributes  []attr
 	exceptions  []int // indexes into Utf8Refs in the CP
+	deprecated  bool  // is the method deprecated?
 }
 
 type codeAttrib struct {

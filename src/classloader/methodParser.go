@@ -90,6 +90,9 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 					if err != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
+				case "Deprecated":
+					meth.deprecated = true
+					log.Log("    Attribute: Deprecated", log.FINEST)
 				case "Exceptions":
 					log.Log("    Attribute: Exceptions", log.FINEST)
 					err2 = parseExceptionsMethodAttribute(attrib, &meth, klass)
