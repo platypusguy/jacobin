@@ -95,8 +95,37 @@ func validateConstantPool(klass *parsedClass) error {
 				return cfe("Constant String at CP entry #" + strconv.Itoa(j) +
 					" points to an invalid entry in CP utf8Refs")
 			}
+		case FieldRef:
+			// the requirements are that the class index points to a valid Class entry
+			// and the name_and_type index points to a valid NameAndType entry. Consult
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.2
+			// Here we just make sure they point to entries of the correct type and
+			// that exist. The pointed-to entries are themselves validated as this loop
+			// picks them up going through the CP.
+			whichFieldRef := entry.slot
+			if whichFieldRef < 0 || whichFieldRef >= len(klass.fieldRefs) {
+				return cfe("Field Ref at CP entry #" + strconv.Itoa(j) +
+					" points to an invalid entry in CP fieldRefs")
+			}
+			fieldRef := klass.fieldRefs[whichFieldRef]
+			classIndex := fieldRef.classIndex
+			class := klass.cpIndex[classIndex]
+			if class.entryType != ClassRef ||
+				class.slot < 0 || class.slot >= len(klass.classRefs) {
+				return cfe("Field Ref at CP entry #" + strconv.Itoa(j) +
+					" has a class index that points to an invalid entry in ClassRefs. " +
+					strconv.Itoa(classIndex))
+			}
+
+			nameAndType := klass.cpIndex[fieldRef.nameAndTypeIndex]
+			if nameAndType.entryType != NameAndType ||
+				nameAndType.slot < 0 || nameAndType.slot >= len(klass.nameAndTypes) {
+				return cfe("Field Ref at CP entry #" + strconv.Itoa(j) +
+					" has a nameAndType index that points to an invalid entry in nameAndTypes. " +
+					strconv.Itoa(fieldRef.nameAndTypeIndex))
+			}
 		case NameAndType:
-			// a NameAndType entry points to two UTF8 entries: name and description
+			// a NameAndType entry points to two UTF8 entries: name and description. Consult
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.6
 			// the descriptor points either to a method, whose UTF8 should begin with a (
 			// or to a field, which must start with one of the letter specified in:
