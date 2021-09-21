@@ -79,6 +79,37 @@ func validateConstantPool(klass *parsedClass) error {
 				return cfe("Float at CP entry #" + strconv.Itoa(j) +
 					" points to an invalid entry in CP floats")
 			}
+		case LongConst:
+			// there are complex bit patterns that can be enforced for longs, but for the
+			// nonce, we'll just make sure that there is an actual value pointed to and
+			// that the long is followed in the CP by a dummy entry. Consult:
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.5
+			whichLong := entry.slot
+			if whichLong < 0 || whichLong >= len(klass.longConsts) {
+				return cfe("Long constant at CP entry #" + strconv.Itoa(j) +
+					" points to an invalid entry in CP longConsts")
+			}
+
+			nextEntry := klass.cpIndex[j+1]
+			if nextEntry.entryType != Dummy {
+				return cfe("Missing dummy entry after long constant at CP entry#" +
+					strconv.Itoa(j))
+			}
+			j += 1
+		case DoubleConst:
+			// see the comments on the LongConst. They apply exactly to the following code.
+			whichDouble := entry.slot
+			if whichDouble < 0 || whichDouble >= len(klass.doubles) {
+				return cfe("Double constant at CP entry #" + strconv.Itoa(j) +
+					" points to an invalid entry in CP doubless")
+			}
+
+			nextEntry := klass.cpIndex[j+1]
+			if nextEntry.entryType != Dummy {
+				return cfe("Missing dummy entry after double constant at CP entry#" +
+					strconv.Itoa(j))
+			}
+			j += 1
 		case ClassRef:
 			// the only field of a ClassRef points to a UTF8 entry holding the class name
 			// in the case of arrays, the UTF8 entry will describe the type and dimensions of the array
@@ -124,6 +155,30 @@ func validateConstantPool(klass *parsedClass) error {
 					" has a nameAndType index that points to an invalid entry in nameAndTypes. " +
 					strconv.Itoa(fieldRef.nameAndTypeIndex))
 			}
+		case MethodRef:
+			// the MethodRef must have a class index that points to a Class_info entry
+			// which itself must point to a class, not an interface. The MethodRef also has
+			// an index to a NameAndType entry. If the name of the latter entry begins with
+			// and <, then the name can only be <init>. Consult:
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.2
+			whichMethodRef := entry.slot
+			methodRef := klass.cpIndex[whichMethodRef]
+			if methodRef.entryType != MethodRef ||
+				methodRef.slot < 0 || methodRef.slot >= len(klass.methodRefs) {
+				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
+					" points to an invalid entry in MethodRefs: " +
+					strconv.Itoa(methodRef.slot))
+			}
+
+			classIndex := klass.methodRefs[methodRef.slot].classIndex
+			class := klass.cpIndex[classIndex]
+			if class.entryType != ClassRef ||
+				class.slot < 0 || class.slot >= len(klass.classRefs) {
+				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an invalid class index: " +
+					strconv.Itoa(class.slot))
+			}
+
 		case NameAndType:
 			// a NameAndType entry points to two UTF8 entries: name and description. Consult
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.6
