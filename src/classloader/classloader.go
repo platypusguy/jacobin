@@ -93,7 +93,8 @@ type method struct {
 	codeAttr    codeAttrib
 	attributes  []attr
 	exceptions  []int // indexes into Utf8Refs in the CP
-	deprecated  bool  // is the method deprecated?
+	parameters  []paramAttrib
+	deprecated  bool // is the method deprecated?
 }
 
 type codeAttrib struct {
@@ -102,6 +103,12 @@ type codeAttrib struct {
 	code       []byte
 	exceptions []exception // exception entries for this method
 	attributes []attr      // the code attributes has its own sub-attributes(!)
+}
+
+// the MethodParameters method attribute
+type paramAttrib struct {
+	name        string // string, rather than index into utf8Refs b/c the name could be ""
+	accessFlags int
 }
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.

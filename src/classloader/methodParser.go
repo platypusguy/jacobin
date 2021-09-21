@@ -99,6 +99,12 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 					if err2 != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
+				case "MethodParameters":
+					log.Log("    Attribute: MethodParameters", log.FINEST)
+					err3 := parseMethodParametersAttribute(attrib, &meth, klass)
+					if err3 != nil {
+						return pos, cfe("") // error msg will already have been shown to user
+					}
 				default:
 					log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
@@ -263,6 +269,53 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 		// store the slot # of the utf8 entries into the method exceptions slice
 		meth.exceptions = append(meth.exceptions, whichUtf8Rec)
 		log.Log("        "+exceptionName, log.FINEST)
+	}
+	return nil
+}
+
+// Per the spec, 'A MethodParameters attribute records information about the formal parameters
+// of a method, such as their names.' See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.24
+//    u2 attribute_name_index;
+//    u4 attribute_length;
+//    u1 parameters_count;
+//    {   u2 name_index;
+//        u2 access_flags;
+//    } parameters[parameters_count];
+// }
+func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) error {
+	pos := 0
+	parametersCount, err := intFrom2Bytes(att.attrContent, pos)
+	pos += 2
+	if err != nil {
+		return cfe("Error getting number of Parameter attributes in method: " +
+			klass.utf8Refs[meth.name].content)
+	}
+
+	for k := 0; k < parametersCount; k++ {
+		mpAttrib := paramAttrib{}
+		paramNameIndex, err := intFrom2Bytes(att.attrContent, pos)
+		pos += 2
+		if err != nil {
+			return cfe("Error getting name index for Parameter attribute #" +
+				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+		}
+		if paramNameIndex == 0 {
+			mpAttrib.name = ""
+		} else {
+			mpAttrib.name, err = fetchUTF8string(klass, paramNameIndex)
+		}
+		if err != nil {
+			return cfe("Error getting name of Parameter attribute #" +
+				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+		}
+
+		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
+		if err != nil {
+			return cfe("Error getting access flags of Parameter attribute #" +
+				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+		}
+		mpAttrib.accessFlags = accessFlags
+		meth.parameters = append(meth.parameters, mpAttrib)
 	}
 	return nil
 }
