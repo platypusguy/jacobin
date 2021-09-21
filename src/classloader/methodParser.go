@@ -309,6 +309,12 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) 
 				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
 		}
 
+		logName := "{none}"
+		if mpAttrib.name != "" {
+			logName = mpAttrib.name
+		}
+		log.Log("        "+logName, log.FINEST)
+
 		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
 		if err != nil {
 			return cfe("Error getting access flags of Parameter attribute #" +
