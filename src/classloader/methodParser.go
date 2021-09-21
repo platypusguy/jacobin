@@ -252,7 +252,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 		// whichClassRef is the entry # in the classRefs array
 		whichClassRef := klass.cpIndex[cRefIndex].slot
 		// get the classRef from the slice of classRefs in the parsedClass
-		classRef := klass.classRefs[whichClassRef].index
+		classRef := klass.classRefs[whichClassRef]
 
 		// the classRef should point to a UTF8 record with the name of the exception class
 		exceptionName, err2 := fetchUTF8string(klass, classRef)

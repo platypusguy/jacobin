@@ -48,9 +48,9 @@ type parsedClass struct {
 	deprecated bool
 
 	// ---- constant pool data items ----
-	cpCount       int             // count of constant pool entries
-	cpIndex       []cpEntry       // the constant pool index to entries
-	classRefs     []classRefEntry // this and next slices hold CP entries
+	cpCount       int       // count of constant pool entries
+	cpIndex       []cpEntry // the constant pool index to entries
+	classRefs     []int     // points to a UTF-8 entry
 	doubles       []float64
 	fieldRefs     []fieldRefEntry
 	floats        []float32
@@ -170,6 +170,13 @@ func (cl Classloader) LoadClassFromFile(filename string) error {
 		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("parsing error")
 	}
+
+	err = formatCheckClass(&fullyParsedClass)
+	if err != nil {
+		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
+		return fmt.Errorf("format-checking error")
+	}
+	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	return insert(fullyParsedClass)
 

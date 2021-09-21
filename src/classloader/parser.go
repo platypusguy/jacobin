@@ -262,7 +262,7 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
-	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
+	classNameIndex = klass.classRefs[pointedToClassRef.slot]
 	className, err := fetchUTF8string(klass, classNameIndex)
 	if err != nil {
 		return pos, errors.New("") // the error msg has already been show to user
@@ -300,7 +300,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
-	classNameIndex = klass.classRefs[pointedToClassRef.slot].index
+	classNameIndex = klass.classRefs[pointedToClassRef.slot]
 
 	superClassName, err := fetchUTF8string(klass, classNameIndex)
 	if err != nil {
@@ -362,7 +362,7 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		classEntry := klass.classRefs[classref.slot]
 
 		// use the class entry's index field to look up the UTF-8 string
-		interfaceName, err := fetchUTF8string(klass, classEntry.index)
+		interfaceName, err := fetchUTF8string(klass, classEntry)
 		if err != nil {
 			return pos, errors.New("") // error msg has already been shown
 		}
@@ -373,9 +373,7 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		// each of the interface class names. This avoids duplicating the name
 		// that's already in the CP and it allows the classloader to get the
 		// interface name in a single dereference.
-		klass.interfaces = append(klass.interfaces, klass.cpIndex[classEntry.index].slot)
-		// name := klass.utf8Refs[klass.cpIndex[classEntry.index].slot].content
-		// println( "utf8 name: "+name)
+		klass.interfaces = append(klass.interfaces, klass.cpIndex[classEntry].slot)
 		//TODO: add tests for this.
 	}
 	return pos, nil

@@ -19,7 +19,7 @@ import (
 
 // the various types of entries in the constant pool
 const (
-	Invalid       = -1 // used for initialization and for dummy entries (viz. for longs, doubles)
+	Dummy         = 0 // used for initialization and for dummy entries (viz. for longs, doubles)
 	UTF8          = 1
 	IntConst      = 3
 	FloatConst    = 4
@@ -54,9 +54,9 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	pos := 9 // position of the last byte before the constant pool
 
 	// the first entry in the CP is a dummy entry, so that all references are 1-based
-	klass.cpIndex[0] = cpEntry{Invalid, 0}
+	klass.cpIndex[0] = cpEntry{Dummy, 0}
 
-	klass.classRefs = []classRefEntry{}
+	klass.classRefs = []int{}
 	klass.fieldRefs = []fieldRefEntry{}
 	klass.intConsts = []int{}
 	klass.methodRefs = []methodRefEntry{}
@@ -109,7 +109,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{LongConst, len(klass.longConsts) - 1}
 			i++
 			// long ints take up two slots in the CP, of which the second is just a dummy slot.
-			klass.cpIndex[i] = cpEntry{Invalid, 0}
+			klass.cpIndex[i] = cpEntry{Dummy, 0}
 			i++
 		case DoubleConst:
 			bytes := make([]byte, 8)
@@ -123,12 +123,12 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{DoubleConst, len(klass.doubles) - 1}
 			i++
 			// doubles take up two slots in the CP, of which the second is just a dummy slot.
-			klass.cpIndex[i] = cpEntry{Invalid, 0}
+			klass.cpIndex[i] = cpEntry{Dummy, 0}
 			i++
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
-			cre := classRefEntry{index}
-			klass.classRefs = append(klass.classRefs, cre)
+			// cre := classRefEntry{index}
+			klass.classRefs = append(klass.classRefs, index)
 			klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
 			pos += 2
 			i += 1
@@ -190,7 +190,7 @@ func printCP(entries int, klass *parsedClass) {
 		entry := klass.cpIndex[j]
 		fmt.Fprintf(os.Stderr, "CP entry: %02d, type %02d ", j, entry.entryType)
 		switch entry.entryType {
-		case Invalid:
+		case Dummy:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
 		case IntConst:
 			ic := entry.slot
@@ -211,7 +211,7 @@ func printCP(entries int, klass *parsedClass) {
 		case ClassRef:
 			fmt.Fprintf(os.Stderr, "(class ref)        ")
 			c := entry.slot
-			fmt.Fprintf(os.Stderr, "index: %02d\n", klass.classRefs[c].index)
+			fmt.Fprintf(os.Stderr, "index: %02d\n", klass.classRefs[c])
 		case StringConst:
 			fmt.Fprintf(os.Stderr, "(string const ref) ")
 			s := entry.slot
