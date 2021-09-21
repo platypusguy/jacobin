@@ -101,7 +101,36 @@ func validateConstantPool(klass *parsedClass) error {
 			// the descriptor points either to a method, whose UTF8 should begin with a (
 			// or to a field, which must start with one of the letter specified in:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.3.2-200
+			whichNandT := entry.slot
+			if whichNandT < 0 || whichNandT >= len(klass.nameAndTypes) {
+				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
+					" points to an invalid entry in CP nameAndTypes")
+			}
 
+			nAndTentry := klass.nameAndTypes[whichNandT]
+			_, err := fetchUTF8string(klass, nAndTentry.nameIndex)
+			if err != nil {
+				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
+					"has a name index that points to an invalid UTF8 entry: " +
+					strconv.Itoa(nAndTentry.nameIndex))
+			}
+
+			desc, err2 := fetchUTF8string(klass, nAndTentry.descriptorIndex)
+			if err2 != nil {
+				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
+					"has a description index that points to an invalid UTF8 entry: " +
+					strconv.Itoa(nAndTentry.nameIndex))
+			}
+
+			descBytes := []byte(desc)
+			c := descBytes[0]
+			if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
+				c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
+				c == '[') {
+				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
+					"has an invalid description string: " + desc)
+			}
+			// CURR: continue format checking other CP entries
 		default:
 			continue
 		}
