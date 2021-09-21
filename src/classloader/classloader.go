@@ -45,6 +45,8 @@ type parsedClass struct {
 	attributes     []attr
 	sourceFile     string
 
+	deprecated bool
+
 	// ---- constant pool data items ----
 	cpCount       int             // count of constant pool entries
 	cpIndex       []cpEntry       // the constant pool index to entries

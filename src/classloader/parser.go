@@ -524,6 +524,9 @@ func parseClassAttributes(bytes []byte, loc int, klass *parsedClass) (int, error
 			klass.sourceFile = sourceFile
 			log.Log("Source file: "+sourceFile, log.FINEST)
 		}
+		if klass.utf8Refs[attrib.attrName].content == "Deprecated" {
+			klass.deprecated = true
+		}
 
 		klass.attributes = append(klass.attributes, attrib)
 	}
