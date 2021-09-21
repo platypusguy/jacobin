@@ -238,8 +238,8 @@ func TestCPvalidClassRef(t *testing.T) {
 	}
 
 	cre := pc.classRefs[0]
-	if cre.index != 517 {
-		t.Error("Was expecting a class ref index of 517, but got: " + strconv.Itoa(cre.index))
+	if cre != 517 {
+		t.Error("Was expecting a class ref index of 517, but got: " + strconv.Itoa(cre))
 	}
 
 	if len(pc.cpIndex) != 2 {

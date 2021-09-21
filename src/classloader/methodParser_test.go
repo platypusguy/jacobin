@@ -41,8 +41,7 @@ func TestValidExceptionsMethodAttribute(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
 
-	classRef := classRefEntry{3}
-	klass.classRefs = append(klass.classRefs, classRef) // classRef[0] points to CP entry #4, which points to UTF #3
+	klass.classRefs = append(klass.classRefs, 3) // classRef[0] points to CP entry #4, which points to UTF #3
 
 	klass.cpCount = 4
 

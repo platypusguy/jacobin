@@ -349,7 +349,7 @@ func TestParseOfValidInterface(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // the UTF-8 reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
-	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.classRefs = append(klass.classRefs, 1) // -> cpIndex[1] -> UTF8 entry
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 3
 	klass.interfaceCount = 1
@@ -390,7 +390,7 @@ func TestParseOfInvalidInterface(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // the invalid reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.classRefs = append(klass.classRefs, 1) // -> cpIndex[1] -> UTF8 entry
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 3
 	klass.interfaceCount = 1
@@ -433,7 +433,7 @@ func TestParseOfInvalidFieldWithFaultyNameIndex(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.classRefs = append(klass.classRefs, classRefEntry{index: 1}) // -> cpIndex[1] -> UTF8 entry
+	klass.classRefs = append(klass.classRefs, 1) // -> cpIndex[1] -> UTF8 entry
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 3
 	klass.fieldCount = 1
