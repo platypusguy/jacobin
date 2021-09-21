@@ -118,7 +118,7 @@ type attr struct {
 	attrContent []byte // the raw data of the attribute
 }
 
-// the exception-related data for each exception in a given method
+// the exception-related data for each exception in the Code attribute of a given method
 type exception struct {
 	startPc   int // first instruction covered by this exception (pc = program counter)
 	endPc     int // the last instruciton covered by this exception
