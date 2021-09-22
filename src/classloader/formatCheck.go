@@ -162,15 +162,9 @@ func validateConstantPool(klass *parsedClass) error {
 			// and <, then the name can only be <init>. Consult:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.2
 			whichMethodRef := entry.slot
-			methodRef := klass.cpIndex[whichMethodRef]
-			if methodRef.entryType != MethodRef ||
-				methodRef.slot < 0 || methodRef.slot >= len(klass.methodRefs) {
-				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
-					" points to an invalid entry in MethodRefs: " +
-					strconv.Itoa(methodRef.slot))
-			}
+			methodRef := klass.methodRefs[whichMethodRef]
 
-			classIndex := klass.methodRefs[methodRef.slot].classIndex
+			classIndex := methodRef.classIndex
 			class := klass.cpIndex[classIndex]
 			if class.entryType != ClassRef ||
 				class.slot < 0 || class.slot >= len(klass.classRefs) {
@@ -179,7 +173,7 @@ func validateConstantPool(klass *parsedClass) error {
 					strconv.Itoa(class.slot))
 			}
 
-			nAndTIndex := klass.methodRefs[methodRef.slot].nameAndTypeIndex
+			nAndTIndex := methodRef.nameAndTypeIndex
 			nAndT := klass.cpIndex[nAndTIndex]
 			if nAndT.entryType != NameAndType ||
 				nAndT.slot < 0 || nAndT.slot >= len(klass.nameAndTypes) {
@@ -202,7 +196,59 @@ func validateConstantPool(klass *parsedClass) error {
 					" holds an NameAndType index to an entry with an invalid method name " +
 					name)
 			}
+		case Interface:
+			// the Interface entries are almost identical to the class entries (see above),
+			// except that the class index must point to an interface class, and the requirement
+			// re naming < and <init> does not apply.
+			whichInterface := entry.slot
+			interfaceRef := klass.interfaceRefs[whichInterface]
 
+			classIndex := interfaceRef.classIndex
+			class := klass.cpIndex[classIndex]
+			if class.entryType != ClassRef ||
+				class.slot < 0 || class.slot >= len(klass.classRefs) {
+				return cfe("Interface Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an invalid class index: " + strconv.Itoa(class.slot))
+			}
+
+			clRef := klass.classRefs[class.slot]
+			// utfIndex, err := fetchUTF8slot(klass, clRef)
+			_, err := fetchUTF8slot(klass, clRef)
+			if err != nil {
+				return cfe("Interface Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an invalid UTF8 index to the interface name: " +
+					strconv.Itoa(clRef))
+			}
+
+			/* TO REVISIT: with java.lang.String the following code works OK
+			with the three interfaces defined in klass.interfaces[], but Iterable
+			is not among those classes and yet it's got a interfaceRef CP entry.
+			So, not presently sure how you validate that the interfaceRef CP entry
+			points to an interface. So for the nonce, the following code is commented out.
+
+			// now that we have the UTF8 index for the interface reference,
+			// check whether it's in our list of interfaces for this class.
+			matchesInterface := false
+			for i := range klass.interfaces {
+				if klass.interfaces[i] == utfIndex {
+					matchesInterface = true
+				}
+			}
+
+			if ! matchesInterface {
+				return cfe("Interface Ref at CP entry #"+ strconv.Itoa(j) +
+					" does not match to any interface in this class.")
+			}
+			*/
+
+			nAndTIndex := interfaceRef.nameAndTypeIndex
+			nAndT := klass.cpIndex[nAndTIndex]
+			if nAndT.entryType != NameAndType ||
+				nAndT.slot < 0 || nAndT.slot >= len(klass.nameAndTypes) {
+				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an invalid NameAndType index: " +
+					strconv.Itoa(nAndT.slot))
+			}
 		case NameAndType:
 			// a NameAndType entry points to two UTF8 entries: name and description. Consult
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.6
