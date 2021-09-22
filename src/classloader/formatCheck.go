@@ -179,6 +179,30 @@ func validateConstantPool(klass *parsedClass) error {
 					strconv.Itoa(class.slot))
 			}
 
+			nAndTIndex := klass.methodRefs[methodRef.slot].nameAndTypeIndex
+			nAndT := klass.cpIndex[nAndTIndex]
+			if nAndT.entryType != NameAndType ||
+				nAndT.slot < 0 || nAndT.slot >= len(klass.nameAndTypes) {
+				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an invalid NameAndType index: " +
+					strconv.Itoa(nAndT.slot))
+			}
+
+			nAndTentry := klass.nameAndTypes[nAndT.slot]
+			methodNameIndex := nAndTentry.nameIndex
+			name, err := fetchUTF8string(klass, methodNameIndex)
+			if err != nil {
+				return cfe("Method Ref (at CP entry #" + strconv.Itoa(j) +
+					") has a Name and Type entry does not have a name that is a valid UTF8 entry")
+			}
+
+			nameBytes := []byte(name)
+			if nameBytes[0] == '<' && name != "<init>" {
+				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
+					" holds an NameAndType index to an entry with an invalid method name " +
+					name)
+			}
+
 		case NameAndType:
 			// a NameAndType entry points to two UTF8 entries: name and description. Consult
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.6
