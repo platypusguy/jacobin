@@ -101,3 +101,90 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestInvalidStringInUTF8Entry(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+
+	invalidUtf8bytes := []byte{'B', 'a', 'd', 0xFA} // the last char is disallowed in UTF8 entries
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{string(invalidUtf8bytes)})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
+
+	klass.cpCount = 2
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for invalid UTF8 string, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "contains an invalid character") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestMissingDummyEntryAfterLongConst(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{LongConst, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // this should be a dummy entry
+
+	klass.longConsts = append(klass.longConsts, int64(123))
+
+	klass.cpCount = 3
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for missing dummy entry after long, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Missing dummy entry") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
