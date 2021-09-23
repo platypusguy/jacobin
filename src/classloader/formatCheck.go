@@ -130,8 +130,8 @@ func validateConstantPool(klass *parsedClass) error {
 			// the requirements are that the class index points to a valid Class entry
 			// and the name_and_type index points to a valid NameAndType entry. Consult
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.2
-			// Here we just make sure they point to entries of the correct type and
-			// that exist. The pointed-to entries are themselves validated as this loop
+			// Here we just make sure they point to entries of the correct type and that
+			// they exist. The pointed-to entries are themselves validated as this loop
 			// picks them up going through the CP.
 			whichFieldRef := entry.slot
 			if whichFieldRef < 0 || whichFieldRef >= len(klass.fieldRefs) {

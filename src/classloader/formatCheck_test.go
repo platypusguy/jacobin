@@ -188,3 +188,98 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestInvalidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{FieldRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // unimportant entry
+
+	klass.fieldRefs = append(klass.fieldRefs, fieldRefEntry{
+		classIndex:       1, // this points to a non-existent class ref
+		nameAndTypeIndex: 0,
+	})
+
+	klass.cpCount = 3
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for invalid class index in FieldRef entry, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "points to an invalid entry in ClassRefs") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{FieldRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+
+	klass.fieldRefs = append(klass.fieldRefs, fieldRefEntry{
+		classIndex:       2, // this correctly points to the ClassRef entry at klass.cpIndex[2]
+		nameAndTypeIndex: 1, // this points to a non-existent class ref, causing the tested error
+	})
+	klass.classRefs = append(klass.classRefs, 0)
+
+	klass.cpCount = 3
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for invalid nameAndType index in FieldRef entry, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "points to an invalid entry in nameAndType") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+//CURR: write tests for MethodRef, Interface, and NameAndType entries
