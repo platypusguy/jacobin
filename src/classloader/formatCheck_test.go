@@ -282,4 +282,64 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-//CURR: write tests for MethodRef, Interface, and NameAndType entries
+// a MethodRef points to a class index and a nameAndType index. The name in
+// nameAndType must point to a valid class name. If that class name begins with
+// a < then it must be <init>. This test makes sure of this latter part.
+func TestMethodRefWithInvalidMethodName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+
+	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+		classIndex:       2, // this correctly points to the ClassRef entry at klass.cpIndex[2]
+		nameAndTypeIndex: 3, // this points to a nameAndType entry that points to an invalid class name
+	})
+
+	klass.classRefs = append(klass.classRefs, 3)
+
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       4, // points to cpIndex[4], which is UTF8 rec w/ invalid name
+		descriptorIndex: 0,
+	})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"<invalidName>"})
+
+	klass.cpCount = 5
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for invalid method name in MethodRef's nameAndType entry, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "an entry with an invalid method name") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+//CURR: write tests for Interface, and NameAndType entries
