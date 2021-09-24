@@ -14,10 +14,9 @@ import (
 	"strings"
 )
 
-var global = globals.GetInstance()
-
 // HandleCli handles all args from the command line, including those from environment
 // variables that the JVM recognizes and prepends to the list of command-line options
+// func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
@@ -156,7 +155,7 @@ where options include:
 }
 
 // show the Jacobin version and minor associated data
-func showVersion(outStream *os.File) {
+func showVersion(outStream *os.File, global *globals.Globals) {
 	// get the build date of the presently executing Jacobin executable
 	exeDate := ""
 	file, err := os.Stat(global.JacobinName)
@@ -174,7 +173,7 @@ func showVersion(outStream *os.File) {
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
 func showCopyright() {
-	global = globals.GetInstance()
+	var global = globals.GetInstance()
 	if !strings.Contains(global.CommandLine, "-showversion") &&
 		!strings.Contains(global.CommandLine, "--show-version") &&
 		!strings.Contains(global.CommandLine, "-version") &&

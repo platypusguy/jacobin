@@ -123,25 +123,25 @@ func showHelpStdoutAndExit(pos int, name string, gl *globals.Globals) (int, erro
 }
 
 func showVersionStderr(pos int, name string, gl *globals.Globals) (int, error) {
-	showVersion(os.Stderr)
+	showVersion(os.Stderr, gl)
 	return pos, nil
 }
 
 func showVersionStdout(pos int, name string, gl *globals.Globals) (int, error) {
-	showVersion(os.Stdout)
+	showVersion(os.Stdout, gl)
 	return pos, nil
 }
 
 // note that the -version option prints the version then exits the VM
 func versionStderrThenExit(pos int, name string, gl *globals.Globals) (int, error) {
-	showVersion(os.Stderr)
+	showVersion(os.Stderr, gl)
 	gl.ExitNow = true
 	return pos, nil
 }
 
 // note that the --version option prints the version info then exits the VM
 func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, error) {
-	showVersion(os.Stdout)
+	showVersion(os.Stdout, gl)
 	gl.ExitNow = true
 	return pos, nil
 }
