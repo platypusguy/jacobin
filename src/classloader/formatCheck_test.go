@@ -342,4 +342,60 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-//CURR: write tests for Interface, and NameAndType entries
+// this test validates both InterfaceRefs and NameAndType refs.
+func TestValidInterfaceRefEntry(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{Interface, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	ire := interfaceRefEntry{classIndex: 2, nameAndTypeIndex: 3}
+	klass.interfaceRefs = append(klass.interfaceRefs, ire)
+
+	klass.classRefs = append(klass.classRefs, 4)
+
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       4, // points to cpIndex[4], which is UTF8
+		descriptorIndex: 5,
+	})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"interface"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"B"})
+
+	klass.cpCount = 6
+
+	err := validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got but did not expect error in test of valid InterfaceRef.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if len(msg) != 0 {
+		t.Error("Got unexpected output to stderr: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}

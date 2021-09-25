@@ -265,14 +265,14 @@ func validateConstantPool(klass *parsedClass) error {
 			_, err := fetchUTF8string(klass, nAndTentry.nameIndex)
 			if err != nil {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
-					"has a name index that points to an invalid UTF8 entry: " +
+					" has a name index that points to an invalid UTF8 entry: " +
 					strconv.Itoa(nAndTentry.nameIndex))
 			}
 
 			desc, err2 := fetchUTF8string(klass, nAndTentry.descriptorIndex)
 			if err2 != nil {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
-					"has a description index that points to an invalid UTF8 entry: " +
+					" has a description index that points to an invalid UTF8 entry: " +
 					strconv.Itoa(nAndTentry.nameIndex))
 			}
 
@@ -282,7 +282,7 @@ func validateConstantPool(klass *parsedClass) error {
 				c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
 				c == '[') {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
-					"has an invalid description string: " + desc)
+					" has an invalid description string: " + desc)
 			}
 			// CURR: continue format checking other CP entries
 		default:
