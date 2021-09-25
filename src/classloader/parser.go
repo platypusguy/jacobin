@@ -318,6 +318,10 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 		return pos, errors.New("") // error has already been reported to user
 	}
 
+	if superClassName == "" { // only Object.class can have an empty superclass and it's handled above
+		return pos, cfe("invaild empty string for superclass name")
+	}
+
 	log.Log("superclass name: "+superClassName, log.FINEST)
 	if len(klass.superClass) > 0 {
 		return pos, cfe("Class can only have 1 superclass, found two: " + klass.superClass + " and: " + superClassName)
