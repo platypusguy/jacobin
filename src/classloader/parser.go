@@ -289,6 +289,17 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 		return pos, cfe("error obtaining index for superclass name")
 	}
 
+	if index == 0 {
+		if klass.className != "java/lang/Object" {
+			return pos, cfe("invaild index for superclass name. Got: 0," +
+				" but class is not java/lang/Object")
+		} else {
+			log.Log("superclass name: [none]", log.FINEST)
+			klass.superClass = ""
+			return pos, nil
+		}
+	}
+
 	if index < 1 || index > (len(klass.cpIndex)-1) {
 		return pos, cfe("invalid index into CP for superclass name")
 	}
@@ -305,10 +316,6 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 	superClassName, err := fetchUTF8string(klass, classNameIndex)
 	if err != nil {
 		return pos, errors.New("") // error has already been reported to user
-	}
-
-	if superClassName == "" && klass.className != "java/lang/Object" {
-		return pos, cfe("invaild empty string for superclass name")
 	}
 
 	log.Log("superclass name: "+superClassName, log.FINEST)
