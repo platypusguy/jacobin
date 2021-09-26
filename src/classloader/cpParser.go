@@ -236,6 +236,11 @@ func printCP(entries int, klass *parsedClass) {
 			n := entry.slot
 			fmt.Fprintf(os.Stderr, "name index: %02d, descriptor index: %02d\n",
 				klass.nameAndTypes[n].nameIndex, klass.nameAndTypes[n].descriptorIndex)
+		case InvokeDynamic:
+			fmt.Fprintf(os.Stderr, "(invokedynamic)    ")
+			n := entry.slot
+			fmt.Fprintf(os.Stderr, "boostrap index: %02d, name and type: %02d\n",
+				klass.invokeDynamics[n].bootstrapIndex, klass.invokeDynamics[n].nameAndType)
 		default:
 			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}

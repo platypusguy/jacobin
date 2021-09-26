@@ -252,7 +252,8 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	}
 
 	if index < 1 || index > (len(klass.cpIndex)-1) {
-		return pos, cfe("invalid index into CP for class name")
+		return pos, cfe("invalid index into CP for class name: " +
+			strconv.Itoa(index))
 	}
 
 	pointedToClassRef := klass.cpIndex[index]
