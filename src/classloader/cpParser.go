@@ -255,10 +255,6 @@ type utf8Entry struct { // type: 01 (UTF-8 string)
 	content string
 }
 
-// type intConst struct { // type 03 (integer constant)
-// 	value int
-// }
-
 type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
 	index int
 }
@@ -270,6 +266,11 @@ type stringConstantEntry struct { // type: 08 (string constant reference)
 type fieldRefEntry struct { // type: 09 (field reference)
 	classIndex       int
 	nameAndTypeIndex int
+}
+
+type invokeDynamic struct {
+	bootstrapIndex int
+	nameAndType    int
 }
 
 type methodRefEntry struct { // type: 10 (method reference)
