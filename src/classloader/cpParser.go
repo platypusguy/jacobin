@@ -59,6 +59,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	klass.classRefs = []int{}
 	klass.fieldRefs = []fieldRefEntry{}
 	klass.intConsts = []int{}
+	klass.invokeDynamics = []invokeDynamic{}
 	klass.methodRefs = []methodRefEntry{}
 	klass.nameAndTypes = []nameAndTypeEntry{}
 	klass.stringRefs = []stringConstantEntry{}
