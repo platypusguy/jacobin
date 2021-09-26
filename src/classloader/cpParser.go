@@ -53,9 +53,6 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	klass.cpIndex = make([]cpEntry, klass.cpCount)
 	pos := 9 // position of the last byte before the constant pool
 
-	// the first entry in the CP is a dummy entry, so that all references are 1-based
-	klass.cpIndex[0] = cpEntry{Dummy, 0}
-
 	klass.classRefs = []int{}
 	klass.fieldRefs = []fieldRefEntry{}
 	klass.intConsts = []int{}
@@ -64,6 +61,9 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	klass.nameAndTypes = []nameAndTypeEntry{}
 	klass.stringRefs = []stringConstantEntry{}
 	klass.utf8Refs = []utf8Entry{}
+
+	// the first entry in the CP is a dummy entry, so that all references are 1-based
+	klass.cpIndex[0] = cpEntry{Dummy, 0}
 
 	var i int
 	for i = 1; i <= klass.cpCount-1; { // i starts at 1 due to the dummy entry at CP[0]
@@ -172,6 +172,17 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{NameAndType, len(klass.nameAndTypes) - 1}
 			pos += 4
 			i += 1
+		case InvokeDynamic:
+			bootstrap, _ := intFrom2Bytes(rawBytes, pos+1)
+			nAndT, _ := intFrom2Bytes(rawBytes, pos+3)
+			ide := invokeDynamic{
+				bootstrapIndex: bootstrap,
+				nameAndType:    nAndT,
+			}
+			klass.invokeDynamics = append(klass.invokeDynamics, ide)
+			klass.cpIndex[i] = cpEntry{InvokeDynamic, len(klass.invokeDynamics) - 1}
+			pos += 4
+			i += 1
 		default:
 			klass.cpCount = i // just to get it over with for the moment
 		}
@@ -249,15 +260,10 @@ func printCP(entries int, klass *parsedClass) {
 }
 
 // ==== the various entry types in the constant pool (listed in order of the enums above) ====
-type dummyEntry struct { // type -1 (invalid or dummy entry)
-}
+// note that the DummyEntry, value 0, is never accessed and so has no corresponding struct
 
 type utf8Entry struct { // type: 01 (UTF-8 string)
 	content string
-}
-
-type classRefEntry struct { // type: 07 (class refence -- points to UTF8 entry)
-	index int
 }
 
 type stringConstantEntry struct { // type: 08 (string constant reference)
@@ -267,11 +273,6 @@ type stringConstantEntry struct { // type: 08 (string constant reference)
 type fieldRefEntry struct { // type: 09 (field reference)
 	classIndex       int
 	nameAndTypeIndex int
-}
-
-type invokeDynamic struct {
-	bootstrapIndex int
-	nameAndType    int
 }
 
 type methodRefEntry struct { // type: 10 (method reference)
@@ -287,4 +288,9 @@ type interfaceRefEntry struct { // type: 11 (interface reference)
 type nameAndTypeEntry struct { // type 12 (name and type reference)
 	nameIndex       int
 	descriptorIndex int
+}
+
+type invokeDynamic struct { // type 18 (invokedynamic data)
+	bootstrapIndex int
+	nameAndType    int
 }

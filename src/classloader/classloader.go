@@ -48,19 +48,20 @@ type parsedClass struct {
 	deprecated bool
 
 	// ---- constant pool data items ----
-	cpCount       int       // count of constant pool entries
-	cpIndex       []cpEntry // the constant pool index to entries
-	classRefs     []int     // points to a UTF-8 entry
-	doubles       []float64
-	fieldRefs     []fieldRefEntry
-	floats        []float32
-	intConsts     []int
-	interfaceRefs []interfaceRefEntry
-	longConsts    []int64
-	methodRefs    []methodRefEntry
-	nameAndTypes  []nameAndTypeEntry
-	stringRefs    []stringConstantEntry
-	utf8Refs      []utf8Entry
+	cpCount        int       // count of constant pool entries
+	cpIndex        []cpEntry // the constant pool index to entries
+	classRefs      []int     // points to a UTF-8 entry
+	doubles        []float64
+	fieldRefs      []fieldRefEntry
+	floats         []float32
+	intConsts      []int
+	interfaceRefs  []interfaceRefEntry
+	invokeDynamics []invokeDynamic
+	longConsts     []int64
+	methodRefs     []methodRefEntry
+	nameAndTypes   []nameAndTypeEntry
+	stringRefs     []stringConstantEntry
+	utf8Refs       []utf8Entry
 
 	// ---- access flags items ----
 	accessFlags       int // the following booleans interpret the access flags

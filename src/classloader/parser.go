@@ -386,7 +386,6 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		// that's already in the CP and it allows the classloader to get the
 		// interface name in a single dereference.
 		klass.interfaces = append(klass.interfaces, klass.cpIndex[classEntry].slot)
-		//TODO: add tests for this.
 	}
 	return pos, nil
 }
