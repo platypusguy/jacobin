@@ -181,6 +181,12 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{MethodHandle, len(klass.methodHandles) - 1}
 			pos += 3
 			i += 1
+		case MethodType:
+			descIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			klass.methodTypes = append(klass.methodTypes, descIndex)
+			klass.cpIndex[i] = cpEntry{MethodType, len(klass.methodTypes) - 1}
+			pos += 2
+			i += 1
 		case InvokeDynamic:
 			bootstrap, _ := intFrom2Bytes(rawBytes, pos+1)
 			nAndT, _ := intFrom2Bytes(rawBytes, pos+3)
@@ -262,6 +268,10 @@ func printCP(entries int, klass *parsedClass) {
 			m := entry.slot
 			fmt.Fprintf(os.Stderr, "reference kind: %d, reference index: %02d\n",
 				klass.methodHandles[m].referenceKind, klass.methodHandles[m].referenceIndex)
+		case MethodType:
+			fmt.Fprintf(os.Stderr, "(method type)      ")
+			mt := entry.slot
+			fmt.Fprintf(os.Stderr, "description index: %02d\n", klass.methodTypes[mt])
 		case InvokeDynamic:
 			fmt.Fprintf(os.Stderr, "(invokedynamic)    ")
 			n := entry.slot

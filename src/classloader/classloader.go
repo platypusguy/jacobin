@@ -60,6 +60,7 @@ type parsedClass struct {
 	longConsts     []int64
 	methodHandles  []methodHandleEntry
 	methodRefs     []methodRefEntry
+	methodTypes    []int
 	nameAndTypes   []nameAndTypeEntry
 	stringRefs     []stringConstantEntry
 	utf8Refs       []utf8Entry

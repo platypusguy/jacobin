@@ -298,6 +298,16 @@ func validateConstantPool(klass *parsedClass) error {
 				return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
 					" has an invalid reference kind: " + strconv.Itoa(refKind))
 			} // TODO: finish the many tests for MethodHandles
+		case MethodType:
+			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
+			// of the method. https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.9
+			whichMethType := entry.slot
+			mte := klass.methodTypes[whichMethType]
+			utf8 := klass.cpIndex[mte]
+			if utf8.entryType != UTF8 || utf8.slot < 0 || utf8.slot > len(klass.utf8Refs)-1 {
+				return cfe("MethodType at CP entry #" + strconv.Itoa(j) +
+					" has an invalid description index: " + strconv.Itoa(utf8.slot))
+			}
 		case InvokeDynamic:
 			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
 			// "valid index into the bootstrap_methods array of the bootstrap method table of this
