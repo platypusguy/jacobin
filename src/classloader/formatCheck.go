@@ -284,6 +284,30 @@ func validateConstantPool(klass *parsedClass) error {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
 					" has an invalid description string: " + desc)
 			}
+		case InvokeDynamic:
+			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
+			// "valid index into the bootstrap_methods array of the bootstrap method table of this
+			// this class file" (specified in §4.7.23). The document spec for InvokeDynamic entries is:
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
+			// Once we actually get bootstrap entry table of the method, we'll circle back here to
+			// check it. The second field is a nameAndType record describing the boostrap method.
+			// Here we just make sure, the field points to the right kind of entry. That entry
+			// will be checked later/earlier in this CP checking loop.
+			whichInvDyn := entry.slot
+			invDyn := klass.invokeDynamics[whichInvDyn]
+
+			// bootstrap = invDyn.bootstrapIndex // TODO: Check the boostrap entry as soon as we can
+			nAndT := invDyn.nameAndType
+			if nAndT < 1 || nAndT > len(klass.cpIndex)-1 {
+				return cfe("The entry number into klass.InvokeDynamics[] at CP entry #" +
+					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nAndT))
+			}
+			if klass.cpIndex[nAndT].entryType != NameAndType {
+				return cfe("NameAndType index at CP entry #" + strconv.Itoa(j) +
+					" (InvokeDynamic) points to an entry that's not NameAndType: " +
+					strconv.Itoa(klass.cpIndex[nAndT].entryType))
+			}
+
 			// CURR: continue format checking other CP entries
 		default:
 			continue
