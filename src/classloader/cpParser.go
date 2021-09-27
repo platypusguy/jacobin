@@ -57,6 +57,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	klass.fieldRefs = []fieldRefEntry{}
 	klass.intConsts = []int{}
 	klass.invokeDynamics = []invokeDynamic{}
+	klass.methodHandles = []methodHandleEntry{}
 	klass.methodRefs = []methodRefEntry{}
 	klass.nameAndTypes = []nameAndTypeEntry{}
 	klass.stringRefs = []stringConstantEntry{}
@@ -172,6 +173,14 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{NameAndType, len(klass.nameAndTypes) - 1}
 			pos += 4
 			i += 1
+		case MethodHandle:
+			refKind := int(rawBytes[pos+1])
+			refIndex, _ := intFrom2Bytes(rawBytes, pos+2)
+			mhe := methodHandleEntry{refKind, refIndex}
+			klass.methodHandles = append(klass.methodHandles, mhe)
+			klass.cpIndex[i] = cpEntry{MethodHandle, len(klass.methodHandles) - 1}
+			pos += 3
+			i += 1
 		case InvokeDynamic:
 			bootstrap, _ := intFrom2Bytes(rawBytes, pos+1)
 			nAndT, _ := intFrom2Bytes(rawBytes, pos+3)
@@ -248,6 +257,11 @@ func printCP(entries int, klass *parsedClass) {
 			n := entry.slot
 			fmt.Fprintf(os.Stderr, "name index: %02d, descriptor index: %02d\n",
 				klass.nameAndTypes[n].nameIndex, klass.nameAndTypes[n].descriptorIndex)
+		case MethodHandle:
+			fmt.Fprintf(os.Stderr, "(method handle)    ")
+			m := entry.slot
+			fmt.Fprintf(os.Stderr, "reference kind: %d, reference index: %02d\n",
+				klass.methodHandles[m].referenceKind, klass.methodHandles[m].referenceIndex)
 		case InvokeDynamic:
 			fmt.Fprintf(os.Stderr, "(invokedynamic)    ")
 			n := entry.slot
@@ -288,6 +302,11 @@ type interfaceRefEntry struct { // type: 11 (interface reference)
 type nameAndTypeEntry struct { // type 12 (name and type reference)
 	nameIndex       int
 	descriptorIndex int
+}
+
+type methodHandleEntry struct { // type: 15 (method handle)
+	referenceKind  int
+	referenceIndex int
 }
 
 type invokeDynamic struct { // type 18 (invokedynamic data)

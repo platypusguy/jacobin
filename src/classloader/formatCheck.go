@@ -284,6 +284,20 @@ func validateConstantPool(klass *parsedClass) error {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
 					" has an invalid description string: " + desc)
 			}
+		case MethodHandle:
+			// Method handles have complex validation logic. It's entirely enforced here. See:
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.8
+			// CONSTANT_MethodHandle_info {
+			//    u1 tag;
+			//    u1 reference_kind;
+			//    u2 reference_index; }
+			whichMethHandle := entry.slot
+			mhe := klass.methodHandles[whichMethHandle]
+			refKind := mhe.referenceKind
+			if refKind < 1 || refKind > 9 {
+				return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
+					" has an invalid reference kind: " + strconv.Itoa(refKind))
+			} // TODO: finish the many tests for MethodHandles
 		case InvokeDynamic:
 			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
 			// "valid index into the bootstrap_methods array of the bootstrap method table of this

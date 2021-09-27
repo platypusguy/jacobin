@@ -58,6 +58,7 @@ type parsedClass struct {
 	interfaceRefs  []interfaceRefEntry
 	invokeDynamics []invokeDynamic
 	longConsts     []int64
+	methodHandles  []methodHandleEntry
 	methodRefs     []methodRefEntry
 	nameAndTypes   []nameAndTypeEntry
 	stringRefs     []stringConstantEntry
