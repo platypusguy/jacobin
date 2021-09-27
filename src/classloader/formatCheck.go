@@ -332,7 +332,7 @@ func validateConstantPool(klass *parsedClass) error {
 					strconv.Itoa(klass.cpIndex[nAndT].entryType))
 			}
 
-			// CURR: continue format checking other CP entries
+			// TODO: continue format checking other CP entries
 		default:
 			continue
 		}
