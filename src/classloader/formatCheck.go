@@ -303,7 +303,8 @@ func validateConstantPool(klass *parsedClass) error {
 			} // TODO: finish the many tests for MethodHandles
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
-			// of the method. https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.9
+			// of the method type, which appears to require an initial opening parenthesis. See
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.9
 			whichMethType := entry.slot
 			mte := klass.methodTypes[whichMethType]
 			utf8 := klass.cpIndex[mte]
