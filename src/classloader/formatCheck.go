@@ -6,7 +6,10 @@
 
 package classloader
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // Performs the format check on a fully parsed class. The requirements are listed
 // here: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8
@@ -307,6 +310,12 @@ func validateConstantPool(klass *parsedClass) error {
 			if utf8.entryType != UTF8 || utf8.slot < 0 || utf8.slot > len(klass.utf8Refs)-1 {
 				return cfe("MethodType at CP entry #" + strconv.Itoa(j) +
 					" has an invalid description index: " + strconv.Itoa(utf8.slot))
+			}
+			methType := klass.utf8Refs[utf8.slot]
+			if !strings.HasPrefix(methType.content, "(") {
+				return cfe("MethodType at CP entry #" + strconv.Itoa(j) +
+					" does not point to a type that starts with an open parenthesis. Got: " +
+					methType.content)
 			}
 		case InvokeDynamic:
 			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
