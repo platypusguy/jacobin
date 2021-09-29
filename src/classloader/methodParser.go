@@ -87,7 +87,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 							" attribute: Code", log.FINEST)
 					}
 					err2 = parseCodeAttribute(attrib, &meth, klass)
-					if err != nil {
+					if err2 != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "Deprecated":
