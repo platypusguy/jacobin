@@ -176,7 +176,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 
 			if ex.catchType != 0 {
 				catchType := klass.cpIndex[ex.catchType]
-				if catchType.entryType != UTF8 {
+				if catchType.entryType != ClassRef {
 					return cfe("Invalid catchType in method " + methodName +
 						"in " + klass.className)
 				} else {
