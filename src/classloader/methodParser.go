@@ -130,19 +130,19 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	maxStack, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting maxStack value in Code attribute" + klass.className)
+		return cfe("Error getting maxStack value in Code attribute in " + klass.className)
 	}
 
 	maxLocals, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting maxLocals value in Code attribute" + klass.className)
+		return cfe("Error getting maxLocals value in Code attribute in " + klass.className)
 	}
 
 	codeLength, err := intFrom4Bytes(att.attrContent, pos+1)
 	pos += 4
 	if err != nil {
-		return cfe("Error getting code length in Code attribute" + klass.className)
+		return cfe("Error getting code length in Code attribute in " + klass.className)
 	}
 
 	var code []byte
@@ -154,7 +154,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	exceptionCount, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting count of exceptions in Code attribute" + klass.className)
+		return cfe("Error getting count of exceptions in Code attribute in " + klass.className)
 	}
 
 	if exceptionCount > 0 {
@@ -178,10 +178,10 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 				catchType := klass.cpIndex[ex.catchType]
 				if catchType.entryType != ClassRef {
 					return cfe("Invalid catchType in method " + methodName +
-						"in " + klass.className)
+						" in " + klass.className)
 				} else {
 					log.Log("Class: "+klass.className+", method: "+methodName+
-						"throws exception: "+klass.utf8Refs[catchType.slot].content,
+						" throws exception: "+klass.utf8Refs[catchType.slot].content,
 						log.FINEST)
 				}
 			}
@@ -193,17 +193,17 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	attrCount, err := intFrom2Bytes(att.attrContent, pos+1)
 	pos += 2
 	if err != nil {
-		return cfe("Error getting attributes in Code attribute of" + methodName +
+		return cfe("Error getting attributes in Code attribute of " + methodName +
 			"() of " + klass.className)
 	}
 
 	if attrCount > 0 {
 		log.Log("Method: "+methodName+" code attribute has "+strconv.Itoa(attrCount)+
-			"attributes: ", log.FINEST)
+			" attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
 			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
 			if err2 != nil {
-				return cfe("Error retrieving attributes in Code attribute of" + methodName +
+				return cfe("Error retrieving attributes in Code attribute of " + methodName +
 					"() of " + klass.className)
 			}
 			pos = loc
@@ -246,7 +246,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 		loc += 2
 		if klass.cpIndex[cRefIndex].entryType != ClassRef {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
-				"in method " + klass.utf8Refs[meth.name].content +
+				" in method " + klass.utf8Refs[meth.name].content +
 				" does not point to a ClassRef CP entry")
 		}
 
@@ -259,7 +259,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 		exceptionName, err2 := fetchUTF8string(klass, classRef)
 		if err2 != nil {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
-				"in method " + klass.utf8Refs[meth.name].content +
+				" in method " + klass.utf8Refs[meth.name].content +
 				" has a ClassRef CP entry that does not point to a UTF8 string")
 		}
 
