@@ -400,7 +400,9 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestInvalidFieldNameContainingWhitepace(t *testing.T) {
+// field names in Java cannot begin with a digit and they cannot contain
+// whitespace. We check for both here.
+func TestInvalidFieldNames(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -436,7 +438,14 @@ func TestInvalidFieldNameContainingWhitepace(t *testing.T) {
 
 	err := validateFields(&klass)
 	if err == nil {
-		t.Error("Did not get expected error for invalid field name.")
+		t.Error("Did not get expected error for field name with embedded space.")
+	}
+
+	// now test a field name that begins with a digit
+	klass.utf8Refs[0] = utf8Entry{"99bottlesOfBeer"}
+	err = validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for field name starting with digit")
 	}
 
 	// restore stderr and stdout to what they were before
