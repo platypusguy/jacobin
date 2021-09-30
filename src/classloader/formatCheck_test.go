@@ -399,3 +399,112 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestInvalidFieldNameContainingWhitepace(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"bad name"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"B"})
+
+	klass.cpCount = 3
+
+	klass.fieldCount = 1
+	klass.fields = append(klass.fields, field{
+		accessFlags: 0,
+		name:        0, // points to the first utf8Refs entry
+		description: 1, // points to the 2nd utf8Refs entry
+		attributes:  nil,
+	})
+
+	err := validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for invalid field name.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	// msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// the field description must start with one only a few characters, of which
+// 's' (our test value) is not one. We also test for an empty description
+func TestInvalidFieldDescription(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"validName"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"s"})
+
+	klass.cpCount = 3
+
+	klass.fieldCount = 1
+	klass.fields = append(klass.fields, field{
+		accessFlags: 0,
+		name:        0,
+		description: 1,
+		attributes:  nil,
+	})
+
+	err := validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for invalid field description for " +
+			"field: validName")
+	}
+
+	// now test for empty description string
+	klass.utf8Refs[1] = utf8Entry{""}
+	err = validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for empty field description for " +
+			"field: validName")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	// msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}

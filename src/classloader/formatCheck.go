@@ -349,7 +349,7 @@ func validateConstantPool(klass *parsedClass) error {
 	return nil
 }
 
-// field entries consist of two string entries, one of which points to the name, the other
+// field entries consist of two string indexes, one of which points to the name, the other
 // to a string containing a description of the type. Here we grab the strings and check that
 // they fulfill the requirements: name doesn't start with a digit or contain a space, and the
 // type begins with one of the required letters/symbols
@@ -372,8 +372,22 @@ func validateFields(klass *parsedClass) error {
 			return cfe("Invalid field name in format check (starts with a digit): " + fName)
 		}
 
-		if strings.Contains(fName, " ") {
-			return cfe("Invalid field name in format check (contains a space): " + fName)
+		// check that there is no leading, trailing, or embedded whitespace
+		for _, c := range fNameBytes {
+			switch c {
+			case
+				'\u0009', // horizontal tab
+				'\u000A', // line feed
+				'\u000B', // vertical tab
+				'\u000C', // form feed
+				'\u000D', // carriage return
+				'\u0020', // space
+				'\u0085', // next line
+				'\u00A0': // no-break space
+				return cfe("Invalid field name in format check (contains whitespace): " + fName)
+			default:
+				continue
+			}
 		}
 
 		if validateFieldDesc(fDesc) != nil {
