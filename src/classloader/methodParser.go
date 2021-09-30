@@ -318,7 +318,7 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) 
 
 		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
 		if err != nil {
-			return cfe("Error getting access flags of Parameter attribute #" +
+			return cfe("Error getting access flags of MethodParameter attribute #" +
 				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
 		}
 		mpAttrib.accessFlags = accessFlags

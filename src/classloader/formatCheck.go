@@ -298,7 +298,67 @@ func validateConstantPool(klass *parsedClass) error {
 			if refKind < 1 || refKind > 9 {
 				return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
 					" has an invalid reference kind: " + strconv.Itoa(refKind))
-			} // TODO: finish the many tests for MethodHandles
+			}
+			refIndex := mhe.referenceIndex
+
+			switch refKind {
+			// if refKind is 1-4, the reference_index must point to a fieldRef
+			case 1, 2, 3, 4:
+				if klass.cpIndex[refIndex].entryType != FieldRef {
+					return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" has an reference kind between 1-4 ( " + strconv.Itoa(refKind) +
+						") which does not point to a FieldRef")
+				}
+			// if refKind is 5 or 8, the reference_index must point to a methodRef
+			case 5, 8:
+				if klass.cpIndex[refIndex].entryType != MethodRef {
+					return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" has an reference kind between of 5 or 8 ( " + strconv.Itoa(refKind) +
+						") which does not point to a MethodRef")
+				}
+			case 6, 7:
+				// if refKind is 6 or 7, the reference_index must point to a methodRef or if the
+				// class version # is >= 52, it can point to an Interface. To make the logic readable,
+				// we test for the positive here, rather than the negative as in the other cases
+				if klass.cpIndex[refIndex].entryType == MethodRef ||
+					(klass.javaVersion >= 52 && klass.cpIndex[refIndex].entryType == Interface) {
+					break
+				} else {
+					return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" has an reference kind between of 6 or 7 ( " + strconv.Itoa(refKind) +
+						") which does not point to a MethodRef or in Java version 52 or later " +
+						"does not point to an Interface.")
+				}
+			case 9:
+				if klass.cpIndex[refIndex].entryType != Interface {
+					return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" has an reference kind between of 9 which does not point to an interface")
+				}
+			}
+
+			// if the reference_kind is 5 or 7 the name of the method pointed to
+			// by the nameAndType entry in the method handle cannot be <init> or <clinit>
+			if refKind == 5 || refKind == 7 {
+				methRefIndex := klass.cpIndex[refIndex].slot
+				if methRefIndex < 0 || methRefIndex >= len(klass.methodRefs) {
+					return cfe("Reference index for MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" points to an invalid MethodRef: " + strconv.Itoa(methRefIndex))
+				}
+				methRef := klass.methodRefs[methRefIndex]
+				nAndT := methRef.nameAndTypeIndex
+				nAndTentry := klass.nameAndTypes[nAndT]
+				name, err := fetchUTF8string(klass, nAndTentry.nameIndex)
+				if err != nil {
+					return cfe("Invalid name index in name and type entry #" +
+						strconv.Itoa(methRef.nameAndTypeIndex) +
+						" in MethodHandle at CP entry #" + strconv.Itoa(j))
+				}
+				if name == "<init>" || name == "<clinit>" {
+					return cfe("Invalid name for method in MethodHandle at CP entry #" +
+						strconv.Itoa(j) + ": " + name)
+				}
+			}
+
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
 			// of the method type, which appears to require an initial opening parenthesis. See
