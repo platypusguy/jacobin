@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -23,7 +24,7 @@ import (
 func formatCheckClass(klass *parsedClass) error {
 	err := validateConstantPool(klass)
 	if err != nil {
-		return err // whatever occurs will there notify the user
+		return err // whatever error occurs, the user will have been notified
 	}
 
 	err = validateFields(klass)
@@ -351,6 +352,47 @@ func validateConstantPool(klass *parsedClass) error {
 	return nil
 }
 
+// field entries consist of two string entries, one of which points to the name, the other
+// to a string containing a description of the type. Here we grab the strings and check that
+// they fulfill the requirements: name doesn't start with a digit or contain a space, and the
+// type begins with one of the required letters/symbols
 func validateFields(klass *parsedClass) error {
+	for i, f := range klass.fields {
+		// f.name points to a UTF8 entry in klass.utf8refs, so check it's in a valid range
+		if f.name < 0 || f.name >= len(klass.utf8Refs) {
+			return cfe("Invalid index to UTF8 string for field name in field #" + strconv.Itoa(i))
+		}
+		fName := klass.utf8Refs[f.name].content
+
+		// f.description points to a UTF8 entry in klass.utf8refs, so check it's in a valid range
+		if f.description < 0 || f.description >= len(klass.utf8Refs) {
+			return cfe("Invalid index for UTF8 string containing description of field " + fName)
+		}
+		fDesc := klass.utf8Refs[f.description].content
+
+		fNameBytes := []byte(fName)
+		if fNameBytes[0] >= '0' && fNameBytes[0] <= '9' {
+			return cfe("Invalid field name in format check (starts with a digit): " + fName)
+		}
+
+		if strings.Contains(fName, " ") {
+			return cfe("Invalid field name in format check (contains a space): " + fName)
+		}
+
+		if validateFieldDesc(fDesc, fName) != nil {
+			return errors.New("invalid field") // error message has already been displayed
+		}
+	}
+	return nil
+}
+
+func validateFieldDesc(desc string, name string) error {
+	descBytes := []byte(desc)
+	c := descBytes[0]
+	if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
+		c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
+		c == '[') {
+		return cfe("Field " + name + " has an invalid description string: " + desc)
+	}
 	return nil
 }
