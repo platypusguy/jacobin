@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"errors"
+	"jacobin/log"
 	"strconv"
 	"strings"
 )
@@ -336,29 +337,45 @@ func validateConstantPool(klass *parsedClass) error {
 				}
 			}
 
-			// if the reference_kind is 5 or 7 the name of the method pointed to
+			// if the reference_kind is 5-7 the name of the method pointed to
 			// by the nameAndType entry in the method handle cannot be <init> or <clinit>
-			if refKind == 5 || refKind == 7 {
+			if refKind >= 5 && refKind <= 7 && klass.cpIndex[refIndex].entryType == MethodRef {
 				methRefIndex := klass.cpIndex[refIndex].slot
 				if methRefIndex < 0 || methRefIndex >= len(klass.methodRefs) {
 					return cfe("Reference index for MethodHandle at CP entry #" + strconv.Itoa(j) +
 						" points to an invalid MethodRef: " + strconv.Itoa(methRefIndex))
 				}
-				methRef := klass.methodRefs[methRefIndex]
-				nAndT := methRef.nameAndTypeIndex
-				nAndTentry := klass.nameAndTypes[nAndT]
-				name, err := fetchUTF8string(klass, nAndTentry.nameIndex)
+
+				// CURR: resume here by checking method name as explained above.
+				// then continue with other checks.
+				className, err := resolveCPmethodRef(refIndex, klass)
 				if err != nil {
-					return cfe("Invalid name index in name and type entry #" +
-						strconv.Itoa(methRef.nameAndTypeIndex) +
-						" in MethodHandle at CP entry #" + strconv.Itoa(j))
+					return errors.New("") // the error messsage is already displayed
 				}
-				if name == "<init>" || name == "<clinit>" {
-					return cfe("Invalid name for method in MethodHandle at CP entry #" +
-						strconv.Itoa(j) + ": " + name)
-				}
+
+				log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
+					" is:"+className, log.FINEST)
 			}
 
+			/* This commented out code might be correct, I'm trying to make it simpler with
+			      resolveCPmethodRef, which is still under development and needs finishing and verification
+			      It's in parserUtils.go
+
+			   				methRef := klass.methodRefs[methRefIndex]
+			   				nAndT := methRef.nameAndTypeIndex
+			   				nAndTentry := klass.nameAndTypes[nAndT]
+			   				name, err := fetchUTF8string(klass, nAndTentry.nameIndex)
+			   				if err != nil {
+			   					return cfe("Invalid name index in name and type entry #" +
+			   						strconv.Itoa(methRef.nameAndTypeIndex) +
+			   						" in MethodHandle at CP entry #" + strconv.Itoa(j))
+			   				}
+			   				if name == "<init>" || name == "<clinit>" {
+			   					return cfe("Invalid name for method in MethodHandle at CP entry #" +
+			   						strconv.Itoa(j) + ": " + name)
+			   				}
+			   			}
+			*/
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
 			// of the method type, which appears to require an initial opening parenthesis. See

@@ -50,7 +50,7 @@ type parsedClass struct {
 	// ---- constant pool data items ----
 	cpCount        int       // count of constant pool entries
 	cpIndex        []cpEntry // the constant pool index to entries
-	classRefs      []int     // points to a UTF-8 entry
+	classRefs      []int     // points to a UTF-8 entry in the CP
 	doubles        []float64
 	fieldRefs      []fieldRefEntry
 	floats         []float32
