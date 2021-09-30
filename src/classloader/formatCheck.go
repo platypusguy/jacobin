@@ -280,11 +280,8 @@ func validateConstantPool(klass *parsedClass) error {
 					strconv.Itoa(nAndTentry.nameIndex))
 			}
 
-			descBytes := []byte(desc)
-			c := descBytes[0]
-			if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
-				c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
-				c == '[') {
+			err = validateFieldDesc(desc)
+			if err != nil {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
 					" has an invalid description string: " + desc)
 			}
@@ -379,20 +376,26 @@ func validateFields(klass *parsedClass) error {
 			return cfe("Invalid field name in format check (contains a space): " + fName)
 		}
 
-		if validateFieldDesc(fDesc, fName) != nil {
-			return errors.New("invalid field") // error message has already been displayed
+		if validateFieldDesc(fDesc) != nil {
+			return cfe("Field " + fName + " has an invalid description string: " + fDesc)
 		}
 	}
 	return nil
 }
 
-func validateFieldDesc(desc string, name string) error {
+// certain descriptions and type strings must start with one of the letters shown here.
+// See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-FieldType
+func validateFieldDesc(desc string) error {
+	if len(desc) < 1 {
+		return errors.New("invalid")
+	}
+
 	descBytes := []byte(desc)
 	c := descBytes[0]
 	if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
 		c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
 		c == '[') {
-		return cfe("Field " + name + " has an invalid description string: " + desc)
+		return errors.New("invalid")
 	}
 	return nil
 }
