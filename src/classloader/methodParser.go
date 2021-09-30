@@ -190,7 +190,8 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	}
 
 	ca.attributes = []attr{}
-	attrCount, err := intFrom2Bytes(att.attrContent, pos)
+	attrCount, err := intFrom2Bytes(att.attrContent, pos+1)
+	pos += 2
 	if err != nil {
 		return cfe("Error getting attributes in Code attribute of" + methodName +
 			"() of " + klass.className)
@@ -200,7 +201,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 		log.Log("Method: "+methodName+" code attribute has "+strconv.Itoa(attrCount)+
 			"attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
-			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos+1)
+			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
 			if err2 != nil {
 				return cfe("Error retrieving attributes in Code attribute of" + methodName +
 					"() of " + klass.className)
