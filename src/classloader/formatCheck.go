@@ -339,6 +339,11 @@ func validateConstantPool(klass *parsedClass) error {
 
 			// if the reference_kind is 5-7 the name of the method pointed to
 			// by the nameAndType entry in the method handle cannot be <init> or <clinit>
+			className, _, _, err := resolveCPmethodRef(refIndex, klass)
+			if err != nil {
+				return errors.New("") // the error messsage is already displayed
+			}
+
 			if refKind >= 5 && refKind <= 7 && klass.cpIndex[refIndex].entryType == MethodRef {
 				methRefIndex := klass.cpIndex[refIndex].slot
 				if methRefIndex < 0 || methRefIndex >= len(klass.methodRefs) {
@@ -346,36 +351,19 @@ func validateConstantPool(klass *parsedClass) error {
 						" points to an invalid MethodRef: " + strconv.Itoa(methRefIndex))
 				}
 
-				// CURR: resume here by checking method name as explained above.
-				// then continue with other checks.
-				className, err := resolveCPmethodRef(refIndex, klass)
-				if err != nil {
-					return errors.New("") // the error messsage is already displayed
+				if className == "<init>" || className == "<clinit>" {
+					return cfe("Invalid class name for MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" : " + className)
 				}
-
-				log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
-					" is:"+className, log.FINEST)
+			} else if refKind == 8 {
+				if className != "<init>" {
+					return cfe("Class name for MethodHandle at CP entry #" + strconv.Itoa(j) +
+						" should be <init>, but is: " + className)
+				}
 			}
 
-			/* This commented out code might be correct, I'm trying to make it simpler with
-			      resolveCPmethodRef, which is still under development and needs finishing and verification
-			      It's in parserUtils.go
-
-			   				methRef := klass.methodRefs[methRefIndex]
-			   				nAndT := methRef.nameAndTypeIndex
-			   				nAndTentry := klass.nameAndTypes[nAndT]
-			   				name, err := fetchUTF8string(klass, nAndTentry.nameIndex)
-			   				if err != nil {
-			   					return cfe("Invalid name index in name and type entry #" +
-			   						strconv.Itoa(methRef.nameAndTypeIndex) +
-			   						" in MethodHandle at CP entry #" + strconv.Itoa(j))
-			   				}
-			   				if name == "<init>" || name == "<clinit>" {
-			   					return cfe("Invalid name for method in MethodHandle at CP entry #" +
-			   						strconv.Itoa(j) + ": " + name)
-			   				}
-			   			}
-			*/
+			log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
+				" is:"+className, log.FINEST)
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
 			// of the method type, which appears to require an initial opening parenthesis. See
