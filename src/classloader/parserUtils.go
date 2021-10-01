@@ -6,7 +6,10 @@
 
 package classloader
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 // various utilities frequently used in parsing classfiles
 
@@ -113,42 +116,58 @@ func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error
 // returns all the elements of a methodRef (10) CP entry when given the CP entry #
 // 	classIndex       int
 //	nameAndTypeIndex int
-func resolveCPmethodRef(index int, klass *parsedClass) (string, error) {
+func resolveCPmethodRef(index int, klass *parsedClass) (string, string, string, error) {
 	if index < 1 || index >= len(klass.cpIndex) {
-		return "", cfe("Invalid index into CP: " + strconv.Itoa(index))
+		return "", "", "", cfe("Invalid index into CP: " + strconv.Itoa(index))
 	}
 	cpEnt := klass.cpIndex[index]
 	if cpEnt.entryType != MethodRef {
-		return "", cfe("Expecting MethodRef (10) at CP entry #" + strconv.Itoa(index) +
+		return "", "", "", cfe("Expecting MethodRef (10) at CP entry #" + strconv.Itoa(index) +
 			" but instead got CP type: " + strconv.Itoa(cpEnt.entryType))
 	}
 
 	methRef := klass.methodRefs[cpEnt.slot]
-	// methRef.classIndex is a CP index to a class entry for the class name
-	// methRef.classxxxx  is a CP index to a NameAndType entry for the class type
-	// see 1425, 1426 in Class.class
 	pointedToClassRef := klass.cpIndex[methRef.classIndex]
 	nameIndex := klass.classRefs[pointedToClassRef.slot]
 	className, err := fetchUTF8string(klass, nameIndex)
 	if err != nil {
-		return "", cfe("ClassRef entry in MethodRef CP entry #" + strconv.Itoa(index) +
+		return "", "", "", cfe("ClassRef entry in MethodRef CP entry #" + strconv.Itoa(index) +
 			" does not point to a valid string")
 	}
 
-	// className, _ := fetchUTF8string(klass, nameIndex.)
-	// class := klass.cpIndex[methRef.classIndex]
-	// if class.entryType != ClassRef {
-	// 	return "", cfe("Expecting ClassRef (7) at CP entry #"+strconv.Itoa(methRef.classIndex)+
-	// 		" but instead got CP type: "+strconv.Itoa(class.entryType))
-	// }
-	//
-	// // classNameIndex := klass.cpIndex[class.slot]
-	// className,err := fetchUTF8string(klass, class.slot)
-	// if err != nil {
-	// 	return "", cfe("ClassRef entry in MethodRef CP entry #"+strconv.Itoa(index)+
-	// 		" does not point to a valid string")
-	// }
+	// pointedToNandT := klass.cpIndex[methRef.nameAndTypeIndex]
+	methName, methType, err := resolveCPnameAndType(klass, methRef.nameAndTypeIndex)
+	if err != nil {
+		return "", "", "", errors.New("error occured") // the error msg is displayed in the called func.
+	}
 
-	return className, nil
+	return className, methName, methType, nil
 
+}
+
+func resolveCPnameAndType(klass *parsedClass, index int) (string, string, error) {
+	if index < 1 || index >= len(klass.cpIndex) {
+		return "", "", cfe("Invalid nameAndType index into CP: " +
+			strconv.Itoa(index))
+	}
+
+	nAndTindex := klass.cpIndex[index]
+	nAndT := klass.nameAndTypes[nAndTindex.slot]
+	nameIndex := nAndT.nameIndex
+	descIndex := nAndT.descriptorIndex
+
+	if klass.cpIndex[nameIndex].entryType != UTF8 {
+		return "", "", cfe("Name index in nameAndType entry (CP #" + strconv.Itoa(index) +
+			") does not point to a UTF8 entry.")
+	}
+
+	name := klass.utf8Refs[klass.cpIndex[nameIndex].slot]
+
+	if klass.cpIndex[descIndex].entryType != UTF8 {
+		return "", "", cfe("Desc index in nameAndType entry (CP #" + strconv.Itoa(index) +
+			") does not point to a UTF8 entry.")
+	}
+
+	desc := klass.utf8Refs[klass.cpIndex[descIndex].slot]
+	return name.content, desc.content, nil
 }
