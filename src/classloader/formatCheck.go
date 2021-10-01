@@ -338,7 +338,7 @@ func validateConstantPool(klass *parsedClass) error {
 			}
 
 			// get the class name pointed to by the MethodRef pointed to by the MethodHandle
-			className, _, _, err := resolveCPmethodRef(refIndex, klass)
+			methodName, _, _, err := resolveCPmethodRef(refIndex, klass)
 			if err != nil {
 				return errors.New("") // the error messsage is already displayed
 			}
@@ -352,19 +352,19 @@ func validateConstantPool(klass *parsedClass) error {
 						" points to an invalid MethodRef: " + strconv.Itoa(methRefIndex))
 				}
 
-				if className == "<init>" || className == "<clinit>" {
+				if methodName == "<init>" || methodName == "<clinit>" {
 					return cfe("Invalid class name for MethodHandle at CP entry #" + strconv.Itoa(j) +
-						" : " + className)
+						" : " + methodName)
 				}
 			} else if refKind == 8 {
-				if className != "<init>" {
+				if methodName != "<init>" {
 					return cfe("Class name for MethodHandle at CP entry #" + strconv.Itoa(j) +
-						" should be <init>, but is: " + className)
+						" should be <init>, but is: " + methodName)
 				}
 			}
 
 			log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
-				" is:"+className, log.FINEST)
+				" is:"+methodName, log.FINEST)
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
 			// of the method type, which appears to require an initial opening parenthesis. See
