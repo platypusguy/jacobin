@@ -24,11 +24,11 @@ A more-than-minimal JVM written in Go.
 **To do**:
   * Handling JAR files
   * Handling @files (which contain command-line options)
-  * Parsing the classpath
+  * Parsing complex classpaths
 
 ### Class loading
 * Correctly reads and parses basic classes
-* Extracts bytecode and params needed for execution
+* Extracts bytecode and parameters needed for execution
 
 **To do**:
 * Handle more-complex classes
@@ -38,7 +38,7 @@ A more-than-minimal JVM written in Go.
 * Automate loading of core Java classes (Object, etc.)
 
 ### Verification, Linking, Preparation, Initialization
-* Performs integrity check bytecode is correct. :pencil2: This is the focus of current coding work
+* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file. :pencil2: This is the focus of current coding work
 
 **To do:**
 * Linking and verification
