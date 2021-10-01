@@ -337,13 +337,14 @@ func validateConstantPool(klass *parsedClass) error {
 				}
 			}
 
-			// if the reference_kind is 5-7 the name of the method pointed to
-			// by the nameAndType entry in the method handle cannot be <init> or <clinit>
+			// get the class name pointed to by the MethodRef pointed to by the MethodHandle
 			className, _, _, err := resolveCPmethodRef(refIndex, klass)
 			if err != nil {
 				return errors.New("") // the error messsage is already displayed
 			}
 
+			// if the reference_kind is 5-7 the name of the method pointed to
+			// by the nameAndType entry in the method handle cannot be <init> or <clinit>
 			if refKind >= 5 && refKind <= 7 && klass.cpIndex[refIndex].entryType == MethodRef {
 				methRefIndex := klass.cpIndex[refIndex].slot
 				if methRefIndex < 0 || methRefIndex >= len(klass.methodRefs) {

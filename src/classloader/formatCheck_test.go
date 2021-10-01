@@ -517,3 +517,72 @@ func TestInvalidFieldDescription(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+// this test validates both InterfaceRefs and NameAndType refs.
+func TestValidMethodHandleEntry(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+
+	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
+		referenceKind:  5, // this requires that the next field be CP entry for MethodRef
+		referenceIndex: 2, // index into CP of MethodRef entry
+	})
+
+	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+		classIndex: 7, // points to classRef entry for class name,
+		// which poitns to UTF8 record, here: "classname"
+		nameAndTypeIndex: 3,
+	})
+
+	klass.classRefs = append(klass.classRefs, 4)
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"classname"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
+
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       5, // points to UTF8[1], i.e., nAndTYpe-methname
+		descriptorIndex: 6, // points to UTF8[2], i.e., "D"
+	})
+
+	klass.cpCount = 8
+
+	err := validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got but did not expect error in test of valid MethodHandle with.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if len(msg) != 0 {
+		t.Error("Got unexpected output to stderr: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
