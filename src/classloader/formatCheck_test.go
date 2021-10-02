@@ -746,3 +746,60 @@ func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestValidMethodType(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.javaVersion = 54
+
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+
+	klass.methodTypes = append(klass.methodTypes, 2) // points to first UTF8 rec
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"(IDLjava/lang/Thread;)Ljava/lang/Object;"})
+
+	klass.cpCount = 3
+
+	// testing with valid UTF8 record re method type (which must begin with open paren)
+
+	err := validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error validating format check of MethodType.")
+	}
+
+	// now run the same test an invalid method type (no opening paren)
+	klass.utf8Refs[0] = utf8Entry{"IDLjava/lang/Thread;)Ljava/lang/Object;"}
+	err = validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Was expecting error in test of MethodType pointing to a type" +
+			" string that did not begin with '('")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "not point to a type that starts with an open parenthesis") {
+		t.Error("Got unexpected output error message: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
