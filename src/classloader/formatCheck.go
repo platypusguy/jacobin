@@ -338,9 +338,13 @@ func validateConstantPool(klass *parsedClass) error {
 			}
 
 			// get the class name pointed to by the MethodRef pointed to by the MethodHandle
-			methodName, _, _, err := resolveCPmethodRef(refIndex, klass)
-			if err != nil {
-				return errors.New("") // the error messsage is already displayed
+			var methodName string
+			var err error
+			if klass.cpIndex[refIndex].entryType == MethodRef {
+				methodName, _, _, err = resolveCPmethodRef(refIndex, klass)
+				if err != nil {
+					return errors.New("") // the error messsage is already displayed
+				}
 			}
 
 			// if the reference_kind is 5-7 the name of the method pointed to
