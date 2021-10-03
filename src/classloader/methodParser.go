@@ -298,8 +298,8 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) 
 		paramNameIndex, err := intFrom2Bytes(att.attrContent, pos)
 		pos += 2
 		if err != nil {
-			return cfe("Error getting name index for Parameter attribute #" +
-				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+			return cfe("Error getting name index for MethodParameters attribute #" +
+				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
 		}
 		if paramNameIndex == 0 {
 			mpAttrib.name = ""
@@ -307,8 +307,8 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) 
 			mpAttrib.name, err = fetchUTF8string(klass, paramNameIndex)
 		}
 		if err != nil {
-			return cfe("Error getting name of Parameter attribute #" +
-				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+			return cfe("Error getting name of MethodParameters attribute #" +
+				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
 		}
 
 		logName := "{none}"
@@ -319,9 +319,15 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) 
 
 		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
 		if err != nil {
-			return cfe("Error getting access flags of MethodParameter attribute #" +
-				strconv.Itoa(k+1) + " " + klass.utf8Refs[meth.name].content)
+			return cfe("Error getting access flags of MethodParameters attribute #" +
+				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
 		}
+		// do format check on the access flags here
+		if accessFlags != 0x10 && accessFlags != 0x1000 && accessFlags != 0x8000 {
+			return cfe("Invalid access flags of MethodParameters attribute #" +
+				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
+		}
+
 		mpAttrib.accessFlags = accessFlags
 		meth.parameters = append(meth.parameters, mpAttrib)
 	}
