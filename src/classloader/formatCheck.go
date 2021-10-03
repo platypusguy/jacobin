@@ -483,3 +483,31 @@ func validateFieldDesc(desc string) error {
 	}
 	return nil
 }
+
+// validates the unqualified names of fields and methods. "Unqualified" is a term of art, see:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.2.2
+// the 'method' parameter indicates whether the string is the name of a method (which would
+// necessitate additional checks. On error, returns false
+func validateUnqualifiedName(name string, method bool) bool {
+	if len(name) == 0 {
+		return false
+	}
+	bytes := []byte(name)
+	for _, v := range bytes { // check there are no embedded . ; [ / (
+		if v == '.' || v == ';' || v == '[' || v == '/' || v == '(' {
+			return false
+		}
+	}
+
+	// only the methods <init> and <clinit> can contain a < or a >
+	if method {
+		if name != "<init>" && name != "<clinit>" {
+			for _, v := range bytes {
+				if v == '<' || v == '>' {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}

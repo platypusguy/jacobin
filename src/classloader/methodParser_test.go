@@ -160,4 +160,8 @@ func TestValidMethodParametersAttribute(t *testing.T) {
 		t.Error("The wrong value for the UTF8 record on MethodParams method attribute was stored. Got:" +
 			mp.name)
 	}
+
+	if !validateUnqualifiedName(mp.name, false) {
+		t.Error("MethodParameter name: " + mp.name + " is not a valid unqualified name")
+	}
 }
