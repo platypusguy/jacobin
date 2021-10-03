@@ -284,9 +284,10 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 //    } parameters[parameters_count];
 // }
 func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) error {
+	var err error
 	pos := 0
-	parametersCount, err := intFrom2Bytes(att.attrContent, pos)
-	pos += 2
+	parametersCount := int(att.attrContent[pos])
+	pos += 1
 	if err != nil {
 		return cfe("Error getting number of Parameter attributes in method: " +
 			klass.utf8Refs[meth.name].content)
