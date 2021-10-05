@@ -92,7 +92,7 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 		t.Error("Expected 0 attributes of Code attribute. Got: " + strconv.Itoa(len(meth.codeAttr.attributes)))
 	}
 }
-func TestValidExceptionsMethodAttribute(t *testing.T) {
+func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.FINEST)
@@ -163,7 +163,7 @@ func TestValidExceptionsMethodAttribute(t *testing.T) {
 	}
 }
 
-func TestValidMethodExceptionsAttribute(t *testing.T) {
+func Test2ValidMethodExceptionAttributes(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.FINEST)
@@ -234,19 +234,10 @@ func TestValidMethodExceptionsAttribute(t *testing.T) {
 		t.Error("Expected 2 exceptions in Method 'testMethod', got: " +
 			strconv.Itoa(len(meth.exceptions)))
 	}
-	//
-	// mp := meth.parameters[0]
-	// if mp.name != "param1" {
-	// 	t.Error("The wrong value for the UTF8 record on MethodParams method attribute was stored. Got:" +
-	// 		mp.name)
-	// }
-	//
-	// if !validateUnqualifiedName(mp.name, false) {
-	// 	t.Error("MethodParameter name: " + mp.name + " is not a valid unqualified name")
-	// }
+
 }
 
-func TestValidMethodDeprecatedAttribute(t *testing.T) {
+func TestValidMethodParameterAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.FINEST)
