@@ -163,7 +163,90 @@ func TestValidExceptionsMethodAttribute(t *testing.T) {
 	}
 }
 
-func TestValidMethodParametersAttribute(t *testing.T) {
+func TestValidMethodExceptionsAttribute(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 3})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOError"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
+
+	klass.classRefs = append(klass.classRefs, 4) // classRef[0] -> CP[4] -> UTF8[2]
+	klass.classRefs = append(klass.classRefs, 3) // classRef[1] -> CP[3] -> UTF8[1]
+	klass.cpCount = 7
+
+	// method
+	meth := method{}
+	meth.name = 6 // CP[6] -> UTF8[3]: "testMethod"
+
+	attrib := attr{}
+	attrib.attrName = 1 // CP[1] points to UTF8[0] -> "MethodParameters" (required)
+	attrib.attrSize = 6 // 2 (exc count) + 2x2bytes = 6 bytes
+	attrib.attrContent = []byte{
+		0x00, 0x02, // 2 exceptions to process
+		0x00, 0x02, // Exception1: CP[2] points to ClassRef[0] -> CP[4]->UTF[3]: name of exception
+		0x00, 0x05, // Exception2: CP[5] points to ClassRef[1] -> CP[3]->UTF[1]: name of exception
+	}
+
+	meth.accessFlags = 0x20
+
+	err := parseExceptionsMethodAttribute(attrib, &meth, &klass)
+	if err != nil {
+		t.Error("Unexpected error in processing valid Exceptions attribute of method")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "java/io/IOException") {
+		t.Error("Expected output containing 'java/io/IOException' but got: " + msg)
+	}
+
+	if len(meth.exceptions) != 2 {
+		t.Error("Expected 2 exceptions in Method 'testMethod', got: " +
+			strconv.Itoa(len(meth.exceptions)))
+	}
+	//
+	// mp := meth.parameters[0]
+	// if mp.name != "param1" {
+	// 	t.Error("The wrong value for the UTF8 record on MethodParams method attribute was stored. Got:" +
+	// 		mp.name)
+	// }
+	//
+	// if !validateUnqualifiedName(mp.name, false) {
+	// 	t.Error("MethodParameter name: " + mp.name + " is not a valid unqualified name")
+	// }
+}
+
+func TestValidMethodDeprecatedAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.FINEST)
