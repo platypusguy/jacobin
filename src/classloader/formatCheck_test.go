@@ -803,3 +803,24 @@ func TestValidMethodType(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestUnqualifiedName(t *testing.T) {
+	isMethod := true
+	isNotMethod := false
+
+	if validateUnqualifiedName("[array]", isNotMethod) != false {
+		t.Error("Expected 'false' for test of unqualified name '[array]', but got OK")
+	}
+
+	if validateUnqualifiedName("isArray", isNotMethod) == false {
+		t.Error("Expected 'true' for test of unqualified name 'isArray', but got false")
+	}
+
+	if validateUnqualifiedName("<clinit>", isMethod) == false {
+		t.Error("Expected 'true' for test of unqualified method name '<clinit>', but got false")
+	}
+
+	if validateUnqualifiedName("java/isOpen", isMethod) != false {
+		t.Error("Expected 'false' for test of unqualified method name 'java/isOpen', but got true")
+	}
+}
