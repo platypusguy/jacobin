@@ -158,7 +158,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	}
 
 	if exceptionCount > 0 {
-		log.Log("Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
+		log.Log("        Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
 			log.FINEST)
 		for k := 0; k < exceptionCount; k++ {
 			ex := exception{}
@@ -180,7 +180,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 					return cfe("Invalid catchType in method " + methodName +
 						" in " + klass.className)
 				} else {
-					log.Log("Class: "+klass.className+", method: "+methodName+
+					log.Log("        Method: "+methodName+
 						" throws exception: "+klass.utf8Refs[catchType.slot].content,
 						log.FINEST)
 				}
@@ -198,7 +198,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 	}
 
 	if attrCount > 0 {
-		log.Log("Method: "+methodName+" code attribute has "+strconv.Itoa(attrCount)+
+		log.Log("        Code attribute has "+strconv.Itoa(attrCount)+
 			" attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
 			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
@@ -207,7 +207,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 					"() of " + klass.className)
 			}
 			pos = loc
-			log.Log("\t"+klass.utf8Refs[cat.attrName].content, log.FINEST)
+			log.Log("        "+klass.utf8Refs[cat.attrName].content, log.FINEST)
 			ca.attributes = append(ca.attributes, cat)
 		}
 	}
