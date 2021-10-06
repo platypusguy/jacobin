@@ -1008,4 +1008,8 @@ func TestUnqualifiedName(t *testing.T) {
 	if validateUnqualifiedName("java/isOpen", isMethod) != false {
 		t.Error("Expected 'false' for test of unqualified method name 'java/isOpen', but got true")
 	}
+
+	if validateUnqualifiedName("invalid<>", isMethod) != false {
+		t.Error("Expected 'false' for test of unqualified method name 'invalid<>', but got true")
+	}
 }
