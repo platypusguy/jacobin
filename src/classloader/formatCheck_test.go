@@ -15,6 +15,33 @@ import (
 	"testing"
 )
 
+// These are the tests in this file (in order of apppearance, roughly matching entry # in CP):
+//
+// ---- general CP ----
+// size of CP							TestInvalidCPsize
+//
+// ---- constant pool (CP) entries ----
+// invalid index into UTF8 entries		TestInvalidIndexInUTF8Entry
+// invalid char in UTF8 entry			TestInvalidStringInUTF8Entry
+// IntConsts (valid and invalid)		TestIntConsts
+// missing dummy entry after Long		TestMissingDummyEntryAfterLongConst
+// invalid index to FieldRef			TestInvalidFieldRef
+// FieldRef with invalid name & type	TestFieldRefWithInvalidNameAndTypeIndex
+// MethodRef pointing to name with
+//     an invalid character in it		TestMethodRefWithInvalidMethodName
+// various errors in Interfaces			TestValidInterfaceRefEntry
+// valid MethodHandle					TestValidMethodHandleEntry
+// valid MethodHandle pting to Interface TestValidMethodHandlePointingToInterface
+// valid MethodHandle, w/ inv class name TestMethodHandleIndex8ButInvalidName
+// valid MethodType 					TestValidMethodType
+//
+// ---- fields ----
+// invalid field name					TestInvalidFieldNames
+// invalid field description syntax		TestInvalidFieldDescription
+//
+// ---- misc routines ----
+// syntax of unqualified names			TestUnqualifiedName
+
 // Get an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
 	globals.InitGlobals("test")
@@ -58,7 +85,6 @@ func TestInvalidCPsize(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
-
 func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -139,6 +165,57 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "contains an invalid character") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestIntConsts(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{IntConst, 1}) // error, should point to IntConst[0]
+
+	klass.intConsts = append(klass.intConsts, 42)
+
+	klass.cpCount = 2
+
+	// first test an index to non-existent IntConst entry
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for incorrect IntConst, but got none.")
+	}
+
+	// now add rec and test valid index to IntConst entry
+	klass.intConsts = append(klass.intConsts, 43)
+
+	err = validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error for valid IntConst")
+	}
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	// this is the error message left over from the first test of the invalid entry
+	if !strings.Contains(msg, "invalid entry in CP intConsts") {
 		t.Error("Did not get expected error msg. Got: " + msg)
 	}
 
@@ -395,124 +472,6 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 	if len(msg) != 0 {
 		t.Error("Got unexpected output to stderr: " + msg)
 	}
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-}
-
-// field names in Java cannot begin with a digit and they cannot contain
-// whitespace. We check for both here.
-func TestInvalidFieldNames(t *testing.T) {
-
-	globals.InitGlobals("test")
-	log.Init()
-	log.SetLogLevel(log.CLASS)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// variables we'll need.
-	klass := parsedClass{}
-	klass.cpIndex = append(klass.cpIndex, cpEntry{})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
-
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"bad name"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"B"})
-
-	klass.cpCount = 3
-
-	klass.fieldCount = 1
-	klass.fields = append(klass.fields, field{
-		accessFlags: 0,
-		name:        0, // points to the first utf8Refs entry
-		description: 1, // points to the 2nd utf8Refs entry
-		attributes:  nil,
-	})
-
-	err := validateFields(&klass)
-	if err == nil {
-		t.Error("Did not get expected error for field name with embedded space.")
-	}
-
-	// now test a field name that begins with a digit
-	klass.utf8Refs[0] = utf8Entry{"99bottlesOfBeer"}
-	err = validateFields(&klass)
-	if err == nil {
-		t.Error("Did not get expected error for field name starting with digit")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
-	os.Stderr = normalStderr
-	// msg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-}
-
-// the field description must start with one only a few characters, of which
-// 's' (our test value) is not one. We also test for an empty description
-func TestInvalidFieldDescription(t *testing.T) {
-
-	globals.InitGlobals("test")
-	log.Init()
-	log.SetLogLevel(log.CLASS)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// variables we'll need.
-	klass := parsedClass{}
-	klass.cpIndex = append(klass.cpIndex, cpEntry{})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
-
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"validName"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"s"})
-
-	klass.cpCount = 3
-
-	klass.fieldCount = 1
-	klass.fields = append(klass.fields, field{
-		accessFlags: 0,
-		name:        0,
-		description: 1,
-		attributes:  nil,
-	})
-
-	err := validateFields(&klass)
-	if err == nil {
-		t.Error("Did not get expected error for invalid field description for " +
-			"field: validName")
-	}
-
-	// now test for empty description string
-	klass.utf8Refs[1] = utf8Entry{""}
-	err = validateFields(&klass)
-	if err == nil {
-		t.Error("Did not get expected error for empty field description for " +
-			"field: validName")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
-	os.Stderr = normalStderr
-	// msg := string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
@@ -804,6 +763,126 @@ func TestValidMethodType(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+// field names in Java cannot begin with a digit and they cannot contain
+// whitespace. We check for both here.
+func TestInvalidFieldNames(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"bad name"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"B"})
+
+	klass.cpCount = 3
+
+	klass.fieldCount = 1
+	klass.fields = append(klass.fields, field{
+		accessFlags: 0,
+		name:        0, // points to the first utf8Refs entry
+		description: 1, // points to the 2nd utf8Refs entry
+		attributes:  nil,
+	})
+
+	err := validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for field name with embedded space.")
+	}
+
+	// now test a field name that begins with a digit
+	klass.utf8Refs[0] = utf8Entry{"99bottlesOfBeer"}
+	err = validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for field name starting with digit")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	// msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// the field description must start with one only a few characters, of which
+// 's' (our test value) is not one. We also test for an empty description
+func TestInvalidFieldDescription(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"validName"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"s"})
+
+	klass.cpCount = 3
+
+	klass.fieldCount = 1
+	klass.fields = append(klass.fields, field{
+		accessFlags: 0,
+		name:        0,
+		description: 1,
+		attributes:  nil,
+	})
+
+	err := validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for invalid field description for " +
+			"field: validName")
+	}
+
+	// now test for empty description string
+	klass.utf8Refs[1] = utf8Entry{""}
+	err = validateFields(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for empty field description for " +
+			"field: validName")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	// msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// unqualified names in Java have a set of restrictions on the syntax, which
+// varies depending on whether the name is the name of a method.
 func TestUnqualifiedName(t *testing.T) {
 	isMethod := true
 	isNotMethod := false

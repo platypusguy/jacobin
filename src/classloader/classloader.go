@@ -54,7 +54,7 @@ type parsedClass struct {
 	doubles        []float64
 	fieldRefs      []fieldRefEntry
 	floats         []float32
-	intConsts      []int
+	intConsts      []int // 32-bit int containing the actual int value
 	interfaceRefs  []interfaceRefEntry
 	invokeDynamics []invokeDynamic
 	longConsts     []int64
