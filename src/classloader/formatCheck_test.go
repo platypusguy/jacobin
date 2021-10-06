@@ -15,16 +15,18 @@ import (
 	"testing"
 )
 
-// These are the tests in this file (in order of apppearance, roughly matching entry # in CP):
+// These are the tests in this file (in order of apppearance):
 //
 // ---- general CP ----
 // size of CP							TestInvalidCPsize
 //
-// ---- constant pool (CP) entries ----
+// ---- constant pool (CP) entries (in order of the numeric value of CP entry type) ----
 // invalid index into UTF8 entries		TestInvalidIndexInUTF8Entry
 // invalid char in UTF8 entry			TestInvalidStringInUTF8Entry
 // IntConsts (valid and invalid)		TestIntConsts
+// Floats (valid and invalid)			TestFloatConsts
 // missing dummy entry after Long		TestMissingDummyEntryAfterLongConst
+// StringConst (valid and invalid)		TestStringConsts
 // invalid index to FieldRef			TestInvalidFieldRef
 // FieldRef with invalid name & type	TestFieldRefWithInvalidNameAndTypeIndex
 // MethodRef pointing to name with
@@ -35,7 +37,7 @@ import (
 // valid MethodHandle, w/ inv class name TestMethodHandleIndex8ButInvalidName
 // valid MethodType 					TestValidMethodType
 //
-// ---- fields ----
+// ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
 // invalid field description syntax		TestInvalidFieldDescription
 //
@@ -223,6 +225,57 @@ func TestIntConsts(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+func TestFloatConsts(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{FloatConst, 1}) // error, should point to FloatConst[0]
+
+	klass.floats = append(klass.floats, 42.0)
+
+	klass.cpCount = 2
+
+	// first test an index to non-existent IntConst entry
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for incorrect FloatConst, but got none.")
+	}
+
+	// now add rec and test valid index to IntConst entry
+	klass.floats = append(klass.floats, 43.0)
+
+	err = validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error for valid FloatConst")
+	}
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	// this is the error message left over from the first test of the invalid entry
+	if !strings.Contains(msg, "invalid entry in CP floats") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -259,6 +312,59 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "Missing dummy entry") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// StringConsts are just indices into the UTF8 entries. So, we just make
+// sure they actually point to an actual entry in utf8Refs
+func TestStringConsts(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{StringConst, 1}) // error, should point to UTF8[0]
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{content: "Hello, Dolly!"})
+
+	klass.cpCount = 2
+
+	// first test a StringConst that points to a non-existent UTF8 entry
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for incorrect StringConst, but got none.")
+	}
+
+	// now add rec and test valid index to UTF8 entry
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{content: "Oh, hello, Dolly!"})
+
+	err = validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error for valid StringConst")
+	}
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	// this is the error message left over from the first test of the invalid entry
+	if !strings.Contains(msg, "invalid entry in CP utf8Refs") {
 		t.Error("Did not get expected error msg. Got: " + msg)
 	}
 

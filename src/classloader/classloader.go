@@ -62,7 +62,7 @@ type parsedClass struct {
 	methodRefs     []methodRefEntry
 	methodTypes    []int
 	nameAndTypes   []nameAndTypeEntry
-	stringRefs     []stringConstantEntry
+	stringRefs     []stringConstantEntry // integer index into utf8Refs
 	utf8Refs       []utf8Entry
 
 	// ---- access flags items ----
