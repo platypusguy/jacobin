@@ -21,6 +21,7 @@ import (
 // size of CP							TestInvalidCPsize
 //
 // ---- constant pool (CP) entries (in order of the numeric value of CP entry type) ----
+// missing initial dummy entry			TestMissingInitialDummyEntry
 // invalid index into UTF8 entries		TestInvalidIndexInUTF8Entry
 // invalid char in UTF8 entry			TestInvalidStringInUTF8Entry
 // IntConsts (valid and invalid)		TestIntConsts
@@ -89,6 +90,48 @@ func TestInvalidCPsize(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestMissingInitialDummyEntry(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
+
+	klass.cpCount = 1 // the error we're testing. There are only two entries, not 4
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Did not get error for missing initial dummy entry")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Missing dummy entry in first slot of constant pool") {
+		t.Error("Did not get expected error msg for missing initial CP dummy entry. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
