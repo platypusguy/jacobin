@@ -333,7 +333,7 @@ func validateConstantPool(klass *parsedClass) error {
 			case 9:
 				if klass.cpIndex[refIndex].entryType != Interface {
 					return cfe("MethodHandle at CP entry #" + strconv.Itoa(j) +
-						" has an reference kind between of 9 which does not point to an interface")
+						" has an reference kind  of 9 which does not point to an interface")
 				}
 			}
 

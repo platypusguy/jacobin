@@ -36,6 +36,7 @@ import (
 // invalid MethodHandle (refKind=4) 	TestMethodHandle4PointsToFieldRef
 // valid MethodHandle pting to Interface TestValidMethodHandlePointingToInterface
 // valid MethodHandle, w/ inv class name TestMethodHandleIndex8ButInvalidName
+// invalid MethodHandle (refKind=9)		TestInvalidMethodHandleRefKind9
 // valid MethodType 					TestValidMethodType
 //
 // ---- fields (these are different from FieldRefs above) ----
@@ -277,6 +278,7 @@ func TestFloatConsts(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+// tests LongConst and the entry afterwards (which should be a dummy entry)
 func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -306,12 +308,20 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 		t.Error("Expected error for missing dummy entry after long, but got none.")
 	}
 
+	// now correct the CP by inserting a dummy entry and make sure it tests right
+	klass.cpIndex[2] = cpEntry{Dummy, 0}
+	err = validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error with dummy entry after LongConst.")
+	}
+
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
+	// tests the remaining error string from the failed test.
 	if !strings.Contains(msg, "Missing dummy entry") {
 		t.Error("Did not get expected error msg. Got: " + msg)
 	}
@@ -876,6 +886,74 @@ func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "should be <init>") {
+		t.Error("Got unexpected error message: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestInvalidMethodHandleRefKind9(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+
+	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
+		referenceKind:  9, // this requires that the reference index point to an interface
+		referenceIndex: 2, // should point to an interface but does not
+	})
+
+	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+		classIndex: 7, // points to classRef entry for class name,
+		// which poitns to UTF8 record, here: "methName"
+		nameAndTypeIndex: 3,
+	})
+
+	klass.classRefs = append(klass.classRefs, 4)
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"methName"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
+
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       5, // points to UTF8[1], i.e., nAndTYpe-methname
+		descriptorIndex: 6, // points to UTF8[2], i.e., "D"
+	})
+
+	klass.cpCount = 8
+
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for ReferenceIndex not pointing to Interface, but got none. ")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "reference kind  of 9 which does not point to an interface") {
 		t.Error("Got unexpected error message: " + msg)
 	}
 
