@@ -113,7 +113,7 @@ func TestMissingInitialDummyEntry(t *testing.T) {
 
 	klass.cpCount = 1 // the error we're testing. There are only two entries, not 4
 
-	err := validateConstantPool(&klass)
+	err := formatCheckClass(&klass)
 	if err == nil {
 		t.Error("Did not get error for missing initial dummy entry")
 	}
