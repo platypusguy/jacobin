@@ -373,6 +373,58 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+func TestDoubleConst(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{DoubleConst, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // this should be a dummy entry
+
+	klass.doubles = append(klass.doubles, 3.14159)
+
+	klass.cpCount = 3
+
+	// this test validates the double and the requirement that a dummy entry follow the double
+	err := validateConstantPool(&klass)
+	if err == nil {
+		t.Error("Expected error for missing dummy entry after double, but got none.")
+	}
+
+	// now correct the CP by inserting a dummy entry and make sure it tests right
+	klass.cpIndex[2] = cpEntry{Dummy, 0}
+	err = validateConstantPool(&klass)
+	if err != nil {
+		t.Error("Got unexpected error with dummy entry after DoubleConst.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	// tests the remaining error string from the failed test.
+	if !strings.Contains(msg, "Missing dummy entry") {
+		t.Error("Did not get expected error msg. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 // StringConsts are just indices into the UTF8 entries. So, we just make
 // sure they actually point to an actual entry in utf8Refs
 func TestStringConsts(t *testing.T) {
@@ -1184,6 +1236,10 @@ func TestInvalidFieldDescription(t *testing.T) {
 func TestUnqualifiedName(t *testing.T) {
 	isMethod := true
 	isNotMethod := false
+
+	if validateUnqualifiedName("", isNotMethod) != false {
+		t.Error("Expected 'false' for test of empty unqualified name, but got OK")
+	}
 
 	if validateUnqualifiedName("[array]", isNotMethod) != false {
 		t.Error("Expected 'false' for test of unqualified name '[array]', but got OK")
