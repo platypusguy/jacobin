@@ -563,3 +563,58 @@ func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestDeprecatedClassAttribute(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0}) // UTF-8 rec w/ attribute name
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Deprecated"})
+	klass.cpCount = 2
+	klass.attribCount = 1
+
+	// the attribute bytes. There's a leading dummy byte b/c the fetch routine starts
+	// at 1 byte after the passed-in position. So here we have a name index of 01, which
+	// points to the first entry in the CP above. That entry points to the first UTF-8
+	// record, which is in postion 0 in the utf8Refs and has a value of "Deprecated"
+	// The next four bytes are the length of the remaining
+	// bytes in the attribute. For Deprecated the length must be 0.
+	bytes := []byte{00, // dummy byte
+		00, 01, // CP[1] -> UTF8[0] -> "Deprecated"
+		00, 00, 00, 00} // length of attribute (must be 0 for 'Deprecated')
+
+	_, err := parseClassAttributes(bytes, 0, &klass)
+	if err != nil {
+		t.Error("Unexpected error in test of parseClassAttributes()")
+	}
+
+	if !klass.deprecated {
+		t.Error("klass.deprecated should be true, but it's false")
+	}
+
+	if len(klass.attributes) != 1 {
+		t.Error("number of klass attributes should be 1, but got: " +
+			strconv.Itoa(len(klass.attributes)))
+	}
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	// errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
