@@ -519,3 +519,47 @@ func TestParseOfFieldWithNoAttributes(t *testing.T) {
 		t.Error("Expected a field attribute count of 0, got: " + strconv.Itoa(len(f.attributes)))
 	}
 }
+
+func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.attribCount = 0
+
+	testBytes := []byte{
+		0x00,       // first byte is skipped
+		0x00, 0x02, // two Class attributes
+	}
+
+	pos, err := parseClassAttributeCount(testBytes, 0, &klass)
+	if err != nil {
+		t.Error("Unexpected error getting class attribute count")
+	}
+
+	if pos != 2 {
+		t.Error("Returned position from class attribute count parse should be 2. Got: " +
+			strconv.Itoa(pos))
+	}
+
+	if klass.attribCount != 2 {
+		t.Error("Expecting a class attribute count of 2, but got: " +
+			strconv.Itoa(pos))
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
