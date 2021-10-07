@@ -26,7 +26,8 @@ import (
 // invalid char in UTF8 entry			TestInvalidStringInUTF8Entry
 // IntConsts (valid and invalid)		TestIntConsts
 // Floats (valid and invalid)			TestFloatConsts
-// missing dummy entry after Long		TestMissingDummyEntryAfterLongConst
+// LongConst and missing dummy entry	TestMissingDummyEntryAfterLongConst
+// Double and missing dummy entry		TestDoubleConst
 // StringConst (valid and invalid)		TestStringConsts
 // invalid index to FieldRef			TestInvalidFieldRef
 // FieldRef with invalid name & type	TestFieldRefWithInvalidNameAndTypeIndex
