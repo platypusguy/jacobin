@@ -536,8 +536,6 @@ func parseClassAttributes(bytes []byte, loc int, klass *parsedClass) (int, error
 		if klass.utf8Refs[attrib.attrName].content == "Deprecated" {
 			klass.deprecated = true
 		}
-
-		klass.attributes = append(klass.attributes, attrib)
 	}
 	return pos, nil
 }
