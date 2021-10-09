@@ -25,8 +25,9 @@ import (
 // }
 func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 	pos := loc
-	meth := method{}
+	var meth method
 	for i := 0; i < klass.methodCount; i++ {
+		meth = method{}
 		accessFlags, err := intFrom2Bytes(bytes, pos+1)
 		pos += 2
 		if err != nil {
