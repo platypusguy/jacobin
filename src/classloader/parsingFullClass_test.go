@@ -163,6 +163,15 @@ func TestASimpleValidClass(t *testing.T) {
 			strconv.Itoa(len(klass.methods)))
 	}
 
+	meth3 := klass.methods[2]
+	if klass.utf8Refs[meth3.name].content != "readObject" {
+		t.Error("Expected a method name of 'readObject'. Got: " + klass.utf8Refs[meth3.name].content)
+	}
+
+	// if len(meth3.attributes) != 2 {
+	// 	t.Error("Expected method readObject() to have 2 attributes. Got: "+strconv.Itoa(len(meth3.attributes)))
+	// }
+
 	if klass.attribCount != 1 || len(klass.attributes) != 1 {
 		t.Error("Expected 1 attribute, but got: " + strconv.Itoa(klass.attribCount) + " and " +
 			strconv.Itoa(len(klass.attributes)))
