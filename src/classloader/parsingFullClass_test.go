@@ -109,8 +109,8 @@ func TestASimpleValidClass(t *testing.T) {
 		0x1A, 0x00, 0x00, 0x00, 0x02, 0x00, 0x1B,
 	}
 
-	// the following tests work against hard-coded values for this class, which are known
-	// to be valid.
+	// the following tests work against hard-coded values for this class,
+	// which are known to be valid. (Compare with javap output for this class.)
 
 	klass, err := parse(classBytes)
 	if err != nil {
@@ -168,18 +168,45 @@ func TestASimpleValidClass(t *testing.T) {
 		t.Error("Expected a method name of 'readObject'. Got: " + klass.utf8Refs[meth3.name].content)
 	}
 
-	// if len(meth3.attributes) != 2 {
-	// 	t.Error("Expected method readObject() to have 2 attributes. Got: "+strconv.Itoa(len(meth3.attributes)))
-	// }
+	if klass.utf8Refs[meth3.description].content != "(Ljava/io/ObjectInputStream;)V" {
+		t.Error("Expected readObject() to have a descriptor of '(Ljava/io/ObjectInputStream;)V'. Got: " +
+			klass.utf8Refs[meth3.description].content)
+	}
+
+	if len(meth3.attributes) != 2 {
+		t.Error("Expected method readObject() to have 2 attributes. Got: " + strconv.Itoa(len(meth3.attributes)))
+	}
+
+	attribName := klass.utf8Refs[meth3.attributes[0].attrName].content
+	if attribName != "Code" {
+		t.Error("Expected name of first method attribute in readObject() to be 'Code'. Got: " +
+			attribName)
+	}
+
+	if meth3.deprecated != false {
+		t.Error("Expected method readObject() not to be deprecated, but it was.")
+	}
 
 	if klass.attribCount != 1 || len(klass.attributes) != 1 {
 		t.Error("Expected 1 attribute, but got: " + strconv.Itoa(klass.attribCount) + " and " +
 			strconv.Itoa(len(klass.attributes)))
 	}
 
+	if klass.utf8Refs[klass.attributes[0].attrName].content != "SourceFile" {
+		t.Error("Expected a class attribute named 'SourceFile'. Got: " +
+			klass.utf8Refs[klass.attributes[0].attrName].content)
+	}
+
+	byte1 := klass.attributes[0].attrContent[0]
+	byte2 := klass.attributes[0].attrContent[1]
+	attrIndex := int(byte1)*256 + int(byte2)
+	attrName := klass.utf8Refs[klass.cpIndex[attrIndex].slot]
+	if attrName.content != "HaveInterface.java" {
+		t.Error("Expected SourceFile attribute to be 'HaveInterface.java'. Got: " + attrName.content)
+	}
+
 	err = formatCheckClass(&klass)
 	if err != nil {
 		t.Error("HaveInterface.class failed format check")
 	}
-
 }
