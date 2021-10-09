@@ -114,9 +114,9 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 					klass.utf8Refs[nameSlot].content)
 			}
 		}
+		klass.methods = append(klass.methods, meth)
 	}
 
-	klass.methods = append(klass.methods, meth)
 	return pos, nil
 }
 
