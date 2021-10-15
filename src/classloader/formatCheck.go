@@ -44,6 +44,11 @@ func validateConstantPool(klass *parsedClass) error {
 			"Expected: " + strconv.Itoa(cpSize) + ", got: " + strconv.Itoa(len(klass.cpIndex)))
 	}
 
+	if klass.cpCount != len(klass.cpIndex) {
+		return cfe("CP count: " + strconv.Itoa(klass.cpCount) +
+			" is not equal to actual size of CP: " + strconv.Itoa(len(klass.cpIndex)))
+	}
+
 	if klass.cpIndex[0].entryType != Dummy {
 		return cfe("Missing dummy entry in first slot of constant pool")
 	}
