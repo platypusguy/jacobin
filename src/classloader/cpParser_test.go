@@ -13,6 +13,24 @@ import (
 	"testing"
 )
 
+// Tests for parsing of CP entries. These tests are sequenced according
+// to the CP entry number for that record:
+//
+// 1 - UTF							TestCPvalidUTF8Ref
+// 3 - IntConst						TestCPvalidIntConst
+// 4 - FloatConst					TestCPvalidFloatConst
+// 5 - LongConst 		TBD
+// 6 - DoubleConst					TestCPvalidDoubleConst
+// 7 - ClassRef						TestCPvalidClassRef
+// 8 - StringConst					TestCPvalidStringConstRef
+// 9 - FieldRef						TestCPvalidFieldRef
+// 10- MethodRef					TestCPvalidMethodRef
+// 11- Interface		TBD
+// 12- NameAndTypeEntry				TestCPvalidNameAndTypeEntry
+// 15- MethodHandle  	TBD
+// 16- MethodType 		TBD
+// 18- InvokeDynamic 	TBD
+
 func TestCPvalidUTF8Ref(t *testing.T) {
 
 	globals.InitGlobals("test")
@@ -132,6 +150,45 @@ func TestCPvalidLongConst(t *testing.T) {
 	}
 }
 
+func TestCPvalidFloatConst(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x04, // Double constant
+		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
+		//
+		0x40, 0x09, 0x21, 0xF9, // ffour bytes of float
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2 //
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP float constant generated an unexpected error")
+	}
+
+	if loc != 14 {
+		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.floats) != 1 {
+		t.Error("Was expecting the double const array to have 1 entry, but it has: " +
+			strconv.Itoa(len(pc.floats)))
+	}
+
+	float := pc.floats[0]
+	if float != 2.14269853 { // precision of value is low enough that exact match is possible.
+		bigFloat := float64(float)
+		t.Error("Was expecting a value of 2.14269853, but got: " +
+			strconv.FormatFloat(bigFloat, 'E', -1, 32))
+	}
+}
+
 func TestCPvalidDoubleConst(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -171,44 +228,6 @@ func TestCPvalidDoubleConst(t *testing.T) {
 	}
 }
 
-func TestCPvalidFloatConst(t *testing.T) {
-	globals.InitGlobals("test")
-	log.Init()
-	log.SetLogLevel(log.WARNING)
-
-	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
-		0x00, 0xFF, 0xF0, 0x00, 0x00,
-		0x04, // Double constant
-		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
-		//
-		0x40, 0x09, 0x21, 0xF9, // ffour bytes of float
-	}
-
-	pc := parsedClass{}
-	pc.cpCount = 2 //
-	loc, err := parseConstantPool(bytesToTest, &pc)
-
-	if err != nil {
-		t.Error("Parsing valid CP float constant generated an unexpected error")
-	}
-
-	if loc != 14 {
-		t.Error("Was expecting a new position of 14, but got: " + strconv.Itoa(loc))
-	}
-
-	if len(pc.floats) != 1 {
-		t.Error("Was expecting the double const array to have 1 entry, but it has: " +
-			strconv.Itoa(len(pc.floats)))
-	}
-
-	float := pc.floats[0]
-	if float != 2.14269853 { // precision of value is low enough that exact match is possible.
-		bigFloat := float64(float)
-		t.Error("Was expecting a value of 2.14269853, but got: " +
-			strconv.FormatFloat(bigFloat, 'E', -1, 32))
-	}
-}
 func TestCPvalidClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
