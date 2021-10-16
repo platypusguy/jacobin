@@ -15,21 +15,48 @@ import (
 
 // Tests for parsing of CP entries. These tests are sequenced according
 // to the CP entry number for that record:
-//
+// 0 - Dummy entry					TestDummyEntry
 // 1 - UTF							TestCPvalidUTF8Ref
 // 3 - IntConst						TestCPvalidIntConst
 // 4 - FloatConst					TestCPvalidFloatConst
-// 5 - LongConst 		TBD
+// 5 - LongConst 		 			TestCPvalidLongConst
 // 6 - DoubleConst					TestCPvalidDoubleConst
 // 7 - ClassRef						TestCPvalidClassRef
 // 8 - StringConst					TestCPvalidStringConstRef
 // 9 - FieldRef						TestCPvalidFieldRef
 // 10- MethodRef					TestCPvalidMethodRef
-// 11- Interface		TBD
+// 11- Interface					TestCPvalidInterface
 // 12- NameAndTypeEntry				TestCPvalidNameAndTypeEntry
 // 15- MethodHandle  	TBD
 // 16- MethodType 		TBD
 // 18- InvokeDynamic 	TBD
+
+// Pass in a CP with a single UTF8 entry and make sure the first CP entry
+// (CP[0]) is a dummy entry as it should be.
+func TestDummyEntry(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x01, 0x00, 0x04, 'J', 'A',
+		'C', 'O',
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 2
+	_, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP UTF-8 entry (01) generated an unexpected error")
+	}
+
+	if pc.cpIndex[0].entryType != Dummy {
+		t.Error("Parsing a valid CP did not result a dummy entry at CP[0]")
+	}
+}
 
 func TestCPvalidUTF8Ref(t *testing.T) {
 
@@ -38,7 +65,7 @@ func TestCPvalidUTF8Ref(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x01, 0x00, 0x04, 'J', 'A',
 		'C', 'O',
@@ -77,7 +104,7 @@ func TestCPvalidIntConst(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x03, 0x01, 0x05, 0x20, 0x44,
 	}
@@ -116,7 +143,7 @@ func TestCPvalidLongConst(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x05, 0x00, 0x00, 0x00, 0x01, // first four bytes of long
 		0x00, 0x00, 0x00, 0x02, // second four bytes of long
@@ -156,7 +183,7 @@ func TestCPvalidFloatConst(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x04, // Double constant
 		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
@@ -195,7 +222,7 @@ func TestCPvalidDoubleConst(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x06, // Double constant
 		// Big endian hex value of 40 09 21 F9 F0 1B 86 6E should be a double of value: 3.14159
@@ -235,7 +262,7 @@ func TestCPvalidClassRef(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x07, 0x02, 0x05,
 	}
@@ -273,7 +300,7 @@ func TestCPvalidStringConstRef(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x08, 0x00, 0x20,
 	}
@@ -311,7 +338,7 @@ func TestCPvalidFieldRef(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x09, 0x00, 0x14, 0x01, 0x01,
 	}
@@ -353,7 +380,7 @@ func TestCPvalidMethodRef(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x0A, 0x00, 0x15, 0x01, 0x06,
 	}
@@ -388,6 +415,52 @@ func TestCPvalidMethodRef(t *testing.T) {
 	}
 }
 
+func TestCPvalidInterface(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x0C,       // name and type (12)
+		0x00, 0x14, // name and type name index
+		0x01, 0x01, // name and type descriptor index
+		0x0B,       // interface entry (11)
+		0x00, 0x20, // interface class index
+		0x00, 0x01, // name and type entry index
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP Interface (11) generated an unexpected error")
+	}
+
+	if loc != 19 { // 20 bytes, but 0-based
+		t.Error("Was expecting a new position of 19, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.interfaceRefs) != 1 {
+		t.Error("Was expecting Interfaces to have 1 entry. Got: " +
+			strconv.Itoa(len(pc.interfaces)))
+	}
+
+	ie := pc.interfaceRefs[0]
+	if ie.classIndex != 32 {
+		t.Error("Was expecting interface to have a class index of 32. Got: " +
+			strconv.Itoa(ie.classIndex))
+	}
+
+	if ie.nameAndTypeIndex != 1 {
+		t.Error("Was expecting interface to have a name-and-type index of 1. Got: " +
+			strconv.Itoa(ie.nameAndTypeIndex))
+	}
+}
+
 func TestCPvalidNameAndTypeEntry(t *testing.T) {
 
 	globals.InitGlobals("test")
@@ -395,7 +468,7 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 	log.SetLogLevel(log.WARNING)
 
 	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBA, 0x00,
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
 		0x0C, 0x00, 0x14, 0x01, 0x01,
 	}
