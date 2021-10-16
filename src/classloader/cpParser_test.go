@@ -7,9 +7,12 @@
 package classloader
 
 import (
+	"io/ioutil"
 	"jacobin/globals"
 	"jacobin/log"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -30,6 +33,8 @@ import (
 // 15- MethodHandle  	 			TestCPvalidMethodHandle
 // 16- MethodType 		 			TestCPvalidMethodType
 // 18- InvokeDynamic 	 			TestCPvalidInvokeDynamic
+//
+// Printing of CP contents			TestPrintOfCP
 
 // Pass in a CP with a single UTF8 entry and make sure the first CP entry
 // (CP[0]) is a dummy entry as it should be.
@@ -637,4 +642,82 @@ func TestCPvalidInvokeDynamic(t *testing.T) {
 	if len(pc.cpIndex) != 3 {
 		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
+}
+
+// test whether the info logged to when logging set to FINEST is correct
+func TestPrintOfCP(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	log.SetLogLevel(log.FINEST)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x01,       // UTF8 entry
+		0x00, 0x04, //		length of UTF8 string
+		'J', 'A', //  	contents of UTF8 string
+		'C', 'O',
+		0x03,       // Integer constant
+		0x00, 0x00, // 		value of int (four bytes)
+		0x01, 0x02, //  	should = 258
+
+		0x0C, // Name and Type entry
+		0x00, 0x14,
+		0x01, 0x01,
+
+		0x12,       // InvokeDynamic (18)
+		0x00, 0x08, // 		Bootstrap index
+		0x00, 0x01, // 		name and type entry
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 5 // Dummy entry/entries plus the number of entries above
+	_, err := parseConstantPool(bytesToTest, &pc)
+	if err != nil {
+		t.Error("Unexpected error in reading CP in testPrintofCP()")
+	}
+
+	// now log the parsed CP to stderr
+	printCP(pc.cpCount, &pc)
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	logMsg := string(out[:])
+
+	if !strings.Contains(logMsg, "(dummy entry)") {
+		t.Error("Dummy CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(UTF-8 string) ") {
+		t.Error("UTF8 string CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(int constant)") || !strings.Contains(logMsg, "258") {
+		t.Error("IntConst CP entry with value 258 did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(name and type) ") {
+		t.Error("Name and type CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(invokedynamic) ") {
+		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
