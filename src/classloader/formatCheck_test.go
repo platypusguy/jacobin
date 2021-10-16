@@ -47,6 +47,7 @@ import (
 //
 // ---- misc routines ----
 // syntax of unqualified names			TestUnqualifiedName
+// validateStructure routine			TestStructuralValidation
 
 // Get an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
@@ -1261,4 +1262,71 @@ func TestUnqualifiedName(t *testing.T) {
 	if validateUnqualifiedName("invalid<>", isMethod) != false {
 		t.Error("Expected 'false' for test of unqualified method name 'invalid<>', but got true")
 	}
+}
+
+func TestStructuralValidation(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+
+	klass.cpCount = 2 // this is an error, it should be 3. Format check should catch this.
+
+	err := validateStructure(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for mismatch between CP count and " +
+			"total number of CP entries")
+	}
+
+	klass.interfaces = append(klass.interfaces, 42)
+	klass.interfaces = append(klass.interfaces, 43)
+	klass.interfaceCount = 4 // should be 2, so an error should ensue
+	if validateStructure(&klass) == nil {
+		t.Error("Did not get expected error for mistmatch between interfaceCount and " +
+			"total number of interfaces")
+	}
+
+	// correct interfaceCount and run similar test on methodCount
+	klass.interfaceCount = 2
+	klass.methods = append(klass.methods, method{})
+	klass.methodCount = 5 // should be 1, so an error should ensue
+	if validateStructure(&klass) == nil {
+		t.Error("Did not get expected error for mistmatch between methodCount and " +
+			"total number of methods")
+	}
+
+	// correct methodCount and run similar test on attributeCount
+	klass.methodCount = 1
+	klass.attributes = append(klass.attributes, attr{})
+	klass.attributes = append(klass.attributes, attr{})
+	klass.attributes = append(klass.attributes, attr{})
+	klass.attribCount = 6 // should be 3, so an error should ensue
+	if validateStructure(&klass) == nil {
+		t.Error("Did not get expected error for mistmatch between attribCount and " +
+			"total number of class attributes")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	// out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	// msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }

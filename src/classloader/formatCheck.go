@@ -23,13 +23,15 @@ import (
 // 5) Fields must have valid names, classes, and descriptions. Partially done in
 //    the parsing, but entirely done below
 func formatCheckClass(klass *parsedClass) error {
-	err := validateConstantPool(klass)
-	if err != nil {
-		return err // whatever error occurs, the user will have been notified
+	if validateConstantPool(klass) != nil {
+		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
-	err = validateFields(klass)
-	return err
+	if validateFields(klass) != nil {
+		return errors.New("") // whatever error occurs, the user will have been notified
+	}
+
+	return validateStructure(klass)
 }
 
 // validates that the CP fits all the requirements enumerated in:
@@ -42,11 +44,6 @@ func validateConstantPool(klass *parsedClass) error {
 	if len(klass.cpIndex) != cpSize {
 		return cfe("Error in size of constant pool discovered in format check." +
 			"Expected: " + strconv.Itoa(cpSize) + ", got: " + strconv.Itoa(len(klass.cpIndex)))
-	}
-
-	if klass.cpCount != len(klass.cpIndex) {
-		return cfe("CP count: " + strconv.Itoa(klass.cpCount) +
-			" is not equal to actual size of CP: " + strconv.Itoa(len(klass.cpIndex)))
 	}
 
 	if klass.cpIndex[0].entryType != Dummy {
@@ -515,4 +512,30 @@ func validateUnqualifiedName(name string, method bool) bool {
 		}
 	}
 	return true
+}
+
+// format checks of structural elements outside of CP and fields. For example,
+// checking that a count field holds the correct number, etc.
+func validateStructure(klass *parsedClass) error {
+	if klass.cpCount != len(klass.cpIndex) {
+		return cfe("CP count: " + strconv.Itoa(klass.cpCount) +
+			" is not equal to actual size of CP: " + strconv.Itoa(len(klass.cpIndex)))
+	}
+
+	if klass.interfaceCount != len(klass.interfaces) {
+		return cfe("Expected " + strconv.Itoa(klass.interfaceCount) + " interfaces. Got: " +
+			strconv.Itoa(len(klass.interfaces)))
+	}
+
+	if klass.methodCount != len(klass.methods) {
+		return cfe("Expected " + strconv.Itoa(klass.methodCount) + " methods. Got: " +
+			strconv.Itoa(len(klass.methods)))
+	}
+
+	if klass.attribCount != len(klass.attributes) {
+		return cfe("Expected " + strconv.Itoa(klass.attribCount) + " class attributes. Got: " +
+			strconv.Itoa(len(klass.attributes)))
+	}
+
+	return nil
 }
