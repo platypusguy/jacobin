@@ -219,9 +219,11 @@ func printCP(entries int, klass *parsedClass) {
 		switch entry.entryType {
 		case Dummy:
 			fmt.Fprintf(os.Stderr, "(dummy entry)\n")
+		case UTF8:
+			s := entry.slot
+			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", klass.utf8Refs[s].content)
 		case IntConst:
 			ic := entry.slot
-			// fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic].value)
 			fmt.Fprintf(os.Stderr, "(int constant)     %d\n", klass.intConsts[ic])
 		case FloatConst:
 			fc := entry.slot
@@ -232,9 +234,6 @@ func printCP(entries int, klass *parsedClass) {
 		case DoubleConst:
 			dc := entry.slot
 			fmt.Fprintf(os.Stderr, "(double constant)  %f\n", klass.doubles[dc])
-		case UTF8:
-			s := entry.slot
-			fmt.Fprintf(os.Stderr, "(UTF-8 string)     %s\n", klass.utf8Refs[s].content)
 		case ClassRef:
 			fmt.Fprintf(os.Stderr, "(class ref)        ")
 			c := entry.slot
