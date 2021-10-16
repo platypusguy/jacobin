@@ -549,3 +549,45 @@ func TestCPvalidMethodHandle(t *testing.T) {
 		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
+
+func TestCPvalidMethodType(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x0C, // Name and Type
+		0x00, 0x14,
+		0x01, 0x01,
+		0x10,       // MethodType (16)
+		0x00, 0x05, // Desc Index
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP MethodType (16) generated an unexpected error")
+	}
+
+	if loc != 17 {
+		t.Error("Was expecting a new position of 17, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.methodTypes) != 1 {
+		t.Error("Was expecting the methodTypes array to have 1 entry, but it has: " + strconv.Itoa(len(pc.nameAndTypes)))
+	}
+
+	mte := pc.methodTypes[0]
+	if mte != 5 {
+		t.Error("Was expecting a methodType kind of 5. Got: " + strconv.Itoa(mte))
+	}
+
+	if len(pc.cpIndex) != 3 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	}
+}
