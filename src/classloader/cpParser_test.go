@@ -27,7 +27,7 @@ import (
 // 10- MethodRef					TestCPvalidMethodRef
 // 11- Interface					TestCPvalidInterface
 // 12- NameAndTypeEntry				TestCPvalidNameAndTypeEntry
-// 15- MethodHandle  	TBD
+// 15- MethodHandle  	 			TestCPvalidMethodHandle
 // 16- MethodType 		TBD
 // 18- InvokeDynamic 	TBD
 
@@ -499,6 +499,53 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 	}
 
 	if len(pc.cpIndex) != 2 {
+		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	}
+}
+
+func TestCPvalidMethodHandle(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x0C, // Name and Type
+		0x00, 0x14,
+		0x01, 0x01,
+		0x0F,       // MethodHanlde (15)
+		0x05,       // Ref kind (one byte)
+		0x00, 0x01, // Ref index
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP MethodHandle (15) generated an unexpected error")
+	}
+
+	if loc != 18 {
+		t.Error("Was expecting a new position of 18, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.methodHandles) != 1 {
+		t.Error("Was expecting the methodHandles array to have 1 entry, but it has: " + strconv.Itoa(len(pc.nameAndTypes)))
+	}
+
+	mhe := pc.methodHandles[0]
+	if mhe.referenceKind != 5 {
+		t.Error("Was expecting a methodHandle kind of 5. Got: " + strconv.Itoa(mhe.referenceKind))
+	}
+
+	if mhe.referenceIndex != 1 {
+		t.Error("Was expecting a methodHandle reference index of 1. Got: " + strconv.Itoa(mhe.referenceIndex))
+	}
+
+	if len(pc.cpIndex) != 3 {
 		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
