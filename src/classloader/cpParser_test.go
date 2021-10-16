@@ -28,8 +28,8 @@ import (
 // 11- Interface					TestCPvalidInterface
 // 12- NameAndTypeEntry				TestCPvalidNameAndTypeEntry
 // 15- MethodHandle  	 			TestCPvalidMethodHandle
-// 16- MethodType 		TBD
-// 18- InvokeDynamic 	TBD
+// 16- MethodType 		 			TestCPvalidMethodType
+// 18- InvokeDynamic 	 			TestCPvalidInvokeDynamic
 
 // Pass in a CP with a single UTF8 entry and make sure the first CP entry
 // (CP[0]) is a dummy entry as it should be.
@@ -546,7 +546,7 @@ func TestCPvalidMethodHandle(t *testing.T) {
 	}
 
 	if len(pc.cpIndex) != 3 {
-		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -588,6 +588,53 @@ func TestCPvalidMethodType(t *testing.T) {
 	}
 
 	if len(pc.cpIndex) != 3 {
-		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	}
+}
+
+func TestCPvalidInvokeDynamic(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+		0x0C, // Name and Type entry
+		0x00, 0x14,
+		0x01, 0x01,
+		0x12,       // InvokeDynamic (18)
+		0x00, 0x08, // Bootstrap index
+		0x00, 0x01, // name and type entry
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3
+	loc, err := parseConstantPool(bytesToTest, &pc)
+
+	if err != nil {
+		t.Error("Parsing valid CP InvokeDynamic (18) generated an unexpected error")
+	}
+
+	if loc != 19 {
+		t.Error("Was expecting a new position of 19, but got: " + strconv.Itoa(loc))
+	}
+
+	if len(pc.invokeDynamics) != 1 {
+		t.Error("Was expecting the invokeDynamics array to have 1 entry, but it has: " + strconv.Itoa(len(pc.nameAndTypes)))
+	}
+
+	ide := pc.invokeDynamics[0]
+	if ide.bootstrapIndex != 8 {
+		t.Error("Was expecting an invokeDynamic boostrap index of 8. Got: " + strconv.Itoa(ide.bootstrapIndex))
+	}
+
+	if ide.nameAndType != 1 {
+		t.Error("Was expecing an invokeDynamic nameAndType index of 1. Got: " + strconv.Itoa(ide.nameAndType))
+	}
+
+	if len(pc.cpIndex) != 3 {
+		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
