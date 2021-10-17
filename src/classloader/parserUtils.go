@@ -23,6 +23,16 @@ func intFrom2Bytes(bytes []byte, pos int) (int, error) {
 	return int(value), nil
 }
 
+// the same as inFrom2Bytes(), but returns a uint16.
+func u16From2bytes(bytes []byte, pos int) (uint16, error) {
+	i, err := intFrom2Bytes(bytes, pos)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint16(i), nil
+}
+
 // read four bytes in big endian order and convert to an int
 func intFrom4Bytes(bytes []byte, pos int) (int, error) {
 	if len(bytes) < pos+4 {

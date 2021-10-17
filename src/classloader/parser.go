@@ -526,16 +526,61 @@ func parseClassAttributes(bytes []byte, loc int, klass *parsedClass) (int, error
 		log.Log("Class: "+klass.className+", attribute: "+klass.utf8Refs[attrib.attrName].content,
 			log.FINEST)
 
-		if klass.utf8Refs[attrib.attrName].content == "SourceFile" {
+		switch klass.utf8Refs[attrib.attrName].content {
+		case "BootstrapMethods":
+			// see: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.23
+			loc = 0
+			boostrapCount, err := u16From2bytes(attrib.attrContent, loc)
+			loc += 2
+			if err != nil {
+				break // error msg will already have been shown
+			} else {
+				klass.bootstrapCount = int(boostrapCount)
+			}
+			for m := 0; m < klass.bootstrapCount; m++ {
+				bsm := bootstrapMethod{}
+				methodRef, err := u16From2bytes(attrib.attrContent, loc)
+				loc += 2
+				if err != nil || klass.cpIndex[methodRef].entryType != MethodHandle {
+					return pos, cfe("Invalid method reference in Boostrap method #" + strconv.Itoa(m))
+				} else {
+					bsm.methodRef = int(methodRef)
+				}
+
+				bootstrapArgCount, err := intFrom2Bytes(attrib.attrContent, loc)
+				loc += 2
+				if bootstrapArgCount > 0 {
+					for n := 0; n < bootstrapArgCount; n++ {
+						arg, _ := intFrom2Bytes(attrib.attrContent, loc)
+						loc += 2
+						bsm.args = append(bsm.args, arg)
+					}
+				}
+				klass.bootstraps = append(klass.bootstraps, bsm)
+			}
+			log.Log("    "+strconv.Itoa(klass.bootstrapCount)+" boostrap method(s)", log.FINEST)
+
+		case "Deprecated":
+			klass.deprecated = true
+
+		case "SourceFile":
 			sourceNameIndex, _ := intFrom2Bytes(attrib.attrContent, 0)
 			utf8slot := klass.cpIndex[sourceNameIndex].slot
 			sourceFile := klass.utf8Refs[utf8slot].content // points to the name of the source file
 			klass.sourceFile = sourceFile
 			log.Log("Source file: "+sourceFile, log.FINEST)
 		}
-		if klass.utf8Refs[attrib.attrName].content == "Deprecated" {
-			klass.deprecated = true
-		}
+
+		// if klass.utf8Refs[attrib.attrName].content == "SourceFile" {
+		// 	sourceNameIndex, _ := intFrom2Bytes(attrib.attrContent, 0)
+		// 	utf8slot := klass.cpIndex[sourceNameIndex].slot
+		// 	sourceFile := klass.utf8Refs[utf8slot].content // points to the name of the source file
+		// 	klass.sourceFile = sourceFile
+		// 	log.Log("Source file: "+sourceFile, log.FINEST)
+		// }
+		// if klass.utf8Refs[attrib.attrName].content == "Deprecated" {
+		// 	klass.deprecated = true
+		// }
 	}
 	return pos, nil
 }

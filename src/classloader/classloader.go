@@ -44,6 +44,8 @@ type parsedClass struct {
 	attribCount    int
 	attributes     []attr
 	sourceFile     string
+	bootstrapCount int // the number of bootstrap methods
+	bootstraps     []bootstrapMethod
 
 	deprecated bool
 
@@ -127,6 +129,12 @@ type exception struct {
 	endPc     int // the last instruciton covered by this exception
 	handlerPc int // the place in the method code that has the exception instructions
 	catchType int // the type of exception, index to CP, which must point a ClassFref entry
+}
+
+// the boostrap methods, specified in the bootstrap class attribute
+type bootstrapMethod struct {
+	methodRef int   // index pointing to a MethodHandle
+	args      []int // arguments: indexes to loadable arguments from the CP
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
