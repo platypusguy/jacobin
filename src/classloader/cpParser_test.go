@@ -645,7 +645,11 @@ func TestCPvalidInvokeDynamic(t *testing.T) {
 }
 
 // test whether the info logged to when logging set to FINEST is correct
-func TestPrintOfCP(t *testing.T) {
+// This test captures stderr and then does searches on the saved output for
+// logging contents. The size of saved stderr output is quite limited and the
+// CP logging of all possible entry types exceeds this space, so this test is
+// broken up into two tests, of which this is the first.
+func TestPrintOfCPpart1(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -668,24 +672,64 @@ func TestPrintOfCP(t *testing.T) {
 		0x00, 0x04, //		length of UTF8 string
 		'J', 'A', //  	contents of UTF8 string
 		'C', 'O',
+
 		0x03,       // Integer constant
 		0x00, 0x00, // 		value of int (four bytes)
 		0x01, 0x02, //  	should = 258
 
-		0x0C, // Name and Type entry
-		0x00, 0x14,
-		0x01, 0x01,
+		0x04,       // Float Constant
+		0x41, 0x42, //		value of float comprises 4 bytes
+		0x43, 0x44,
 
-		0x12,       // InvokeDynamic (18)
-		0x00, 0x08, // 		Bootstrap index
-		0x00, 0x01, // 		name and type entry
+		0x05,       // Long constant
+		0x50, 0x50, //  	value consists of 8 bytes
+		0x50, 0x51,
+		0x50, 0x52,
+		0x50, 0x53,
+
+		0x06,       // Double constant
+		0x61, 0x60, //  	value consists of 8 bytes
+		0x61, 0x61,
+		0x61, 0x62,
+		0x61, 0x63,
+
+		0x07,       // Classref
+		0x74, 0x75, // 		value consists of 2 bytes
+
+		0x08,       // StringConst
+		0x84, 0x85, // 		value consists of 2 bytes
+
+		0x09,       // FieldRef
+		0x91, 0x92, //		class index (2 bytes)
+		0x93, 0x94, //		name and type index (2 bytes)
+
+		0x0A,       // MethodRef (10)
+		0xA0, 0xA1, //		class index (2 bytes)
+		0xA2, 0xA3, //		name and type index (2 bytes)
+
+		0x0B,       // Interface (11)
+		0xB0, 0xB1, //		class index (2 bytes)
+		0xB2, 0xB3, //		name and type index (2 bytes)
+
+		0x0C,       // Name and Type entry (12)
+		0xC0, 0xC4, //		value consists of 4 bytes
+		0xC1, 0xC1,
+
+		0x0F,       // Method Handle (15)
+		0xF1, 0xF2, //		reference kind (2 bytes)
+		0xF3, 0xF4, //		reference index (2bytes)
+
+		// 0x12,       // InvokeDynamic (18)
+		// 0x12, 0x08, // 		Bootstrap index
+		// 0x12, 0x01, // 		name and type entry
 	}
 
 	pc := parsedClass{}
-	pc.cpCount = 5 // Dummy entry/entries plus the number of entries above
+	pc.cpCount = 15 // Dummy entry/entries plus the number of entries above
+
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
-		t.Error("Unexpected error in reading CP in testPrintofCP()")
+		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
 	}
 
 	// now log the parsed CP to stderr
@@ -710,13 +754,45 @@ func TestPrintOfCP(t *testing.T) {
 		t.Error("IntConst CP entry with value 258 did not appear correctly in CP logging")
 	}
 
+	if !strings.Contains(logMsg, "(long constant)") {
+		t.Error("LongConst CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(double constant)") {
+		t.Error("DoubleConst CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(class ref)") {
+		t.Error("ClassRef CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(string const ref)") {
+		t.Error("StringConst CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(field ref)") {
+		t.Error("FieldRef CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(method ref)") {
+		t.Error("MethodRef CP entry did not appear correctly in CP logging")
+	}
+
+	if !strings.Contains(logMsg, "(interface ref)") {
+		t.Error("InterfaceRef CP entry did not appear correctly in CP logging")
+	}
+
 	if !strings.Contains(logMsg, "(name and type) ") {
 		t.Error("Name and type CP entry did not appear in logging of CP contents")
 	}
 
-	if !strings.Contains(logMsg, "(invokedynamic) ") {
-		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
+	if !strings.Contains(logMsg, "(method handle)") {
+		t.Error("Method Handle CP entry did not appear in logging of CP contents")
 	}
+
+	// if !strings.Contains(logMsg, "(invokedynamic) ") {
+	// 	t.Error("invokedynamic CP entry did not appear in logging of CP contents")
+	// }
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
