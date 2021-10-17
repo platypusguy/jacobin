@@ -719,9 +719,6 @@ func TestPrintOfCPpart1(t *testing.T) {
 		0xF1, 0xF2, //		reference kind (2 bytes)
 		0xF3, 0xF4, //		reference index (2bytes)
 
-		// 0x12,       // InvokeDynamic (18)
-		// 0x12, 0x08, // 		Bootstrap index
-		// 0x12, 0x01, // 		name and type entry
 	}
 
 	pc := parsedClass{}
@@ -790,9 +787,64 @@ func TestPrintOfCPpart1(t *testing.T) {
 		t.Error("Method Handle CP entry did not appear in logging of CP contents")
 	}
 
-	// if !strings.Contains(logMsg, "(invokedynamic) ") {
-	// 	t.Error("invokedynamic CP entry did not appear in logging of CP contents")
-	// }
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// see the comment for part 1 of this test
+func TestPrintOfCPpart2(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	log.SetLogLevel(log.FINEST)
+
+	bytesToTest := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
+		0x00, 0xFF, 0xF0, 0x00, 0x00,
+
+		0x10,       // Method Type (16)
+		0x11, 0x12, //		description index (2 bytes)
+
+		0x12,       // InvokeDynamic (18)
+		0x12, 0x08, // 		Bootstrap index
+		0x12, 0x01, // 		name and type entry
+	}
+
+	pc := parsedClass{}
+	pc.cpCount = 3 // Dummy entry/entries plus the number of entries above
+
+	_, err := parseConstantPool(bytesToTest, &pc)
+	if err != nil {
+		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
+	}
+
+	// now log the parsed CP to stderr
+	printCP(pc.cpCount, &pc)
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	logMsg := string(out[:])
+
+	if !strings.Contains(logMsg, "(method type) ") {
+		t.Error("MethodType CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(invokedynamic) ") {
+		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
+	}
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
