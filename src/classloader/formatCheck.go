@@ -398,14 +398,24 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			// "valid index into the bootstrap_methods array of the bootstrap method table of this
 			// this class file" (specified in §4.7.23). The document spec for InvokeDynamic entries is:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
-			// Once we actually get bootstrap entry table of the method, we'll circle back here to
-			// check it. The second field is a nameAndType record describing the boostrap method.
+			// The second field is a nameAndType record describing the boostrap method.
 			// Here we just make sure, the field points to the right kind of entry. That entry
-			// will be checked later/earlier in this CP checking loop.
+			// will be checked later/earlier in this CP checking loop and in the format check.
 			whichInvDyn := entry.slot
 			invDyn := klass.invokeDynamics[whichInvDyn]
 
-			// bootstrap = invDyn.bootstrapIndex // TODO: Check the boostrap entry as soon as we can
+			bootstrap := invDyn.bootstrapIndex
+			if bootstrap >= klass.bootstrapCount {
+				return cfe("The boostrap index in InvokeDynamic at CP entry #" + strconv.Itoa(j) +
+					" is invalid: " + strconv.Itoa(bootstrap))
+			}
+
+			// just trying to access it to make sure it's actually there and accessible.
+			bse := klass.bootstraps[bootstrap]
+			if !(bse.methodRef > 0) {
+				return cfe("Invalid methodRef in bootstrap method[" + strconv.Itoa(bootstrap) + "]")
+			}
+
 			nAndT := invDyn.nameAndType
 			if nAndT < 1 || nAndT > len(klass.cpIndex)-1 {
 				return cfe("The entry number into klass.InvokeDynamics[] at CP entry #" +
