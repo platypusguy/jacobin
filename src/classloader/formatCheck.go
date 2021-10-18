@@ -18,20 +18,25 @@ import (
 // They are:
 // 1) must start with 0xCAFEBABE -- this is verified in the parsing, so not done here
 // 2) most predefined attributes must be the right length -- verified during parsing
+//    However, some additional attribute checking done here in formatCheckClassAttributes()
 // 3) class must not be truncated or have extra bytes -- verified during parsing
-// 4) CP must fulfill all constraints. This is done in this function
+// 4) CP must fulfill all constraints. This is done in formatCheckConstantPool() below
 // 5) Fields must have valid names, classes, and descriptions. Partially done in
-//    the parsing, but entirely done below
+//    the parsing, but entirely done in formatCheckFields() below
 func formatCheckClass(klass *parsedClass) error {
-	if validateConstantPool(klass) != nil {
+	if formatCheckConstantPool(klass) != nil {
 		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
-	if validateFields(klass) != nil {
+	if formatCheckFields(klass) != nil {
 		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
-	return validateStructure(klass)
+	if formatCheckClassAttributes(klass) != nil {
+		return errors.New("") // whatever error occurs, the user will have been notified
+	}
+
+	return formatCheckStructure(klass)
 }
 
 // validates that the CP fits all the requirements enumerated in:
@@ -39,7 +44,7 @@ func formatCheckClass(klass *parsedClass) error {
 // some of these checks were performed perforce in the parsing. Here, however,
 // we verify them all. This is a requirement of all classes loaded in the JVM
 // Note that this is *not* part of the larger class verification process.
-func validateConstantPool(klass *parsedClass) error {
+func formatCheckConstantPool(klass *parsedClass) error {
 	cpSize := klass.cpCount
 	if len(klass.cpIndex) != cpSize {
 		return cfe("Error in size of constant pool discovered in format check." +
@@ -425,7 +430,7 @@ func validateConstantPool(klass *parsedClass) error {
 // to a string containing a description of the type. Here we grab the strings and check that
 // they fulfill the requirements: name doesn't start with a digit or contain a space, and the
 // type begins with one of the required letters/symbols
-func validateFields(klass *parsedClass) error {
+func formatCheckFields(klass *parsedClass) error {
 	for i, f := range klass.fields {
 		// f.name points to a UTF8 entry in klass.utf8refs, so check it's in a valid range
 		if f.name < 0 || f.name >= len(klass.utf8Refs) {
@@ -514,9 +519,55 @@ func validateUnqualifiedName(name string, method bool) bool {
 	return true
 }
 
+// Format checks various class attributes. Technically speaking, format checking is
+// only supposed to check the length of attributes. (This is done when the attributes
+// are initially parsed.) This adds a little more checking.
+func formatCheckClassAttributes(klass *parsedClass) error {
+
+	// enforce basic checks of bootstrap entries (which are used by invokedynamic)
+	if len(klass.bootstraps) > 0 {
+		for i := 0; i < len(klass.bootstraps); i++ {
+			bsm := klass.bootstraps[i]
+			if klass.cpIndex[bsm.methodRef].entryType != MethodHandle {
+				return cfe("MethodRef in bootstrapMethod[" + strconv.Itoa(i) + "] in class " +
+					klass.className + "should but does not point to a MethodHandle")
+			}
+
+			if len(bsm.args) > 0 {
+				for j := 0; j < len(bsm.args); j++ {
+					if !validateItemIsLodable(klass, bsm.args[j]) {
+						return cfe("Boostrap method argument[" + strconv.Itoa(j) + "] in class " +
+							klass.className + " bootstrap method #[" + strconv.Itoa(i) + "] " +
+							"should be but is not a loadable constant")
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// Certain types of items are loadable. This checks that an entry into the CP
+// does in fact point to a loadable item. Returns false if not or on any error.
+// See Table 4.4C at https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
+func validateItemIsLodable(klass *parsedClass, arg int) bool {
+	if arg < 1 || arg >= len(klass.cpIndex) {
+		return false
+	}
+
+	t := klass.cpIndex[arg].entryType
+	if t != IntConst && t != FloatConst && t != LongConst && t != DoubleConst &&
+		t != ClassRef && t != StringConst && t != MethodHandle && t != MethodType &&
+		t != Dynamic {
+		return false
+	}
+
+	return true
+}
+
 // format checks of structural elements outside of CP and fields. For example,
 // checking that a count field holds the correct number, etc.
-func validateStructure(klass *parsedClass) error {
+func formatCheckStructure(klass *parsedClass) error {
 	if klass.cpCount != len(klass.cpIndex) {
 		return cfe("CP count: " + strconv.Itoa(klass.cpCount) +
 			" is not equal to actual size of CP: " + strconv.Itoa(len(klass.cpIndex)))
@@ -535,6 +586,11 @@ func validateStructure(klass *parsedClass) error {
 	if klass.attribCount != len(klass.attributes) {
 		return cfe("Expected " + strconv.Itoa(klass.attribCount) + " class attributes. Got: " +
 			strconv.Itoa(len(klass.attributes)))
+	}
+
+	if klass.bootstrapCount != len(klass.bootstraps) {
+		return cfe("Expected " + strconv.Itoa(klass.bootstrapCount) + " bootstrap methods. Got: " +
+			strconv.Itoa(len(klass.bootstraps)))
 	}
 
 	return nil
