@@ -564,6 +564,57 @@ func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+func TestValidBootstrapClassAttribute(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{LongConst, 0}) // LongConst (which is loadable)
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"BootstrapMethods"})
+	klass.cpCount = 4
+	klass.attribCount = 1
+
+	// the attribute bytes. There's a leading dummy byte b/c the fetch routine starts
+	// at 1 byte after the passed-in position.
+	bytes := []byte{00, // dummy byte
+		00, 02, // CP[2] -> UTF8[0] -> "BootstrapMethods"
+		00, 00, 00, 0x08, // length of attribute (must be 0 for 'Deprecated')
+		00, 01, // bootstrap count
+		00, 03, // CP[3] -> MethodHandle
+		00, 01, // arg count for this first boostrap method
+		00, 01, // CP[1] -> LongConst (which is loadable, so all is good.
+	}
+
+	_, err := parseClassAttributes(bytes, 0, &klass)
+	if err != nil {
+		t.Error("Unexpected error in test of parseClassAttributes()")
+	}
+
+	if len(klass.bootstraps) != 1 {
+		t.Error("Class should have 1 bootstrap methods. Got: " + strconv.Itoa(len(klass.bootstraps)))
+	}
+
+	// restore stderr and stdout to what they were before
+	w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 func TestDeprecatedClassAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -612,8 +663,6 @@ func TestDeprecatedClassAttribute(t *testing.T) {
 	w.Close()
 	// out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
-
-	// errMsg := string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout

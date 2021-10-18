@@ -48,6 +48,7 @@ import (
 // ---- misc routines ----
 // syntax of unqualified names			TestUnqualifiedName
 // formatCheckStructure routine			TestStructuralValidation
+// validity of loadable items			TestLoadableItem
 
 // Get an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
@@ -1329,4 +1330,23 @@ func TestStructuralValidation(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestLoadableItem(t *testing.T) {
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodType, 0})
+
+	if validateItemIsLodable(&klass, 8) {
+		t.Error("Invalid value for loadable item did not return an error.")
+	}
+
+	if validateItemIsLodable(&klass, 1) {
+		t.Error("Index for loadable item -> to UTF8 (which is not loadable) did not return error")
+	}
+
+	if !validateItemIsLodable(&klass, 2) {
+		t.Error("Valid index for loadable item returned an error")
+	}
 }

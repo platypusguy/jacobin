@@ -549,7 +549,7 @@ func formatCheckClassAttributes(klass *parsedClass) error {
 
 // Certain types of items are loadable. This checks that an entry into the CP
 // does in fact point to a loadable item. Returns false if not or on any error.
-// See Table 4.4C at https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
+// See Table 4.4C: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
 func validateItemIsLodable(klass *parsedClass, arg int) bool {
 	if arg < 1 || arg >= len(klass.cpIndex) {
 		return false
