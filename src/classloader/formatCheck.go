@@ -400,7 +400,7 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
 			// The second field is a nameAndType record describing the boostrap method.
 			// Here we just make sure, the field points to the right kind of entry. That entry
-			// will be checked later/earlier in this CP checking loop and in the format check.
+			// will be checked later/earlier in this format check.
 			whichInvDyn := entry.slot
 			invDyn := klass.invokeDynamics[whichInvDyn]
 
