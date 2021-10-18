@@ -47,7 +47,7 @@ import (
 //
 // ---- misc routines ----
 // syntax of unqualified names			TestUnqualifiedName
-// validateStructure routine			TestStructuralValidation
+// formatCheckStructure routine			TestStructuralValidation
 
 // Get an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
@@ -74,7 +74,7 @@ func TestInvalidCPsize(t *testing.T) {
 
 	klass.cpCount = 4 // the error we're testing. There are only two entries, not 4
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Did not get error for mismatch between CP count field and actual number of CP entries")
 	}
@@ -158,7 +158,7 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 
 	klass.cpCount = 2
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for incorrect ut8Refs index, but got none.")
 	}
@@ -202,7 +202,7 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 
 	klass.cpCount = 2
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for invalid UTF8 string, but got none.")
 	}
@@ -246,7 +246,7 @@ func TestIntConsts(t *testing.T) {
 
 	// first test an index to non-existent IntConst entry
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for incorrect IntConst, but got none.")
 	}
@@ -254,7 +254,7 @@ func TestIntConsts(t *testing.T) {
 	// now add rec and test valid index to IntConst entry
 	klass.intConsts = append(klass.intConsts, 43)
 
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error for valid IntConst")
 	}
@@ -297,7 +297,7 @@ func TestFloatConsts(t *testing.T) {
 
 	// first test an index to non-existent IntConst entry
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for incorrect FloatConst, but got none.")
 	}
@@ -305,7 +305,7 @@ func TestFloatConsts(t *testing.T) {
 	// now add rec and test valid index to IntConst entry
 	klass.floats = append(klass.floats, 43.0)
 
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error for valid FloatConst")
 	}
@@ -348,14 +348,14 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 
 	klass.cpCount = 3
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for missing dummy entry after long, but got none.")
 	}
 
 	// now correct the CP by inserting a dummy entry and make sure it tests right
 	klass.cpIndex[2] = cpEntry{Dummy, 0}
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error with dummy entry after LongConst.")
 	}
@@ -400,14 +400,14 @@ func TestDoubleConst(t *testing.T) {
 	klass.cpCount = 3
 
 	// this test validates the double and the requirement that a dummy entry follow the double
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for missing dummy entry after double, but got none.")
 	}
 
 	// now correct the CP by inserting a dummy entry and make sure it tests right
 	klass.cpIndex[2] = cpEntry{Dummy, 0}
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error with dummy entry after DoubleConst.")
 	}
@@ -454,7 +454,7 @@ func TestStringConsts(t *testing.T) {
 
 	// first test a StringConst that points to a non-existent UTF8 entry
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for incorrect StringConst, but got none.")
 	}
@@ -462,7 +462,7 @@ func TestStringConsts(t *testing.T) {
 	// now add rec and test valid index to UTF8 entry
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{content: "Oh, hello, Dolly!"})
 
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error for valid StringConst")
 	}
@@ -507,7 +507,7 @@ func TestInvalidFieldRef(t *testing.T) {
 
 	klass.cpCount = 3
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for invalid class index in FieldRef entry, but got none.")
 	}
@@ -554,7 +554,7 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 
 	klass.cpCount = 3
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for invalid nameAndType index in FieldRef entry, but got none.")
 	}
@@ -614,7 +614,7 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 
 	klass.cpCount = 5
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for invalid method name in MethodRef's nameAndType entry, but got none.")
 	}
@@ -672,7 +672,7 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 
 	klass.cpCount = 6
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got but did not expect error in test of valid InterfaceRef.")
 	}
@@ -742,7 +742,7 @@ func TestValidMethodHandleEntry(t *testing.T) {
 
 	klass.cpCount = 8
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got but did not expect error in test of valid MethodHandle with.")
 	}
@@ -812,7 +812,7 @@ func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 
 	klass.cpCount = 8
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error in test of invalid MethodHandle but got none.")
 	}
@@ -892,7 +892,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 
 	// testing with klassavaVersion = 54, which should be OK
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got but did not expect error in test of valid MethodHandle with" +
 			" refIndex = 6, and Java version = 54, but got one.")
@@ -900,7 +900,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 
 	// now run the same test with klass.javaVersion < 52, which should generate an error
 	klass.javaVersion = 50
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Was expecting error in thest of MethodHandle with refIndex = 6" +
 			" pointint to an interface and Java version of 50, but did not get one")
@@ -971,7 +971,7 @@ func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 
 	klass.cpCount = 8
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for invalid method name, but didn't get any")
 	}
@@ -1039,7 +1039,7 @@ func TestInvalidMethodHandleRefKind9(t *testing.T) {
 
 	klass.cpCount = 8
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Expected error for ReferenceIndex not pointing to Interface, but got none. ")
 	}
@@ -1088,14 +1088,14 @@ func TestValidMethodType(t *testing.T) {
 
 	// testing with valid UTF8 record re method type (which must begin with open paren)
 
-	err := validateConstantPool(&klass)
+	err := formatCheckConstantPool(&klass)
 	if err != nil {
 		t.Error("Got unexpected error validating format check of MethodType.")
 	}
 
 	// now run the same test an invalid method type (no opening paren)
 	klass.utf8Refs[0] = utf8Entry{"IDLjava/lang/Thread;)Ljava/lang/Object;"}
-	err = validateConstantPool(&klass)
+	err = formatCheckConstantPool(&klass)
 	if err == nil {
 		t.Error("Was expecting error in test of MethodType pointing to a type" +
 			" string that did not begin with '('")
@@ -1151,14 +1151,14 @@ func TestInvalidFieldNames(t *testing.T) {
 		attributes:  nil,
 	})
 
-	err := validateFields(&klass)
+	err := formatCheckFields(&klass)
 	if err == nil {
 		t.Error("Did not get expected error for field name with embedded space.")
 	}
 
 	// now test a field name that begins with a digit
 	klass.utf8Refs[0] = utf8Entry{"99bottlesOfBeer"}
-	err = validateFields(&klass)
+	err = formatCheckFields(&klass)
 	if err == nil {
 		t.Error("Did not get expected error for field name starting with digit")
 	}
@@ -1209,7 +1209,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 		attributes:  nil,
 	})
 
-	err := validateFields(&klass)
+	err := formatCheckFields(&klass)
 	if err == nil {
 		t.Error("Did not get expected error for invalid field description for " +
 			"field: validName")
@@ -1217,7 +1217,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 
 	// now test for empty description string
 	klass.utf8Refs[1] = utf8Entry{""}
-	err = validateFields(&klass)
+	err = formatCheckFields(&klass)
 	if err == nil {
 		t.Error("Did not get expected error for empty field description for " +
 			"field: validName")
@@ -1287,7 +1287,7 @@ func TestStructuralValidation(t *testing.T) {
 
 	klass.cpCount = 2 // this is an error, it should be 3. Format check should catch this.
 
-	err := validateStructure(&klass)
+	err := formatCheckStructure(&klass)
 	if err == nil {
 		t.Error("Did not get expected error for mismatch between CP count and " +
 			"total number of CP entries")
@@ -1296,7 +1296,7 @@ func TestStructuralValidation(t *testing.T) {
 	klass.interfaces = append(klass.interfaces, 42)
 	klass.interfaces = append(klass.interfaces, 43)
 	klass.interfaceCount = 4 // should be 2, so an error should ensue
-	if validateStructure(&klass) == nil {
+	if formatCheckStructure(&klass) == nil {
 		t.Error("Did not get expected error for mistmatch between interfaceCount and " +
 			"total number of interfaces")
 	}
@@ -1305,7 +1305,7 @@ func TestStructuralValidation(t *testing.T) {
 	klass.interfaceCount = 2
 	klass.methods = append(klass.methods, method{})
 	klass.methodCount = 5 // should be 1, so an error should ensue
-	if validateStructure(&klass) == nil {
+	if formatCheckStructure(&klass) == nil {
 		t.Error("Did not get expected error for mistmatch between methodCount and " +
 			"total number of methods")
 	}
@@ -1316,7 +1316,7 @@ func TestStructuralValidation(t *testing.T) {
 	klass.attributes = append(klass.attributes, attr{})
 	klass.attributes = append(klass.attributes, attr{})
 	klass.attribCount = 6 // should be 3, so an error should ensue
-	if validateStructure(&klass) == nil {
+	if formatCheckStructure(&klass) == nil {
 		t.Error("Did not get expected error for mistmatch between attribCount and " +
 			"total number of class attributes")
 	}
