@@ -1142,13 +1142,17 @@ func TestValidInvokeDynamic(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{InvokeDynamic, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
 
-	// CURR: Error resolving MethodRef (getting a panic) so need to create a MethodRef entry
-	// CURR: Also, write test in the code for this so that it doesn't panic in the future
-
-	klass.cpCount = 7
+	klass.cpCount = 11
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"BootstrapMethods"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Z"})
+
 	klass.longConsts = append(klass.longConsts, int64(2200))
 	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
 		referenceKind:  5, //
@@ -1158,7 +1162,25 @@ func TestValidInvokeDynamic(t *testing.T) {
 		methodRef: 3,
 		args:      []int{1},
 	})
+	klass.bootstrapCount = 1
+	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+		classIndex:       7,
+		nameAndTypeIndex: 9,
+	})
+	klass.classRefs = append(klass.classRefs, 8)
+	klass.classRefs = append(klass.classRefs, 8)
 
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       8,
+		descriptorIndex: 10,
+	})
+
+	klass.invokeDynamics = append(klass.invokeDynamics, invokeDynamic{
+		bootstrapIndex: 0,
+		nameAndType:    9,
+	})
+
+	// ---- attribute
 	bsmAttrib := attr{
 		attrName:    2,
 		attrSize:    8,
