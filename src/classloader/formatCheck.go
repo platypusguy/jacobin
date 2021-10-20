@@ -402,12 +402,16 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			// Here we just make sure, the field points to the right kind of entry. That entry
 			// will be checked later/earlier in this format check.
 			whichInvDyn := entry.slot
+			if whichInvDyn >= len(klass.invokeDynamics) {
+				return cfe("The invokeDynamic entry at CP[" + strconv.Itoa(j) + "] " +
+					"points to a non-existent invokeDynamic slot: " + strconv.Itoa(entry.slot))
+			}
 			invDyn := klass.invokeDynamics[whichInvDyn]
 
 			bootstrap := invDyn.bootstrapIndex
 			if bootstrap >= klass.bootstrapCount {
-				return cfe("The boostrap index in InvokeDynamic at CP entry #" + strconv.Itoa(j) +
-					" is invalid: " + strconv.Itoa(bootstrap))
+				return cfe("The boostrap index in InvokeDynamic at CP[" + strconv.Itoa(j) +
+					"] is invalid: " + strconv.Itoa(bootstrap))
 			}
 
 			// just trying to access it to make sure it's actually there and accessible.
