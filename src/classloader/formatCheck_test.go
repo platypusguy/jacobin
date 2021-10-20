@@ -1211,7 +1211,48 @@ func TestValidInvokeDynamic(t *testing.T) {
 	if err != nil {
 		println(msg)
 	}
+}
 
+// checking the error message for non-existent InvokeDynamic entry.
+// This is simply to proof the fix in JACOBIN-81
+func TestInvalidInvokeDynamic(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{InvokeDynamic, 0})
+
+	klass.cpCount = 2
+
+	err := formatCheckConstantPool(&klass)
+	if err == nil {
+		t.Error("Did not get expected error for missing InvokeDynamic.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "points to a non-existent invokeDynamic slot") {
+		t.Error("Did not get the expected error message for missing InvokeDynamic. Got: " + msg)
+	}
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 // field names in Java cannot begin with a digit and they cannot contain
