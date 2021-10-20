@@ -41,6 +41,8 @@ import (
 // invalid MethodHandle (refKind=9)		TestInvalidMethodHandleRefKind9
 // valid MethodType 					TestValidMethodType
 // valid InvokeDynamic					TestValidInvokeDynamic
+// invalid InvokeDynamic (i.e. missing)	TestInvalidInvokeDynamic
+// valid & invalid module names	    	TestModuleNames
 //
 // ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
@@ -1253,6 +1255,43 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestModuleNames(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.moduleName = "@invalid"
+	if checkModuleName(&klass) == nil {
+		t.Error("Expecting error on invalid module name (@invalid), but got none.")
+	}
+
+	klass.moduleName = "\\@valid"
+	if checkModuleName(&klass) != nil {
+		out, _ := ioutil.ReadAll(r)
+		msg := string(out[:])
+		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
+			"Error message: " + msg)
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
 }
 
 // field names in Java cannot begin with a digit and they cannot contain

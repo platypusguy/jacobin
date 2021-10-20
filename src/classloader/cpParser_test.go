@@ -33,6 +33,7 @@ import (
 // 15- MethodHandle  	 			TestCPvalidMethodHandle
 // 16- MethodType 		 			TestCPvalidMethodType
 // 18- InvokeDynamic 	 			TestCPvalidInvokeDynamic
+// 19- ModuleName					see TestPrintOfCP2
 //
 // Printing of CP contents			TestPrintOfCP
 
@@ -818,10 +819,23 @@ func TestPrintOfCPpart2(t *testing.T) {
 		0x12,       // InvokeDynamic (18)
 		0x12, 0x08, // 		Bootstrap index
 		0x12, 0x01, // 		name and type entry
+
+		0x01,       // UTF-8 String (1)
+		0x00, 0x06, //		length of UTF8 string
+		'M', 'o', //  	contents of UTF8 string
+		'd', 'u',
+		'l', 'e',
+
+		0x13,       // Module name (19)
+		0x00, 0x03, // CP[3] -> UTF8 rec with name of module "Module"
+
 	}
 
 	pc := parsedClass{}
-	pc.cpCount = 3 // Dummy entry/entries plus the number of entries above
+	pc.cpCount = 5 // Dummy entry/entries plus the number of entries above
+
+	pc.javaVersion = 55 // Java 11
+	pc.moduleName = "Module"
 
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
@@ -844,6 +858,11 @@ func TestPrintOfCPpart2(t *testing.T) {
 
 	if !strings.Contains(logMsg, "(invokedynamic) ") {
 		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(module name) ") {
+		t.Error("module name CP entry did not appear in logging of CP contents" +
+			"Output: " + logMsg)
 	}
 
 	_ = wout.Close()

@@ -433,43 +433,10 @@ func formatCheckConstantPool(klass *parsedClass) error {
 		case Module:
 			// if there's a module entry, the module name has already been fetched
 			// and placed into klass.moduleName. So, here we verify this module name
-			// rather than the entry that got it. The constraints on module names are:
-			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.2.3
-			if klass.moduleName == "" {
-				return cfe("Expected a module name, but none was found.")
+			// rather than the CP entry that got it.
+			if checkModuleName(klass) != nil {
+				return errors.New("") // the rror message will already have been displayed
 			}
-
-			bArr := []byte(klass.moduleName)
-			if bArr[0] == '@' || bArr[0] == ':' { // a @ or : must be escaped, so can't start name
-				return cfe("Module name " + klass.moduleName + " contains an illegal character")
-			}
-
-			invalidName := false
-			for i := 1; i < len(bArr); i++ {
-				switch bArr[i] {
-				case '@':
-				case ':':
-					if bArr[i-1] != '\\' {
-						invalidName = true
-					}
-				case '\\':
-					if i+1 >= len(bArr) { // name cannot end on a \
-						invalidName = true
-					}
-					// if a \ is encountered it can only escape a @, :, or \
-					// if this is the case, we skip the escaped char, if not, it's an error
-					if bArr[i+1] == '@' || bArr[i+1] == ':' || bArr[i+1] == '\\' {
-						i += 1
-					} else {
-						invalidName = true
-					}
-				}
-				if invalidName {
-					return cfe("Module name " + klass.moduleName + " contains an illegal character")
-				}
-			}
-
-			// TODO: continue format checking other CP entries
 		default:
 			continue
 		}
@@ -569,6 +536,46 @@ func validateUnqualifiedName(name string, method bool) bool {
 		}
 	}
 	return true
+}
+
+// module names have multiple restrictions. Some UTF8 code points are disallowed. We don't
+// check for those here, but certain characters are disallowed. Those are explained here:
+// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.2.3
+func checkModuleName(klass *parsedClass) error {
+	if klass.moduleName == "" {
+		return cfe("Expected a module name, but none was found.")
+	}
+
+	bArr := []byte(klass.moduleName)
+	if bArr[0] == '@' || bArr[0] == ':' { // a @ or : must be escaped, so can't start name
+		return cfe("Module name " + klass.moduleName + " contains an illegal character")
+	}
+
+	invalidName := false
+	for i := 1; i < len(bArr); i++ {
+		switch bArr[i] {
+		case '@':
+		case ':':
+			if bArr[i-1] != '\\' {
+				invalidName = true
+			}
+		case '\\':
+			if i+1 >= len(bArr) { // name cannot end on a \
+				invalidName = true
+			}
+			// if a \ is encountered it can only escape a @, :, or \
+			// if this is the case, we skip the escaped char, if not, it's an error
+			if bArr[i+1] == '@' || bArr[i+1] == ':' || bArr[i+1] == '\\' {
+				i += 1
+			} else {
+				invalidName = true
+			}
+		}
+		if invalidName {
+			return cfe("Module name " + klass.moduleName + " contains an illegal character")
+		}
+	}
+	return nil
 }
 
 // Format checks various class attributes. Technically speaking, format checking is

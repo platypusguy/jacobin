@@ -203,6 +203,9 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			pos += 4
 			i += 1
 		case Module:
+			if klass.javaVersion < 53 {
+				return pos, cfe("Java module record requires Java 9 or later version")
+			}
 			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
 			moduleName, err := fetchUTF8string(klass, nameIndex)
 			if err != nil {
@@ -213,6 +216,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 					" and " + moduleName)
 			}
 			klass.moduleName = moduleName
+			klass.cpIndex[i] = cpEntry{Module, nameIndex}
 			pos += 2
 			i += 1
 		default:
@@ -295,7 +299,7 @@ func printCP(entries int, klass *parsedClass) {
 				klass.invokeDynamics[n].bootstrapIndex, klass.invokeDynamics[n].nameAndType)
 		case Module:
 			fmt.Fprintf(os.Stderr, "(module name)      ")
-			fmt.Fprintf(os.Stderr, "module name: %s\n", klass.moduleName)
+			fmt.Fprintf(os.Stderr, "%s\n", klass.moduleName)
 		default:
 			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}
