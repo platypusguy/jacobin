@@ -48,10 +48,14 @@ type cpEntry struct {
 	slot      int
 }
 
-// parse the CP entries in the class file and put references to their data in klass.cpIndex
+// parse the CP entries in the class file and put references to their data in klass.cpIndex,
+// where appropriate. (Some entries, such as invokeDynamic, Module, etc. require other actions
+// performed here. Returns location through last parsed byte and any error.
 func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	klass.cpIndex = make([]cpEntry, klass.cpCount)
 	pos := 9 // position of the last byte before the constant pool
+
+	klass.moduleName = ""
 
 	klass.classRefs = []int{}
 	klass.fieldRefs = []fieldRefEntry{}
@@ -198,6 +202,19 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{InvokeDynamic, len(klass.invokeDynamics) - 1}
 			pos += 4
 			i += 1
+		case Module:
+			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			moduleName, err := fetchUTF8string(klass, nameIndex)
+			if err != nil {
+				break // error message will already have been shown
+			}
+			if klass.moduleName != "" {
+				return pos + 2, cfe("Class " + klass.className + " has two module names: " + klass.moduleName +
+					" and " + moduleName)
+			}
+			klass.moduleName = moduleName
+			pos += 2
+			i += 1
 		default:
 			klass.cpCount = i // just to get it over with for the moment
 		}
@@ -276,6 +293,9 @@ func printCP(entries int, klass *parsedClass) {
 			n := entry.slot
 			fmt.Fprintf(os.Stderr, "boostrap index: %02d, name and type: %02d\n",
 				klass.invokeDynamics[n].bootstrapIndex, klass.invokeDynamics[n].nameAndType)
+		case Module:
+			fmt.Fprintf(os.Stderr, "(module name)      ")
+			fmt.Fprintf(os.Stderr, "module name: %s\n", klass.moduleName)
 		default:
 			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}
