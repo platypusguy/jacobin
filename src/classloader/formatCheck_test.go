@@ -43,6 +43,7 @@ import (
 // valid InvokeDynamic					TestValidInvokeDynamic
 // invalid InvokeDynamic (i.e. missing)	TestInvalidInvokeDynamic
 // valid & invalid module names	    	TestModuleNames
+// valid & invalid CP module names		TestCPModuleNames
 //
 // ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
@@ -1280,18 +1281,60 @@ func TestModuleNames(t *testing.T) {
 
 	klass.moduleName = "\\@valid"
 	if checkModuleName(&klass) != nil {
+		_ = w.Close()
 		out, _ := ioutil.ReadAll(r)
 		msg := string(out[:])
 		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
 			"Error message: " + msg)
+	} else {
+		_ = w.Close()
 	}
 
-	_ = w.Close()
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
 
+func TestCPModuleNames(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	// _, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{Module, 0})
+
+	klass.cpCount = 2
+	klass.moduleName = "\\@valid"
+	klass.javaVersion = 55
+	klass.classIsModule = true
+
+	if formatCheckConstantPool(&klass) != nil {
+		_ = w.Close()
+		out, _ := ioutil.ReadAll(r)
+		msg := string(out[:])
+		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
+			"Error message: " + msg)
+	} else {
+		_ = w.Close()
+	}
+
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 // field names in Java cannot begin with a digit and they cannot contain
@@ -1302,7 +1345,7 @@ func TestInvalidFieldNames(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.CLASS)
 
-	// redirect stderr & stdout to capture results from stderr
+	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1344,9 +1387,7 @@ func TestInvalidFieldNames(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
-	// msg := string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
@@ -1360,7 +1401,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.CLASS)
 
-	// redirect stderr & stdout to capture results from stderr
+	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1404,9 +1445,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
-	// msg := string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
@@ -1449,7 +1488,7 @@ func TestStructuralValidation(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.CLASS)
 
-	// redirect stderr & stdout to capture results from stderr
+	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1502,9 +1541,7 @@ func TestStructuralValidation(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
-	// msg := string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout

@@ -433,7 +433,11 @@ func formatCheckConstantPool(klass *parsedClass) error {
 		case Module:
 			// if there's a module entry, the module name has already been fetched
 			// and placed into klass.moduleName. So, here we verify this module name
-			// rather than the CP entry that got it.
+			// rather than the CP entry that got it. We also check access permissions,
+			// as required in: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.11
+			if !klass.classIsModule {
+				return cfe("Module CP entry must only appear in class with ACC_MODULE set.")
+			}
 			if checkModuleName(klass) != nil {
 				return errors.New("") // the rror message will already have been displayed
 			}
