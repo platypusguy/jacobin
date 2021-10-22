@@ -393,6 +393,57 @@ func formatCheckConstantPool(klass *parsedClass) error {
 					" does not point to a type that starts with an open parenthesis. Got: " +
 					methType.content)
 			}
+		case Dynamic:
+			// Like InvokeDynamic, Dynamic is a unique kind of entry. The first field,
+			// boostrapIndex, must be a "valid index into the bootstrap_methods array
+			// of the bootstrap method table of this this class file" (specified in §4.7.23). The document spec for InvokeDynamic entries is:
+			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
+			// The second field is a nameAndType record describing the boostrap method.
+			// Here we just make sure, the field points to the right kind of entry and that
+			// the descriptor in the nameAndType points to a field.
+			whichDyn := entry.slot
+			if whichDyn >= len(klass.dynamics) {
+				return cfe("The dynamic entry at CP[" + strconv.Itoa(j) + "] " +
+					"points to a non-existent dynamic slot: " + strconv.Itoa(entry.slot))
+			}
+			dyn := klass.dynamics[whichDyn]
+
+			bootstrap := dyn.bootstrapIndex
+			if bootstrap >= klass.bootstrapCount {
+				return cfe("The boostrap index in dynamic at CP[" + strconv.Itoa(j) +
+					"] is invalid: " + strconv.Itoa(bootstrap))
+			}
+
+			// just trying to access it to make sure it's actually there and accessible.
+			bse := klass.bootstraps[bootstrap]
+			if !(bse.methodRef > 0) {
+				return cfe("Invalid methodRef in bootstrap method[" + strconv.Itoa(bootstrap) + "]")
+			}
+
+			nAndT := dyn.nameAndType
+			if nAndT < 1 || nAndT > len(klass.cpIndex)-1 {
+				return cfe("The entry number into klass.dynamics[] at CP entry #" +
+					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nAndT))
+			}
+			if klass.cpIndex[nAndT].entryType != NameAndType {
+				return cfe("NameAndType index at CP entry #" + strconv.Itoa(j) +
+					" (dynamic) points to an entry that's not NameAndType: " +
+					strconv.Itoa(klass.cpIndex[nAndT].entryType))
+			}
+
+			natSlot := klass.cpIndex[nAndT].slot
+			nat := klass.nameAndTypes[natSlot] // gets the actual nameAndType entry
+			desc, err := fetchUTF8string(klass, nat.descriptorIndex)
+			if err != nil {
+				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
+					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nat.descriptorIndex))
+			}
+
+			if validateFieldDesc(desc) != nil {
+				return cfe("Dexcripto in nameAndType entry of dynamci CP entry #" +
+					strconv.Itoa(j) + " is an invalid field descriptor: " + desc)
+			}
+
 		case InvokeDynamic:
 			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
 			// "valid index into the bootstrap_methods array of the bootstrap method table of this

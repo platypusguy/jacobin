@@ -310,6 +310,11 @@ func printCP(entries int, klass *parsedClass) {
 			fmt.Fprintf(os.Stderr, "(method type)      ")
 			mt := entry.slot
 			fmt.Fprintf(os.Stderr, "description index: %02d\n", klass.methodTypes[mt])
+		case Dynamic:
+			fmt.Fprintf(os.Stderr, "(dynamic)          ")
+			n := entry.slot
+			fmt.Fprintf(os.Stderr, "boostrap index: %02d, name and type: %02d\n",
+				klass.dynamics[n].bootstrapIndex, klass.dynamics[n].nameAndType)
 		case InvokeDynamic:
 			fmt.Fprintf(os.Stderr, "(invokedynamic)    ")
 			n := entry.slot
@@ -361,6 +366,11 @@ type nameAndTypeEntry struct { // type 12 (name and type reference)
 type methodHandleEntry struct { // type: 15 (method handle)
 	referenceKind  int
 	referenceIndex int
+}
+
+type dynamic struct { // type 17 (dynamic--similar to invokedynamic)
+	bootstrapIndex int
+	nameAndType    int
 }
 
 type invokeDynamic struct { // type 18 (invokedynamic data)

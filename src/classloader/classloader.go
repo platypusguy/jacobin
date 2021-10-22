@@ -56,6 +56,7 @@ type parsedClass struct {
 	cpIndex        []cpEntry // the constant pool index to entries
 	classRefs      []int     // points to a UTF-8 entry in the CP
 	doubles        []float64
+	dynamics       []dynamic
 	fieldRefs      []fieldRefEntry
 	floats         []float32
 	intConsts      []int // 32-bit int containing the actual int value
