@@ -228,7 +228,7 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			if err != nil {
 				break // error message will already have been shown
 			}
-			if klass.moduleName != "" {
+			if klass.packageName != "" {
 				return pos + 2, cfe("Class " + klass.className + " has two package names: " + klass.packageName +
 					" and " + packageName)
 			}
@@ -318,6 +318,9 @@ func printCP(entries int, klass *parsedClass) {
 		case Module:
 			fmt.Fprintf(os.Stderr, "(module name)      ")
 			fmt.Fprintf(os.Stderr, "%s\n", klass.moduleName)
+		case Package:
+			fmt.Fprintf(os.Stderr, "(package name)     ")
+			fmt.Fprintf(os.Stderr, "%s\n", klass.packageName)
 		default:
 			fmt.Fprintf(os.Stderr, "invalid entry\n")
 		}

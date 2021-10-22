@@ -435,8 +435,10 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			// placed into klass.moduleName. So, here we verify this module name rather
 			// than the CP entry that got it. We also check access permissions, as required
 			// in: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.11
+			// Note: the test for minimum Java 9 version and the limit of at most one
+			// Module entry is enforced in the original CP parsing (see cpParser.go)
 			if !klass.classIsModule {
-				return cfe("Module CP entry must only appear in class with ACC_MODULE set.")
+				return cfe("Module CP entry must appear only in class with ACC_MODULE set.")
 			}
 			if checkModuleName(klass.moduleName) != nil {
 				return errors.New("") // the rror message will already have been displayed
@@ -446,13 +448,15 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			// placed into klass.packageName. So, here we verify this package name rather
 			// than the CP entry that got it. We also check access permissions, as required
 			// in: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.12
+			// Note: the test for minimum Java 9 version and the limit of at most one
+			// Package entry is enforced in the original CP parsing (see cpParser.go)
 			if !klass.classIsModule {
-				return cfe("Package CP entry must only appear in class with ACC_MODULE set.")
+				return cfe("Package CP entry must appear only in class with ACC_MODULE set.")
 			}
 
 			// packages have the same restrictions on the names as modules, so we use the
 			// module name verification routine here.
-			if checkModuleName(klass.packageName) != nil {
+			if checkPackageName(klass.packageName) != nil {
 				return errors.New("") // the rror message will already have been displayed
 			}
 		default:
@@ -556,9 +560,10 @@ func validateUnqualifiedName(name string, method bool) bool {
 	return true
 }
 
-// module and package names have multiple restrictions. Some UTF8 code points are disallowed.
-// We don't // check for those here, but certain characters are disallowed. Those are explained
+// module names have multiple restrictions. Some UTF8 code points are disallowed. We don't
+// check for those here, but certain characters are disallowed. Those are explained
 // here: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.2.3
+// see checkPackageName() for the same check (but different error messages)
 func checkModuleName(name string) error {
 	if name == "" {
 		return cfe("Expected a module/package name, but none was found.")
@@ -591,6 +596,47 @@ func checkModuleName(name string) error {
 		}
 		if invalidName {
 			return cfe("Module/Package name " + name + " contains an illegal character")
+		}
+	}
+	return nil
+}
+
+// package names have multiple restrictions. Some UTF8 code points are disallowed. We don't
+// check for those here, but certain characters are disallowed. Those are explained
+// here: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.2.3
+// see checkModuleName() for the same check (but different error messages)
+func checkPackageName(name string) error {
+	if name == "" {
+		return cfe("Expected a package name, but none was found.")
+	}
+
+	bArr := []byte(name)
+	if bArr[0] == '@' || bArr[0] == ':' { // a @ or : must be escaped, so can't start name
+		return cfe("Package name " + name + " contains an illegal character")
+	}
+
+	invalidName := false
+	for i := 1; i < len(bArr); i++ {
+		switch bArr[i] {
+		case '@':
+		case ':':
+			if bArr[i-1] != '\\' {
+				invalidName = true
+			}
+		case '\\':
+			if i+1 >= len(bArr) { // name cannot end on a \
+				invalidName = true
+			}
+			// if a \ is encountered it can only escape a @, :, or \
+			// if this is the case, we skip the escaped char, if not, it's an error
+			if bArr[i+1] == '@' || bArr[i+1] == ':' || bArr[i+1] == '\\' {
+				i += 1
+			} else {
+				invalidName = true
+			}
+		}
+		if invalidName {
+			return cfe("Package name " + name + " contains an illegal character")
 		}
 	}
 	return nil

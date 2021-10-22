@@ -44,6 +44,7 @@ import (
 // invalid InvokeDynamic (i.e. missing)	TestInvalidInvokeDynamic
 // valid & invalid module names	    	TestModuleNames
 // valid & invalid CP module names		TestCPModuleNames
+// valid package name					TestCPPackageNames
 //
 // ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
@@ -1326,6 +1327,47 @@ func TestCPModuleNames(t *testing.T) {
 		out, _ := ioutil.ReadAll(r)
 		msg := string(out[:])
 		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
+			"Error message: " + msg)
+	} else {
+		_ = w.Close()
+	}
+
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestCPPackageNames(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	// _, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// variables we'll need.
+	klass := parsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{Package, 0})
+
+	klass.cpCount = 2
+	klass.packageName = "\\@valid"
+	klass.javaVersion = 55
+	klass.classIsModule = true
+
+	if formatCheckConstantPool(&klass) != nil {
+		_ = w.Close()
+		out, _ := ioutil.ReadAll(r)
+		msg := string(out[:])
+		t.Error("Unexpected error occurred with valid package name: \\@valid\n" +
 			"Error message: " + msg)
 	} else {
 		_ = w.Close()
