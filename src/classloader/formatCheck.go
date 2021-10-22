@@ -440,7 +440,7 @@ func formatCheckConstantPool(klass *parsedClass) error {
 			}
 
 			if validateFieldDesc(desc) != nil {
-				return cfe("Dexcripto in nameAndType entry of dynamci CP entry #" +
+				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
 					strconv.Itoa(j) + " is an invalid field descriptor: " + desc)
 			}
 
@@ -471,15 +471,28 @@ func formatCheckConstantPool(klass *parsedClass) error {
 				return cfe("Invalid methodRef in bootstrap method[" + strconv.Itoa(bootstrap) + "]")
 			}
 
-			nAndT := invDyn.nameAndType
-			if nAndT < 1 || nAndT > len(klass.cpIndex)-1 {
+			nAndTslot := invDyn.nameAndType
+			if nAndTslot < 1 || nAndTslot > len(klass.cpIndex)-1 {
 				return cfe("The entry number into klass.InvokeDynamics[] at CP entry #" +
-					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nAndT))
+					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nAndTslot))
 			}
-			if klass.cpIndex[nAndT].entryType != NameAndType {
+			if klass.cpIndex[nAndTslot].entryType != NameAndType {
 				return cfe("NameAndType index at CP entry #" + strconv.Itoa(j) +
 					" (InvokeDynamic) points to an entry that's not NameAndType: " +
-					strconv.Itoa(klass.cpIndex[nAndT].entryType))
+					strconv.Itoa(klass.cpIndex[nAndTslot].entryType))
+			}
+
+			natSlot := klass.cpIndex[nAndTslot].slot
+			nat := klass.nameAndTypes[natSlot] // gets the actual nameAndType entry
+			desc, err := fetchUTF8string(klass, nat.descriptorIndex)
+			if err != nil {
+				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
+					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nat.descriptorIndex))
+			}
+
+			if validateMethodDesc(desc) != nil {
+				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
+					strconv.Itoa(j) + " is an invalid method descriptor: " + desc)
 			}
 		case Module:
 			// if there's a module entry, the module name has already been fetched and
@@ -578,6 +591,24 @@ func validateFieldDesc(desc string) error {
 	if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
 		c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
 		c == '[') {
+		return errors.New("invalid")
+	}
+	return nil
+}
+
+// Method descriptors list the parameters and the return type of a method. The symbols
+// for these are identical to field descriptors see alidateFieldDesc()with the addition
+// of V for void. https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.3.3
+func validateMethodDesc(desc string) error {
+	if len(desc) < 1 {
+		return errors.New("invalid")
+	}
+
+	descBytes := []byte(desc)
+	c := descBytes[0]
+	if !(c == '(' || c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
+		c == 'I' || c == 'J' || c == 'L' || c == 'S' || c == 'Z' ||
+		c == '[' || c == 'V') {
 		return errors.New("invalid")
 	}
 	return nil

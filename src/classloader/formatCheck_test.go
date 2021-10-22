@@ -50,6 +50,7 @@ import (
 // ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
 // invalid field description syntax		TestInvalidFieldDescription
+// valid and invalid method description TestMethodDescription
 //
 // ---- misc routines ----
 // syntax of unqualified names			TestUnqualifiedName
@@ -1597,6 +1598,20 @@ func TestInvalidFieldDescription(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestMethodDescription(t *testing.T) {
+	if validateMethodDesc("") == nil {
+		t.Error("Did not get expected error for empty method descriptor")
+	}
+
+	if validateMethodDesc("V") != nil {
+		t.Error("Got unexpected error for valid method descriptor: 'V'")
+	}
+
+	if validateMethodDesc("notValid") == nil {
+		t.Error("Did not get expected error for invalid method descriptor: notValid")
+	}
 }
 
 // unqualified names in Java have a set of restrictions on the syntax, which
