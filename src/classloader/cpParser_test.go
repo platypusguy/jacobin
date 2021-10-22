@@ -824,11 +824,11 @@ func TestPrintOfCPpart2(t *testing.T) {
 		'd', 'u',
 		'l', 'e',
 
-		0x13,       // Module name (19)
-		0x00, 0x03, // CP[3] -> UTF8 rec with name of module: "Module"
-
-		0x14,       // Package name (20)
-		0x00, 0x03, // CP[3] -> UTF8 rec with name of package: "Module"
+		// 0x13,       // Module name (19)
+		// 0x00, 0x03, // CP[3] -> UTF8 rec with name of module: "Module"
+		//
+		// 0x14,       // Package name (20)
+		// 0x00, 0x03, // CP[3] -> UTF8 rec with name of package: "Module"
 
 		0x11,       // Dynamic (17)
 		0x12, 0x08, // 		Bootstrap index
@@ -842,7 +842,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 	}
 
 	pc := parsedClass{}
-	pc.cpCount = 8 // Dummy entry/entries plus the number of entries above
+	pc.cpCount = 6 // Dummy entry/entries plus the number of entries above
 
 	pc.javaVersion = 55 // Java 11
 	pc.moduleName = "Module"
@@ -870,11 +870,11 @@ func TestPrintOfCPpart2(t *testing.T) {
 	if !strings.Contains(logMsg, "(invokedynamic) ") {
 		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
 	}
-
-	if !strings.Contains(logMsg, "(package name) ") {
-		t.Error("package name CP entry did not appear in logging of CP contents" +
-			"Output: " + logMsg)
-	}
+	//
+	// if !strings.Contains(logMsg, "(package name) ") {
+	// 	t.Error("package name CP entry did not appear in logging of CP contents" +
+	// 		"Output: " + logMsg)
+	// }
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
