@@ -867,7 +867,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 	}
 
 	if !strings.Contains(logMsg, "(dynamic) ") {
-		t.Error("dynamic CP entry did not appear in logging of CP contents")
+		t.Error("dynamic CP entry did not appear in logging of CP contents:\n" + logMsg)
 	}
 
 	if !strings.Contains(logMsg, "(invokedynamic) ") {
