@@ -243,16 +243,20 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 	}
 
 	if log.Level == log.FINEST {
-		printCP(i, klass)
+		// printCP(i, klass)
+		printCP(klass)
+
 	}
 
 	return pos, nil
 }
 
 // prints the entries in the CP. Accepts the number of entries for the nonce.
-func printCP(entries int, klass *parsedClass) {
+// func printCP(entries int, klass *parsedClass) {
+func printCP(klass *parsedClass) {
+
 	fmt.Fprintf(os.Stderr, "Number of CP entries parsed: %02d\n", len(klass.cpIndex))
-	for j := 0; j < entries; j++ {
+	for j := 0; j < len(klass.cpIndex); j++ {
 		entry := klass.cpIndex[j]
 		fmt.Fprintf(os.Stderr, "CP entry: %02d, type %02d ", j, entry.entryType)
 		switch entry.entryType {

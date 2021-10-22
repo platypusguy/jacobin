@@ -725,13 +725,11 @@ func TestPrintOfCPpart1(t *testing.T) {
 	pc := parsedClass{}
 	pc.cpCount = 15 // Dummy entry/entries plus the number of entries above
 
+	// this parses the CP and logs it to stderr b/c logging is set to FINEST
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
 		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
 	}
-
-	// now log the parsed CP to stderr
-	printCP(pc.cpCount, &pc)
 
 	// restore stderr and stdout to what they were before
 	w.Close()
@@ -849,7 +847,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 	pc.javaVersion = 55 // Java 11
 	pc.moduleName = "Module"
 
-	// this parses the CP and logs it b/c logging is set to FINEST
+	// this parses the CP and logs it to stderr b/c logging is set to FINEST
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
 		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
@@ -858,7 +856,6 @@ func TestPrintOfCPpart2(t *testing.T) {
 	// restore stderr and stdout to what they were before
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
-	os.Stderr = normalStderr
 
 	logMsg := string(out[:])
 
@@ -881,4 +878,5 @@ func TestPrintOfCPpart2(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+	os.Stderr = normalStderr
 }
