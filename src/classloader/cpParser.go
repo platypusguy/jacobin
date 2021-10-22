@@ -219,6 +219,24 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{Module, nameIndex}
 			pos += 2
 			i += 1
+		case Package:
+			if klass.javaVersion < 53 {
+				return pos, cfe("Java package entry requires Java 9 or later version")
+			}
+			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
+			packageName, err := fetchUTF8string(klass, nameIndex)
+			if err != nil {
+				break // error message will already have been shown
+			}
+			if klass.moduleName != "" {
+				return pos + 2, cfe("Class " + klass.className + " has two package names: " + klass.packageName +
+					" and " + packageName)
+			}
+			klass.packageName = packageName
+			klass.cpIndex[i] = cpEntry{Package, nameIndex}
+			pos += 2
+			i += 1
+
 		default:
 			klass.cpCount = i // just to get it over with for the moment
 		}

@@ -36,6 +36,7 @@ type parsedClass struct {
 	className      string // name of class without path and without .class
 	superClass     string // name of superclass for this class
 	moduleName     string
+	packageName    string
 	interfaceCount int   // number of interfaces this class implements
 	interfaces     []int // the interfaces this class implements, as indices into utf8Refs
 	fieldCount     int   // number of fields in this class

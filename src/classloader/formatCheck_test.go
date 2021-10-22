@@ -1275,12 +1275,12 @@ func TestModuleNames(t *testing.T) {
 	// variables we'll need.
 	klass := parsedClass{}
 	klass.moduleName = "@invalid"
-	if checkModuleName(&klass) == nil {
+	if checkModuleName(klass.moduleName) == nil {
 		t.Error("Expecting error on invalid module name (@invalid), but got none.")
 	}
 
 	klass.moduleName = "\\@valid"
-	if checkModuleName(&klass) != nil {
+	if checkModuleName(klass.moduleName) != nil {
 		_ = w.Close()
 		out, _ := ioutil.ReadAll(r)
 		msg := string(out[:])
