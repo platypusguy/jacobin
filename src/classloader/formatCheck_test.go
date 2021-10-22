@@ -40,6 +40,7 @@ import (
 // valid MethodHandle, w/ inv class name TestMethodHandleIndex8ButInvalidName
 // invalid MethodHandle (refKind=9)		TestInvalidMethodHandleRefKind9
 // valid MethodType 					TestValidMethodType
+// valid and invalid Dynamic entries	TestDynamics
 // valid InvokeDynamic					TestValidInvokeDynamic
 // invalid InvokeDynamic (i.e. missing)	TestInvalidInvokeDynamic
 // valid & invalid module names	    	TestModuleNames
@@ -1119,6 +1120,111 @@ func TestValidMethodType(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestDynamics(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// first create the Bootstrap Method we'll need to point to
+	klass := parsedClass{}
+	klass.javaVersion = 55
+
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{LongConst, 0}) // LongConst (which is loadable)
+	klass.cpIndex = append(klass.cpIndex, cpEntry{Dummy, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{Dynamic, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
+
+	klass.cpCount = 11
+
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"BootstrapMethods"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Z"})
+
+	klass.longConsts = append(klass.longConsts, int64(2200))
+	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
+		referenceKind:  5, //
+		referenceIndex: 6, // points to MethodRef entry
+	})
+	klass.bootstraps = append(klass.bootstraps, bootstrapMethod{
+		methodRef: 3,
+		args:      []int{1},
+	})
+	klass.bootstrapCount = 1
+	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+		classIndex:       7,
+		nameAndTypeIndex: 9,
+	})
+	klass.classRefs = append(klass.classRefs, 8)
+	klass.classRefs = append(klass.classRefs, 8)
+
+	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+		nameIndex:       8,
+		descriptorIndex: 10,
+	})
+
+	klass.dynamics = append(klass.dynamics, dynamic{
+		bootstrapIndex: 0,
+		nameAndType:    9,
+	})
+
+	// ---- attribute
+	bsmAttrib := attr{
+		attrName:    2,
+		attrSize:    8,
+		attrContent: []byte{00, 01, 00, 03, 00, 01, 00, 01}, // these bytes represent:
+		// 00, 01, // bootstrap count
+		// 00, 03, // CP[3] -> MethodHandle
+		// 00, 01, // arg count for this first boostrap method
+		// 00, 01, // CP[1] -> LongConst (which is loadable, so all is good.
+	}
+	klass.attributes = append(klass.attributes, bsmAttrib)
+	klass.attribCount = 1
+
+	// variables we'll need.
+
+	err := formatCheckConstantPool(&klass)
+	if err != nil {
+		t.Error("Unexpected error in testing dynamic CP entry")
+	}
+
+	// now have nameAndType descriptor point to a method, rather than a field.
+	// That should cause an error.
+
+	klass.utf8Refs[2] = utf8Entry{content: "V"} // V stands for a void method
+	err2 := formatCheckConstantPool(&klass)
+	if err2 == nil {
+		t.Error("Expected error for invalid dynamic CP entry, but got none.")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err != nil {
+		println(msg)
+	}
 }
 
 func TestValidInvokeDynamic(t *testing.T) {

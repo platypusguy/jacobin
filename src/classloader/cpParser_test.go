@@ -832,14 +832,17 @@ func TestPrintOfCPpart2(t *testing.T) {
 		0x14,       // Module name (20)
 		0x00, 0x03, // CP[3] -> UTF8 rec with name of package: "Module"
 
+		0x11,       // Dynamic (17)
+		0x12, 0x08, // 		Bootstrap index
+		0x12, 0x01, // 		name and type entry
+
 	}
 
 	pc := parsedClass{}
-	pc.cpCount = 6 // Dummy entry/entries plus the number of entries above
+	pc.cpCount = 7 // Dummy entry/entries plus the number of entries above
 
 	pc.javaVersion = 55 // Java 11
 	pc.moduleName = "Module"
-	// pc.packageName = "Module"
 
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
@@ -858,6 +861,10 @@ func TestPrintOfCPpart2(t *testing.T) {
 
 	if !strings.Contains(logMsg, "(method type) ") {
 		t.Error("MethodType CP entry did not appear in logging of CP contents")
+	}
+
+	if !strings.Contains(logMsg, "(dynamic) ") {
+		t.Error("dynamic CP entry did not appear in logging of CP contents")
 	}
 
 	if !strings.Contains(logMsg, "(invokedynamic) ") {
