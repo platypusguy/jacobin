@@ -829,28 +829,31 @@ func TestPrintOfCPpart2(t *testing.T) {
 		0x13,       // Module name (19)
 		0x00, 0x03, // CP[3] -> UTF8 rec with name of module: "Module"
 
-		0x14,       // Module name (20)
+		0x14,       // Package name (20)
 		0x00, 0x03, // CP[3] -> UTF8 rec with name of package: "Module"
 
 		0x11,       // Dynamic (17)
 		0x12, 0x08, // 		Bootstrap index
 		0x12, 0x01, // 		name and type entry
 
+		0x01,       // UTF-8 String (1)
+		0x00, 0x05, //		length of UTF8 string
+		'H', 'e', //  	contents of UTF8 string
+		'l', 'l', // added to see whether it solves the missing 'dynamic' entry on GitHub
+		'o',
 	}
 
 	pc := parsedClass{}
-	pc.cpCount = 7 // Dummy entry/entries plus the number of entries above
+	pc.cpCount = 8 // Dummy entry/entries plus the number of entries above
 
 	pc.javaVersion = 55 // Java 11
 	pc.moduleName = "Module"
 
+	// this parses the CP and logs it b/c logging is set to FINEST
 	_, err := parseConstantPool(bytesToTest, &pc)
 	if err != nil {
 		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
 	}
-
-	// now log the parsed CP to stderr
-	printCP(pc.cpCount, &pc)
 
 	// restore stderr and stdout to what they were before
 	w.Close()
