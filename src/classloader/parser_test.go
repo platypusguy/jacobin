@@ -163,6 +163,15 @@ func TestAccessFlags(t *testing.T) {
 
 func TestClassNameInvalidIndex(t *testing.T) {
 
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
 	globals.InitGlobals("test")
 	log.Init()
 	log.SetLogLevel(log.WARNING)
@@ -174,6 +183,13 @@ func TestClassNameInvalidIndex(t *testing.T) {
 	if err == nil {
 		t.Error("Should have returned an error for invalid value in class name item")
 	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 // a complex test. It first parses a minimal constant pool that has the records we need
@@ -228,6 +244,15 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
 	}
 
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
 	_, err := parseConstantPool(bytes, &pc)
 	if err != nil {
 		t.Error("Error parsing test CP for setup in testing ClassName")
@@ -241,6 +266,13 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 	if !strings.HasPrefix(err.Error(), "Class Format Error: invalid entry for class name") {
 		t.Error("Expected error msg about invalid entry for class name. Got: " + err.Error())
 	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 // see the previous tests for explanation of the setup. Here we test whether a class name entry
@@ -261,6 +293,15 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 		0x07, 0x00, 0x01, // entry #2, this should be a UTF-8 entry, but it's not
 	}
 
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
 	_, err := parseConstantPool(bytes, &pc)
 	if err != nil {
 		t.Error("Error parsing test CP for setup in testing ClassName")
@@ -271,6 +312,13 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	if err == nil {
 		t.Error("Parse of class name field should have generated an error but it did not.")
 	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 func TestErrorOnEmptySuperclassName(t *testing.T) {
@@ -291,6 +339,15 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 		0x01, 0x00, 0x00, // emtry #4 an empty string
 	}
 
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
 	_, err := parseConstantPool(bytes, &pc)
 	if err != nil {
 		t.Error("Error parsing test CP for setup in testing superclassName")
@@ -308,6 +365,13 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 			t.Error("Expected an invalid string for superclass error, but got: " + err.Error())
 		}
 	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 func TestValidParseInterfaceCount(t *testing.T) {
