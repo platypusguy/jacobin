@@ -191,6 +191,17 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 			klass.cpIndex[i] = cpEntry{MethodType, len(klass.methodTypes) - 1}
 			pos += 2
 			i += 1
+		case Dynamic:
+			bootstrap, _ := intFrom2Bytes(rawBytes, pos+1)
+			nAndT, _ := intFrom2Bytes(rawBytes, pos+3)
+			dyn := dynamic{
+				bootstrapIndex: bootstrap,
+				nameAndType:    nAndT,
+			}
+			klass.dynamics = append(klass.dynamics, dyn)
+			klass.cpIndex[i] = cpEntry{Dynamic, len(klass.dynamics) - 1}
+			pos += 4
+			i += 1
 		case InvokeDynamic:
 			bootstrap, _ := intFrom2Bytes(rawBytes, pos+1)
 			nAndT, _ := intFrom2Bytes(rawBytes, pos+3)
