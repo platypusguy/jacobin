@@ -202,7 +202,7 @@ func TestFetchValidAttribute(t *testing.T) {
 	// the attribute bytes. There's a leading dummy byte b/c the fetch routine starts
 	// at 1 byte after the passed-in position. So here we have a name index of 01, which
 	// points to the first entry in the CP above. That entry points to the first UTF-8
-	// record, which is in postion 0 in the utf8Refs and has a value of "SourceCode", which
+	// record, which is in position 0 in the utf8Refs and has a value of "SourceCode", which
 	// is a common attribute value. The next four bytes are the length of the remaining
 	// bytes in the attribute. In this case, that value is 2. And those two bytes follow
 	// right away with the values of 'A' and 'B' respectively.

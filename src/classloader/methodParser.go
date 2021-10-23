@@ -41,15 +41,19 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 			return pos, cfe("Invalid fetch of method name index in class: " +
 				klass.className)
 		}
-		nameSlot, err := fetchUTF8slot(klass, nameIndex)
+		nameSlot, err2 := fetchUTF8slot(klass, nameIndex)
 
-		descIndex, err := intFrom2Bytes(bytes, pos+1)
+		descIndex, err3 := intFrom2Bytes(bytes, pos+1)
 		pos += 2
-		if err != nil {
+		if err2 != nil || err3 != nil {
 			return pos, cfe("Invalid fetch of method description index in method: " +
 				klass.utf8Refs[nameSlot].content)
 		}
-		descSlot, err := fetchUTF8slot(klass, descIndex)
+		descSlot, err4 := fetchUTF8slot(klass, descIndex)
+		if err4 != nil {
+			return pos, cfe("Invalid fetch of method description slot in method: " +
+				klass.utf8Refs[nameSlot].content)
+		}
 
 		attrCount, err := intFrom2Bytes(bytes, pos+1)
 		pos += 2
@@ -73,9 +77,9 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 		}
 
 		for j := 0; j < attrCount; j++ {
-			attrib, location, err2 := fetchAttribute(klass, bytes, pos)
+			attrib, location, err5 := fetchAttribute(klass, bytes, pos)
 			pos = location
-			if err2 == nil {
+			if err5 == nil {
 				meth.attributes = append(meth.attributes, attrib)
 				// switch on the name of the attribute (listed here in alpha order)
 				switch klass.utf8Refs[attrib.attrName].content {
@@ -87,8 +91,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 							klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+
 							" attribute: Code", log.FINEST)
 					}
-					err2 = parseCodeAttribute(attrib, &meth, klass)
-					if err2 != nil {
+					if parseCodeAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "Deprecated":
@@ -96,14 +99,12 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 					log.Log("    Attribute: Deprecated", log.FINEST)
 				case "Exceptions":
 					log.Log("    Attribute: Exceptions", log.FINEST)
-					err2 = parseExceptionsMethodAttribute(attrib, &meth, klass)
-					if err2 != nil {
+					if parseExceptionsMethodAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "MethodParameters":
 					log.Log("    Attribute: MethodParameters", log.FINEST)
-					err3 := parseMethodParametersAttribute(attrib, &meth, klass)
-					if err3 != nil {
+					if parseMethodParametersAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				default:

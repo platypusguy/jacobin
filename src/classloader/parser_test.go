@@ -702,7 +702,7 @@ func TestDeprecatedClassAttribute(t *testing.T) {
 	// the attribute bytes. There's a leading dummy byte b/c the fetch routine starts
 	// at 1 byte after the passed-in position. So here we have a name index of 01, which
 	// points to the first entry in the CP above. That entry points to the first UTF-8
-	// record, which is in postion 0 in the utf8Refs and has a value of "Deprecated"
+	// record, which is in position 0 in the utf8Refs and has a value of "Deprecated"
 	// The next four bytes are the length of the remaining
 	// bytes in the attribute. For Deprecated the length must be 0.
 	bytes := []byte{00, // dummy byte

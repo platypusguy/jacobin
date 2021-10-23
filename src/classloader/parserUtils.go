@@ -148,7 +148,7 @@ func resolveCPmethodRef(index int, klass *parsedClass) (string, string, string, 
 	// pointedToNandT := klass.cpIndex[methRef.nameAndTypeIndex]
 	methName, methType, err := resolveCPnameAndType(klass, methRef.nameAndTypeIndex)
 	if err != nil {
-		return "", "", "", errors.New("error occured") // the error msg is displayed in the called func.
+		return "", "", "", errors.New("error occurred") // the error msg is displayed in the called func.
 	}
 
 	return className, methName, methType, nil

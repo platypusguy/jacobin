@@ -26,11 +26,14 @@ const (
 	FINEST
 )
 
-var Level int           // the level the logger currently supports. See the enums above.
-var StartTime time.Time // the start time of the Jacoby VM
+// Level is the level the logger currently supports. See the enums above.
+var Level int
 
-// Initialize the logger, which by default is set to WARNING. Note: that it cannot be
-// set any coarser. At all times SEVERE and WARNING messages must be visible to the user.
+// StartTime is the start time of this instance of the Jacoby VM.
+var StartTime time.Time
+
+// Init() initialize the logger, which by default is set to WARNING. Note: that it cannot be
+// set any coarser. At all times, SEVERE and WARNING messages must be visible to the user.
 func Init() {
 	Level = WARNING
 	StartTime = time.Now()

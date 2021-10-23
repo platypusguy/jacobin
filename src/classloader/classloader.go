@@ -129,7 +129,7 @@ type attr struct {
 // the exception-related data for each exception in the Code attribute of a given method
 type exception struct {
 	startPc   int // first instruction covered by this exception (pc = program counter)
-	endPc     int // the last instruciton covered by this exception
+	endPc     int // the last instruction covered by this exception
 	handlerPc int // the place in the method code that has the exception instructions
 	catchType int // the type of exception, index to CP, which must point a ClassFref entry
 }
