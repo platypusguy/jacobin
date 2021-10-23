@@ -35,6 +35,7 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
+// LoadOptionsTable loads the table with all the options Jacobin recognizes.
 func LoadOptionsTable(Global globals.Globals) {
 
 	client := globals.Option{true, false, 0, clientVM}

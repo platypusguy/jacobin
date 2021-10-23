@@ -29,7 +29,7 @@ type Classloader struct {
 // AppCL is the application classloader, which loads most of the app's classes
 var AppCL Classloader
 
-// BoostrapCL is the classloader that loads most of the standard libraries
+// BootstrapCL is the classloader that loads most of the standard libraries
 var BootstrapCL Classloader
 
 // ExtensionCL is the classloader typically used for loading custom agents
