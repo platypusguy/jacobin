@@ -167,14 +167,13 @@ func cfe(msg string) error {
 	return errors.New(errMsg)
 }
 
-// first canonicalizes the filename, checks whether the class is already loaded,
-// and if not, then parses the class and loads it.
-/*
+// LoadClassFromFile first canonicalizes the filename, checks whether
+// the class is already loaded, and if not, then parses the class and loads it.
+//
 // 1 TODO: canonicalize class name
 // 2 TODO: search through classloaders for this class
 // 3 TODO: determine which classloader should load the class, then
 // 4 TODO: have *it* parse and load the class.
-*/
 func (cl Classloader) LoadClassFromFile(filename string) error {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
@@ -201,7 +200,7 @@ func (cl Classloader) LoadClassFromFile(filename string) error {
 
 }
 
-// Init() simply initializes the three classloaders and points them to each other
+// Init simply initializes the three classloaders and points them to each other
 // in the proper order. This function might be substantially revised later.
 func Init() error {
 	BootstrapCL.Name = "bootstrap"
