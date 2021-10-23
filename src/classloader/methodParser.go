@@ -164,9 +164,9 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 			log.FINEST)
 		for k := 0; k < exceptionCount; k++ {
 			ex := exception{}
-			ex.startPc, err = intFrom2Bytes(att.attrContent, pos+1)
-			ex.endPc, err = intFrom2Bytes(att.attrContent, pos+3)
-			ex.handlerPc, err = intFrom2Bytes(att.attrContent, pos+5)
+			ex.startPc, _ = intFrom2Bytes(att.attrContent, pos+1)
+			ex.endPc, _ = intFrom2Bytes(att.attrContent, pos+3)
+			ex.handlerPc, _ = intFrom2Bytes(att.attrContent, pos+5)
 			ex.catchType, err = intFrom2Bytes(att.attrContent, pos+7)
 			pos += 8
 

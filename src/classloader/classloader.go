@@ -16,7 +16,7 @@ import (
 	"strconv"
 )
 
-// Classloaders hold the parsed bytecode in classes, where they can be retrieved
+// Classloader holds the parsed bytecode in classes, where they can be retrieved
 // and moved to an execution role. Most of the comments and code presuppose some
 // familiarity with the role of classloaders. More information can be found at:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-5.html#jvms-5.3
@@ -26,8 +26,13 @@ type Classloader struct {
 	Classes map[string]parsedClass
 }
 
+// AppCL is the application classloader, which loads most of the app's classes
 var AppCL Classloader
+
+// BoostrapCL is the classloader that loads most of the standard libraries
 var BootstrapCL Classloader
+
+// ExtensionCL is the classloader typically used for loading custom agents
 var ExtensionCL Classloader
 
 // the parsed class

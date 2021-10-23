@@ -32,7 +32,7 @@ var Level int
 // StartTime is the start time of this instance of the Jacoby VM.
 var StartTime time.Time
 
-// Init() initialize the logger, which by default is set to WARNING. Note: that it cannot be
+// Init initialize the logger, which by default is set to WARNING. Note: that it cannot be
 // set any coarser. At all times, SEVERE and WARNING messages must be visible to the user.
 func Init() {
 	Level = WARNING
@@ -73,14 +73,14 @@ func Log(msg string, level int) (err error) {
 	return
 }
 
-// set the level of granularity.
+// SetLogLevel seta the level of granularity.
 func SetLogLevel(level int) (err error) {
 	// SEVERE is here just to fill the hierarchy. You cannot actually set the logging
 	// level coarser than WARNING. In other words, all warnings must be shown.
 	if level <= SEVERE || level > FINEST {
 		return errors.New("invalid logging level")
-	} else {
-		Level = level
-		return nil
 	}
+
+	Level = level
+	return nil
 }

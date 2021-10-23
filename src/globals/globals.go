@@ -35,7 +35,7 @@ type Globals struct {
 
 var global Globals
 
-// initialize the global values that are known at start-up
+// InitGlobal initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
 		Version:           "0.1.0",
@@ -51,7 +51,7 @@ func InitGlobals(progName string) Globals {
 	return global
 }
 
-// This function enables the singleton aspect of Globals
+// GetInstance enables the singleton aspect of Globals
 func GetInstance() Globals {
 	return global
 }
