@@ -47,7 +47,7 @@ func intFrom4Bytes(bytes []byte, pos int) (int, error) {
 
 // finds and returns a UTF8 string when handed an index into the CP that points
 // to a UTF8 entry. Does extensive checking of values.
-func fetchUTF8string(klass *parsedClass, index int) (string, error) {
+func fetchUTF8string(klass *ParsedClass, index int) (string, error) {
 	if index < 1 || index > klass.cpCount-1 {
 		return "", cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
 	}
@@ -66,7 +66,7 @@ func fetchUTF8string(klass *parsedClass, index int) (string, error) {
 
 // like the preceding function, except this returns the slot number in the utf8Refs
 // rather than the string that's in that slot.
-func fetchUTF8slot(klass *parsedClass, index int) (int, error) {
+func fetchUTF8slot(klass *ParsedClass, index int) (int, error) {
 	if index < 1 || index > klass.cpCount-1 {
 		return -1, cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
 	}
@@ -91,7 +91,7 @@ func fetchUTF8slot(klass *parsedClass, index int) (int, error) {
 //    u4 attribute_length;
 //    u1 info[attribute_length];
 // }
-func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error) {
+func fetchAttribute(klass *ParsedClass, bytes []byte, loc int) (attr, int, error) {
 	pos := loc
 	attribute := attr{}
 	nameIndex, err := intFrom2Bytes(bytes, pos+1)
@@ -126,7 +126,7 @@ func fetchAttribute(klass *parsedClass, bytes []byte, loc int) (attr, int, error
 // returns all the elements of a methodRef (10) CP entry when given the CP entry #
 // 	classIndex       int
 //	nameAndTypeIndex int
-func resolveCPmethodRef(index int, klass *parsedClass) (string, string, string, error) {
+func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, error) {
 	if index < 1 || index >= len(klass.cpIndex) {
 		return "", "", "", cfe("Invalid index into CP: " + strconv.Itoa(index))
 	}
@@ -155,7 +155,7 @@ func resolveCPmethodRef(index int, klass *parsedClass) (string, string, string, 
 
 }
 
-func resolveCPnameAndType(klass *parsedClass, index int) (string, string, error) {
+func resolveCPnameAndType(klass *ParsedClass, index int) (string, string, error) {
 	if index < 1 || index >= len(klass.cpIndex) {
 		return "", "", cfe("Invalid nameAndType index into CP: " +
 			strconv.Itoa(index))

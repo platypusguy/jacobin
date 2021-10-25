@@ -116,7 +116,7 @@ func TestFetchValidUTF8string(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0}) // the UTF-8 reference
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
@@ -152,7 +152,7 @@ func TestFetchInvalidUTF8string(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{7, 0}) // the invalid UTF-8 reference
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
@@ -193,7 +193,7 @@ func TestFetchValidAttribute(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0}) // UTF-8 rec w/ attribute name
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})
@@ -254,7 +254,7 @@ func TestFetchInvalidAttribute(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})

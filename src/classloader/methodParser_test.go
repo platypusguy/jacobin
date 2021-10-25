@@ -32,7 +32,7 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
@@ -107,7 +107,7 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
@@ -178,7 +178,7 @@ func Test2ValidMethodExceptionAttributes(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
@@ -252,7 +252,7 @@ func TestValidMethodParameterAttribute(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry

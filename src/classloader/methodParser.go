@@ -23,7 +23,7 @@ import (
 //    u2             attributes_count;
 //    attribute_info attributes[attributes_count];
 // }
-func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	var meth method
 	for i := 0; i < klass.methodCount; i++ {
@@ -124,7 +124,7 @@ func parseMethods(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 // parse the Code attribute and its sub-attributes. Details of the contents here:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.3
-func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
+func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	methodName := klass.utf8Refs[meth.name].content
 	ca := codeAttrib{}
 
@@ -233,7 +233,7 @@ func parseCodeAttribute(att attr, meth *method, klass *parsedClass) error {
 // The last two entries are in attrContent, which is a []byte. The last entry, per the spec,
 // is a ClassRef entry, which consists of a CP index that points to UTF8 entry containing the
 // name of the checked exception class, e.g., java/io/IOException
-func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClass) error {
+func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClass) error {
 	loc := -1
 	exceptionCount, err := intFrom2Bytes(attrib.attrContent, loc+1)
 	loc += 2
@@ -254,7 +254,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 
 		// whichClassRef is the entry # in the classRefs array
 		whichClassRef := klass.cpIndex[cRefIndex].slot
-		// get the classRef from the slice of classRefs in the parsedClass
+		// get the classRef from the slice of classRefs in the ParsedClass
 		classRef := klass.classRefs[whichClassRef]
 
 		// the classRef should point to a UTF8 record with the name of the exception class
@@ -285,7 +285,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *parsedClas
 //        u2 access_flags;
 //    } parameters[parameters_count];
 // }
-func parseMethodParametersAttribute(att attr, meth *method, klass *parsedClass) error {
+func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) error {
 	var err error
 	pos := 0
 	parametersCount := int(att.attrContent[pos])

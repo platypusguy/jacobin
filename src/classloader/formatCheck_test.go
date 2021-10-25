@@ -73,7 +73,7 @@ func TestInvalidCPsize(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 
@@ -116,7 +116,7 @@ func TestMissingInitialDummyEntry(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
@@ -157,7 +157,7 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 4}) // the error: there are only 2 UTF8 entries (see below)
 
@@ -200,7 +200,7 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 
@@ -244,7 +244,7 @@ func TestIntConsts(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{IntConst, 1}) // error, should point to IntConst[0]
 
@@ -295,7 +295,7 @@ func TestFloatConsts(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{FloatConst, 1}) // error, should point to FloatConst[0]
 
@@ -347,7 +347,7 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{LongConst, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // this should be a dummy entry
@@ -398,7 +398,7 @@ func TestDoubleConst(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{DoubleConst, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // this should be a dummy entry
@@ -452,7 +452,7 @@ func TestStringConsts(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{StringConst, 1}) // error, should point to UTF8[0]
 
@@ -503,7 +503,7 @@ func TestInvalidFieldRef(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{FieldRef, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // unimportant entry
@@ -549,7 +549,7 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{FieldRef, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
@@ -599,7 +599,7 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
@@ -657,7 +657,7 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{Interface, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
@@ -716,7 +716,7 @@ func TestValidMethodHandleEntry(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
@@ -786,7 +786,7 @@ func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
@@ -857,7 +857,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.javaVersion = 54
 
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
@@ -944,7 +944,7 @@ func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
@@ -1013,7 +1013,7 @@ func TestInvalidMethodHandleRefKind9(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
@@ -1081,7 +1081,7 @@ func TestValidMethodType(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.javaVersion = 54
 
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
@@ -1138,7 +1138,7 @@ func TestDynamics(t *testing.T) {
 	os.Stdout = wout
 
 	// first create the Bootstrap Method we'll need to point to
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.javaVersion = 55
 
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
@@ -1243,7 +1243,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 	os.Stdout = wout
 
 	// first create the Bootstrap Method we'll need to point to
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.javaVersion = 55
 
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
@@ -1341,7 +1341,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{InvokeDynamic, 0})
 
@@ -1381,7 +1381,7 @@ func TestModuleNames(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.moduleName = "@invalid"
 	if checkModuleName(klass.moduleName) == nil {
 		t.Error("Expecting error on invalid module name (@invalid), but got none.")
@@ -1420,7 +1420,7 @@ func TestCPModuleNames(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{Module, 0})
 
@@ -1461,7 +1461,7 @@ func TestCPPackageNames(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{Package, 0})
 
@@ -1504,7 +1504,7 @@ func TestInvalidFieldNames(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
@@ -1560,7 +1560,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
@@ -1661,7 +1661,7 @@ func TestStructuralValidation(t *testing.T) {
 	os.Stdout = wout
 
 	// variables we'll need.
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
@@ -1711,7 +1711,7 @@ func TestStructuralValidation(t *testing.T) {
 }
 
 func TestLoadableItem(t *testing.T) {
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodType, 0})

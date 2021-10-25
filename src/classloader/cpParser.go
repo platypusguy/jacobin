@@ -51,7 +51,7 @@ type cpEntry struct {
 // parse the CP entries in the class file and put references to their data in klass.cpIndex,
 // where appropriate. (Some entries, such as invokeDynamic, Module, etc. require other actions
 // performed here. Returns location through last parsed byte and any error.
-func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
+func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 	klass.cpIndex = make([]cpEntry, klass.cpCount)
 	pos := 9 // position of the last byte before the constant pool
 
@@ -262,8 +262,8 @@ func parseConstantPool(rawBytes []byte, klass *parsedClass) (int, error) {
 }
 
 // prints the entries in the CP. Accepts the number of entries for the nonce.
-// func printCP(entries int, klass *parsedClass) {
-func printCP(klass *parsedClass) {
+// func printCP(entries int, klass *ParsedClass) {
+func printCP(klass *ParsedClass) {
 
 	fmt.Fprintf(os.Stderr, "Number of CP entries parsed: %02d\n", len(klass.cpIndex))
 	for j := 0; j < len(klass.cpIndex); j++ {

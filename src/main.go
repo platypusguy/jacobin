@@ -42,7 +42,7 @@ func main() {
 		shutdown(true)
 	} else {
 		log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
-		classloader.AppCL.LoadClassFromFile(Global.StartingClass)
+		classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	}
 
 	shutdown(false)

@@ -51,7 +51,7 @@ func TestDummyEntry(t *testing.T) {
 		'C', 'O',
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	_, err := parseConstantPool(bytesToTest, &pc)
 
@@ -77,7 +77,7 @@ func TestCPvalidUTF8Ref(t *testing.T) {
 		'C', 'O',
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -115,7 +115,7 @@ func TestCPvalidIntConst(t *testing.T) {
 		0x03, 0x01, 0x05, 0x20, 0x44,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -155,7 +155,7 @@ func TestCPvalidLongConst(t *testing.T) {
 		0x00, 0x00, 0x00, 0x02, // second four bytes of long
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3 // it's 3 b/c the long constant takes up two slots
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -197,7 +197,7 @@ func TestCPvalidFloatConst(t *testing.T) {
 		0x40, 0x09, 0x21, 0xF9, // ffour bytes of float
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2 //
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -237,7 +237,7 @@ func TestCPvalidDoubleConst(t *testing.T) {
 		0xF0, 0x1B, 0x86, 0x6E, // second four bytes of double
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3 // it's 3 b/c the long constant takes up two slots
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -273,7 +273,7 @@ func TestCPvalidClassRef(t *testing.T) {
 		0x07, 0x02, 0x05,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -311,7 +311,7 @@ func TestCPvalidStringConstRef(t *testing.T) {
 		0x08, 0x00, 0x20,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -349,7 +349,7 @@ func TestCPvalidFieldRef(t *testing.T) {
 		0x09, 0x00, 0x14, 0x01, 0x01,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -391,7 +391,7 @@ func TestCPvalidMethodRef(t *testing.T) {
 		0x0A, 0x00, 0x15, 0x01, 0x06,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -438,7 +438,7 @@ func TestCPvalidInterface(t *testing.T) {
 		0x00, 0x01, // name and type entry index
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -479,7 +479,7 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 		0x0C, 0x00, 0x14, 0x01, 0x01,
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 2
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -526,7 +526,7 @@ func TestCPvalidMethodHandle(t *testing.T) {
 		0x00, 0x01, // Ref index
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -572,7 +572,7 @@ func TestCPvalidMethodType(t *testing.T) {
 		0x00, 0x05, // Desc Index
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -615,7 +615,7 @@ func TestCPvalidInvokeDynamic(t *testing.T) {
 		0x00, 0x01, // name and type entry
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
@@ -722,7 +722,7 @@ func TestPrintOfCPpart1(t *testing.T) {
 
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 15 // Dummy entry/entries plus the number of entries above
 
 	// this parses the CP and logs it to stderr b/c logging is set to FINEST
@@ -846,7 +846,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 		// 'o',
 	}
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 6 // Dummy entry/entries plus the number of entries above
 
 	pc.javaVersion = 55 // Java 11

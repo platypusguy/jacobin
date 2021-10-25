@@ -9,6 +9,7 @@ package classloader
 import (
 	"errors"
 	"fmt"
+	"jacobin/exec"
 	"jacobin/log"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ import (
 type Classloader struct {
 	Name    string
 	Parent  string
-	Classes map[string]parsedClass
+	Classes map[string]ParsedClass
 }
 
 // AppCL is the application classloader, which loads most of the app's classes
@@ -36,7 +37,7 @@ var BootstrapCL Classloader
 var ExtensionCL Classloader
 
 // the parsed class
-type parsedClass struct {
+type ParsedClass struct {
 	javaVersion    int
 	className      string // name of class without path and without .class
 	superClass     string // name of superclass for this class
@@ -174,7 +175,7 @@ func cfe(msg string) error {
 // 2 TODO: search through classloaders for this class
 // 3 TODO: determine which classloader should load the class, then
 // 4 TODO: have *it* parse and load the class.
-func (cl Classloader) LoadClassFromFile(filename string) error {
+func LoadClassFromFile(cl Classloader, filename string) error {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		log.Log("Could not read file: "+filename+". Exiting.", log.SEVERE)
@@ -189,15 +190,93 @@ func (cl Classloader) LoadClassFromFile(filename string) error {
 		return fmt.Errorf("parsing error")
 	}
 
-	err = formatCheckClass(&fullyParsedClass)
-	if err != nil {
+	// load the class into the exec.Classes structure, making small changes
+	// and omitting certain fields that are no longer needed.
+	k := exec.Klass{}
+	k.Status = 'P'
+	k.Loader = cl.Name
+	kd := k.Data
+	kd.Name = fullyParsedClass.className
+	kd.Superclass = fullyParsedClass.superClass
+	kd.Module = fullyParsedClass.moduleName
+	kd.Pkg = fullyParsedClass.packageName
+	for i := 0; i < len(fullyParsedClass.interfaces); i++ {
+		kd.Interfaces = append(kd.Interfaces, uint16(fullyParsedClass.interfaces[i]))
+	}
+	if len(fullyParsedClass.fields) > 0 {
+		for i := 0; i < len(fullyParsedClass.fields); i++ {
+			kdf := exec.Field{}
+			kdf.Name = uint16(fullyParsedClass.fields[i].name)
+			kdf.Desc = uint16(fullyParsedClass.fields[i].description)
+			if len(fullyParsedClass.fields[i].attributes) > 0 {
+				for j := 0; j < len(fullyParsedClass.fields[i].attributes); j++ {
+					kdfa := exec.Attr{}
+					kdfa.AttrName = uint16(fullyParsedClass.fields[i].attributes[j].attrName)
+					kdfa.AttrSize = fullyParsedClass.fields[i].attributes[j].attrSize
+					kdfa.AttrContent = fullyParsedClass.fields[i].attributes[j].attrContent
+					kdf.Attributes = append(kdf.Attributes, kdfa)
+				}
+			}
+			kd.Fields = append(kd.Fields, kdf)
+		}
+	}
+
+	if len(fullyParsedClass.methods) > 0 {
+		for i := 0; i < len(fullyParsedClass.methods); i++ {
+			kdm := exec.Method{}
+			kdm.Name = uint16(fullyParsedClass.methods[i].name)
+			kdm.Desc = uint16(fullyParsedClass.methods[i].description)
+			kdm.AccessFlags = fullyParsedClass.methods[i].accessFlags
+			kdm.CodeAttr.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
+			kdm.CodeAttr.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
+			kdm.CodeAttr.Code = fullyParsedClass.methods[i].codeAttr.code
+			if len(fullyParsedClass.methods[i].codeAttr.exceptions) > 0 {
+				for j := 0; j < len(fullyParsedClass.methods[i].codeAttr.exceptions); j++ {
+					kdmce := exec.CodeException{}
+					kdmce.StartPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].startPc
+					kdmce.EndPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].endPc
+					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
+					kdmce.CatchType = uint16(fullyParsedClass.methods[i].codeAttr.exceptions[j].catchType)
+					kdm.CodeAttr.Exceptions = append(kdm.CodeAttr.Exceptions, kdmce)
+				}
+			}
+			if len(fullyParsedClass.methods[i].codeAttr.attributes) > 0 {
+				for m := 0; m < len(fullyParsedClass.methods[i].codeAttr.attributes); m++ {
+					kdmca := exec.Attr{}
+					kdmca.AttrName = uint16(fullyParsedClass.methods[i].codeAttr.attributes[m].attrName)
+					kdmca.AttrSize = fullyParsedClass.methods[i].codeAttr.attributes[m].attrSize
+					kdmca.AttrContent = fullyParsedClass.methods[i].codeAttr.attributes[m].attrContent
+					kdm.CodeAttr.Attributes = append(kdm.CodeAttr.Attributes, kdmca)
+				}
+			}
+			if len(fullyParsedClass.methods[i].attributes) > 0 {
+				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
+					kda := exec.Attr{
+						AttrName:    uint16(fullyParsedClass.methods[i].attributes[n].attrName),
+						AttrSize:    fullyParsedClass.methods[i].attributes[n].attrSize,
+						AttrContent: fullyParsedClass.methods[i].attributes[n].attrContent,
+					}
+					kdm.Attributes = append(kdm.Attributes, kda)
+				}
+			}
+			if len(fullyParsedClass.methods[i].exceptions) > 0 {
+				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
+					kdm.Exceptions = append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
+				}
+			}
+			// CURR: Resume here with Method Parameters and Deprecated.
+			kd.Methods = append(kd.Methods, kdm)
+		}
+	}
+
+	// format check the class
+	if formatCheckClass(&fullyParsedClass) != nil {
 		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("format-checking error")
 	}
 	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
-	return insert(fullyParsedClass)
-
+	return nil
 }
 
 // Init simply initializes the three classloaders and points them to each other
@@ -205,19 +284,19 @@ func (cl Classloader) LoadClassFromFile(filename string) error {
 func Init() error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""
-	BootstrapCL.Classes = make(map[string]parsedClass)
+	BootstrapCL.Classes = make(map[string]ParsedClass)
 
 	ExtensionCL.Name = "extension"
 	ExtensionCL.Parent = "bootstrap"
-	ExtensionCL.Classes = make(map[string]parsedClass)
+	ExtensionCL.Classes = make(map[string]ParsedClass)
 
 	AppCL.Name = "app"
 	AppCL.Parent = "system"
-	AppCL.Classes = make(map[string]parsedClass)
+	AppCL.Classes = make(map[string]ParsedClass)
 	return nil
 }
 
 // insert the fully parsed class into the classloader
-func insert(class parsedClass) error {
+func insert(class ParsedClass) error {
 	return nil //TODO: fill out after finishing parser
 }

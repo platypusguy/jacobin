@@ -57,7 +57,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 	os.Stderr = w
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0xFF, 0xF0}
-	err := parseJavaVersionNumber(bytesToTest, &parsedClass{})
+	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
 
 	// restore stderr to what it was before
 	w.Close()
@@ -80,7 +80,7 @@ func TestParseValidJavaVersion(t *testing.T) {
 	log.Init()
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30}
-	err := parseJavaVersionNumber(bytesToTest, &parsedClass{})
+	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
 	if err != nil {
 		t.Error("valid Java version # generated an error in version # parser")
 	}
@@ -90,7 +90,7 @@ func TestConstantPoolCountValid(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
-	pClass := parsedClass{}
+	pClass := ParsedClass{}
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30, 0x00, 0x20}
 	err := getConstantPoolCount(bytesToTest, &pClass)
@@ -114,7 +114,7 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 	os.Stderr = w
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30, 0x00, 0x01}
-	err := getConstantPoolCount(bytesToTest, &parsedClass{})
+	err := getConstantPoolCount(bytesToTest, &ParsedClass{})
 
 	// restore stderr to what it was before
 	w.Close()
@@ -141,7 +141,7 @@ func TestAccessFlags(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x84, 0x21}
 	loc, err := parseAccessFlags(bytes, 0, &pc)
 
@@ -176,7 +176,7 @@ func TestClassNameInvalidIndex(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x00, 0x10}
 	_, err := parseClassName(bytes, 0, &pc)
 
@@ -201,7 +201,7 @@ func TestClassNameValidName(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
@@ -235,7 +235,7 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
@@ -284,7 +284,7 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 3
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
@@ -327,7 +327,7 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 	pc.cpCount = 5
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
@@ -380,7 +380,7 @@ func TestValidParseInterfaceCount(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.WARNING)
 
-	pc := parsedClass{}
+	pc := ParsedClass{}
 
 	bytesToTest := []byte{
 		0x00, 0x00, 0x12,
@@ -409,7 +409,7 @@ func TestParseOfValidInterface(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // the UTF-8 reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
@@ -450,7 +450,7 @@ func TestParseOfInvalidInterface(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // the invalid reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
@@ -493,7 +493,7 @@ func TestParseOfInvalidFieldWithFaultyNameIndex(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
@@ -532,7 +532,7 @@ func TestParseOfFieldWithNoAttributes(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
@@ -597,7 +597,7 @@ func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.attribCount = 0
 
 	testBytes := []byte{
@@ -641,7 +641,7 @@ func TestValidBootstrapClassAttribute(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{LongConst, 0}) // LongConst (which is loadable)
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
@@ -692,7 +692,7 @@ func TestDeprecatedClassAttribute(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	klass := parsedClass{}
+	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0}) // UTF-8 rec w/ attribute name
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Deprecated"})

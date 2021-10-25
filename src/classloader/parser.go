@@ -21,10 +21,10 @@ import (
 // receives the rawBytes of the class that were previously read in
 //
 // ClassFormatError - if the parser finds anything unexpected
-func parse(rawBytes []byte) (parsedClass, error) {
+func parse(rawBytes []byte) (ParsedClass, error) {
 
 	// the parsed class as we'll give it to the classloader
-	var pClass = parsedClass{}
+	var pClass = ParsedClass{}
 
 	err := parseMagicNumber(rawBytes)
 	if err != nil {
@@ -129,7 +129,7 @@ func parseMagicNumber(bytes []byte) error {
 
 // get the Java version number used in creating this class file. If it's higher than the
 // version Jacobin presently supports, report an error.
-func parseJavaVersionNumber(bytes []byte, klass *parsedClass) error {
+func parseJavaVersionNumber(bytes []byte, klass *ParsedClass) error {
 	version, err := intFrom2Bytes(bytes, 6)
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func parseJavaVersionNumber(bytes []byte, klass *parsedClass) error {
 // correct. Note that this number is technically 1 greater than the
 // number of actual entries, because the first entry in the constant
 // pool is an empty placeholder, rather than an actual entry.
-func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
+func getConstantPoolCount(bytes []byte, klass *ParsedClass) error {
 	cpEntryCount, err := intFrom2Bytes(bytes, 8)
 	if err != nil || cpEntryCount <= 2 {
 		return cfe("Invalid number of entries in constant pool: " +
@@ -166,7 +166,7 @@ func getConstantPoolCount(bytes []byte, klass *parsedClass) error {
 // decode the meaning of the class access flags and set the various getters
 // in the class. FromTable 4.1-B in the spec:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1-200-E.1
-func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseAccessFlags(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	accessFlags, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
@@ -242,7 +242,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *parsedClass) (int, error) {
 // the package name as a path, but not the extension of .class. So, for example,
 // ParsePosition.class in the core Java string library has a class name of:
 // java/text/ParsePosition
-func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	index, err := intFrom2Bytes(bytes, pos+1)
 	var classNameIndex int
@@ -281,7 +281,7 @@ func parseClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 // Get the name of the superclass. The logic is identical to that of parseClassName()
 // All classes, except java/lang/Object have superclasses.
-func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	index, err := intFrom2Bytes(bytes, pos+1)
 	var classNameIndex int
@@ -333,7 +333,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *parsedClass) (int, error)
 }
 
 // Get the count of the number of interfaces this class implements
-func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseInterfaceCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	interfaceCount, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
@@ -349,7 +349,7 @@ func parseInterfaceCount(bytes []byte, loc int, klass *parsedClass) (int, error)
 // these are actually interface references, simply indexes into the CP that point to
 // class name entries, which in turn point to the UTF-8 string holding the name of the
 // interface class.
-func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseInterfaces(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	for i := 0; i < klass.interfaceCount; i += 1 {
 		interfaceIndex, err := intFrom2Bytes(bytes, pos+1)
@@ -391,7 +391,7 @@ func parseInterfaces(bytes []byte, loc int, klass *parsedClass) (int, error) {
 }
 
 // Get the number of fields in this class
-func parseFieldCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseFieldCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	fieldCount, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
@@ -415,7 +415,7 @@ func parseFieldCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
 //    attribute_info attributes[attributes_count];
 // }
 
-func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	for i := 0; i < klass.fieldCount; i += 1 {
 		f := field{}
@@ -483,7 +483,7 @@ func parseFields(bytes []byte, loc int, klass *parsedClass) (int, error) {
 }
 
 // Get the number of methods in this class
-func parseMethodCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseMethodCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	methodCount, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
@@ -498,7 +498,7 @@ func parseMethodCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
 
 // get the count of the class attributes (which form the last group of elements in
 // the class file).
-func parseClassAttributeCount(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseClassAttributeCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	attributeCount, err := intFrom2Bytes(bytes, pos+1)
 	pos += 2
@@ -511,7 +511,7 @@ func parseClassAttributeCount(bytes []byte, loc int, klass *parsedClass) (int, e
 	return pos, nil
 }
 
-func parseClassAttributes(bytes []byte, loc int, klass *parsedClass) (int, error) {
+func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	for j := 0; j < klass.attribCount; j++ {
 		attrib, location, err := fetchAttribute(klass, bytes, pos)
