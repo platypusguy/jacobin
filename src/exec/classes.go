@@ -24,24 +24,24 @@ type ClData struct {
 	Methods    []Method
 	Attributes []Attr
 	SourceFile string
-	Bootstraps []bootstrapMethod
+	Bootstraps []BootstrapMethod
 	CP         cPool
-	Flags      accessFlags
+	Access     AccessFlags
 }
 
 type cPool struct {
 }
 
-type accessFlags struct {
-	classIsPublic     bool
-	classIsFinal      bool
-	classIsSuper      bool
-	classIsInterface  bool
-	classIsAbstract   bool
-	classIsSynthetic  bool
-	classIsAnnotation bool
-	classIsEnum       bool
-	classIsModule     bool
+type AccessFlags struct {
+	ClassIsPublic     bool
+	ClassIsFinal      bool
+	ClassIsSuper      bool
+	ClassIsInterface  bool
+	ClassIsAbstract   bool
+	ClassIsSynthetic  bool
+	ClassIsAnnotation bool
+	ClassIsEnum       bool
+	ClassIsModule     bool
 }
 
 // For the nonce, these definitions are similar to corresponding items in
@@ -84,7 +84,7 @@ type ParamAttrib struct {
 
 // the structure of many attributes (field, class, etc.) The content is just the raw bytes.
 type Attr struct {
-	AttrName    uint16 // index of the UTF-8 entry in the CP
+	AttrName    uint16 // index of the UTF8 entry in the CP
 	AttrSize    int    // length of the following array of raw bytes
 	AttrContent []byte // the raw data of the attribute
 }
@@ -98,7 +98,7 @@ type CodeException struct {
 }
 
 // the boostrap methods, specified in the bootstrap class attribute
-type bootstrapMethod struct {
-	methodRef int   // index pointing to a MethodHandle
-	args      []int // arguments: indexes to loadable arguments from the CP
+type BootstrapMethod struct {
+	MethodRef uint16   // index pointing to a MethodHandle
+	Args      []uint16 // arguments: indexes to loadable arguments from the CP
 }

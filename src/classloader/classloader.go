@@ -251,12 +251,12 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 			}
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
 				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
-					kda := exec.Attr{
+					kdma := exec.Attr{
 						AttrName:    uint16(fullyParsedClass.methods[i].attributes[n].attrName),
 						AttrSize:    fullyParsedClass.methods[i].attributes[n].attrSize,
 						AttrContent: fullyParsedClass.methods[i].attributes[n].attrContent,
 					}
-					kdm.Attributes = append(kdm.Attributes, kda)
+					kdm.Attributes = append(kdm.Attributes, kdma)
 				}
 			}
 			if len(fullyParsedClass.methods[i].exceptions) > 0 {
@@ -264,10 +264,56 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 					kdm.Exceptions = append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
 				}
 			}
-			// CURR: Resume here with Method Parameters and Deprecated.
+			if len(fullyParsedClass.methods[i].parameters) > 0 {
+				for q := 0; q < len(fullyParsedClass.methods[i].parameters); q++ {
+					kdmp := exec.ParamAttrib{
+						Name:        fullyParsedClass.methods[i].parameters[q].name,
+						AccessFlags: fullyParsedClass.methods[i].parameters[q].accessFlags,
+					}
+					kdm.Parameters = append(kdm.Parameters, kdmp)
+				}
+			}
+			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
 			kd.Methods = append(kd.Methods, kdm)
 		}
 	}
+	if len(fullyParsedClass.attributes) > 0 {
+		for i := 0; i < len(fullyParsedClass.attributes); i++ {
+			kda := exec.Attr{
+				AttrName:    uint16(fullyParsedClass.attributes[i].attrName),
+				AttrSize:    fullyParsedClass.attributes[i].attrSize,
+				AttrContent: fullyParsedClass.attributes[i].attrContent,
+			}
+			kd.Attributes = append(kd.Attributes, kda)
+		}
+	}
+	kd.SourceFile = fullyParsedClass.sourceFile
+	if len(fullyParsedClass.bootstraps) > 0 {
+		for j := 0; j < len(fullyParsedClass.bootstraps); j++ {
+			kdbs := exec.BootstrapMethod{
+				MethodRef: uint16(fullyParsedClass.bootstraps[j].methodRef),
+				Args:      nil,
+			}
+			if len(fullyParsedClass.bootstraps[j].args) > 0 {
+				for l := 0; l < len(fullyParsedClass.bootstraps[j].args); l++ {
+					kdbs.Args = append(kdbs.Args, (uint16(fullyParsedClass.bootstraps[j].args[l])))
+				}
+			}
+			kd.Bootstraps = append(kd.Bootstraps, kdbs)
+		}
+	}
+	kd.Access.ClassIsPublic = fullyParsedClass.classIsPublic
+	kd.Access.ClassIsFinal = fullyParsedClass.classIsFinal
+	kd.Access.ClassIsSuper = fullyParsedClass.classIsSuper
+	kd.Access.ClassIsInterface = fullyParsedClass.classIsInterface
+	kd.Access.ClassIsAbstract = fullyParsedClass.classIsAbstract
+	kd.Access.ClassIsSynthetic = fullyParsedClass.classIsSynthetic
+	kd.Access.ClassIsAnnotation = fullyParsedClass.classIsAnnotation
+	kd.Access.ClassIsEnum = fullyParsedClass.classIsEnum
+	kd.Access.ClassIsModule = fullyParsedClass.classIsModule
+
+	// CURR: do CP
+	exec.Classes[kd.Name] = k
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
