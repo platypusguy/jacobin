@@ -41,8 +41,7 @@ const (
 
 // the constant pool, which is an array of different record types. Each entry in the table
 // consists of an identifying integer (see enums above)
-// // and a structure that has varying fields and fulfills the cpTyper interface.
-// // all entries are defined at the end of this file
+// all entries are defined at the end of this file
 type cpEntry struct {
 	entryType int
 	slot      int

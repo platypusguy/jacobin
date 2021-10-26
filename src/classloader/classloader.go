@@ -195,7 +195,7 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	k := exec.Klass{}
 	k.Status = 'P'
 	k.Loader = cl.Name
-	kd := k.Data
+	kd := exec.ClData{}
 	kd.Name = fullyParsedClass.className
 	kd.Superclass = fullyParsedClass.superClass
 	kd.Module = fullyParsedClass.moduleName
@@ -312,7 +312,59 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	kd.Access.ClassIsEnum = fullyParsedClass.classIsEnum
 	kd.Access.ClassIsModule = fullyParsedClass.classIsModule
 
-	// CURR: do CP
+	// ---- loading the CP ----
+	for i := 0; i < fullyParsedClass.cpCount; i++ {
+		cpE := exec.CpEntry{
+			Type: uint16(fullyParsedClass.cpIndex[i].entryType),
+			Slot: uint16(fullyParsedClass.cpIndex[i].slot),
+		}
+		kd.CP.CpIndex = append(kd.CP.CpIndex, cpE)
+	}
+
+	if len(fullyParsedClass.classRefs) > 0 {
+		for i := 0; i < len(fullyParsedClass.classRefs); i++ {
+			kd.CP.ClassRefs = append(kd.CP.ClassRefs, uint16(fullyParsedClass.classRefs[i]))
+		}
+	}
+
+	if len(fullyParsedClass.doubles) > 0 {
+		for i := 0; i < len(fullyParsedClass.doubles); i++ {
+			kd.CP.Doubles = append(kd.CP.Doubles, fullyParsedClass.doubles[i])
+		}
+	}
+
+	if len(fullyParsedClass.floats) > 0 {
+		for i := 0; i < len(fullyParsedClass.floats); i++ {
+			kd.CP.Floats = append(kd.CP.Floats, fullyParsedClass.floats[i])
+		}
+	}
+
+	if len(fullyParsedClass.intConsts) > 0 {
+		for i := 0; i < len(fullyParsedClass.intConsts); i++ {
+			kd.CP.IntConsts = append(kd.CP.IntConsts, int32(fullyParsedClass.intConsts[i]))
+		}
+	}
+
+	if len(fullyParsedClass.longConsts) > 0 {
+		for i := 0; i < len(fullyParsedClass.longConsts); i++ {
+			kd.CP.LongConsts = append(kd.CP.LongConsts, fullyParsedClass.longConsts[i])
+		}
+	}
+
+	if len(fullyParsedClass.methodTypes) > 0 {
+		for i := 0; i < len(fullyParsedClass.methodTypes); i++ {
+			kd.CP.MethodTypes = append(kd.CP.MethodTypes, uint16(fullyParsedClass.methodTypes[i]))
+		}
+	}
+
+	if len(fullyParsedClass.utf8Refs) > 0 {
+		for i := 0; i < len(fullyParsedClass.utf8Refs); i++ {
+			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
+		}
+	}
+
+	// ---- move into Classes in the MethodArea ----
+	k.Data = kd
 	exec.Classes[kd.Name] = k
 
 	// format check the class

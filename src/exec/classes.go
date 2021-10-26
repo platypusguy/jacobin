@@ -25,11 +25,28 @@ type ClData struct {
 	Attributes []Attr
 	SourceFile string
 	Bootstraps []BootstrapMethod
-	CP         cPool
+	CP         CPool
 	Access     AccessFlags
 }
 
-type cPool struct {
+type CPool struct {
+	cpCount   int       // count of constant pool entries
+	CpIndex   []CpEntry // the constant pool index to entries
+	ClassRefs []uint16  // points to a UTF8 entry in the CP
+	Doubles   []float64
+	// dynamics       []dynamic
+	// fieldRefs      []fieldRefEntry
+	Floats    []float32
+	IntConsts []int32 // 32-bit int containing the actual int value
+	// interfaceRefs  []interfaceRefEntry
+	// invokeDynamics []invokeDynamic
+	LongConsts []int64
+	// methodHandles  []methodHandleEntry
+	// methodRefs     []methodRefEntry
+	MethodTypes []uint16
+	// nameAndTypes   []nameAndTypeEntry
+	// stringRefs     []stringConstantEntry // integer index into utf8Refs
+	Utf8Refs []string
 }
 
 type AccessFlags struct {
@@ -101,4 +118,10 @@ type CodeException struct {
 type BootstrapMethod struct {
 	MethodRef uint16   // index pointing to a MethodHandle
 	Args      []uint16 // arguments: indexes to loadable arguments from the CP
+}
+
+// ==== Constant Pool structs ====//
+type CpEntry struct {
+	Type uint16
+	Slot uint16
 }
