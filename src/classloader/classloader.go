@@ -190,11 +190,33 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 		return fmt.Errorf("parsing error")
 	}
 
-	// load the class into the exec.Classes structure, making small changes
-	// and omitting certain fields that are no longer needed.
+	// post the parsed class to the method area (that is, exec.Classes)
+	classToPost := convertToPostableClass(&fullyParsedClass)
+	classToPost.Loader = cl.Name
+	exec.Classes[cl.Name] = classToPost
+
+	// CURR: move all this transfer into a separate function (possibly a separate source file)
+	// CURR: write a test of the transfer, possibly using a fully loaded binary class.
+	// ---- move into Classes in the MethodArea ----
+
+	// format check the class
+	if formatCheckClass(&fullyParsedClass) != nil {
+		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
+		return fmt.Errorf("format-checking error")
+	}
+	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+
+	return nil
+}
+
+// load the parse class into a form suitable for posting to the method area (which is
+// exec.Classes. This mostly involves copying the data, converting most indexes to uint16
+// and removing some fields we needed in parsing, but which are no longer required.
+func convertToPostableClass(fullyParsedClass *ParsedClass) exec.Klass {
+
 	k := exec.Klass{}
 	k.Status = 'P'
-	k.Loader = cl.Name
+	k.Loader = ""
 	kd := exec.ClData{}
 	kd.Name = fullyParsedClass.className
 	kd.Superclass = fullyParsedClass.superClass
@@ -438,21 +460,8 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
 		}
 	}
-
-	// CURR: move all this transfer into a separate function (possibly a separate source file)
-	// CURR: write a test of the transfer, possibly using a fully loaded binary class.
-	// ---- move into Classes in the MethodArea ----
 	k.Data = kd
-	exec.Classes[kd.Name] = k
-
-	// format check the class
-	if formatCheckClass(&fullyParsedClass) != nil {
-		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
-		return fmt.Errorf("format-checking error")
-	}
-	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
-
-	return nil
+	return k
 }
 
 // Init simply initializes the three classloaders and points them to each other
