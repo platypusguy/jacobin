@@ -333,6 +333,26 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 		}
 	}
 
+	if len(fullyParsedClass.dynamics) > 0 {
+		for i := 0; i < len(fullyParsedClass.dynamics); i++ {
+			dyn := exec.Dynamic{
+				BootstrapIndex: uint16(fullyParsedClass.dynamics[i].bootstrapIndex),
+				NameAndType:    uint16(fullyParsedClass.dynamics[i].nameAndType),
+			}
+			kd.CP.Dynamics = append(kd.CP.Dynamics, dyn)
+		}
+	}
+
+	if len(fullyParsedClass.fieldRefs) > 0 {
+		for i := 0; i < len(fullyParsedClass.fieldRefs); i++ {
+			fr := exec.FieldRefEntry{
+				ClassIndex:  uint16(fullyParsedClass.fieldRefs[i].classIndex),
+				NameAndType: uint16(fullyParsedClass.fieldRefs[i].nameAndTypeIndex),
+			}
+			kd.CP.FieldRefs = append(kd.CP.FieldRefs, fr)
+		}
+	}
+
 	if len(fullyParsedClass.floats) > 0 {
 		for i := 0; i < len(fullyParsedClass.floats); i++ {
 			kd.CP.Floats = append(kd.CP.Floats, fullyParsedClass.floats[i])
@@ -345,9 +365,49 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 		}
 	}
 
+	if len(fullyParsedClass.interfaceRefs) > 0 {
+		for i := 0; i < len(fullyParsedClass.interfaceRefs); i++ {
+			ir := exec.InterfaceRefEntry{
+				ClassIndex:  uint16(fullyParsedClass.interfaceRefs[i].classIndex),
+				NameAndType: uint16(fullyParsedClass.interfaceRefs[i].nameAndTypeIndex),
+			}
+			kd.CP.InterfaceRefs = append(kd.CP.InterfaceRefs, ir)
+		}
+	}
+
+	if len(fullyParsedClass.invokeDynamics) > 0 {
+		for i := 0; i < len(fullyParsedClass.invokeDynamics); i++ {
+			id := exec.InvokeDynamic{
+				BootstrapIndex: uint16(fullyParsedClass.invokeDynamics[i].bootstrapIndex),
+				NameAndType:    uint16(fullyParsedClass.invokeDynamics[i].nameAndType),
+			}
+			kd.CP.InvokeDynamics = append(kd.CP.InvokeDynamics, id)
+		}
+	}
+
 	if len(fullyParsedClass.longConsts) > 0 {
 		for i := 0; i < len(fullyParsedClass.longConsts); i++ {
 			kd.CP.LongConsts = append(kd.CP.LongConsts, fullyParsedClass.longConsts[i])
+		}
+	}
+
+	if len(fullyParsedClass.methodHandles) > 0 {
+		for i := 0; i < len(fullyParsedClass.methodHandles); i++ {
+			mh := exec.MethodHandleEntry{
+				RefKind:  uint16(fullyParsedClass.methodHandles[i].referenceKind),
+				RefIndex: uint16(fullyParsedClass.methodHandles[i].referenceIndex),
+			}
+			kd.CP.MethodHandles = append(kd.CP.MethodHandles, mh)
+		}
+	}
+
+	if len(fullyParsedClass.methodRefs) > 0 {
+		for i := 0; i < len(fullyParsedClass.methodRefs); i++ {
+			mr := exec.MethodRefEntry{
+				ClassIndex:  uint16(fullyParsedClass.methodRefs[i].classIndex),
+				NameAndType: uint16(fullyParsedClass.methodRefs[i].nameAndTypeIndex),
+			}
+			kd.CP.MethodRefs = append(kd.CP.MethodRefs, mr)
 		}
 	}
 
@@ -357,12 +417,30 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 		}
 	}
 
+	if len(fullyParsedClass.nameAndTypes) > 0 {
+		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
+			nat := exec.NameAndTypeEntry{
+				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
+				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
+			}
+			kd.CP.NameAndTypes = append(kd.CP.NameAndTypes, nat)
+		}
+	}
+
+	if len(fullyParsedClass.stringRefs) > 0 {
+		for i := 0; i < len(fullyParsedClass.stringRefs); i++ {
+			kd.CP.StringRefs = append(kd.CP.StringRefs, uint16(fullyParsedClass.stringRefs[i].index))
+		}
+	}
+
 	if len(fullyParsedClass.utf8Refs) > 0 {
 		for i := 0; i < len(fullyParsedClass.utf8Refs); i++ {
 			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
 		}
 	}
 
+	// CURR: move all this transfer into a separate function (possibly a separate source file)
+	// CURR: write a test of the transfer, possibly using a fully loaded binary class.
 	// ---- move into Classes in the MethodArea ----
 	k.Data = kd
 	exec.Classes[kd.Name] = k

@@ -30,23 +30,22 @@ type ClData struct {
 }
 
 type CPool struct {
-	cpCount   int       // count of constant pool entries
-	CpIndex   []CpEntry // the constant pool index to entries
-	ClassRefs []uint16  // points to a UTF8 entry in the CP
-	Doubles   []float64
-	// dynamics       []dynamic
-	// fieldRefs      []fieldRefEntry
-	Floats    []float32
-	IntConsts []int32 // 32-bit int containing the actual int value
-	// interfaceRefs  []interfaceRefEntry
-	// invokeDynamics []invokeDynamic
-	LongConsts []int64
-	// methodHandles  []methodHandleEntry
-	// methodRefs     []methodRefEntry
-	MethodTypes []uint16
-	// nameAndTypes   []nameAndTypeEntry
-	// stringRefs     []stringConstantEntry // integer index into utf8Refs
-	Utf8Refs []string
+	CpIndex        []CpEntry // the constant pool index to entries
+	ClassRefs      []uint16  // points to a UTF8 entry in the CP
+	Doubles        []float64
+	Dynamics       []Dynamic
+	FieldRefs      []FieldRefEntry
+	Floats         []float32
+	IntConsts      []int32 // 32-bit int containing the actual int value
+	InterfaceRefs  []InterfaceRefEntry
+	InvokeDynamics []InvokeDynamic
+	LongConsts     []int64
+	MethodHandles  []MethodHandleEntry
+	MethodRefs     []MethodRefEntry
+	MethodTypes    []uint16
+	NameAndTypes   []NameAndTypeEntry
+	StringRefs     []uint16 // integer index into utf8Refs
+	Utf8Refs       []string
 }
 
 type AccessFlags struct {
@@ -120,8 +119,43 @@ type BootstrapMethod struct {
 	Args      []uint16 // arguments: indexes to loadable arguments from the CP
 }
 
-// ==== Constant Pool structs ====//
+// ==== Constant Pool structs (in order by their numeric code) ====//
 type CpEntry struct {
 	Type uint16
 	Slot uint16
+}
+
+type FieldRefEntry struct { // type: 09 (field reference)
+	ClassIndex  uint16
+	NameAndType uint16
+}
+
+type MethodRefEntry struct { // type: 10 (method reference)
+	ClassIndex  uint16
+	NameAndType uint16
+}
+
+type InterfaceRefEntry struct { // type: 11 (interface reference)
+	ClassIndex  uint16
+	NameAndType uint16
+}
+
+type NameAndTypeEntry struct { // type 12 (name and type reference)
+	NameIndex uint16
+	DescIndex uint16
+}
+
+type MethodHandleEntry struct { // type: 15 (method handle)
+	RefKind  uint16
+	RefIndex uint16
+}
+
+type Dynamic struct { // type 17 (dynamic--similar to invokedynamic)
+	BootstrapIndex uint16
+	NameAndType    uint16
+}
+
+type InvokeDynamic struct { // type 18 (invokedynamic data)
+	BootstrapIndex uint16
+	NameAndType    uint16
 }
