@@ -190,20 +190,27 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 		return fmt.Errorf("parsing error")
 	}
 
-	// post the parsed class to the method area (that is, exec.Classes)
-	classToPost := convertToPostableClass(&fullyParsedClass)
-	classToPost.Loader = cl.Name
-	exec.Classes[cl.Name] = classToPost
-
-	// CURR: move all this transfer into a separate function (possibly a separate source file)
-	// CURR: write a test of the transfer, possibly using a fully loaded binary class.
-	// ---- move into Classes in the MethodArea ----
+	// add entry to the method area, indicating initialization of the load of this class
+	exec.Classes[fullyParsedClass.className] = exec.Klass{
+		Status: 'I',
+		Loader: cl.Name,
+		Data:   nil,
+	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("format-checking error")
 	}
+
+	classToPost := convertToPostableClass(&fullyParsedClass)
+	exec.Classes[fullyParsedClass.className] = exec.Klass{
+		Status: 'F',
+		Loader: cl.Name,
+		Data:   &classToPost,
+	}
+
+	// TODO: Put a mutex around previous step
 	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	return nil
@@ -212,11 +219,8 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 // load the parse class into a form suitable for posting to the method area (which is
 // exec.Classes. This mostly involves copying the data, converting most indexes to uint16
 // and removing some fields we needed in parsing, but which are no longer required.
-func convertToPostableClass(fullyParsedClass *ParsedClass) exec.Klass {
+func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
-	k := exec.Klass{}
-	k.Status = 'P'
-	k.Loader = ""
 	kd := exec.ClData{}
 	kd.Name = fullyParsedClass.className
 	kd.Superclass = fullyParsedClass.superClass
@@ -460,8 +464,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.Klass {
 			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
 		}
 	}
-	k.Data = kd
-	return k
+	return kd
 }
 
 // Init simply initializes the three classloaders and points them to each other

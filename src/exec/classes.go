@@ -9,9 +9,9 @@ package exec
 var Classes = make(map[string]Klass)
 
 type Klass struct {
-	Status byte // P=Parsed,F=formatChecked,V=verified,L=linked
+	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked
 	Loader string
-	Data   ClData
+	Data   *ClData
 }
 
 type ClData struct {
