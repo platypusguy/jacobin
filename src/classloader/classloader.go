@@ -192,7 +192,7 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 
 	// add entry to the method area, indicating initialization of the load of this class
 	exec.Classes[fullyParsedClass.className] = exec.Klass{
-		Status: 'I',
+		Status: 'I', // I = initializing the load
 		Loader: cl.Name,
 		Data:   nil,
 	}
@@ -205,12 +205,14 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 
 	classToPost := convertToPostableClass(&fullyParsedClass)
 	exec.Classes[fullyParsedClass.className] = exec.Klass{
-		Status: 'F',
+		Status: 'F', // F = format-checked
 		Loader: cl.Name,
 		Data:   &classToPost,
 	}
 
-	// TODO: Put a mutex around previous step
+	// TODO: Put a mutex around both writes to exec.Classes
+	// See RWmutex in: https://stackoverflow.com/questions/53303965/how-to-lock-a-specific-maps-index-for-concurent-read-write-in-golang
+
 	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	return nil
