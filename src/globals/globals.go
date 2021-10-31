@@ -31,16 +31,7 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
-
-	// Classes  		  map[string]Klass
 }
-
-//
-// type Klass struct {
-// 	Status 		byte  // 'I' initializing, 'L' loaded, 'V' verified, ' ' not processed
-// 	Loader		string // the classloader that loaded it
-// 	Data		Cl
-// }
 
 var global Globals
 
@@ -72,8 +63,4 @@ type Option struct {
 	Set       bool
 	ArgStyle  int16
 	Action    func(position int, name string, gl *Globals) (int, error)
-}
-
-// Cl holds all the relevant fields from the parsed class
-type Cl struct {
 }

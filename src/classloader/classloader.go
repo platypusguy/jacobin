@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
@@ -146,6 +147,8 @@ type bootstrapMethod struct {
 	args      []int // arguments: indexes to loadable arguments from the CP
 }
 
+// var lock = sync.RWMutex{}
+
 // cfe = class format error, which is the error thrown by the parser for most
 // of the errors arising from malformed bytecode. Prints out file and line# where
 // the call to cfe() occurred.
@@ -191,30 +194,41 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	}
 
 	// add entry to the method area, indicating initialization of the load of this class
-	exec.Classes[fullyParsedClass.className] = exec.Klass{
+	eKI := exec.Klass{
 		Status: 'I', // I = initializing the load
 		Loader: cl.Name,
 		Data:   nil,
 	}
+	insert(fullyParsedClass.className, eKI)
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
 		return fmt.Errorf("format-checking error")
 	}
+	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	classToPost := convertToPostableClass(&fullyParsedClass)
-	exec.Classes[fullyParsedClass.className] = exec.Klass{
+	eKF := exec.Klass{
 		Status: 'F', // F = format-checked
 		Loader: cl.Name,
 		Data:   &classToPost,
 	}
+	insert(fullyParsedClass.className, eKF)
 
-	// TODO: Put a mutex around both writes to exec.Classes
-	// See RWmutex in: https://stackoverflow.com/questions/53303965/how-to-lock-a-specific-maps-index-for-concurent-read-write-in-golang
+	return nil
+}
 
-	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+// insert the fully parsed class into the method area (exec.Classes)
+func insert(name string, klass exec.Klass) error {
+	lock := sync.RWMutex{}
+	lock.Lock()
+	exec.Classes[name] = klass
+	lock.Unlock()
 
+	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
+		log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
+	}
 	return nil
 }
 
@@ -484,9 +498,4 @@ func Init() error {
 	AppCL.Parent = "system"
 	AppCL.Classes = make(map[string]ParsedClass)
 	return nil
-}
-
-// insert the fully parsed class into the classloader
-func insert(class ParsedClass) error {
-	return nil //TODO: fill out after finishing parser
 }
