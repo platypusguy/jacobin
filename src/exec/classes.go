@@ -6,7 +6,7 @@
 
 package exec
 
-var Classes = make(map[string]Klass)
+var Classes = make(map[string]Klass) // make this a sync.Map
 
 type Klass struct {
 	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked
