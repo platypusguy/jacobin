@@ -10,7 +10,6 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
-	"sync"
 )
 
 // var Global *globals.Globals
@@ -53,10 +52,7 @@ func main() {
 // before closing down in order to have an orderly exit
 func shutdown(errorCondition bool) {
 
-	var mutex = sync.Mutex{}
-	mutex.Lock()
 	log.Log("shutdown", log.INFO)
-	mutex.Unlock()
 
 	if errorCondition {
 		os.Exit(1)
