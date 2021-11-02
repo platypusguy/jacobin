@@ -677,7 +677,7 @@ func checkModuleName(name string) error {
 			}
 		}
 		if invalidName {
-			return cfe("Module/Package name " + name + " contains an illegal character")
+			return cfe("Module name " + name + " contains an illegal character")
 		}
 	}
 	return nil
