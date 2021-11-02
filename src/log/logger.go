@@ -29,6 +29,9 @@ const (
 // Level is the level the logger currently supports. See the enums above.
 var Level int
 
+// Mutex for protecting the Log function during multithreading.
+var mutex = sync.Mutex{}
+
 // StartTime is the start time of this instance of the Jacoby VM.
 var StartTime time.Time
 
@@ -63,7 +66,6 @@ func Log(msg string, level int) (err error) {
 
 	// lock the write to the logging stream to prevent overwrite issues
 	// if some other operation is also writing to the stream
-	var mutex = sync.Mutex{}
 	mutex.Lock()
 	if level > WARNING {
 		fmt.Fprintf(os.Stderr, "[%3d.%03ds] ", millis/1000, millis%1000)
