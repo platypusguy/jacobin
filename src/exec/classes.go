@@ -6,6 +6,8 @@
 
 package exec
 
+import "sync"
+
 var Classes = make(map[string]Klass) // make this a sync.Map
 
 type Klass struct {
@@ -13,6 +15,8 @@ type Klass struct {
 	Loader string
 	Data   *ClData
 }
+
+var MethAreaMutex sync.RWMutex // All additions or updates to Classes map come through this mutex
 
 type ClData struct {
 	Name       string

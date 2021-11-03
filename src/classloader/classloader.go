@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
 )
 
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
@@ -223,10 +222,9 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 
 // insert the fully parsed class into the method area (exec.Classes)
 func insert(name string, klass exec.Klass) error {
-	lock := sync.RWMutex{}
-	lock.Lock()
+	exec.MethAreaMutex.Lock()
 	exec.Classes[name] = klass
-	lock.Unlock()
+	exec.MethAreaMutex.Unlock()
 
 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
 		log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
