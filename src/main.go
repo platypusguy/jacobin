@@ -51,10 +51,12 @@ func main() {
 // the exit function. Later on, this will check a list of JVM shutdown hooks
 // before closing down in order to have an orderly exit
 func shutdown(errorCondition bool) {
+	err := errorCondition
+	if log.Log("shutdown", log.INFO) != nil {
+		err = true
+	}
 
-	log.Log("shutdown", log.INFO)
-
-	if errorCondition {
+	if err {
 		os.Exit(1)
 	} else {
 		os.Exit(0)
