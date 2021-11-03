@@ -7,6 +7,8 @@
 package classloader
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"jacobin/exec"
@@ -480,6 +482,14 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
 		}
 	}
+
+	if log.Level == log.FINEST {
+		b := new(bytes.Buffer)
+		if gob.NewEncoder(b).Encode(kd) == nil {
+			log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
+		}
+	}
+
 	return kd
 }
 
