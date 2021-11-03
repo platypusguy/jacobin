@@ -18,6 +18,7 @@ As we progress, we post short explanations of project decisions and explanations
 
 #### Project Posts
 [Why Use Go for This Project?](http://binstock.blogspot.com/2021/08/a-whole-new-project-jvm.html)
+[Project Status After 3 Months](http://binstock.blogspot.com/2021/11/jacobin-jvm-project-after-three-months.html)
 
 #### How the JVM Works
 [Command-line Processing](https://github.com/platypusguy/jacobin/wiki/Command-line-Processing)
