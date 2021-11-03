@@ -31,6 +31,10 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
+
+	// ---- paths for finding the base classes to load ----
+	JavaHome    string
+	JacobinHome string
 }
 
 var global Globals
@@ -42,6 +46,8 @@ func InitGlobals(progName string) Globals {
 		VmModel:           "server",
 		ExitNow:           false,
 		JacobinName:       progName,
+		JacobinHome:       "",
+		JavaHome:          "",
 		Options:           make(map[string]Option),
 		StartingClass:     "",
 		StartingJar:       "",

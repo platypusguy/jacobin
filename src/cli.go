@@ -21,6 +21,9 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
 
+	// get JAVA_HOME and JACOBIN_HOME from the environment
+	getJavaHomeArgs(Global)
+
 	// add command-line args to those extracted from the environment (if any)
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
@@ -122,6 +125,19 @@ func getEnvArgs() string {
 		}
 	}
 	return strings.TrimSpace(envArgs)
+}
+
+// get the two environmental variables from which we'll load base classes.
+func getJavaHomeArgs(Global *globals.Globals) {
+	Global.JavaHome = os.Getenv("JAVA_HOME")
+	if Global.JavaHome != "" {
+		log.Log("JAVA_HOME: "+Global.JavaHome, log.FINE)
+	}
+
+	Global.JacobinHome = os.Getenv("JACOBIN_HOME")
+	if Global.JacobinHome != "" {
+		log.Log("JACOBIN_HOME: "+Global.JacobinHome, log.FINE)
+	}
 }
 
 // show the usage info to the user (in response to errors or java -help and
