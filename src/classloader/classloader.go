@@ -7,16 +7,19 @@
 package classloader
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/gob"
 	"errors"
 	"fmt"
 	"jacobin/exec"
+	"jacobin/globals"
 	"jacobin/log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
@@ -170,6 +173,37 @@ func cfe(msg string) error {
 	}
 	log.Log(errMsg, log.SEVERE)
 	return errors.New(errMsg)
+}
+
+func LoadBaseClasses(global *globals.Globals) {
+	jh := global.JacobinHome
+	if jh != "" {
+		// if the JacobinHome doesn't end in a backward slash, add one.
+		if !(strings.HasSuffix(jh, "\\") ||
+			strings.HasSuffix(jh, "/")) {
+			jh = jh + "\\"
+		}
+		// replace forward slashes in JacobinHome with backward slashes
+		jh = strings.ReplaceAll(jh, "/", "\\")
+
+		classList := jh + "classes\\baseclasslist.txt"
+		file, err := os.Open(classList)
+		if err != nil {
+			log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
+				log.WARNING)
+			file.Close()
+		} else {
+			defer file.Close()
+
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				name := scanner.Text()
+				name = strings.ReplaceAll(name, "/", "\\")
+				name = jh + "classes\\" + name + ".class"
+				println("base file to load: " + name)
+			}
+		}
+	}
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
