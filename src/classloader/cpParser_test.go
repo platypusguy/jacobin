@@ -833,17 +833,17 @@ func TestPrintOfCPpart2(t *testing.T) {
 		// The following entries and the assertions they correspond to below are
 		// commented out due to the problem described in JACOBIN-86.
 
-		// 0x11,       // Dynamic (17)
-		// 0x12, 0x08, // 		Bootstrap index
-		// 0x12, 0x01, // 		name and type entry
+		0x11,       // Dynamic (17)
+		0x12, 0x08, // 		Bootstrap index
+		0x12, 0x01, // 		name and type entry
 		//
 		// The following UTF8 record was added during the attempt to diagnose the
 		// problem with JACOBIN-86. It is not otherwise needed and can be deleted.
-		// 0x01,       // UTF-8 String (1)
-		// 0x00, 0x05, //		length of UTF8 string
-		// 'H', 'e', //  	contents of UTF8 string
-		// 'l', 'l', // added to see whether it solves the missing 'dynamic' entry on GitHub
-		// 'o',
+		0x01,       // UTF-8 String (1)
+		0x00, 0x05, //		length of UTF8 string
+		'H', 'e', //  	contents of UTF8 string
+		'l', 'l', // added to see whether it solves the missing 'dynamic' entry on GitHub
+		'o',
 	}
 
 	pc := ParsedClass{}
