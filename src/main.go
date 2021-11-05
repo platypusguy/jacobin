@@ -41,7 +41,7 @@ func main() {
 		shutdown(true)
 	} else {
 		log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
-		classloader.Init()
+		classloader.Init(&Global)
 		classloader.LoadBaseClasses(&Global)
 		classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	}

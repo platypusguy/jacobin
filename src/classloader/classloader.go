@@ -200,8 +200,9 @@ func LoadBaseClasses(global *globals.Globals) {
 				name := scanner.Text()
 				name = strings.ReplaceAll(name, "/", "\\")
 				name = jh + "classes\\" + name + ".class"
-				println("base file to load: " + name)
+				LoadClassFromFile(BootstrapCL, name)
 			}
+			err = nil // used only to be able to add a breakpoint in debugger.
 		}
 	}
 }
@@ -527,7 +528,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 // Init simply initializes the three classloaders and points them to each other
 // in the proper order. This function might be substantially revised later.
-func Init() error {
+func Init(gl *globals.Globals) error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""
 	BootstrapCL.Classes = make(map[string]ParsedClass)
@@ -539,5 +540,7 @@ func Init() error {
 	AppCL.Name = "app"
 	AppCL.Parent = "system"
 	AppCL.Classes = make(map[string]ParsedClass)
+
+	gl.MethArea = &exec.Classes
 	return nil
 }

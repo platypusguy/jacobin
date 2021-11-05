@@ -6,6 +6,8 @@
 
 package globals
 
+import "jacobin/exec"
+
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, pointers to classloaders, etc.
 type Globals struct {
@@ -35,6 +37,9 @@ type Globals struct {
 	// ---- paths for finding the base classes to load ----
 	JavaHome    string
 	JacobinHome string
+
+	// .... method area ....
+	MethArea *map[string]exec.Klass
 }
 
 var global Globals
