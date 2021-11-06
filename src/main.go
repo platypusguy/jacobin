@@ -43,10 +43,9 @@ func main() {
 		log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
 		classloader.Init(&Global)
 		classloader.LoadBaseClasses(&Global)
-		classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
-		// classloader.LoadReferencedClasses(classloader.BootstrapCL, )// CURR:
+		clName, _ := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+		classloader.LoadReferencedClasses(classloader.BootstrapCL, clName)
 	}
-
 	shutdown(false)
 }
 

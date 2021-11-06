@@ -7,6 +7,7 @@
 package exec
 
 import (
+	"strings"
 	"sync"
 )
 
@@ -179,4 +180,18 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	}
 
 	return cp.Utf8Refs[u.Slot]
+}
+
+// accepts a class name with the JVM's internal format and converts
+// it to a filename (with backslashes). Returns "" on error.
+func ConvertInternalClassNameToFilename(clName string) string {
+	name := strings.ReplaceAll(clName, "/", "\\")
+	name = strings.ReplaceAll(clName, "\\", ".") + ".class"
+	return name
+}
+
+func ConvertClassFilenameToInternalFormat(fName string) string {
+	name := strings.TrimSuffix(fName, ".class")
+	strings.ReplaceAll(name, ".", "\\")
+	return name
 }

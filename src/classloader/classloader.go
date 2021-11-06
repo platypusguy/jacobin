@@ -198,10 +198,10 @@ func LoadBaseClasses(global *globals.Globals) {
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				rawName := scanner.Text()
-				name := strings.ReplaceAll(rawName, "/", "\\")
-				name = jh + "classes\\" + name + ".class"
+				name := exec.ConvertInternalClassNameToFilename(rawName)
+				name = jh + "classes\\" + name
 				LoadClassFromFile(BootstrapCL, name)
-				LoadReferencedClasses(BootstrapCL, rawName)
+				// LoadReferencedClasses(BootstrapCL, rawName)
 			}
 			err = nil // used only to be able to add a breakpoint in debugger.
 		}
@@ -221,16 +221,16 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
 // the class is already loaded, and if not, then parses the class and loads it.
-//
+// Returns the class's internal name and error, if any.
 // 1 TODO: canonicalize class name
 // 2 TODO: search through classloaders for this class
 // 3 TODO: determine which classloader should load the class, then
 // 4 TODO: have *it* parse and load the class.
-func LoadClassFromFile(cl Classloader, filename string) error {
+func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		log.Log("Could not read file: "+filename+". Exiting.", log.SEVERE)
-		return fmt.Errorf("file I/O error")
+		return "", fmt.Errorf("file I/O error")
 	}
 
 	log.Log(filename+" read", log.FINE)
@@ -238,7 +238,7 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
-		return fmt.Errorf("parsing error")
+		return "", fmt.Errorf("parsing error")
 	}
 
 	// add entry to the method area, indicating initialization of the load of this class
@@ -252,7 +252,7 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
-		return fmt.Errorf("format-checking error")
+		return "", fmt.Errorf("format-checking error")
 	}
 	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
@@ -264,7 +264,7 @@ func LoadClassFromFile(cl Classloader, filename string) error {
 	}
 	insert(fullyParsedClass.className, eKF)
 
-	return nil
+	return fullyParsedClass.className, nil
 }
 
 // insert the fully parsed class into the method area (exec.Classes)
