@@ -44,6 +44,7 @@ func main() {
 		classloader.Init(&Global)
 		classloader.LoadBaseClasses(&Global)
 		classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+		// classloader.LoadReferencedClasses(classloader.BootstrapCL, )// CURR:
 	}
 
 	shutdown(false)

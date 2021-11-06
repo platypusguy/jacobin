@@ -6,7 +6,9 @@
 
 package exec
 
-import "sync"
+import (
+	"sync"
+)
 
 var Classes = make(map[string]Klass) // make this a sync.Map
 
@@ -162,4 +164,19 @@ type Dynamic struct { // type 17 (dynamic--similar to invokedynamic)
 type InvokeDynamic struct { // type 18 (invokedynamic data)
 	BootstrapIndex uint16
 	NameAndType    uint16
+}
+
+// fetches the UTF8 string using the CP entry number for that string in the
+// designated ClData.CP. Returns "" on error.
+func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
+	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
+		return ""
+	}
+
+	u := cp.CpIndex[entry]
+	if u.Type != 1 { // cannot test for classloader.UTF8 b/c cannot create dependence
+		return ""
+	}
+
+	return cp.Utf8Refs[u.Slot]
 }

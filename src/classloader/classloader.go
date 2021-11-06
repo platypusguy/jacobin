@@ -197,13 +197,25 @@ func LoadBaseClasses(global *globals.Globals) {
 
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
-				name := scanner.Text()
-				name = strings.ReplaceAll(name, "/", "\\")
+				rawName := scanner.Text()
+				name := strings.ReplaceAll(rawName, "/", "\\")
 				name = jh + "classes\\" + name + ".class"
 				LoadClassFromFile(BootstrapCL, name)
+				LoadReferencedClasses(BootstrapCL, rawName)
 			}
 			err = nil // used only to be able to add a breakpoint in debugger.
 		}
+	}
+}
+
+// This loads the classes referenced in the loading of the class named clName.
+// It does this by reading the class entries (7) in the CP and loading each of those.
+func LoadReferencedClasses(classloader Classloader, clName string) {
+	cpClassCP := &exec.Classes[clName].Data.CP
+	classRefs := cpClassCP.ClassRefs
+	for _, v := range classRefs {
+		refClassName := exec.FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
+		println("referenced class: " + refClassName)
 	}
 }
 
