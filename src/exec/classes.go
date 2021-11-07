@@ -167,6 +167,28 @@ type InvokeDynamic struct { // type 18 (invokedynamic data)
 	NameAndType    uint16
 }
 
+// the various types of entries in the constant pool
+const (
+	Dummy              = 0 // used for initialization and for dummy entries (viz. for longs, doubles)
+	UTF8               = 1
+	IntConst           = 3
+	FloatConst         = 4
+	LongConst          = 5
+	DoubleConst        = 6
+	ClassRef           = 7
+	StringConst        = 8
+	FieldRef           = 9
+	MethodRef          = 10
+	Interface          = 11
+	NameAndType        = 12
+	MethodHandle       = 15
+	MethodType         = 16
+	DynamicEntry       = 17
+	InvokeDynamicEntry = 18
+	Module             = 19
+	Package            = 20
+)
+
 // fetches the UTF8 string using the CP entry number for that string in the
 // designated ClData.CP. Returns "" on error.
 func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
@@ -175,7 +197,7 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	}
 
 	u := cp.CpIndex[entry]
-	if u.Type != 1 { // cannot test for classloader.UTF8 b/c cannot create dependence
+	if u.Type != UTF8 {
 		return ""
 	}
 
@@ -186,12 +208,12 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 // it to a filename (with backslashes). Returns "" on error.
 func ConvertInternalClassNameToFilename(clName string) string {
 	name := strings.ReplaceAll(clName, "/", "\\")
-	name = strings.ReplaceAll(clName, "\\", ".") + ".class"
+	name = strings.ReplaceAll(name, "\\", ".") + ".class"
 	return name
 }
 
 func ConvertClassFilenameToInternalFormat(fName string) string {
 	name := strings.TrimSuffix(fName, ".class")
-	strings.ReplaceAll(name, ".", "\\")
+	name = strings.ReplaceAll(name, ".", "/")
 	return name
 }
