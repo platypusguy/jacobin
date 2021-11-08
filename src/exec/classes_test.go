@@ -43,12 +43,12 @@ func TestConvertInternalClassNameToFilename(t *testing.T) {
 	}
 
 	s := ConvertInternalClassNameToFilename("sponge/bob")
-	if s != "sponge.bob.class" {
+	if s != "sponge\\bob.class" {
 		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
 	}
 
 	s = ConvertInternalClassNameToFilename("sponge/bob\\square.pants")
-	if s != "sponge.bob.square.pants.class" {
+	if s != "sponge\\bob\\square\\pants.class" {
 		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
 	}
 }
