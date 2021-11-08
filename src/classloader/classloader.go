@@ -41,6 +41,8 @@ var BootstrapCL Classloader
 // ExtensionCL is the classloader typically used for loading custom agents
 var ExtensionCL Classloader
 
+var LoaderChannel chan string
+
 // the parsed class
 type ParsedClass struct {
 	javaVersion    int
@@ -175,6 +177,9 @@ func cfe(msg string) error {
 	return errors.New(errMsg)
 }
 
+// LoadBaseClasses loads a basic set of classes that are specified in the file
+// classes\baseclasslist.txt, which is found in JACOBIN_HOME. It's similar to
+// classlist file in the JDK, except shorter (for the nonce)
 func LoadBaseClasses(global *globals.Globals) {
 	jh := global.JacobinHome
 	if jh != "" {
@@ -215,8 +220,18 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 	classRefs := cpClassCP.ClassRefs
 	for _, v := range classRefs {
 		refClassName := exec.FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
+		if strings.HasPrefix(refClassName, "[L") {
+			refClassName = strings.TrimPrefix(refClassName, "[L")
+			if strings.HasSuffix(refClassName, ";") {
+				refClassName = strings.TrimSuffix(refClassName, ";")
+			}
+		} else if strings.HasPrefix(refClassName, "[") {
+			continue
+		}
 		println("referenced class: " + refClassName)
+		LoaderChannel <- refClassName
 	}
+
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
@@ -552,6 +567,8 @@ func Init(gl *globals.Globals) error {
 	AppCL.Name = "app"
 	AppCL.Parent = "system"
 	AppCL.Classes = make(map[string]ParsedClass)
+
+	LoaderChannel = make(chan string, 100)
 
 	gl.MethArea = &exec.Classes
 	return nil

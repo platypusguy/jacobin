@@ -167,7 +167,8 @@ type InvokeDynamic struct { // type 18 (invokedynamic data)
 	NameAndType    uint16
 }
 
-// the various types of entries in the constant pool
+// the various types of entries in the constant pool. These entries are duplicates
+// of the ones in cpParser.go. These lists should be kept in sync.
 const (
 	Dummy              = 0 // used for initialization and for dummy entries (viz. for longs, doubles)
 	UTF8               = 1
@@ -208,7 +209,8 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 // it to a filename (with backslashes). Returns "" on error.
 func ConvertInternalClassNameToFilename(clName string) string {
 	name := strings.ReplaceAll(clName, "/", "\\")
-	name = strings.ReplaceAll(name, "\\", ".") + ".class"
+	name = strings.ReplaceAll(name, ".", "\\") + ".class"
+
 	return name
 }
 
