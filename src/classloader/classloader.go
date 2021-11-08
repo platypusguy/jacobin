@@ -220,18 +220,13 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 	classRefs := cpClassCP.ClassRefs
 	for _, v := range classRefs {
 		refClassName := exec.FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
-		if strings.HasPrefix(refClassName, "[L") {
-			refClassName = strings.TrimPrefix(refClassName, "[L")
-			if strings.HasSuffix(refClassName, ";") {
-				refClassName = strings.TrimSuffix(refClassName, ";")
-			}
-		} else if strings.HasPrefix(refClassName, "[") {
+		name := normalizeClassReference(refClassName)
+		if name == "" {
 			continue
 		}
-		println("referenced class: " + refClassName)
+		println("referenced class: " + name)
 		LoaderChannel <- refClassName
 	}
-
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
@@ -549,8 +544,23 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
 		}
 	}
-
 	return kd
+}
+
+// accepts a string containing a class reference from a class file and converts
+// it into a normalized z/y/x format. It converts references that start with [L
+// and skips all array classes. For these latter cases or any errors, it returns ""
+func normalizeClassReference(ref string) string {
+	refClassName := ref
+	if strings.HasPrefix(refClassName, "[L") {
+		refClassName = strings.TrimPrefix(refClassName, "[L")
+		if strings.HasSuffix(refClassName, ";") {
+			refClassName = strings.TrimSuffix(refClassName, ";")
+		}
+	} else if strings.HasPrefix(refClassName, "[") {
+		refClassName = ""
+	}
+	return refClassName
 }
 
 // Init simply initializes the three classloaders and points them to each other
