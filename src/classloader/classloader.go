@@ -225,6 +225,11 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 // classloader, checks if the class is already loaded, and loads it if not.
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
+		_, present := exec.Classes[name]
+		if present { // if the class is already loaded, skip this.
+			continue
+		}
+
 		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
 			strings.HasPrefix(name, "sun/") {
 			name = exec.ConvertInternalClassNameToFilename(name)
