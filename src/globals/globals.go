@@ -6,7 +6,12 @@
 
 package globals
 
-import "jacobin/exec"
+import (
+	"jacobin/exec"
+	"os"
+	"strings"
+	"sync"
+)
 
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, pointers to classloaders, etc.
@@ -42,6 +47,9 @@ type Globals struct {
 	MethArea *map[string]exec.Klass
 }
 
+// Wait group for various channels used for parallel loading of classes.
+var LoaderWg sync.WaitGroup
+
 var global Globals
 
 // InitGlobals initializes the global values that are known at start-up
@@ -59,6 +67,8 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
 	}
+	initJavaHome()
+	initJacobinHome()
 	return global
 }
 
@@ -75,3 +85,35 @@ type Option struct {
 	ArgStyle  int16
 	Action    func(position int, name string, gl *Globals) (int, error)
 }
+
+// get JACOBIN_HOME and format it as expected
+func initJacobinHome() {
+	jacobinHome := os.Getenv("JACOBIN_HOME")
+	if jacobinHome != "" {
+		// if the JacobinHome doesn't end in a backward slash, add one.
+		if !(strings.HasSuffix(jacobinHome, "\\") ||
+			strings.HasSuffix(jacobinHome, "/")) {
+			jacobinHome = jacobinHome + "\\"
+		}
+		// replace forward slashes in JacobinHome with backward slashes
+		jacobinHome = strings.ReplaceAll(jacobinHome, "/", "\\")
+	}
+	global.JacobinHome = jacobinHome
+}
+func JacobinHome() string { return global.JacobinHome }
+
+// get JAVA_HOME and format it as expected
+func initJavaHome() {
+	javaHome := os.Getenv("JAVA_HOME")
+	if javaHome != "" {
+		// if the JacobinHome doesn't end in a backward slash, add one.
+		if !(strings.HasSuffix(javaHome, "\\") ||
+			strings.HasSuffix(javaHome, "/")) {
+			javaHome = javaHome + "\\"
+		}
+		// replace forward slashes in JacobinHome with backward slashes
+		javaHome = strings.ReplaceAll(javaHome, "/", "\\")
+	}
+	global.JavaHome = javaHome
+}
+func JavaHome() string { return global.JavaHome }

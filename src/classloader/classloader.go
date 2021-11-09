@@ -41,8 +41,6 @@ var BootstrapCL Classloader
 // ExtensionCL is the classloader typically used for loading custom agents
 var ExtensionCL Classloader
 
-var LoaderChannel chan string
-
 // the parsed class
 type ParsedClass struct {
 	javaVersion    int
@@ -181,52 +179,61 @@ func cfe(msg string) error {
 // classes\baseclasslist.txt, which is found in JACOBIN_HOME. It's similar to
 // classlist file in the JDK, except shorter (for the nonce)
 func LoadBaseClasses(global *globals.Globals) {
-	jh := global.JacobinHome
-	if jh != "" {
-		// if the JacobinHome doesn't end in a backward slash, add one.
-		if !(strings.HasSuffix(jh, "\\") ||
-			strings.HasSuffix(jh, "/")) {
-			jh = jh + "\\"
-		}
-		// replace forward slashes in JacobinHome with backward slashes
-		jh = strings.ReplaceAll(jh, "/", "\\")
+	classList := global.JacobinHome + "classes\\baseclasslist.txt"
+	file, err := os.Open(classList)
+	if err != nil {
+		log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
+			log.WARNING)
+		file.Close()
+	} else {
+		defer file.Close()
 
-		classList := jh + "classes\\baseclasslist.txt"
-		file, err := os.Open(classList)
-		if err != nil {
-			log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
-				log.WARNING)
-			file.Close()
-		} else {
-			defer file.Close()
-
-			scanner := bufio.NewScanner(file)
-			for scanner.Scan() {
-				rawName := scanner.Text()
-				name := exec.ConvertInternalClassNameToFilename(rawName)
-				name = jh + "classes\\" + name
-				LoadClassFromFile(BootstrapCL, name)
-				// LoadReferencedClasses(BootstrapCL, rawName)
-			}
-			err = nil // used only to be able to add a breakpoint in debugger.
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			rawName := scanner.Text()
+			name := exec.ConvertInternalClassNameToFilename(rawName)
+			name = globals.JacobinHome() + "classes\\" + name
+			LoadClassFromFile(BootstrapCL, name)
+			// LoadReferencedClasses(BootstrapCL, rawName)
 		}
+		err = nil // used only to be able to add a breakpoint in debugger.
 	}
 }
 
 // This loads the classes referenced in the loading of the class named clName.
-// It does this by reading the class entries (7) in the CP and loading each of those.
+// It does this by reading the class entries (7) in the CP and sending the class names
+// it finds there to a go channel that will load the class.
 func LoadReferencedClasses(classloader Classloader, clName string) {
 	cpClassCP := &exec.Classes[clName].Data.CP
 	classRefs := cpClassCP.ClassRefs
+
+	loaderChannel := make(chan string, len(classRefs))
 	for _, v := range classRefs {
 		refClassName := exec.FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
 		name := normalizeClassReference(refClassName)
 		if name == "" {
 			continue
 		}
-		println("referenced class: " + name)
-		LoaderChannel <- refClassName
+		loaderChannel <- name
 	}
+	globals.LoaderWg.Add(1)
+	go LoadFromLoaderChannel(loaderChannel)
+	close(loaderChannel)
+}
+
+// receives a name of a class to load in /java/lang/String format, determines the
+// classloader, checks if the class is already loaded, and loads it if not.
+func LoadFromLoaderChannel(LoaderChannel <-chan string) {
+	for name := range LoaderChannel {
+		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
+			strings.HasPrefix(name, "sun/") {
+			name = exec.ConvertInternalClassNameToFilename(name)
+			name = globals.JacobinHome() + "classes\\" + name
+			LoadClassFromFile(BootstrapCL, name)
+		}
+		println("loading from channel: " + name)
+	}
+	globals.LoaderWg.Done()
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
@@ -577,8 +584,6 @@ func Init(gl *globals.Globals) error {
 	AppCL.Name = "app"
 	AppCL.Parent = "system"
 	AppCL.Classes = make(map[string]ParsedClass)
-
-	LoaderChannel = make(chan string, 100)
 
 	gl.MethArea = &exec.Classes
 	return nil
