@@ -39,13 +39,15 @@ func main() {
 		log.Log("Error: No executable program specified. Exiting.", log.INFO)
 		showUsage(os.Stdout)
 		shutdown(true)
-	} else {
-		log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
-		classloader.Init(&Global)
-		classloader.LoadBaseClasses(&Global)
-		clName, _ := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
-		classloader.LoadReferencedClasses(classloader.BootstrapCL, clName)
 	}
+	log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
+	classloader.Init(&Global)
+	classloader.LoadBaseClasses(&Global)
+	mainClass, _ := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+	classloader.LoadReferencedClasses(classloader.BootstrapCL, mainClass)
+
+	// setupExecEnvironment()
+	// beginExecution(mainClass)
 	shutdown(false)
 }
 

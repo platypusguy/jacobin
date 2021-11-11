@@ -254,10 +254,6 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 // LoadClassFromFile first canonicalizes the filename, checks whether
 // the class is already loaded, and if not, then parses the class and loads it.
 // Returns the class's internal name and error, if any.
-// 1 TODO: canonicalize class name
-// 2 TODO: search through classloaders for this class
-// 3 TODO: determine which classloader should load the class, then
-// 4 TODO: have *it* parse and load the class.
 func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
