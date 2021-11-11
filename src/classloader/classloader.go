@@ -226,15 +226,25 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
 		_, present := exec.Classes[name]
-		if present { // if the class is already loaded, skip this.
+		if present { // if the class is already loaded, skip rest of this loop
 			continue
 		}
 
+		// add entry to the method area, indicating initialization of the load of this class
+		eKI := exec.Klass{
+			Status: 'I', // I = initializing the load
+			Loader: name,
+			Data:   nil,
+		}
+		insert(name, eKI)
+
 		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
-			strings.HasPrefix(name, "sun/") {
+			strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
 			name = exec.ConvertInternalClassNameToFilename(name)
 			name = globals.JacobinHome() + "classes\\" + name
 			LoadClassFromFile(BootstrapCL, name)
+		} else {
+			LoadClassFromFile(AppCL, name)
 		}
 		println("loading from channel: " + name)
 	}
@@ -262,14 +272,6 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
 		return "", fmt.Errorf("parsing error")
 	}
-
-	// add entry to the method area, indicating initialization of the load of this class
-	eKI := exec.Klass{
-		Status: 'I', // I = initializing the load
-		Loader: cl.Name,
-		Data:   nil,
-	}
-	insert(fullyParsedClass.className, eKI)
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
