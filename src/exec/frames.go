@@ -5,15 +5,20 @@
 
 package exec
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // The data structures and functions related to JVM frames
 
 type frame struct {
+	thread  int
+	clName  string
 	meth    []byte
 	cp      *CPool
-	locals  []int
-	opStack []int
+	locals  []int32
+	opStack []int32
+	tos     int // top of the operand stack
 }
 
 // a stack of frames. Top points to the present top of the stack.
