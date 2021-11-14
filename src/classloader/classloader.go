@@ -588,6 +588,5 @@ func Init(gl *globals.Globals) error {
 	AppCL.Parent = "system"
 	AppCL.Classes = make(map[string]ParsedClass)
 
-	gl.MethArea = &exec.Classes
 	return nil
 }

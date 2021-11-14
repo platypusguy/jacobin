@@ -7,6 +7,7 @@ package main
 
 import (
 	"jacobin/classloader"
+	"jacobin/exec"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -46,8 +47,10 @@ func main() {
 	mainClass, _ := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	classloader.LoadReferencedClasses(classloader.BootstrapCL, mainClass)
 
-	// setupExecEnvironment()
-	// beginExecution(mainClass)
+	if exec.StartExec(mainClass) != nil {
+		shutdown(true)
+	}
+
 	shutdown(false)
 }
 

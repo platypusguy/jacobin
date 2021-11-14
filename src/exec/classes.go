@@ -7,6 +7,8 @@
 package exec
 
 import (
+	"errors"
+	"jacobin/log"
 	"strings"
 	"sync"
 )
@@ -189,6 +191,21 @@ const (
 	Module             = 19
 	Package            = 20
 )
+
+func fetchMethod(class, meth string) (Method, error) {
+	k := Classes[class]
+	if k.Loader == "" { // if class is not found, the zero value struct is returned
+		log.Log("Could not find class: "+class, log.SEVERE)
+		return Method{}, errors.New("class not found")
+	}
+	for i := 0; i < len(k.Data.Methods); i++ {
+		if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth {
+			return k.Data.Methods[i], nil
+		}
+	}
+	log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+	return Method{}, errors.New("method not found")
+}
 
 // fetches the UTF8 string using the CP entry number for that string in the
 // designated ClData.CP. Returns "" on error.

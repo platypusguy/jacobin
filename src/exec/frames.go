@@ -10,6 +10,10 @@ import "fmt"
 // The data structures and functions related to JVM frames
 
 type frame struct {
+	meth    []byte
+	cp      *CPool
+	locals  []int
+	opStack []int
 }
 
 // a stack of frames. Top points to the present top of the stack.

@@ -7,7 +7,6 @@
 package globals
 
 import (
-	"jacobin/exec"
 	"os"
 	"strings"
 	"sync"
@@ -15,6 +14,8 @@ import (
 
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, pointers to classloaders, etc.
+// Note: globals cannot depend on exec package to avoid circularity.
+// As a result, exec contains its own globals
 type Globals struct {
 	// ---- jacobin version number ----
 	// note: all references to version number must come from this literal
@@ -42,9 +43,6 @@ type Globals struct {
 	// ---- paths for finding the base classes to load ----
 	JavaHome    string
 	JacobinHome string
-
-	// .... method area ....
-	MethArea *map[string]exec.Klass
 }
 
 // Wait group for various channels used for parallel loading of classes.
