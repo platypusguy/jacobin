@@ -100,6 +100,11 @@ func runFrame(f frame) error {
 			} else {
 				pc += 2
 			}
+		case 0xB2: // getstatic
+			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2])
+			pc += 2
+			CPentry := f.cp.CpIndex[CPslot]
+			fmt.Fprintf(os.Stderr, "Getstatic, CP entry: type %d, slot %d\n", CPentry.Type, CPentry.Slot)
 		default:
 			fmt.Fprintf(os.Stderr, "Invalid bytecode found: %d at location: %d in method %s\n",
 				f.meth[pc], pc, f.clName)
