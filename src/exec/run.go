@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/log"
+	"strconv"
 )
 
 // StartExec accepts the name of the starting class, finds its main() method
@@ -40,9 +41,12 @@ func StartExec(className string) error {
 		f.locals = append(f.locals, 0)
 	}
 
+	// create the first thread and place its first frame on it
 	t := CreateThread(0)
 	f.thread = t.id
-	pushFrame(&t.stack, f)
+	if pushFrame(&t.stack, f) != nil {
+		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(t.id), log.SEVERE)
+	}
 
 	err = runThread(t)
 	if err != nil {
@@ -157,7 +161,7 @@ func runFrame(f frame) error {
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)
-			log.Log(msg, log.SEVERE)
+			_ = log.Log(msg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}
 	}
