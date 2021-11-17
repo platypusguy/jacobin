@@ -16,9 +16,11 @@ import (
 // Classes contains all the loaded classes
 var Classes = make(map[string]Klass) // TODO: make these maps sync.Map
 
-// Statics is a fast-lookup map of static variables and functions. They are only placed
-// into this map when they are first referenced and resolved.
-var Statics = make(map[string]Static)
+// Statics is a fast-lookup map of static variables and functions. The int value
+// contains the index into the statics array where the entry is stored.
+// Statics are placed into this map only when they are first referenced and resolved.
+var Statics = make(map[string]int32)
+var StaticsArray []Static
 
 type Klass struct {
 	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked

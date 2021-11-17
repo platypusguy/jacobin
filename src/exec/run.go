@@ -8,7 +8,7 @@ package exec
 import (
 	"errors"
 	"fmt"
-	"os"
+	"jacobin/log"
 )
 
 // StartExec accepts the name of the starting class, finds its main() method
@@ -102,26 +102,28 @@ func runFrame(f frame) error {
 				pc += 2
 			}
 		case 0xB2: // getstatic
-
-			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2])
+			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
 			pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			if CPentry.Type != FieldRef {
+			if CPentry.Type != FieldRef { // the pointed-to CP entry must be a field reference
 				return fmt.Errorf("Expected a field ref on getstatic, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, pc, f.methName, f.clName)
 			}
-			fmt.Fprintf(os.Stderr, "getstatic, CP entry: type %d, slot %d\n",
-				CPentry.Type, CPentry.Slot)
-			field := f.cp.FieldRefs[CPentry.Slot]
-			// get the indexes into the CP for this field
-			classRef := field.ClassIndex
+			// fmt.Fprintf(os.Stderr, "getstatic, CP entry: type %d, slot %d\n",
+			// 	CPentry.Type, CPentry.Slot)
 
+			// get the field entry
+			field := f.cp.FieldRefs[CPentry.Slot]
+
+			// get the class entry from the field entry for this field. It's the class name.
+			classRef := field.ClassIndex
 			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
 			classNameEntry := f.cp.CpIndex[classNameIndex]
 			className := f.cp.Utf8Refs[classNameEntry.Slot]
 			println("Field name: " + className)
 
+			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
 			nAndTentry := f.cp.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
@@ -130,12 +132,32 @@ func runFrame(f frame) error {
 			fieldName := FetchUTF8stringFromCPEntryNumber(f.cp, fieldNameIndex)
 			fieldName = className + "." + fieldName
 
-			//CURR: get the type of the field from the nAndT entry
-			println("full field name: " + fieldName)
+			// was this static field previously loaded? Is so, get its location and move on.
+			prevLoaded, ok := Statics[fieldName]
+			if ok { // if preloaded, then push the index into the array of constant fields
+				push(&f, prevLoaded)
+				continue
+			}
+
+			fieldTypeIndex := nAndT.DescIndex
+			fieldType := FetchUTF8stringFromCPEntryNumber(f.cp, fieldTypeIndex)
+			println("full field name: " + fieldName + ", type: " + fieldType)
+			newStatic := Static{
+				Class:     'L',
+				Type:      fieldType,
+				ValueRef:  "",
+				ValueInt:  0,
+				ValueFP:   0,
+				ValueStr:  "",
+				ValueFunc: nil,
+			}
+			StaticsArray = append(StaticsArray, newStatic)
+			Statics[fieldName] = int32(len(StaticsArray) - 1)
 
 		default:
-			fmt.Fprintf(os.Stderr, "Invalid bytecode found: %d at location %d in method %s of class %s\n",
+			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)
+			log.Log(msg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}
 	}
