@@ -22,6 +22,7 @@ func StartExec(className string) error {
 	}
 
 	f := frame{} // create a new frame
+	f.methName = "main"
 	f.clName = className
 	f.cp = cpp                                  // add its pointer to the class CP
 	for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
@@ -106,8 +107,8 @@ func runFrame(f frame) error {
 			CPentry := f.cp.CpIndex[CPslot]
 			fmt.Fprintf(os.Stderr, "Getstatic, CP entry: type %d, slot %d\n", CPentry.Type, CPentry.Slot)
 		default:
-			fmt.Fprintf(os.Stderr, "Invalid bytecode found: %d at location: %d in method %s\n",
-				f.meth[pc], pc, f.clName)
+			fmt.Fprintf(os.Stderr, "Invalid bytecode found: %d at location %d in method %s of class %s\n",
+				f.meth[pc], pc, f.methName, f.clName)
 			return errors.New("invalid bytecode encountered")
 		}
 	}

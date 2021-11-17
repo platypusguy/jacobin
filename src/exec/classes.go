@@ -13,12 +13,28 @@ import (
 	"sync"
 )
 
-var Classes = make(map[string]Klass) // make this a sync.Map
+// Classes contains all the loaded classes
+var Classes = make(map[string]Klass) // TODO: make these maps sync.Map
+
+// Statics is a fast-lookup map of static variables and functions. They are only placed
+// into this map when they are first referenced and resolved.
+var Statics = make(map[string]Static)
 
 type Klass struct {
 	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked
 	Loader string
 	Data   *ClData
+}
+
+// Static contains all the various items needed for a static variable or function.
+type Static struct {
+	Class     byte    // byte types used by the JVM, plus N for native function
+	Type      string  // Type data used for reference variables (i.e., objects, etc.)
+	ValueRef  string  // pointer--might need to change this
+	ValueInt  int64   // holds longs, ints, chars, booleans, byte
+	ValueFP   float64 // holds doubles and floats
+	ValueStr  string
+	ValueFunc func() // function pointer
 }
 
 var MethAreaMutex sync.RWMutex // All additions or updates to Classes map come through this mutex
