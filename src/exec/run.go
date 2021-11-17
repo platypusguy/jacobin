@@ -102,10 +102,37 @@ func runFrame(f frame) error {
 				pc += 2
 			}
 		case 0xB2: // getstatic
+
 			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2])
 			pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			fmt.Fprintf(os.Stderr, "Getstatic, CP entry: type %d, slot %d\n", CPentry.Type, CPentry.Slot)
+			if CPentry.Type != FieldRef {
+				return fmt.Errorf("Expected a field ref on getstatic, but got %d in"+
+					"location %d in method %s of class %s\n",
+					CPentry.Type, pc, f.methName, f.clName)
+			}
+			fmt.Fprintf(os.Stderr, "getstatic, CP entry: type %d, slot %d\n",
+				CPentry.Type, CPentry.Slot)
+			field := f.cp.FieldRefs[CPentry.Slot]
+			// get the indexes into the CP for this field
+			classRef := field.ClassIndex
+
+			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
+			classNameEntry := f.cp.CpIndex[classNameIndex]
+			className := f.cp.Utf8Refs[classNameEntry.Slot]
+			println("Field name: " + className)
+
+			nAndTindex := field.NameAndType
+			nAndTentry := f.cp.CpIndex[nAndTindex]
+			nAndTslot := nAndTentry.Slot
+			nAndT := f.cp.NameAndTypes[nAndTslot]
+			fieldNameIndex := nAndT.NameIndex
+			fieldName := FetchUTF8stringFromCPEntryNumber(f.cp, fieldNameIndex)
+			fieldName = className + "." + fieldName
+
+			//CURR: get the type of the field from the nAndT entry
+			println("full field name: " + fieldName)
+
 		default:
 			fmt.Fprintf(os.Stderr, "Invalid bytecode found: %d at location %d in method %s of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)

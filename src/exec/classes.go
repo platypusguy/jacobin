@@ -28,13 +28,26 @@ type Klass struct {
 
 // Static contains all the various items needed for a static variable or function.
 type Static struct {
-	Class     byte    // byte types used by the JVM, plus N for native function
+	Class byte // the kind of entity we're dealing with
+	/*
+		B	byte signed byte
+		C	char	Unicode character code point (UTF-16)
+		D	double
+		F	float
+		I	int	integer
+		J	long integer
+		L ClassName ;	reference	an instance of class ClassName
+		S	signed short int
+		Z	boolean
+		plus (Jacobin implementation-specific):
+		N   native method (that is, one written in go, in this
+	*/
 	Type      string  // Type data used for reference variables (i.e., objects, etc.)
 	ValueRef  string  // pointer--might need to change this
-	ValueInt  int64   // holds longs, ints, chars, booleans, byte
+	ValueInt  int64   // holds longs, ints, shorts, chars, booleans, byte
 	ValueFP   float64 // holds doubles and floats
-	ValueStr  string
-	ValueFunc func() // function pointer
+	ValueStr  string  // string
+	ValueFunc func()  // function pointer
 }
 
 var MethAreaMutex sync.RWMutex // All additions or updates to Classes map come through this mutex
