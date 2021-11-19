@@ -168,6 +168,41 @@ func runFrame(f frame) error {
 			// push the pointer to the stack of the frame
 			push(&f, int32(len(StaticsArray)-1))
 
+		case 0xB6: // invokevirtual (create new frame, invoke function)
+			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
+			pc += 2
+			CPentry := f.cp.CpIndex[CPslot]
+			if CPentry.Type != MethodRef { // the pointed-to CP entry must be a field reference
+				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
+					"location %d in method %s of class %s\n",
+					CPentry.Type, pc, f.methName, f.clName)
+			}
+
+			// get the methodRef entry
+			method := f.cp.MethodRefs[CPentry.Slot]
+
+			// get the class entry from this method
+			classRef := method.ClassIndex
+			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
+			classNameEntry := f.cp.CpIndex[classNameIndex]
+			className := f.cp.Utf8Refs[classNameEntry.Slot]
+			// println("Method class name: " + className)
+
+			// get the method name for this method
+			nAndTindex := method.NameAndType
+			nAndTentry := f.cp.CpIndex[nAndTindex]
+			nAndTslot := nAndTentry.Slot
+			nAndT := f.cp.NameAndTypes[nAndTslot]
+			methodNameIndex := nAndT.NameIndex
+			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
+			methodName = className + "." + methodName
+			println("Method name for invokevirtual: " + methodName)
+
+			// get the signature for this method
+			methodSigIndex := nAndT.DescIndex
+			methodSig := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
+			println("Method for invokevirtual-name: " + methodName + ", type: " + methodSig)
+
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)
