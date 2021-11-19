@@ -80,6 +80,9 @@ func runFrame(f frame) error {
 		case 0x10: // bipush       push the following byte as an int onto the stack
 			push(&f, int32(f.meth[pc+1]))
 			pc += 1
+		case 0x12: // ldc          (push constant from CP indexed by next byte)
+			push(&f, int32(f.meth[pc+1]))
+			pc += 1
 		case 0x1A: // iload_0      (push local variable 0)
 			push(&f, f.locals[0])
 		case 0x1B: // iload_1      (push local variable 1)
@@ -106,6 +109,11 @@ func runFrame(f frame) error {
 				pc += 2
 			}
 		case 0xB2: // getstatic
+			// TODO: getstatic will instantiate a static class if it's not already instantiated
+			// that logic has not yet been implemented and the code here is simply a reasonable
+			// placeholder, which consists of creating a struct that holds most of the needed info
+			// puts it into a slice of such static fields and pushes the index of this item in the slice
+			// onto the stack of the frame.
 			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
 			pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
@@ -157,9 +165,11 @@ func runFrame(f frame) error {
 			}
 			StaticsArray = append(StaticsArray, newStatic)
 			Statics[fieldName] = int32(len(StaticsArray) - 1)
+			// push the pointer to the stack of the frame
+			push(&f, int32(len(StaticsArray)-1))
 
 		default:
-			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s of class %s\n",
+			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)
 			_ = log.Log(msg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
