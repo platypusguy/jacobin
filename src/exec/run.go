@@ -99,7 +99,7 @@ func runFrame(f frame) error {
 			f.locals[2] = pop(&f)
 		case 0x3E: // istore_3     (store popped top of stack int into local 3)
 			f.locals[3] = pop(&f)
-		case 0xA2: // icmpge       (jump if popped val1 >= popped val2)
+		case IF_ICMPGE: // icmpge       (jump if popped val1 >= popped val2)
 			val2 := pop(&f)
 			val1 := pop(&f)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
