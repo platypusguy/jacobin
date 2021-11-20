@@ -62,44 +62,44 @@ func runThread(t execThread) error {
 
 func runFrame(f frame) error {
 	for pc := 0; pc < len(f.meth); pc++ {
-		switch f.meth[pc] {
-		case 0x02: // iconst_n1    (push -1 onto opStack)
+		switch f.meth[pc] { // cases listed in numerical value of opcode
+		case ICONST_N1: //	0x02	(push -1 onto opStack)
 			push(&f, -1)
-		case 0x03: // iconst_0     (push 0 onto opStack)
+		case ICONST_0: // 	0x03	(push 0 onto opStack)
 			push(&f, 0)
-		case 0x04: // iconst_1     (push 1 onto opStack)
+		case ICONST_1: //  	0x04	(push 1 onto opStack)
 			push(&f, 1)
-		case 0x05: // iconst_2     (push 2 onto opStack)
+		case ICONST_2: //   0x05	(push 2 onto opStack)
 			push(&f, 2)
-		case 0x06: // iconst_3     (push 3 onto opStack)
+		case ICONST_3: //   0x06	(push 3 onto opStack)
 			push(&f, 3)
-		case 0x07: // iconst_4     (push 4 onto opStack)
+		case ICONST_4: //   0x07	(push 4 onto opStack)
 			push(&f, 4)
-		case 0x08: // iconst_5     (push 5 onto opStack)
+		case ICONST_5: //   0x08	(push 5 onto opStack)
 			push(&f, 5)
-		case 0x10: // bipush       push the following byte as an int onto the stack
+		case BIPUSH: //     0x10	(push the following byte as an int onto the stack)
 			push(&f, int32(f.meth[pc+1]))
 			pc += 1
-		case 0x12: // ldc          (push constant from CP indexed by next byte)
+		case LDC: // 		0x12   	(push constant from CP indexed by next byte)
 			push(&f, int32(f.meth[pc+1]))
 			pc += 1
-		case 0x1A: // iload_0      (push local variable 0)
+		case ILOAD_0: // 	0x1A    (push local variable 0)
 			push(&f, f.locals[0])
-		case 0x1B: // iload_1      (push local variable 1)
+		case ILOAD_1: //    OX1B    (push local variable 1)
 			push(&f, f.locals[1])
-		case 0x1C: // iload_2      (push local variable 2)
+		case ILOAD_2: //    0X1C    (push local variable 2)
 			push(&f, f.locals[2])
-		case 0x1D: // iload_3      (push local variable 3)
+		case ILOAD_3: //    0x1D    (push local variable 3)
 			push(&f, f.locals[3])
-		case 0x3B: // istore_0     (store popped top of stack int into local 0)
+		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.locals[0] = pop(&f)
-		case 0x3C: // istore_1     (store popped top of stack int into local 1)
+		case ISTORE_1: //   0x3C    (store popped top of stack int into local 1)
 			f.locals[1] = pop(&f)
-		case 0x3D: // istore_2     (store popped top of stack int into local 2)
+		case ISTORE_2: //   0x3D    (store popped top of stack int into local 2)
 			f.locals[2] = pop(&f)
-		case 0x3E: // istore_3     (store popped top of stack int into local 3)
+		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			f.locals[3] = pop(&f)
-		case IF_ICMPGE: // icmpge       (jump if popped val1 >= popped val2)
+		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
 			val2 := pop(&f)
 			val1 := pop(&f)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
@@ -108,7 +108,7 @@ func runFrame(f frame) error {
 			} else {
 				pc += 2
 			}
-		case 0xB2: // getstatic
+		case GETSTATIC: // 0xB2		(get static field)
 			// TODO: getstatic will instantiate a static class if it's not already instantiated
 			// that logic has not yet been implemented and the code here is simply a reasonable
 			// placeholder, which consists of creating a struct that holds most of the needed info
@@ -168,7 +168,7 @@ func runFrame(f frame) error {
 			// push the pointer to the stack of the frame
 			push(&f, int32(len(StaticsArray)-1))
 
-		case 0xB6: // invokevirtual (create new frame, invoke function)
+		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
 			pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
