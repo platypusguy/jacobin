@@ -9,11 +9,18 @@ import (
 )
 
 func TestLoadOfMethodSignature(t *testing.T) {
+	// load the MethodSignature table
 	ms := MethodSignatures
 	load()
+
+	// get the entry for println() (Java: System.out.println())
 	m := ms["println"]
+
+	// create a slice of interfaces and added the one param (a string to print
 	ia := make([]interface{}, m.paramSlots)
 	ia[0] = "hello!"
+
+	// call the method body
 	m.fu(ia)
 }
 
