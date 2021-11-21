@@ -11,6 +11,22 @@ import (
 	"os"
 )
 
+var MethodSignatures = make(map[string]method)
+
+type method struct {
+	paramSlots int
+	fu         function
+}
+
+type function func([]interface{})
+
+func load() {
+	MethodSignatures["println"] = method{
+		paramSlots: 1,
+		fu:         Println,
+	}
+}
+
 // a temporary stand-in for java\io\PrintStream
 type stream *os.File
 
@@ -24,10 +40,6 @@ func init() {
 	Out = os.Stdout
 }
 
-func Println(s string) {
-	if Out == os.Stdout {
-		println(s)
-	} else if Out == os.Stderr {
-		fmt.Fprintln(os.Stderr, s)
-	}
+func Println(i []interface{}) {
+	fmt.Fprintln(os.Stderr, i[0])
 }
