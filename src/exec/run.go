@@ -14,7 +14,8 @@ import (
 
 var MainThread execThread
 
-// StartExec accepts the name of the starting class, finds its main() method
+// StartExec is where execution begins. It initializes various structures, such as
+// the VTable, then using the passed-in name of the starting class, finds its main() method
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
@@ -37,7 +38,7 @@ func StartExec(className string) error {
 
 	// allocate the operand stack
 	for j := 0; j < m.CodeAttr.MaxStack; j++ {
-		f.opStack = append(f.opStack, int32(0))
+		f.opStack = append(f.opStack, int64(0))
 	}
 	f.tos = -1
 
@@ -51,6 +52,7 @@ func StartExec(className string) error {
 	f.thread = MainThread.id
 	if pushFrame(&MainThread.stack, f) != nil {
 		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(MainThread.id), log.SEVERE)
+		return errors.New("outOfMemory Exception")
 	}
 
 	err = runThread(&MainThread)
@@ -60,6 +62,7 @@ func StartExec(className string) error {
 	return nil
 }
 
+// Point the thread to the top of the frame stack and tell it to run from there.
 func runThread(t *execThread) error {
 	currFrame := t.stack.frames[t.stack.top]
 	return runFrame(currFrame)
@@ -84,10 +87,10 @@ func runFrame(f frame) error {
 		case ICONST_5: //   0x08	(push 5 onto opStack)
 			push(&f, 5)
 		case BIPUSH: //     0x10	(push the following byte as an int onto the stack)
-			push(&f, int32(f.meth[pc+1]))
+			push(&f, int64(f.meth[pc+1]))
 			pc += 1
 		case LDC: // 		0x12   	(push constant from CP indexed by next byte)
-			push(&f, int32(f.meth[pc+1]))
+			push(&f, int64(f.meth[pc+1]))
 			pc += 1
 		case ILOAD_0: // 	0x1A    (push local variable 0)
 			push(&f, f.locals[0])
@@ -170,9 +173,9 @@ func runFrame(f frame) error {
 				ValueFunc: nil,
 			}
 			StaticsArray = append(StaticsArray, newStatic)
-			Statics[fieldName] = int32(len(StaticsArray) - 1)
+			Statics[fieldName] = int64(len(StaticsArray) - 1)
 			// push the pointer to the stack of the frame
-			push(&f, int32(len(StaticsArray)-1))
+			push(&f, int64(len(StaticsArray)-1))
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
@@ -221,7 +224,7 @@ func runFrame(f frame) error {
 					opStack:  nil,
 					tos:      0,
 				}
-				var argList []int32
+				var argList []int64
 				for i := 0; i < v.ParamSlots; i++ {
 					arg := pop(&f)
 					argList = append(argList, arg)
@@ -245,14 +248,14 @@ func runFrame(f frame) error {
 }
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
-func pop(f *frame) int32 {
+func pop(f *frame) int64 {
 	value := f.opStack[f.tos]
 	f.tos -= 1
 	return value
 }
 
 // push onto the operand stack
-func push(f *frame, i int32) {
+func push(f *frame, i int64) {
 	f.tos += 1
 	f.opStack[f.tos] = i
 }

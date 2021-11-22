@@ -11,14 +11,18 @@ import (
 
 // The data structures and functions related to JVM frames
 
+// Note that the operand stack (opStack) is made up of int64 items, rather than the JVM-
+// prescribed 32-bit entries. The rationale is that longs and doubles can be stored
+// without manipulation at this width. (However, there will still be need for the dummy
+// second stack entry for these data items.
 type frame struct {
 	thread   int
 	methName string  // method name
 	clName   string  // class name
 	meth     []byte  // bytecode of method
 	cp       *CPool  // constant pool of class
-	locals   []int32 // local variables
-	opStack  []int32 // operand stack
+	locals   []int64 // local variables
+	opStack  []int64 // operand stack
 	tos      int     // top of the operand stack
 	ftype    byte    // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
