@@ -12,11 +12,16 @@ import (
 	"strconv"
 )
 
+var MainThread execThread
+
 // StartExec accepts the name of the starting class, finds its main() method
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
 func StartExec(className string) error {
+	// initialize the VTable
+	VTable = make(map[string]Ventry)
+
 	m, cpp, err := fetchMethodAndCP(className, "main")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
@@ -42,25 +47,26 @@ func StartExec(className string) error {
 	}
 
 	// create the first thread and place its first frame on it
-	t := CreateThread(0)
-	f.thread = t.id
-	if pushFrame(&t.stack, f) != nil {
-		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(t.id), log.SEVERE)
+	MainThread = CreateThread(0)
+	f.thread = MainThread.id
+	if pushFrame(&MainThread.stack, f) != nil {
+		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(MainThread.id), log.SEVERE)
 	}
 
-	err = runThread(t)
+	err = runThread(&MainThread)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func runThread(t execThread) error {
+func runThread(t *execThread) error {
 	currFrame := t.stack.frames[t.stack.top]
 	return runFrame(currFrame)
 }
 
 func runFrame(f frame) error {
+
 	for pc := 0; pc < len(f.meth); pc++ {
 		switch f.meth[pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
@@ -200,9 +206,34 @@ func runFrame(f frame) error {
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
-			methodSig := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
-			println("Method for invokevirtual-name: " + methodName + ", type: " + methodSig)
+			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
+			println("Method signature for invokevirtual: " + methodName + methodType)
 
+			v := VTable[methodName+methodType]
+			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
+				gf := frame{ // gf = go frame
+					thread:   f.thread,
+					methName: methodName,
+					clName:   className,
+					meth:     nil,
+					cp:       nil,
+					locals:   nil,
+					opStack:  nil,
+					tos:      0,
+				}
+				var argList []int32
+				for i := 0; i < v.ParamSlots; i++ {
+					arg := pop(&f)
+					argList = append(argList, arg)
+				}
+				for j := len(argList) - 1; j >= 0; j-- {
+					push(&gf, argList[j])
+				}
+				gf.tos = len(gf.opStack) - 1
+				pushFrame(&MainThread.stack, gf)
+				runThread(&MainThread)
+
+			}
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[pc], pc, f.methName, f.clName)

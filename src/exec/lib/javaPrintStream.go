@@ -12,7 +12,7 @@ import (
 )
 
 /*
- Each object or library that has go methods contains a reference to MethodSignatures,
+ Each object or library that has Go methods contains a reference to MethodSignatures,
  which contain data needed to insert the go method into the vtable of the currently
  executing JVM. MethodSignatures is a map whose key is the fully qualified name and
  type of the method (that is, the method's full signature) and a value consisting of
@@ -37,7 +37,7 @@ type function func([]interface{})
 
 func load() {
 	MethodSignatures["println"] = method{
-		paramSlots: 1,
+		paramSlots: 2, // [0] = out object, [1] = string to print
 		fu:         Println,
 	}
 }

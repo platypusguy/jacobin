@@ -20,6 +20,7 @@ type frame struct {
 	locals   []int32 // local variables
 	opStack  []int32 // operand stack
 	tos      int     // top of the operand stack
+	ftype    byte    // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
 // a stack of frames. Top points to the present top of the stack.
