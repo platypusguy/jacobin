@@ -50,6 +50,20 @@ func createFrameStack() frameStack {
 	return fs
 }
 
+// creates a raw frame and allocates an opStack of the passed-in size.
+func createFrame(opStackSize int) frame {
+	fram := frame{}
+
+	// allocate the operand stack
+	for j := 0; j < opStackSize; j++ {
+		fram.opStack = append(fram.opStack, int64(0))
+	}
+
+	// set top of stack to an empty stack
+	fram.tos = -1
+	return fram
+}
+
 // push a frame. If more frames need to be allocated to the frame stack,
 // then append one for the new frame. Always returns nil at present, but see:
 // TODO: test for out of memory error.

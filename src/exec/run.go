@@ -29,19 +29,13 @@ func StartExec(className string) error {
 		return errors.New("Class not found: " + className + ".main()")
 	}
 
-	f := frame{} // create a new frame
+	f := createFrame(m.CodeAttr.MaxStack) // create a new frame
 	f.methName = "main"
 	f.clName = className
 	f.cp = cpp                                  // add its pointer to the class CP
 	for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
 		f.meth = append(f.meth, m.CodeAttr.Code[i])
 	}
-
-	// allocate the operand stack
-	for j := 0; j < m.CodeAttr.MaxStack; j++ {
-		f.opStack = append(f.opStack, int64(0))
-	}
-	f.tos = -1
 
 	// allocate the local variables
 	for k := 0; k < m.CodeAttr.MaxLocals; k++ {
@@ -215,16 +209,15 @@ func runFrame(f frame) error {
 
 			v := VTable[methodName+methodType]
 			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
-				gf := frame{ // gf = go frame
-					thread:   f.thread,
-					methName: methodName,
-					clName:   className,
-					meth:     nil,
-					cp:       nil,
-					locals:   nil,
-					opStack:  nil,
-					tos:      0,
-				}
+				gf := createFrame(v.ParamSlots)
+				gf.thread = f.thread
+				gf.methName = methodName + methodType
+				gf.clName = className
+				gf.meth = nil
+				gf.cp = nil
+				gf.locals = nil
+				gf.ftype = 'G' // a golang function
+
 				var argList []int64
 				for i := 0; i < v.ParamSlots; i++ {
 					arg := pop(&f)
