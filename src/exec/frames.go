@@ -24,6 +24,7 @@ type frame struct {
 	locals   []int64 // local variables
 	opStack  []int64 // operand stack
 	tos      int     // top of the operand stack
+	pc       int     // program counter (index into the bytecode of the method)
 	ftype    byte    // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
@@ -61,6 +62,7 @@ func createFrame(opStackSize int) frame {
 
 	// set top of stack to an empty stack
 	fram.tos = -1
+	fram.pc = 0
 	return fram
 }
 

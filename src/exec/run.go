@@ -59,8 +59,12 @@ func StartExec(className string) error {
 
 // Point the thread to the top of the frame stack and tell it to run from there.
 func runThread(t *execThread) error {
-	currFrame := t.stack.frames[t.stack.top]
-	return runFrame(currFrame)
+	for t.stack.top > 0 {
+		currFrame := t.stack.frames[t.stack.top]
+		runFrame(currFrame)
+		popFrame(&t.stack)
+	}
+	return nil
 }
 
 func runFrame(f frame) error {
@@ -68,8 +72,8 @@ func runFrame(f frame) error {
 		return runGframe(f) // run it differently
 	}
 
-	for pc := 0; pc < len(f.meth); pc++ {
-		switch f.meth[pc] { // cases listed in numerical value of opcode
+	for f.pc < len(f.meth) {
+		switch f.meth[f.pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
 			push(&f, -1)
 		case ICONST_0: // 	0x03	(push 0 onto opStack)
@@ -85,11 +89,11 @@ func runFrame(f frame) error {
 		case ICONST_5: //   0x08	(push 5 onto opStack)
 			push(&f, 5)
 		case BIPUSH: //     0x10	(push the following byte as an int onto the stack)
-			push(&f, int64(f.meth[pc+1]))
-			pc += 1
+			push(&f, int64(f.meth[f.pc+1]))
+			f.pc += 1
 		case LDC: // 		0x12   	(push constant from CP indexed by next byte)
-			push(&f, int64(f.meth[pc+1]))
-			pc += 1
+			push(&f, int64(f.meth[f.pc+1]))
+			f.pc += 1
 		case ILOAD_0: // 	0x1A    (push local variable 0)
 			push(&f, f.locals[0])
 		case ILOAD_1: //    OX1B    (push local variable 1)
@@ -110,10 +114,10 @@ func runFrame(f frame) error {
 			val2 := pop(&f)
 			val1 := pop(&f)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
-				jumpTo := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2])
-				pc = jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
+				jumpTo := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2])
+				f.pc = jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
 			} else {
-				pc += 2
+				f.pc += 2
 			}
 		case GETSTATIC: // 0xB2		(get static field)
 			// TODO: getstatic will instantiate a static class if it's not already instantiated
@@ -121,13 +125,13 @@ func runFrame(f frame) error {
 			// placeholder, which consists of creating a struct that holds most of the needed info
 			// puts it into a slice of such static fields and pushes the index of this item in the slice
 			// onto the stack of the frame.
-			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
-			pc += 2
+			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
+			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
 			if CPentry.Type != FieldRef { // the pointed-to CP entry must be a field reference
 				return fmt.Errorf("Expected a field ref on getstatic, but got %d in"+
 					"location %d in method %s of class %s\n",
-					CPentry.Type, pc, f.methName, f.clName)
+					CPentry.Type, f.pc, f.methName, f.clName)
 			}
 			// fmt.Fprintf(os.Stderr, "getstatic, CP entry: type %d, slot %d\n",
 			// 	CPentry.Type, CPentry.Slot)
@@ -177,13 +181,13 @@ func runFrame(f frame) error {
 			push(&f, int64(len(StaticsArray)-1))
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
-			CPslot := (int(f.meth[pc+1]) * 256) + int(f.meth[pc+2]) // next 2 bytes point to CP entry
-			pc += 2
+			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
+			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
 			if CPentry.Type != MethodRef { // the pointed-to CP entry must be a field reference
 				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
 					"location %d in method %s of class %s\n",
-					CPentry.Type, pc, f.methName, f.clName)
+					CPentry.Type, f.pc, f.methName, f.clName)
 			}
 
 			// get the methodRef entry
@@ -237,10 +241,11 @@ func runFrame(f frame) error {
 			}
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
-				f.meth[pc], pc, f.methName, f.clName)
+				f.meth[f.pc], f.pc, f.methName, f.clName)
 			_ = log.Log(msg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}
+		f.pc += 1
 	}
 	return nil
 }
