@@ -22,6 +22,7 @@ var MainThread execThread
 func StartExec(className string) error {
 	// initialize the VTable
 	VTable = make(map[string]Ventry)
+	VTableLoad()
 
 	m, cpp, err := fetchMethodAndCP(className, "main")
 	if err != nil {

@@ -26,20 +26,22 @@ import (
  return value on the operand stack of the calling function.
 */
 
-var MethodSignatures = make(map[string]method)
+var MethodSignatures = make(map[string]GMeth)
 
-type method struct {
-	paramSlots int
-	fu         function
+type GMeth struct {
+	ParamSlots int
+	GFunction  function
 }
 
 type function func([]interface{})
 
-func load() {
-	MethodSignatures["println"] = method{
-		paramSlots: 2, // [0] = out object, [1] = string to print
-		fu:         Println,
-	}
+func Load_System_PrintStream() map[string]GMeth {
+	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2, // [0] = PrintStream.out object, [1] = string to print
+			GFunction:  Println,
+		}
+	return MethodSignatures
 }
 
 // a temporary stand-in for java\io\PrintStream
