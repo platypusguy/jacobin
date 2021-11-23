@@ -6,7 +6,6 @@
 package exec
 
 import (
-	"jacobin/exec/lib"
 	"sync"
 )
 
@@ -37,11 +36,11 @@ type Function func([]interface{})
 var VTmutex sync.Mutex
 
 func VTableLoad() {
-	loadlib(lib.Load_System_PrintStream())
+	loadlib(Load_System_PrintStream())
 
 }
 
-func loadlib(libMeths map[string]lib.GMeth) {
+func loadlib(libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		ve := Ventry{}
 		ve.ParamSlots = val.ParamSlots

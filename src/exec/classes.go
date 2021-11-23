@@ -50,6 +50,7 @@ type Static struct {
 	ValueFP   float64 // holds doubles and floats
 	ValueStr  string  // string
 	ValueFunc func()  // function pointer
+	CP        *CPool  // the constant pool for the class
 }
 
 var MethAreaMutex sync.RWMutex // All additions or updates to Classes map come through this mutex

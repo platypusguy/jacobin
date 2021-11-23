@@ -64,6 +64,9 @@ func runThread(t *execThread) error {
 }
 
 func runFrame(f frame) error {
+	if f.ftype == 'G' { // if the frame contains a Golang method ('G')
+		return runGframe(f) // run it differently
+	}
 
 	for pc := 0; pc < len(f.meth); pc++ {
 		switch f.meth[pc] { // cases listed in numerical value of opcode
@@ -166,6 +169,7 @@ func runFrame(f frame) error {
 				ValueFP:   0,
 				ValueStr:  "",
 				ValueFunc: nil,
+				CP:        f.cp,
 			}
 			StaticsArray = append(StaticsArray, newStatic)
 			Statics[fieldName] = int64(len(StaticsArray) - 1)
@@ -238,6 +242,21 @@ func runFrame(f frame) error {
 			return errors.New("invalid bytecode encountered")
 		}
 	}
+	return nil
+}
+
+func runGframe(fr frame) error {
+	ve := VTable[fr.methName]
+	if ve.Fu == nil {
+		return errors.New("go method not found: " + fr.methName)
+	}
+	var params = new([]interface{})
+	for _, v := range fr.opStack {
+		*params = append(*params, v)
+	}
+
+	ve.Fu(*params)
+
 	return nil
 }
 
