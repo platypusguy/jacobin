@@ -7,6 +7,7 @@ package exec
 
 import (
 	"fmt"
+	"jacobin/log"
 )
 
 // The data structures and functions related to JVM frames
@@ -76,6 +77,14 @@ func pushFrame(fs *frameStack, f frame) error {
 		fs.size += 1
 	} else {
 		fs.frames[fs.top] = f
+	}
+
+	if log.Level == log.FINEST {
+		var s string
+		for i:=fs.top; i>0; i-- {
+			s = s + fs.frames[i].methName+"\n"
+		}
+		log.Log("Present stack frame:\n"+s, log.FINEST)
 	}
 	return nil
 }

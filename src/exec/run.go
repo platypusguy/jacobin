@@ -236,8 +236,9 @@ func runFrame(f frame) error {
 				}
 				gf.tos = len(gf.opStack) - 1
 				pushFrame(&MainThread.stack, gf)
-				runThread(&MainThread)
-
+				runFrame(gf)
+				popFrame(&MainThread.stack)
+				break
 			}
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
