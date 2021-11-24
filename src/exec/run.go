@@ -167,7 +167,7 @@ func runFrame(f frame) error {
 			prevLoaded, ok := Statics[fieldName]
 			if ok { // if preloaded, then push the index into the array of constant fields
 				push(&f, prevLoaded)
-				continue
+				break
 			}
 
 			fieldTypeIndex := nAndT.DescIndex
