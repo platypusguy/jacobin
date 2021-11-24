@@ -111,8 +111,8 @@ func runFrame(f frame) error {
 		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			f.locals[3] = pop(&f)
 		case IINC: //   0x84    (increment local variable by a constant)
-			localVarIndex := (int(f.meth[f.pc+1]))
-			constAmount := (int(f.meth[f.pc+2]))
+			localVarIndex := int(f.meth[f.pc+1])
+			constAmount := int(f.meth[f.pc+2])
 			f.pc += 2
 			f.locals[localVarIndex] += int64(constAmount)
 		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
@@ -120,13 +120,16 @@ func runFrame(f frame) error {
 			val1 := pop(&f)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2])
-				f.pc = jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
+				f.pc = f.pc + jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
 			} else {
 				f.pc += 2
 			}
 		case GOTO: // 0xA7     (goto an instruction)
 			jumpTo := (int16(f.meth[f.pc+1]) * 256) + int16(f.meth[f.pc+2])
 			f.pc = f.pc + int(jumpTo) - 1 // -1 because this loop will increment f.pc by 1
+		case RETURN: // 0xB1    (return from void function)
+			f.tos = -1 // empty the stack
+			return nil
 		case GETSTATIC: // 0xB2		(get static field)
 			// TODO: getstatic will instantiate a static class if it's not already instantiated
 			// that logic has not yet been implemented and the code here is simply a reasonable
