@@ -38,25 +38,20 @@ type function func([]interface{})
 func Load_System_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] =
 		GMeth{
-			ParamSlots: 2, // [0] = PrintStream.out object, [1] = string to print
-			GFunction:  Println,
+			ParamSlots: 2, // [0] = PrintStream.out object,
+			// [1] = index to StringConst to print
+			GFunction: Println,
 		}
 	return MethodSignatures
 }
 
-// a temporary stand-in for java\io\PrintStream
-type stream *os.File
-
-var Out stream
-
-func PrintStream(out stream) {
-	Out = out
-}
-
-func init() {
-	Out = os.Stdout
-}
-
+// Println is the go equivalent of System.out.println(). It accepts two args,
+// which are passed in a two-entry slice of type interface{}. The first arg is an
+// index in the CP to a StringConst entry; the second arg is an index into the
+// array of static fields, Statics. The entry there includes a pointer to the CP
+// for this class. The first arg then gets the StringConst ref, which is an index
+// into the UTF8 entries of the CP. This string is then printed to stdout. There
+// is no return value.
 func Println(i []interface{}) {
 	sIndex := i[1].(int64) // points to a String constant entry in the CP
 	cpi := i[0].(int64)    // int64 which is an index into Statics array

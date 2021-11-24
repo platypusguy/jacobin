@@ -61,8 +61,8 @@ func StartExec(className string) error {
 func runThread(t *execThread) error {
 	for t.stack.top > 0 {
 		currFrame := t.stack.frames[t.stack.top]
-		runFrame(currFrame)
-		popFrame(&t.stack)
+		_ = runFrame(currFrame)
+		_ = popFrame(&t.stack)
 	}
 	return nil
 }
@@ -144,8 +144,6 @@ func runFrame(f frame) error {
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.pc, f.methName, f.clName)
 			}
-			// fmt.Fprintf(os.Stderr, "getstatic, CP entry: type %d, slot %d\n",
-			// 	CPentry.Type, CPentry.Slot)
 
 			// get the field entry
 			field := f.cp.FieldRefs[CPentry.Slot]
@@ -175,7 +173,7 @@ func runFrame(f frame) error {
 
 			fieldTypeIndex := nAndT.DescIndex
 			fieldType := FetchUTF8stringFromCPEntryNumber(f.cp, fieldTypeIndex)
-			println("full field name: " + fieldName + ", type: " + fieldType)
+			// println("full field name: " + fieldName + ", type: " + fieldType)
 			newStatic := Static{
 				Class:     'L',
 				Type:      fieldType,
@@ -188,6 +186,7 @@ func runFrame(f frame) error {
 			}
 			StaticsArray = append(StaticsArray, newStatic)
 			Statics[fieldName] = int64(len(StaticsArray) - 1)
+
 			// push the pointer to the stack of the frame
 			push(&f, int64(len(StaticsArray)-1))
 
@@ -209,7 +208,6 @@ func runFrame(f frame) error {
 			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
 			classNameEntry := f.cp.CpIndex[classNameIndex]
 			className := f.cp.Utf8Refs[classNameEntry.Slot]
-			// println("Method class name: " + className)
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType
@@ -219,12 +217,12 @@ func runFrame(f frame) error {
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
 			methodName = className + "." + methodName
-			println("Method name for invokevirtual: " + methodName)
+			// println("Method name for invokevirtual: " + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
-			println("Method signature for invokevirtual: " + methodName + methodType)
+			// println("Method signature for invokevirtual: " + methodName + methodType)
 
 			v := VTable[methodName+methodType]
 			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
@@ -247,7 +245,7 @@ func runFrame(f frame) error {
 				}
 				gf.tos = len(gf.opStack) - 1
 				pushFrame(&MainThread.stack, gf)
-				runFrame(gf)
+				runGframe(gf)
 				popFrame(&MainThread.stack)
 				break
 			}
@@ -262,11 +260,15 @@ func runFrame(f frame) error {
 	return nil
 }
 
+// runs a frame whose method is a golang (so, native) method. It copies the parameters
+// from the operand stack and passes them to the go function, here called Fu.
+// TODO: Handle how return values are placed back on the stack.
 func runGframe(fr frame) error {
 	ve := VTable[fr.methName]
 	if ve.Fu == nil {
 		return errors.New("go method not found: " + fr.methName)
 	}
+
 	var params = new([]interface{})
 	for _, v := range fr.opStack {
 		*params = append(*params, v)
