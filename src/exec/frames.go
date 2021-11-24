@@ -85,8 +85,7 @@ func pushFrame(fs *frameStack, f frame) error {
 		for i := fs.top; i > 0; i-- {
 			s = s + "\n" + "> " + fs.frames[i].methName
 		}
-		log.Log("Present stack frame:"+s, log.FINEST)
-		// log.Log("Present stack frame:\n"+strings.TrimRight(s, "\n"), log.FINEST)
+		_ = log.Log("Present stack frame:"+s, log.FINEST)
 	}
 	return nil
 }
