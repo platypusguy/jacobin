@@ -79,12 +79,14 @@ func pushFrame(fs *frameStack, f frame) error {
 		fs.frames[fs.top] = f
 	}
 
+	// TODO: move this to instrumentation system
 	if log.Level == log.FINEST {
 		var s string
-		for i:=fs.top; i>0; i-- {
-			s = s + fs.frames[i].methName+"\n"
+		for i := fs.top; i > 0; i-- {
+			s = s + "\n" + "> " + fs.frames[i].methName
 		}
-		log.Log("Present stack frame:\n"+s, log.FINEST)
+		log.Log("Present stack frame:"+s, log.FINEST)
+		// log.Log("Present stack frame:\n"+strings.TrimRight(s, "\n"), log.FINEST)
 	}
 	return nil
 }
