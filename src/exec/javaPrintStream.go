@@ -8,7 +8,6 @@ package exec
 
 import (
 	"fmt"
-	"os"
 )
 
 /*
@@ -59,5 +58,5 @@ func Println(i []interface{}) {
 	stringRef := cp.CpIndex[sIndex]
 	utf8index := cp.StringRefs[int(stringRef.Slot)]
 	s := FetchUTF8stringFromCPEntryNumber(cp, uint16(utf8index))
-	fmt.Fprintf(os.Stdout, "%s\n", s)
+	fmt.Println(s)
 }
