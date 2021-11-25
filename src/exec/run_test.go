@@ -6,7 +6,9 @@
 
 package exec
 
-import "testing"
+import (
+	"testing"
+)
 
 // These tests test the individual bytecode instructions. They are presented here in
 // alphabetical order of the instruction name.
@@ -205,5 +207,17 @@ func TestLdc(t *testing.T) {
 	value := pop(&f)
 	if value != 5 {
 		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
+	}
+}
+
+func TestReturn(t *testing.T) {
+	f := newFrame(RETURN)
+	ret := runFrame(&f)
+	if f.tos != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.tos)
+	}
+
+	if ret != nil {
+		t.Error("RETURN: Expected popped value to be 2, got: " + ret.Error())
 	}
 }
