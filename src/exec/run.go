@@ -61,13 +61,14 @@ func StartExec(className string) error {
 func runThread(t *execThread) error {
 	for t.stack.top > 0 {
 		currFrame := t.stack.frames[t.stack.top]
-		_ = runFrame(currFrame)
+		_ = runFrame(&currFrame)
 		_ = popFrame(&t.stack)
 	}
 	return nil
 }
 
-func runFrame(f frame) error {
+func runFrame(f *frame) error {
+	// f := *fr
 	if f.ftype == 'G' { // if the frame contains a Golang method ('G')
 		return runGframe(f) // run it differently
 	}
@@ -75,49 +76,49 @@ func runFrame(f frame) error {
 	for f.pc < len(f.meth) {
 		switch f.meth[f.pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
-			push(&f, -1)
+			push(f, -1)
 		case ICONST_0: // 	0x03	(push 0 onto opStack)
-			push(&f, 0)
+			push(f, 0)
 		case ICONST_1: //  	0x04	(push 1 onto opStack)
-			push(&f, 1)
+			push(f, 1)
 		case ICONST_2: //   0x05	(push 2 onto opStack)
-			push(&f, 2)
+			push(f, 2)
 		case ICONST_3: //   0x06	(push 3 onto opStack)
-			push(&f, 3)
+			push(f, 3)
 		case ICONST_4: //   0x07	(push 4 onto opStack)
-			push(&f, 4)
+			push(f, 4)
 		case ICONST_5: //   0x08	(push 5 onto opStack)
-			push(&f, 5)
+			push(f, 5)
 		case BIPUSH: //     0x10	(push the following byte as an int onto the stack)
-			push(&f, int64(f.meth[f.pc+1]))
+			push(f, int64(f.meth[f.pc+1]))
 			f.pc += 1
 		case LDC: // 		0x12   	(push constant from CP indexed by next byte)
-			push(&f, int64(f.meth[f.pc+1]))
+			push(f, int64(f.meth[f.pc+1]))
 			f.pc += 1
 		case ILOAD_0: // 	0x1A    (push local variable 0)
-			push(&f, f.locals[0])
+			push(f, f.locals[0])
 		case ILOAD_1: //    OX1B    (push local variable 1)
-			push(&f, f.locals[1])
+			push(f, f.locals[1])
 		case ILOAD_2: //    0X1C    (push local variable 2)
-			push(&f, f.locals[2])
+			push(f, f.locals[2])
 		case ILOAD_3: //    0x1D    (push local variable 3)
-			push(&f, f.locals[3])
+			push(f, f.locals[3])
 		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
-			f.locals[0] = pop(&f)
+			f.locals[0] = pop(f)
 		case ISTORE_1: //   0x3C    (store popped top of stack int into local 1)
-			f.locals[1] = pop(&f)
+			f.locals[1] = pop(f)
 		case ISTORE_2: //   0x3D    (store popped top of stack int into local 2)
-			f.locals[2] = pop(&f)
+			f.locals[2] = pop(f)
 		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
-			f.locals[3] = pop(&f)
+			f.locals[3] = pop(f)
 		case IINC: //   0x84    (increment local variable by a constant)
 			localVarIndex := int(f.meth[f.pc+1])
 			constAmount := int(f.meth[f.pc+2])
 			f.pc += 2
 			f.locals[localVarIndex] += int64(constAmount)
 		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
-			val2 := pop(&f)
-			val1 := pop(&f)
+			val2 := pop(f)
+			val1 := pop(f)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2])
 				f.pc = f.pc + jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -167,7 +168,7 @@ func runFrame(f frame) error {
 			// was this static field previously loaded? Is so, get its location and move on.
 			prevLoaded, ok := Statics[fieldName]
 			if ok { // if preloaded, then push the index into the array of constant fields
-				push(&f, prevLoaded)
+				push(f, prevLoaded)
 				break
 			}
 
@@ -188,7 +189,7 @@ func runFrame(f frame) error {
 			Statics[fieldName] = int64(len(StaticsArray) - 1)
 
 			// push the pointer to the stack of the frame
-			push(&f, int64(len(StaticsArray)-1))
+			push(f, int64(len(StaticsArray)-1))
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
@@ -237,7 +238,7 @@ func runFrame(f frame) error {
 
 				var argList []int64
 				for i := 0; i < v.ParamSlots; i++ {
-					arg := pop(&f)
+					arg := pop(f)
 					argList = append(argList, arg)
 				}
 				for j := len(argList) - 1; j >= 0; j-- {
@@ -245,7 +246,7 @@ func runFrame(f frame) error {
 				}
 				gf.tos = len(gf.opStack) - 1
 				pushFrame(&MainThread.stack, gf)
-				runGframe(gf)
+				runGframe(&gf)
 				popFrame(&MainThread.stack)
 				break
 			}
@@ -263,7 +264,7 @@ func runFrame(f frame) error {
 // runs a frame whose method is a golang (so, native) method. It copies the parameters
 // from the operand stack and passes them to the go function, here called Fu.
 // TODO: Handle how return values are placed back on the stack.
-func runGframe(fr frame) error {
+func runGframe(fr *frame) error {
 	ve := VTable[fr.methName]
 	if ve.Fu == nil {
 		return errors.New("go method not found: " + fr.methName)
