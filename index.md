@@ -8,7 +8,7 @@ Jacobin is heavily tested during development. As of November 2021, the testing c
 
 ### Current Status
 
-The current status is shown [here](https://github.com/platypusguy/jacobin). There are currently no packaged releases of Jacobin available (although you can always compile the code). We'll issue releases when Jacobin is mature enough to run classes as expected.
+The current status is shown [here](https://github.com/platypusguy/jacobin). Updates are also posted in realtime on the [Jacobin Twitter account](https://twitter.com/jacobin_jvm).There are currently no packaged releases of Jacobin available (although you can always compile the code). We'll issue releases when Jacobin is mature enough to run classes as expected.
 
 At present, all tasks and defects are logged in and instance of JetBrains' [YouTrack](https://www.jetbrains.com/youtrack/) (kindly provided at no cost). The task numbers appear at the start of the comment for every commit and push. The GitHub 'issues' facility is used strictly for issues that might affect a user's ability to run Jacobin. This design allows users to find solutions without needing to dig through numerous unrelated matters. 
 
