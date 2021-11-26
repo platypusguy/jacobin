@@ -41,7 +41,7 @@ A more-than-minimal JVM written in Go.
 * Automate loading of core Java classes (Object, etc.)
 
 ### Verification, Linking, Preparation, Initialization
-* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file. :pencil2: This is the focus of current coding work
+* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file. 
 
 **To do:**
 * Linking and verification
@@ -49,10 +49,23 @@ A more-than-minimal JVM written in Go.
 * Initialization
 
 ### Execution
-Not started yet
+* Execution of bytecode :pencil2: This is the focus of current coding work
+* Replace Java methods with functions written in go :pencil2: This too is a major focus
+
+**To do:**
+* invokedynamic
+* Calls to superclasses
+* Annotated classes
+* Arrays
+
+### Instrumentation
+* Extensive logging data
+
+**To do:**
+* Emit instrumented data to a port, for reading/display by a separate program
 
 ## Garbage Collection
 GC is handled by the golang runtime, which has its own GC
 
 # Thanks
-The overview page carries a right-side panel that expresses our thanks to vendors and programmers who have made the Jacobin project possible. They are many and we are deeply grateful to them.
+The project's [home page](https://jacobin.org/) carries a lengthy note at the bottom that expresses our thanks to vendors and programmers who have made the Jacobin project possible. They are many and we are deeply grateful to them.
