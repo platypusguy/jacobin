@@ -429,13 +429,18 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 		if fullyParsedClass.cpIndex[i].entryType == StringConst {
 			whichStringConst := fullyParsedClass.cpIndex[i].slot
 			cpIndexForUTF8 := fullyParsedClass.stringRefs[whichStringConst]
+			cpE := exec.CpEntry{
+				Type: UTF8,
+				Slot: uint16(fullyParsedClass.cpIndex[cpIndexForUTF8.index].slot),
+			}
+			kd.CP.CpIndex = append(kd.CP.CpIndex, cpE)
+		} else {
+			cpE := exec.CpEntry{
+				Type: uint16(fullyParsedClass.cpIndex[i].entryType),
+				Slot: uint16(fullyParsedClass.cpIndex[i].slot),
+			}
+			kd.CP.CpIndex = append(kd.CP.CpIndex, cpE)
 		}
-		cpE := exec.CpEntry{
-			Type: uint16(fullyParsedClass.cpIndex[i].entryType),
-			Slot: uint16(fullyParsedClass.cpIndex[i].slot),
-		}
-
-		kd.CP.CpIndex = append(kd.CP.CpIndex, cpE)
 	}
 
 	if len(fullyParsedClass.classRefs) > 0 {
@@ -547,13 +552,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 	if len(fullyParsedClass.utf8Refs) > 0 {
 		for i := 0; i < len(fullyParsedClass.utf8Refs); i++ {
 			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
-		}
-	}
-
-	// string refs are convertered to UTF8 refs.
-	if len(fullyParsedClass.stringRefs) > 0 {
-		for i := 0; i < len(fullyParsedClass.stringRefs); i++ {
-			kd.CP.StringRefs = append(kd.CP.StringRefs, uint16(fullyParsedClass.stringRefs[i].index))
 		}
 	}
 
