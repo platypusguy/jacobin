@@ -154,7 +154,7 @@ func runFrame(f *frame) error {
 			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
 			classNameEntry := f.cp.CpIndex[classNameIndex]
 			className := f.cp.Utf8Refs[classNameEntry.Slot]
-			println("Field name: " + className)
+			// println("Field name: " + className)
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
