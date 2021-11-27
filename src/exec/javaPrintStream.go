@@ -55,8 +55,6 @@ func Println(i []interface{}) {
 	sIndex := i[1].(int64) // points to a String constant entry in the CP
 	cpi := i[0].(int64)    // int64 which is an index into Statics array
 	cp := StaticsArray[cpi].CP
-	stringRef := cp.CpIndex[sIndex]
-	utf8index := cp.StringRefs[int(stringRef.Slot)]
-	s := FetchUTF8stringFromCPEntryNumber(cp, uint16(utf8index))
+	s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
 	fmt.Println(s)
 }
