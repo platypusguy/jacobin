@@ -85,8 +85,8 @@ type CPool struct {
 	MethodRefs     []MethodRefEntry
 	MethodTypes    []uint16
 	NameAndTypes   []NameAndTypeEntry
-	StringRefs     []uint16 // integer index into utf8Refs
-	Utf8Refs       []string
+	//	StringRefs     []uint16 // all StringRefs are converted into utf8Refs
+	Utf8Refs []string
 }
 
 type AccessFlags struct {
