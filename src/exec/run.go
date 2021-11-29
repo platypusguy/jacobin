@@ -120,6 +120,15 @@ func runFrame(f *frame) error {
 			constAmount := int(f.meth[f.pc+2])
 			f.pc += 2
 			f.locals[localVarIndex] += int64(constAmount)
+		case IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
+			val2 := pop(f)
+			val1 := pop(f)
+			if val1 < val2 { // if comp succeeds, next 2 bytes hold instruction index
+				jumpTo := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2])
+				f.pc = f.pc + jumpTo - 1 // -1 b/c on the next iteration, pc is bumped by 1
+			} else {
+				f.pc += 2
+			}
 		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
 			val2 := pop(f)
 			val1 := pop(f)

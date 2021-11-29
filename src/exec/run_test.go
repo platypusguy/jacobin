@@ -121,8 +121,6 @@ func TestIconst5(t *testing.T) {
 	}
 }
 
-// func
-
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
 	f.locals = append(f.locals, 0)
@@ -209,7 +207,6 @@ func TestIsub(t *testing.T) {
 	if value != 3 {
 		t.Errorf("ISUB: Expected popped value to be 3, got: %d", value)
 	}
-
 }
 
 func TestLdc(t *testing.T) {
