@@ -41,6 +41,11 @@ func Load_System_PrintStream() map[string]GMeth {
 			// [1] = index to StringConst to print
 			GFunction: Println,
 		}
+	MethodSignatures["java/io/PrintStream.println:(I)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  PrintlnI,
+		}
 	return MethodSignatures
 }
 
@@ -57,4 +62,13 @@ func Println(i []interface{}) {
 	cp := StaticsArray[cpi].CP
 	s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
 	fmt.Println(s)
+}
+
+// java/io/Prinstream(int) TODO: equivalent (verify that this grabs the right param to print)
+func PrintlnI(i []interface{}) {
+	intToPrint := i[1].(int64) // points to an int
+	// cpi := i[0].(int64)    // int64 which is an index into Statics array
+	// cp := StaticsArray[cpi].CP
+	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
+	fmt.Println(intToPrint)
 }
