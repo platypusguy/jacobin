@@ -197,6 +197,21 @@ func TestIload3(t *testing.T) {
 	}
 }
 
+func TestIsub(t *testing.T) {
+	f := newFrame(ISUB)
+	push(&f, 10)
+	push(&f, 7)
+	_ = runFrame(&f)
+	if f.tos != 0 {
+		t.Errorf("ISUB, Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 3 {
+		t.Errorf("ISUB: Expected popped value to be 3, got: %d", value)
+	}
+
+}
+
 func TestLdc(t *testing.T) {
 	f := newFrame(LDC)
 	f.meth = append(f.meth, 0x05)
