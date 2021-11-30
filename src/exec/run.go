@@ -263,6 +263,55 @@ func runFrame(f *frame) error {
 				popFrame(&MainThread.stack)
 				break
 			}
+		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
+			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
+			f.pc += 2
+			CPentry := f.cp.CpIndex[CPslot]
+			// get the methodRef entry
+			method := f.cp.MethodRefs[CPentry.Slot]
+
+			// get the class entry from this method
+			classRef := method.ClassIndex
+			classNameIndex := f.cp.ClassRefs[f.cp.CpIndex[classRef].Slot]
+			classNameEntry := f.cp.CpIndex[classNameIndex]
+			className := f.cp.Utf8Refs[classNameEntry.Slot]
+
+			// get the method name for this method
+			nAndTindex := method.NameAndType
+			nAndTentry := f.cp.CpIndex[nAndTindex]
+			nAndTslot := nAndTentry.Slot
+			nAndT := f.cp.NameAndTypes[nAndTslot]
+			methodNameIndex := nAndT.NameIndex
+			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
+			methodName = className + "." + methodName
+			// println("Method name for invokevirtual: " + methodName)
+
+			// get the signature for this method
+			methodSigIndex := nAndT.DescIndex
+			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
+			println("Method signature for invokestatic: " + methodName + methodType)
+
+			m, cpp, err := fetchMethodAndCP(className, methodName)
+			if err != nil {
+				return errors.New("Class not found: " + className + methodName)
+			}
+
+			fram := createFrame(5) // TODO: How is this value computed?
+
+			fram.clName = className
+			fram.cp = cpp                               // add its pointer to the class CP
+			for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
+				fram.meth = append(fram.meth, m.CodeAttr.Code[i])
+			}
+
+			// allocate the local variables
+			for k := 0; k < m.CodeAttr.MaxLocals; k++ {
+				fram.locals = append(fram.locals, 0)
+			}
+			pushFrame(&MainThread.stack, fram)
+			runFrame(&fram)
+			popFrame(&MainThread.stack)
+
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[f.pc], f.pc, f.methName, f.clName)
