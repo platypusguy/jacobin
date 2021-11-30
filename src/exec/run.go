@@ -283,8 +283,8 @@ func runFrame(f *frame) error {
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
-			methodName = className + "." + methodName
-			// println("Method name for invokevirtual: " + methodName)
+			fullMethodName := className + "." + methodName
+			println("Method name for invokevirtual: " + fullMethodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
@@ -296,7 +296,8 @@ func runFrame(f *frame) error {
 				return errors.New("Class not found: " + className + methodName)
 			}
 
-			fram := createFrame(5) // TODO: How is this value computed?
+			maxStack := m.CodeAttr.MaxStack
+			fram := createFrame(maxStack)
 
 			fram.clName = className
 			fram.cp = cpp                               // add its pointer to the class CP
