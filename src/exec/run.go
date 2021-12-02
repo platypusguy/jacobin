@@ -8,6 +8,7 @@ package exec
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
 	"jacobin/log"
 	"strconv"
 )
@@ -19,7 +20,7 @@ var MainThread execThread
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
-func StartExec(className string) error {
+func StartExec(className string, globals *globals.Globals) error {
 	// initialize the VTable
 	VTable = make(map[string]Ventry)
 	VTableLoad()
@@ -44,6 +45,12 @@ func StartExec(className string) error {
 
 	// create the first thread and place its first frame on it
 	MainThread = CreateThread(0)
+	tracing := false
+	trace, exists := globals.Options["-trace:inst"]
+	if exists {
+		tracing = trace.Set
+	}
+	MainThread.trace = tracing
 	f.thread = MainThread.id
 	if pushFrame(&MainThread.stack, f) != nil {
 		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(MainThread.id), log.SEVERE)
@@ -68,12 +75,15 @@ func runThread(t *execThread) error {
 }
 
 func runFrame(f *frame) error {
-	// f := *fr
 	if f.ftype == 'G' { // if the frame contains a Golang method ('G')
 		return runGframe(f) // run it differently
 	}
 
 	for f.pc < len(f.meth) {
+		if MainThread.trace {
+			log.Log("class: "+f.clName+", meth: "+f.methName+", pc: "+strconv.Itoa(f.pc)+", inst: "+
+				strconv.Itoa(int(f.meth[f.pc])), log.FINEST)
+		}
 		switch f.meth[f.pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
 			push(f, -1)

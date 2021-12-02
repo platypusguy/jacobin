@@ -66,6 +66,10 @@ func LoadOptionsTable(Global globals.Globals) {
 	Global.Options["--show-version"] = show_Version
 	show_Version.Set = true
 
+	traceInstruction := globals.Option{true, false, 1, enableTraceInstructions}
+	Global.Options["-trace"] = traceInstruction
+	traceInstruction.Set = true
+
 	verboseClass := globals.Option{true, false, 1, verbosityLevel}
 	Global.Options["-verbose"] = verboseClass
 	verboseClass.Set = true
@@ -144,6 +148,13 @@ func versionStderrThenExit(pos int, name string, gl *globals.Globals) (int, erro
 func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stdout, gl)
 	gl.ExitNow = true
+	return pos, nil
+}
+
+func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int, error) {
+	o := gl.Options["-trace:inst"]
+	o.Set = true
+	gl.Options["-trace:inst"] = o
 	return pos, nil
 }
 

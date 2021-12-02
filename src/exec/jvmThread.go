@@ -14,6 +14,7 @@ type execThread struct {
 	id    int        // the thread ID
 	stack frameStack // the JVM stack for this thread
 	pc    int        // the program counter (the index to the instruction being executed)
+	trace bool       // do we trace instructions?
 }
 
 func CreateThread(threadNum int) execThread {
@@ -21,5 +22,6 @@ func CreateThread(threadNum int) execThread {
 	t.id = threadNum
 	t.pc = 0
 	t.stack = createFrameStack()
+	t.trace = false
 	return t
 }
