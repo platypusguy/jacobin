@@ -111,11 +111,15 @@ func runFrame(f *frame) error {
 			f.locals[2] = pop(f)
 		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			f.locals[3] = pop(f)
-		case ISUB: //   0x64	(subtract top 2 items on operand stack, push result)
+		case IADD: //	0x60	(add top 2 items on operand stack, push result)
+			i2 := pop(f)
+			i1 := pop(f)
+			push(f, i1+i2)
+		case ISUB: //  0x64	(subtract top 2 items on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
 			push(f, i1-i2)
-		case IINC: //   0x84    (increment local variable by a constant)
+		case IINC: // 	0x84    (increment local variable by a constant)
 			localVarIndex := int(f.meth[f.pc+1])
 			constAmount := int(f.meth[f.pc+2])
 			f.pc += 2
@@ -141,6 +145,12 @@ func runFrame(f *frame) error {
 		case GOTO: // 0xA7     (goto an instruction)
 			jumpTo := (int16(f.meth[f.pc+1]) * 256) + int16(f.meth[f.pc+2])
 			f.pc = f.pc + int(jumpTo) - 1 // -1 because this loop will increment f.pc by 1
+		case IRETURN: // 0xAC (return an int and exit current frame)
+			valToReturn := pop(f)
+			fStack := &MainThread.stack
+			prevFrame := fStack.frames[fStack.top-1]
+			push(&prevFrame, valToReturn)
+			return nil
 		case RETURN: // 0xB1    (return from void function)
 			f.tos = -1 // empty the stack
 			return nil
@@ -208,7 +218,7 @@ func runFrame(f *frame) error {
 			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
 			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			if CPentry.Type != MethodRef { // the pointed-to CP entry must be a field reference
+			if CPentry.Type != MethodRef { // the pointed-to CP entry must be a method reference
 				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.pc, f.methName, f.clName)
@@ -238,7 +248,7 @@ func runFrame(f *frame) error {
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := VTable[methodName+methodType]
+			v := VTable[methodName+":"+methodType]
 			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
 				gf := createFrame(v.ParamSlots)
 				gf.thread = f.thread
@@ -300,6 +310,7 @@ func runFrame(f *frame) error {
 			fram := createFrame(maxStack)
 
 			fram.clName = className
+			fram.methName = methodName
 			fram.cp = cpp                               // add its pointer to the class CP
 			for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
 				fram.meth = append(fram.meth, m.CodeAttr.Code[i])
