@@ -46,7 +46,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	// create the first thread and place its first frame on it
 	MainThread = CreateThread(0)
 	tracing := false
-	trace, exists := globals.Options["-trace:inst"]
+	trace, exists := globals.Options["-trace"]
 	if exists {
 		tracing = trace.Set
 	}

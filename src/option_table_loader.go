@@ -35,6 +35,27 @@ import (
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
+// ==== How to add new options to Jacobin:
+// 1) Create an entry in LoadOptionsTable:
+//    * x := globalOptions {
+//             where param1 = is a boolean: is the option supported? s/be true
+//							  Setting it to false avoids an error message to the
+//							  user that the option is unrecognized while still
+//							  having it be unsupported
+//                   param2 = boolean: has the options been set yet? s/be false
+//					 param3 = integer as explained in the previous paragraphs
+//                   param3 = the function to perform
+//  2) Add x to the GlobalOptions table, using the string of the option as the key
+//     Note that in options with parameters after an : or an = (types 1 or 2 in
+//     param3 in step 1), you enter only the root as the key. For example, see
+//     the -verbose entry below.
+//  3) create the function referred to in param 3 in step 1. This function accepts
+//     the position in the option string where a parameter specified (as in parameters
+//     that come after a : or =), a string which contains any parameters (if it has
+//     no parameters an empty string is passed in), and finally a pointer to the
+//     globals data structure, which contains the Options table.
+//
+
 // LoadOptionsTable loads the table with all the options Jacobin recognizes.
 func LoadOptionsTable(Global globals.Globals) {
 
@@ -60,28 +81,21 @@ func LoadOptionsTable(Global globals.Globals) {
 
 	showversion := globals.Option{true, false, 0, showVersionStderr}
 	Global.Options["-showversion"] = showversion
-	showversion.Set = true
 
 	show_Version := globals.Option{true, false, 0, showVersionStdout}
 	Global.Options["--show-version"] = show_Version
-	show_Version.Set = true
 
 	traceInstruction := globals.Option{true, false, 1, enableTraceInstructions}
 	Global.Options["-trace"] = traceInstruction
-	traceInstruction.Set = true
 
 	verboseClass := globals.Option{true, false, 1, verbosityLevel}
 	Global.Options["-verbose"] = verboseClass
-	verboseClass.Set = true
 
 	version := globals.Option{true, false, 1, versionStderrThenExit}
 	Global.Options["-version"] = version
-	version.Set = true
 
 	vversion := globals.Option{true, false, 1, versionStdoutThenExit}
 	Global.Options["--version"] = vversion
-	vversion.Set = true
-
 }
 
 // ---- the functions for the supported CLI options, in alphabetic order ----
@@ -90,12 +104,14 @@ func LoadOptionsTable(Global globals.Globals) {
 // info. (This is the same behavior as the OpenJDK JVM.)
 func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 	gl.VmModel = "client"
+	setOptionToSeen("-client", gl)
 	return pos, nil
 }
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
 // are app args, which are duly added to Global.appArgs
 func getJarFilename(pos int, name string, gl *globals.Globals) (int, error) {
+	setOptionToSeen("-jar", gl)
 	if len(gl.Args) > pos+1 {
 		gl.StartingJar = gl.Args[pos+1]
 		log.Log("Starting with JAR file: "+gl.StartingJar, log.FINE)
@@ -129,11 +145,13 @@ func showHelpStdoutAndExit(pos int, name string, gl *globals.Globals) (int, erro
 
 func showVersionStderr(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stderr, gl)
+	setOptionToSeen("-showversion", gl)
 	return pos, nil
 }
 
 func showVersionStdout(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stdout, gl)
+	setOptionToSeen("--show-version", gl)
 	return pos, nil
 }
 
@@ -152,9 +170,7 @@ func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, erro
 }
 
 func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int, error) {
-	o := gl.Options["-trace:inst"]
-	o.Set = true
-	gl.Options["-trace:inst"] = o
+	setOptionToSeen("-trace", gl)
 	return pos, nil
 }
 
@@ -179,5 +195,13 @@ func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) 
 		log.Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", log.WARNING)
 		return pos, errors.New("Invalid logging level specified: " + argValue)
 	}
+	setOptionToSeen("-verbose", gl) // mark the -verbose option as having been specified
 	return pos, nil
+}
+
+// Marks the given option as having been 'set' that is, specified on the command line
+func setOptionToSeen(optionKey string, gl *globals.Globals) {
+	o := gl.Options[optionKey]
+	o.Set = true
+	gl.Options[optionKey] = o
 }
