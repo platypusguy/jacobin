@@ -41,7 +41,7 @@ func Load_System_PrintStream() map[string]GMeth {
 			// [1] = index to StringConst to print
 			GFunction: Println,
 		}
-	MethodSignatures["java/io/PrintStream.println:(I)V"] =
+	MethodSignatures["java/io/PrintStream.println(I)V"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  PrintlnI,

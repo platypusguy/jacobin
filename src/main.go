@@ -22,7 +22,7 @@ func main() {
 	log.Init()
 
 	// during development, let's use the most verbose logging level
-	log.Level = log.FINEST
+	// log.Level = log.FINEST  // no longer needed
 	log.Log("running program: "+Global.JacobinName, log.FINE)
 
 	// handle the command-line interface (cli) -- i.e., process the args

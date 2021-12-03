@@ -263,7 +263,7 @@ func runFrame(f *frame) error {
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := VTable[methodName+":"+methodType]
+			v := VTable[methodName+methodType]
 			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
 				gf := createFrame(v.ParamSlots)
 				gf.thread = f.thread
@@ -308,13 +308,13 @@ func runFrame(f *frame) error {
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
-			fullMethodName := className + "." + methodName
-			println("Method name for invokestatic: " + fullMethodName)
+			//fullMethodName := className + "." + methodName
+			//println("Method name for invokestatic: " + fullMethodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
-			println("Method signature for invokestatic: " + methodName + methodType)
+			//println("Method signature for invokestatic: " + methodName + methodType)
 
 			m, cpp, err := fetchMethodAndCP(className, methodName)
 			if err != nil {
