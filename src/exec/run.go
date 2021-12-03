@@ -162,8 +162,9 @@ func runFrame(f *frame) error {
 		case IRETURN: // 0xAC (return an int and exit current frame)
 			valToReturn := pop(f)
 			fStack := &MainThread.stack
-			prevFrame := fStack.frames[fStack.top-1]
-			push(&prevFrame, valToReturn)
+			// prevFrame := fStack.frames[fStack.top-1]
+			// push(&prevFrame, valToReturn)
+			push(&fStack.frames[fStack.top-1], valToReturn)
 			return nil
 		case RETURN: // 0xB1    (return from void function)
 			f.tos = -1 // empty the stack
@@ -335,19 +336,30 @@ func runFrame(f *frame) error {
 				fram.locals = append(fram.locals, 0)
 			}
 
-			// pop the parameters off the present stack and put them in the new frame
+			// pop the parameters off the present stack and put them in the new frame's locals
 			var argList []int64
-			for i := 0; i < v.ParamSlots; i++ {
-				arg := pop(f)
-				argList = append(argList, arg)
+			paramsToPass := ParseIncomingParamsFromMethTypeString(methodType)
+			if len(paramsToPass) > 0 {
+				for i := 0; i < len(paramsToPass); i++ {
+					arg := pop(f)
+					argList = append(argList, arg)
+					if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
+						pop(f) // doubles and longs occupy two slots on the operand stack
+					}
+				}
 			}
+
+			destLocal := 0
 			for j := len(argList) - 1; j >= 0; j-- {
-				push(&gf, argList[j])
+				fram.locals[destLocal] = argList[j]
+				destLocal += 1
 			}
+			fram.tos = -1
 
 			pushFrame(&MainThread.stack, fram)
 			runFrame(&fram)
 			popFrame(&MainThread.stack)
+			f = &(MainThread.stack.frames[MainThread.stack.top])
 
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
