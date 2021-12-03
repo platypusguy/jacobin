@@ -59,7 +59,8 @@ A more-than-minimal JVM written in Go.
 * Arrays
 
 ### Instrumentation
-* Extensive logging data
+* Instruction-level tracing (use `-trace:inst` to enable this feature)
+* Extensive logging data (use `-verbose:finest` to enable. Caveat: this produces *a lot* of data)
 
 **To do:**
 * Emit instrumented data to a port, for reading/display by a separate program
