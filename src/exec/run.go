@@ -81,8 +81,12 @@ func runFrame(f *frame) error {
 
 	for f.pc < len(f.meth) {
 		if MainThread.trace {
-			log.Log("class: "+f.clName+", meth: "+f.methName+", pc: "+strconv.Itoa(f.pc)+", inst: "+
-				strconv.Itoa(int(f.meth[f.pc])), log.FINEST)
+			log.Log("class: "+f.clName+
+				", meth: "+f.methName+
+				", pc: "+strconv.Itoa(f.pc)+
+				", inst: "+BytecodeNames[int(f.meth[f.pc])]+
+				", tos: "+strconv.Itoa(f.tos),
+				log.FINEST)
 		}
 		switch f.meth[f.pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
@@ -304,7 +308,7 @@ func runFrame(f *frame) error {
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
 			fullMethodName := className + "." + methodName
-			println("Method name for invokevirtual: " + fullMethodName)
+			println("Method name for invokestatic: " + fullMethodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
@@ -330,6 +334,17 @@ func runFrame(f *frame) error {
 			for k := 0; k < m.CodeAttr.MaxLocals; k++ {
 				fram.locals = append(fram.locals, 0)
 			}
+
+			// pop the parameters off the present stack and put them in the new frame
+			var argList []int64
+			for i := 0; i < v.ParamSlots; i++ {
+				arg := pop(f)
+				argList = append(argList, arg)
+			}
+			for j := len(argList) - 1; j >= 0; j-- {
+				push(&gf, argList[j])
+			}
+
 			pushFrame(&MainThread.stack, fram)
 			runFrame(&fram)
 			popFrame(&MainThread.stack)

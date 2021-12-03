@@ -27,11 +27,12 @@ import (
 //                              // 0 = no argument      1 = value follows a :
 //                              // 2 = value follows =  4 = value follows a space
 //                              // 8 = option has multiple values separated by a ; (such as -cp)
-//	        action  func(position int, name string) error  // the action to perform when this option found.
+//	        action  func(position int, name string, gl pointer to globasl) error
+//                              // which is the action to perform when this option found.
 //      }
 //
-// Every option Jacobin responds to (even if just to say it's not supported) requires an entry in
-// the Option table, except for these options:
+// Every option that Jacobin responds to (even if just to say it's not supported) requires
+// an entry in the Option table, except for these options:
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
 
@@ -50,8 +51,8 @@ import (
 //     param3 in step 1), you enter only the root as the key. For example, see
 //     the -verbose entry below.
 //  3) create the function referred to in param 3 in step 1. This function accepts
-//     the position in the option string where a parameter specified (as in parameters
-//     that come after a : or =), a string which contains any parameters (if it has
+//     the position in the command line where the present option is located (first
+//     option is at position zero), a string which contains any parameters (if it has
 //     no parameters an empty string is passed in), and finally a pointer to the
 //     globals data structure, which contains the Options table.
 //
