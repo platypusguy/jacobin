@@ -45,7 +45,10 @@ func main() {
 	// load the starting class, classes it references, and some base classes
 	classloader.Init(&Global)
 	classloader.LoadBaseClasses(&Global)
-	mainClass, _ := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+	if err != nil { // the error message will already have been shown to user
+		shutdown(true)
+	}
 	classloader.LoadReferencedClasses(classloader.BootstrapCL, mainClass)
 
 	// begin execution

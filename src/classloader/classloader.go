@@ -257,8 +257,8 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
-		log.Log("Could not read file: "+filename+". Exiting.", log.SEVERE)
-		return "", fmt.Errorf("file I/O error")
+		log.Log("Error: could not find or load main class "+filename+". Exiting.", log.SEVERE)
+		return "", fmt.Errorf("java.lang.classNotFoundException")
 	}
 
 	log.Log(filename+" read", log.FINE)
