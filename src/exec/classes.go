@@ -235,7 +235,14 @@ func fetchMethodAndCP(class, meth string) (Method, *CPool, error) {
 			return k.Data.Methods[i], &k.Data.CP, nil
 		}
 	}
-	log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+
+	if meth == "main" { // to be consistent withe the JDK, we print this peculiar error message when main() is missing
+		log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
+			"   public static void main(String[] args)", log.SEVERE)
+	} else {
+		log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+	}
+
 	return Method{}, nil, errors.New("method not found")
 }
 

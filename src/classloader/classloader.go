@@ -246,7 +246,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 		} else {
 			LoadClassFromFile(AppCL, name)
 		}
-		println("loading from channel: " + name)
+		//println("loading from channel: " + name)
 	}
 	globals.LoaderWg.Done()
 }
