@@ -135,6 +135,40 @@ func TestIconst5(t *testing.T) {
 	}
 }
 
+// ICMPLT: if integer compare val 1 < val 2
+func TestIfIcmplt(t *testing.T) {
+	f := newFrame(IF_ICMPLT)
+	push(&f, 8)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPLT: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICMPLT: if integer compare val 1 < val 2 //test when condition fails
+func TestIfIcmpltFail(t *testing.T) {
+	f := newFrame(IF_ICMPLT)
+	push(&f, 9)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, RETURN) // the failed test should drop to this
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("ICMPLT: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
 	f.locals = append(f.locals, 0)
