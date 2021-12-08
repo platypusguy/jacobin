@@ -275,7 +275,7 @@ func runFrame(f *frame) error {
 				gf.ftype = 'G' // a golang function
 
 				var argList []int64
-				for i := 0; i < gFunc.ParamSlots; i++ {
+				for i := 0; i < paramSlots; i++ {
 					arg := pop(f)
 					argList = append(argList, arg)
 				}
