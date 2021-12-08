@@ -275,7 +275,7 @@ func runFrame(f *frame) error {
 				gf.ftype = 'G' // a golang function
 
 				var argList []int64
-				for i := 0; i < v.ParamSlots; i++ {
+				for i := 0; i < gFunc.ParamSlots; i++ {
 					arg := pop(f)
 					argList = append(argList, arg)
 				}
@@ -373,7 +373,7 @@ func runFrame(f *frame) error {
 }
 
 // runs a frame whose method is a golang (so, native) method. It copies the parameters
-// from the operand stack and passes them to the go function, here called Fu.
+// from the operand stack and passes them to the go function, here called GFunction.
 // TODO: Handle how return values are placed back on the stack.
 func runGframe(fr *frame) error {
 	ve := VTable[fr.methName]
@@ -381,12 +381,14 @@ func runGframe(fr *frame) error {
 		return errors.New("go method not found: " + fr.methName)
 	}
 
+	gmeth := me.meth.(GMeth)
+
 	var params = new([]interface{})
 	for _, v := range fr.opStack {
 		*params = append(*params, v)
 	}
 
-	ve.Fu(*params)
+	gmeth.GFunction(*params)
 
 	return nil
 }
