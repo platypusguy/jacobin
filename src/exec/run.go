@@ -16,13 +16,13 @@ import (
 var MainThread execThread
 
 // StartExec is where execution begins. It initializes various structures, such as
-// the VTable, then using the passed-in name of the starting class, finds its main() method
+// the MTable, then using the passed-in name of the starting class, finds its main() method
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
-	// initialize the VTable
-	VTable = make(map[string]Ventry)
+	// initialize the MTable
+	MTable = make(map[string]MTentry)
 	VTableLoad()
 
 	m, cpp, err := fetchMethodAndCP(className, "main")
@@ -263,9 +263,11 @@ func runFrame(f *frame) error {
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := VTable[methodName+methodType]
-			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
-				gf := createFrame(v.ParamSlots)
+			v := MTable[methodName+methodType]
+			if v.meth != nil && v.mType == 'G' { // so we have a golang function
+				//gFunc := v.meth.(GmEntry).Fu
+				paramSlots := v.meth.(GmEntry).ParamSlots
+				gf := createFrame(paramSlots)
 				gf.thread = f.thread
 				gf.methName = methodName + methodType
 				gf.clName = className
@@ -376,8 +378,8 @@ func runFrame(f *frame) error {
 // from the operand stack and passes them to the go function, here called GFunction.
 // TODO: Handle how return values are placed back on the stack.
 func runGframe(fr *frame) error {
-	ve := VTable[fr.methName]
-	if ve.Fu == nil {
+	me := MTable[fr.methName]
+	if me.meth == nil {
 		return errors.New("go method not found: " + fr.methName)
 	}
 

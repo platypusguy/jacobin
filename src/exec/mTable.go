@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-// VTable is the table in which virtual method data is stored for quick reference at
+// MTable is the table in which method data is stored for quick reference at
 // method invocation. It consists of a map whose key is a string consisting of a
 // concatenation of the class name, method name, and method type. For example,
 //		java/io/PrintStream.println(Ljava/lang/String;)V
@@ -45,12 +45,12 @@ type GmEntry struct {
 	Fu         func([]interface{})
 }
 
-// Function is the generic-style function used in the VTable: a function that accepts a
+// Function is the generic-style function used for Go entries: a function that accepts a
 // slice of empty interfaces and returns nothing (b/c all returns are pushed onto the
 // stack rather than actually returned to a caller.
 type Function func([]interface{})
 
-// VTmutex is used for updates to the VTable because multiple threads could be
+// MTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
 var MTmutex sync.Mutex
 
@@ -73,8 +73,8 @@ func loadlib(libMeths map[string]GMeth) {
 			meth:  gme,
 		}
 
-		VTmutex.Lock()
-		VTable[key] = ve
-		VTmutex.Unlock()
+		MTmutex.Lock()
+		MTable[key] = tableEntry
+		MTmutex.Unlock()
 	}
 }
