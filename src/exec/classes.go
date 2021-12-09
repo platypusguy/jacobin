@@ -245,6 +245,22 @@ func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, erro
 		// method along with a pointer to the CP
 		for i := 0; i < len(k.Data.Methods); i++ {
 			if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth {
+				m := k.Data.Methods[i]
+				jme := JmEntry{
+					accessFlags: m.AccessFlags,
+					maxStack:    m.CodeAttr.MaxStack,
+					maxLocals:   m.CodeAttr.MaxLocals,
+					code:        m.CodeAttr.Code,
+					exceptions:  m.CodeAttr.Exceptions,
+					attribs:     m.CodeAttr.Attributes,
+					params:      m.Parameters,
+					deprecated:  m.Deprecated,
+					cp:          &k.Data.CP,
+				} // CURR: See notes in YouTrack for JAC-115
+				MTable[methFQN] = MTentry{
+					meth:  jme,
+					mType: 'J',
+				}
 				return k.Data.Methods[i], &k.Data.CP, nil
 			}
 		}
