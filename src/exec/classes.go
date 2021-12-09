@@ -42,7 +42,7 @@ type Static struct {
 		S	signed short int
 		Z	boolean
 		plus (Jacobin implementation-specific):
-		N   native method (that is, one written in go, in this
+		G   native method (that is, one written in Go
 	*/
 	Type      string  // Type data used for reference variables (i.e., objects, etc.)
 	ValueRef  string  // pointer--might need to change this
@@ -133,7 +133,7 @@ type CodeAttrib struct {
 	Attributes []Attr          // the code attributes has its own sub-attributes(!)
 }
 
-// the MethodParameters method attribute
+// ParamAttrib is the MethodParameters method attribute
 type ParamAttrib struct {
 	Name        string // string, rather than index into utf8Refs b/c the name could be ""
 	AccessFlags int
@@ -228,13 +228,14 @@ const (
 // It searches for the method first by checking the MTable (that is, the method table).
 // If it doesn't find it there, then it looks for it in the class entry in Classes.
 // If it finds it there, then it loads that class into the MTable and returns that
-// entry as the Method it's returning. // TODO: check superclasses if method not found
+// entry as the Method it's returning.
 func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
 	methFQN := class + "." + meth + methType //FQN = fully qualified name
 	methEntry := MTable[methFQN]
 	if methEntry.meth == nil { // method is not in the MTable, so find it and put it there
 		k := Classes[class]
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
+			// TODO: check superclasses if method not found
 			log.Log("Could not find class: "+class, log.SEVERE)
 			return Method{}, nil, errors.New("class not found")
 		}
@@ -249,7 +250,7 @@ func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, erro
 		}
 	}
 
-	// if we got this far, the class could not be found
+	// if we got this far, the class was not found
 
 	if meth == "main" { // to be consistent withe the JDK, we print this peculiar error message when main() is missing
 		log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+

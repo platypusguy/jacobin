@@ -12,7 +12,7 @@ import (
 
 /*
  Each object or library that has Go methods contains a reference to MethodSignatures,
- which contain data needed to insert the go method into the vtable of the currently
+ which contain data needed to insert the go method into the MTable of the currently
  executing JVM. MethodSignatures is a map whose key is the fully qualified name and
  type of the method (that is, the method's full signature) and a value consisting of
  a struct of an int (the number of slots to pop off the caller's operand stack when
@@ -64,7 +64,7 @@ func Println(i []interface{}) {
 	fmt.Println(s)
 }
 
-// java/io/Prinstream(int) TODO: equivalent (verify that this grabs the right param to print)
+// PrintlnI = java/io/Prinstream(int) TODO: equivalent (verify that this grabs the right param to print)
 func PrintlnI(i []interface{}) {
 	intToPrint := i[1].(int64) // points to an int
 	// cpi := i[0].(int64)    // int64 which is an index into Statics array
