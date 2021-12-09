@@ -33,8 +33,8 @@ var MTable = make(map[string]MTentry)
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
-	mType byte
-	meth  mData
+	meth  mData // the method data
+	mType byte  // method type, G = Go method, J = Java method
 }
 
 type mData interface{}
@@ -54,10 +54,10 @@ type Function func([]interface{})
 // updating it simultaneously.
 var MTmutex sync.Mutex
 
-// VTableLoad loads the Go methods from files that contain them. It does this by
-// calling the Load_* function in each of those files to load whatever Go functions
+// MTableLoadNatives loads the Go methods from files that contain them. It does this
+// by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
-func VTableLoad() {
+func MTableLoadNatives() {
 	loadlib(Load_System_PrintStream())
 
 }

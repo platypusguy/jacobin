@@ -23,9 +23,9 @@ var MainThread execThread
 func StartExec(className string, globals *globals.Globals) error {
 	// initialize the MTable
 	MTable = make(map[string]MTentry)
-	VTableLoad()
+	MTableLoadNatives()
 
-	m, cpp, err := fetchMethodAndCP(className, "main")
+	m, cpp, err := fetchMethodAndCP(className, "main", "([S)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
 	}
@@ -310,15 +310,14 @@ func runFrame(f *frame) error {
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
-			//fullMethodName := className + "." + methodName
-			//println("Method name for invokestatic: " + fullMethodName)
+			//println("Method name for invokestatic: " + className + "." + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			//println("Method signature for invokestatic: " + methodName + methodType)
 
-			m, cpp, err := fetchMethodAndCP(className, methodName)
+			m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
 				return errors.New("Class not found: " + className + methodName)
 			}
