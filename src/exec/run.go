@@ -81,7 +81,7 @@ func runFrame(f *frame) error {
 
 	for f.pc < len(f.meth) {
 		if MainThread.trace {
-			log.Log("class: "+f.clName+
+			_ = log.Log("class: "+f.clName+
 				", meth: "+f.methName+
 				", pc: "+strconv.Itoa(f.pc)+
 				", inst: "+BytecodeNames[int(f.meth[f.pc])]+
@@ -285,9 +285,9 @@ func runFrame(f *frame) error {
 					push(&gf, argList[j])
 				}
 				gf.tos = len(gf.opStack) - 1
-				pushFrame(&MainThread.stack, gf)
-				runGframe(&gf)
-				popFrame(&MainThread.stack)
+				_ = pushFrame(&MainThread.stack, gf)
+				_ = runGframe(&gf)
+				_ = popFrame(&MainThread.stack)
 				break
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
@@ -358,9 +358,9 @@ func runFrame(f *frame) error {
 			}
 			fram.tos = -1
 
-			pushFrame(&MainThread.stack, fram)
-			runFrame(&fram)
-			popFrame(&MainThread.stack)
+			_ = pushFrame(&MainThread.stack, fram)
+			_ = runFrame(&fram)
+			_ = popFrame(&MainThread.stack)
 			f = &(MainThread.stack.frames[MainThread.stack.top])
 
 		default:
@@ -383,14 +383,12 @@ func runGframe(fr *frame) error {
 		return errors.New("go method not found: " + fr.methName)
 	}
 
-	gmeth := me.meth.(GMeth)
-
 	var params = new([]interface{})
 	for _, v := range fr.opStack {
 		*params = append(*params, v)
 	}
 
-	gmeth.GFunction(*params)
+	me.meth.(GmEntry).Fu(*params)
 
 	return nil
 }
