@@ -75,7 +75,6 @@ func MTableLoadNatives() {
 	loadlib(Load_System_PrintStream()) // load the Println variants
 }
 
-// the actual loading of the G functions
 func loadlib(libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		gme := GmEntry{}

@@ -37,6 +37,20 @@ func TestBipush(t *testing.T) {
 	}
 }
 
+func TestIadd(t *testing.T) {
+	f := newFrame(IADD)
+	push(&f, 21)
+	push(&f, 22)
+	_ = runFrame(&f)
+	value := pop(&f)
+	if value != 43 {
+		t.Errorf("IADD: expected a result of 43, but got: %d", value)
+	}
+	if f.tos != -1 {
+		t.Errorf("IADD: Expected an empty stack, but got a tos of: %d", f.tos)
+	}
+}
+
 func TestIconstN1(t *testing.T) {
 	f := newFrame(ICONST_N1)
 	_ = runFrame(&f)
@@ -121,6 +135,91 @@ func TestIconst5(t *testing.T) {
 	}
 }
 
+// ICMPGE: if integer compare val 1 >= val 2. Here test for = (next test for >)
+func TestIfIcmpge1(t *testing.T) {
+	f := newFrame(IF_ICMPGE)
+	push(&f, 9)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPGE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICMPGE: if integer compare val 1 >= val 2. Here test for > (previous test for =)
+func TestIfIcmpge21(t *testing.T) {
+	f := newFrame(IF_ICMPGE)
+	push(&f, 9)
+	push(&f, 8)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPGE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICMPGE: if integer compare val 1 >= val 2 //test when condition fails
+func TestIfIcmgetFail(t *testing.T) {
+	f := newFrame(IF_ICMPGE)
+	push(&f, 8)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, RETURN) // the failed test should drop to this
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("ICMPGE: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICMPLT: if integer compare val 1 < val 2
+func TestIfIcmplt(t *testing.T) {
+	f := newFrame(IF_ICMPLT)
+	push(&f, 8)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPLT: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICMPLT: if integer compare val 1 < val 2 //test when condition fails
+func TestIfIcmpltFail(t *testing.T) {
+	f := newFrame(IF_ICMPLT)
+	push(&f, 9)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, RETURN) // the failed test should drop to this
+	f.meth = append(f.meth, ICONST_2)
+	_ = runFrame(&f)
+	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("ICMPLT: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
 	f.locals = append(f.locals, 0)
@@ -192,6 +291,64 @@ func TestIload3(t *testing.T) {
 	value := pop(&f)
 	if value != 27 {
 		t.Errorf("ILOAD_3: Expected popped value to be 27, got: %d", value)
+	}
+}
+
+func TestIstore0(t *testing.T) {
+	f := newFrame(ISTORE_0)
+	f.locals = append(f.locals, 0)
+	push(&f, 220)
+	_ = runFrame(&f)
+	if f.locals[0] != 220 {
+		t.Errorf("After ISTORE_0, expected lcoals[2] to be 220, got: %d", f.locals[0])
+	}
+	if f.tos != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestIstore1(t *testing.T) {
+	f := newFrame(ISTORE_1)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 221)
+	_ = runFrame(&f)
+	if f.locals[1] != 221 {
+		t.Errorf("After ISTORE_1, expected lcoals[1] to be 221, got: %d", f.locals[1])
+	}
+	if f.tos != -1 {
+		t.Errorf("ISTORE_1: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestIstore2(t *testing.T) {
+	f := newFrame(ISTORE_2)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 222)
+	_ = runFrame(&f)
+	if f.locals[2] != 222 {
+		t.Errorf("After ISTORE_2, expected lcoals[2] to be 222, got: %d", f.locals[2])
+	}
+	if f.tos != -1 {
+		t.Errorf("ISTORE_2: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestIstore3(t *testing.T) {
+	f := newFrame(ISTORE_3)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 223)
+	_ = runFrame(&f)
+	if f.locals[3] != 223 {
+		t.Errorf("After ISTORE_3, expected lcoals[0] to be 223, got: %d", f.locals[3])
+	}
+	if f.tos != -1 {
+		t.Errorf("ISTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
 	}
 }
 

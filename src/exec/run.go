@@ -16,16 +16,16 @@ import (
 var MainThread execThread
 
 // StartExec is where execution begins. It initializes various structures, such as
-// the VTable, then using the passed-in name of the starting class, finds its main() method
+// the MTable, then using the passed-in name of the starting class, finds its main() method
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
-	// initialize the VTable
-	VTable = make(map[string]Ventry)
-	VTableLoad()
+	// initialize the MTable
+	MTable = make(map[string]MTentry)
+	MTableLoadNatives()
 
-	m, cpp, err := fetchMethodAndCP(className, "main")
+	m, cpp, err := fetchMethodAndCP(className, "main", "([S)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
 	}
@@ -81,7 +81,7 @@ func runFrame(f *frame) error {
 
 	for f.pc < len(f.meth) {
 		if MainThread.trace {
-			log.Log("class: "+f.clName+
+			_ = log.Log("class: "+f.clName+
 				", meth: "+f.methName+
 				", pc: "+strconv.Itoa(f.pc)+
 				", inst: "+BytecodeNames[int(f.meth[f.pc])]+
@@ -263,9 +263,11 @@ func runFrame(f *frame) error {
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := VTable[methodName+methodType]
-			if v.Fu != nil && v.MethType == 'G' { // so we have a golang function in the queue
-				gf := createFrame(v.ParamSlots)
+			v := MTable[methodName+methodType]
+			if v.meth != nil && v.mType == 'G' { // so we have a golang function
+				//gFunc := v.meth.(GmEntry).Fu
+				paramSlots := v.meth.(GmEntry).ParamSlots
+				gf := createFrame(paramSlots)
 				gf.thread = f.thread
 				gf.methName = methodName + methodType
 				gf.clName = className
@@ -275,7 +277,7 @@ func runFrame(f *frame) error {
 				gf.ftype = 'G' // a golang function
 
 				var argList []int64
-				for i := 0; i < v.ParamSlots; i++ {
+				for i := 0; i < paramSlots; i++ {
 					arg := pop(f)
 					argList = append(argList, arg)
 				}
@@ -283,9 +285,9 @@ func runFrame(f *frame) error {
 					push(&gf, argList[j])
 				}
 				gf.tos = len(gf.opStack) - 1
-				pushFrame(&MainThread.stack, gf)
-				runGframe(&gf)
-				popFrame(&MainThread.stack)
+				_ = pushFrame(&MainThread.stack, gf)
+				_ = runGframe(&gf)
+				_ = popFrame(&MainThread.stack)
 				break
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
@@ -308,15 +310,14 @@ func runFrame(f *frame) error {
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
-			//fullMethodName := className + "." + methodName
-			//println("Method name for invokestatic: " + fullMethodName)
+			//println("Method name for invokestatic: " + className + "." + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			//println("Method signature for invokestatic: " + methodName + methodType)
 
-			m, cpp, err := fetchMethodAndCP(className, methodName)
+			m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
 				return errors.New("Class not found: " + className + methodName)
 			}
@@ -356,9 +357,9 @@ func runFrame(f *frame) error {
 			}
 			fram.tos = -1
 
-			pushFrame(&MainThread.stack, fram)
-			runFrame(&fram)
-			popFrame(&MainThread.stack)
+			_ = pushFrame(&MainThread.stack, fram)
+			_ = runFrame(&fram)
+			_ = popFrame(&MainThread.stack)
 			f = &(MainThread.stack.frames[MainThread.stack.top])
 
 		default:
@@ -373,11 +374,11 @@ func runFrame(f *frame) error {
 }
 
 // runs a frame whose method is a golang (so, native) method. It copies the parameters
-// from the operand stack and passes them to the go function, here called Fu.
+// from the operand stack and passes them to the go function, here called GFunction.
 // TODO: Handle how return values are placed back on the stack.
 func runGframe(fr *frame) error {
-	ve := VTable[fr.methName]
-	if ve.Fu == nil {
+	me := MTable[fr.methName]
+	if me.meth == nil {
 		return errors.New("go method not found: " + fr.methName)
 	}
 
@@ -386,7 +387,7 @@ func runGframe(fr *frame) error {
 		*params = append(*params, v)
 	}
 
-	ve.Fu(*params)
+	me.meth.(GmEntry).Fu(*params)
 
 	return nil
 }

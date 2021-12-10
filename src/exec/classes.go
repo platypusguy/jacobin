@@ -42,7 +42,7 @@ type Static struct {
 		S	signed short int
 		Z	boolean
 		plus (Jacobin implementation-specific):
-		N   native method (that is, one written in go, in this
+		G   native method (that is, one written in Go
 	*/
 	Type      string  // Type data used for reference variables (i.e., objects, etc.)
 	ValueRef  string  // pointer--might need to change this
@@ -133,7 +133,7 @@ type CodeAttrib struct {
 	Attributes []Attr          // the code attributes has its own sub-attributes(!)
 }
 
-// the MethodParameters method attribute
+// ParamAttrib is the MethodParameters method attribute
 type ParamAttrib struct {
 	Name        string // string, rather than index into utf8Refs b/c the name could be ""
 	AccessFlags int
@@ -224,23 +224,62 @@ const (
 	Package            = 20
 )
 
-func fetchMethodAndCP(class, meth string) (Method, *CPool, error) {
-	k := Classes[class]
-	if k.Loader == "" { // if class is not found, the zero value struct is returned
-		log.Log("Could not find class: "+class, log.SEVERE)
-		return Method{}, nil, errors.New("class not found")
-	}
-	for i := 0; i < len(k.Data.Methods); i++ {
-		if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth {
-			return k.Data.Methods[i], &k.Data.CP, nil
+// fetchMethodAndCP gets the method and the CP for the class of the method.
+// It searches for the method first by checking the MTable (that is, the method table).
+// If it doesn't find it there, then it looks for it in the class entry in Classes.
+// If it finds it there, then it loads that class into the MTable and returns that
+// entry as the Method it's returning.
+func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
+	methFQN := class + "." + meth + methType //FQN = fully qualified name
+	methEntry := MTable[methFQN]
+	if methEntry.meth == nil { // method is not in the MTable, so find it and put it there
+		k := Classes[class]
+		if k.Loader == "" { // if class is not found, the zero value struct is returned
+			// TODO: check superclasses if method not found
+			log.Log("Could not find class: "+class, log.SEVERE)
+			return Method{}, nil, errors.New("class not found")
+		}
+
+		// the class has been found (k) so now go down the list of methods until
+		// we find one that matches the name we're looking for. Then return that
+		// method along with a pointer to the CP
+		for i := 0; i < len(k.Data.Methods); i++ {
+			if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth {
+				m := k.Data.Methods[i]
+				jme := JmEntry{
+					accessFlags: m.AccessFlags,
+					maxStack:    m.CodeAttr.MaxStack,
+					maxLocals:   m.CodeAttr.MaxLocals,
+					code:        m.CodeAttr.Code,
+					exceptions:  m.CodeAttr.Exceptions,
+					attribs:     m.CodeAttr.Attributes,
+					params:      m.Parameters,
+					deprecated:  m.Deprecated,
+					cp:          &k.Data.CP,
+				} // CURR: See notes in YouTrack for JAC-115
+				MTable[methFQN] = MTentry{
+					meth:  jme,
+					mType: 'J',
+				}
+				return k.Data.Methods[i], &k.Data.CP, nil
+			}
 		}
 	}
-	log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+
+	// if we got this far, the class was not found
+
+	if meth == "main" { // to be consistent withe the JDK, we print this peculiar error message when main() is missing
+		log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
+			"   public static void main(String[] args)", log.SEVERE)
+	} else {
+		log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+	}
+
 	return Method{}, nil, errors.New("method not found")
 }
 
-// fetches the UTF8 string using the CP entry number for that string in the
-// designated ClData.CP. Returns "" on error.
+// FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number
+// for that string in the designated ClData.CP. Returns "" on error.
 func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
 		return ""
