@@ -16,7 +16,7 @@ import (
 //
 // The value consists of a byte identifying whether the method is a Java method
 // ('J'), that is, a method that is executed by executing bytecodes, or a go
-// method ('G"), which is a Go funciton that is being used as a stand-in for
+// method ('G'), which is a Go funciton that is being used as a stand-in for
 // the named Java method. In most contexts, this would be called a native method,
 // but that term is used in a different context in Java (see JNI), so avoided here.
 //
