@@ -229,15 +229,16 @@ const (
 // If it doesn't find it there, then it looks for it in the class entry in Classes.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
-func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
-	methFQN := class + "." + meth + methType //FQN = fully qualified name
+// func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
+func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
+	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
 	if methEntry.meth == nil { // method is not in the MTable, so find it and put it there
 		k := Classes[class]
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			log.Log("Could not find class: "+class, log.SEVERE)
-			return Method{}, nil, errors.New("class not found")
+			_ = log.Log("Could not find class: "+class, log.SEVERE)
+			return MTentry{}, errors.New("class not found")
 		}
 
 		// the class has been found (k) so now go down the list of methods until
@@ -261,21 +262,28 @@ func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, erro
 					meth:  jme,
 					mType: 'J',
 				}
-				return k.Data.Methods[i], &k.Data.CP, nil
+				// return k.Data.Methods[i], &k.Data.CP, nil
+				return MTentry{meth: jme, mType: 'J'}, nil
 			}
+		}
+	} else { // we found the entry in the MTable
+		if methEntry.mType == 'J' {
+			return MTentry{meth: methEntry.meth, mType: 'J'}, nil
+		} else if methEntry.mType == 'G' {
+			return MTentry{meth: methEntry.meth, mType: 'G'}, nil
 		}
 	}
 
 	// if we got this far, the class was not found
 
 	if meth == "main" { // to be consistent withe the JDK, we print this peculiar error message when main() is missing
-		log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
+		_ = log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
 			"   public static void main(String[] args)", log.SEVERE)
 	} else {
-		log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+		_ = log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
 	}
 
-	return Method{}, nil, errors.New("method not found")
+	return MTentry{}, errors.New("method not found")
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number

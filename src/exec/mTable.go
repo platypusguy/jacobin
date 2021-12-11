@@ -61,7 +61,7 @@ type JmEntry struct {
 
 // Function is the generic-style function used for Go entries: a function that accepts a
 // slice of empty interfaces and returns nothing (b/c all returns are pushed onto the
-// stack rather than actually returned to a caller.
+// stack rather than actually returned to a caller).
 type Function func([]interface{})
 
 // MTmutex is used for updates to the MTable because multiple threads could be

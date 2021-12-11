@@ -5,6 +5,8 @@
 
 package exec
 
+import "container/list"
+
 // Creates a JVM program execution thread. These threads are extremely limited.
 // They basically hold a stack of frames. They push and popFrame frames as required.
 // They begin execution; they exit when execution ends; and they emit diagnostic
@@ -12,7 +14,7 @@ package exec
 
 type execThread struct {
 	id    int        // the thread ID
-	stack frameStack // the JVM stack for this thread
+	stack *list.List // the JVM stack for this thread
 	pc    int        // the program counter (the index to the instruction being executed)
 	trace bool       // do we trace instructions?
 }

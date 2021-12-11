@@ -9,35 +9,25 @@ import "testing"
 
 func TestFrameStack(t *testing.T) {
 	fs := createFrameStack()
-	if fs.top != 0 {
-		t.Errorf("Newly allocated framestack. Expected top to be 0, got: %d", fs.top)
-	}
-
-	if fs.size != 10 {
-		t.Errorf("Newly allocated framestack. Expected size to be 10, got: %d", fs.size)
+	if fs.Len() != 0 {
+		t.Errorf("Newly allocated framestack. Expected size to be 0, got: %d", fs.Len())
 	}
 }
 
 func TestFrameStackPushAndPop(t *testing.T) {
 	fs := createFrameStack()
-	pushFrame(&fs, frame{})
-	if fs.top != 1 {
-		t.Errorf("Pushed frame on to empty stack. Expected top to be 1, got: %d", fs.top)
+	_ = pushFrame(fs, &frame{})
+	if fs.Len() != 1 {
+		t.Errorf("Pushed frame on to empty stack. Expected size of stack to be 1, got: %d", fs.Len())
 	}
 
-	popFrame(&fs)
-	if fs.top != 0 {
-		t.Errorf("Poppped only frame. Expected top to be 0, got: %d", fs.top)
-	}
-
-	if fs.size != 10 {
-		t.Errorf("Expected framestack size to be 10, got: %d", fs.size)
+	_ = popFrame(fs)
+	if fs.Len() != 0 {
+		t.Errorf("Poppped only frame. Expected size of stack to be 0, got: %d", fs.Len())
 	}
 
 	// the test stack is empty at this point, so popFrame() should return an error
-	if popFrame(&fs) == nil {
+	if popFrame(fs) == nil {
 		t.Error("popFrame() on an empty frame stack did not generate an error.")
 	}
 }
-
-//TODO: Push 11 items and make sure that the stack grows correctly.

@@ -6,6 +6,7 @@
 package exec
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"jacobin/globals"
@@ -25,21 +26,22 @@ func StartExec(className string, globals *globals.Globals) error {
 	MTable = make(map[string]MTentry)
 	MTableLoadNatives()
 
-	m, cpp, err := fetchMethodAndCP(className, "main", "([S)V")
+	me, err := fetchMethodAndCP(className, "main", "([S)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
 	}
 
-	f := createFrame(m.CodeAttr.MaxStack) // create a new frame
+	m := me.meth.(JmEntry)
+	f := createFrame(m.maxStack) // create a new frame
 	f.methName = "main"
 	f.clName = className
-	f.cp = cpp                                  // add its pointer to the class CP
-	for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
-		f.meth = append(f.meth, m.CodeAttr.Code[i])
+	f.cp = m.cp                        // add its pointer to the class CP
+	for i := 0; i < len(m.code); i++ { // copy the bytecodes over
+		f.meth = append(f.meth, m.code[i])
 	}
 
 	// allocate the local variables
-	for k := 0; k < m.CodeAttr.MaxLocals; k++ {
+	for k := 0; k < m.maxLocals; k++ {
 		f.locals = append(f.locals, 0)
 	}
 
@@ -52,7 +54,8 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 	MainThread.trace = tracing
 	f.thread = MainThread.id
-	if pushFrame(&MainThread.stack, f) != nil {
+
+	if pushFrame(MainThread.stack, f) != nil {
 		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(MainThread.id), log.SEVERE)
 		return errors.New("outOfMemory Exception")
 	}
@@ -66,16 +69,18 @@ func StartExec(className string, globals *globals.Globals) error {
 
 // Point the thread to the top of the frame stack and tell it to run from there.
 func runThread(t *execThread) error {
-	for t.stack.top > 0 {
-		currFrame := t.stack.frames[t.stack.top]
-		_ = runFrame(&currFrame)
-		_ = popFrame(&t.stack)
+	for t.stack.Len() > 0 {
+		err := runFrame(t.stack)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func runFrame(f *frame) error {
-	if f.ftype == 'G' { // if the frame contains a Golang method ('G')
+func runFrame(fs *list.List) error {
+	f := fs.Front().Value.(*frame) // convert list element to frame pointer
+	if f.ftype == 'G' {            // if the frame contains a Golang method ('G')
 		return runGframe(f) // run it differently
 	}
 
@@ -161,11 +166,9 @@ func runFrame(f *frame) error {
 			f.pc = f.pc + int(jumpTo) - 1 // -1 because this loop will increment f.pc by 1
 		case IRETURN: // 0xAC (return an int and exit current frame)
 			valToReturn := pop(f)
-			fStack := &MainThread.stack
-			// prevFrame := fStack.frames[fStack.top-1]
-			// push(&prevFrame, valToReturn)
-			push(&fStack.frames[fStack.top-1], valToReturn)
-			return nil
+			fs.Remove(fs.Front())
+			f = fs.Front().Value.(*frame) // point to the head again
+			push(f, valToReturn)          // TODO: check what happens when main() ends on IRETURN
 		case RETURN: // 0xB1    (return from void function)
 			f.tos = -1 // empty the stack
 			return nil
@@ -265,7 +268,7 @@ func runFrame(f *frame) error {
 
 			v := MTable[methodName+methodType]
 			if v.meth != nil && v.mType == 'G' { // so we have a golang function
-				//gFunc := v.meth.(GmEntry).Fu
+				// gFunc := v.meth.(GmEntry).Fu
 				paramSlots := v.meth.(GmEntry).ParamSlots
 				gf := createFrame(paramSlots)
 				gf.thread = f.thread
@@ -282,12 +285,15 @@ func runFrame(f *frame) error {
 					argList = append(argList, arg)
 				}
 				for j := len(argList) - 1; j >= 0; j-- {
-					push(&gf, argList[j])
+					push(gf, argList[j])
 				}
 				gf.tos = len(gf.opStack) - 1
-				_ = pushFrame(&MainThread.stack, gf)
-				_ = runGframe(&gf)
-				_ = popFrame(&MainThread.stack)
+
+				fs.PushFront(gf)              // push the new frame
+				f = fs.Front().Value.(*frame) // point f to the new head
+				_ = runFrame(fs)
+				fs.Remove(fs.Front())         // pop the frame off
+				f = fs.Front().Value.(*frame) // point f the head again
 				break
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
@@ -310,57 +316,77 @@ func runFrame(f *frame) error {
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
-			//println("Method name for invokestatic: " + className + "." + methodName)
+			// println("Method name for invokestatic: " + className + "." + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
-			//println("Method signature for invokestatic: " + methodName + methodType)
+			// println("Method signature for invokestatic: " + methodName + methodType)
 
-			m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
+			// m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
+			mtEntry, err := fetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
 				return errors.New("Class not found: " + className + methodName)
 			}
 
-			maxStack := m.CodeAttr.MaxStack
-			fram := createFrame(maxStack)
+			if mtEntry.mType == 'J' {
+				m := mtEntry.meth.(JmEntry)
+				maxStack := m.maxStack
+				fram := createFrame(maxStack)
 
-			fram.clName = className
-			fram.methName = methodName
-			fram.cp = cpp                               // add its pointer to the class CP
-			for i := 0; i < len(m.CodeAttr.Code); i++ { // copy the bytecodes over
-				fram.meth = append(fram.meth, m.CodeAttr.Code[i])
-			}
+				fram.clName = className
+				fram.methName = methodName
+				fram.cp = m.cp                     // add its pointer to the class CP
+				for i := 0; i < len(m.code); i++ { // copy the bytecodes over
+					fram.meth = append(fram.meth, m.code[i])
+				}
 
-			// allocate the local variables
-			for k := 0; k < m.CodeAttr.MaxLocals; k++ {
-				fram.locals = append(fram.locals, 0)
-			}
+				// allocate the local variables
+				for k := 0; k < m.maxLocals; k++ {
+					fram.locals = append(fram.locals, 0)
+				}
 
-			// pop the parameters off the present stack and put them in the new frame's locals
-			var argList []int64
-			paramsToPass := ParseIncomingParamsFromMethTypeString(methodType)
-			if len(paramsToPass) > 0 {
-				for i := 0; i < len(paramsToPass); i++ {
-					arg := pop(f)
-					argList = append(argList, arg)
-					if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
-						pop(f) // doubles and longs occupy two slots on the operand stack
+				// pop the parameters off the present stack and put them in the new frame's locals
+				var argList []int64
+				paramsToPass := ParseIncomingParamsFromMethTypeString(methodType)
+				if len(paramsToPass) > 0 {
+					for i := 0; i < len(paramsToPass); i++ {
+						arg := pop(f)
+						argList = append(argList, arg)
+						if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
+							pop(f) // doubles and longs occupy two slots on the operand stack
+						}
 					}
 				}
-			}
 
-			destLocal := 0
-			for j := len(argList) - 1; j >= 0; j-- {
-				fram.locals[destLocal] = argList[j]
-				destLocal += 1
-			}
-			fram.tos = -1
+				destLocal := 0
+				for j := len(argList) - 1; j >= 0; j-- {
+					fram.locals[destLocal] = argList[j]
+					destLocal += 1
+				}
+				fram.tos = -1
 
-			_ = pushFrame(&MainThread.stack, fram)
-			_ = runFrame(&fram)
-			_ = popFrame(&MainThread.stack)
-			f = &(MainThread.stack.frames[MainThread.stack.top])
+				fs.PushFront(fram)            // push the new frame
+				f = fs.Front().Value.(*frame) // point f to the new head
+				_ = runFrame(fs)
+
+				// if the static method is main(), when we get here the
+				// frame stack will be empty to exit from here, otherwise
+				// there's still a frame on the stack, pop it off and continue.
+				if fs.Len() == 0 {
+					return nil
+				}
+				fs.Remove(fs.Front()) // pop the frame off
+
+				// the previous frame pop might have been main()
+				// if so, then we can't reset f to a non-existent frame
+				// so we test for this before resetting f.
+				if fs.Len() != 0 {
+					f = fs.Front().Value.(*frame)
+				} else {
+					return nil
+				}
+			}
 
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",

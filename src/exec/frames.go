@@ -6,6 +6,7 @@
 package exec
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/log"
 )
@@ -29,31 +30,15 @@ type frame struct {
 	ftype    byte    // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
-// a stack of frames. Top points to the present top of the stack.
-// When top == 0, the stack is empty. (In other words, there is no
-// zero entry in this stack. size is the total number of allocated
-// slots in the stack. When a push() forces top to go past size, a
-// new slot is allocated.
-type frameStack struct {
-	frames []frame
-	top    int
-	size   int
-}
-
-// we preallocate 10 frames for this stack. If more are needed,
-// they'll be appended in push()
-func createFrameStack() frameStack {
-	fs := frameStack{}
-	for i := 0; i < 10; i++ {
-		fs.frames = append(fs.frames, frame{})
-	}
-	fs.top = 0
-	fs.size = 10
-	return fs
+// a stack of frames. Implemented as a list in which the current running
+// frame is always the frame at the head
+func createFrameStack() *list.List {
+	l := list.New()
+	return l
 }
 
 // creates a raw frame and allocates an opStack of the passed-in size.
-func createFrame(opStackSize int) frame {
+func createFrame(opStackSize int) *frame {
 	fram := frame{}
 
 	// allocate the operand stack
@@ -64,39 +49,30 @@ func createFrame(opStackSize int) frame {
 	// set top of stack to an empty stack
 	fram.tos = -1
 	fram.pc = 0
-	return fram
+	return &fram
 }
 
-// push a frame. If more frames need to be allocated to the frame stack,
-// then append one for the new frame. Always returns nil at present, but see:
-// TODO: test for out of memory error.
-func pushFrame(fs *frameStack, f frame) error {
-	fs.top += 1
-	if fs.top >= fs.size {
-		fs.frames = append(fs.frames, f)
-		fs.size += 1
-	} else {
-		fs.frames[fs.top] = f
-	}
-
+// push a frame. This simply adds a frame to the head of the list.
+func pushFrame(fs *list.List, f *frame) error {
+	fs.PushFront(f)
 	// TODO: move this to instrumentation system
 	if log.Level == log.FINEST {
 		var s string
-		for i := fs.top; i > 0; i-- {
-			s = s + "\n" + "> " + fs.frames[i].methName
+		for e := fs.Front(); e != nil; e = e.Next() {
+			fr := e.Value.(*frame)
+			s = s + "\n" + "> " + fr.methName
 		}
 		_ = log.Log("Present stack frame:"+s, log.FINEST)
 	}
 	return nil
 }
 
-// unlike most stacks, popFrame() here does not return an item. It simply
-// decrements to the top of stack variable. Nothing is erased. Popping
-// from an empty stack returns an error.
-func popFrame(fs *frameStack) error {
-	if fs.top == 0 {
+// deletes the frame at the head of the list.
+func popFrame(fs *list.List) error {
+	if fs.Len() == 0 {
 		return fmt.Errorf("invalid popFrame of empty JVM frame stack")
 	}
-	fs.top -= 1
+
+	fs.Remove(fs.Front())
 	return nil
 }
