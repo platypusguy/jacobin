@@ -257,12 +257,11 @@ func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 					params:      m.Parameters,
 					deprecated:  m.Deprecated,
 					cp:          &k.Data.CP,
-				} // CURR: See notes in YouTrack for JAC-115
+				}
 				MTable[methFQN] = MTentry{
 					meth:  jme,
 					mType: 'J',
 				}
-				// return k.Data.Methods[i], &k.Data.CP, nil
 				return MTentry{meth: jme, mType: 'J'}, nil
 			}
 		}
