@@ -29,7 +29,10 @@ import (
 // the search goes to the class and faiing that to the superclass, etc. Once the
 // method is located it's added to the MTable so that all future invocations will
 // result in fast look-ups in the MTable.
-var MTable = make(map[string]MTentry)
+var MTable = make(MT)
+
+// MT is a type alias for the MTable. It's simply syntactic sugar in context.
+type MT = map[string]MTentry
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
@@ -72,10 +75,10 @@ var MTmutex sync.Mutex
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
 func MTableLoadNatives() {
-	loadlib(Load_System_PrintStream()) // load the Println variants
+	loadlib(&MTable, Load_System_PrintStream()) // load the Println variants
 }
 
-func loadlib(libMeths map[string]GMeth) {
+func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		gme := GmEntry{}
 		gme.ParamSlots = val.ParamSlots
@@ -86,8 +89,15 @@ func loadlib(libMeths map[string]GMeth) {
 			meth:  gme,
 		}
 
-		MTmutex.Lock()
-		MTable[key] = tableEntry
-		MTmutex.Unlock()
+		addEntry(tbl, key, tableEntry)
 	}
+}
+
+// adds an entry to the MTable, using a mutex
+func addEntry(tbl *MT, key string, mte MTentry) {
+	mt := *tbl
+
+	MTmutex.Lock()
+	mt[key] = mte
+	MTmutex.Unlock()
 }
