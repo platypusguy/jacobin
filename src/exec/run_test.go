@@ -332,6 +332,23 @@ func TestIload3(t *testing.T) {
 	}
 }
 
+// Test IMUL (pop 2 values, multiply them, push result)
+func TestImul(t *testing.T) {
+	f := newFrame(IMUL)
+	push(&f, 10)
+	push(&f, 7)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.tos != 0 {
+		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 70 {
+		t.Errorf("IMUL: Expected popped value to be 70, got: %d", value)
+	}
+}
+
 func TestIstore0(t *testing.T) {
 	f := newFrame(ISTORE_0)
 	f.locals = append(f.locals, 0)
