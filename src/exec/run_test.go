@@ -24,6 +24,158 @@ func newFrame(code byte) frame {
 
 // ---- tests ----
 
+// test load of reference in locals[0] on to stack
+func TestAload0(t *testing.T) {
+	f := newFrame(ALOAD_0)
+	f.locals = append(f.locals, 0x1234560) // put value in locals[0]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234560 {
+		t.Errorf("ALOAD_0: Expecting 0x1234560 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ALOAD_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test load of reference in locals[1] on to stack
+func TestAload1(t *testing.T) {
+	f := newFrame(ALOAD_1)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234561) // put value in locals[1]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234561 {
+		t.Errorf("ALOAD_1: Expecting 0x1234561 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ALOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// // test load of reference in locals[2] on to stack
+func TestAload2(t *testing.T) {
+	f := newFrame(ALOAD_2)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[2]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("ALOAD_2: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ALOAD_2: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test load of reference in locals[3] on to stack
+func TestAload3(t *testing.T) {
+	f := newFrame(ALOAD_3)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234563) // put value in locals[3]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234563 {
+		t.Errorf("ALOAD_3: Expecting 0x1234563 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ALOAD_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test store of reference from stack into locals[0]
+func TestAstore0(t *testing.T) {
+	f := newFrame(ASTORE_0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22220)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[0] != 0x22220 {
+		t.Errorf("ASTORE_0: Expecting 0x22220 on stack, got: 0x%x", f.locals[0])
+	}
+	if f.tos != -1 {
+		t.Errorf("ASTORE_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test store of reference from stack into locals[1]
+func TestAstore1(t *testing.T) {
+	f := newFrame(ASTORE_1)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22221)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[1] != 0x22221 {
+		t.Errorf("ASTORE_1: Expecting 0x22221 on stack, got: 0x%x", f.locals[0])
+	}
+	if f.tos != -1 {
+		t.Errorf("ASTORE_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test store of reference from stack into locals[2]
+func TestAstore2(t *testing.T) {
+	f := newFrame(ASTORE_2)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22222)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x22222 {
+		t.Errorf("ASTORE_2: Expecting 0x22222 on stack, got: 0x%x", f.locals[0])
+	}
+	if f.tos != -1 {
+		t.Errorf("ASTORE_2: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// test store of reference from stack into locals[3]
+func TestAstore3(t *testing.T) {
+	f := newFrame(ASTORE_3)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[3] != 0x22223 {
+		t.Errorf("ASTORE_3: Expecting 0x22223 on stack, got: 0x%x", f.locals[0])
+	}
+	if f.tos != -1 {
+		t.Errorf("ASTORE_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
 func TestBipush(t *testing.T) {
 	f := newFrame(BIPUSH)
 	f.meth = append(f.meth, 0x05)
