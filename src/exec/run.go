@@ -9,6 +9,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	// "main"
 	"jacobin/globals"
 	"jacobin/log"
 	"strconv"
@@ -388,7 +389,10 @@ func runFrame(fs *list.List) error {
 
 				fs.PushFront(fram)            // push the new frame
 				f = fs.Front().Value.(*frame) // point f to the new head
-				_ = runFrame(fs)
+				err = runFrame(fs)
+				if err != nil {
+					return err
+				}
 
 				// if the static method is main(), when we get here the
 				// frame stack will be empty to exit from here, otherwise
