@@ -26,7 +26,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	MTable = make(map[string]MTentry)
 	MTableLoadNatives()
 
-	me, err := fetchMethodAndCP(className, "main", "([S)V")
+	me, err := fetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
 	}

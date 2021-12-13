@@ -251,7 +251,8 @@ func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		// we find one that matches the name we're looking for. Then return that
 		// method along with a pointer to the CP
 		for i := 0; i < len(k.Data.Methods); i++ {
-			if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth {
+			if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth &&
+				k.Data.CP.Utf8Refs[k.Data.Methods[i].Desc] == methType {
 				m := k.Data.Methods[i]
 				jme := JmEntry{
 					accessFlags: m.AccessFlags,
