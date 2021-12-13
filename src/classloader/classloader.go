@@ -233,7 +233,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 		// add entry to the method area, indicating initialization of the load of this class
 		eKI := exec.Klass{
 			Status: 'I', // I = initializing the load
-			Loader: name,
+			Loader: "",
 			Data:   nil,
 		}
 		insert(name, eKI)
@@ -246,7 +246,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 		} else {
 			LoadClassFromFile(AppCL, name)
 		}
-		//println("loading from channel: " + name)
+		// println("loading from channel: " + name)
 	}
 	globals.LoaderWg.Done()
 }

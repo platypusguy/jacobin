@@ -11,6 +11,7 @@ import (
 	"jacobin/log"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Classes contains all the loaded classes
@@ -235,6 +236,11 @@ func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methEntry := MTable[methFQN]
 	if methEntry.meth == nil { // method is not in the MTable, so find it and put it there
 		k := Classes[class]
+		if k.Status == 'I' { // class is being initialized by a loader, so wait
+			time.Sleep(15 * time.Millisecond) // TODO: must be a better way to do this
+			k = Classes[class]
+		}
+
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
 			_ = log.Log("Could not find class: "+class, log.SEVERE)
