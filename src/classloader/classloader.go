@@ -15,6 +15,7 @@ import (
 	"jacobin/exec"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/util"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -191,7 +192,7 @@ func LoadBaseClasses(global *globals.Globals) {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			rawName := scanner.Text()
-			name := exec.ConvertInternalClassNameToFilename(rawName)
+			name := util.ConvertInternalClassNameToFilename(rawName)
 			name = globals.JacobinHome() + "classes\\" + name
 			LoadClassFromFile(BootstrapCL, name)
 			// LoadReferencedClasses(BootstrapCL, rawName)
@@ -240,7 +241,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 
 		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
 			strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
-			name = exec.ConvertInternalClassNameToFilename(name)
+			name = util.ConvertInternalClassNameToFilename(name)
 			name = globals.JacobinHome() + "classes\\" + name
 			LoadClassFromFile(BootstrapCL, name)
 		} else {
@@ -249,6 +250,31 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 		// println("loading from channel: " + name)
 	}
 	globals.LoaderWg.Done()
+}
+
+func LoadClassFromNameOnly(name string) error {
+	_, present := exec.Classes[name]
+	if present { // if the class is already loaded, skip rest of this
+		return nil
+	}
+
+	// add entry to the method area, indicating initialization of the load of this class
+	eKI := exec.Klass{
+		Status: 'I', // I = initializing the load
+		Loader: "",
+		Data:   nil,
+	}
+	err := insert(name, eKI)
+
+	if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
+		strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
+		name = util.ConvertInternalClassNameToFilename(name)
+		name = globals.JacobinHome() + "classes\\" + name
+		_, err = LoadClassFromFile(BootstrapCL, name)
+	} else {
+		_, err = LoadClassFromFile(AppCL, name)
+	}
+	return err
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether

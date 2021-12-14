@@ -1,0 +1,38 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ */
+
+package exec
+
+import (
+	"jacobin/bridge"
+	"jacobin/log"
+)
+
+func instantiateClass(classname string) (interface{}, error) {
+recheck:
+	k, present := Classes[classname]
+	if k.Status == 'I' { // the class is being loaded
+		goto recheck // recheck the status until it changes (i.e., the class is loaded)
+	} else if !present { // the class has not yet been loaded
+		if bridge.LoadClassFromName(classname) != nil {
+			log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
+		}
+	}
+
+	// at this point the class has been loaded
+	k, _ = Classes[classname]
+	if len(k.Data.Fields) > 0 {
+		for i := 0; i < len(k.Data.Fields); i++ {
+			f := k.Data.Fields[i]
+			initializeField(f)
+		}
+	}
+	return nil, nil
+}
+
+func initializeField(f Field) {
+
+}

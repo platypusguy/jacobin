@@ -9,12 +9,11 @@ package exec
 import (
 	"errors"
 	"jacobin/log"
-	"strings"
 	"sync"
 	"time"
 )
 
-// Classes contains all the loaded classes
+// Classes contains all the loaded classes. Key is the class name in java/lang/Object format.
 var Classes = make(map[string]Klass) // TODO: make these maps sync.Map
 
 // Statics is a fast-lookup map of static variables and functions. The int64 value
@@ -24,7 +23,7 @@ var Statics = make(map[string]int64)
 var StaticsArray []Static
 
 type Klass struct {
-	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked
+	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
 	Loader string
 	Data   *ClData
 }
@@ -307,17 +306,17 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	return cp.Utf8Refs[u.Slot]
 }
 
-// accepts a class name with the JVM's internal format and converts
-// it to a filename (with backslashes). Returns "" on error.
-func ConvertInternalClassNameToFilename(clName string) string {
-	name := strings.ReplaceAll(clName, "/", "\\")
-	name = strings.ReplaceAll(name, ".", "\\") + ".class"
-
-	return name
-}
-
-func ConvertClassFilenameToInternalFormat(fName string) string {
-	name := strings.TrimSuffix(fName, ".class")
-	name = strings.ReplaceAll(name, ".", "/")
-	return name
-}
+// // accepts a class name with the JVM's internal format and converts
+// // it to a filename (with backslashes). Returns "" on error.
+// func ConvertInternalClassNameToFilename(clName string) string {
+// 	name := strings.ReplaceAll(clName, "/", "\\")
+// 	name = strings.ReplaceAll(name, ".", "\\") + ".class"
+//
+// 	return name
+// }
+//
+// func ConvertClassFilenameToInternalFormat(fName string) string {
+// 	name := strings.TrimSuffix(fName, ".class")
+// 	name = strings.ReplaceAll(name, ".", "/")
+// 	return name
+// }

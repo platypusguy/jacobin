@@ -280,7 +280,6 @@ func runFrame(fs *list.List) error {
 			methodNameIndex := nAndT.NameIndex
 			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
 			methodName = className + "." + methodName
-			// println("Method name for invokevirtual: " + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
@@ -312,7 +311,12 @@ func runFrame(fs *list.List) error {
 
 				fs.PushFront(gf)              // push the new frame
 				f = fs.Front().Value.(*frame) // point f to the new head
-				_ = runFrame(fs)
+
+				err := runFrame(fs)
+				if err != nil {
+					return err
+				}
+
 				fs.Remove(fs.Front())         // pop the frame off
 				f = fs.Front().Value.(*frame) // point f the head again
 				break
@@ -411,7 +415,28 @@ func runFrame(fs *list.List) error {
 					return nil
 				}
 			}
+		case NEW: // 0xBB 	new: create and instantiate a new object
+			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
+			f.pc += 2
+			CPentry := f.cp.CpIndex[CPslot]
+			if CPentry.Type != ClassRef || CPentry.Type != Interface {
+				msg := fmt.Sprintf("Invalid type for new object")
+				_ = log.Log(msg, log.SEVERE)
+			}
 
+			// the classref points to a UTF8 record with the name of the class to instantiate
+			var className string
+			if CPentry.Type == ClassRef {
+				utf8Index := f.cp.ClassRefs[CPentry.Slot]
+				className = FetchUTF8stringFromCPEntryNumber(f.cp, utf8Index)
+			}
+
+			ref, err := instantiateClass(className)
+			if err != nil {
+				_ = log.Log("Error instantiating class: "+className, log.SEVERE)
+				return errors.New("Error instnatiating class")
+			}
+			push(f, ref.(int64))
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[f.pc], f.pc, f.methName, f.clName)
