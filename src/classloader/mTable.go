@@ -1,9 +1,10 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package classloader
 
 import (
 	"sync"
@@ -36,8 +37,8 @@ type MT = map[string]MTentry
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
-	meth  mData // the method data
-	mType byte  // method type, G = Go method, J = Java method
+	Meth  mData // the method data
+	MType byte  // method type, G = Go method, J = Java method
 }
 
 // mData can be a GmEntry or a JmEntry (method in Go or Java, respectively)
@@ -52,14 +53,14 @@ type GmEntry struct {
 // JmEntry is the entry in the Mtable for Java methods.
 type JmEntry struct {
 	accessFlags int
-	maxStack    int
-	maxLocals   int
-	code        []byte
+	MaxStack    int
+	MaxLocals   int
+	Code        []byte
 	exceptions  []CodeException
 	attribs     []Attr
 	params      []ParamAttrib
 	deprecated  bool
-	cp          *CPool
+	Cp          *CPool
 }
 
 // Function is the generic-style function used for Go entries: a function that accepts a
@@ -85,8 +86,8 @@ func loadlib(tbl *MT, libMeths map[string]GMeth) {
 		gme.Fu = val.GFunction
 
 		tableEntry := MTentry{
-			mType: 'G',
-			meth:  gme,
+			MType: 'G',
+			Meth:  gme,
 		}
 
 		addEntry(tbl, key, tableEntry)

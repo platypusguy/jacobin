@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package classloader
 
 import (
 	"fmt"

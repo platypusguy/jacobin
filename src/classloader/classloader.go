@@ -12,7 +12,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"jacobin/exec"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/util"
@@ -205,12 +204,12 @@ func LoadBaseClasses(global *globals.Globals) {
 // It does this by reading the class entries (7) in the CP and sending the class names
 // it finds there to a go channel that will load the class.
 func LoadReferencedClasses(classloader Classloader, clName string) {
-	cpClassCP := &exec.Classes[clName].Data.CP
+	cpClassCP := &Classes[clName].Data.CP
 	classRefs := cpClassCP.ClassRefs
 
 	loaderChannel := make(chan string, len(classRefs))
 	for _, v := range classRefs {
-		refClassName := exec.FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
+		refClassName := FetchUTF8stringFromCPEntryNumber(cpClassCP, v)
 		name := normalizeClassReference(refClassName)
 		if name == "" {
 			continue
@@ -226,13 +225,13 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 // classloader, checks if the class is already loaded, and loads it if not.
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
-		_, present := exec.Classes[name]
+		_, present := Classes[name]
 		if present { // if the class is already loaded, skip rest of this loop
 			continue
 		}
 
 		// add entry to the method area, indicating initialization of the load of this class
-		eKI := exec.Klass{
+		eKI := Klass{
 			Status: 'I', // I = initializing the load
 			Loader: "",
 			Data:   nil,
@@ -253,13 +252,13 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 }
 
 func LoadClassFromNameOnly(name string) error {
-	_, present := exec.Classes[name]
+	_, present := Classes[name]
 	if present { // if the class is already loaded, skip rest of this
 		return nil
 	}
 
 	// add entry to the method area, indicating initialization of the load of this class
-	eKI := exec.Klass{
+	eKI := Klass{
 		Status: 'I', // I = initializing the load
 		Loader: "",
 		Data:   nil,
@@ -303,7 +302,7 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	classToPost := convertToPostableClass(&fullyParsedClass)
-	eKF := exec.Klass{
+	eKF := Klass{
 		Status: 'F', // F = format-checked
 		Loader: cl.Name,
 		Data:   &classToPost,
@@ -314,10 +313,10 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 }
 
 // insert the fully parsed class into the method area (exec.Classes)
-func insert(name string, klass exec.Klass) error {
-	exec.MethAreaMutex.Lock()
-	exec.Classes[name] = klass
-	exec.MethAreaMutex.Unlock()
+func insert(name string, klass Klass) error {
+	MethAreaMutex.Lock()
+	Classes[name] = klass
+	MethAreaMutex.Unlock()
 
 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
 		log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
@@ -328,9 +327,9 @@ func insert(name string, klass exec.Klass) error {
 // load the parse class into a form suitable for posting to the method area (which is
 // exec.Classes. This mostly involves copying the data, converting most indexes to uint16
 // and removing some fields we needed in parsing, but which are no longer required.
-func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
+func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
-	kd := exec.ClData{}
+	kd := ClData{}
 	kd.Name = fullyParsedClass.className
 	kd.Superclass = fullyParsedClass.superClass
 	kd.Module = fullyParsedClass.moduleName
@@ -340,12 +339,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 	}
 	if len(fullyParsedClass.fields) > 0 {
 		for i := 0; i < len(fullyParsedClass.fields); i++ {
-			kdf := exec.Field{}
+			kdf := Field{}
 			kdf.Name = uint16(fullyParsedClass.fields[i].name)
 			kdf.Desc = uint16(fullyParsedClass.fields[i].description)
 			if len(fullyParsedClass.fields[i].attributes) > 0 {
 				for j := 0; j < len(fullyParsedClass.fields[i].attributes); j++ {
-					kdfa := exec.Attr{}
+					kdfa := Attr{}
 					kdfa.AttrName = uint16(fullyParsedClass.fields[i].attributes[j].attrName)
 					kdfa.AttrSize = fullyParsedClass.fields[i].attributes[j].attrSize
 					kdfa.AttrContent = fullyParsedClass.fields[i].attributes[j].attrContent
@@ -358,7 +357,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
-			kdm := exec.Method{}
+			kdm := Method{}
 			kdm.Name = uint16(fullyParsedClass.methods[i].name)
 			kdm.Desc = uint16(fullyParsedClass.methods[i].description)
 			kdm.AccessFlags = fullyParsedClass.methods[i].accessFlags
@@ -367,7 +366,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			kdm.CodeAttr.Code = fullyParsedClass.methods[i].codeAttr.code
 			if len(fullyParsedClass.methods[i].codeAttr.exceptions) > 0 {
 				for j := 0; j < len(fullyParsedClass.methods[i].codeAttr.exceptions); j++ {
-					kdmce := exec.CodeException{}
+					kdmce := CodeException{}
 					kdmce.StartPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].startPc
 					kdmce.EndPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].endPc
 					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
@@ -377,7 +376,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			}
 			if len(fullyParsedClass.methods[i].codeAttr.attributes) > 0 {
 				for m := 0; m < len(fullyParsedClass.methods[i].codeAttr.attributes); m++ {
-					kdmca := exec.Attr{}
+					kdmca := Attr{}
 					kdmca.AttrName = uint16(fullyParsedClass.methods[i].codeAttr.attributes[m].attrName)
 					kdmca.AttrSize = fullyParsedClass.methods[i].codeAttr.attributes[m].attrSize
 					kdmca.AttrContent = fullyParsedClass.methods[i].codeAttr.attributes[m].attrContent
@@ -386,7 +385,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			}
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
 				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
-					kdma := exec.Attr{
+					kdma := Attr{
 						AttrName:    uint16(fullyParsedClass.methods[i].attributes[n].attrName),
 						AttrSize:    fullyParsedClass.methods[i].attributes[n].attrSize,
 						AttrContent: fullyParsedClass.methods[i].attributes[n].attrContent,
@@ -401,7 +400,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 			}
 			if len(fullyParsedClass.methods[i].parameters) > 0 {
 				for q := 0; q < len(fullyParsedClass.methods[i].parameters); q++ {
-					kdmp := exec.ParamAttrib{
+					kdmp := ParamAttrib{
 						Name:        fullyParsedClass.methods[i].parameters[q].name,
 						AccessFlags: fullyParsedClass.methods[i].parameters[q].accessFlags,
 					}
@@ -414,7 +413,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 	}
 	if len(fullyParsedClass.attributes) > 0 {
 		for i := 0; i < len(fullyParsedClass.attributes); i++ {
-			kda := exec.Attr{
+			kda := Attr{
 				AttrName:    uint16(fullyParsedClass.attributes[i].attrName),
 				AttrSize:    fullyParsedClass.attributes[i].attrSize,
 				AttrContent: fullyParsedClass.attributes[i].attrContent,
@@ -425,7 +424,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 	kd.SourceFile = fullyParsedClass.sourceFile
 	if len(fullyParsedClass.bootstraps) > 0 {
 		for j := 0; j < len(fullyParsedClass.bootstraps); j++ {
-			kdbs := exec.BootstrapMethod{
+			kdbs := BootstrapMethod{
 				MethodRef: uint16(fullyParsedClass.bootstraps[j].methodRef),
 				Args:      nil,
 			}
@@ -455,13 +454,13 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 		if fullyParsedClass.cpIndex[i].entryType == StringConst {
 			whichStringConst := fullyParsedClass.cpIndex[i].slot
 			cpIndexForUTF8 := fullyParsedClass.stringRefs[whichStringConst]
-			cpE := exec.CpEntry{
+			cpE := CpEntry{
 				Type: UTF8,
 				Slot: uint16(fullyParsedClass.cpIndex[cpIndexForUTF8.index].slot),
 			}
 			kd.CP.CpIndex = append(kd.CP.CpIndex, cpE)
 		} else {
-			cpE := exec.CpEntry{
+			cpE := CpEntry{
 				Type: uint16(fullyParsedClass.cpIndex[i].entryType),
 				Slot: uint16(fullyParsedClass.cpIndex[i].slot),
 			}
@@ -483,7 +482,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.dynamics) > 0 {
 		for i := 0; i < len(fullyParsedClass.dynamics); i++ {
-			dyn := exec.Dynamic{
+			dyn := DynamicEntry{
 				BootstrapIndex: uint16(fullyParsedClass.dynamics[i].bootstrapIndex),
 				NameAndType:    uint16(fullyParsedClass.dynamics[i].nameAndType),
 			}
@@ -493,7 +492,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.fieldRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.fieldRefs); i++ {
-			fr := exec.FieldRefEntry{
+			fr := FieldRefEntry{
 				ClassIndex:  uint16(fullyParsedClass.fieldRefs[i].classIndex),
 				NameAndType: uint16(fullyParsedClass.fieldRefs[i].nameAndTypeIndex),
 			}
@@ -515,7 +514,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.interfaceRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.interfaceRefs); i++ {
-			ir := exec.InterfaceRefEntry{
+			ir := InterfaceRefEntry{
 				ClassIndex:  uint16(fullyParsedClass.interfaceRefs[i].classIndex),
 				NameAndType: uint16(fullyParsedClass.interfaceRefs[i].nameAndTypeIndex),
 			}
@@ -525,7 +524,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.invokeDynamics) > 0 {
 		for i := 0; i < len(fullyParsedClass.invokeDynamics); i++ {
-			id := exec.InvokeDynamic{
+			id := InvokeDynamicEntry{
 				BootstrapIndex: uint16(fullyParsedClass.invokeDynamics[i].bootstrapIndex),
 				NameAndType:    uint16(fullyParsedClass.invokeDynamics[i].nameAndType),
 			}
@@ -541,7 +540,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.methodHandles) > 0 {
 		for i := 0; i < len(fullyParsedClass.methodHandles); i++ {
-			mh := exec.MethodHandleEntry{
+			mh := MethodHandleEntry{
 				RefKind:  uint16(fullyParsedClass.methodHandles[i].referenceKind),
 				RefIndex: uint16(fullyParsedClass.methodHandles[i].referenceIndex),
 			}
@@ -551,7 +550,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.methodRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.methodRefs); i++ {
-			mr := exec.MethodRefEntry{
+			mr := MethodRefEntry{
 				ClassIndex:  uint16(fullyParsedClass.methodRefs[i].classIndex),
 				NameAndType: uint16(fullyParsedClass.methodRefs[i].nameAndTypeIndex),
 			}
@@ -567,7 +566,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) exec.ClData {
 
 	if len(fullyParsedClass.nameAndTypes) > 0 {
 		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
-			nat := exec.NameAndTypeEntry{
+			nat := NameAndTypeEntry{
 				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
 				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
 			}

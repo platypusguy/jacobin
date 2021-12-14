@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package main
 
 const AALOAD = 0x32
 const AASTORE = 0x53

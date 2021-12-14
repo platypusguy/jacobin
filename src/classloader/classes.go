@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package classloader
 
 import (
 	"errors"
@@ -74,12 +74,12 @@ type CPool struct {
 	CpIndex        []CpEntry // the constant pool index to entries
 	ClassRefs      []uint16  // points to a UTF8 entry in the CP
 	Doubles        []float64
-	Dynamics       []Dynamic
+	Dynamics       []DynamicEntry
 	FieldRefs      []FieldRefEntry
 	Floats         []float32
 	IntConsts      []int32 // 32-bit int containing the actual int value
 	InterfaceRefs  []InterfaceRefEntry
-	InvokeDynamics []InvokeDynamic
+	InvokeDynamics []InvokeDynamicEntry
 	LongConsts     []int64
 	MethodHandles  []MethodHandleEntry
 	MethodRefs     []MethodRefEntry
@@ -191,49 +191,49 @@ type MethodHandleEntry struct { // type: 15 (method handle)
 	RefIndex uint16
 }
 
-type Dynamic struct { // type 17 (dynamic--similar to invokedynamic)
+type DynamicEntry struct { // type 17 (dynamic--similar to invokedynamic)
 	BootstrapIndex uint16
 	NameAndType    uint16
 }
 
-type InvokeDynamic struct { // type 18 (invokedynamic data)
+type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 	BootstrapIndex uint16
 	NameAndType    uint16
 }
 
-// the various types of entries in the constant pool. These entries are duplicates
-// of the ones in cpParser.go. These lists should be kept in sync.
-const (
-	Dummy              = 0 // used for initialization and for dummy entries (viz. for longs, doubles)
-	UTF8               = 1
-	IntConst           = 3
-	FloatConst         = 4
-	LongConst          = 5
-	DoubleConst        = 6
-	ClassRef           = 7
-	StringConst        = 8
-	FieldRef           = 9
-	MethodRef          = 10
-	Interface          = 11
-	NameAndType        = 12
-	MethodHandle       = 15
-	MethodType         = 16
-	DynamicEntry       = 17
-	InvokeDynamicEntry = 18
-	Module             = 19
-	Package            = 20
-)
+// // the various types of entries in the constant pool. These entries are duplicates
+// // of the ones in cpParser.go. These lists should be kept in sync.
+// const (
+// 	Dummy              = 0 // used for initialization and for dummy entries (viz. for longs, doubles)
+// 	UTF8               = 1
+// 	IntConst           = 3
+// 	FloatConst         = 4
+// 	LongConst          = 5
+// 	DoubleConst        = 6
+// 	ClassRef           = 7
+// 	StringConst        = 8
+// 	FieldRef           = 9
+// 	MethodRef          = 10
+// 	Interface          = 11
+// 	NameAndType        = 12
+// 	MethodHandle       = 15
+// 	MethodType         = 16
+// 	DynamicEntry       = 17
+// 	InvokeDynamicEntry = 18
+// 	Module             = 19
+// 	Package            = 20
+// )
 
-// fetchMethodAndCP gets the method and the CP for the class of the method.
+// FetchMethodAndCP gets the method and the CP for the class of the method.
 // It searches for the method first by checking the MTable (that is, the method table).
 // If it doesn't find it there, then it looks for it in the class entry in Classes.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
-// func fetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
-func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
+// func FetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
+func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
-	if methEntry.meth == nil { // method is not in the MTable, so find it and put it there
+	if methEntry.Meth == nil { // method is not in the MTable, so find it and put it there
 		k := Classes[class]
 		if k.Status == 'I' { // class is being initialized by a loader, so wait
 			time.Sleep(15 * time.Millisecond) // TODO: must be a better way to do this
@@ -255,27 +255,27 @@ func fetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 				m := k.Data.Methods[i]
 				jme := JmEntry{
 					accessFlags: m.AccessFlags,
-					maxStack:    m.CodeAttr.MaxStack,
-					maxLocals:   m.CodeAttr.MaxLocals,
-					code:        m.CodeAttr.Code,
+					MaxStack:    m.CodeAttr.MaxStack,
+					MaxLocals:   m.CodeAttr.MaxLocals,
+					Code:        m.CodeAttr.Code,
 					exceptions:  m.CodeAttr.Exceptions,
 					attribs:     m.CodeAttr.Attributes,
 					params:      m.Parameters,
 					deprecated:  m.Deprecated,
-					cp:          &k.Data.CP,
+					Cp:          &k.Data.CP,
 				}
 				MTable[methFQN] = MTentry{
-					meth:  jme,
-					mType: 'J',
+					Meth:  jme,
+					MType: 'J',
 				}
-				return MTentry{meth: jme, mType: 'J'}, nil
+				return MTentry{Meth: jme, MType: 'J'}, nil
 			}
 		}
 	} else { // we found the entry in the MTable
-		if methEntry.mType == 'J' {
-			return MTentry{meth: methEntry.meth, mType: 'J'}, nil
-		} else if methEntry.mType == 'G' {
-			return MTentry{meth: methEntry.meth, mType: 'G'}, nil
+		if methEntry.MType == 'J' {
+			return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
+		} else if methEntry.MType == 'G' {
+			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
 		}
 	}
 
@@ -305,18 +305,3 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 
 	return cp.Utf8Refs[u.Slot]
 }
-
-// // accepts a class name with the JVM's internal format and converts
-// // it to a filename (with backslashes). Returns "" on error.
-// func ConvertInternalClassNameToFilename(clName string) string {
-// 	name := strings.ReplaceAll(clName, "/", "\\")
-// 	name = strings.ReplaceAll(name, ".", "\\") + ".class"
-//
-// 	return name
-// }
-//
-// func ConvertClassFilenameToInternalFormat(fName string) string {
-// 	name := strings.TrimSuffix(fName, ".class")
-// 	name = strings.ReplaceAll(name, ".", "/")
-// 	return name
-// }

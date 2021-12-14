@@ -1,13 +1,15 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package main
 
 import (
 	"container/list"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/log"
 )
 
@@ -19,15 +21,15 @@ import (
 // second stack entry for these data items.
 type frame struct {
 	thread   int
-	methName string  // method name
-	clName   string  // class name
-	meth     []byte  // bytecode of method
-	cp       *CPool  // constant pool of class
-	locals   []int64 // local variables
-	opStack  []int64 // operand stack
-	tos      int     // top of the operand stack
-	pc       int     // program counter (index into the bytecode of the method)
-	ftype    byte    // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	methName string             // method name
+	clName   string             // class name
+	meth     []byte             // bytecode of method
+	cp       *classloader.CPool // constant pool of class
+	locals   []int64            // local variables
+	opStack  []int64            // operand stack
+	tos      int                // top of the operand stack
+	pc       int                // program counter (index into the bytecode of the method)
+	ftype    byte               // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
 // a stack of frames. Implemented as a list in which the current running

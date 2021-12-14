@@ -7,7 +7,6 @@ package main
 
 import (
 	"jacobin/classloader"
-	"jacobin/exec"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -53,7 +52,7 @@ func main() {
 
 	// begin execution
 	log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
-	if exec.StartExec(mainClass, &Global) != nil {
+	if StartExec(mainClass, &Global) != nil {
 		shutdown(true)
 	}
 

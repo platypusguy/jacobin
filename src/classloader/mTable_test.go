@@ -4,24 +4,26 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package classloader
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMTableAdd(t *testing.T) {
 	mtbl := make(MT)
 	addEntry(&mtbl, "test1", MTentry{
-		meth:  nil,
-		mType: 'G',
+		Meth:  nil,
+		MType: 'G',
 	})
 
 	if len(mtbl) != 1 {
 		t.Errorf("Expecting MTable size of 1, got: %d", len(mtbl))
 	}
 
-	if mtbl["test1"].mType != 'G' {
+	if mtbl["test1"].MType != 'G' {
 		t.Errorf("Expecting fetch of a 'G' MTable rec, but got type: %c",
-			mtbl["test1"].mType)
+			mtbl["test1"].MType)
 	}
 }
 

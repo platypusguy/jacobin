@@ -1,15 +1,16 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exec
+package main
 
 import (
 	"container/list"
 	"errors"
 	"fmt"
-	// "main"
+	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
 	"strconv"
@@ -24,25 +25,25 @@ var MainThread execThread
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
 	// initialize the MTable
-	MTable = make(map[string]MTentry)
-	MTableLoadNatives()
+	classloader.MTable = make(map[string]classloader.MTentry)
+	classloader.MTableLoadNatives()
 
-	me, err := fetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
+	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
 	}
 
-	m := me.meth.(JmEntry)
-	f := createFrame(m.maxStack) // create a new frame
+	m := me.Meth.(classloader.JmEntry)
+	f := createFrame(m.MaxStack) // create a new frame
 	f.methName = "main"
 	f.clName = className
-	f.cp = m.cp                        // add its pointer to the class CP
-	for i := 0; i < len(m.code); i++ { // copy the bytecodes over
-		f.meth = append(f.meth, m.code[i])
+	f.cp = m.Cp                        // add its pointer to the class CP
+	for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
+		f.meth = append(f.meth, m.Code[i])
 	}
 
 	// allocate the local variables
-	for k := 0; k < m.maxLocals; k++ {
+	for k := 0; k < m.MaxLocals; k++ {
 		f.locals = append(f.locals, 0)
 	}
 
@@ -202,7 +203,7 @@ func runFrame(fs *list.List) error {
 			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
 			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			if CPentry.Type != FieldRef { // the pointed-to CP entry must be a field reference
+			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				return fmt.Errorf("Expected a field ref on getstatic, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.pc, f.methName, f.clName)
@@ -224,20 +225,20 @@ func runFrame(fs *list.List) error {
 			nAndTslot := nAndTentry.Slot
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			fieldNameIndex := nAndT.NameIndex
-			fieldName := FetchUTF8stringFromCPEntryNumber(f.cp, fieldNameIndex)
+			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, fieldNameIndex)
 			fieldName = className + "." + fieldName
 
 			// was this static field previously loaded? Is so, get its location and move on.
-			prevLoaded, ok := Statics[fieldName]
+			prevLoaded, ok := classloader.Statics[fieldName]
 			if ok { // if preloaded, then push the index into the array of constant fields
 				push(f, prevLoaded)
 				break
 			}
 
 			fieldTypeIndex := nAndT.DescIndex
-			fieldType := FetchUTF8stringFromCPEntryNumber(f.cp, fieldTypeIndex)
+			fieldType := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, fieldTypeIndex)
 			// println("full field name: " + fieldName + ", type: " + fieldType)
-			newStatic := Static{
+			newStatic := classloader.Static{
 				Class:     'L',
 				Type:      fieldType,
 				ValueRef:  "",
@@ -247,17 +248,17 @@ func runFrame(fs *list.List) error {
 				ValueFunc: nil,
 				CP:        f.cp,
 			}
-			StaticsArray = append(StaticsArray, newStatic)
-			Statics[fieldName] = int64(len(StaticsArray) - 1)
+			classloader.StaticsArray = append(classloader.StaticsArray, newStatic)
+			classloader.Statics[fieldName] = int64(len(classloader.StaticsArray) - 1)
 
 			// push the pointer to the stack of the frame
-			push(f, int64(len(StaticsArray)-1))
+			push(f, int64(len(classloader.StaticsArray)-1))
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
 			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			if CPentry.Type != MethodRef { // the pointed-to CP entry must be a method reference
+			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
 				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.pc, f.methName, f.clName)
@@ -278,18 +279,18 @@ func runFrame(fs *list.List) error {
 			nAndTslot := nAndTentry.Slot
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
-			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
+			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
 			methodName = className + "." + methodName
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
-			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
+			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := MTable[methodName+methodType]
-			if v.meth != nil && v.mType == 'G' { // so we have a golang function
+			v := classloader.MTable[methodName+methodType]
+			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
 				// gFunc := v.meth.(GmEntry).Fu
-				paramSlots := v.meth.(GmEntry).ParamSlots
+				paramSlots := v.Meth.(classloader.GmEntry).ParamSlots
 				gf := createFrame(paramSlots)
 				gf.thread = f.thread
 				gf.methName = methodName + methodType
@@ -340,34 +341,34 @@ func runFrame(fs *list.List) error {
 			nAndTslot := nAndTentry.Slot
 			nAndT := f.cp.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
-			methodName := FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
+			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, methodNameIndex)
 			// println("Method name for invokestatic: " + className + "." + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
-			methodType := FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
+			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.cp, methodSigIndex)
 			// println("Method signature for invokestatic: " + methodName + methodType)
 
 			// m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
-			mtEntry, err := fetchMethodAndCP(className, methodName, methodType)
+			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
 				return errors.New("Class not found: " + className + methodName)
 			}
 
-			if mtEntry.mType == 'J' {
-				m := mtEntry.meth.(JmEntry)
-				maxStack := m.maxStack
+			if mtEntry.MType == 'J' {
+				m := mtEntry.Meth.(classloader.JmEntry)
+				maxStack := m.MaxStack
 				fram := createFrame(maxStack)
 
 				fram.clName = className
 				fram.methName = methodName
-				fram.cp = m.cp                     // add its pointer to the class CP
-				for i := 0; i < len(m.code); i++ { // copy the bytecodes over
-					fram.meth = append(fram.meth, m.code[i])
+				fram.cp = m.Cp                     // add its pointer to the class CP
+				for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
+					fram.meth = append(fram.meth, m.Code[i])
 				}
 
 				// allocate the local variables
-				for k := 0; k < m.maxLocals; k++ {
+				for k := 0; k < m.MaxLocals; k++ {
 					fram.locals = append(fram.locals, 0)
 				}
 
@@ -419,16 +420,16 @@ func runFrame(fs *list.List) error {
 			CPslot := (int(f.meth[f.pc+1]) * 256) + int(f.meth[f.pc+2]) // next 2 bytes point to CP entry
 			f.pc += 2
 			CPentry := f.cp.CpIndex[CPslot]
-			if CPentry.Type != ClassRef || CPentry.Type != Interface {
+			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
 				msg := fmt.Sprintf("Invalid type for new object")
 				_ = log.Log(msg, log.SEVERE)
 			}
 
 			// the classref points to a UTF8 record with the name of the class to instantiate
 			var className string
-			if CPentry.Type == ClassRef {
+			if CPentry.Type == classloader.ClassRef {
 				utf8Index := f.cp.ClassRefs[CPentry.Slot]
-				className = FetchUTF8stringFromCPEntryNumber(f.cp, utf8Index)
+				className = classloader.FetchUTF8stringFromCPEntryNumber(f.cp, utf8Index)
 			}
 
 			ref, err := instantiateClass(className)
@@ -452,8 +453,8 @@ func runFrame(fs *list.List) error {
 // from the operand stack and passes them to the go function, here called GFunction.
 // TODO: Handle how return values are placed back on the stack.
 func runGframe(fr *frame) error {
-	me := MTable[fr.methName]
-	if me.meth == nil {
+	me := classloader.MTable[fr.methName]
+	if me.Meth == nil {
 		return errors.New("go method not found: " + fr.methName)
 	}
 
@@ -462,7 +463,7 @@ func runGframe(fr *frame) error {
 		*params = append(*params, v)
 	}
 
-	me.meth.(GmEntry).Fu(*params)
+	me.Meth.(classloader.GmEntry).Fu(*params)
 
 	return nil
 }
