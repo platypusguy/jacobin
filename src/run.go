@@ -200,6 +200,7 @@ func runFrame(fs *list.List) error {
 			fs.Remove(fs.Front())
 			f = fs.Front().Value.(*frame) // point to the head again
 			push(f, valToReturn)          // TODO: check what happens when main() ends on IRETURN
+			// return nil
 		case RETURN: // 0xB1    (return from void function)
 			f.tos = -1 // empty the stack
 			return nil
@@ -447,6 +448,7 @@ func runFrame(fs *list.List) error {
 				return errors.New("Error instnatiating class")
 			}
 			push(f, ref.(int64))
+
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.meth[f.pc], f.pc, f.methName, f.clName)

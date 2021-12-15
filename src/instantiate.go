@@ -12,6 +12,7 @@ import (
 )
 
 func instantiateClass(classname string) (interface{}, error) {
+	log.Log("Instantiating class: "+classname, log.FINEST)
 recheck:
 	k, present := classloader.Classes[classname]
 	if k.Status == 'I' { // the class is being loaded
@@ -34,5 +35,5 @@ recheck:
 }
 
 func initializeField(f classloader.Field) {
-
+	//
 }
