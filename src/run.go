@@ -197,10 +197,9 @@ func runFrame(fs *list.List) error {
 			f.pc = f.pc + int(jumpTo) - 1 // -1 because this loop will increment f.pc by 1
 		case IRETURN: // 0xAC (return an int and exit current frame)
 			valToReturn := pop(f)
-			fs.Remove(fs.Front())
-			f = fs.Front().Value.(*frame) // point to the head again
-			push(f, valToReturn)          // TODO: check what happens when main() ends on IRETURN
-			// return nil
+			f = fs.Front().Next().Value.(*frame)
+			push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
+			return nil
 		case RETURN: // 0xB1    (return from void function)
 			f.tos = -1 // empty the stack
 			return nil
