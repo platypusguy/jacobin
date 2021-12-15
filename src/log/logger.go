@@ -11,6 +11,7 @@ package log
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
 	"os"
 	"sync"
 	"time"
@@ -24,6 +25,7 @@ const (
 	INFO
 	FINE
 	FINEST
+	TRACE_INST
 )
 
 // Level is the level the logger currently supports. See the enums above.
@@ -49,13 +51,17 @@ func Log(msg string, level int) (err error) {
 		return errors.New("empty logging message")
 	}
 
-	if level < SEVERE || level > FINEST {
+	if level < SEVERE || level > TRACE_INST {
 		return errors.New("invalid logging level")
 	}
 
-	// if the message is for a finer logging level than currently being logged,
-	// simply return
-	if level > Level {
+	// if the message is a trace and we're not tracing, then return.
+	if level == TRACE_INST && globals.GetInstance().Options["-trace"].Set != true {
+		return
+	}
+
+	// if the message is for a finer logging level than currently being logged, return.
+	if level <= FINEST && level > Level {
 		return
 	}
 
@@ -67,10 +73,10 @@ func Log(msg string, level int) (err error) {
 	// lock the write to the logging stream to prevent overwrite issues
 	// if some other operation is also writing to the stream
 	mutex.Lock()
-	if level > WARNING {
-		fmt.Fprintf(os.Stderr, "[%3d.%03ds] ", millis/1000, millis%1000)
+	if level > WARNING { // show elapsed time only if messages are finer than warning
+		_, _ = fmt.Fprintf(os.Stderr, "[%3d.%03ds] ", millis/1000, millis%1000)
 	}
-	fmt.Fprintf(os.Stderr, "%s\n", msg)
+	_, _ = fmt.Fprintf(os.Stderr, "%s\n", msg)
 	mutex.Unlock()
 	return
 }
@@ -79,7 +85,7 @@ func Log(msg string, level int) (err error) {
 func SetLogLevel(level int) (err error) {
 	// SEVERE is here just to fill the hierarchy. You cannot actually set the logging
 	// level coarser than WARNING. In other words, all warnings must be shown.
-	if level <= SEVERE || level > FINEST {
+	if level <= SEVERE || level > TRACE_INST {
 		return errors.New("invalid logging level")
 	}
 

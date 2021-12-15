@@ -93,7 +93,7 @@ func runFrame(fs *list.List) error {
 				", pc: "+strconv.Itoa(f.pc)+
 				", inst: "+BytecodeNames[int(f.meth[f.pc])]+
 				", tos: "+strconv.Itoa(f.tos),
-				log.FINEST)
+				log.TRACE_INST)
 		}
 		switch f.meth[f.pc] { // cases listed in numerical value of opcode
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
