@@ -21,8 +21,10 @@ As we progress, we post short explanations of project decisions and explanations
 
 [Jacobin status after 3 months](http://binstock.blogspot.com/2021/11/jacobin-jvm-project-after-three-months.html)
 
-#### How the JVM Works
+#### How the Jacobin JVM works
 [Command-line processing](https://github.com/platypusguy/jacobin/wiki/Command-line-Processing)
+
+[How Jacobin searches for methods](http://binstock.blogspot.com/2021/12/how-jacobin-jvm-accesses-methods.html)
 
 ### The Team (and Thanks)
 Jacobin is presently being developed by Andrew Binstock ([platypusguy](https://github.com/platypusguy/)). Contributors are more than welcome. If you'd like to show your support the project but can't contribute code, we'd love a GitHub star or for you to follow the project. 
