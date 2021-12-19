@@ -419,6 +419,8 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	for i := 0; i < klass.fieldCount; i += 1 {
 		f := field{}
+		f.constValue = nil
+
 		accessFlags, err := intFrom2Bytes(bytes, pos+1)
 		pos += 2
 		if err != nil {
@@ -460,6 +462,18 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 			attribute, k, err := fetchAttribute(klass, bytes, pos)
 			if err != nil {
 				return pos, errors.New("") // error message will already have been displayed
+			}
+			attrName := klass.utf8Refs[attribute.attrName].content
+			// if the attribute is a constant value (for initializing the field)
+			// then stick the value into the field struct. That value is a pointer
+			// into the CP and its value must be converted based on the type of
+			// field we're dealing with (shown in the desc data item)
+			if attrName == "ConstantValue" {
+				desc, _ := fetchUTF8string(klass, f.description)
+				switch desc {
+				case "B", "C", "I", "S", "Z", "L":
+					f.constValue = 0
+				}
 			}
 			f.attributes = append(f.attributes, attribute)
 			pos = k

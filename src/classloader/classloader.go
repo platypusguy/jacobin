@@ -99,8 +99,9 @@ type ParsedClass struct {
 // the fields defined in the class
 type field struct {
 	accessFlags int
-	name        int // index of the UTF-8 entry in the CP
-	description int // index of the UTF-8 entry in the CP
+	name        int         // index of the UTF-8 entry in the CP
+	description int         // index of the UTF-8 entry in the CP
+	constValue  interface{} // the constant value if any was defined
 	attributes  []attr
 }
 
