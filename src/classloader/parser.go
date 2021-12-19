@@ -469,13 +469,23 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 			// into the CP and its value must be converted based on the type of
 			// field we're dealing with (shown in the desc data item)
 			if attrName == "ConstantValue" {
-				desc, _ := fetchUTF8string(klass, f.description)
+				desc := klass.utf8Refs[f.description].content
 				switch desc {
-				case "B", "C", "I", "S", "Z", "L":
+				case "B", "C", "I", "S", "Z":
 					f.constValue = 0
-				}
+				case "J": // long
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != LongConst {
+						return pos, cfe("error: wrong type of constant value for long " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.longConsts[entryInCp.slot]
+				} // CURR: finish up for the other value types, including L
+			} else { // append the attribute only if it's not ConstantValue
+				f.attributes = append(f.attributes, attribute)
 			}
-			f.attributes = append(f.attributes, attribute)
 			pos = k
 		}
 
