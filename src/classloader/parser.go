@@ -471,8 +471,53 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 			if attrName == "ConstantValue" {
 				desc := klass.utf8Refs[f.description].content
 				switch desc {
-				case "B", "C", "I", "S", "Z":
-					f.constValue = 0
+				case "L", "Z": // TODO: Find out how to process these
+					f.constValue = nil
+				case "B": // byte--same logic as for "I", only error message is different
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != IntConst {
+						return pos, cfe("error: wrong type of constant value for byte " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.intConsts[entryInCp.slot]
+				case "C": // char--same logic as for "I", only error message is different
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != IntConst {
+						return pos, cfe("error: wrong type of constant value for char " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.intConsts[entryInCp.slot]
+				case "D": // double
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != DoubleConst {
+						return pos, cfe("error: wrong type of constant value for double " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.doubles[entryInCp.slot]
+				case "F": // float
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != FloatConst {
+						return pos, cfe("error: wrong type of constant value for float " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.floats[entryInCp.slot]
+				case "I": // integer
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != IntConst {
+						return pos, cfe("error: wrong type of constant value for integer " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.intConsts[entryInCp.slot]
 				case "J": // long
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -482,7 +527,16 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.longConsts[entryInCp.slot]
-				} // CURR: finish up for the other value types, including L
+				case "S": // short--same logic as int, only message is different
+					indexIntoCP := int(attribute.attrContent[0])*256 +
+						int(attribute.attrContent[1])
+					entryInCp := klass.cpIndex[indexIntoCP]
+					if entryInCp.entryType != IntConst {
+						return pos, cfe("error: wrong type of constant value for short " +
+							klass.utf8Refs[f.name].content)
+					}
+					f.constValue = klass.intConsts[entryInCp.slot]
+				}
 			} else { // append the attribute only if it's not ConstantValue
 				f.attributes = append(f.attributes, attribute)
 			}
