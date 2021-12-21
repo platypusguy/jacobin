@@ -183,12 +183,27 @@ func TestBipush(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.tos)
 	}
 	value := pop(&f)
 	if value != 5 {
 		t.Errorf("BIPUSH: Expected popped value to be 5, got: %d", value)
 	}
+}
+
+// test of GOTO instruction -- in forward direction (to a later bytecode)
+func TestGotoForward(t *testing.T) {
+	f := newFrame(GOTO)
+	f.meth = append(f.meth, 0x00)
+	f.meth = append(f.meth, 0x01)
+	f.meth = append(f.meth, BIPUSH)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc] != NOP {
+		t.Errorf("GOTO: Expected pc to point to NOP, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
+	}
+
 }
 
 func TestIadd(t *testing.T) {
