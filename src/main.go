@@ -12,12 +12,13 @@ import (
 	"os"
 )
 
-// var Global *globals.Globals
+var Global globals.Globals
+
 // Global := globals.Globals{}
 
 // where everything begins
 func main() {
-	Global := globals.InitGlobals(os.Args[0])
+	Global = globals.InitGlobals(os.Args[0])
 	log.Init()
 
 	// during development, let's use the most verbose logging level
@@ -61,16 +62,30 @@ func main() {
 
 // the exit function. Later on, this will check a list of JVM shutdown hooks
 // before closing down in order to have an orderly exit
-func shutdown(errorCondition bool) {
+func shutdown(errorCondition bool) int {
 	globals.LoaderWg.Wait()
+	g := globals.GetInstance()
+	if g.JacobinHome == "test" {
+		return 0
+	}
+
 	err := errorCondition
 	if log.Log("shutdown", log.INFO) != nil {
 		err = true
 	}
 
 	if err {
-		os.Exit(1)
+		if Global.JacobinName == "test" {
+			return 1
+		} else {
+			os.Exit(1)
+		}
+	}
+
+	if Global.JacobinName == "test" {
+		return 0
 	} else {
 		os.Exit(0)
 	}
+	return 0 // required by go
 }

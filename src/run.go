@@ -96,6 +96,8 @@ func runFrame(fs *list.List) error {
 				log.TRACE_INST)
 		}
 		switch f.meth[f.pc] { // cases listed in numerical value of opcode
+		case NOP:
+			break
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
 			push(f, -1)
 		case ICONST_0: // 	0x03	(push 0 onto opStack)

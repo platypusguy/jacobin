@@ -7,6 +7,11 @@
 package main
 
 import (
+	"io/ioutil"
+	"jacobin/globals"
+	"jacobin/log"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -195,15 +200,32 @@ func TestBipush(t *testing.T) {
 func TestGotoForward(t *testing.T) {
 	f := newFrame(GOTO)
 	f.meth = append(f.meth, 0x00)
-	f.meth = append(f.meth, 0x01)
-	f.meth = append(f.meth, BIPUSH)
+	f.meth = append(f.meth, 0x03)
+	f.meth = append(f.meth, RETURN)
+	f.meth = append(f.meth, NOP)
+	f.meth = append(f.meth, NOP)
 	fs := createFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != NOP {
-		t.Errorf("GOTO: Expected pc to point to NOP, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
+	if f.meth[f.pc] != RETURN {
+		t.Errorf("GOTO forward: Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
 	}
+}
 
+// test of GOTO instruction -- in backward direction (to an earlier bytecode)
+func TestGotoBackward(t *testing.T) {
+	f := newFrame(RETURN)
+	f.meth = append(f.meth, GOTO)
+	f.meth = append(f.meth, 0xFF) // should be -1
+	f.meth = append(f.meth, 0xFF)
+	f.meth = append(f.meth, BIPUSH)
+	f.pc = 1 // skip over the return instruction to start, catch it on the backward goto
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc] != RETURN {
+		t.Errorf("GOTO backeard Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
+	}
 }
 
 func TestIadd(t *testing.T) {
@@ -573,6 +595,29 @@ func TestImul(t *testing.T) {
 	}
 }
 
+// IRETURN: push an int on to the op stack of the calling method and exit the present method/frame
+func TestIreturn(t *testing.T) {
+	f0 := newFrame(0)
+	push(&f0, 20)
+	fs := createFrameStack()
+	fs.PushFront(&f0)
+	f1 := newFrame(IRETURN)
+	push(&f1, 21)
+	fs.PushFront(&f1)
+	_ = runFrame(fs)
+	_ = popFrame(fs)
+	f3 := fs.Front().Value.(*frame)
+	newVal := pop(f3)
+	if newVal != 21 {
+		t.Errorf("After IRETURN, expected a value of 21 in previous frame, got: %d", newVal)
+	}
+	prevVal := pop(f3)
+	if prevVal != 20 {
+		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
+	}
+
+}
+
 func TestIstore0(t *testing.T) {
 	f := newFrame(ISTORE_0)
 	f.locals = append(f.locals, 0)
@@ -681,5 +726,44 @@ func TestReturn(t *testing.T) {
 
 	if ret != nil {
 		t.Error("RETURN: Expected popped value to be 2, got: " + ret.Error())
+	}
+}
+
+func TestInvalidInstruction(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	Global := globals.InitGlobals("test")
+	log.SetLogLevel(log.WARNING)
+	LoadOptionsTable(Global)
+
+	// to avoid cluttering the test results, redirect stdout
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(252)
+	fs := createFrameStack()
+	fs.PushFront(&f)
+	ret := runFrame(fs)
+	if ret == nil {
+		t.Errorf("Invalid instruction: Expected an error returned, but got nil.")
+	}
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+
+	wout.Close()
+	os.Stdout = normalStdout
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Invalid bytecode") {
+		t.Errorf("Error message for invalid bytecode not as expected, got: %s", msg)
 	}
 }
