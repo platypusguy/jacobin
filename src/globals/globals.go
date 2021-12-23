@@ -65,8 +65,8 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
 	}
-	initJavaHome()
-	initJacobinHome()
+	InitJavaHome()
+	InitJacobinHome()
 	return global
 }
 
@@ -88,8 +88,8 @@ type Option struct {
 	Action    func(position int, name string, gl *Globals) (int, error)
 }
 
-// get JACOBIN_HOME and format it as expected
-func initJacobinHome() {
+// InitJacobinHome gets JACOBIN_HOME and formats it as expected
+func InitJacobinHome() {
 	jacobinHome := os.Getenv("JACOBIN_HOME")
 	if jacobinHome != "" {
 		// if the JacobinHome doesn't end in a backward slash, add one.
@@ -102,10 +102,12 @@ func initJacobinHome() {
 	}
 	global.JacobinHome = jacobinHome
 }
+
 func JacobinHome() string { return global.JacobinHome }
 
-// get JAVA_HOME and format it as expected
-func initJavaHome() {
+// InitJavaHome gets JAVA_HOME and formats it as expected
+func InitJavaHome() {
+
 	javaHome := os.Getenv("JAVA_HOME")
 	if javaHome != "" {
 		// if the JacobinHome doesn't end in a backward slash, add one.
