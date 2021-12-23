@@ -75,6 +75,10 @@ func GetInstance() Globals {
 	return global
 }
 
+func GetGlobalRef() *Globals {
+	return &global
+}
+
 // Option is the value portion of the globals.options table. This table is described in
 // more detail in option_table_loader.go introductory comments
 type Option struct {

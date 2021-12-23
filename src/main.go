@@ -65,9 +65,6 @@ func main() {
 func shutdown(errorCondition bool) int {
 	globals.LoaderWg.Wait()
 	g := globals.GetInstance()
-	if g.JacobinHome == "test" {
-		return 0
-	}
 
 	err := errorCondition
 	if log.Log("shutdown", log.INFO) != nil {
@@ -75,14 +72,14 @@ func shutdown(errorCondition bool) int {
 	}
 
 	if err {
-		if Global.JacobinName == "test" {
+		if g.JacobinName == "test" {
 			return 1
 		} else {
 			os.Exit(1)
 		}
 	}
 
-	if Global.JacobinName == "test" {
+	if g.JacobinName == "test" {
 		return 0
 	} else {
 		os.Exit(0)
