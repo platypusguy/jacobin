@@ -11,6 +11,19 @@ import (
 	"testing"
 )
 
+func TestGlobalsInit(t *testing.T) {
+	g := InitGlobals("testInit")
+
+	if g.JacobinName != "testInit" {
+		t.Errorf("Expecting globals init to set Jacobin name to 'testInit', got: %s", g.JacobinName)
+	}
+
+	if g.VmModel != "server" {
+		t.Errorf("Expected globals init to set VmModel to 'server', got: %s", g.VmModel)
+	}
+}
+
+// make sure the environment variable is extracted and reformatted correctly
 func TestJavaHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JAVA_HOME")
 	os.Setenv("JAVA_HOME", "foo/bar")
@@ -22,6 +35,7 @@ func TestJavaHomeFormat(t *testing.T) {
 	os.Setenv("JAVA_HOME", origJavaHome)
 }
 
+// make sure the environment variable is extracted and reformatted correctly
 func TestJacobinHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JAVA_HOME")
 	os.Setenv("JACOBIN_HOME", "foo/bar")

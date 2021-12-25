@@ -75,6 +75,7 @@ func GetInstance() Globals {
 	return global
 }
 
+// GetGlobalRef returns a pointer to the singleton instance of Globals
 func GetGlobalRef() *Globals {
 	return &global
 }
