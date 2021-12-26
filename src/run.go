@@ -76,6 +76,10 @@ func runThread(t *execThread) error {
 		if err != nil {
 			return err
 		}
+
+		if t.stack.Len() == 1 { // true when the last executed frame was main()
+			return nil
+		}
 	}
 	return nil
 }
