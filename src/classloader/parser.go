@@ -135,9 +135,9 @@ func parseJavaVersionNumber(bytes []byte, klass *ParsedClass) error {
 		return err
 	}
 
-	if version > globals.GetInstance().MaxJavaVersionRaw {
+	if version > globals.GetGlobalRef().MaxJavaVersionRaw {
 		errMsg := "Jacobin supports only Java versions through Java " +
-			strconv.Itoa(globals.GetInstance().MaxJavaVersion)
+			strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion)
 		return cfe(errMsg)
 	}
 

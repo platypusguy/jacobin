@@ -64,7 +64,7 @@ func main() {
 // before closing down in order to have an orderly exit
 func shutdown(errorCondition bool) int {
 	globals.LoaderWg.Wait()
-	g := globals.GetInstance()
+	g := globals.GetGlobalRef()
 
 	err := errorCondition
 	if log.Log("shutdown", log.INFO) != nil {

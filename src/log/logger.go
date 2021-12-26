@@ -56,7 +56,7 @@ func Log(msg string, level int) (err error) {
 	}
 
 	// if the message is a trace and we're not tracing, then return.
-	if level == TRACE_INST && globals.GetInstance().Options["-trace"].Set != true {
+	if level == TRACE_INST && globals.GetGlobalRef().Options["-trace"].Set != true {
 		return
 	}
 

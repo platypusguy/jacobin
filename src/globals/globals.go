@@ -70,11 +70,6 @@ func InitGlobals(progName string) Globals {
 	return global
 }
 
-// GetInstance enables the singleton aspect of Globals
-func GetInstance() Globals {
-	return global
-}
-
 // GetGlobalRef returns a pointer to the singleton instance of Globals
 func GetGlobalRef() *Globals {
 	return &global
