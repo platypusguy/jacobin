@@ -46,6 +46,7 @@ import (
 // valid & invalid module names	    	TestModuleNames
 // valid & invalid CP module names		TestCPModuleNames
 // valid package name					TestCPPackageNames
+// valid padkage name (w/out using CP)  TestPackageName
 //
 // ---- fields (these are different from FieldRefs above) ----
 // invalid field name					TestInvalidFieldNames
@@ -57,7 +58,7 @@ import (
 // formatCheckStructure routine			TestStructuralValidation
 // validity of loadable items			TestLoadableItem
 
-// Get an error if the klass.cpCount of entries does not match the actual number
+// Note: generates an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
@@ -1501,10 +1502,24 @@ func TestPackageName(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	err := checkPackageName("")
-
-	if err == nil {
+	if checkPackageName("") == nil {
 		t.Error("Expected error on test of empty package name, but got none")
+	}
+
+	if checkPackageName("@invalid") == nil {
+		t.Error("Expected error in package name starting with @, but got none")
+	}
+
+	if checkPackageName("invalid:") == nil {
+		t.Error("Expected error in package name with non-escaped :, but got none")
+	}
+
+	if checkPackageName("invalid"+"\\") == nil {
+		t.Error("Expected error in package name with ending \\:, but got none")
+	}
+
+	if checkPackageName("goodname") != nil {
+		t.Error("Expected no error in package name 'goodnae', but got one")
 	}
 
 	_ = w.Close()
