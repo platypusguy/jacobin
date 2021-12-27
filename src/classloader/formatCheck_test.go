@@ -1486,6 +1486,34 @@ func TestCPPackageNames(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+func TestPackageName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	// _, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	err := checkPackageName("")
+
+	if err == nil {
+		t.Error("Expected error on test of empty package name, but got none")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 // field names in Java cannot begin with a digit and they cannot contain
 // whitespace. We check for both here.
 func TestInvalidFieldNames(t *testing.T) {
