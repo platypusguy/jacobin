@@ -1529,6 +1529,50 @@ func TestPackageName(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+// Tests module name without using CP records. Identical logic to TestPackageName(), except
+// error messages are different.
+func TestModuleName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	// _, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	if checkModuleName("") == nil {
+		t.Error("Expected error on test of empty module name, but got none")
+	}
+
+	if checkModuleName("@invalid") == nil {
+		t.Error("Expected error in module name starting with @, but got none")
+	}
+
+	if checkModuleName("invalid:") == nil {
+		t.Error("Expected error in module name with non-escaped :, but got none")
+	}
+
+	if checkModuleName("invalid"+"\\") == nil {
+		t.Error("Expected error in module name with ending \\:, but got none")
+	}
+
+	if checkModuleName("goodname") != nil {
+		t.Error("Expected no error in module name 'goodnae', but got one")
+	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 // field names in Java cannot begin with a digit and they cannot contain
 // whitespace. We check for both here.
 func TestInvalidFieldNames(t *testing.T) {

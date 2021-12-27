@@ -667,6 +667,7 @@ func checkModuleName(name string) error {
 		case '\\':
 			if i+1 >= len(bArr) { // name cannot end on a \
 				invalidName = true
+				break
 			}
 			// if a \ is encountered it can only escape a @, :, or \
 			// if this is the case, we skip the escaped char, if not, it's an error
