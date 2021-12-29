@@ -169,7 +169,7 @@ func cfe(msg string) error {
 	if ok {
 		fn := runtime.FuncForPC(pc)
 		fileName, fileLine := fn.FileLine(pc)
-		errMsg = errMsg + "\n  dectected by file: " + filepath.Base(fileName) +
+		errMsg = errMsg + "\n  detected by file: " + filepath.Base(fileName) +
 			", line: " + strconv.Itoa(fileLine)
 	}
 	log.Log(errMsg, log.SEVERE)
