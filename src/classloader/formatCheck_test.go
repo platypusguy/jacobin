@@ -1701,6 +1701,24 @@ func TestMethodDescription(t *testing.T) {
 	}
 }
 
+func TestCheckStructure(t *testing.T) {
+
+	pClass := ParsedClass{
+		interfaceCount: 3,
+		interfaces:     nil,
+	}
+	if formatCheckStructure(&pClass) == nil {
+		t.Error("Expecting error in mismatch of interfaceCount and interfaces.len, but got none")
+	}
+	pClass.interfaceCount = 0
+
+	pClass.attribCount = 4
+	pClass.attributes = nil
+	if formatCheckStructure(&pClass) == nil {
+		t.Error("Expecting error in mismatch of attribCount and attributess.len, but got none")
+	}
+}
+
 // unqualified names in Java have a set of restrictions on the syntax, which
 // varies depending on whether the name is the name of a method.
 func TestUnqualifiedName(t *testing.T) {
