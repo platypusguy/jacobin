@@ -1703,20 +1703,35 @@ func TestMethodDescription(t *testing.T) {
 
 func TestCheckStructure(t *testing.T) {
 
-	pClass := ParsedClass{
-		interfaceCount: 3,
-		interfaces:     nil,
+	pClass := ParsedClass{}
+
+	pClass.cpCount = 1
+	pClass.cpIndex = nil
+	if formatCheckStructure(&pClass) == nil {
+		t.Error("Expecting error in mismatch of cpCpount and cpIndex.len, but got none")
 	}
+	pClass.cpCount = 0
+
+	pClass.interfaceCount = 2
+	pClass.interfaces = nil
 	if formatCheckStructure(&pClass) == nil {
 		t.Error("Expecting error in mismatch of interfaceCount and interfaces.len, but got none")
 	}
 	pClass.interfaceCount = 0
+
+	pClass.methodCount = 3
+	pClass.methods = nil
+	if formatCheckStructure(&pClass) == nil {
+		t.Error("Expecting error in mismatch of methodCount and methods.len, but got none")
+	}
+	pClass.methodCount = 0
 
 	pClass.attribCount = 4
 	pClass.attributes = nil
 	if formatCheckStructure(&pClass) == nil {
 		t.Error("Expecting error in mismatch of attribCount and attributess.len, but got none")
 	}
+	pClass.attribCount = 0
 }
 
 // unqualified names in Java have a set of restrictions on the syntax, which
