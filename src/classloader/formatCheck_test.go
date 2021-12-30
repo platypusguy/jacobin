@@ -1702,6 +1702,18 @@ func TestMethodDescription(t *testing.T) {
 }
 
 func TestCheckStructure(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to avoid noisy output
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
 
 	pClass := ParsedClass{}
 
@@ -1732,6 +1744,20 @@ func TestCheckStructure(t *testing.T) {
 		t.Error("Expecting error in mismatch of attribCount and attributess.len, but got none")
 	}
 	pClass.attribCount = 0
+
+	pClass.bootstrapCount = 5
+	pClass.bootstraps = nil
+	if formatCheckStructure(&pClass) == nil {
+		t.Error("Expecting error in mismatch of bootstrapCount and boostraps.len, but got none")
+	}
+	pClass.bootstrapCount = 0
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 // unqualified names in Java have a set of restrictions on the syntax, which
