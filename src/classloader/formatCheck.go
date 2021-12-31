@@ -232,7 +232,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 					strconv.Itoa(clRef))
 			}
 
-			/* TO REVISIT: with java.lang.String the following code works OK
+			/* TODO: REVISIT: with java.lang.String the following code works OK
 			with the three interfaces defined in klass.interfaces[], but Iterable
 			is not among those classes and yet it's got a interfaceRef CP entry.
 			So, not presently sure how you validate that the interfaceRef CP entry
@@ -396,7 +396,8 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 		case Dynamic:
 			// Like InvokeDynamic, Dynamic is a unique kind of entry. The first field,
 			// boostrapIndex, must be a "valid index into the bootstrap_methods array
-			// of the bootstrap method table of this this class file" (specified in §4.7.23). The document spec for InvokeDynamic entries is:
+			// of the bootstrap method table of this this class file" (specified in §4.7.23).
+			// The document spec for InvokeDynamic entries is found at:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
 			// The second field is a nameAndType record describing the boostrap method.
 			// Here we just make sure, the field points to the right kind of entry and that
@@ -505,7 +506,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 				return cfe("Module CP entry must appear only in class with ACC_MODULE set.")
 			}
 			if checkModuleName(klass.moduleName) != nil {
-				return errors.New("") // the rror message will already have been displayed
+				return errors.New("") // the error message will already have been displayed
 			}
 		case Package:
 			// if there's a package entry, the package name has already been fetched and
@@ -518,10 +519,9 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 				return cfe("Package CP entry must appear only in class with ACC_MODULE set.")
 			}
 
-			// packages have the same restrictions on the names as modules, so we use the
-			// module name verification routine here.
+			// packages have the same restrictions on the names as modules.
 			if checkPackageName(klass.packageName) != nil {
-				return errors.New("") // the rror message will already have been displayed
+				return errors.New("") // the error message will already have been displayed
 			}
 		default:
 			continue
