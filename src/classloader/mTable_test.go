@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	goclasses2 "jacobin/internal"
 	"testing"
 )
 
@@ -28,10 +29,10 @@ func TestMTableAdd(t *testing.T) {
 }
 
 func TestMTableLoadLib(t *testing.T) {
-	libMeths := make(map[string]GMeth)
-	libMeths["testG1"] = GMeth{ParamSlots: 1, GFunction: nil}
-	libMeths["testG2"] = GMeth{ParamSlots: 2, GFunction: nil}
-	libMeths["testG3"] = GMeth{ParamSlots: 3, GFunction: nil}
+	libMeths := make(map[string]goclasses2.GMeth)
+	libMeths["testG1"] = goclasses2.GMeth{ParamSlots: 1, GFunction: nil}
+	libMeths["testG2"] = goclasses2.GMeth{ParamSlots: 2, GFunction: nil}
+	libMeths["testG3"] = goclasses2.GMeth{ParamSlots: 3, GFunction: nil}
 
 	mtbl := make(MT)
 	loadlib(&mtbl, libMeths)
