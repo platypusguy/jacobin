@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -10,12 +10,7 @@ import (
 	"sync"
 )
 
-// MTable is the table in which method data is stored for quick reference at
-// method invocation. It consists of a map whose key is a string consisting of a
-// concatenation of the class name, method name, and method type. For example,
-//		java/io/PrintStream.println(Ljava/lang/String;)V
-//
-// The value consists of a byte identifying whether the method is a Java method
+// MTable value consists of a byte identifying whether the method is a Java method
 // ('J'), that is, a method that is executed by executing bytecodes, or a go
 // method ('G'), which is a Go funciton that is being used as a stand-in for
 // the named Java method. In most contexts, this would be called a native method,
