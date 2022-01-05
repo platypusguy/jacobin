@@ -1,13 +1,12 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
 package classloader
 
 import (
-	goclasses2 "jacobin/internal"
 	"testing"
 )
 
@@ -29,17 +28,15 @@ func TestMTableAdd(t *testing.T) {
 }
 
 func TestMTableLoadLib(t *testing.T) {
-	libMeths := make(map[string]goclasses2.GMeth)
-	libMeths["testG1"] = goclasses2.GMeth{ParamSlots: 1, GFunction: nil}
-	libMeths["testG2"] = goclasses2.GMeth{ParamSlots: 2, GFunction: nil}
-	libMeths["testG3"] = goclasses2.GMeth{ParamSlots: 3, GFunction: nil}
-
+	libMeths := make(map[string]GMeth)
+	libMeths["testG1"] = GMeth{ParamSlots: 1, GFunction: nil}
+	libMeths["testG2"] = GMeth{ParamSlots: 2, GFunction: nil}
+	libMeths["testG3"] = GMeth{ParamSlots: 3, GFunction: nil}
 	mtbl := make(MT)
 	loadlib(&mtbl, libMeths)
 	if len(mtbl) != 3 {
 		t.Errorf("Expecting MTable with 3 entries, got: %d", len(mtbl))
 	}
-
 	mte := libMeths["testG2"]
 	if mte.ParamSlots != 2 {
 		t.Errorf("Expecting MTable entry to have 2 param slots, got: %d",
