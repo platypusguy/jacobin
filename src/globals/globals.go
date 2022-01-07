@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -13,7 +13,7 @@ import (
 )
 
 // Globals contains variables that need to be globally accessible,
-// such as VM and program args, pointers to classloaders, etc.
+// such as VM and program args, etc.
 // Note: globals cannot depend on exec package to avoid circularity.
 // As a result, exec contains its own globals
 type Globals struct {
