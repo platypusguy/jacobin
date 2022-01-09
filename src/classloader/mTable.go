@@ -40,9 +40,11 @@ type MTentry struct {
 type mData interface{}
 
 // GmEntry is the entry in the MTable for Go functions. See MTable comments for details.
+// Fu is a go function. All go functions accept a possibly empty slice of interface{} and
+// return a possibly nil interface{}
 type GmEntry struct {
 	ParamSlots int
-	Fu         func([]interface{})
+	Fu         func([]interface{}) interface{}
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
@@ -61,7 +63,7 @@ type JmEntry struct {
 // Function is the generic-style function used for Go entries: a function that accepts a
 // slice of empty interfaces and returns nothing (b/c all returns are pushed onto the
 // stack rather than actually returned to a caller).
-type Function func([]interface{})
+type Function func([]interface{}) interface{}
 
 // MTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
@@ -71,7 +73,7 @@ var MTmutex sync.Mutex
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
 func MTableLoadNatives() {
-	loadlib(&MTable, Load_System_PrintStream()) // load the Println variants
+	loadlib(&MTable, Load_System_Io_PrintStream()) // load the Println variants
 }
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
