@@ -466,21 +466,27 @@ func runFrame(fs *list.List) error {
 }
 
 // runs a frame whose method is a golang (so, native) method. It copies the parameters
-// from the operand stack and passes them to the go function, here called GFunction.
+// from the operand stack and passes them to the go function, here called Fu.
 // TODO: Handle how return values are placed back on the stack.
 func runGframe(fr *frame) error {
+	// get the go method from the MTable
 	me := classloader.MTable[fr.methName]
 	if me.Meth == nil {
 		return errors.New("go method not found: " + fr.methName)
 	}
 
+	// pull arguments for the function off the frame's operand stack and put them in a slice
 	var params = new([]interface{})
 	for _, v := range fr.opStack {
 		*params = append(*params, v)
 	}
 
-	me.Meth.(classloader.GmEntry).Fu(*params)
+	// call the function passing a pointer to the slice of arguments
+	ret := me.Meth.(classloader.GmEntry).Fu(*params)
 
+	if ret == nil {
+		return nil
+	} // CURR: else push the return value onto the calling frame's operand stack
 	return nil
 }
 
