@@ -87,7 +87,8 @@ func runThread(t *execThread) error {
 func runFrame(fs *list.List) error {
 	f := fs.Front().Value.(*frame) // convert list element to frame pointer
 	if f.ftype == 'G' {            // if the frame contains a Golang method ('G')
-		return runGframe(f) // run it differently
+		_, err := runGframe(f) // run it differently
+		return err             // TODO: update handling of return of non-err value
 	}
 
 	for f.pc < len(f.meth) {
@@ -468,11 +469,11 @@ func runFrame(fs *list.List) error {
 // runs a frame whose method is a golang (so, native) method. It copies the parameters
 // from the operand stack and passes them to the go function, here called Fu.
 // TODO: Handle how return values are placed back on the stack.
-func runGframe(fr *frame) error {
+func runGframe(fr *frame) (interface{}, error) {
 	// get the go method from the MTable
 	me := classloader.MTable[fr.methName]
 	if me.Meth == nil {
-		return errors.New("go method not found: " + fr.methName)
+		return nil, errors.New("go method not found: " + fr.methName)
 	}
 
 	// pull arguments for the function off the frame's operand stack and put them in a slice
@@ -485,9 +486,9 @@ func runGframe(fr *frame) error {
 	ret := me.Meth.(classloader.GmEntry).Fu(*params)
 
 	if ret == nil {
-		return nil
+		return nil, nil
 	} // CURR: else push the return value onto the calling frame's operand stack
-	return nil
+	return nil, nil
 }
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
