@@ -15,6 +15,19 @@ import (
 	"testing"
 )
 
+/*
+ * Tests for Hello.class, which is the first class Jacobin executed. Its source code:
+ *
+ *	class Hello {
+ *		public static void main( String[] args) {
+ *			for( int i = 0; i < 10; i++)
+ *				System.out.println( "Hello from Hello.main!" );
+ *		}
+ *	}
+ *
+ * These test check the output with various options for verbosity and features set.
+ */
+
 var JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
 var JVM_ARGS = ""
 var TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello.class" // the class to test
