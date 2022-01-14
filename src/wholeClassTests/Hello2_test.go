@@ -16,7 +16,7 @@ import (
 )
 
 /*
- * Tests for Hello2.class, which is one of the first classES Jacobin executed. Source code:
+ * Tests for Hello2.class, which is one of the first classes Jacobin executed. Source code:
  *
  *		public static void main( String[] args) {
  *			int x;
