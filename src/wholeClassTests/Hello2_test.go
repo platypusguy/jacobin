@@ -16,24 +16,29 @@ import (
 )
 
 /*
- * Tests for Hello.class, which is the first class Jacobin executed. Its source code:
+ * Tests for Hello2.class, which is one of the first classES Jacobin executed. Source code:
  *
- *	class Hello {
  *		public static void main( String[] args) {
- *			for( int i = 0; i < 10; i++)
- *				System.out.println( "Hello from Hello.main!" );
- *		}
- *	}
+ *			int x;
+ *			for( int i = 0; i < 10; i++) {
+ *				x = addTwo(i, i-1);
+ *				System.out.println( x );
+ *          }
+ *      }
+ *
+ *	    static int addTwo(int j, int k) {
+ *		    return j + k;
+ *	    }
  *
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
-var JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
-var JVM_ARGS = ""
-var TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello.class" // the class to test
-var APP_ARGS = ""
+var _JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+var _JVM_ARGS = ""
+var _TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello2.class" // the class to test
+var _APP_ARGS = ""
 
-func TestRunHello(t *testing.T) {
+func TestRunHello2(t *testing.T) {
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -41,23 +46,23 @@ func TestRunHello(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", JACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(JVM_ARGS) > 0 {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS, APP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, TESTCLASS, APP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -84,12 +89,12 @@ func TestRunHello(t *testing.T) {
 		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
 
-func TestRunHelloVerboseClass(t *testing.T) {
+func TestRunHello2VerboseClass(t *testing.T) {
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -97,24 +102,24 @@ func TestRunHelloVerboseClass(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", JACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	JVM_ARGS = "-verbose:class"
+	_JVM_ARGS = "-verbose:class"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(JVM_ARGS) > 0 {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS, APP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, TESTCLASS, APP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -132,7 +137,7 @@ func TestRunHelloVerboseClass(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class: Hello, loader: bootstrap") {
+	if !strings.Contains(string(slurp), "Class: Hello2, loader: bootstrap") {
 		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
 	}
 
@@ -141,12 +146,12 @@ func TestRunHelloVerboseClass(t *testing.T) {
 		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
 
-func TestRunHelloVerboseFinest(t *testing.T) {
+func TestRunHello2VerboseFinest(t *testing.T) {
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -154,24 +159,24 @@ func TestRunHelloVerboseFinest(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", JACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	JVM_ARGS = "-verbose:finest"
+	_JVM_ARGS = "-verbose:finest"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(JVM_ARGS) > 0 {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS, APP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, TESTCLASS, APP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -189,7 +194,7 @@ func TestRunHelloVerboseFinest(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class Hello has been format-checked.") {
+	if !strings.Contains(string(slurp), "Class Hello2 has been format-checked.") {
 		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
 	}
 
@@ -198,12 +203,12 @@ func TestRunHelloVerboseFinest(t *testing.T) {
 		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), "13") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
 
-func TestRunHelloTraceInst(t *testing.T) {
+func TestRunHello2TraceInst(t *testing.T) {
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -211,24 +216,24 @@ func TestRunHelloTraceInst(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", JACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	JVM_ARGS = "-trace:inst"
+	_JVM_ARGS = "-trace:inst"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(JVM_ARGS) > 0 {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS, APP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, JVM_ARGS, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(APP_ARGS) > 0 {
-			cmd = exec.Command(JACOBIN, TESTCLASS, APP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(JACOBIN, TESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -246,7 +251,7 @@ func TestRunHelloTraceInst(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "class: Hello, meth: main, pc: 22, inst: RETURN, tos: -1") {
+	if !strings.Contains(string(slurp), "class: Hello2, meth: main, pc: 29, inst: RETURN, tos: -1") {
 		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
 	}
 
@@ -255,7 +260,7 @@ func TestRunHelloTraceInst(t *testing.T) {
 		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), "15") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
