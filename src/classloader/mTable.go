@@ -73,7 +73,8 @@ var MTmutex sync.Mutex
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
 func MTableLoadNatives() {
-	loadlib(&MTable, Load_System_Io_PrintStream()) // load the Println variants
+	loadlib(&MTable, Load_System_Io_PrintStream()) // load the java.io.prinstream golang functions
+	loadlib(&MTable, Load_Lang_System())           // load the java.lang.system golang functions
 }
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
