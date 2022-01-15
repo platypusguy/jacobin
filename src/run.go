@@ -149,6 +149,14 @@ func runFrame(fs *list.List) error {
 			push(f, f.locals[2])
 		case ILOAD_3: //  	0x1D   	(push local variable 3)
 			push(f, f.locals[3])
+		case LLOAD_0: //	0x1E	(push local variable 0, as long)
+			push(f, f.locals[0])
+		case LLOAD_1: //	0x1F	(push local variable 1, as long)
+			push(f, f.locals[1])
+		case LLOAD_2: //	0x20	(push local variable 2, as long)
+			push(f, f.locals[2])
+		case LLOAD_3: //	0x21	(push local variable 3, as long)
+			push(f, f.locals[3])
 		case ALOAD_0: //	0x2A	(push reference stored in local variable 0)
 			push(f, f.locals[0])
 		case ALOAD_1: //	0x2B	(push reference stored in local variable 1)
@@ -165,6 +173,18 @@ func runFrame(fs *list.List) error {
 			f.locals[2] = pop(f)
 		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			f.locals[3] = pop(f)
+		case LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
+			f.locals[0] = pop(f)
+			f.locals[1] = f.locals[0]
+		case LSTORE_1: //   0x40    (store long from top of stack into locals 1 and 2)
+			f.locals[1] = pop(f)
+			f.locals[2] = f.locals[1]
+		case LSTORE_2: //   0x41    (store long from top of stack into locals 2 and 3)
+			f.locals[2] = pop(f)
+			f.locals[3] = f.locals[2]
+		case LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
+			f.locals[3] = pop(f)
+			f.locals[4] = f.locals[3]
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.locals[0] = pop(f)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
