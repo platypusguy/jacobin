@@ -84,13 +84,31 @@ func runThread(t *execThread) error {
 	return nil
 }
 
+// runFrame() is the principal execution function in Jacobin. It first tests for a
+// golang function in the present frame. If it is a golang function, it's sent to
+// a different function for execution. Otherwise, bytecode interpretation takes
+// place through a giant switch statement.
 func runFrame(fs *list.List) error {
-	f := fs.Front().Value.(*frame) // convert list element to frame pointer
-	if f.ftype == 'G' {            // if the frame contains a Golang method ('G')
-		_, err := runGframe(f) // run it differently
-		return err             // TODO: update handling of return of non-err value
+	// the current frame is always the head of the linked list of frames.
+	// the next statement converts the address of that frame to the more readable 'f'
+	f := fs.Front().Value.(*frame)
+
+	// if the frame contains a golang method, execute it using runGframe(),
+	// which returns a value (possibly nil) and an error code. Presuming no error,
+	// if the return value (here, retval) is not nil, it is placed on the stack
+	// of the calling frame.
+	if f.ftype == 'G' {
+		retval, err := runGframe(f)
+
+		if retval != nil {
+			f = fs.Front().Next().Value.(*frame)
+			push(f, retval.(int64))
+		}
+		return err
 	}
 
+	// the frame's method is not a golang method, so it's Java bytecode, which
+	// is interpreted in the rest of this function.
 	for f.pc < len(f.meth) {
 		if MainThread.trace {
 			_ = log.Log("class: "+f.clName+
