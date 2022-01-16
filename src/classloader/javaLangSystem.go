@@ -28,7 +28,7 @@ import (
 */
 
 func Load_Lang_System() map[string]GMeth {
-	MethodSignatures["java/lang/System.nanoTime:()J"] = // get nanoseconds time, returned as long
+	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  nanoTime,
