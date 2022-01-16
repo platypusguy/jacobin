@@ -48,7 +48,7 @@ func Load_System_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 2,
 			GFunction:  PrintlnI,
 		}
-	MethodSignatures["java/io/PrintStream.println:(J)V"] = // println long
+	MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  PrintlnLong,

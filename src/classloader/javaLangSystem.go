@@ -38,5 +38,5 @@ func Load_Lang_System() map[string]GMeth {
 
 // Return time in nanoseconds
 func nanoTime([]interface{}) interface{} {
-	return time.Now().Nanosecond()
+	return int64(time.Now().UnixNano())
 }
