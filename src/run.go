@@ -525,11 +525,7 @@ func runGframe(fr *frame) (interface{}, error) {
 
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(classloader.GmEntry).Fu(*params)
-
-	if ret == nil {
-		return nil, nil
-	}
-	return nil, nil
+	return ret, nil
 }
 
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) error {
@@ -538,7 +534,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	paramSlots := mt.Meth.(classloader.GmEntry).ParamSlots
 	gf := createFrame(paramSlots)
 	gf.thread = f.thread
-	gf.methName = methodName + methodType
+	gf.methName = className + "." + methodName + methodType
 	gf.clName = className
 	gf.meth = nil
 	gf.cp = nil
