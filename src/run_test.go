@@ -626,7 +626,7 @@ func TestIstore0(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.locals[0] != 220 {
-		t.Errorf("After ISTORE_0, expected lcoals[2] to be 220, got: %d", f.locals[0])
+		t.Errorf("ISTORE_0: expected lcoals[0] to be 220, got: %d", f.locals[0])
 	}
 	if f.tos != -1 {
 		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.tos)
@@ -642,7 +642,7 @@ func TestIstore1(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.locals[1] != 221 {
-		t.Errorf("After ISTORE_1, expected lcoals[1] to be 221, got: %d", f.locals[1])
+		t.Errorf("ISTORE_1: expected locals[1] to be 221, got: %d", f.locals[1])
 	}
 	if f.tos != -1 {
 		t.Errorf("ISTORE_1: Expected op stack to be empty, got tos: %d", f.tos)
@@ -659,7 +659,7 @@ func TestIstore2(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.locals[2] != 222 {
-		t.Errorf("After ISTORE_2, expected lcoals[2] to be 222, got: %d", f.locals[2])
+		t.Errorf("ISTORE_2: expected locals[2] to be 222, got: %d", f.locals[2])
 	}
 	if f.tos != -1 {
 		t.Errorf("ISTORE_2: Expected op stack to be empty, got tos: %d", f.tos)
@@ -677,7 +677,7 @@ func TestIstore3(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.locals[3] != 223 {
-		t.Errorf("After ISTORE_3, expected lcoals[0] to be 223, got: %d", f.locals[3])
+		t.Errorf("ISTORE_3: expected locals[3] to be 223, got: %d", f.locals[3])
 	}
 	if f.tos != -1 {
 		t.Errorf("ISTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
@@ -807,6 +807,100 @@ func TestLload3(t *testing.T) {
 
 	if f.tos != -1 {
 		t.Errorf("LLOAD_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+func TestLstore0(t *testing.T) {
+	f := newFrame(LSTORE_0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, 0x12345678)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[0] != 0x12345678 {
+		t.Errorf("LSTORE_0: expected locals[0] to be 0x12345678, got: %d", f.locals[0])
+	}
+
+	if f.locals[1] != 0x12345678 {
+		t.Errorf("LSTORE_0: expected locals[1] to be 0x12345678, got: %d", f.locals[1])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LSTORE_0: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestLstore1(t *testing.T) {
+	f := newFrame(LSTORE_1)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, 0x12345678)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[1] != 0x12345678 {
+		t.Errorf("LSTORE_1: expected locals[1] to be 0x12345678, got: %d", f.locals[1])
+	}
+
+	if f.locals[2] != 0x12345678 {
+		t.Errorf("LSTORE_1: expected locals[2] to be 0x12345678, got: %d", f.locals[2])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LSTORE_1: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestLstore2(t *testing.T) {
+	f := newFrame(LSTORE_2)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, 0x12345678)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x12345678 {
+		t.Errorf("LSTORE_2: expected locals[2] to be 0x12345678, got: %d", f.locals[2])
+	}
+
+	if f.locals[3] != 0x12345678 {
+		t.Errorf("LSTORE_2: expected locals[3] to be 0x12345678, got: %d", f.locals[3])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LSTORE_2: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+func TestLstore3(t *testing.T) {
+	f := newFrame(LSTORE_3)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, 0x12345678)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[3] != 0x12345678 {
+		t.Errorf("LSTORE_3: expected locals[3] to be 0x12345678, got: %d", f.locals[3])
+	}
+
+	if f.locals[4] != 0x12345678 {
+		t.Errorf("LSTORE_3: expected locals[4] to be 0x12345678, got: %d", f.locals[4])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LSTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
 	}
 }
 
