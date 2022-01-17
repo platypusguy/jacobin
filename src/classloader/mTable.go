@@ -11,7 +11,7 @@ import (
 )
 
 // MTable value consists of a byte identifying whether the method is a Java method
-// ('J'), that is, a method that is executed by executing bytecodes, or a go
+// ('J'), that is, a method that is executed by executing bytecodes, or a go-style
 // method ('G'), which is a Go funciton that is being used as a stand-in for
 // the named Java method. In most contexts, this would be called a native method,
 // but that term is used in a different context in Java (see JNI), so avoided here.
@@ -73,8 +73,8 @@ var MTmutex sync.Mutex
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
 func MTableLoadNatives() {
-	loadlib(&MTable, Load_System_Io_PrintStream()) // load the java.io.prinstream golang functions
-	loadlib(&MTable, Load_Lang_System())           // load the java.lang.system golang functions
+	loadlib(&MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
+	loadlib(&MTable, Load_Lang_System())    // load the java.lang.system golang functions
 }
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
