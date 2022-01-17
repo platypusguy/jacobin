@@ -22,21 +22,33 @@ import (
  return interface can be nil. This covers all Java functions. (Objects are returned
  as a 64-bit address in this scheme (as they are in the JVM).
 
- The slice contains one entry for every parameter passed to the method (which could
- mean an empty slice). There is no return value, because the method will place any
- return value on the operand stack of the calling function.
+ The passed-in slice contains one entry for every parameter passed to the method (which
+ could mean an empty slice).
 */
 
 func Load_Lang_System() map[string]GMeth {
+
+	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  currentTimeMillis,
+		}
 	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  nanoTime,
 		}
+
 	return MethodSignatures
 }
 
-// Return time in nanoseconds
+// Return time in milliseconds, measured since midnight of Jan 1, 1970
+func currentTimeMillis([]interface{}) interface{} {
+	return int64(time.Now().UnixMilli())
+}
+
+// Return time in nanoseconds. Note that in golang this function has a lower (that is, less good)
+// resolution than Java: two successive calls often return the same value.
 func nanoTime([]interface{}) interface{} {
 	return int64(time.Now().UnixNano())
 }
