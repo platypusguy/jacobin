@@ -39,12 +39,15 @@ import (
 //
 // These tests check the output with various options for verbosity and features set on the command line.
 
-var _jACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
-var _jVM_ARGS = ""
-var _tESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello3.class" // the class to test
-var _aPP_ARGS = ""
+func initVarsHello3() {
+	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+	_JVM_ARGS = ""
+	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello3.class" // the class to test
+	_APP_ARGS = ""
+}
 
 func TestRunHello3(t *testing.T) {
+	initVarsHello3()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -52,23 +55,23 @@ func TestRunHello3(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(_jACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _jACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(_jVM_ARGS) > 0 {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS, _aPP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS, _aPP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -103,6 +106,7 @@ func TestRunHello3(t *testing.T) {
 }
 
 func TestRunHello3VerboseClass(t *testing.T) {
+	initVarsHello3()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -110,24 +114,24 @@ func TestRunHello3VerboseClass(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(_jACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _jACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	_jVM_ARGS = "-verbose:class"
+	_JVM_ARGS = "-verbose:class"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(_jVM_ARGS) > 0 {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS, _aPP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS, _aPP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -162,6 +166,7 @@ func TestRunHello3VerboseClass(t *testing.T) {
 }
 
 func TestRunHello3VerboseFinest(t *testing.T) {
+	initVarsHello3()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -169,24 +174,24 @@ func TestRunHello3VerboseFinest(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(_jACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _jACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	_jVM_ARGS = "-verbose:finest"
+	_JVM_ARGS = "-verbose:finest"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(_jVM_ARGS) > 0 {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS, _aPP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS, _aPP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 
@@ -221,6 +226,7 @@ func TestRunHello3VerboseFinest(t *testing.T) {
 }
 
 func TestRunHello3TraceInst(t *testing.T) {
+	initVarsHello3()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -228,24 +234,24 @@ func TestRunHello3TraceInst(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(_jACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _jACOBIN)
+	if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	_jVM_ARGS = "-trace:inst"
+	_JVM_ARGS = "-trace:inst"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
-	if len(_jVM_ARGS) > 0 {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS, _aPP_ARGS)
+	if len(_JVM_ARGS) > 0 {
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _jVM_ARGS, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
 		}
 	} else {
-		if len(_aPP_ARGS) > 0 {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS, _aPP_ARGS)
+		if len(_APP_ARGS) > 0 {
+			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_jACOBIN, _tESTCLASS)
+			cmd = exec.Command(_JACOBIN, _TESTCLASS)
 		}
 	}
 

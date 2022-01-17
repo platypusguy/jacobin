@@ -11,42 +11,41 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 )
 
-/*
- * Tests for Hello2.class, which is one of the first classes Jacobin executed. Source code:
- *
- *		public static void main( String[] args) {
- *			int x;
- *			for( int i = 0; i < 10; i++) {
- *				x = addTwo(i, i-1);
- *				System.out.println( x );
- *          }
- *      }
- *
- *	    static int addTwo(int j, int k) {
- *		    return j + k;
- *	    }
- *
- * These tests check the output with various options for verbosity and features set on the command line.
- */
+// Test for Nanoprint class, which calls java.lang.System.nanoTime() twice and prints the result.
+// This is a test of returning a value (here, a long with the nano count) from a go-style function,
+// which is standing in for the Java call. In addition, this class is one of the first to use the
+// lstore and lload instructions.
+//
+// Source code:
+//
+// import static java.lang.System.nanoTime;
+//
+// public class NanoPrint {
+//
+//     public static void main( String[] args) {
+//          long nano1 = nanoTime();
+//          long nano2 = nanoTime();
+//          System.out.println( nano1 );
+//          System.out.println( nano2 );
+//     }
+// }
+//
+// These tests check the output with various options for verbosity and features set on the command line.
 
-var _JACOBIN string
-var _JVM_ARGS string
-var _TESTCLASS string
-var _APP_ARGS string
-
-func initVarsHello2() {
+func initVarsNanoPrint() {
 	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
 	_JVM_ARGS = ""
-	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello2.class" // the class to test
+	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\NanoPrint.class" // the class to test
 	_APP_ARGS = ""
 }
 
-func TestRunHello2(t *testing.T) {
-	initVarsHello2()
+func TestRunNanoprint(t *testing.T) {
+	initVarsNanoPrint()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -88,22 +87,32 @@ func TestRunHello2(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
+	slurpErr := string(slurp)
 	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
+	slurpOut := string(slurp)
+	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
+		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 
-	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+	outStrings := strings.Split(strings.ReplaceAll(slurpOut, "\r\n", "\n"), "\n")
+	time1, err1 := strconv.Atoi(outStrings[1])
+	time2, err2 := strconv.Atoi(outStrings[2])
+
+	if err1 != nil || err2 != nil {
+		t.Errorf("Error converting nanoTimes to integers in lines[1] and [2]: %s", outStrings)
+	}
+
+	if time2 < time1 {
+		t.Errorf("expected time2 to be >= to time1, but got: time1 = %d, time2 = %d", time1, time2)
 	}
 }
 
-func TestRunHello2VerboseClass(t *testing.T) {
-	initVarsHello2()
+func TestRunNanoPrintVerboseClass(t *testing.T) {
+	initVarsNanoPrint()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -146,22 +155,20 @@ func TestRunHello2VerboseClass(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class: Hello2, loader: bootstrap") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+	slurpErr := string(slurp)
+	if !strings.Contains(slurpErr, "Class: NanoPrint, loader: bootstrap") {
+		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 
 	slurp, _ = io.ReadAll(stdout)
+	slurpOut := string(slurp)
 	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
-
-	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }
 
-func TestRunHello2VerboseFinest(t *testing.T) {
-	initVarsHello2()
+func TestRunNanoPrintVerboseFinest(t *testing.T) {
+	initVarsNanoPrint()
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -204,22 +211,19 @@ func TestRunHello2VerboseFinest(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class Hello2 has been format-checked.") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+	slurpErr := string(slurp)
+	if !strings.Contains(slurpErr, "Class NanoPrint has been format-checked.") {
+		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
-
-	if !strings.Contains(string(slurp), "13") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+	slurpOut := string(slurp)
+	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
+		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }
 
-func TestRunHello2TraceInst(t *testing.T) {
-	initVarsHello2()
+func TestRunNanoPrintTraceInst(t *testing.T) {
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -262,16 +266,14 @@ func TestRunHello2TraceInst(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "class: Hello2, meth: main, pc: 29, inst: RETURN, tos: -1") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+	slurpErr := string(slurp)
+	if !strings.Contains(slurpErr, "class: NanoPrint, meth: main, pc: 22, inst: RETURN, tos: -1") {
+		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
-
-	if !strings.Contains(string(slurp), "15") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+	slurpOut := string(slurp)
+	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
+		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }
