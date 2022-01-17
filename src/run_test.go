@@ -715,6 +715,101 @@ func TestLdc(t *testing.T) {
 	}
 }
 
+func TestLload0(t *testing.T) {
+	f := newFrame(LLOAD_0)
+
+	f.locals = append(f.locals, 0x12345678) // put value in locals[0]
+	f.locals = append(f.locals, 0x12345678) // put value in locals[1] // lload uses two local consecutive
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x12345678 {
+		t.Errorf("LLOAD_0: Expecting 0x12345678 on stack, got: 0x%x", x)
+	}
+
+	if f.locals[1] != x {
+		t.Errorf("LLOAD_0: Local variable[1] holds invalid value: 0x%x", f.locals[2])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LLOAD_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+func TestLload1(t *testing.T) {
+	f := newFrame(LLOAD_1)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x12345678) // put value in locals[1]
+	f.locals = append(f.locals, 0x12345678) // put value in locals[2] // lload uses two local consecutive
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x12345678 {
+		t.Errorf("LLOAD_1: Expecting 0x12345678 on stack, got: 0x%x", x)
+	}
+
+	if f.locals[2] != x {
+		t.Errorf("LLOAD_1: Local variable[2] holds invalid value: 0x%x", f.locals[2])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+func TestLload2(t *testing.T) {
+	f := newFrame(LLOAD_2)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x12345678) // put value in locals[2]
+	f.locals = append(f.locals, 0x12345678) // put value in locals[3] // lload uses two local consecutive
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x12345678 {
+		t.Errorf("LLOAD_12: Expecting 0x12345678 on stack, got: 0x%x", x)
+	}
+
+	if f.locals[3] != x {
+		t.Errorf("LLOAD_2: Local variable[3] holds invalid value: 0x%x", f.locals[3])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+func TestLload3(t *testing.T) {
+	f := newFrame(LLOAD_3)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x12345678) // put value in locals[3]
+	f.locals = append(f.locals, 0x12345678) // put value in locals[4] // lload uses two local consecutive
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x12345678 {
+		t.Errorf("LLOAD_3: Expecting 0x12345678 on stack, got: 0x%x", x)
+	}
+
+	if f.locals[4] != x {
+		t.Errorf("LLOAD_3: Local variable[4] holds invalid value: 0x%x", f.locals[4])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LLOAD_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
 func TestReturn(t *testing.T) {
 	f := newFrame(RETURN)
 	fs := createFrameStack()
@@ -732,7 +827,7 @@ func TestReturn(t *testing.T) {
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 	LoadOptionsTable(Global)
 
 	// to avoid cluttering the test results, redirect stdout
@@ -754,10 +849,10 @@ func TestInvalidInstruction(t *testing.T) {
 	}
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
