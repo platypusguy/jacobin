@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -36,7 +36,7 @@ type GMeth struct {
 
 type function func([]interface{}) interface{}
 
-func Load_System_Io_PrintStream() map[string]GMeth {
+func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
 		GMeth{
 			ParamSlots: 2, // [0] = PrintStream.out object,
