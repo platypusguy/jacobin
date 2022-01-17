@@ -33,11 +33,6 @@ import (
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
-var _JACOBIN string
-var _JVM_ARGS string
-var _TESTCLASS string
-var _APP_ARGS string
-
 func initVarsHello2() {
 	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
 	_JVM_ARGS = ""
