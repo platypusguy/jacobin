@@ -74,7 +74,7 @@ func Println(i []interface{}) interface{} {
 
 // PrintlnI = java/io/Prinstream.println(int) TODO: equivalent (verify that this grabs the right param to print)
 func PrintlnI(i []interface{}) interface{} {
-	intToPrint := i[1].(int64) // points to an int
+	intToPrint := i[1].(int64) // contains an int
 	// cpi := i[0].(int64)    // int64 which is an index into Statics array
 	// cp := StaticsArray[cpi].CP
 	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
@@ -85,7 +85,7 @@ func PrintlnI(i []interface{}) interface{} {
 // PrintlnLong = java/io/Prinstream.println(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintlnLong(l []interface{}) interface{} {
-	intToPrint := l[1].(int64) // points to an int
+	intToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
 	fmt.Println(intToPrint)
 	return nil
 }
