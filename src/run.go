@@ -135,7 +135,7 @@ func runFrame(fs *list.List) error {
 			push(f, 4)
 		case ICONST_5: //   0x08	(push 5 onto opStack)
 			push(f, 5)
-		case BIPUSH: //     0x10	(push the following byte as an int onto the stack)
+		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.meth[f.pc+1]))
 			f.pc += 1
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
