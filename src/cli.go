@@ -186,13 +186,11 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
 func showCopyright() {
-	// var global = globals.GetInstance()
-	var global = globals.GetGlobalRef()
-	if !strings.Contains(global.CommandLine, "-showversion") &&
-		!strings.Contains(global.CommandLine, "--show-version") &&
-		!strings.Contains(global.CommandLine, "-version") &&
-		!strings.Contains(global.CommandLine, "--version") {
-		fmt.Println("Jacobin VM v. " + global.Version +
+	if !strings.Contains(Global.CommandLine, "-showversion") &&
+		!strings.Contains(Global.CommandLine, "--show-version") &&
+		!strings.Contains(Global.CommandLine, "-version") &&
+		!strings.Contains(Global.CommandLine, "--version") {
+		fmt.Println("Jacobin VM v. " + Global.Version +
 			", © 2021-2 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
 	}
 }
