@@ -18,7 +18,7 @@ import (
 /*
  * Tests for: jacobin -version
  *     which should print info about the JVM to stderr
- * These tests check the output with various options for verbosity and features set on the command line.
+ * These tests check the output.
  */
 
 func initVarsVersion() {
@@ -64,7 +64,6 @@ func TestRunVersion(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,12 +74,8 @@ func TestRunVersion(t *testing.T) {
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stdout) // the output is written to stderr, so stdout should be empty
-	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stdout: %s", string(slurp))
-	}
 
-	slurp, _ = io.ReadAll(stderr)
+	slurp, _ := io.ReadAll(stderr)
 	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
 		t.Errorf("Stderr did not begin with Jacobin name, instead: %s", string(slurp))
 	}
