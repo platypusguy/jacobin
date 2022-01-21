@@ -1,4 +1,6 @@
-This directory contains tests for Jacobin VM. Each file has exercises a
+This directory contains tests for Jacobin VM.
+
+Each file whose name begins with a capital letter exercises a
 corresponding Java class file located on Github in this directory:
 https://github.com/platypusguy/jacobin/tree/main/testdata. The source
 code for each test class is listed in the comments section of the test
@@ -9,8 +11,12 @@ Jacobin VM supports. At present, that is Java 11.
 To run a test on its corresponding class, simply change the value in the
 initVars*() go function to reflect your setup, then compile and run the test.
 
+Tests that whose file name begin with a lower-case letter do not have a
+corresponding class. These are tests for command lines such as:
+jacobin -version or jacobin -help.
+
 On the Jacobin VM development system, a CI suite runs all these tests before
 every commit (generally many times before any commit). On Github actions,
-however, these tests are not run--only unit tests are run by Github. (This
+however, these tests are *not* run--only unit tests are run by Github. (This
 capability is enabled by the -short flag of the standard go test framework.)
 
