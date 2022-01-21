@@ -43,15 +43,6 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 	log.Init()
 	log.SetLogLevel(log.CLASS)
 
-	// // redirect stderr & stdout to capture results from stderr
-	// normalStderr := os.Stderr
-	// r, w, _ := os.Pipe()
-	// os.Stderr = w
-	//
-	// normalStdout := os.Stdout
-	// _, wout, _ := os.Pipe()
-	// os.Stdout = wout
-
 	// set up a class with a constant pool containing the one
 	// StringConst we want to make sure is converted to a UTF8
 	klass := ParsedClass{}
