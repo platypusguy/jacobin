@@ -47,8 +47,13 @@ func TestRunVersion(t *testing.T) {
 		if len(_APP_ARGS) > 0 {
 			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
 		} else {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
+			if len(_TESTCLASS) > 0 {
+				cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
+			} else {
+				cmd = exec.Command(_JACOBIN, _JVM_ARGS)
+			}
 		}
+
 	} else {
 		if len(_APP_ARGS) > 0 {
 			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
@@ -77,10 +82,10 @@ func TestRunVersion(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stderr)
 	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin name, instead: %s", string(slurp))
+		t.Errorf("Stderr did not begin with Jacobin name, instead: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "64-bit server VM") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
+		t.Errorf("Did not get expected output to stderr. Got: %s", string(slurp))
 	}
 }
