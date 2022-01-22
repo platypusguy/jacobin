@@ -37,9 +37,14 @@ func runGframe(fr *frame) (interface{}, error) {
 	return ret, nil
 }
 
+// This function creates a new frame for the go-style function, loads its arguments onto
+// its stack, pushes the frame onto the head of the frame stack and then calls run() to
+// execute it. This eventually calls runGFrame(), which handles any return value. After
+// the function is run, this method pops the frame off the frame stack and returns.
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) error {
 	f := fs.Front().Value.(*frame)
 
+	// create a frame (gf for 'go frame') for this function
 	paramSlots := mt.Meth.(classloader.GmEntry).ParamSlots
 	gf := createFrame(paramSlots)
 	gf.thread = f.thread
@@ -50,6 +55,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	gf.locals = nil
 	gf.ftype = 'G' // a golang function
 
+	// get the args (if any) from the operand stack of the current frame(f)
+	// then push them onto the stack of the go function
 	var argList []int64
 	for i := 0; i < paramSlots; i++ {
 		arg := pop(f)
@@ -60,14 +67,18 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	}
 	gf.tos = len(gf.opStack) - 1
 
+	// push this new frame onto the frame stack for this thread
 	fs.PushFront(gf)              // push the new frame
 	f = fs.Front().Value.(*frame) // point f to the new head
 
-	err := runFrame(fs) // this will eventually find its way to runGFrame()
+	// then run the frame, which will call run(), which will eventually call runGFrame()
+	err := runFrame(fs)
 	if err != nil {
 		return err
 	}
 
+	// now that the go function is done, pop the frame off the stack and
+	// point the previous frame as the current frame
 	fs.Remove(fs.Front())         // pop the frame off
 	f = fs.Front().Value.(*frame) // point f the head again
 	return nil
