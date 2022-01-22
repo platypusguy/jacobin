@@ -343,38 +343,10 @@ func runFrame(fs *list.List) error {
 
 			v := classloader.MTable[methodName+methodType]
 			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
-				_ = runGmethod(v, fs, className, methodName, methodType)
-				// // gFunc := v.meth.(GmEntry).Fu
-				// paramSlots := v.Meth.(classloader.GmEntry).ParamSlots
-				// gf := createFrame(paramSlots)
-				// gf.thread = f.thread
-				// gf.methName = methodName + methodType
-				// gf.clName = className
-				// gf.meth = nil
-				// gf.cp = nil
-				// gf.locals = nil
-				// gf.ftype = 'G' // a golang function
-				//
-				// var argList []int64
-				// for i := 0; i < paramSlots; i++ {
-				// 	arg := pop(f)
-				// 	argList = append(argList, arg)
-				// }
-				// for j := len(argList) - 1; j >= 0; j-- {
-				// 	push(gf, argList[j])
-				// }
-				// gf.tos = len(gf.opStack) - 1
-				//
-				// fs.PushFront(gf)              // push the new frame
-				// f = fs.Front().Value.(*frame) // point f to the new head
-				//
-				// err := runFrame(fs)
-				// if err != nil {
-				// 	return err
-				// }
-				//
-				// fs.Remove(fs.Front())         // pop the frame off
-				// f = fs.Front().Value.(*frame) // point f the head again
+				_, err := runGmethod(v, fs, className, methodName, methodType)
+				if err != nil {
+					shutdown(true) // any error message will already have been displayed to the user
+				}
 				break
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
@@ -411,7 +383,10 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' {
-				runGmethod(mtEntry, fs, className, methodName, methodType)
+				f, err = runGmethod(mtEntry, fs, className, className+"."+methodName, methodType)
+				if err != nil {
+					shutdown(true) // any error message will already have been displayed to the user
+				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				maxStack := m.MaxStack
