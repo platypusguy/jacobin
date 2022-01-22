@@ -11,7 +11,7 @@ Jacobin VM supports. At present, that is Java 11.
 To run a test on its corresponding class, simply change the value in the
 initVars*() go function to reflect your setup, then compile and run the test.
 
-Tests that whose file name begin with a lower-case letter do not have a
+Tests whose file name begin with a lower-case letter do not have a
 corresponding class. These are tests for command lines such as:
 jacobin -version or jacobin -help.
 
