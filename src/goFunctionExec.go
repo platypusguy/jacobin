@@ -12,10 +12,13 @@ import (
 	"jacobin/classloader"
 )
 
-// runs a frame whose method is a golang method. It copies the parameters
-// from the operand stack and passes them to the go function, here called Fu.
-// Any return value from the method is returned to the call from run(), where
-// it is placed on the stack of the calling function.
+// This function is called from main.run(). It execuates a frame whose
+// method is a golang method. It copies the parameters from the
+// operand stack and passes them to the go function, here called Fu,
+// as an array of interface{}, which can be nil if there are no arguments.
+// Any return value from the method is returned to run() as an interface{}
+// (which is nil in the case of a void function), where it is placed
+// by run() on the operand stack of the calling function.
 func runGframe(fr *frame) (interface{}, error) {
 	// get the go method from the MTable
 	me := classloader.MTable[fr.methName]
