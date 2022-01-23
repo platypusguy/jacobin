@@ -23,26 +23,26 @@ func TestGlobalsInit(t *testing.T) {
 	}
 }
 
-// make sure the environment variable is extracted and reformatted correctly
+// make sure the JAVA_HOME environment variable is extracted and reformatted correctly
 func TestJavaHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JAVA_HOME")
-	os.Setenv("JAVA_HOME", "foo/bar")
+	_ = os.Setenv("JAVA_HOME", "foo/bar")
 	InitJavaHome()
 	ret := JavaHome()
 	if ret != "foo\\bar\\" {
 		t.Errorf("Expecting a JAVA_HOME of 'foo\\bar\\', got: %s", ret)
 	}
-	os.Setenv("JAVA_HOME", origJavaHome)
+	_ = os.Setenv("JAVA_HOME", origJavaHome)
 }
 
-// make sure the environment variable is extracted and reformatted correctly
+// make sure the JACOBIN_HOME environment variable is extracted and reformatted correctly
 func TestJacobinHomeFormat(t *testing.T) {
-	origJavaHome := os.Getenv("JAVA_HOME")
-	os.Setenv("JACOBIN_HOME", "foo/bar")
+	origJavaHome := os.Getenv("JACOBIN_HOME")
+	_ = os.Setenv("JACOBIN_HOME", "foo/bar")
 	InitJacobinHome()
-	ret := GetGlobalRef().JacobinHome
+	ret := JacobinHome()
 	if ret != "foo\\bar\\" {
 		t.Errorf("Expecting a JACOBIN_HOME of 'foo\\bar\\', got: %s", ret)
 	}
-	os.Setenv("JACOBIN_HOME", origJavaHome)
+	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
 }
