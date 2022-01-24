@@ -910,6 +910,84 @@ func TestFieldWithNoAttributes(t *testing.T) {
 	}
 }
 
+func TestMethodCountValid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	pc := ParsedClass{}
+	pc.methodCount = 200
+
+	bytesToTest := []byte{ // count of 10 methods
+		0x00, 0x00, 0x0A,
+	}
+
+	_, err := parseMethodCount(bytesToTest, 0, &pc)
+	if err != nil {
+		t.Error("Got unexpected error on valid method count: " + err.Error())
+	}
+
+	if pc.methodCount != 10 {
+		t.Errorf("expected method count to be 10, but got: %d", pc.methodCount)
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestMethodCountInvalid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	pc := ParsedClass{}
+	pc.methodCount = 200
+
+	bytesToTest := []byte{ // too short to extract a count
+		0x00,
+	}
+
+	_, err := parseMethodCount(bytesToTest, 0, &pc)
+	if err == nil {
+		t.Error("Did not get expected error on invalid method count")
+	}
+
+	if pc.methodCount != 200 {
+		t.Errorf("expected method count to be 200, but got: %d", pc.methodCount) // original count should not change
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
