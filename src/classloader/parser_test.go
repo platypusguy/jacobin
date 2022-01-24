@@ -17,7 +17,7 @@ import (
 )
 
 // Magic number should be OxCAFEBABE in the first four bytes of the classfile
-func TestMagicNumber(t *testing.T) {
+func TestInvalidMagicNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -43,6 +43,60 @@ func TestMagicNumber(t *testing.T) {
 
 	if !strings.Contains(msg, "invalid magic number") {
 		t.Error("Did not get expected error msg for invalid magic number. Got: " + msg)
+	}
+}
+
+func TestTooShortMagicNumber(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0xCA, 0xFE, 0xBA}
+	err := parseMagicNumber(bytesToTest)
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if err == nil {
+		t.Error("Too short Java magic number did not generate an error")
+	}
+
+	if !strings.Contains(msg, "invalid magic number") {
+		t.Error("Did not get expected error msg for invalid magic number. Got: " + msg)
+	}
+}
+
+func TestValidMagicNumber(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0xFF, 0xF0}
+	err := parseMagicNumber(bytesToTest)
+
+	// restore stderr to what it was before
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	if err != nil {
+		t.Error("Valid Java magic number generate an unexpected error: " + msg)
 	}
 }
 
@@ -159,6 +213,37 @@ func TestAccessFlags(t *testing.T) {
 		pc.classIsModule == false {
 		t.Error("Access flags did not set expected values in the parsed class")
 	}
+}
+
+func TestClassNameInvalidLocation(t *testing.T) {
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	pc := ParsedClass{}
+	bytes := []byte{0x00, 0x00, 0x10}
+	_, err := parseClassName(bytes, 4, &pc)
+
+	if err == nil {
+		t.Error("Should have returned an error for invalid value in class name item")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
 
 func TestClassNameInvalidIndex(t *testing.T) {
@@ -321,7 +406,7 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestErrorOnEmptySuperclassName(t *testing.T) {
+func TestSuperclassNameEmpty(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -361,8 +446,137 @@ func TestErrorOnEmptySuperclassName(t *testing.T) {
 	if err == nil {
 		t.Error("Expected but did not get an error for superclass name that's empty")
 	} else {
-		if !strings.HasPrefix(err.Error(), "Class Format Error: invaild empty string for superclass name") {
+		if !strings.HasPrefix(err.Error(), "Class Format Error: invalid empty string for superclass name") {
 			t.Error("Expected an invalid string for superclass error, but got: " + err.Error())
+		}
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestSuperclassNameInvalidIndex(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	testBytes := []byte{0xFF, 0xFF, 0xFF, 0xFF}
+
+	pc := ParsedClass{} // create a CP with a single entry
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 1,
+		slot:      1,
+	})
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for superclass name that's empty")
+	} else {
+		if !strings.HasPrefix(err.Error(), "Class Format Error: invalid index into CP for superclass name") {
+			t.Error("Expected an invalid index for superclass name error, but got: " + err.Error())
+		}
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestSuperclassNameNotClassref(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	testBytes := []byte{0x00, 0x00, 0x01, 0xFF}
+
+	pc := ParsedClass{} // create a CP with a single valid entry to which the superclass points incorrectly
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 0,
+		slot:      0,
+	})
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 0,
+		slot:      1,
+	})
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for superclass that's not a Classref")
+	} else {
+		if !strings.Contains(err.Error(), "invalid entry for superclass name") {
+			t.Error("Expected error that superclass entry is not a Classref: " + err.Error())
+		}
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestSuperclassNameNoneButNotObectClass(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	testBytes := []byte{0x00, 0x00, 0x00, 0xFF}
+
+	pc := ParsedClass{} // create a CP with a single valid entry to which the superclass points incorrectly
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 0,
+		slot:      0,
+	})
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 0,
+		slot:      1,
+	})
+	pc.className = "Allo!"
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for missing superclass when class is not Object.class")
+	} else {
+		if !strings.Contains(err.Error(), "class is not java/lang/Object") {
+			t.Error("Expected superclass name error for non-Object class, but got: " + err.Error())
 		}
 	}
 

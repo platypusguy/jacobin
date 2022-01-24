@@ -320,7 +320,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 	}
 
 	if superClassName == "" { // only Object.class can have an empty superclass and it's handled above
-		return pos, cfe("invaild empty string for superclass name")
+		return pos, cfe("invalid empty string for superclass name")
 	}
 
 	log.Log("superclass name: "+superClassName, log.FINEST)
