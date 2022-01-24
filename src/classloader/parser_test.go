@@ -588,7 +588,7 @@ func TestSuperclassNameNoneButNotObectClass(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestValidParseInterfaceCount(t *testing.T) {
+func TestInterfaceCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -610,7 +610,41 @@ func TestValidParseInterfaceCount(t *testing.T) {
 	}
 }
 
-func TestParseOfValidInterface(t *testing.T) {
+func TestInterfaceCountInvalid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	pc := ParsedClass{}
+
+	bytesToTest := []byte{ // too short to extract a count
+		0x00,
+	}
+
+	_, err := parseInterfaceCount(bytesToTest, 0, &pc)
+	if err == nil {
+		t.Error("Did not get error fetching invalid interface count")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestInterfaceValid(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -651,7 +685,7 @@ func TestParseOfValidInterface(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestParseOfInvalidInterface(t *testing.T) {
+func TestInterfaceInvalid(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -694,7 +728,85 @@ func TestParseOfInvalidInterface(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestParseOfInvalidFieldWithFaultyNameIndex(t *testing.T) {
+func TestFieldCountValid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	pc := ParsedClass{}
+	pc.fieldCount = 200
+
+	bytesToTest := []byte{ // count of 10 fields
+		0x00, 0x00, 0x0A,
+	}
+
+	_, err := parseFieldCount(bytesToTest, 0, &pc)
+	if err != nil {
+		t.Error("Got unexpected error on valid field count: " + err.Error())
+	}
+
+	if pc.fieldCount != 10 {
+		t.Errorf("expected field count to be 10, but got: %d", pc.fieldCount)
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestFieldCountInvalid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	pc := ParsedClass{}
+	pc.fieldCount = 200
+
+	bytesToTest := []byte{ // too short to extract a count
+		0x00,
+	}
+
+	_, err := parseFieldCount(bytesToTest, 0, &pc)
+	if err == nil {
+		t.Error("Did not get expected error on invalid field count")
+	}
+
+	if pc.fieldCount != 200 {
+		t.Errorf("expected field count to be 200, but got: %d", pc.fieldCount) // original count should not change
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestFieldWithFaultyNameIndex(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -733,7 +845,7 @@ func TestParseOfInvalidFieldWithFaultyNameIndex(t *testing.T) {
 	}
 }
 
-func TestParseOfFieldWithNoAttributes(t *testing.T) {
+func TestFieldWithNoAttributes(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
