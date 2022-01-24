@@ -25,7 +25,7 @@ recheck:
 		}
 	}
 
-	// at this point the class has been loaded
+	// at this point the class has been loaded into the method area (Classes).
 	k, _ = classloader.Classes[classname]
 	if len(k.Data.Fields) > 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
