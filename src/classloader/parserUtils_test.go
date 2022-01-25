@@ -164,7 +164,7 @@ func TestFetchInvalidUTF8string(t *testing.T) {
 	}
 
 	// restore stderr and stdout to what they were before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -213,7 +213,7 @@ func TestFetchValidAttribute(t *testing.T) {
 	}
 
 	// restore stderr and stdout to what they were before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -268,7 +268,7 @@ func TestFetchInvalidAttribute(t *testing.T) {
 	}
 
 	// restore stderr and stdout to what they were before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 

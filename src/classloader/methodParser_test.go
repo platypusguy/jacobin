@@ -20,7 +20,7 @@ import (
 func TestValidCodeMethodAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -95,7 +95,7 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -166,7 +166,7 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 func Test2ValidMethodExceptionAttributes(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -240,7 +240,7 @@ func Test2ValidMethodExceptionAttributes(t *testing.T) {
 func TestValidMethodParameterAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

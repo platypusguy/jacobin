@@ -68,7 +68,7 @@ func TestSettingLogLevels(t *testing.T) {
 
 func TestEmptyLogMessage(t *testing.T) {
 	globals.InitGlobals("test")
-	SetLogLevel(WARNING)
+	_ = SetLogLevel(WARNING)
 	err := Log("", SEVERE)
 	if err == nil {
 		t.Error("trying to log an empty message did not generate an error")
@@ -77,17 +77,17 @@ func TestEmptyLogMessage(t *testing.T) {
 
 func TestValidLogMessageFineLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	SetLogLevel(FINE)
+	_ = SetLogLevel(FINE)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Log("Test message (FINE)", FINE)
+	_ = Log("Test message (FINE)", FINE)
 
 	// reset stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = normalStderr
 
@@ -101,17 +101,17 @@ func TestValidLogMessageFineLevel(t *testing.T) {
 
 func TestValidLogMessagelogWarningLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	SetLogLevel(WARNING)
+	_ = SetLogLevel(WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Log("Test message (log.WARNING)", WARNING)
+	_ = Log("Test message (log.WARNING)", WARNING)
 
 	// reset stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = normalStderr
 
@@ -125,7 +125,7 @@ func TestValidLogMessagelogWarningLevel(t *testing.T) {
 
 func TestLoggingMessageAtInvalidLoggingLevel(t *testing.T) {
 	globals.InitGlobals("test")
-	SetLogLevel(WARNING)
+	_ = SetLogLevel(WARNING)
 
 	// to test the error message, capture the writing done to stderr
 	normalStderr := os.Stderr
@@ -135,7 +135,7 @@ func TestLoggingMessageAtInvalidLoggingLevel(t *testing.T) {
 	err := Log("Test message (log.WARNING)", 0)
 
 	// reset stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	os.Stdout = normalStderr
 
 	if err == nil {
