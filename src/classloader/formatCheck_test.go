@@ -62,7 +62,7 @@ import (
 func TestInvalidCPsize(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -105,7 +105,7 @@ func TestInvalidCPsize(t *testing.T) {
 func TestMissingInitialDummyEntry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -146,7 +146,7 @@ func TestMissingInitialDummyEntry(t *testing.T) {
 func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -189,7 +189,7 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 func TestInvalidStringInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -233,7 +233,7 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 func TestIntConsts(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -284,7 +284,7 @@ func TestIntConsts(t *testing.T) {
 func TestFloatConsts(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -336,7 +336,7 @@ func TestFloatConsts(t *testing.T) {
 func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -387,7 +387,7 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 func TestDoubleConst(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -441,7 +441,7 @@ func TestDoubleConst(t *testing.T) {
 func TestStringConsts(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -492,7 +492,7 @@ func TestStringConsts(t *testing.T) {
 func TestInvalidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -538,7 +538,7 @@ func TestInvalidFieldRef(t *testing.T) {
 func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -588,7 +588,7 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 func TestMethodRefWithInvalidMethodName(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -646,7 +646,7 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 func TestValidInterfaceRefEntry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -705,7 +705,7 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 func TestValidMethodHandleEntry(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -775,7 +775,7 @@ func TestValidMethodHandleEntry(t *testing.T) {
 func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -846,7 +846,7 @@ func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 func TestValidMethodHandlePointingToInterface(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -933,7 +933,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1002,7 +1002,7 @@ func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 func TestInvalidMethodHandleRefKind9(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1070,7 +1070,7 @@ func TestInvalidMethodHandleRefKind9(t *testing.T) {
 func TestValidMethodType(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1127,7 +1127,7 @@ func TestValidMethodType(t *testing.T) {
 func TestDynamics(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1232,7 +1232,7 @@ func TestDynamics(t *testing.T) {
 func TestValidInvokeDynamic(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1330,7 +1330,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 func TestInvalidInvokeDynamic(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1370,7 +1370,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 func TestModuleNames(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1408,7 +1408,7 @@ func TestModuleNames(t *testing.T) {
 func TestCPModuleNames(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1449,7 +1449,7 @@ func TestCPModuleNames(t *testing.T) {
 func TestCPPackageNames(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.FINEST)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1579,7 +1579,7 @@ func TestInvalidFieldNames(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1635,7 +1635,7 @@ func TestInvalidFieldDescription(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1704,7 +1704,7 @@ func TestMethodDescription(t *testing.T) {
 func TestCheckStructure(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1795,7 +1795,7 @@ func TestStructuralValidation(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
