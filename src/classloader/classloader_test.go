@@ -7,8 +7,11 @@
 package classloader
 
 import (
+	"io/ioutil"
 	"jacobin/globals"
 	"jacobin/log"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -41,7 +44,7 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.CLASS)
 
 	// set up a class with a constant pool containing the one
 	// StringConst we want to make sure is converted to a UTF8
@@ -66,5 +69,46 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 	if utf8.Type != UTF8 {
 		t.Errorf("Expecting StringConst entry to have become UTF8 entry,"+
 			"but instead is of type: %d", utf8.Type)
+	}
+}
+
+func TestInsertionIntoMethodArea(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	k := Klass{}
+	k.Status = 'F'
+	k.Loader = "application"
+	clData := ClData{}
+	clData.Name = "WillyWonkaClass"
+	k.Data = &clData
+	insert("WillyWonkaClass", k)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "WillyWonkaClass") || !strings.Contains(msg, "application") {
+		t.Error("Got unexpected logging message for insertion of Klass into method area: " + msg)
+	}
+
+	if len(Classes) != 1 {
+		t.Errorf("Expecting method area to have a size of 1, got: %d", len(Classes))
 	}
 }
