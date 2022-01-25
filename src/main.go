@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// load the starting class, classes it references, and some base classes
-	classloader.Init(&Global)
+	classloader.Init()
 	classloader.LoadBaseClasses(&Global)
 	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	if err != nil { // the error message will already have been shown to user

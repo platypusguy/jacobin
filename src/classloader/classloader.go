@@ -608,7 +608,7 @@ func normalizeClassReference(ref string) string {
 
 // Init simply initializes the three classloaders and points them to each other
 // in the proper order. This function might be substantially revised later.
-func Init(gl *globals.Globals) error {
+func Init() error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""
 	BootstrapCL.Classes = make(map[string]ParsedClass)
@@ -618,7 +618,7 @@ func Init(gl *globals.Globals) error {
 	ExtensionCL.Classes = make(map[string]ParsedClass)
 
 	AppCL.Name = "app"
-	AppCL.Parent = "system"
+	AppCL.Parent = "extension"
 	AppCL.Classes = make(map[string]ParsedClass)
 
 	return nil
