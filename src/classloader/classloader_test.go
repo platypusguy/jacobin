@@ -22,6 +22,39 @@ import (
 // etc.
 // This files tests remaining routines.
 
+func TestInitOfClassloaders(t *testing.T) {
+	_ = Init()
+
+	// check that the classloader hierarchy is set up correctly
+	if BootstrapCL.Parent != "" {
+		t.Errorf("Expecting parent of Boostrap classloader to be empty, got: %s",
+			BootstrapCL.Parent)
+	}
+
+	if ExtensionCL.Parent != "bootstrap" {
+		t.Errorf("Expecting parent of Extension classloader to be Boostrap, got: %s",
+			ExtensionCL.Parent)
+	}
+
+	if AppCL.Parent != "extension" {
+		t.Errorf("Expecting parent of Application classloader to be Extension, got: %s",
+			AppCL.Parent)
+	}
+
+	// check that the classloaders have empty tables ready
+	if len(BootstrapCL.Classes) != 0 {
+		t.Errorf("Expected size of boostrap CL's table to be 0, got: %d", len(BootstrapCL.Classes))
+	}
+
+	if len(ExtensionCL.Classes) != 0 {
+		t.Errorf("Expected size of extension CL's table to be 0, got: %d", len(ExtensionCL.Classes))
+	}
+
+	if len(AppCL.Classes) != 0 {
+		t.Errorf("Expected size of application CL's table to be 0, got: %d", len(AppCL.Classes))
+	}
+}
+
 // remove leading [L and delete trailing;, eliminate all other entries with [prefix
 func TestNormalizingClassReference(t *testing.T) {
 	s := normalizeClassReference("[Ljava/test/java.String;")
@@ -92,7 +125,7 @@ func TestInsertionIntoMethodArea(t *testing.T) {
 	clData := ClData{}
 	clData.Name = "WillyWonkaClass"
 	k.Data = &clData
-	insert("WillyWonkaClass", k)
+	_ = insert("WillyWonkaClass", k)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
