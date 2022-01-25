@@ -17,9 +17,9 @@ import (
 // unset all of the JVM environment variables and make sure
 // collecting them results in an empty string
 func TestGetJVMenvVariablesWhenAbsent(t *testing.T) {
-	os.Unsetenv("JAVA_TOOL_OPTIONS")
-	os.Unsetenv("_JAVA_OPTIONS")
-	os.Unsetenv("JDK_JAVA_OPTIONS")
+	_ = os.Unsetenv("JAVA_TOOL_OPTIONS")
+	_ = os.Unsetenv("_JAVA_OPTIONS")
+	_ = os.Unsetenv("JDK_JAVA_OPTIONS")
 
 	javaEnvVars := getEnvArgs()
 	if javaEnvVars != "" {
@@ -30,9 +30,9 @@ func TestGetJVMenvVariablesWhenAbsent(t *testing.T) {
 // set two of the JVM environment variables and make sure
 // they are fetched correctly and a space is inserted between them
 func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
-	os.Unsetenv("JAVA_TOOL_OPTIONS")
-	os.Setenv("_JAVA_OPTIONS", "Hello,")
-	os.Setenv("JDK_JAVA_OPTIONS", "Jacobin!")
+	_ = os.Unsetenv("JAVA_TOOL_OPTIONS")
+	_ = os.Setenv("_JAVA_OPTIONS", "Hello,")
+	_ = os.Setenv("JDK_JAVA_OPTIONS", "Jacobin!")
 
 	javaEnvVars := getEnvArgs()
 	if javaEnvVars != "Hello, Jacobin!" {
@@ -40,16 +40,16 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 	}
 
 	// clean up the environment
-	os.Unsetenv("_JAVA_OPTIONS")
-	os.Unsetenv("JDK_JAVA_OPTIONS")
+	_ = os.Unsetenv("_JAVA_OPTIONS")
+	_ = os.Unsetenv("JDK_JAVA_OPTIONS")
 }
 
 // verify the output to stderr -help option is used
 func TestHandleUsageMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global := globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+	LoadOptionsTable(global)
 
 	// to avoid cluttering the test results, redirect stdout
 	normalStdout := os.Stdout
@@ -62,13 +62,13 @@ func TestHandleUsageMessage(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "-help"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -79,16 +79,16 @@ func TestHandleUsageMessage(t *testing.T) {
 		t.Error("jacobin -help did not generate the usage message to stderr. msg was: " + msg)
 	}
 
-	if Global.ExitNow != true {
+	if global.ExitNow != true {
 		t.Error("'jacobin -help' should have set Global.exitNow to true to signal end of processing")
 	}
 }
 
 func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global := globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+	LoadOptionsTable(global)
 
 	// to avoid cluttering the test results, redirect stdout and stderr
 	normalStdout := os.Stdout
@@ -99,21 +99,21 @@ func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	showHelpStdoutAndExit(0, "--help", &Global)
+	_, _ = showHelpStdoutAndExit(0, "--help", &global)
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if Global.ExitNow != true {
+	if global.ExitNow != true {
 		t.Error("'jacobin --help' should set Global.exitNow to true but did not")
 	}
 }
 
 func TestShowVersionMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global := globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
+	global := globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
 
 	// to avoid cluttering the test results, redirect stdout
 	normalStdout := os.Stdout
@@ -125,16 +125,16 @@ func TestShowVersionMessage(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	LoadOptionsTable(Global)
+	LoadOptionsTable(global)
 	args := []string{"jacobin", "-showversion", "main.clas"}
 
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -146,16 +146,16 @@ func TestShowVersionMessage(t *testing.T) {
 }
 
 func TestShow__VersionUsingOptionTable(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	normalStdout := os.Stdout
 	r, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	versionStdoutThenExit(0, "--version", &Global)
+	_, _ = versionStdoutThenExit(0, "--version", &global)
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	out, _ := ioutil.ReadAll(r)
 
@@ -166,15 +166,15 @@ func TestShow__VersionUsingOptionTable(t *testing.T) {
 		t.Error("jacobin --version did not generate the correct msg to stdout. msg was: " + msg)
 	}
 
-	if Global.ExitNow != true {
+	if global.ExitNow != true {
 		t.Error("--version did not set exitNow value to exit. Should be set.")
 	}
 }
 
 func TestChangeLoggingLevels(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+	LoadOptionsTable(global)
 
 	normalStdout := os.Stdout
 	_, wout, _ := os.Pipe()
@@ -186,11 +186,11 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "-verbose:info", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
 	// reset stdout and stderr to what they were before redirection
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -200,7 +200,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	// --- now test with FINE
 
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout = os.Stdout
 	_, wout, _ = os.Pipe()
@@ -210,12 +210,12 @@ func TestChangeLoggingLevels(t *testing.T) {
 	_, w, _ = os.Pipe()
 	os.Stderr = w
 
-	LoadOptionsTable(Global)
+	LoadOptionsTable(global)
 	args = []string{"jacobin", "-verbose:fine", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -225,7 +225,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	// --- now try with FINEST
 
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout = os.Stdout
 	_, wout, _ = os.Pipe()
@@ -235,12 +235,12 @@ func TestChangeLoggingLevels(t *testing.T) {
 	_, w, _ = os.Pipe()
 	os.Stderr = w
 
-	LoadOptionsTable(Global)
+	LoadOptionsTable(global)
 	args = []string{"jacobin", "-verbose:finest", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -250,7 +250,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 
 	// --- finally test with CLASS
 
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout = os.Stdout
 	_, wout, _ = os.Pipe()
@@ -260,12 +260,12 @@ func TestChangeLoggingLevels(t *testing.T) {
 	_, w, _ = os.Pipe()
 	os.Stderr = w
 
-	LoadOptionsTable(Global)
+	LoadOptionsTable(global)
 	args = []string{"jacobin", "-verbose:class", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -275,9 +275,9 @@ func TestChangeLoggingLevels(t *testing.T) {
 }
 
 func TestInvalidLoggingLevel(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
-	log.SetLogLevel(log.WARNING)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// to avoid cluttering the test results, redirect stdout and stderr
 	normalStdout := os.Stdout
@@ -288,10 +288,10 @@ func TestInvalidLoggingLevel(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	_, err := verbosityLevel(0, "severe", &Global)
+	_, err := verbosityLevel(0, "severe", &global)
 
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
@@ -302,11 +302,11 @@ func TestInvalidLoggingLevel(t *testing.T) {
 
 func TestSpecifyClientVM(t *testing.T) {
 
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
-	if Global.VmModel != "server" {
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+	if global.VmModel != "server" {
 		t.Error("Initialization of Global.vmModel was not set to 'server' Got: " +
-			Global.VmModel)
+			global.VmModel)
 	}
 
 	normalStdout := os.Stdout
@@ -314,22 +314,22 @@ func TestSpecifyClientVM(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "-client"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
 	// restore stdout to what it was before
-	w.Close()
+	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if Global.VmModel != "client" {
-		t.Error("Global.vmModel should be set to 'client'. Instead got: " +
-			Global.VmModel)
+	if global.VmModel != "client" {
+		t.Error("global.vmModel should be set to 'client'. Instead got: " +
+			global.VmModel)
 	}
 }
 
 func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	// redirect stdout to avoid cluttering test results with copyright notice
 	normalStdout := os.Stdout
@@ -342,16 +342,16 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 	os.Stderr = w
 
 	args := []string{"jacobin", "--dry-run", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
 
-	wout.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 
 	if !strings.Contains(msg, "not currently supported") {
@@ -361,7 +361,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 
 func TestShowCopyright(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -369,7 +369,7 @@ func TestShowCopyright(t *testing.T) {
 
 	showCopyright()
 
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = normalStdout
 
@@ -382,8 +382,8 @@ func TestShowCopyright(t *testing.T) {
 }
 
 func TestFoundClassFileWithNoArgs(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	// redirecting stdout to avoid clutter in the test results
 	normalStdout := os.Stdout
@@ -391,19 +391,19 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if Global.StartingClass != "main.class" {
+	if global.StartingClass != "main.class" {
 		t.Error("main.class not identified as starting class. Got: " +
-			Global.StartingClass)
+			global.StartingClass)
 	}
 
-	if len(Global.AppArgs) != 0 {
+	if len(global.AppArgs) != 0 {
 		t.Error("app arg to main.class should be empty, but got: " +
-			Global.AppArgs[0])
+			global.AppArgs[0])
 	}
 }
 
@@ -411,8 +411,8 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 // (as it might under Windows), that it's not mistaken for an option
 // with an embedded argument (JACOBIN-2)
 func TestClassFileColonIFilePath(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	// redirecting stdout to avoid clutter in the test results
 	normalStdout := os.Stdout
@@ -420,25 +420,25 @@ func TestClassFileColonIFilePath(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "d:main.class"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if Global.StartingClass != "d:main.class" {
+	if global.StartingClass != "d:main.class" {
 		t.Error("d:main.class not identified as starting class. Got: " +
-			Global.StartingClass)
+			global.StartingClass)
 	}
 
-	if len(Global.AppArgs) != 0 {
+	if len(global.AppArgs) != 0 {
 		t.Error("app arg to main.class should be empty, but got: " +
-			Global.AppArgs[0])
+			global.AppArgs[0])
 	}
 }
 
 func TestFoundClassFileWithArgs(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	// redirecting stdout to avoid clutter in the test results
 	normalStdout := os.Stdout
@@ -446,25 +446,25 @@ func TestFoundClassFileWithArgs(t *testing.T) {
 	os.Stdout = w
 
 	args := []string{"jacobin", "main.class", "appArg1"}
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if Global.StartingClass != "main.class" {
+	if global.StartingClass != "main.class" {
 		t.Error("main.class not identified as starting class. Got: " +
-			Global.StartingClass)
+			global.StartingClass)
 	}
 
-	if Global.AppArgs[0] != "appArg1" {
+	if global.AppArgs[0] != "appArg1" {
 		t.Error("app arg to main.class not correct. Got: " +
-			Global.AppArgs[0])
+			global.AppArgs[0])
 	}
 }
 
 func TestGetJarFilename(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
 
 	normalStdout := os.Stdout
 	_, wout, _ := os.Pipe()
@@ -476,29 +476,29 @@ func TestGetJarFilename(t *testing.T) {
 
 	args := []string{"jacobin", "-jar", "pinkle.jar", "appArg1"}
 
-	HandleCli(args, &Global)
+	_ = HandleCli(args, &global)
 
-	w.Close()
-	wout.Close()
+	_ = w.Close()
+	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
-	if Global.StartingJar != "pinkle.jar" {
+	if global.StartingJar != "pinkle.jar" {
 		t.Error("Name of JAR file not correctly extracted from CLI")
 	}
 
-	if Global.AppArgs[0] != "appArg1" {
+	if global.AppArgs[0] != "appArg1" {
 		t.Error("JAR file arg not correctly extracted from CLI. Expected: appArg1, got: " +
-			Global.AppArgs[0])
+			global.AppArgs[0])
 	}
 }
 
 func TestMissingJARfilename(t *testing.T) {
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
-	Global.Args = []string{"jacobin", "-jar"}
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+	global.Args = []string{"jacobin", "-jar"}
 
-	_, err := getJarFilename(1, "-jar", &Global)
+	_, err := getJarFilename(1, "-jar", &global)
 	if err != os.ErrInvalid {
 		t.Error("Missing JAR filename after -jar did not trigger the right error")
 	}

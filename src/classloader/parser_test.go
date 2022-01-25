@@ -31,7 +31,7 @@ func TestInvalidMagicNumber(t *testing.T) {
 	err := parseMagicNumber(bytesToTest)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -60,7 +60,7 @@ func TestTooShortMagicNumber(t *testing.T) {
 	err := parseMagicNumber(bytesToTest)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -89,7 +89,7 @@ func TestValidMagicNumber(t *testing.T) {
 	err := parseMagicNumber(bytesToTest)
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -114,7 +114,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -171,7 +171,7 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 	err := getConstantPoolCount(bytesToTest, &ParsedClass{})
 
 	// restore stderr to what it was before
-	w.Close()
+	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
 
@@ -193,7 +193,7 @@ func TestAccessFlags(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x84, 0x21}
@@ -228,7 +228,7 @@ func TestClassNameInvalidLocation(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x00, 0x10}
@@ -259,7 +259,7 @@ func TestClassNameInvalidIndex(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x00, 0x10}
@@ -284,7 +284,7 @@ func TestClassNameValidName(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -318,7 +318,7 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -367,7 +367,7 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -410,7 +410,7 @@ func TestSuperclassNameEmpty(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 	pc.cpCount = 5
@@ -463,7 +463,7 @@ func TestSuperclassNameInvalidIndex(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -503,7 +503,7 @@ func TestSuperclassNameNotClassref(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -547,7 +547,7 @@ func TestSuperclassNameNoneButNotObectClass(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -592,7 +592,7 @@ func TestInterfaceCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
 
@@ -614,7 +614,7 @@ func TestInterfaceCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -732,7 +732,7 @@ func TestFieldCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -771,7 +771,7 @@ func TestFieldCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -914,7 +914,7 @@ func TestMethodCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -953,7 +953,7 @@ func TestMethodCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.WARNING)
+	_ = log.SetLogLevel(log.WARNING)
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1076,7 +1076,7 @@ func TestValidBootstrapClassAttribute(t *testing.T) {
 	}
 
 	// restore stderr and stdout to what they were before
-	w.Close()
+	_ = w.Close()
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
@@ -1128,8 +1128,7 @@ func TestDeprecatedClassAttribute(t *testing.T) {
 	}
 
 	// restore stderr and stdout to what they were before
-	w.Close()
-	// out, _ := ioutil.ReadAll(r)
+	_ = w.Close()
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
