@@ -1,13 +1,70 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 package classloader
 
 import (
+	"io/ioutil"
+	"jacobin/globals"
+	"jacobin/log"
+	"os"
+	"strings"
 	"testing"
 )
+
+// test insertion of klass into the method area (called Classes[])
+func TestInsertValid(t *testing.T) {
+	// Testing the changes made as a result of JACOBIN-103
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	Classes = make(map[string]Klass)
+	currLen := len(Classes)
+	k := Klass{
+		Status: 0,
+		Loader: "",
+		Data:   &ClData{},
+	}
+	k.Data.Name = "testClass"
+	k.Loader = "testLoader"
+	k.Status = 'F'
+	err := insert("TestEntry", k)
+	if err != nil {
+		t.Errorf("Got unexpected error on valid insertion into Classes[]: %s", err.Error())
+	}
+
+	newLen := len(Classes)
+	if newLen != currLen+1 {
+		t.Errorf("Expected post-insertion Classes[] to have length of %d, got: %d",
+			currLen+1, newLen)
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Class: testClass") {
+		t.Errorf("Expecting log message containing 'Class: testClass', got: %s", msg)
+	}
+}
 
 func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 	cp := CPool{}

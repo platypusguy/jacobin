@@ -55,6 +55,33 @@ func TestInitOfClassloaders(t *testing.T) {
 	}
 }
 
+func TestLoadClassFromFileInvalidName(t *testing.T) {
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	name, err := LoadClassFromFile(Classloader{}, "noSuchFile")
+
+	if name != "" {
+		t.Errorf("Expected empty filename due to error, got: %s", err.Error())
+	}
+	if err == nil {
+		t.Errorf("Expected an error message for invalid file name, but got none")
+	}
+
+	_ = w.Close()
+	_, _ = ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 // remove leading [L and delete trailing;, eliminate all other entries with [prefix
 func TestNormalizingClassReference(t *testing.T) {
 	s := normalizeClassReference("[Ljava/test/java.String;")
@@ -118,6 +145,8 @@ func TestInsertionIntoMethodArea(t *testing.T) {
 	normalStdout := os.Stdout
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
+
+	Classes = make(map[string]Klass)
 
 	k := Klass{}
 	k.Status = 'F'
