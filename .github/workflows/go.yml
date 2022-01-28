@@ -26,3 +26,6 @@ jobs:
     - name: Test
       run: go test -short -v ./...
       working-directory: src
+
+    - name: Codecov
+      uses: codecov/codecov-action@v2.1.0
