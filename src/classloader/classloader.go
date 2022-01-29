@@ -41,7 +41,7 @@ var BootstrapCL Classloader
 // ExtensionCL is the classloader typically used for loading custom agents
 var ExtensionCL Classloader
 
-// the parsed class
+// ParsedClass contains all the parsed fields
 type ParsedClass struct {
 	javaVersion    int
 	className      string // name of class without path and without .class
@@ -172,7 +172,7 @@ func cfe(msg string) error {
 		errMsg = errMsg + "\n  detected by file: " + filepath.Base(fileName) +
 			", line: " + strconv.Itoa(fileLine)
 	}
-	log.Log(errMsg, log.SEVERE)
+	_ = log.Log(errMsg, log.SEVERE)
 	return errors.New(errMsg)
 }
 
@@ -181,9 +181,10 @@ func cfe(msg string) error {
 // classlist file in the JDK, except shorter (for the nonce)
 func LoadBaseClasses(global *globals.Globals) {
 	classList := global.JacobinHome + "classes\\baseclasslist.txt"
+	classList = util.ConvertToPlatformPathSeparators(classList)
 	file, err := os.Open(classList)
 	if err != nil {
-		log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
+		_ = log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
 			log.WARNING)
 		file.Close()
 	} else {
@@ -192,8 +193,8 @@ func LoadBaseClasses(global *globals.Globals) {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			rawName := scanner.Text()
-			name := util.ConvertInternalClassNameToFilename(rawName)
-			name = globals.JacobinHome() + "classes\\" + name
+			fileName := util.ConvertInternalClassNameToFilename(rawName)
+			name := util.ConvertToPlatformPathSeparators(globals.JacobinHome() + "classes\\" + fileName)
 			LoadClassFromFile(BootstrapCL, name)
 			// LoadReferencedClasses(BootstrapCL, rawName)
 		}
@@ -243,9 +244,10 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
 			name = util.ConvertInternalClassNameToFilename(name)
 			name = globals.JacobinHome() + "classes\\" + name
-			LoadClassFromFile(BootstrapCL, name)
+			validName := util.ConvertToPlatformPathSeparators(name)
+			LoadClassFromFile(BootstrapCL, validName)
 		} else {
-			LoadClassFromFile(AppCL, name)
+			LoadClassFromFile(AppCL, util.ConvertToPlatformPathSeparators(name))
 		}
 		// println("loading from channel: " + name)
 	}
@@ -283,24 +285,24 @@ func LoadClassFromNameOnly(name string) error {
 func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
-		log.Log("Error: could not find or load main class "+filename+". Exiting.", log.SEVERE)
+		_ = log.Log("Error: could not find or load main class "+filename+". Exiting.", log.SEVERE)
 		return "", fmt.Errorf("java.lang.classNotFoundException")
 	}
 
-	log.Log(filename+" read", log.FINE)
+	_ = log.Log(filename+" read", log.FINE)
 
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
-		log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
+		_ = log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
 		return "", fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
-		log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
+		_ = log.Log("error format-checking "+filename+". Exiting.", log.SEVERE)
 		return "", fmt.Errorf("format-checking error")
 	}
-	log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
 	classToPost := convertToPostableClass(&fullyParsedClass)
 	eKF := Klass{
@@ -308,7 +310,7 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 		Loader: cl.Name,
 		Data:   &classToPost,
 	}
-	insert(fullyParsedClass.className, eKF)
+	_ = insert(fullyParsedClass.className, eKF)
 
 	return fullyParsedClass.className, nil
 }
@@ -320,7 +322,7 @@ func insert(name string, klass Klass) error {
 	MethAreaMutex.Unlock()
 
 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
-		log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
+		_ = log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
 	}
 	return nil
 }
@@ -431,7 +433,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			}
 			if len(fullyParsedClass.bootstraps[j].args) > 0 {
 				for l := 0; l < len(fullyParsedClass.bootstraps[j].args); l++ {
-					kdbs.Args = append(kdbs.Args, (uint16(fullyParsedClass.bootstraps[j].args[l])))
+					kdbs.Args = append(kdbs.Args, uint16(fullyParsedClass.bootstraps[j].args[l]))
 				}
 			}
 			kd.Bootstraps = append(kd.Bootstraps, kdbs)
@@ -584,7 +586,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if log.Level == log.FINEST {
 		b := new(bytes.Buffer)
 		if gob.NewEncoder(b).Encode(kd) == nil {
-			log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
+			_ = log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
 		}
 	}
 	return kd

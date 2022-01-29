@@ -6,7 +6,11 @@
 
 package util
 
-import "testing"
+import (
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestConvertInternalClassNameToFilename(t *testing.T) {
 	// var s string
@@ -26,7 +30,6 @@ func TestConvertInternalClassNameToFilename(t *testing.T) {
 }
 
 func TestConvertClassFilenameToInternalFormat(t *testing.T) {
-	// var s string
 	if ConvertClassFilenameToInternalFormat("sponge") != "sponge" {
 		t.Error("Unexpected result in call ConvertClassFilenameToInternalFormat()")
 	}
@@ -39,5 +42,28 @@ func TestConvertClassFilenameToInternalFormat(t *testing.T) {
 	s = ConvertClassFilenameToInternalFormat("sponge/bob/square.Pants.class")
 	if s != "sponge/bob/square/Pants" {
 		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
+	}
+}
+
+func TestConverFilenameToPlatformPathSeparator(t *testing.T) {
+	if os.PathSeparator == '\\' {
+		s := ConvertToPlatformPathSeparators("snoop/dog/the/man")
+		if strings.ContainsRune(s, '/') {
+			t.Errorf("Expected a path with no / slashes, got: %s", s)
+		}
+		if strings.Count(s, string("\\")) != 3 {
+			t.Error("Expected 3 backslashes in path, got: ", strings.Count(s, "\\"))
+		}
+	} else {
+		var s string
+		if os.PathSeparator == '/' {
+			s = ConvertToPlatformPathSeparators("smoop\\dog\the\\man")
+			if strings.ContainsRune(s, '\\') {
+				t.Errorf("Expected a path with no \\ slashes, got: %s", s)
+			}
+		}
+		if strings.Count(s, string("/")) != 3 {
+			t.Error("Expected 3 forward slashes in path, got: ", strings.Count(s, "/"))
+		}
 	}
 }
