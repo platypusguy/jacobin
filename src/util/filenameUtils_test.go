@@ -13,19 +13,33 @@ import (
 )
 
 func TestConvertInternalClassNameToFilename(t *testing.T) {
-	// var s string
-	if ConvertInternalClassNameToFilename("sponge") != "sponge.class" {
-		t.Error("Unexpected result in call ConvertInternalClassNameToFilename()")
+	fs := os.PathSeparator
+
+	s := ConvertInternalClassNameToFilename("sponge")
+	if s != "sponge.class" {
+		t.Errorf("In ConvertInternalClassNameToFilename(), expected 'sponge.class', got: %s", s)
 	}
 
-	s := ConvertInternalClassNameToFilename("sponge/bob")
-	if s != "sponge\\bob.class" {
-		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
+	s = ConvertInternalClassNameToFilename("sponge/bob")
+	if fs == '/' {
+		if s != "sponge/bob.class" {
+			t.Error("From ConvertInternalClassNameToFilename() expected 'sponge/bob.class, got: " + s)
+		}
+	} else if fs == '\\' {
+		if s != "sponge\\bob.class" {
+			t.Error("From ConvertInternalClassNameToFilename() expected 'sponge\\bob.class, got: " + s)
+		}
 	}
 
 	s = ConvertInternalClassNameToFilename("sponge/bob\\square.pants")
-	if s != "sponge\\bob\\square\\pants.class" {
-		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
+	if fs == '/' {
+		if s != "sponge/bob/square/pants.class" {
+			t.Error("From ConvertInternalClassNameToFilename() expected 'sponge/bob/square/pants.class', got: " + s)
+		}
+	} else if fs == '\\' {
+		if s != "sponge\\bob\\square\\pants.class" {
+			t.Error("From ConvertInternalClassNameToFilename() expected 'sponge\\bob\\square\\pants.classs', got: " + s)
+		}
 	}
 }
 
@@ -45,7 +59,7 @@ func TestConvertClassFilenameToInternalFormat(t *testing.T) {
 	}
 }
 
-func TestConverFilenameToPlatformPathSeparator(t *testing.T) {
+func TestConvertFilenameWithPlatformPathSeparator(t *testing.T) {
 	if os.PathSeparator == '\\' {
 		s := ConvertToPlatformPathSeparators("snoop/dog/the/man")
 		if strings.ContainsRune(s, '/') {
@@ -57,7 +71,7 @@ func TestConverFilenameToPlatformPathSeparator(t *testing.T) {
 	} else {
 		var s string
 		if os.PathSeparator == '/' {
-			s = ConvertToPlatformPathSeparators("smoop\\dog\the\\man")
+			s = ConvertToPlatformPathSeparators("snoop\\dog\\the\\man")
 			if strings.ContainsRune(s, '\\') {
 				t.Errorf("Expected a path with no \\ slashes, got: %s", s)
 			}
