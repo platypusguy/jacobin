@@ -700,6 +700,21 @@ func TestIsub(t *testing.T) {
 	}
 }
 
+func TestLadd(t *testing.T) {
+	f := newFrame(LADD)
+	push(&f, 21)
+	push(&f, 22)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f)
+	if value != 43 {
+		t.Errorf("LADD: expected a result of 43, but got: %d", value)
+	}
+	if f.tos != -1 {
+		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.tos)
+	}
+}
 func TestLdc(t *testing.T) {
 	f := newFrame(LDC)
 	f.meth = append(f.meth, 0x05)
@@ -712,6 +727,34 @@ func TestLdc(t *testing.T) {
 	value := pop(&f)
 	if value != 5 {
 		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
+	}
+}
+
+func TestLconst0(t *testing.T) {
+	f := newFrame(LCONST_0)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.tos != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 0 {
+		t.Errorf("LCONST_0: Expected popped value to be 0, got: %d", value)
+	}
+}
+
+func TestLconst1(t *testing.T) {
+	f := newFrame(LCONST_1)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.tos != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 1 {
+		t.Errorf("LCONST_1: Expected popped value to be 1, got: %d", value)
 	}
 }
 
@@ -810,6 +853,23 @@ func TestLload3(t *testing.T) {
 	}
 }
 
+// Test LMUL (pop 2 longs, multiply them, push result)
+func TestLmul(t *testing.T) {
+	f := newFrame(LMUL)
+	push(&f, 10)
+	push(&f, 7)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.tos != 0 {
+		t.Errorf("LMUL, Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 70 {
+		t.Errorf("LMUL: Expected popped value to be 70, got: %d", value)
+	}
+}
+
 func TestLstore0(t *testing.T) {
 	f := newFrame(LSTORE_0)
 	f.locals = append(f.locals, 0)
@@ -901,6 +961,23 @@ func TestLstore3(t *testing.T) {
 
 	if f.tos != -1 {
 		t.Errorf("LSTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
+	}
+}
+
+// LSUB: Subtract two longs
+func TestLsub(t *testing.T) {
+	f := newFrame(LSUB)
+	push(&f, 10)
+	push(&f, 7)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.tos != 0 {
+		t.Errorf("LSUB, Top of stack, expected 0, got: %d", f.tos)
+	}
+	value := pop(&f)
+	if value != 3 {
+		t.Errorf("LSUB: Expected popped value to be 3, got: %d", value)
 	}
 }
 
