@@ -280,7 +280,8 @@ func LoadClassFromNameOnly(name string) error {
 }
 
 // LoadClassFromFile first canonicalizes the filename, checks whether
-// the class is already loaded, and if not, then parses the class and loads it.
+// the class is already loaded, and if not, then calls ParseAndPostClass()
+// to parse the class and load it.
 // Returns the class's internal name and error, if any.
 func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
@@ -291,6 +292,12 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 
 	_ = log.Log(filename+" read", log.FINE)
 
+	return ParseAndPostClass(cl, filename, rawBytes)
+}
+
+// ParseAndPostClass parses a class, presented as a slice of bytes, and
+// if no errors occurred, posts/loads it to the method area.
+func ParseAndPostClass(cl Classloader, filename string, rawBytes []byte) (string, error) {
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("error parsing "+filename+". Exiting.", log.SEVERE)
