@@ -180,13 +180,12 @@ func cfe(msg string) error {
 // classes\baseclasslist.txt, which is found in JACOBIN_HOME. It's similar to
 // classlist file in the JDK, except shorter (for the nonce)
 func LoadBaseClasses(global *globals.Globals) {
-	classList := global.JacobinHome + "classes\\baseclasslist.txt"
+	classList := global.JacobinHome + "classes" + string(os.PathSeparator) + "baseclasslist.txt"
 	classList = util.ConvertToPlatformPathSeparators(classList)
 	file, err := os.Open(classList)
 	if err != nil {
-		_ = log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")",
-			log.WARNING)
-		file.Close()
+		_ = log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")", log.WARNING)
+		_ = file.Close()
 	} else {
 		defer file.Close()
 
@@ -194,18 +193,19 @@ func LoadBaseClasses(global *globals.Globals) {
 		for scanner.Scan() {
 			rawName := scanner.Text()
 			fileName := util.ConvertInternalClassNameToFilename(rawName)
-			name := util.ConvertToPlatformPathSeparators(globals.JacobinHome() + "classes\\" + fileName)
-			LoadClassFromFile(BootstrapCL, name)
+			name := util.ConvertToPlatformPathSeparators(
+				globals.JacobinHome() + "classes" + string(os.PathSeparator) + fileName)
+			_, _ = LoadClassFromFile(BootstrapCL, name)
 			// LoadReferencedClasses(BootstrapCL, rawName)
 		}
 		err = nil // used only to be able to add a breakpoint in debugger.
 	}
 }
 
-// This loads the classes referenced in the loading of the class named clName.
-// It does this by reading the class entries (7) in the CP and sending the class names
-// it finds there to a go channel that will load the class.
-func LoadReferencedClasses(classloader Classloader, clName string) {
+// LoadReferencedClasses loads the classes referenced in the loading of the class named clName.
+// It does this by reading the class entries (7) in the CP and sending the class names it finds
+// there to a go channel that will load the class.
+func LoadReferencedClasses(clName string) {
 	cpClassCP := &Classes[clName].Data.CP
 	classRefs := cpClassCP.ClassRefs
 
@@ -223,8 +223,8 @@ func LoadReferencedClasses(classloader Classloader, clName string) {
 	close(loaderChannel)
 }
 
-// receives a name of a class to load in /java/lang/String format, determines the
-// classloader, checks if the class is already loaded, and loads it if not.
+// LoadFromLoaderChannel receives a name of a class to load in /java/lang/String format,
+// determines the classloader, checks if the class is already loaded, and loads it if not.
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
 		_, present := Classes[name]
@@ -238,18 +238,17 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			Loader: "",
 			Data:   nil,
 		}
-		insert(name, eKI)
+		_ = insert(name, eKI)
 
 		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
 			strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
 			name = util.ConvertInternalClassNameToFilename(name)
-			name = globals.JacobinHome() + "classes\\" + name
+			name = globals.JacobinHome() + "classes" + string(os.PathSeparator) + name
 			validName := util.ConvertToPlatformPathSeparators(name)
-			LoadClassFromFile(BootstrapCL, validName)
+			_, _ = LoadClassFromFile(BootstrapCL, validName)
 		} else {
-			LoadClassFromFile(AppCL, util.ConvertToPlatformPathSeparators(name))
+			_, _ = LoadClassFromFile(AppCL, util.ConvertToPlatformPathSeparators(name))
 		}
-		// println("loading from channel: " + name)
 	}
 	globals.LoaderWg.Done()
 }
@@ -268,13 +267,15 @@ func LoadClassFromNameOnly(name string) error {
 	}
 	err := insert(name, eKI)
 
+	var validName string
 	if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
 		strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
 		name = util.ConvertInternalClassNameToFilename(name)
-		name = globals.JacobinHome() + "classes\\" + name
-		_, err = LoadClassFromFile(BootstrapCL, name)
+		name = globals.JacobinHome() + "classes" + string(os.PathSeparator) + name
+		validName = util.ConvertToPlatformPathSeparators(name)
+		_, err = LoadClassFromFile(BootstrapCL, validName)
 	} else {
-		_, err = LoadClassFromFile(AppCL, name)
+		_, err = LoadClassFromFile(AppCL, validName)
 	}
 	return err
 }

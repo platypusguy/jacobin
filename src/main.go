@@ -47,10 +47,10 @@ func main() {
 	if err != nil { // the error message will already have been shown to user
 		shutdown(true)
 	}
-	classloader.LoadReferencedClasses(classloader.BootstrapCL, mainClass)
+	classloader.LoadReferencedClasses(mainClass)
 
 	// begin execution
-	log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
+	_ = log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
 	if StartExec(mainClass, &Global) != nil {
 		shutdown(true)
 	}
