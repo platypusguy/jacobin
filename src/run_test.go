@@ -29,6 +29,31 @@ func newFrame(code byte) frame {
 
 // ---- tests ----
 
+// test load of reference in locals[index] on to stack
+func TestAload(t *testing.T) {
+	f := newFrame(ALOAD)
+	f.meth = append(f.meth, 0x04) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("ALOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ALOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+	if f.pc != 2 {
+		t.Errorf("ALOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	}
+}
+
 // test load of reference in locals[0] on to stack
 func TestAload0(t *testing.T) {
 	f := newFrame(ALOAD_0)
@@ -64,7 +89,7 @@ func TestAload1(t *testing.T) {
 	}
 }
 
-// // test load of reference in locals[2] on to stack
+// test load of reference in locals[2] on to stack
 func TestAload2(t *testing.T) {
 	f := newFrame(ALOAD_2)
 	f.locals = append(f.locals, 0)
@@ -193,6 +218,56 @@ func TestBipush(t *testing.T) {
 	value := pop(&f)
 	if value != 5 {
 		t.Errorf("BIPUSH: Expected popped value to be 5, got: %d", value)
+	}
+}
+
+// DLOAD: test load of double in locals[index] on to stack
+func TestDload(t *testing.T) {
+	f := newFrame(DLOAD)
+	f.meth = append(f.meth, 0x04) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("DLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("DLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+	if f.pc != 2 {
+		t.Errorf("DLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	}
+}
+
+// FLOAD: test load of float in locals[index] on to stack
+func TestFload(t *testing.T) {
+	f := newFrame(FLOAD)
+	f.meth = append(f.meth, 0x04) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("FLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("FLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+	if f.pc != 2 {
+		t.Errorf("FLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
 	}
 }
 
@@ -512,6 +587,30 @@ func TestIinc(t *testing.T) {
 	}
 }
 
+// ILOAD: test load of int in locals[index] on to stack
+func TestIload(t *testing.T) {
+	f := newFrame(ILOAD)
+	f.meth = append(f.meth, 0x04) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("ILOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("ILOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+	if f.pc != 2 {
+		t.Errorf("ILOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	}
+}
 func TestIload0(t *testing.T) {
 	f := newFrame(ILOAD_0)
 	f.locals = append(f.locals, 27)
@@ -755,6 +854,31 @@ func TestLconst1(t *testing.T) {
 	value := pop(&f)
 	if value != 1 {
 		t.Errorf("LCONST_1: Expected popped value to be 1, got: %d", value)
+	}
+}
+
+// LLOAD: test load of lon in locals[index] on to stack
+func TestLload(t *testing.T) {
+	f := newFrame(LLOAD)
+	f.meth = append(f.meth, 0x04) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := pop(&f)
+	if x != 0x1234562 {
+		t.Errorf("LLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
+	}
+	if f.tos != -1 {
+		t.Errorf("LLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+	if f.pc != 2 {
+		t.Errorf("LLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
 	}
 }
 

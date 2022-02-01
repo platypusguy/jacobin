@@ -143,6 +143,14 @@ func runFrame(fs *list.List) error {
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			push(f, int64(f.meth[f.pc+1]))
 			f.pc += 1
+		case ILOAD, // 0x15	(push int from local var, using next byte as index)
+			LLOAD, // 0x16 (push long from local var, using next byte as index)
+			FLOAD, // 0x17 (push float from local var, using next byte as index)
+			DLOAD, // 0x18 (push double from local var, using next byte as index)
+			ALOAD: // 0x19 (push ref from local var, using next byte as index)
+			index := int(f.meth[f.pc+1])
+			f.pc += 1
+			push(f, f.locals[index])
 		case ILOAD_0: // 	0x1A    (push local variable 0)
 			push(f, f.locals[0])
 		case ILOAD_1: //    OX1B    (push local variable 1)
