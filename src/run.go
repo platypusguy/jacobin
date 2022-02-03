@@ -175,7 +175,7 @@ func runFrame(fs *list.List) error {
 			push(f, f.locals[2])
 		case ALOAD_3: //	0x2D	(push reference stored in local variable 3)
 			push(f, f.locals[3])
-		case ISTORE, //  0x36 	(store pooped top of stack int into local[index])
+		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE, //  0x37 (store popped top of stack long into local[index])
 			FSTORE, //  0x38 (store popped top of stack float into local[index])
 			DSTORE, //  0x39 (store popped top of stack double into local[index])
