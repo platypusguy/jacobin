@@ -128,6 +128,28 @@ func TestAload3(t *testing.T) {
 	}
 }
 
+// ASTORE: Store reference in local var specified by following byte.
+func TestAstore(t *testing.T) {
+	f := newFrame(ASTORE)
+	f.meth = append(f.meth, 0x03) // use local var #4
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[3] != 0x22223 {
+		t.Errorf("ASTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	}
+	if f.tos != -1 {
+		t.Errorf("ASTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
 // test store of reference from stack into locals[0]
 func TestAstore0(t *testing.T) {
 	f := newFrame(ASTORE_0)
@@ -246,6 +268,33 @@ func TestDload(t *testing.T) {
 	}
 }
 
+// DSTORE: Store double from stack into local specified by following byte.
+func TestDstore(t *testing.T) {
+	f := newFrame(DSTORE)
+	f.meth = append(f.meth, 0x02) // use local var #2
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x22223 {
+		t.Errorf("DSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	}
+
+	if f.locals[3] != 0x22223 {
+		t.Errorf("DSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("DSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
@@ -271,7 +320,30 @@ func TestFload(t *testing.T) {
 	}
 }
 
-// test of GOTO instruction -- in forward direction (to a later bytecode)
+// FSTORE: Store float from stack into local specified by following byte.
+func TestFstore(t *testing.T) {
+	f := newFrame(FSTORE)
+	f.meth = append(f.meth, 0x02) // use local var #2
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x22223 {
+		t.Errorf("FSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("FSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// GOTO: in forward direction (to a later bytecode)
 func TestGotoForward(t *testing.T) {
 	f := newFrame(GOTO)
 	f.meth = append(f.meth, 0x00)
@@ -714,9 +786,32 @@ func TestIreturn(t *testing.T) {
 	if prevVal != 20 {
 		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
 	}
-
 }
 
+// ISTORE: Store integer from stack into local specified by following byte.
+func TestIstore(t *testing.T) {
+	f := newFrame(DSTORE)
+	f.meth = append(f.meth, 0x02) // use local var #2
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x22223 {
+		t.Errorf("ISTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("ISTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// ISTORE_0: Store integer from stack into localVar[0]
 func TestIstore0(t *testing.T) {
 	f := newFrame(ISTORE_0)
 	f.locals = append(f.locals, 0)
@@ -994,6 +1089,34 @@ func TestLmul(t *testing.T) {
 	}
 }
 
+// LSTORE: Store long from stack into local specified by following byte, and the local var after it.
+func TestLstore(t *testing.T) {
+	f := newFrame(LSTORE)
+	f.meth = append(f.meth, 0x02) // use local var #2
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	f.locals = append(f.locals, 0)
+	push(&f, 0x22223)
+
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.locals[2] != 0x22223 {
+		t.Errorf("LSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	}
+
+	if f.locals[3] != 0x22223 {
+		t.Errorf("LSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	}
+
+	if f.tos != -1 {
+		t.Errorf("LSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	}
+}
+
+// LSTORE_0: Store long from stack in localVar[0] and again in localVar[1]
 func TestLstore0(t *testing.T) {
 	f := newFrame(LSTORE_0)
 	f.locals = append(f.locals, 0)
