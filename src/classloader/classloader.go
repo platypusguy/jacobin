@@ -184,7 +184,7 @@ func cfe(msg string) error {
 // 	classList = util.ConvertToPlatformPathSeparators(classList)
 // 	file, err := os.Open(classList)
 // 	if err != nil {
-// 		_ = log.Log("Did not find baseclasslist.txt in JACOBIN_HOME ("+classList+")", log.WARNING)
+// 		_ = log.Log("goDid not find baseclasslist.txt in JACOBIN_HOME ("+classList+")", log.WARNING)
 // 		_ = file.Close()
 // 	} else {
 // 		defer file.Close()
