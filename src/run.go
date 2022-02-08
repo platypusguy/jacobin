@@ -218,6 +218,12 @@ func runFrame(fs *list.List) error {
 			f.locals[3] = pop(f)
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
 			push(f, peek(f))
+		case DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
+			top := pop(f)
+			next := pop(f)
+			push(f, top)
+			push(f, next)
+			push(f, top)
 		case IADD, //  0x60		(add top 2 integers on operand stack, push result)
 			LADD: //  0x61     (add top 2 longs on operand stack, push result)
 			i2 := pop(f)

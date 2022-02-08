@@ -315,6 +315,29 @@ func TestDup(t *testing.T) {
 	}
 }
 
+// DUP_X1: Duplicate the top stack value and insert two values down
+func TestDupX1(t *testing.T) {
+	f := newFrame(DUP_X1)
+	push(&f, 0x3)
+	push(&f, 0x2)
+	push(&f, 0x1)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.tos != 3 {
+		t.Errorf("DUP_X1: Expecting a top of stack = 3 (so stack size 4), got: %d", f.tos)
+	}
+
+	a := pop(&f)
+	b := pop(&f)
+	c := pop(&f)
+	if a != 1 || c != 1 {
+		t.Errorf(
+			"DUP_X1: popped values are incorrect. Expecting value of 1, got: %X and %X", a, b)
+	}
+}
+
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
