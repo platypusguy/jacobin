@@ -216,21 +216,23 @@ func runFrame(fs *list.List) error {
 			f.locals[2] = pop(f)
 		case ASTORE_3: //	0x4E	(pop reference into local variable 3)
 			f.locals[3] = pop(f)
+		case DUP: // 0x59 			(push an item equal to the current top of the stack
+			push(f, peek(f))
 		case IADD, //  0x60		(add top 2 integers on operand stack, push result)
 			LADD: //  0x61     (add top 2 longs on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
 			push(f, i1+i2)
-		case IMUL, //  0x68  	(multiply 2 integers on operand stack, push result)
-			LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
-			i2 := pop(f)
-			i1 := pop(f)
-			push(f, i1*i2)
 		case ISUB, //  0x64	(subtract top 2 integers on operand stack, push result)
 			LSUB: //  0x65 (subtract top 2 longs on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
 			push(f, i1-i2)
+		case IMUL, //  0x68  	(multiply 2 integers on operand stack, push result)
+			LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
+			i2 := pop(f)
+			i1 := pop(f)
+			push(f, i1*i2)
 		case IINC: // 	0x84    (increment local variable by a constant)
 			localVarIndex := int(f.meth[f.pc+1])
 			constAmount := int(f.meth[f.pc+2])
@@ -513,6 +515,11 @@ func pop(f *frame) int64 {
 	value := f.opStack[f.tos]
 	f.tos -= 1
 	return value
+}
+
+// returns the value at the top of the stack without popping it off.
+func peek(f *frame) int64 {
+	return f.opStack[f.tos]
 }
 
 // push onto the operand stack

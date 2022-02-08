@@ -295,6 +295,26 @@ func TestDstore(t *testing.T) {
 	}
 }
 
+// DUP: Push a duplicate of the top item on the stack
+func TestDup(t *testing.T) {
+	f := newFrame(DUP)
+	push(&f, 0x22223)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.tos < 1 {
+		t.Errorf("DUP: stack should have two elements with tos > 0, tos was: %d", f.tos)
+	}
+
+	a := pop(&f)
+	b := pop(&f)
+	if a != 0x22223 || b != 0x22223 {
+		t.Errorf(
+			"DUP: popped values are incorrect. Expecting 0x22223, got: %X and %X", a, b)
+	}
+}
+
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
