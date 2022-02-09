@@ -510,6 +510,25 @@ func TestIfIcmple2(t *testing.T) {
 	}
 }
 
+// ICMPGT: jump if integer compare val 1 > val 2.
+func TestIfIcmpgt(t *testing.T) {
+	f := newFrame(IF_ICMPLE)
+	push(&f, 9)
+	push(&f, 7)
+
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IF_ICMPGT: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
 // ICMPLT: if integer compare val 1 < val 2
 func TestIfIcmplt(t *testing.T) {
 	f := newFrame(IF_ICMPLT)
