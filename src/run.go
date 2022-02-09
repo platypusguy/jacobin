@@ -244,10 +244,19 @@ func runFrame(fs *list.List) error {
 			constAmount := int(f.meth[f.pc+2])
 			f.pc += 2
 			f.locals[localVarIndex] += int64(constAmount)
-		case IF_ICMPEQ: //  0x9F 	(jump if two ints are equal)
+		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f)
 			val1 := pop(f)
 			if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
+				jumpTo := (int16(f.meth[f.pc+1]) * 256) + int16(f.meth[f.pc+2])
+				f.pc = f.pc + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
+			} else {
+				f.pc += 2
+			}
+		case IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
+			val2 := pop(f)
+			val1 := pop(f)
+			if int32(val1) != int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.meth[f.pc+1]) * 256) + int16(f.meth[f.pc+2])
 				f.pc = f.pc + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
 			} else {
