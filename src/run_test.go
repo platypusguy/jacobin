@@ -434,6 +434,61 @@ func TestIadd(t *testing.T) {
 	}
 }
 
+// IDIV: integer divide of tos-1 by tos, push result
+func TestIdiv(t *testing.T) {
+	f := newFrame(IDIV)
+	push(&f, 220)
+	push(&f, 22)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f)
+	if value != 10 {
+		t.Errorf("IDIV: expected a result of 10, but got: %d", value)
+	}
+}
+
+// IDIV: make sure that divide by zero generates an Arithmetic Exception and
+// displays an error message.
+func TestIdivDivideByZero(t *testing.T) {
+	g := globals.GetGlobalRef()
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	f := newFrame(IDIV)
+	f.clName = "testClass"
+	f.methName = "testMethod"
+	push(&f, 220)
+	push(&f, 0)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Arithmetic Exception") ||
+		!strings.Contains(errMsg, "testMethod") {
+		t.Errorf("IDIV: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // ICMPGE: if integer compare val 1 >= val 2. Here test for = (next test for >)
 func TestIfIcmpge1(t *testing.T) {
 	f := newFrame(IF_ICMPGE)

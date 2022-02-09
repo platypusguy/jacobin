@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
 	"strconv"
@@ -239,6 +240,16 @@ func runFrame(fs *list.List) error {
 			i2 := pop(f)
 			i1 := pop(f)
 			push(f, i1*i2)
+		case IDIV, //  0x6C
+			LDIV: //  0x6D   (divide tos-1 by tos)
+			val1 := pop(f)
+			if val1 == 0 {
+				exceptions.Throw(exceptions.Arithmetic_DivideByZero, f.clName, f.methName, f.pc)
+				shutdown(true)
+			} else {
+				val2 := pop(f)
+				push(f, val2/val1)
+			}
 		case IINC: // 	0x84    (increment local variable by a constant)
 			localVarIndex := int(f.meth[f.pc+1])
 			constAmount := int(f.meth[f.pc+2])
