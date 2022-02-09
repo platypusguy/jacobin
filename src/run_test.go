@@ -434,25 +434,6 @@ func TestIadd(t *testing.T) {
 	}
 }
 
-// IF_ICMPEQ: jump if val1 == val2 (both ints, both popped off stack)
-func TestIfIcmpeq(t *testing.T) {
-	f := newFrame(IF_ICMPEQ)
-	push(&f, 9) // pushed two equal values, so jump should be made.
-	push(&f, 9)
-
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, NOP)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
-		t.Errorf("ICMPEQ: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
-	}
-}
-
 // ICMPGE: if integer compare val 1 >= val 2. Here test for = (next test for >)
 func TestIfIcmpge1(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
@@ -510,25 +491,6 @@ func TestIfIcmgetFail(t *testing.T) {
 	}
 }
 
-// IF_ICMPLE: if integer compare val 1 <= val 2. Here testing for =
-func TestIfIcmple1(t *testing.T) {
-	f := newFrame(IF_ICMPLE)
-	push(&f, 9)
-	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
-		t.Errorf("ICMPLE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
-	}
-}
-
 // ICMPGE: if integer compare val 1 >= val 2. Here test for > (previous test for =)
 func TestIfIcmple2(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
@@ -544,25 +506,6 @@ func TestIfIcmple2(t *testing.T) {
 	_ = runFrame(fs)
 	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("IF_ICMPLE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
-	}
-}
-
-// IF_ICMPLE: if integer compare val 1 <>>= val 2 //test when condition fails
-func TestIfIcmletFail(t *testing.T) {
-	f := newFrame(IF_ICMPLE)
-	push(&f, 9)
-	push(&f, 8)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, RETURN) // the failed test should drop to this
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
-		t.Errorf("IF_ICMPLE: expecting fall-through to RETURN instuction, got: %s",
 			BytecodeNames[f.pc])
 	}
 }
@@ -605,6 +548,83 @@ func TestIfIcmpltFail(t *testing.T) {
 	}
 }
 
+// IF_ICMPEQ: jump if val1 == val2 (both ints, both popped off stack)
+func TestIfIcmpeq(t *testing.T) {
+	f := newFrame(IF_ICMPEQ)
+	push(&f, 9) // pushed two equal values, so jump should be made.
+	push(&f, 9)
+
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, NOP)
+	f.meth = append(f.meth, ICONST_2)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPEQ: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// IF_ICMPLE: if integer compare val 1 <>>= val 2 //test when condition fails
+func TestIfIcmletFail(t *testing.T) {
+	f := newFrame(IF_ICMPLE)
+	push(&f, 9)
+	push(&f, 8)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, RETURN) // the failed test should drop to this
+	f.meth = append(f.meth, ICONST_2)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("IF_ICMPLE: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// IF_ICMPLE: if integer compare val 1 <= val 2. Here testing for =
+func TestIfIcmple1(t *testing.T) {
+	f := newFrame(IF_ICMPLE)
+	push(&f, 9)
+	push(&f, 9)
+	// note that the byte passed in newframe() is at f.meth[0]
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, ICONST_1)
+	f.meth = append(f.meth, ICONST_2)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPLE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// IF_ICMPNE: jump if val1 != val2 (both ints, both popped off stack)
+func TestIfIcmpne(t *testing.T) {
+	f := newFrame(IF_ICMPEQ)
+	push(&f, 9) // pushed two unequal values, so jump should be made.
+	push(&f, 8)
+
+	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.meth = append(f.meth, 4)
+	f.meth = append(f.meth, NOP)
+	f.meth = append(f.meth, ICONST_2)
+	fs := createFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("ICMPNE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.pc])
+	}
+}
+
+// ICONST:
 func TestIconstN1(t *testing.T) {
 	f := newFrame(ICONST_N1)
 	fs := createFrameStack()
@@ -619,6 +639,7 @@ func TestIconstN1(t *testing.T) {
 	}
 }
 
+// ICONST_0
 func TestIconst0(t *testing.T) {
 	f := newFrame(ICONST_0)
 	fs := createFrameStack()
@@ -633,6 +654,7 @@ func TestIconst0(t *testing.T) {
 	}
 }
 
+// ICONST_1
 func TestIconst1(t *testing.T) {
 	f := newFrame(ICONST_1)
 	fs := createFrameStack()
@@ -647,6 +669,7 @@ func TestIconst1(t *testing.T) {
 	}
 }
 
+// ICONST_2
 func TestIconst2(t *testing.T) {
 	f := newFrame(ICONST_2)
 	fs := createFrameStack()
@@ -661,6 +684,7 @@ func TestIconst2(t *testing.T) {
 	}
 }
 
+// ICONST_3
 func TestIconst3(t *testing.T) {
 	f := newFrame(ICONST_3)
 	fs := createFrameStack()
@@ -675,6 +699,7 @@ func TestIconst3(t *testing.T) {
 	}
 }
 
+// ICONST_4
 func TestIconst4(t *testing.T) {
 	f := newFrame(ICONST_4)
 	fs := createFrameStack()
@@ -689,6 +714,7 @@ func TestIconst4(t *testing.T) {
 	}
 }
 
+// ICONST_5:
 func TestIconst5(t *testing.T) {
 	f := newFrame(ICONST_5)
 	fs := createFrameStack()
@@ -703,6 +729,7 @@ func TestIconst5(t *testing.T) {
 	}
 }
 
+// IINC:
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
 	f.locals = append(f.locals, 0)
@@ -745,6 +772,8 @@ func TestIload(t *testing.T) {
 		t.Errorf("ILOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
 	}
 }
+
+// ILOAD_0
 func TestIload0(t *testing.T) {
 	f := newFrame(ILOAD_0)
 	f.locals = append(f.locals, 27)
