@@ -7,6 +7,7 @@
 package globals
 
 import (
+	"container/list"
 	"os"
 	"strings"
 	"sync"
@@ -43,6 +44,9 @@ type Globals struct {
 	// ---- paths for finding the base classes to load ----
 	JavaHome    string
 	JacobinHome string
+
+	// ---- thread management ----
+	Threads *list.List
 }
 
 // Wait group for various channels used for parallel loading of classes.
@@ -64,6 +68,7 @@ func InitGlobals(progName string) Globals {
 		StartingJar:       "",
 		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
+		Threads:           list.New(),
 	}
 	InitJavaHome()
 	InitJacobinHome()

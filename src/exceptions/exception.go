@@ -8,11 +8,18 @@ package exceptions
 
 import (
 	"fmt"
+	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/thread"
 )
 
 const (
-	Arithmetic_DivideByZero = 0
+	ArithmeticDividebyzero = 0
+	/*
+	   Exception in thread "main" java.lang.ArithmeticException: / by zero
+	      at Main.main(Main.java:4)
+	*/
 )
 
 var literals = []string{
@@ -21,8 +28,14 @@ var literals = []string{
 
 // Throw duplicates the exception mechanism in Java. Right now, it displays the
 // error message. Will add: catch logic, stack trace, and halt of execution
-func Throw(excType int, clName string, methName string, cp int) {
+// TODO: use ThreadNum to find the right thread
+func Throw(excType int, clName string, threadNum int, methName string, cp int) {
+	thd := globals.GetGlobalRef().Threads.Front().Value.(*thread.ExecThread)
+	frameStack := thd.Stack
+	f := frames.PeekFrame(frameStack, 0)
+	fmt.Println("class name: " + f.ClName)
 	msg := fmt.Sprintf(
+
 		"%s%sin %s, in%s, at bytecode[]: %d", literals[excType], ": ", clName, methName, cp)
 	_ = log.Log(msg, log.SEVERE)
 }

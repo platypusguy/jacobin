@@ -8,8 +8,10 @@ package main
 
 import (
 	"io/ioutil"
+	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/thread"
 	"os"
 	"strings"
 	"testing"
@@ -20,10 +22,10 @@ import (
 
 // set up function to create a frame with a method with the single instruction
 // that's being tested
-func newFrame(code byte) frame {
-	f := createFrame(6)
-	f.ftype = 'J'
-	f.meth = append(f.meth, code)
+func newFrame(code byte) frames.Frame {
+	f := frames.CreateFrame(6)
+	f.Ftype = 'J'
+	f.Meth = append(f.Meth, code)
 	return *f
 }
 
@@ -32,210 +34,210 @@ func newFrame(code byte) frame {
 // test load of reference in locals[index] on to stack
 func TestAload(t *testing.T) {
 	f := newFrame(ALOAD)
-	f.meth = append(f.meth, 0x04) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+	f.Meth = append(f.Meth, 0x04) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ALOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ALOAD: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
-	if f.pc != 2 {
-		t.Errorf("ALOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	if f.PC != 2 {
+		t.Errorf("ALOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
 	}
 }
 
 // test load of reference in locals[0] on to stack
 func TestAload0(t *testing.T) {
 	f := newFrame(ALOAD_0)
-	f.locals = append(f.locals, 0x1234560) // put value in locals[0]
+	f.Locals = append(f.Locals, 0x1234560) // put value in locals[0]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234560 {
 		t.Errorf("ALOAD_0: Expecting 0x1234560 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ALOAD_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ALOAD_0: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test load of reference in locals[1] on to stack
 func TestAload1(t *testing.T) {
 	f := newFrame(ALOAD_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234561) // put value in locals[1]
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234561) // put value in locals[1]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234561 {
 		t.Errorf("ALOAD_1: Expecting 0x1234561 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ALOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ALOAD_1: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test load of reference in locals[2] on to stack
 func TestAload2(t *testing.T) {
 	f := newFrame(ALOAD_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[2]
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[2]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD_2: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ALOAD_2: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ALOAD_2: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test load of reference in locals[3] on to stack
 func TestAload3(t *testing.T) {
 	f := newFrame(ALOAD_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234563) // put value in locals[3]
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234563) // put value in locals[3]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234563 {
 		t.Errorf("ALOAD_3: Expecting 0x1234563 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ALOAD_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ALOAD_3: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // ASTORE: Store reference in local var specified by following byte.
 func TestAstore(t *testing.T) {
 	f := newFrame(ASTORE)
-	f.meth = append(f.meth, 0x03) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Meth = append(f.Meth, 0x03) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[3] != 0x22223 {
-		t.Errorf("ASTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	if f.Locals[3] != 0x22223 {
+		t.Errorf("ASTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
-	if f.tos != -1 {
-		t.Errorf("ASTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ASTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test store of reference from stack into locals[0]
 func TestAstore0(t *testing.T) {
 	f := newFrame(ASTORE_0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22220)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[0] != 0x22220 {
-		t.Errorf("ASTORE_0: Expecting 0x22220 on stack, got: 0x%x", f.locals[0])
+	if f.Locals[0] != 0x22220 {
+		t.Errorf("ASTORE_0: Expecting 0x22220 on stack, got: 0x%x", f.Locals[0])
 	}
-	if f.tos != -1 {
-		t.Errorf("ASTORE_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ASTORE_0: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test store of reference from stack into locals[1]
 func TestAstore1(t *testing.T) {
 	f := newFrame(ASTORE_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22221)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[1] != 0x22221 {
-		t.Errorf("ASTORE_1: Expecting 0x22221 on stack, got: 0x%x", f.locals[0])
+	if f.Locals[1] != 0x22221 {
+		t.Errorf("ASTORE_1: Expecting 0x22221 on stack, got: 0x%x", f.Locals[0])
 	}
-	if f.tos != -1 {
-		t.Errorf("ASTORE_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ASTORE_1: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test store of reference from stack into locals[2]
 func TestAstore2(t *testing.T) {
 	f := newFrame(ASTORE_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22222)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x22222 {
-		t.Errorf("ASTORE_2: Expecting 0x22222 on stack, got: 0x%x", f.locals[0])
+	if f.Locals[2] != 0x22222 {
+		t.Errorf("ASTORE_2: Expecting 0x22222 on stack, got: 0x%x", f.Locals[0])
 	}
-	if f.tos != -1 {
-		t.Errorf("ASTORE_2: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ASTORE_2: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // test store of reference from stack into locals[3]
 func TestAstore3(t *testing.T) {
 	f := newFrame(ASTORE_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[3] != 0x22223 {
-		t.Errorf("ASTORE_3: Expecting 0x22223 on stack, got: 0x%x", f.locals[0])
+	if f.Locals[3] != 0x22223 {
+		t.Errorf("ASTORE_3: Expecting 0x22223 on stack, got: 0x%x", f.Locals[0])
 	}
-	if f.tos != -1 {
-		t.Errorf("ASTORE_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ASTORE_3: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 func TestBipush(t *testing.T) {
 	f := newFrame(BIPUSH)
-	f.meth = append(f.meth, 0x05)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0x05)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 5 {
@@ -246,52 +248,52 @@ func TestBipush(t *testing.T) {
 // DLOAD: test load of double in locals[index] on to stack
 func TestDload(t *testing.T) {
 	f := newFrame(DLOAD)
-	f.meth = append(f.meth, 0x04) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+	f.Meth = append(f.Meth, 0x04) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("DLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("DLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("DLOAD: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
-	if f.pc != 2 {
-		t.Errorf("DLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	if f.PC != 2 {
+		t.Errorf("DLOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
 	}
 }
 
 // DSTORE: Store double from stack into local specified by following byte.
 func TestDstore(t *testing.T) {
 	f := newFrame(DSTORE)
-	f.meth = append(f.meth, 0x02) // use local var #2
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Meth = append(f.Meth, 0x02) // use local var #2
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x22223 {
-		t.Errorf("DSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	if f.Locals[2] != 0x22223 {
+		t.Errorf("DSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.locals[3] != 0x22223 {
-		t.Errorf("DSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	if f.Locals[3] != 0x22223 {
+		t.Errorf("DSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("DSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("DSTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
@@ -299,12 +301,12 @@ func TestDstore(t *testing.T) {
 func TestDup(t *testing.T) {
 	f := newFrame(DUP)
 	push(&f, 0x22223)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.tos < 1 {
-		t.Errorf("DUP: stack should have two elements with tos > 0, tos was: %d", f.tos)
+	if f.TOS < 1 {
+		t.Errorf("DUP: stack should have two elements with tos > 0, tos was: %d", f.TOS)
 	}
 
 	a := pop(&f)
@@ -321,12 +323,12 @@ func TestDupX1(t *testing.T) {
 	push(&f, 0x3)
 	push(&f, 0x2)
 	push(&f, 0x1)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.tos != 3 {
-		t.Errorf("DUP_X1: Expecting a top of stack = 3 (so stack size 4), got: %d", f.tos)
+	if f.TOS != 3 {
+		t.Errorf("DUP_X1: Expecting a top of stack = 3 (so stack size 4), got: %d", f.TOS)
 	}
 
 	a := pop(&f)
@@ -341,80 +343,80 @@ func TestDupX1(t *testing.T) {
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
-	f.meth = append(f.meth, 0x04) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+	f.Meth = append(f.Meth, 0x04) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("FLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("FLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("FLOAD: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
-	if f.pc != 2 {
-		t.Errorf("FLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	if f.PC != 2 {
+		t.Errorf("FLOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
 	}
 }
 
 // FSTORE: Store float from stack into local specified by following byte.
 func TestFstore(t *testing.T) {
 	f := newFrame(FSTORE)
-	f.meth = append(f.meth, 0x02) // use local var #2
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Meth = append(f.Meth, 0x02) // use local var #2
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x22223 {
-		t.Errorf("FSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	if f.Locals[2] != 0x22223 {
+		t.Errorf("FSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("FSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("FSTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // GOTO: in forward direction (to a later bytecode)
 func TestGotoForward(t *testing.T) {
 	f := newFrame(GOTO)
-	f.meth = append(f.meth, 0x00)
-	f.meth = append(f.meth, 0x03)
-	f.meth = append(f.meth, RETURN)
-	f.meth = append(f.meth, NOP)
-	f.meth = append(f.meth, NOP)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x03)
+	f.Meth = append(f.Meth, RETURN)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, NOP)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN {
-		t.Errorf("GOTO forward: Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
+	if f.Meth[f.PC] != RETURN {
+		t.Errorf("GOTO forward: Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.Meth[f.PC]])
 	}
 }
 
 // test of GOTO instruction -- in backward direction (to an earlier bytecode)
 func TestGotoBackward(t *testing.T) {
 	f := newFrame(RETURN)
-	f.meth = append(f.meth, GOTO)
-	f.meth = append(f.meth, 0xFF) // should be -1
-	f.meth = append(f.meth, 0xFF)
-	f.meth = append(f.meth, BIPUSH)
-	f.pc = 1 // skip over the return instruction to start, catch it on the backward goto
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, GOTO)
+	f.Meth = append(f.Meth, 0xFF) // should be -1
+	f.Meth = append(f.Meth, 0xFF)
+	f.Meth = append(f.Meth, BIPUSH)
+	f.PC = 1 // skip over the return instruction to start, catch it on the backward goto
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN {
-		t.Errorf("GOTO backeard Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.meth[f.pc]])
+	if f.Meth[f.PC] != RETURN {
+		t.Errorf("GOTO backeard Expected pc to point to RETURN, but instead it points to : %s", BytecodeNames[f.Meth[f.PC]])
 	}
 }
 
@@ -422,24 +424,24 @@ func TestIadd(t *testing.T) {
 	f := newFrame(IADD)
 	push(&f, 21)
 	push(&f, 22)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	value := pop(&f)
 	if value != 43 {
 		t.Errorf("IADD: expected a result of 43, but got: %d", value)
 	}
-	if f.tos != -1 {
-		t.Errorf("IADD: Expected an empty stack, but got a tos of: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("IADD: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 
-// IDIV: integer divide of tos-1 by tos, push result
+// IDIV: integer divide of.TOS-1 by tos, push result
 func TestIdiv(t *testing.T) {
 	f := newFrame(IDIV)
 	push(&f, 220)
 	push(&f, 22)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	value := pop(&f)
@@ -452,6 +454,8 @@ func TestIdiv(t *testing.T) {
 // displays an error message.
 func TestIdivDivideByZero(t *testing.T) {
 	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	// g.Threads = list.New()
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
 	log.Init()
 
@@ -465,12 +469,17 @@ func TestIdivDivideByZero(t *testing.T) {
 	os.Stdout = wout
 
 	f := newFrame(IDIV)
-	f.clName = "testClass"
-	f.methName = "testMethod"
+	f.ClName = "testClass"
+	f.MethName = "testMethod"
 	push(&f, 220)
 	push(&f, 0)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
+
+	// need to create a thread to catch the exception
+	mainThread := thread.CreateThread(0)
+	mainThread.Stack = fs
+	mainThread.ID = thread.AddThreadToTable(&mainThread, g.Threads)
 	_ = runFrame(fs)
 
 	// restore stderr and stdout to what they were before
@@ -494,17 +503,17 @@ func TestIfIcmpge1(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
 	push(&f, 9)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPGE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -513,17 +522,17 @@ func TestIfIcmpge2(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
 	push(&f, 9)
 	push(&f, 8)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPGE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -532,17 +541,17 @@ func TestIfIcmgetFail(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
 	push(&f, 8)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, RETURN) // the failed test should drop to this
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN) // the failed test should drop to this
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+	if f.Meth[f.PC] != RETURN { // b/c we return directly, we don't subtract 1 from pc
 		t.Errorf("ICMPGE: expecting fall-through to RETURN instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -551,17 +560,17 @@ func TestIfIcmple2(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
 	push(&f, 8)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("IF_ICMPLE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -571,16 +580,16 @@ func TestIfIcmpgt(t *testing.T) {
 	push(&f, 9)
 	push(&f, 7)
 
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("IF_ICMPGT: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -589,17 +598,17 @@ func TestIfIcmplt(t *testing.T) {
 	f := newFrame(IF_ICMPLT)
 	push(&f, 8)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPLT: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -608,17 +617,17 @@ func TestIfIcmpltFail(t *testing.T) {
 	f := newFrame(IF_ICMPLT)
 	push(&f, 9)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, RETURN) // the failed test should drop to this
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN) // the failed test should drop to this
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+	if f.Meth[f.PC] != RETURN { // b/c we return directly, we don't subtract 1 from pc
 		t.Errorf("ICMPLT: expecting fall-through to RETURN instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -628,16 +637,16 @@ func TestIfIcmpeq(t *testing.T) {
 	push(&f, 9) // pushed two equal values, so jump should be made.
 	push(&f, 9)
 
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, NOP)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPEQ: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -646,17 +655,17 @@ func TestIfIcmletFail(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
 	push(&f, 9)
 	push(&f, 8)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, RETURN) // the failed test should drop to this
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN) // the failed test should drop to this
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+	if f.Meth[f.PC] != RETURN { // b/c we return directly, we don't subtract 1 from pc
 		t.Errorf("IF_ICMPLE: expecting fall-through to RETURN instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -665,17 +674,17 @@ func TestIfIcmple1(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
 	push(&f, 9)
 	push(&f, 9)
-	// note that the byte passed in newframe() is at f.meth[0]
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, ICONST_1)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPLE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
@@ -685,27 +694,27 @@ func TestIfIcmpne(t *testing.T) {
 	push(&f, 9) // pushed two unequal values, so jump should be made.
 	push(&f, 8)
 
-	f.meth = append(f.meth, 0) // where we are jumping to, byte 4 = ICONST2
-	f.meth = append(f.meth, 4)
-	f.meth = append(f.meth, NOP)
-	f.meth = append(f.meth, ICONST_2)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.meth[f.pc-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("ICMPNE: expecting a jump to ICONST_2 instuction, got: %s",
-			BytecodeNames[f.pc])
+			BytecodeNames[f.PC])
 	}
 }
 
 // ICONST:
 func TestIconstN1(t *testing.T) {
 	f := newFrame(ICONST_N1)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != -1 {
@@ -716,11 +725,11 @@ func TestIconstN1(t *testing.T) {
 // ICONST_0
 func TestIconst0(t *testing.T) {
 	f := newFrame(ICONST_0)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 0 {
@@ -731,11 +740,11 @@ func TestIconst0(t *testing.T) {
 // ICONST_1
 func TestIconst1(t *testing.T) {
 	f := newFrame(ICONST_1)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 1 {
@@ -746,11 +755,11 @@ func TestIconst1(t *testing.T) {
 // ICONST_2
 func TestIconst2(t *testing.T) {
 	f := newFrame(ICONST_2)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 2 {
@@ -761,11 +770,11 @@ func TestIconst2(t *testing.T) {
 // ICONST_3
 func TestIconst3(t *testing.T) {
 	f := newFrame(ICONST_3)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 3 {
@@ -776,11 +785,11 @@ func TestIconst3(t *testing.T) {
 // ICONST_4
 func TestIconst4(t *testing.T) {
 	f := newFrame(ICONST_4)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 4 {
@@ -791,11 +800,11 @@ func TestIconst4(t *testing.T) {
 // ICONST_5:
 func TestIconst5(t *testing.T) {
 	f := newFrame(ICONST_5)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 5 {
@@ -806,17 +815,17 @@ func TestIconst5(t *testing.T) {
 // IINC:
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 10) // initialize local variable[1] to 10
-	f.meth = append(f.meth, 1)      // increment local variable[1]
-	f.meth = append(f.meth, 27)     // increment it by 27
-	fs := createFrameStack()
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 10) // initialize local variable[1] to 10
+	f.Meth = append(f.Meth, 1)      // increment local variable[1]
+	f.Meth = append(f.Meth, 27)     // increment it by 27
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != -1 {
-		t.Errorf("Top of stack, expected -1, got: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
 	}
-	value := f.locals[1]
+	value := f.Locals[1]
 	if value != 37 {
 		t.Errorf("IINC: Expected popped value to be 37, got: %d", value)
 	}
@@ -825,37 +834,37 @@ func TestIinc(t *testing.T) {
 // ILOAD: test load of int in locals[index] on to stack
 func TestIload(t *testing.T) {
 	f := newFrame(ILOAD)
-	f.meth = append(f.meth, 0x04) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+	f.Meth = append(f.Meth, 0x04) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("ILOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("ILOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ILOAD: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
-	if f.pc != 2 {
-		t.Errorf("ILOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	if f.PC != 2 {
+		t.Errorf("ILOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
 	}
 }
 
 // ILOAD_0
 func TestIload0(t *testing.T) {
 	f := newFrame(ILOAD_0)
-	f.locals = append(f.locals, 27)
-	fs := createFrameStack()
+	f.Locals = append(f.Locals, 27)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 27 {
@@ -865,13 +874,13 @@ func TestIload0(t *testing.T) {
 
 func TestIload1(t *testing.T) {
 	f := newFrame(ILOAD_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 27)
-	fs := createFrameStack()
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 27)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 27 {
@@ -881,14 +890,14 @@ func TestIload1(t *testing.T) {
 
 func TestIload2(t *testing.T) {
 	f := newFrame(ILOAD_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 1)
-	f.locals = append(f.locals, 27)
-	fs := createFrameStack()
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 1)
+	f.Locals = append(f.Locals, 27)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 27 {
@@ -898,15 +907,15 @@ func TestIload2(t *testing.T) {
 
 func TestIload3(t *testing.T) {
 	f := newFrame(ILOAD_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 1)
-	f.locals = append(f.locals, 2)
-	f.locals = append(f.locals, 27)
-	fs := createFrameStack()
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 1)
+	f.Locals = append(f.Locals, 2)
+	f.Locals = append(f.Locals, 27)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 27 {
@@ -919,11 +928,11 @@ func TestImul(t *testing.T) {
 	f := newFrame(IMUL)
 	push(&f, 10)
 	push(&f, 7)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 70 {
@@ -935,14 +944,14 @@ func TestImul(t *testing.T) {
 func TestIreturn(t *testing.T) {
 	f0 := newFrame(0)
 	push(&f0, 20)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
 	f1 := newFrame(IRETURN)
 	push(&f1, 21)
 	fs.PushFront(&f1)
 	_ = runFrame(fs)
-	_ = popFrame(fs)
-	f3 := fs.Front().Value.(*frame)
+	_ = frames.PopFrame(fs)
+	f3 := fs.Front().Value.(*frames.Frame)
 	newVal := pop(f3)
 	if newVal != 21 {
 		t.Errorf("After IRETURN, expected a value of 21 in previous frame, got: %d", newVal)
@@ -956,90 +965,90 @@ func TestIreturn(t *testing.T) {
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
 	f := newFrame(DSTORE)
-	f.meth = append(f.meth, 0x02) // use local var #2
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Meth = append(f.Meth, 0x02) // use local var #2
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x22223 {
-		t.Errorf("ISTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	if f.Locals[2] != 0x22223 {
+		t.Errorf("ISTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("ISTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ISTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // ISTORE_0: Store integer from stack into localVar[0]
 func TestIstore0(t *testing.T) {
 	f := newFrame(ISTORE_0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 220)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.locals[0] != 220 {
-		t.Errorf("ISTORE_0: expected lcoals[0] to be 220, got: %d", f.locals[0])
+	if f.Locals[0] != 220 {
+		t.Errorf("ISTORE_0: expected lcoals[0] to be 220, got: %d", f.Locals[0])
 	}
-	if f.tos != -1 {
-		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestIstore1(t *testing.T) {
 	f := newFrame(ISTORE_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 221)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.locals[1] != 221 {
-		t.Errorf("ISTORE_1: expected locals[1] to be 221, got: %d", f.locals[1])
+	if f.Locals[1] != 221 {
+		t.Errorf("ISTORE_1: expected locals[1] to be 221, got: %d", f.Locals[1])
 	}
-	if f.tos != -1 {
-		t.Errorf("ISTORE_1: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_1: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestIstore2(t *testing.T) {
 	f := newFrame(ISTORE_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 222)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.locals[2] != 222 {
-		t.Errorf("ISTORE_2: expected locals[2] to be 222, got: %d", f.locals[2])
+	if f.Locals[2] != 222 {
+		t.Errorf("ISTORE_2: expected locals[2] to be 222, got: %d", f.Locals[2])
 	}
-	if f.tos != -1 {
-		t.Errorf("ISTORE_2: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_2: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestIstore3(t *testing.T) {
 	f := newFrame(ISTORE_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 223)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.locals[3] != 223 {
-		t.Errorf("ISTORE_3: expected locals[3] to be 223, got: %d", f.locals[3])
+	if f.Locals[3] != 223 {
+		t.Errorf("ISTORE_3: expected locals[3] to be 223, got: %d", f.Locals[3])
 	}
-	if f.tos != -1 {
-		t.Errorf("ISTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_3: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
@@ -1047,11 +1056,11 @@ func TestIsub(t *testing.T) {
 	f := newFrame(ISUB)
 	push(&f, 10)
 	push(&f, 7)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("ISUB, Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("ISUB, Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 3 {
@@ -1063,25 +1072,25 @@ func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
 	push(&f, 21)
 	push(&f, 22)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	value := pop(&f)
 	if value != 43 {
 		t.Errorf("LADD: expected a result of 43, but got: %d", value)
 	}
-	if f.tos != -1 {
-		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 func TestLdc(t *testing.T) {
 	f := newFrame(LDC)
-	f.meth = append(f.meth, 0x05)
-	fs := createFrameStack()
+	f.Meth = append(f.Meth, 0x05)
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 5 {
@@ -1091,11 +1100,11 @@ func TestLdc(t *testing.T) {
 
 func TestLconst0(t *testing.T) {
 	f := newFrame(LCONST_0)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 0 {
@@ -1105,11 +1114,11 @@ func TestLconst0(t *testing.T) {
 
 func TestLconst1(t *testing.T) {
 	f := newFrame(LCONST_1)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 1 {
@@ -1120,35 +1129,35 @@ func TestLconst1(t *testing.T) {
 // LLOAD: test load of lon in locals[index] on to stack
 func TestLload(t *testing.T) {
 	f := newFrame(LLOAD)
-	f.meth = append(f.meth, 0x04) // use local var #4
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x1234562) // put value in locals[4]
+	f.Meth = append(f.Meth, 0x04) // use local var #4
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
 	if x != 0x1234562 {
 		t.Errorf("LLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
-	if f.tos != -1 {
-		t.Errorf("LLOAD: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LLOAD: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
-	if f.pc != 2 {
-		t.Errorf("LLOAD: Expected pc to be pointing at byte 2, got: %d", f.pc)
+	if f.PC != 2 {
+		t.Errorf("LLOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
 	}
 }
 
 func TestLload0(t *testing.T) {
 	f := newFrame(LLOAD_0)
 
-	f.locals = append(f.locals, 0x12345678) // put value in locals[0]
-	f.locals = append(f.locals, 0x12345678) // put value in locals[1] // lload uses two local consecutive
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[0]
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[1] // lload uses two local consecutive
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
@@ -1156,22 +1165,22 @@ func TestLload0(t *testing.T) {
 		t.Errorf("LLOAD_0: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
 
-	if f.locals[1] != x {
-		t.Errorf("LLOAD_0: Local variable[1] holds invalid value: 0x%x", f.locals[2])
+	if f.Locals[1] != x {
+		t.Errorf("LLOAD_0: Local variable[1] holds invalid value: 0x%x", f.Locals[2])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LLOAD_0: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LLOAD_0: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 func TestLload1(t *testing.T) {
 	f := newFrame(LLOAD_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x12345678) // put value in locals[1]
-	f.locals = append(f.locals, 0x12345678) // put value in locals[2] // lload uses two local consecutive
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[1]
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[2] // lload uses two local consecutive
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
@@ -1179,23 +1188,23 @@ func TestLload1(t *testing.T) {
 		t.Errorf("LLOAD_1: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
 
-	if f.locals[2] != x {
-		t.Errorf("LLOAD_1: Local variable[2] holds invalid value: 0x%x", f.locals[2])
+	if f.Locals[2] != x {
+		t.Errorf("LLOAD_1: Local variable[2] holds invalid value: 0x%x", f.Locals[2])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 func TestLload2(t *testing.T) {
 	f := newFrame(LLOAD_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x12345678) // put value in locals[2]
-	f.locals = append(f.locals, 0x12345678) // put value in locals[3] // lload uses two local consecutive
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[2]
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[3] // lload uses two local consecutive
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
@@ -1203,24 +1212,24 @@ func TestLload2(t *testing.T) {
 		t.Errorf("LLOAD_12: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
 
-	if f.locals[3] != x {
-		t.Errorf("LLOAD_2: Local variable[3] holds invalid value: 0x%x", f.locals[3])
+	if f.Locals[3] != x {
+		t.Errorf("LLOAD_2: Local variable[3] holds invalid value: 0x%x", f.Locals[3])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LLOAD_1: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 func TestLload3(t *testing.T) {
 	f := newFrame(LLOAD_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0x12345678) // put value in locals[3]
-	f.locals = append(f.locals, 0x12345678) // put value in locals[4] // lload uses two local consecutive
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[3]
+	f.Locals = append(f.Locals, 0x12345678) // put value in locals[4] // lload uses two local consecutive
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
@@ -1228,12 +1237,12 @@ func TestLload3(t *testing.T) {
 		t.Errorf("LLOAD_3: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
 
-	if f.locals[4] != x {
-		t.Errorf("LLOAD_3: Local variable[4] holds invalid value: 0x%x", f.locals[4])
+	if f.Locals[4] != x {
+		t.Errorf("LLOAD_3: Local variable[4] holds invalid value: 0x%x", f.Locals[4])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LLOAD_3: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LLOAD_3: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
@@ -1242,11 +1251,11 @@ func TestLmul(t *testing.T) {
 	f := newFrame(LMUL)
 	push(&f, 10)
 	push(&f, 7)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("LMUL, Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("LMUL, Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 70 {
@@ -1257,122 +1266,122 @@ func TestLmul(t *testing.T) {
 // LSTORE: Store long from stack into local specified by following byte, and the local var after it.
 func TestLstore(t *testing.T) {
 	f := newFrame(LSTORE)
-	f.meth = append(f.meth, 0x02) // use local var #2
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
+	f.Meth = append(f.Meth, 0x02) // use local var #2
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
 	push(&f, 0x22223)
 
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x22223 {
-		t.Errorf("LSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.locals[2])
+	if f.Locals[2] != 0x22223 {
+		t.Errorf("LSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.locals[3] != 0x22223 {
-		t.Errorf("LSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.locals[3])
+	if f.Locals[3] != 0x22223 {
+		t.Errorf("LSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LSTORE: Expecting an empty stack, but tos points to item: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LSTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
 	}
 }
 
 // LSTORE_0: Store long from stack in localVar[0] and again in localVar[1]
 func TestLstore0(t *testing.T) {
 	f := newFrame(LSTORE_0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, 0x12345678)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[0] != 0x12345678 {
-		t.Errorf("LSTORE_0: expected locals[0] to be 0x12345678, got: %d", f.locals[0])
+	if f.Locals[0] != 0x12345678 {
+		t.Errorf("LSTORE_0: expected locals[0] to be 0x12345678, got: %d", f.Locals[0])
 	}
 
-	if f.locals[1] != 0x12345678 {
-		t.Errorf("LSTORE_0: expected locals[1] to be 0x12345678, got: %d", f.locals[1])
+	if f.Locals[1] != 0x12345678 {
+		t.Errorf("LSTORE_0: expected locals[1] to be 0x12345678, got: %d", f.Locals[1])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LSTORE_0: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LSTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestLstore1(t *testing.T) {
 	f := newFrame(LSTORE_1)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, 0x12345678)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[1] != 0x12345678 {
-		t.Errorf("LSTORE_1: expected locals[1] to be 0x12345678, got: %d", f.locals[1])
+	if f.Locals[1] != 0x12345678 {
+		t.Errorf("LSTORE_1: expected locals[1] to be 0x12345678, got: %d", f.Locals[1])
 	}
 
-	if f.locals[2] != 0x12345678 {
-		t.Errorf("LSTORE_1: expected locals[2] to be 0x12345678, got: %d", f.locals[2])
+	if f.Locals[2] != 0x12345678 {
+		t.Errorf("LSTORE_1: expected locals[2] to be 0x12345678, got: %d", f.Locals[2])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LSTORE_1: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LSTORE_1: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestLstore2(t *testing.T) {
 	f := newFrame(LSTORE_2)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, 0x12345678)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[2] != 0x12345678 {
-		t.Errorf("LSTORE_2: expected locals[2] to be 0x12345678, got: %d", f.locals[2])
+	if f.Locals[2] != 0x12345678 {
+		t.Errorf("LSTORE_2: expected locals[2] to be 0x12345678, got: %d", f.Locals[2])
 	}
 
-	if f.locals[3] != 0x12345678 {
-		t.Errorf("LSTORE_2: expected locals[3] to be 0x12345678, got: %d", f.locals[3])
+	if f.Locals[3] != 0x12345678 {
+		t.Errorf("LSTORE_2: expected locals[3] to be 0x12345678, got: %d", f.Locals[3])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LSTORE_2: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LSTORE_2: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
 func TestLstore3(t *testing.T) {
 	f := newFrame(LSTORE_3)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0)
-	f.locals = append(f.locals, 0) // LSTORE instructions fill two local variables (with the same value)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, 0x12345678)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.locals[3] != 0x12345678 {
-		t.Errorf("LSTORE_3: expected locals[3] to be 0x12345678, got: %d", f.locals[3])
+	if f.Locals[3] != 0x12345678 {
+		t.Errorf("LSTORE_3: expected locals[3] to be 0x12345678, got: %d", f.Locals[3])
 	}
 
-	if f.locals[4] != 0x12345678 {
-		t.Errorf("LSTORE_3: expected locals[4] to be 0x12345678, got: %d", f.locals[4])
+	if f.Locals[4] != 0x12345678 {
+		t.Errorf("LSTORE_3: expected locals[4] to be 0x12345678, got: %d", f.Locals[4])
 	}
 
-	if f.tos != -1 {
-		t.Errorf("LSTORE_3: Expected op stack to be empty, got tos: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("LSTORE_3: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
@@ -1381,11 +1390,11 @@ func TestLsub(t *testing.T) {
 	f := newFrame(LSUB)
 	push(&f, 10)
 	push(&f, 7)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.tos != 0 {
-		t.Errorf("LSUB, Top of stack, expected 0, got: %d", f.tos)
+	if f.TOS != 0 {
+		t.Errorf("LSUB, Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 3 {
@@ -1395,11 +1404,11 @@ func TestLsub(t *testing.T) {
 
 func TestReturn(t *testing.T) {
 	f := newFrame(RETURN)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	ret := runFrame(fs)
-	if f.tos != -1 {
-		t.Errorf("Top of stack, expected -1, got: %d", f.tos)
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
 	}
 
 	if ret != nil {
@@ -1424,7 +1433,7 @@ func TestInvalidInstruction(t *testing.T) {
 	os.Stderr = w
 
 	f := newFrame(252)
-	fs := createFrameStack()
+	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
 	ret := runFrame(fs)
 	if ret == nil {
