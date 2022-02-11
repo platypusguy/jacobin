@@ -21,7 +21,7 @@ func main() {
 
 	// during development, let's use the most verbose logging level
 	// log.Level = log.FINEST  // no longer needed
-	log.Log("running program: "+Global.JacobinName, log.FINE)
+	_ = log.Log("running program: "+Global.JacobinName, log.FINE)
 
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(Global)
@@ -35,13 +35,13 @@ func main() {
 	}
 
 	if Global.StartingClass == "" {
-		log.Log("Error: No executable program specified. Exiting.", log.INFO)
+		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
 		showUsage(os.Stdout)
 		shutdown(true)
 	}
 
 	// load the starting class, classes it references, and some base classes
-	classloader.Init()
+	_ = classloader.Init()
 	classloader.LoadBaseClasses(&Global)
 	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	if err != nil { // the error message will already have been shown to user
