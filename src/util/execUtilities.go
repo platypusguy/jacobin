@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package util
 
 // ParseIncomingParamsFromMethTypeString takes a type string from a CP
 // and parses its passed-in parameters, returning them in reduced form
