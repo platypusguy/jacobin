@@ -16,6 +16,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/util"
 	"strconv"
 )
 
@@ -483,7 +484,7 @@ func runFrame(fs *list.List) error {
 
 				// pop the parameters off the present stack and put them in the new frame's locals
 				var argList []int64
-				paramsToPass := ParseIncomingParamsFromMethTypeString(methodType)
+				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
 					for i := 0; i < len(paramsToPass); i++ {
 						arg := pop(f)
