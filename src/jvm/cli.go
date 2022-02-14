@@ -1,9 +1,10 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021-2 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"errors"
@@ -19,7 +20,7 @@ import (
 // func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
-	log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
+	_ = log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
 
 	// JAVA_HOME and JACOBIN_HOME were obtained in the init of globals.go. Here we just log them.
 	showJavaHomeArgs(Global)
@@ -140,7 +141,7 @@ func showJavaHomeArgs(Global *globals.Globals) {
 // show the usage info to the user (in response to errors or java -help and
 // similar command-line options). The text will be updated to conform closer
 // to the OpenJDK message as features are added to Jacobin
-func showUsage(outStream *os.File) {
+func ShowUsage(outStream *os.File) {
 	userMessage :=
 		`
 Usage: jacobin [options] <mainclass> [args...]
@@ -164,7 +165,7 @@ where options include:
 	--show-version
 				  print product version to the output stream and continue`
 
-	fmt.Fprintln(outStream, userMessage)
+	_, _ = fmt.Fprintln(outStream, userMessage)
 }
 
 // show the Jacobin version and minor associated data
@@ -186,11 +187,12 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
 func showCopyright() {
-	if !strings.Contains(Global.CommandLine, "-showversion") &&
-		!strings.Contains(Global.CommandLine, "--show-version") &&
-		!strings.Contains(Global.CommandLine, "-version") &&
-		!strings.Contains(Global.CommandLine, "--version") {
-		fmt.Println("Jacobin VM v. " + Global.Version +
+	g := globals.GetGlobalRef()
+	if !strings.Contains(g.CommandLine, "-showversion") &&
+		!strings.Contains(g.CommandLine, "--show-version") &&
+		!strings.Contains(g.CommandLine, "-version") &&
+		!strings.Contains(g.CommandLine, "--version") {
+		fmt.Println("Jacobin VM v. " + g.Version +
 			", © 2021-2 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
 	}
 }

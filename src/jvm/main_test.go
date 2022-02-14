@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"io/ioutil"
@@ -20,7 +20,7 @@ func TestShutdownOK(t *testing.T) {
 	gl := globals.GetGlobalRef()
 	gl.JacobinName = "test"
 
-	log.SetLogLevel(log.FINE)
+	_ = log.SetLogLevel(log.FINE)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -31,7 +31,7 @@ func TestShutdownOK(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	shutdown(false)
+	Shutdown(false)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

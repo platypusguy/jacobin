@@ -1,9 +1,10 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"errors"
@@ -133,13 +134,13 @@ func notSupported(pos int, arg string, gl *globals.Globals) (int, error) {
 }
 
 func showHelpStderrAndExit(pos int, name string, gl *globals.Globals) (int, error) {
-	showUsage(os.Stderr)
+	ShowUsage(os.Stderr)
 	gl.ExitNow = true
 	return pos, nil
 }
 
 func showHelpStdoutAndExit(pos int, name string, gl *globals.Globals) (int, error) {
-	showUsage(os.Stdout)
+	ShowUsage(os.Stdout)
 	gl.ExitNow = true
 	return pos, nil
 }

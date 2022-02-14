@@ -4,11 +4,10 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"io/ioutil"
-	// "jacobin"
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
@@ -102,7 +101,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	os.Stdout = normalStdout
 
 	if !strings.Contains(string(msgOut), "-1") {
-		t.Errorf("Error in output from main, expected to contain in part 'Hello.main', got: %s", string(msgOut))
+		t.Errorf("Error in output from   expected to contain in part 'Hello. , got: %s", string(msgOut))
 	}
 }
 

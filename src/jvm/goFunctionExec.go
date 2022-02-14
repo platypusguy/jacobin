@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"container/list"
@@ -14,7 +14,7 @@ import (
 	"jacobin/log"
 )
 
-// This function is called from main.run(). It execuates a frame whose
+// This function is called from  run(). It execuates a frame whose
 // method is a golang method. It copies the parameters from the
 // operand stack and passes them to the go function, here called Fu,
 // as an array of interface{}, which can be nil if there are no arguments.

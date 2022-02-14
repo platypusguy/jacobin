@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"container/list"
@@ -251,7 +251,7 @@ func runFrame(fs *list.List) error {
 			val1 := pop(f)
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticDividebyzero, f.ClName, f.Thread, f.MethName, f.PC)
-				shutdown(true)
+				Shutdown(true)
 			} else {
 				val2 := pop(f)
 				push(f, val2/val1)
@@ -423,7 +423,7 @@ func runFrame(fs *list.List) error {
 			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(v, fs, className, methodName, methodType)
 				if err != nil {
-					shutdown(true) // any error message will already have been displayed to the user
+					Shutdown(true) // any error message will already have been displayed to the user
 				}
 				break
 			}
@@ -463,7 +463,7 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' {
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methodName, methodType)
 				if err != nil {
-					shutdown(true) // any error message will already have been displayed to the user
+					Shutdown(true) // any error message will already have been displayed to the user
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)

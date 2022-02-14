@@ -1,9 +1,10 @@
-/* Jacobin VM -- A Java virtual machine
- * © Copyright 2021 by Andrew Binstock. All rights reserved
- * Licensed under Mozilla Public License 2.0 (MPL-2.0)
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"io/ioutil"
@@ -126,7 +127,7 @@ func TestShowVersionMessage(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(global)
-	args := []string{"jacobin", "-showversion", "main.clas"}
+	args := []string{"jacobin", "-showversion", " clas"}
 
 	_ = HandleCli(args, &global)
 
@@ -185,7 +186,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 
-	args := []string{"jacobin", "-verbose:info", "main.class"}
+	args := []string{"jacobin", "-verbose:info", " class"}
 	_ = HandleCli(args, &global)
 
 	// reset stdout and stderr to what they were before redirection
@@ -211,7 +212,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:fine", "main.class"}
+	args = []string{"jacobin", "-verbose:fine", " class"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
@@ -236,7 +237,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:finest", "main.class"}
+	args = []string{"jacobin", "-verbose:finest", " class"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
@@ -261,7 +262,7 @@ func TestChangeLoggingLevels(t *testing.T) {
 	os.Stderr = w
 
 	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:class", "main.class"}
+	args = []string{"jacobin", "-verbose:class", " class"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
@@ -341,7 +342,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	args := []string{"jacobin", "--dry-run", "main.class"}
+	args := []string{"jacobin", "--dry-run", " class"}
 	_ = HandleCli(args, &global)
 
 	// restore stderr to what it was before
@@ -390,19 +391,19 @@ func TestFoundClassFileWithNoArgs(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stdout = w
 
-	args := []string{"jacobin", "main.class"}
+	args := []string{"jacobin", "a.class"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if global.StartingClass != "main.class" {
-		t.Error("main.class not identified as starting class. Got: " +
+	if global.StartingClass != "a.class" {
+		t.Error(" class not identified as starting class. Got: " +
 			global.StartingClass)
 	}
 
 	if len(global.AppArgs) != 0 {
-		t.Error("app arg to main.class should be empty, but got: " +
+		t.Error("app arg to  class should be empty, but got: " +
 			global.AppArgs[0])
 	}
 }
@@ -419,19 +420,19 @@ func TestClassFileColonIFilePath(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stdout = w
 
-	args := []string{"jacobin", "d:main.class"}
+	args := []string{"jacobin", "d:a.class"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if global.StartingClass != "d:main.class" {
-		t.Error("d:main.class not identified as starting class. Got: " +
+	if global.StartingClass != "d:a.class" {
+		t.Error("d:a.class not identified as starting class. Got: " +
 			global.StartingClass)
 	}
 
 	if len(global.AppArgs) != 0 {
-		t.Error("app arg to main.class should be empty, but got: " +
+		t.Error("app arg to  class should be empty, but got: " +
 			global.AppArgs[0])
 	}
 }
@@ -445,19 +446,19 @@ func TestFoundClassFileWithArgs(t *testing.T) {
 	_, w, _ := os.Pipe()
 	os.Stdout = w
 
-	args := []string{"jacobin", "main.class", "appArg1"}
+	args := []string{"jacobin", "a.class", "appArg1"}
 	_ = HandleCli(args, &global)
 
 	_ = w.Close()
 	os.Stdout = normalStdout
 
-	if global.StartingClass != "main.class" {
-		t.Error("main.class not identified as starting class. Got: " +
+	if global.StartingClass != "a.class" {
+		t.Error("a.class not identified as starting class. Got: " +
 			global.StartingClass)
 	}
 
 	if global.AppArgs[0] != "appArg1" {
-		t.Error("app arg to main.class not correct. Got: " +
+		t.Error("app arg to  class not correct. Got: " +
 			global.AppArgs[0])
 	}
 }

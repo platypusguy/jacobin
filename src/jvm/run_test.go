@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"io/ioutil"
@@ -477,9 +477,9 @@ func TestIdivDivideByZero(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 
 	// need to create a thread to catch the exception
-	mainThread := thread.CreateThread(0)
-	mainThread.Stack = fs
-	mainThread.ID = thread.AddThreadToTable(&mainThread, g.Threads)
+	hread := thread.CreateThread(0)
+	hread.Stack = fs
+	hread.ID = thread.AddThreadToTable(&hread, g.Threads)
 	_ = runFrame(fs)
 
 	// restore stderr and stdout to what they were before

@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package main
+package jvm
 
 import (
 	"fmt"
@@ -14,14 +14,14 @@ import (
 )
 
 func instantiateClass(classname string) (interface{}, error) {
-	log.Log("Instantiating class: "+classname, log.FINEST)
+	_ = log.Log("Instantiating class: "+classname, log.FINEST)
 recheck:
 	k, present := classloader.Classes[classname] // TODO: Put a mutex around this the same one used for writing.
 	if k.Status == 'I' {                         // the class is being loaded
 		goto recheck // recheck the status until it changes (i.e., until the class is loaded)
 	} else if !present { // the class has not yet been loaded
 		if classloader.LoadClassFromNameOnly(classname) != nil {
-			log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
+			_ = log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
 		}
 	}
 
