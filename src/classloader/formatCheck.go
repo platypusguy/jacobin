@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -233,24 +233,24 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 
 			/* TODO: REVISIT: with java.lang.String the following code works OK
-			with the three interfaces defined in klass.interfaces[], but Iterable
-			is not among those classes and yet it's got a interfaceRef CP entry.
-			So, not presently sure how you validate that the interfaceRef CP entry
-			points to an interface. So for the nonce, the following code is commented out.
+			   with the three interfaces defined in klass.interfaces[], but Iterable
+			   is not among those classes and yet it's got a interfaceRef CP entry.
+			   So, not presently sure how you validate that the interfaceRef CP entry
+			   points to an interface. So for the nonce, the following code is commented out.
 
-			// now that we have the UTF8 index for the interface reference,
-			// check whether it's in our list of interfaces for this class.
-			matchesInterface := false
-			for i := range klass.interfaces {
-				if klass.interfaces[i] == utfIndex {
-					matchesInterface = true
-				}
-			}
+			   // now that we have the UTF8 index for the interface reference,
+			   // check whether it's in our list of interfaces for this class.
+			   matchesInterface := false
+			   for i := range klass.interfaces {
+			   	if klass.interfaces[i] == utfIndex {
+			   		matchesInterface = true
+			   	}
+			   }
 
-			if ! matchesInterface {
-				return cfe("Interface Ref at CP entry #"+ strconv.Itoa(j) +
-					" does not match to any interface in this class.")
-			}
+			   if ! matchesInterface {
+			   	return cfe("Interface Ref at CP entry #"+ strconv.Itoa(j) +
+			   		" does not match to any interface in this class.")
+			   }
 			*/
 
 			nAndTIndex := interfaceRef.nameAndTypeIndex
