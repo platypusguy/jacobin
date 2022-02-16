@@ -34,6 +34,10 @@ import (
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
+// To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
+// This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
+// we're running the tests on. The folder which contains the test class should be specified in the environmental
+// variable JACOBIN_TESTDATA (without a terminating slash).
 func initVarsHello2() error {
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
@@ -57,6 +61,10 @@ func initVarsHello2() error {
 }
 
 func TestRunHello2(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello2()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
@@ -112,15 +120,15 @@ func TestRunHello2(t *testing.T) {
 }
 
 func TestRunHello2VerboseClass(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello2()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
@@ -173,15 +181,15 @@ func TestRunHello2VerboseClass(t *testing.T) {
 }
 
 func TestRunHello2VerboseFinest(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello2()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
@@ -234,15 +242,15 @@ func TestRunHello2VerboseFinest(t *testing.T) {
 }
 
 func TestRunHello2TraceInst(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello2()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
