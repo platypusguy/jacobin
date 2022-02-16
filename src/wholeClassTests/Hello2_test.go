@@ -39,6 +39,9 @@ import (
 // we're running the tests on. The folder which contains the test class should be specified in the environmental
 // variable JACOBIN_TESTDATA (without a terminating slash).
 func initVarsHello2() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = ""
