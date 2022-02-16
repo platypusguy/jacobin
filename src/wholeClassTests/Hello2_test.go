@@ -34,7 +34,8 @@ import (
  */
 
 func initVarsHello2() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = ""
 	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello2.class" // the class to test
 	_APP_ARGS = ""
@@ -49,8 +50,10 @@ func TestRunHello2(t *testing.T) {
 	}
 
 	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	if _JACOBIN == "" {
+		t.Fatalf("Test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		t.Fatalf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
