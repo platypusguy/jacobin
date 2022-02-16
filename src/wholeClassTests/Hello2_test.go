@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -33,27 +34,37 @@ import (
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
-func initVarsHello2() {
+func initVarsHello2() error {
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = ""
-	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello2.class" // the class to test
+	_TESTCLASS = "Hello2.class" // the class to test
 	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+	if _, err := os.Stat(testClass); err != nil {
+		return fmt.Errorf("nissing class to test, which was specified as %s", testClass)
+	} else {
+		_TESTCLASS = testClass
+	}
+	return nil
 }
 
 func TestRunHello2(t *testing.T) {
-	initVarsHello2()
+	initErr := initVarsHello2()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
-	}
-
-	// test that executable exists
-	if _JACOBIN == "" {
-		t.Fatalf("Test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
-	} else if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Fatalf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
@@ -101,7 +112,10 @@ func TestRunHello2(t *testing.T) {
 }
 
 func TestRunHello2VerboseClass(t *testing.T) {
-	initVarsHello2()
+	initErr := initVarsHello2()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -159,7 +173,10 @@ func TestRunHello2VerboseClass(t *testing.T) {
 }
 
 func TestRunHello2VerboseFinest(t *testing.T) {
-	initVarsHello2()
+	initErr := initVarsHello2()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -217,7 +234,10 @@ func TestRunHello2VerboseFinest(t *testing.T) {
 }
 
 func TestRunHello2TraceInst(t *testing.T) {
-	initVarsHello2()
+	initErr := initVarsHello2()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
