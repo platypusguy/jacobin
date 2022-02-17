@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -21,16 +22,46 @@ import (
  * These tests check the output.
  */
 
-func initVarsClientVersion() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+// To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
+// This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
+// we're running the tests on. The folder which contains the test class should be specified in the environmental
+// variable JACOBIN_TESTDATA (without a terminating slash).
+func initVarsClientVersion() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
+
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
+	_JVM_ARGS = ""
+	_TESTCLASS = ""
+	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	if _TESTCLASS != "" {
+		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+		if _, err := os.Stat(testClass); err != nil {
+			return fmt.Errorf("missing class to test, which was specified as %s", testClass)
+		} else {
+			_TESTCLASS = testClass
+		}
+	}
+	return nil
+
 }
 
 func TestRunClientVersion(t *testing.T) {
-	initVarsClientVersion()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
+	}
+
+	initErr := initVarsClientVersion()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 
 	// test that executable exists
@@ -38,7 +69,7 @@ func TestRunClientVersion(t *testing.T) {
 		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	cmd = exec.Command(_JACOBIN, "-client", "-version")
+	cmd := exec.Command(_JACOBIN, "-client", "-version")
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()

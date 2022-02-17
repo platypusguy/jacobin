@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -37,17 +38,40 @@ import (
 // }
 // }
 //
-// These tests check the output with various options for verbosity and features set on the command line.
+// To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
+// This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
+// we're running the tests on. The folder which contains the test class should be specified in the environmental
+// variable JACOBIN_TESTDATA (without a terminating slash).
+func initVarsHello3() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
 
-func initVarsHello3() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = ""
-	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\Hello3.class" // the class to test
+	_TESTCLASS = "Hello3.class" // the class to test
 	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+	if _, err := os.Stat(testClass); err != nil {
+		return fmt.Errorf("nissing class to test, which was specified as %s", testClass)
+	} else {
+		_TESTCLASS = testClass
+	}
+	return nil
 }
 
 func TestRunHello3(t *testing.T) {
-	initVarsHello3()
+	initErr := initVarsHello3()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -106,7 +130,10 @@ func TestRunHello3(t *testing.T) {
 }
 
 func TestRunHello3VerboseClass(t *testing.T) {
-	initVarsHello3()
+	initErr := initVarsHello3()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -166,7 +193,10 @@ func TestRunHello3VerboseClass(t *testing.T) {
 }
 
 func TestRunHello3VerboseFinest(t *testing.T) {
-	initVarsHello3()
+	initErr := initVarsHello3()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
@@ -226,7 +256,10 @@ func TestRunHello3VerboseFinest(t *testing.T) {
 }
 
 func TestRunHello3TraceInst(t *testing.T) {
-	initVarsHello3()
+	initErr := initVarsHello3()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
+	}
 	var cmd *exec.Cmd
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)

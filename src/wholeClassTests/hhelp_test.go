@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -21,25 +22,48 @@ import (
  * These tests check the output.
  */
 
-func initVarsHhelp() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+func initVarsHhelp() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
+
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = "--help"
-	_TESTCLASS = ""
+	_TESTCLASS = "" // the class to test
 	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	if _TESTCLASS != "" {
+		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+		if _, err := os.Stat(testClass); err != nil {
+			return fmt.Errorf("nissing class to test, which was specified as %s", testClass)
+		} else {
+			_TESTCLASS = testClass
+		}
+	}
+	return nil
 }
 
 func TestRunHhelp(t *testing.T) {
-	initVarsHhelp()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
+	}
+
+	initErr := initVarsHhelp()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
 		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
+	var cmd *exec.Cmd
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
