@@ -68,6 +68,10 @@ func initVarsHello3() error {
 }
 
 func TestRunHello3(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello3()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
@@ -130,15 +134,15 @@ func TestRunHello3(t *testing.T) {
 }
 
 func TestRunHello3VerboseClass(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello3()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
@@ -193,15 +197,15 @@ func TestRunHello3VerboseClass(t *testing.T) {
 }
 
 func TestRunHello3VerboseFinest(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello3()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
@@ -256,15 +260,15 @@ func TestRunHello3VerboseFinest(t *testing.T) {
 }
 
 func TestRunHello3TraceInst(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
 	initErr := initVarsHello3()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
 	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
 
 	// test that executable exists
 	if _, err := os.Stat(_JACOBIN); err != nil {
