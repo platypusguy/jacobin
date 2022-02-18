@@ -49,16 +49,18 @@ func initVarsHello2() error {
 	_APP_ARGS = ""
 
 	if _JACOBIN == "" {
-		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+		return fmt.Errorf("missing Jacobin executable. Please specify it in JACOBIN_EXE")
 	} else if _, err := os.Stat(_JACOBIN); err != nil {
 		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
 	}
 
-	testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
-	if _, err := os.Stat(testClass); err != nil {
-		return fmt.Errorf("nissing class to test, which was specified as %s", testClass)
-	} else {
-		_TESTCLASS = testClass
+	if _TESTCLASS != "" {
+		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+		if _, err := os.Stat(testClass); err != nil {
+			return fmt.Errorf("missing class to test, which was specified as %s", testClass)
+		} else {
+			_TESTCLASS = testClass
+		}
 	}
 	return nil
 }

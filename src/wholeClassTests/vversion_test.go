@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -20,25 +21,47 @@ import (
  *     which should print info about the JVM to stdout (which go test reroutes to stderr (dang it!))
  */
 
-func initVarsVversion() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+// To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
+// This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
+// we're running the tests on. The folder which contains the test class should be specified in the environmental
+// variable JACOBIN_TESTDATA (without a terminating slash).
+func initVarsVversion() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
+
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = "--version"
-	_TESTCLASS = "" // the class to test
+	_TESTCLASS = ""
 	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("missing  Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	if _TESTCLASS != "" {
+		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+		if _, err := os.Stat(testClass); err != nil {
+			return fmt.Errorf("missing class to test, which was specified as %s", testClass)
+		} else {
+			_TESTCLASS = testClass
+		}
+	}
+	return nil
 }
 
 func TestRunVversion(t *testing.T) {
-	initVarsVersion()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
 
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	initErr := initVarsVversion()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
+	var cmd *exec.Cmd
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
@@ -60,7 +83,7 @@ func TestRunVversion(t *testing.T) {
 		}
 	}
 
-	stderr, err := cmd.StderrPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,12 +93,12 @@ func TestRunVversion(t *testing.T) {
 		t.Errorf("Got error running Jacobin: %s", err.Error())
 	}
 
-	slurpErr, _ := io.ReadAll(stderr) // the output is written to stderr, which go test reroutes to stderr
-	if len(slurpErr) == 0 {
-		t.Errorf("Expected output to stderr, but got none")
+	slurpOut, _ := io.ReadAll(stdout) // the output is written to stderr, which go test reroutes to stderr
+	if len(slurpOut) == 0 {
+		t.Errorf("Expected output to stdout, but got none")
 	}
 
-	msg := string(slurpErr)
+	msg := string(slurpOut)
 	if !strings.HasPrefix(msg, "Jacobin VM") {
 		t.Errorf("Output did not begin with Jacobin name, instead: %s", string(msg))
 	}

@@ -7,6 +7,7 @@
 package wholeClassTests
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -37,25 +38,48 @@ import (
 //
 // These tests check the output with various options for verbosity and features set on the command line.
 
-func initVarsNanoPrint() {
-	_JACOBIN = "d:\\GoogleDrive\\Dev\\jacobin\\src\\jacobin.exe"
+// To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
+// This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
+// we're running the tests on. The folder which contains the test class should be specified in the environmental
+// variable JACOBIN_TESTDATA (without a terminating slash).
+func initVarsNanoPrint() error {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		return fmt.Errorf("test not run due to -short")
+	}
+
+	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
 	_JVM_ARGS = ""
-	_TESTCLASS = "d:\\GoogleDrive\\Dev\\jacobin\\testdata\\NanoPrint.class" // the class to test
+	_TESTCLASS = "NanoPrint.class" // the class to test
 	_APP_ARGS = ""
+
+	if _JACOBIN == "" {
+		return fmt.Errorf("test failure due to missing Jacobin executable. Please specify it in JACOBIN_EXE")
+	} else if _, err := os.Stat(_JACOBIN); err != nil {
+		return fmt.Errorf("missing Jacobin executable, which was specified as %s", _JACOBIN)
+	}
+
+	if _TESTCLASS != "" {
+		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
+		if _, err := os.Stat(testClass); err != nil {
+			return fmt.Errorf("missing class to test, which was specified as %s", testClass)
+		} else {
+			_TESTCLASS = testClass
+		}
+	}
+	return nil
 }
 
 func TestRunNanoprint(t *testing.T) {
-	initVarsNanoPrint()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
 
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	initErr := initVarsNanoPrint()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
+
+	var cmd *exec.Cmd
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
@@ -112,17 +136,16 @@ func TestRunNanoprint(t *testing.T) {
 }
 
 func TestRunNanoPrintVerboseClass(t *testing.T) {
-	initVarsNanoPrint()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
 
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	initErr := initVarsNanoPrint()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
+
+	var cmd *exec.Cmd
 
 	_JVM_ARGS = "-verbose:class"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
@@ -168,17 +191,16 @@ func TestRunNanoPrintVerboseClass(t *testing.T) {
 }
 
 func TestRunNanoPrintVerboseFinest(t *testing.T) {
-	initVarsNanoPrint()
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
 
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	initErr := initVarsNanoPrint()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
+
+	var cmd *exec.Cmd
 
 	_JVM_ARGS = "-verbose:finest"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
@@ -224,16 +246,16 @@ func TestRunNanoPrintVerboseFinest(t *testing.T) {
 }
 
 func TestRunNanoPrintTraceInst(t *testing.T) {
-	var cmd *exec.Cmd
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
 
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
+	initErr := initVarsNanoPrint()
+	if initErr != nil {
+		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
+
+	var cmd *exec.Cmd
 
 	_JVM_ARGS = "-trace:inst"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
