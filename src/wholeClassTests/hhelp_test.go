@@ -41,7 +41,7 @@ func initVarsHhelp() error {
 	if _TESTCLASS != "" {
 		testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + _TESTCLASS
 		if _, err := os.Stat(testClass); err != nil {
-			return fmt.Errorf("nissing class to test, which was specified as %s", testClass)
+			return fmt.Errorf("missing class to test, which was specified as %s", testClass)
 		} else {
 			_TESTCLASS = testClass
 		}
