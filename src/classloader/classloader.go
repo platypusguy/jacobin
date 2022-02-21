@@ -176,51 +176,28 @@ func cfe(msg string) error {
 	return errors.New(errMsg)
 }
 
-// // LoadBaseClasses loads a basic set of classes that are specified in the file
-// // classes\baseclasslist.txt, which is found in JACOBIN_HOME. It's similar to
-// // classlist file in the JDK, except shorter (for the nonce)
-// func LoadBaseClasses(global *globals.Globals) {
-// 	classList := global.JacobinHome + "classes" + string(os.PathSeparator) + "baseclasslist.txt"
-// 	classList = util.ConvertToPlatformPathSeparators(classList)
-// 	file, err := os.Open(classList)
-// 	if err != nil {
-// 		_ = log.Log("goDid not find baseclasslist.txt in JACOBIN_HOME ("+classList+")", log.WARNING)
-// 		_ = file.Close()
-// 	} else {
-// 		defer file.Close()
-//
-// 		scanner := bufio.NewScanner(file)
-// 		for scanner.Scan() {
-// 			rawName := scanner.Text()
-// 			fileName := util.ConvertInternalClassNameToFilename(rawName)
-// 			name := util.ConvertToPlatformPathSeparators(
-// 				globals.JacobinHome() + "classes" + string(os.PathSeparator) + fileName)
-// 			_, _ = LoadClassFromFile(BootstrapCL, name)
-// 			// LoadReferencedClasses(BootstrapCL, rawName)
-// 		}
-// 		err = nil // used only to be able to add a breakpoint in debugger.
-// 	}
-// }
-
+// LoadBaseClasses loads a basic set of classes that are found in
+// JACOBIN_HOME/classes directory. As of Jacobin 0.1.0, that directory
+// consists of roughly 1400 classes from the JDK.
 func LoadBaseClasses(global *globals.Globals) {
 	if len(global.JacobinHome) == 0 {
 		_ = log.Log("JACOBIN_HOME not specified. Program may fail.", log.WARNING)
 	}
 
 	err := filepath.WalkDir(globals.JacobinHome()+"classes", walk)
-	// LoadClassFromFile(BootstrapCL, walk)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error in filepath.Walkdir: %s", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "Error in filepath.Walkdir: %s", err.Error())
 	}
 }
 
+// walk the directory and load every file (which is known to be a class)
 func walk(s string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
 	}
-	if !d.IsDir() {
-		LoadClassFromFile(BootstrapCL, s)
-		// println(s)
+	if !d.IsDir() && strings.HasSuffix(s, ".class") {
+		// Error is discarded b/c it's not clear yet a given class is needed.
+		_, _ = LoadClassFromFile(BootstrapCL, s)
 	}
 	return nil
 }
