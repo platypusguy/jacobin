@@ -314,7 +314,7 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 		return "", fmt.Errorf("java.lang.classNotFoundException")
 	}
 
-	_ = log.Log(filename+" read", log.FINE)
+	// _ = log.Log(filename+" read", log.FINE)
 
 	return ParseAndPostClass(cl, filename, rawBytes)
 }

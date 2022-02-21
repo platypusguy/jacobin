@@ -14,7 +14,7 @@ import (
 )
 
 func instantiateClass(classname string) (interface{}, error) {
-	_ = log.Log("Instantiating class: "+classname, log.FINEST)
+	_ = log.Log("Instantiating class: "+classname, log.FINE)
 recheck:
 	k, present := classloader.Classes[classname] // TODO: Put a mutex around this the same one used for writing.
 	if k.Status == 'I' {                         // the class is being loaded
