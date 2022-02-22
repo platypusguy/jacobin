@@ -18,6 +18,7 @@ import (
 	"jacobin/thread"
 	"jacobin/util"
 	"strconv"
+	"unsafe"
 )
 
 var MainThread thread.ExecThread
@@ -547,7 +548,10 @@ func runFrame(fs *list.List) error {
 				_ = log.Log("Error instantiating class: "+className, log.SEVERE)
 				return errors.New("Error instantiating class")
 			}
-			push(f, ref.(int64))
+
+			// to push the object reference as an int64, it must first be converted to an unsafe pointer
+			rawRef := uintptr(unsafe.Pointer(ref))
+			push(f, int64(rawRef))
 
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
