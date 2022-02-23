@@ -50,13 +50,13 @@ recheck:
 	// at this point the class has been loaded into the method area (Classes).
 	k, _ = classloader.Classes[classname]
 
-	var obj Object
+	obj := Object{
+		klass:  k,
+		mark:   &MarkWord{m: nil},
+		fields: nil,
+	}
+
 	if len(k.Data.Fields) > 0 {
-		obj = Object{
-			klass:  k,
-			mark:   &MarkWord{m: nil},
-			fields: nil,
-		}
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
 			initializeField(f, &k.Data.CP, classname, &obj)
