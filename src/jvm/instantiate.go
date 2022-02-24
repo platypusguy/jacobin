@@ -65,7 +65,7 @@ recheck:
 	return &obj, nil
 }
 
-// the only fields allocated during class instantiation are class fields and instance fields--
+// the only fields allocated during class instantiation are instance fields--
 // method-local fields are created on the stack during method execution.
 // The allocated fields are in a structure that starts with a header area containing fields
 // collectively referred to as oops: ordinary object pointers. These include two fields:
@@ -77,6 +77,7 @@ func initializeField(f classloader.Field, cp *classloader.CPool, cn string, obj 
 	name := cp.Utf8Refs[int(f.Name)]
 	desc := cp.Utf8Refs[int(f.Desc)]
 	var attr string = ""
+	var value int64
 	if len(f.Attributes) > 0 {
 		for i := 0; i < len(f.Attributes); i++ {
 			attr = cp.Utf8Refs[int(f.Attributes[i].AttrName)]
@@ -86,9 +87,17 @@ func initializeField(f classloader.Field, cp *classloader.CPool, cn string, obj 
 				// // valueType := cp.CpIndex[valueIndex].Type
 				// // valueSlot := cp.CpIndex[valueIndex].Slot
 
+			} else {
+				value = 0
 			}
+
 		}
 	}
+	// append field to the object.fields slice TODO: check that this is a good solution.
+	obj.fields = append(obj.fields, Field{
+		metadata: classloader.Field{},
+		value:    value,
+	})
 	// CURR: Resume here, entering the new field into obj.
 	_, _ = fmt.Fprintf(os.Stdout, "Class: %s, Field to initialize: %s, type: %s\n", cn, name, desc)
 	if attr != "" {
