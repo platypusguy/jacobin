@@ -16,19 +16,8 @@ import (
 // The data structures and functions related to JVM frames
 
 type Number interface {
-	~int | ~int64 | ~float64
+	int | int64 | float64
 }
-
-type Reference interface {
-	*string | *int
-}
-
-type JVMitem interface {
-	Number | Reference
-}
-
-// // type opStack []any
-// type opStack = []Number
 
 // Frame is the fundamental execution environment for a single function/method call.
 // Note that the operand stack (opStack) is made up of int64 items, rather than the JVM-
