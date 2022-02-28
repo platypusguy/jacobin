@@ -29,16 +29,18 @@ func newFrame(code byte) frames.Frame {
 	return *f
 }
 
+var zero = int64(0)
+
 // ---- tests ----
 
 // test load of reference in locals[index] on to stack
 func TestAload(t *testing.T) {
 	f := newFrame(ALOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
@@ -76,7 +78,7 @@ func TestAload0(t *testing.T) {
 // test load of reference in locals[1] on to stack
 func TestAload1(t *testing.T) {
 	f := newFrame(ALOAD_1)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 0x1234561) // put value in locals[1]
 
 	fs := frames.CreateFrameStack()
@@ -94,8 +96,8 @@ func TestAload1(t *testing.T) {
 // test load of reference in locals[2] on to stack
 func TestAload2(t *testing.T) {
 	f := newFrame(ALOAD_2)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 0x1234562) // put value in locals[2]
 
 	fs := frames.CreateFrameStack()
@@ -113,9 +115,9 @@ func TestAload2(t *testing.T) {
 // test load of reference in locals[3] on to stack
 func TestAload3(t *testing.T) {
 	f := newFrame(ALOAD_3)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 0x1234563) // put value in locals[3]
 
 	fs := frames.CreateFrameStack()
@@ -134,11 +136,12 @@ func TestAload3(t *testing.T) {
 func TestAstore(t *testing.T) {
 	f := newFrame(ASTORE)
 	f.Meth = append(f.Meth, 0x03) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -155,8 +158,8 @@ func TestAstore(t *testing.T) {
 // test store of reference from stack into locals[0]
 func TestAstore0(t *testing.T) {
 	f := newFrame(ASTORE_0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22220)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22220))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -173,9 +176,9 @@ func TestAstore0(t *testing.T) {
 // test store of reference from stack into locals[1]
 func TestAstore1(t *testing.T) {
 	f := newFrame(ASTORE_1)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22221)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22221))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -192,10 +195,10 @@ func TestAstore1(t *testing.T) {
 // test store of reference from stack into locals[2]
 func TestAstore2(t *testing.T) {
 	f := newFrame(ASTORE_2)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22222)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22222))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -212,11 +215,11 @@ func TestAstore2(t *testing.T) {
 // test store of reference from stack into locals[3]
 func TestAstore3(t *testing.T) {
 	f := newFrame(ASTORE_3)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -249,11 +252,11 @@ func TestBipush(t *testing.T) {
 func TestDload(t *testing.T) {
 	f := newFrame(DLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -274,11 +277,11 @@ func TestDload(t *testing.T) {
 func TestDstore(t *testing.T) {
 	f := newFrame(DSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -300,7 +303,7 @@ func TestDstore(t *testing.T) {
 // DUP: Push a duplicate of the top item on the stack
 func TestDup(t *testing.T) {
 	f := newFrame(DUP)
-	push(&f, 0x22223)
+	push(&f, int64(0x22223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -320,9 +323,9 @@ func TestDup(t *testing.T) {
 // DUP_X1: Duplicate the top stack value and insert two values down
 func TestDupX1(t *testing.T) {
 	f := newFrame(DUP_X1)
-	push(&f, 0x3)
-	push(&f, 0x2)
-	push(&f, 0x1)
+	push(&f, int64(0x3))
+	push(&f, int64(0x2))
+	push(&f, int64(0x1))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -344,11 +347,11 @@ func TestDupX1(t *testing.T) {
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -369,11 +372,11 @@ func TestFload(t *testing.T) {
 func TestFstore(t *testing.T) {
 	f := newFrame(FSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -422,8 +425,8 @@ func TestGotoBackward(t *testing.T) {
 
 func TestIadd(t *testing.T) {
 	f := newFrame(IADD)
-	push(&f, 21)
-	push(&f, 22)
+	push(&f, int64(21))
+	push(&f, int64(22))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -439,8 +442,8 @@ func TestIadd(t *testing.T) {
 // IDIV: integer divide of.TOS-1 by tos, push result
 func TestIdiv(t *testing.T) {
 	f := newFrame(IDIV)
-	push(&f, 220)
-	push(&f, 22)
+	push(&f, int64(220))
+	push(&f, int64(22))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -471,8 +474,8 @@ func TestIdivDivideByZero(t *testing.T) {
 	f := newFrame(IDIV)
 	f.ClName = "testClass"
 	f.MethName = "testMethod"
-	push(&f, 220)
-	push(&f, 0)
+	push(&f, int64(220))
+	push(&f, int64(0))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 
@@ -501,8 +504,8 @@ func TestIdivDivideByZero(t *testing.T) {
 // ICMPGE: if integer compare val 1 >= val 2. Here test for = (next test for >)
 func TestIfIcmpge1(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
-	push(&f, 9)
-	push(&f, 9)
+	push(&f, int64(9))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -520,8 +523,8 @@ func TestIfIcmpge1(t *testing.T) {
 // ICMPGE: if integer compare val 1 >= val 2. Here test for > (previous test for =)
 func TestIfIcmpge2(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
-	push(&f, 9)
-	push(&f, 8)
+	push(&f, int64(9))
+	push(&f, int64(8))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -539,8 +542,8 @@ func TestIfIcmpge2(t *testing.T) {
 // ICMPGE: if integer compare val 1 >= val 2 //test when condition fails
 func TestIfIcmgetFail(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
-	push(&f, 8)
-	push(&f, 9)
+	push(&f, int64(8))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -558,8 +561,8 @@ func TestIfIcmgetFail(t *testing.T) {
 // ICMPGE: if integer compare val 1 >= val 2. Here test for > (previous test for =)
 func TestIfIcmple2(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
-	push(&f, 8)
-	push(&f, 9)
+	push(&f, int64(8))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -577,8 +580,8 @@ func TestIfIcmple2(t *testing.T) {
 // ICMPGT: jump if integer compare val 1 > val 2.
 func TestIfIcmpgt(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
-	push(&f, 9)
-	push(&f, 7)
+	push(&f, int64(9))
+	push(&f, int64(7))
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -596,8 +599,8 @@ func TestIfIcmpgt(t *testing.T) {
 // ICMPLT: if integer compare val 1 < val 2
 func TestIfIcmplt(t *testing.T) {
 	f := newFrame(IF_ICMPLT)
-	push(&f, 8)
-	push(&f, 9)
+	push(&f, int64(8))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -615,8 +618,8 @@ func TestIfIcmplt(t *testing.T) {
 // ICMPLT: if integer compare val 1 < val 2 //test when condition fails
 func TestIfIcmpltFail(t *testing.T) {
 	f := newFrame(IF_ICMPLT)
-	push(&f, 9)
-	push(&f, 9)
+	push(&f, int64(9))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -634,8 +637,8 @@ func TestIfIcmpltFail(t *testing.T) {
 // IF_ICMPEQ: jump if val1 == val2 (both ints, both popped off stack)
 func TestIfIcmpeq(t *testing.T) {
 	f := newFrame(IF_ICMPEQ)
-	push(&f, 9) // pushed two equal values, so jump should be made.
-	push(&f, 9)
+	push(&f, int64(9)) // pushed two equal values, so jump should be made.
+	push(&f, int64(9))
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -653,8 +656,8 @@ func TestIfIcmpeq(t *testing.T) {
 // IF_ICMPLE: if integer compare val 1 <>>= val 2 //test when condition fails
 func TestIfIcmletFail(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
-	push(&f, 9)
-	push(&f, 8)
+	push(&f, int64(9))
+	push(&f, int64(8))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -672,8 +675,8 @@ func TestIfIcmletFail(t *testing.T) {
 // IF_ICMPLE: if integer compare val 1 <= val 2. Here testing for =
 func TestIfIcmple1(t *testing.T) {
 	f := newFrame(IF_ICMPLE)
-	push(&f, 9)
-	push(&f, 9)
+	push(&f, int64(9))
+	push(&f, int64(9))
 	// note that the byte passed in newframe() is at f.Meth[0]
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -691,8 +694,8 @@ func TestIfIcmple1(t *testing.T) {
 // IF_ICMPNE: jump if val1 != val2 (both ints, both popped off stack)
 func TestIfIcmpne(t *testing.T) {
 	f := newFrame(IF_ICMPEQ)
-	push(&f, 9) // pushed two unequal values, so jump should be made.
-	push(&f, 8)
+	push(&f, int64(9)) // pushed two unequal values, so jump should be made.
+	push(&f, int64(8))
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -716,7 +719,7 @@ func TestIconstN1(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	var value int64 = pop(&f)
 	if value != -1 {
 		t.Errorf("ICONST_N1: Expected popped value to be -1, got: %d", value)
 	}
@@ -815,10 +818,10 @@ func TestIconst5(t *testing.T) {
 // IINC:
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 10) // initialize local variable[1] to 10
-	f.Meth = append(f.Meth, 1)      // increment local variable[1]
-	f.Meth = append(f.Meth, 27)     // increment it by 27
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
+	f.Meth = append(f.Meth, 1)             // increment local variable[1]
+	f.Meth = append(f.Meth, 27)            // increment it by 27
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -835,11 +838,11 @@ func TestIinc(t *testing.T) {
 func TestIload(t *testing.T) {
 	f := newFrame(ILOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -874,7 +877,7 @@ func TestIload0(t *testing.T) {
 
 func TestIload1(t *testing.T) {
 	f := newFrame(ILOAD_1)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 27)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -890,7 +893,7 @@ func TestIload1(t *testing.T) {
 
 func TestIload2(t *testing.T) {
 	f := newFrame(ILOAD_2)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 1)
 	f.Locals = append(f.Locals, 27)
 	fs := frames.CreateFrameStack()
@@ -907,7 +910,7 @@ func TestIload2(t *testing.T) {
 
 func TestIload3(t *testing.T) {
 	f := newFrame(ILOAD_3)
-	f.Locals = append(f.Locals, 0)
+	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, 1)
 	f.Locals = append(f.Locals, 2)
 	f.Locals = append(f.Locals, 27)
@@ -926,8 +929,8 @@ func TestIload3(t *testing.T) {
 // Test IMUL (pop 2 values, multiply them, push result)
 func TestImul(t *testing.T) {
 	f := newFrame(IMUL)
-	push(&f, 10)
-	push(&f, 7)
+	push(&f, int64(10))
+	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -943,11 +946,11 @@ func TestImul(t *testing.T) {
 // IRETURN: push an int on to the op stack of the calling method and exit the present method/frame
 func TestIreturn(t *testing.T) {
 	f0 := newFrame(0)
-	push(&f0, 20)
+	push(&f0, int64(20))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
 	f1 := newFrame(IRETURN)
-	push(&f1, 21)
+	push(&f1, int64(21))
 	fs.PushFront(&f1)
 	_ = runFrame(fs)
 	_ = frames.PopFrame(fs)
@@ -966,11 +969,11 @@ func TestIreturn(t *testing.T) {
 func TestIstore(t *testing.T) {
 	f := newFrame(DSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -988,8 +991,8 @@ func TestIstore(t *testing.T) {
 // ISTORE_0: Store integer from stack into localVar[0]
 func TestIstore0(t *testing.T) {
 	f := newFrame(ISTORE_0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 220)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(220))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1003,9 +1006,9 @@ func TestIstore0(t *testing.T) {
 
 func TestIstore1(t *testing.T) {
 	f := newFrame(ISTORE_1)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 221)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(221))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1019,10 +1022,10 @@ func TestIstore1(t *testing.T) {
 
 func TestIstore2(t *testing.T) {
 	f := newFrame(ISTORE_2)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 222)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(222))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1036,11 +1039,11 @@ func TestIstore2(t *testing.T) {
 
 func TestIstore3(t *testing.T) {
 	f := newFrame(ISTORE_3)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1054,8 +1057,8 @@ func TestIstore3(t *testing.T) {
 
 func TestIsub(t *testing.T) {
 	f := newFrame(ISUB)
-	push(&f, 10)
-	push(&f, 7)
+	push(&f, int64(10))
+	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1070,8 +1073,8 @@ func TestIsub(t *testing.T) {
 
 func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
-	push(&f, 21)
-	push(&f, 22)
+	push(&f, int64(21))
+	push(&f, int64(22))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1130,11 +1133,11 @@ func TestLconst1(t *testing.T) {
 func TestLload(t *testing.T) {
 	f := newFrame(LLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1154,8 +1157,8 @@ func TestLload(t *testing.T) {
 func TestLload0(t *testing.T) {
 	f := newFrame(LLOAD_0)
 
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[0]
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[1] // lload uses two local consecutive
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[0]
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[1] // lload uses two local consecutive
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1176,9 +1179,9 @@ func TestLload0(t *testing.T) {
 
 func TestLload1(t *testing.T) {
 	f := newFrame(LLOAD_1)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[1]
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[2] // lload uses two local consecutive
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[1]
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[2] // lload uses two local consecutive
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1199,10 +1202,10 @@ func TestLload1(t *testing.T) {
 
 func TestLload2(t *testing.T) {
 	f := newFrame(LLOAD_2)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[2]
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[3] // lload uses two local consecutive
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[2]
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[3] // lload uses two local consecutive
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1223,11 +1226,11 @@ func TestLload2(t *testing.T) {
 
 func TestLload3(t *testing.T) {
 	f := newFrame(LLOAD_3)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[3]
-	f.Locals = append(f.Locals, 0x12345678) // put value in locals[4] // lload uses two local consecutive
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[3]
+	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[4] // lload uses two local consecutive
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1249,8 +1252,8 @@ func TestLload3(t *testing.T) {
 // Test LMUL (pop 2 longs, multiply them, push result)
 func TestLmul(t *testing.T) {
 	f := newFrame(LMUL)
-	push(&f, 10)
-	push(&f, 7)
+	push(&f, int64(10))
+	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1267,11 +1270,11 @@ func TestLmul(t *testing.T) {
 func TestLstore(t *testing.T) {
 	f := newFrame(LSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	push(&f, 0x22223)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, int64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1293,9 +1296,9 @@ func TestLstore(t *testing.T) {
 // LSTORE_0: Store long from stack in localVar[0] and again in localVar[1]
 func TestLstore0(t *testing.T) {
 	f := newFrame(LSTORE_0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
-	push(&f, 0x12345678)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, int64(0x12345678))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1315,10 +1318,10 @@ func TestLstore0(t *testing.T) {
 
 func TestLstore1(t *testing.T) {
 	f := newFrame(LSTORE_1)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
-	push(&f, 0x12345678)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, int64(0x12345678))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1338,11 +1341,11 @@ func TestLstore1(t *testing.T) {
 
 func TestLstore2(t *testing.T) {
 	f := newFrame(LSTORE_2)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
-	push(&f, 0x12345678)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, int64(0x12345678))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1362,12 +1365,12 @@ func TestLstore2(t *testing.T) {
 
 func TestLstore3(t *testing.T) {
 	f := newFrame(LSTORE_3)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0)
-	f.Locals = append(f.Locals, 0) // LSTORE instructions fill two local variables (with the same value)
-	push(&f, 0x12345678)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
+	push(&f, int64(0x12345678))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1388,8 +1391,8 @@ func TestLstore3(t *testing.T) {
 // LSUB: Subtract two longs
 func TestLsub(t *testing.T) {
 	f := newFrame(LSUB)
-	push(&f, 10)
-	push(&f, 7)
+	push(&f, int64(10))
+	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
