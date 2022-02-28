@@ -67,6 +67,9 @@ var Hello2Bytes = []byte{
 }
 
 func TestHexHello2ValidClass(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
