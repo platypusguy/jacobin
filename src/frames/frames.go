@@ -15,6 +15,21 @@ import (
 
 // The data structures and functions related to JVM frames
 
+type Number interface {
+	~int | ~int64 | ~float64
+}
+
+type Reference interface {
+	*string | *int
+}
+
+type JVMitem interface {
+	Number | Reference
+}
+
+// // type opStack []any
+// type opStack = []Number
+
 // Frame is the fundamental execution environment for a single function/method call.
 // Note that the operand stack (opStack) is made up of int64 items, rather than the JVM-
 // prescribed 32-bit entries. The rationale is that longs and doubles can be stored
@@ -27,7 +42,7 @@ type Frame struct {
 	Meth     []byte             // bytecode of method
 	CP       *classloader.CPool // constant pool of class
 	Locals   []int64            // local variables
-	OpStack  []int64            // operand stack
+	OpStack  []interface{}      // operand stack
 	TOS      int                // top of the operand stack
 	PC       int                // program counter (index into the bytecode of the method)
 	Ftype    byte               // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
@@ -43,10 +58,11 @@ func CreateFrameStack() *list.List {
 // CreateFrame creates a raw frame and allocates an opStack of the passed-in size.
 func CreateFrame(opStackSize int) *Frame {
 	fram := Frame{}
+	// fram.OpStack = *new(opStack)
 
 	// allocate the operand stack
 	for j := 0; j < opStackSize; j++ {
-		fram.OpStack = append(fram.OpStack, int64(0))
+		fram.OpStack = append(fram.OpStack, 0)
 	}
 
 	// set top of stack to an empty stack

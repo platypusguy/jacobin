@@ -130,21 +130,21 @@ func runFrame(fs *list.List) error {
 		case NOP:
 			break
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
-			push(f, -1)
+			push(f, int64(-1))
 		case ICONST_0, // 	0x03	(push int 0 onto opStack)
 			LCONST_0: //   0x09     " " long 0
-			push(f, 0)
+			push(f, int64(0))
 		case ICONST_1, //  	0x04	(push int 1 onto opStack)
 			LCONST_1: //   0x0A     " " long 1
-			push(f, 1)
+			push(f, int64(1))
 		case ICONST_2: //   0x05	(push 2 onto opStack)
-			push(f, 2)
+			push(f, int64(2))
 		case ICONST_3: //   0x06	(push 3 onto opStack)
-			push(f, 3)
+			push(f, int64(3))
 		case ICONST_4: //   0x07	(push 4 onto opStack)
-			push(f, 4)
+			push(f, int64(4))
 		case ICONST_5: //   0x08	(push 5 onto opStack)
-			push(f, 5)
+			push(f, int64(5))
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
@@ -236,17 +236,20 @@ func runFrame(fs *list.List) error {
 			LADD: //  0x61     (add top 2 longs on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
-			push(f, i1+i2)
+			sum := add(i1, i2)
+			push(f, sum)
 		case ISUB, //  0x64	(subtract top 2 integers on operand stack, push result)
 			LSUB: //  0x65 (subtract top 2 longs on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
-			push(f, i1-i2)
+			diff := subtract(i1, i2)
+			push(f, diff)
 		case IMUL, //  0x68  	(multiply 2 integers on operand stack, push result)
 			LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
-			push(f, i1*i2)
+			product := multiply(i1, i2)
+			push(f, product)
 		case IDIV, //  0x6C
 			LDIV: //  0x6D   (divide tos-1 by tos)
 			val1 := pop(f)
@@ -257,11 +260,27 @@ func runFrame(fs *list.List) error {
 				val2 := pop(f)
 				push(f, val2/val1)
 			}
+		case INEG: //	0x74 	(negate an int)
+			val := pop(f)
+			val = val * (-1)
+			push(f, val)
+		case LNEG: //   0x75	(negate a long)
+			val := pop(f)
+			pop(f) // pop a second time because it's a long
+			val = val * (-1)
+			push(f, val)
+			push(f, val)
+		// case FNEG: //	0x76	(negate a float)
+		// 	val := float64(pop(f))
+		// 	val = val * (-1.0)
+		// 	push(f, val) // CURR: resume here. Consider making opStack []interface{c
+
 		case IINC: // 	0x84    (increment local variable by a constant)
-			localVarIndex := int(f.Meth[f.PC+1])
-			constAmount := int(f.Meth[f.PC+2])
+			localVarIndex := int64(f.Meth[f.PC+1])
+			constAmount := int64(f.Meth[f.PC+2])
 			f.PC += 2
-			f.Locals[localVarIndex] += int64(constAmount)
+			orig := f.Locals[localVarIndex]
+			f.Locals[localVarIndex] = orig + constAmount
 		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f)
 			val1 := pop(f)
@@ -283,7 +302,9 @@ func runFrame(fs *list.List) error {
 		case IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
 			val2 := pop(f)
 			val1 := pop(f)
-			if val1 < val2 { // if comp succeeds, next 2 bytes hold instruction index
+			val1a := val1
+			val2a := val2
+			if val1a < val2a { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
 			} else {
@@ -484,7 +505,7 @@ func runFrame(fs *list.List) error {
 				}
 
 				// pop the parameters off the present stack and put them in the new frame's locals
-				var argList []int64
+				var argList []interface{}
 				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
 					for i := 0; i < len(paramsToPass); i++ {
@@ -498,7 +519,7 @@ func runFrame(fs *list.List) error {
 
 				destLocal := 0
 				for j := len(argList) - 1; j >= 0; j-- {
-					fram.Locals[destLocal] = argList[j]
+					fram.Locals[destLocal] = argList[j].(int64)
 					destLocal += 1
 				}
 				fram.TOS = -1
@@ -566,18 +587,31 @@ func runFrame(fs *list.List) error {
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
 func pop(f *frames.Frame) int64 {
-	value := f.OpStack[f.TOS]
+	value := f.OpStack[f.TOS].(int64)
 	f.TOS -= 1
 	return value
 }
 
 // returns the value at the top of the stack without popping it off.
-func peek(f *frames.Frame) int64 {
+func peek(f *frames.Frame) interface{} {
 	return f.OpStack[f.TOS]
 }
 
 // push onto the operand stack
-func push(f *frames.Frame, i int64) {
+func push(f *frames.Frame, x interface{}) {
 	f.TOS += 1
-	f.OpStack[f.TOS] = i
+	f.OpStack[f.TOS] = x
+}
+
+func add[N frames.Number](num1, num2 N) N {
+	return num1 + num2
+}
+
+// multiply two numbers
+func multiply[N frames.Number](num1, num2 N) N {
+	return num1 * num2
+}
+
+func subtract[N frames.Number](num1, num2 N) N {
+	return num1 - num2
 }

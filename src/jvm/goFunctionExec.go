@@ -63,7 +63,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	var argList []int64
 	for i := 0; i < paramSlots; i++ {
 		arg := pop(f)
-		argList = append(argList, arg)
+		intArg := arg
+		argList = append(argList, intArg)
 	}
 	for j := len(argList) - 1; j >= 0; j-- {
 		push(gf, argList[j])
