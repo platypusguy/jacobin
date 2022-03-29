@@ -68,5 +68,8 @@ A more-than-minimal JVM written in Go.
 ## Garbage Collection
 GC is handled by the golang runtime, which has its own GC
 
+## Understanding the Code
+A detailed roadmap to the code base can be found [in the wiki](https://github.com/platypusguy/jacobin/wiki/Roadmap-to-Jacobin-source-code).
+
 # Thanks
 The project's [home page](https://jacobin.org/) carries a lengthy note at the bottom that expresses our thanks to vendors and programmers who have made the Jacobin project possible. They are many and we are deeply grateful to them.
