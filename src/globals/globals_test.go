@@ -29,8 +29,9 @@ func TestJavaHomeFormat(t *testing.T) {
 	_ = os.Setenv("JAVA_HOME", "foo/bar")
 	InitJavaHome()
 	ret := JavaHome()
-	if ret != "foo\\bar\\" {
-		t.Errorf("Expecting a JAVA_HOME of 'foo\\bar\\', got: %s", ret)
+	expectedPath := "foo" + string(os.PathSeparator) + "bar" + string(os.PathSeparator)
+	if ret != expectedPath {
+		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
 	_ = os.Setenv("JAVA_HOME", origJavaHome)
 }
@@ -41,8 +42,9 @@ func TestJacobinHomeFormat(t *testing.T) {
 	_ = os.Setenv("JACOBIN_HOME", "foo/bar")
 	InitJacobinHome()
 	ret := JacobinHome()
-	if ret != "foo\\bar\\" {
-		t.Errorf("Expecting a JACOBIN_HOME of 'foo\\bar\\', got: %s", ret)
+	expectedPath := "foo" + string(os.PathSeparator) + "bar" + string(os.PathSeparator)
+	if ret != expectedPath {
+		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
 	}
 	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
 }

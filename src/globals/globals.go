@@ -9,6 +9,7 @@ package globals
 import (
 	"container/list"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -93,13 +94,7 @@ type Option struct {
 func InitJacobinHome() {
 	jacobinHome := os.Getenv("JACOBIN_HOME")
 	if jacobinHome != "" {
-		// if the JacobinHome doesn't end in a backward slash, add one.
-		if !(strings.HasSuffix(jacobinHome, "\\") ||
-			strings.HasSuffix(jacobinHome, "/")) {
-			jacobinHome = jacobinHome + "\\"
-		}
-		// replace forward slashes in JacobinHome with backward slashes
-		jacobinHome = strings.ReplaceAll(jacobinHome, "/", "\\")
+		jacobinHome = cleanupPath(jacobinHome)
 	}
 	global.JacobinHome = jacobinHome
 }
@@ -111,14 +106,18 @@ func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
 	if javaHome != "" {
-		// if the JacobinHome doesn't end in a backward slash, add one.
-		if !(strings.HasSuffix(javaHome, "\\") ||
-			strings.HasSuffix(javaHome, "/")) {
-			javaHome = javaHome + "\\"
-		}
-		// replace forward slashes in JacobinHome with backward slashes
-		javaHome = strings.ReplaceAll(javaHome, "/", "\\")
+		javaHome = cleanupPath(javaHome)
 	}
 	global.JavaHome = javaHome
 }
 func JavaHome() string { return global.JavaHome }
+
+// Attempts to normalize a file path.
+// Slashes are converted to the current platform's path separator if necessary, then a trailing path separator is added.
+func cleanupPath(path string) string {
+	path = filepath.FromSlash(path)
+	if !(strings.HasSuffix(path, string(os.PathSeparator))) {
+		path = path + string(os.PathSeparator)
+	}
+	return path
+}
