@@ -8,7 +8,7 @@ package thread
 
 import (
 	"container/list"
-	"sync"
+	"jacobin/globals"
 )
 
 // Creates a JVM program execution thread. These threads are extremely limited.
@@ -32,13 +32,12 @@ func CreateThread(threadNum int) ExecThread {
 	return t
 }
 
-func AddThreadToTable(t *ExecThread, tbl *list.List) int {
-	mutex := sync.Mutex{}
-	mutex.Lock()
+func AddThreadToTable(t *ExecThread, tbl *globals.ThreadList) int {
+	tbl.ThreadsMutex.Lock()
 
-	tbl.PushBack(t)
-	t.ID = tbl.Len() - 1
-	mutex.Unlock()
+	tbl.ThreadList.PushBack(t)
+	t.ID = tbl.ThreadList.Len() - 1
+	tbl.ThreadsMutex.Unlock()
 
 	return t.ID
 }

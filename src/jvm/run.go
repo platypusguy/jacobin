@@ -55,7 +55,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	// create the first thread and place its first frame on it
 	MainThread = thread.CreateThread(0)
 	MainThread.Stack = frames.CreateFrameStack()
-	MainThread.ID = thread.AddThreadToTable(&MainThread, globals.Threads)
+	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 
 	tracing := false
 	trace, exists := globals.Options["-trace"]

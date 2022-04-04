@@ -47,10 +47,10 @@ type Globals struct {
 	JacobinHome string
 
 	// ---- thread management ----
-	Threads *list.List
+	Threads ThreadList // list of all app execution threads
 }
 
-// Wait group for various channels used for parallel loading of classes.
+// LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
 
 var global Globals
@@ -69,11 +69,18 @@ func InitGlobals(progName string) Globals {
 		StartingJar:       "",
 		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
-		Threads:           list.New(),
+		Threads:           ThreadList{list.New(), sync.Mutex{}},
 	}
+
 	InitJavaHome()
 	InitJacobinHome()
 	return global
+}
+
+// ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
+type ThreadList struct {
+	ThreadList   *list.List
+	ThreadsMutex sync.Mutex
 }
 
 // GetGlobalRef returns a pointer to the singleton instance of Globals

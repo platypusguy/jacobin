@@ -482,7 +482,7 @@ func TestIdivDivideByZero(t *testing.T) {
 	// need to create a thread to catch the exception
 	hread := thread.CreateThread(0)
 	hread.Stack = fs
-	hread.ID = thread.AddThreadToTable(&hread, g.Threads)
+	hread.ID = thread.AddThreadToTable(&hread, &g.Threads)
 	_ = runFrame(fs)
 
 	// restore stderr and stdout to what they were before

@@ -30,12 +30,11 @@ var literals = []string{
 // error message. Will add: catch logic, stack trace, and halt of execution
 // TODO: use ThreadNum to find the right thread
 func Throw(excType int, clName string, threadNum int, methName string, cp int) {
-	thd := globals.GetGlobalRef().Threads.Front().Value.(*thread.ExecThread)
+	thd := globals.GetGlobalRef().Threads.ThreadList.Front().Value.(*thread.ExecThread)
 	frameStack := thd.Stack
 	f := frames.PeekFrame(frameStack, 0)
 	fmt.Println("class name: " + f.ClName)
 	msg := fmt.Sprintf(
-
 		"%s%sin %s, in%s, at bytecode[]: %d", literals[excType], ": ", clName, methName, cp)
 	_ = log.Log(msg, log.SEVERE)
 }
