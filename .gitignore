@@ -17,7 +17,7 @@
 
 #Ancillary dirs and files that should not be checked in
 reports/
-testdata/
+mytestdata/
 pkg/
 docs/
 
