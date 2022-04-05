@@ -79,7 +79,7 @@ func InitGlobals(progName string) Globals {
 
 // ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
 type ThreadList struct {
-	ThreadList   *list.List
+	ThreadsList  *list.List
 	ThreadsMutex sync.Mutex
 }
 
