@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Flag the /testdata directory so that GitHub does not include its contens in the
+# language and line-counts testdata
+testdata/** linguist-vendored
