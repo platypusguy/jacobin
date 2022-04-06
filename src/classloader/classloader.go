@@ -181,18 +181,16 @@ func cfe(msg string) error {
 // consists of roughly 1400 classes from the JDK.
 func LoadBaseClasses(global *globals.Globals) {
 	if len(global.JavaHome) > 0 {
-		fmt.Printf("Found JavaHome - %s", global.JavaHome)
 		fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
-		jmodFile, err := os.Open(fname)
-		defer jmodFile.Close()
 
+		jmodFile, err := os.Open(fname)
 		if err != nil {
 			log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
 		} else {
+			defer jmodFile.Close()
 			jmod := Jmod{File: *jmodFile}
 			jmod.Walk(func(bytes []byte, filename string) error {
 				_, err := loadClassFromBytes(BootstrapCL, filename, bytes)
-
 				return err
 			})
 		}
