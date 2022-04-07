@@ -1,3 +1,9 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ */
+
 package classloader
 
 import (
@@ -12,6 +18,9 @@ import (
 type WalkEntryFunc func(bytes []byte, filename string) error
 
 // Jmod Holds the file referring to a Java Module (JMOD)
+// Allows walking a Java Module (JMOD). The `Walk` method will walk the module and invoke the `walk` parameter for all
+// classes found. If there is a classlist file in lib\classlist (in the module), it will filter out any classes not
+// contained in the classlist file; otherwise, all classes found in classes/ in the module.
 type Jmod struct {
 	File os.File
 }
