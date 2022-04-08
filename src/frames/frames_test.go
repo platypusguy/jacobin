@@ -8,6 +8,13 @@ package frames
 
 import "testing"
 
+func TestNewFrame(t *testing.T) {
+	f := CreateFrame(6)
+	if len(f.OpStack) != 6 || f.TOS != -1 || f.PC != 0 {
+		t.Error("Created frame is invalid")
+	}
+}
+
 func TestFrameStack(t *testing.T) {
 	fs := CreateFrameStack()
 	if fs.Len() != 0 {
@@ -30,5 +37,18 @@ func TestFrameStackPushAndPop(t *testing.T) {
 	// the test stack is empty at this point, so PopFrame() should return an error
 	if PopFrame(fs) == nil {
 		t.Error("PopFrame() on an empty frame stack did not generate an error.")
+	}
+}
+
+func TestFramePeek(t *testing.T) {
+	fs := CreateFrameStack()
+	f1 := CreateFrame(1)
+	f2 := CreateFrame(2)
+	_ = PushFrame(fs, f1)
+	_ = PushFrame(fs, f2)
+
+	peek := PeekFrame(fs, 1)
+	if len(peek.OpStack) != 1 {
+		t.Errorf("Peeked at prior frame. Expected size of opstack to be 1, got: %d", len(peek.OpStack))
 	}
 }

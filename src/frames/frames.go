@@ -49,6 +49,10 @@ func CreateFrame(opStackSize int) *Frame {
 	fram := Frame{}
 	// fram.OpStack = *new(opStack)
 
+	if opStackSize < 0 { // TODO: Check if this is possible. If so, decide what to do. Class is clearly malformed.
+		opStackSize = 0
+	}
+
 	// allocate the operand stack
 	for j := 0; j < opStackSize; j++ {
 		fram.OpStack = append(fram.OpStack, 0)
@@ -86,6 +90,8 @@ func PopFrame(fs *list.List) error {
 }
 
 // PeekFrame peeks at a given frame without popping or deleting it.
+// The current frame (so, top of stack) is 0, the one below it is 1, etc.
+// Pass that value in and you receive back a pointer to the frame.
 func PeekFrame(fs *list.List, which int) *Frame {
 	var e *list.Element
 	i := 0
