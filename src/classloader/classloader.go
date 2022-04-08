@@ -180,6 +180,23 @@ func cfe(msg string) error {
 // JACOBIN_HOME/classes directory. As of Jacobin 0.1.0, that directory
 // consists of roughly 1400 classes from the JDK.
 func LoadBaseClasses(global *globals.Globals) {
+	if len(global.JavaHome) > 0 {
+		fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
+
+		jmodFile, err := os.Open(fname)
+		if err != nil {
+			log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
+		} else {
+			defer jmodFile.Close()
+			jmod := Jmod{File: *jmodFile}
+			jmod.Walk(func(bytes []byte, filename string) error {
+				_, err := loadClassFromBytes(BootstrapCL, filename, bytes)
+				return err
+			})
+		}
+
+	}
+
 	if len(global.JacobinHome) == 0 {
 		_ = log.Log("JACOBIN_HOME not specified. Program may fail.", log.WARNING)
 	}
@@ -293,6 +310,10 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 
 	// _ = log.Log(filename+" read", log.FINE)
 
+	return loadClassFromBytes(cl, filename, rawBytes)
+}
+
+func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (string, error) {
 	return ParseAndPostClass(cl, filename, rawBytes)
 }
 
