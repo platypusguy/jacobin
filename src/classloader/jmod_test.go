@@ -2,7 +2,7 @@ package classloader
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -14,7 +14,7 @@ func TestJmodFile(t *testing.T) {
 		return
 	}
 
-	jmodFileName := path.Join(pwd, "..", "..", "testdata", "jmod", "jacobin.jmod")
+	jmodFileName := filepath.Join(pwd, "..", "..", "testdata", "jmod", "jacobin.jmod")
 
 	jmodFile, err := os.Open(jmodFileName)
 	if err != nil {
@@ -50,8 +50,7 @@ func TestJmodFileNoClasslist(t *testing.T) {
 		return
 	}
 
-	jmodFileName := path.Join(pwd, "..", "..", "testdata", "jmod", "jacobinfull.jmod")
-
+	jmodFileName := filepath.Join(pwd, "..", "..", "testdata", "jmod", "jacobinfull.jmod")
 	jmodFile, err := os.Open(jmodFileName)
 	if err != nil {
 		t.Error("Unable to open jmod file", err)
