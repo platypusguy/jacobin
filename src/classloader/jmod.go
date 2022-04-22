@@ -9,6 +9,9 @@ package classloader
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"jacobin/log"
 	"os"
@@ -16,6 +19,9 @@ import (
 )
 
 type WalkEntryFunc func(bytes []byte, filename string) error
+
+// MagicNumber JMOD Magic Number
+const MagicNumber = 0x4A4D
 
 // Jmod Holds the file referring to a Java Module (JMOD)
 // Allows walking a Java Module (JMOD). The `Walk` method will walk the module and invoke the `walk` parameter for all
@@ -30,6 +36,11 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 	b, err := ioutil.ReadFile(j.File.Name())
 	if err != nil {
 		return err
+	}
+
+	if binary.BigEndian.Uint16(b[:2])^MagicNumber != 0 {
+		errMsg := fmt.Sprintf("%s does not have a valid JMOD header (%x)", j.File.Name(), MagicNumber)
+		return errors.New(errMsg)
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file

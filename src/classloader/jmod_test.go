@@ -63,11 +63,15 @@ func TestJmodFileNoClasslist(t *testing.T) {
 
 	var empty struct{}
 
-	jmod.Walk(func(bytes []byte, filename string) error {
+	err = jmod.Walk(func(bytes []byte, filename string) error {
 		fname := strings.Split(filename, "+")[1]
 		filesFound[fname] = empty
 		return nil
 	})
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	if _, ok := filesFound["classes/org/jacobin/test/Hello.class"]; !ok {
 		t.Error("Expected org.jacobin.test.Hello, but it wasn't there.")
@@ -75,5 +79,30 @@ func TestJmodFileNoClasslist(t *testing.T) {
 
 	if _, ok := filesFound["classes/module-info.class"]; !ok {
 		t.Error("Expected module-info, but it wasn't there.")
+	}
+}
+
+func TestNotJmodFile(t *testing.T) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Error("Unable to get cwd")
+		return
+	}
+
+	jmodFileName := filepath.Join(pwd, "..", "..", "testdata", "jmod", "README.md")
+	jmodFile, err := os.Open(jmodFileName)
+	if err != nil {
+		t.Error("Unable to open jmod file", err)
+		return
+	}
+
+	jmod := Jmod{*jmodFile}
+
+	err = jmod.Walk(func(bytes []byte, filename string) error {
+		return nil
+	})
+
+	if err == nil {
+		t.Error("Should have gotten error that README.md isn't a JMOD file, but didn't.")
 	}
 }

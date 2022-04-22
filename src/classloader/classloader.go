@@ -189,10 +189,15 @@ func LoadBaseClasses(global *globals.Globals) {
 		} else {
 			defer jmodFile.Close()
 			jmod := Jmod{File: *jmodFile}
-			jmod.Walk(func(bytes []byte, filename string) error {
+			err = jmod.Walk(func(bytes []byte, filename string) error {
 				_, err := loadClassFromBytes(BootstrapCL, filename, bytes)
 				return err
 			})
+
+			if err != nil {
+				log.Log("Error loading jmod file "+fname, log.SEVERE)
+				log.Log(err.Error(), log.SEVERE)
+			}
 		}
 
 	}
