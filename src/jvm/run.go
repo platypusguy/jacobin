@@ -53,7 +53,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	// create the first thread and place its first frame on it
-	MainThread = thread.CreateThread(0)
+	MainThread = thread.CreateThread()
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 

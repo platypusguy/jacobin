@@ -23,9 +23,9 @@ type ExecThread struct {
 	Trace bool       // do we Trace instructions?
 }
 
-func CreateThread(threadNum int) ExecThread {
+func CreateThread() ExecThread {
 	t := ExecThread{}
-	t.ID = threadNum
+	t.ID = 0
 	t.PC = 0
 	t.Stack = nil
 	t.Trace = false
