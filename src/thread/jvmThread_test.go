@@ -9,6 +9,7 @@ package thread
 import (
 	"container/list"
 	"jacobin/globals"
+	"sync"
 	"testing"
 )
 
@@ -40,5 +41,47 @@ func TestAddThreadToTable(t *testing.T) {
 	if retVal != 9 {
 		t.Errorf("Expected last inserted thread to be #9; got %d", retVal)
 	}
+}
 
+// This tests validates that the use of the mutex on addition of
+// threads to the thread table works correctly. It starts four
+// goroutines that each add 100 threads to the same table. It uses
+// a wait group to wait for the four routines to finish, then gets
+// the size of the table and validates that it = 400.
+func TestAddingMultipleSimultaneousThreads(t *testing.T) {
+	tbl := globals.ThreadList{}
+	tbl.ThreadsList = list.New()
+
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go add100threads(&tbl, &wg)
+
+	wg.Add(1)
+	go add100threads(&tbl, &wg)
+
+	wg.Add(1)
+	go add100threads(&tbl, &wg)
+
+	wg.Add(1)
+	go add100threads(&tbl, &wg)
+
+	wg.Wait() // wait for the goroutines to all finish
+	size := tbl.ThreadsList.Len()
+	if size != 400 {
+		t.Errorf("Expecting thread table size of 400, got %d", size)
+	}
+}
+
+// Called by the goroutines in TestAddingMultipleSimultaneousThreads()
+// to add 100 threads to the thread table and decrements the wait
+// group by 1 when it's done. Note that the wait group is initialized
+// prior to the goroutine being called, as prescribed by the go docs.
+func add100threads(tbl *globals.ThreadList, wgrp *sync.WaitGroup) {
+	// create and add 100 threads
+	for i := 0; i < 100; i++ {
+		th := CreateThread()
+		AddThreadToTable(&th, tbl)
+	}
+	wgrp.Done() // decrements the wait group by 1.
 }
