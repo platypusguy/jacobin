@@ -72,12 +72,9 @@ func InitGlobals(progName string) Globals {
 		StartingJar:       "",
 		MaxJavaVersion:    11, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 55, // this value and MaxJavaVersion must *always* be in sync
-
-		StrictJDK: false,
+		Threads:           ThreadList{list.New(), sync.Mutex{}},
+		StrictJDK:         false,
 	}
-
-	threadsMutex := sync.Mutex{}
-	global.Threads = ThreadList{list.New(), &threadsMutex}
 
 	InitJavaHome()
 	InitJacobinHome()
@@ -87,7 +84,7 @@ func InitGlobals(progName string) Globals {
 // ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
 type ThreadList struct {
 	ThreadsList  *list.List
-	ThreadsMutex *sync.Mutex
+	ThreadsMutex sync.Mutex
 }
 
 // GetGlobalRef returns a pointer to the singleton instance of Globals

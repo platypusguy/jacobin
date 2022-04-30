@@ -51,6 +51,7 @@ func TestAddThreadToTable(t *testing.T) {
 // a wait group to wait for the four routines to finish, then gets
 // the size of the table and validates that it = 400.
 func TestAddingMultipleSimultaneousThreads(t *testing.T) {
+	// globals.InitGlobals("test")
 	tbl := globals.ThreadList{}
 	tbl.ThreadsList = list.New()
 
