@@ -198,10 +198,14 @@ const (
 )
 
 var JacobinRuntimeErrLiterals = []string{
+	"",
+	"",
 	"Arithmetic Exception, Divide by Zero",
 }
 
 var JDKRuntimeErrLiterals = []string{
+	"",
+	"",
 	"java.lang.ArithmeticException: / by zero",
 }
 
