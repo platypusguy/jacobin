@@ -33,11 +33,12 @@ func CreateThread() ExecThread {
 }
 
 func AddThreadToTable(t *ExecThread, tbl *globals.ThreadList) int {
-	tbl.ThreadsMutex.Lock()
+	lock := *tbl.ThreadsMutex
+	lock.Lock()
 
 	tbl.ThreadsList.PushBack(t)
 	t.ID = tbl.ThreadsList.Len() - 1
-	tbl.ThreadsMutex.Unlock()
+	lock.Unlock()
 
 	return t.ID
 }

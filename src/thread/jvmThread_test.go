@@ -23,7 +23,9 @@ func TestCreateThread(t *testing.T) {
 }
 
 func TestAddThreadToTable(t *testing.T) {
-	tbl := globals.ThreadList{}
+	globals.InitGlobals("test")
+	gl := globals.GetGlobalRef()
+	tbl := gl.Threads
 	tbl.ThreadsList = list.New()
 	retVal := 0
 
