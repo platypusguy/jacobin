@@ -10,9 +10,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io/ioutil"
+	"jacobin/globals"
+	"jacobin/jvm"
 	"jacobin/log"
 	"os"
 	"strings"
@@ -38,9 +39,15 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 		return err
 	}
 
-	if binary.BigEndian.Uint16(b[:2])^MagicNumber != 0 {
-		errMsg := fmt.Sprintf("%s does not have a valid JMOD header (%x)", j.File.Name(), MagicNumber)
-		return errors.New(errMsg)
+	fileMagic := binary.BigEndian.Uint16(b[:2])
+
+	if fileMagic != MagicNumber {
+
+		if !globals.GetGlobalRef().StrictJDK {
+			log.Log(fmt.Sprintf("Expected: %x, Got: %x", MagicNumber, fileMagic), log.SEVERE)
+		}
+
+		jvm.Shutdown(true)
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
