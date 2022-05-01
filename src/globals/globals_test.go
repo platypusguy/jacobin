@@ -48,3 +48,13 @@ func TestJacobinHomeFormat(t *testing.T) {
 	}
 	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
 }
+
+func TestVariousInitialDefaultValues(t *testing.T) {
+	InitGlobals("testInit")
+	gl := GetGlobalRef()
+	if gl.StrictJDK != false ||
+		gl.ExitNow != false ||
+		!(gl.MaxJavaVersion >= 11) {
+		t.Errorf("Some global variables intialized to unexpected values.")
+	}
+}

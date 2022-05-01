@@ -480,7 +480,7 @@ func TestIdivDivideByZero(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 
 	// need to create a thread to catch the exception
-	hread := thread.CreateThread(0)
+	hread := thread.CreateThread()
 	hread.Stack = fs
 	hread.ID = thread.AddThreadToTable(&hread, &g.Threads)
 	_ = runFrame(fs)

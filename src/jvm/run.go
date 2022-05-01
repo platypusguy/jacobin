@@ -53,7 +53,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	// create the first thread and place its first frame on it
-	MainThread = thread.CreateThread(0)
+	MainThread = thread.CreateThread()
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 
@@ -254,7 +254,7 @@ func runFrame(fs *list.List) error {
 			LDIV: //  0x6D   (divide tos-1 by tos)
 			val1 := pop(f)
 			if val1 == 0 {
-				exceptions.Throw(exceptions.ArithmeticDividebyzero, f.ClName, f.Thread, f.MethName, f.PC)
+				exceptions.Throw(exceptions.ArithmeticException, f.ClName, f.Thread, f.MethName, f.PC)
 				Shutdown(true)
 			} else {
 				val2 := pop(f)
