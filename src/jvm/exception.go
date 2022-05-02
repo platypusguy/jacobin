@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package exceptions
+package jvm
 
 import (
 	"fmt"
@@ -225,7 +225,9 @@ func Throw(excType int, clName string, threadNum int, methName string, cp int) {
 // JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
 // such as invalid JAR files, and the like. For the moment, it prints out the error msg
 // only. Eventually, it will print out considerably more info depending on the setting of
-// globals.JVMstrict
+// globals.JVMstrict. NOTE: this function calls Shutdown(), as all JVM runtime exceptions
+// are fatal.
 func JVMexception(excType int, msg string) {
 	_ = log.Log(msg, log.SEVERE)
+	Shutdown(true)
 }
