@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
-	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -254,7 +253,7 @@ func runFrame(fs *list.List) error {
 			LDIV: //  0x6D   (divide tos-1 by tos)
 			val1 := pop(f)
 			if val1 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException, f.ClName, f.Thread, f.MethName, f.PC)
+				Throw(ArithmeticException, f.ClName, f.Thread, f.MethName, f.PC)
 				Shutdown(true)
 			} else {
 				val2 := pop(f)
