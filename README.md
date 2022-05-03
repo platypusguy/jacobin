@@ -12,11 +12,12 @@ A more-than-minimal JVM written in Go.
 
 # Status
 ## Intended feature set:
-* Java 11 functionality, but...
+* Java 17 functionality, but...
 * No JNI (Oracle intends to replace it; see [JEP 389](https://openjdk.java.net/jeps/389))
 * No security manager (Oracle intends to remove it; see [JEP 411](https://openjdk.java.net/jeps/411))
 * No JIT
 * Somewhat less stringent bytecode verification
+* Does not enforce Java 17's sealed classes
 
 ## What we've done so far and what we need to do:
 ### Command-line parsing
