@@ -12,6 +12,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -158,7 +159,7 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	err := classloader.Init()
 
 	var testBytes = Hello2Bytes[0:8]
-	testBytes[7] = 59 // change class to Java 15, which is not currently supported
+	testBytes[7] = 99 // change class to unsupported version of Java class files
 
 	_, err = classloader.ParseAndPostClass(classloader.BootstrapCL, "Hello2", testBytes)
 	if err == nil {
@@ -172,7 +173,9 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(string(msg), "supports only Java versions through Java 11") {
-		t.Errorf("Expected error message to contain 'supports only Java versions through Java 11', got: %s", string(msg))
+	versionString := "Java " + strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion)
+	if !strings.Contains(string(msg), "supports only Java versions through "+versionString) {
+		t.Errorf("Expected error message to contain 'supports only Java versions through %s', got: %s",
+			versionString, string(msg))
 	}
 }
