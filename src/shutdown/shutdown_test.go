@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package jvm
+package shutdown
 
 import (
 	"io/ioutil"
@@ -31,7 +31,7 @@ func TestShutdownOK(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	Shutdown(false)
+	Exit(false)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

@@ -10,6 +10,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"os"
 )
 
@@ -28,60 +29,60 @@ func JVMrun() {
 	LoadOptionsTable(Global)
 	err := HandleCli(os.Args, &Global)
 	if err != nil {
-		Shutdown(true)
+		shutdown.Exit(true)
 	}
 	// some CLI options, like -version, show data and immediately exit. This tests for that.
 	if Global.ExitNow == true {
-		Shutdown(false)
+		shutdown.Exit(false)
 	}
 
 	if Global.StartingClass == "" {
 		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
 		ShowUsage(os.Stdout)
-		Shutdown(true)
+		shutdown.Exit(true)
 	}
 
 	// load the starting class, classes it references, and some base classes
 	_ = classloader.Init()
 	classloader.LoadBaseClasses(&Global)
 	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
-	if err != nil { // the error message will already have been shown to user
-		Shutdown(true)
+	if err != nil { // the exceptions message will already have been shown to user
+		shutdown.Exit(true)
 	}
 	classloader.LoadReferencedClasses(mainClass)
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
 	if StartExec(mainClass, &Global) != nil {
-		Shutdown(true)
+		shutdown.Exit(true)
 	}
 
-	Shutdown(false)
+	shutdown.Exit(false)
 }
 
-// Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks
-// before closing down in order to have an orderly exit
-func Shutdown(errorCondition bool) int {
-	globals.LoaderWg.Wait()
-	g := globals.GetGlobalRef()
-
-	err := errorCondition
-	if log.Log("shutdown", log.INFO) != nil {
-		err = true
-	}
-
-	if err {
-		if g.JacobinName == "test" {
-			return 1
-		} else {
-			os.Exit(1)
-		}
-	}
-
-	if g.JacobinName == "test" {
-		return 0
-	} else {
-		os.Exit(0)
-	}
-	return 0 // required by go
-}
+// // Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks
+// // before closing down in order to have an orderly exit
+// func Shutdown(errorCondition bool) int {
+// 	globals.LoaderWg.Wait()
+// 	g := globals.GetGlobalRef()
+//
+// 	err := errorCondition
+// 	if log.Log("shutdown", log.INFO) != nil {
+// 		err = true
+// 	}
+//
+// 	if err {
+// 		if g.JacobinName == "test" {
+// 			return 1
+// 		} else {
+// 			os.Exit(1)
+// 		}
+// 	}
+//
+// 	if g.JacobinName == "test" {
+// 		return 0
+// 	} else {
+// 		os.Exit(0)
+// 	}
+// 	return 0 // required by go
+// }

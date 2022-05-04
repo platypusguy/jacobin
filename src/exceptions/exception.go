@@ -4,13 +4,14 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package jvm
+package exceptions
 
 import (
 	"fmt"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"jacobin/thread"
 )
 
@@ -182,7 +183,7 @@ const (
 	XMLSignatureException
 	XMLStreamException
 
-	// Java errors
+	// Java exceptions
 	AnnotationFormatError
 	AssertionError
 	AWTError
@@ -197,6 +198,8 @@ const (
 	VirtualMachineError
 )
 
+// JacobinRuntimeErrLiterals are the displayed strings for the given exception.
+// They are in the order
 var JacobinRuntimeErrLiterals = []string{
 	"",
 	"",
@@ -210,7 +213,7 @@ var JDKRuntimeErrLiterals = []string{
 }
 
 // Throw duplicates the exception mechanism in Java. Right now, it displays the
-// error message. Will add: catch logic, stack trace, and halt of execution
+// exceptions message. Will add: catch logic, stack trace, and halt of execution
 // TODO: use ThreadNum to find the right thread
 func Throw(excType int, clName string, threadNum int, methName string, cp int) {
 	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
@@ -223,11 +226,11 @@ func Throw(excType int, clName string, threadNum int, methName string, cp int) {
 }
 
 // JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
-// such as invalid JAR files, and the like. For the moment, it prints out the error msg
+// such as invalid JAR files, and the like. For the moment, it prints out the exceptions msg
 // only. Eventually, it will print out considerably more info depending on the setting of
 // globals.JVMstrict. NOTE: this function calls Shutdown(), as all JVM runtime exceptions
 // are fatal.
 func JVMexception(excType int, msg string) {
 	_ = log.Log(msg, log.SEVERE)
-	Shutdown(true)
+	shutdown.Exit(true)
 }
