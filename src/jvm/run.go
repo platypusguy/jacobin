@@ -11,9 +11,11 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/util"
 	"strconv"
@@ -65,7 +67,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	f.Thread = MainThread.ID
 
 	if frames.PushFrame(MainThread.Stack, f) != nil {
-		_ = log.Log("Memory error allocating frame on thread: "+strconv.Itoa(MainThread.ID), log.SEVERE)
+		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID), log.SEVERE)
 		return errors.New("outOfMemory Exception")
 	}
 
@@ -101,7 +103,7 @@ func runFrame(fs *list.List) error {
 	f := fs.Front().Value.(*frames.Frame)
 
 	// if the frame contains a golang method, execute it using runGframe(),
-	// which returns a value (possibly nil) and an error code. Presuming no error,
+	// which returns a value (possibly nil) and an exceptions code. Presuming no exceptions,
 	// if the return value (here, retval) is not nil, it is placed on the stack
 	// of the calling frame.
 	if f.Ftype == 'G' {
@@ -253,8 +255,8 @@ func runFrame(fs *list.List) error {
 			LDIV: //  0x6D   (divide tos-1 by tos)
 			val1 := pop(f)
 			if val1 == 0 {
-				Throw(ArithmeticException, f.ClName, f.Thread, f.MethName, f.PC)
-				Shutdown(true)
+				exceptions.Throw(exceptions.ArithmeticException, f.ClName, f.Thread, f.MethName, f.PC)
+				shutdown.Exit(true)
 			} else {
 				val2 := pop(f)
 				push(f, val2/val1)
@@ -444,7 +446,7 @@ func runFrame(fs *list.List) error {
 			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(v, fs, className, methodName, methodType)
 				if err != nil {
-					Shutdown(true) // any error message will already have been displayed to the user
+					shutdown.Exit(true) // any exceptions message will already have been displayed to the user
 				}
 				break
 			}
@@ -484,7 +486,7 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' {
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methodName, methodType)
 				if err != nil {
-					Shutdown(true) // any error message will already have been displayed to the user
+					shutdown.Exit(true) // any exceptions message will already have been displayed to the user
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
