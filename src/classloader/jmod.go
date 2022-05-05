@@ -44,10 +44,11 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 	if fileMagic != MagicNumber {
 
 		if !globals.GetGlobalRef().StrictJDK {
-			log.Log(fmt.Sprintf("Expected: %x, Got: %x", MagicNumber, fileMagic), log.SEVERE)
+			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", j.File.Name(), MagicNumber, fileMagic)
+			log.Log(msg, log.SEVERE)
 		}
 
-		jvm.Shutdown(true)
+		jvm.JVMexception(jvm.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
