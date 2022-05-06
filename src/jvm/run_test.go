@@ -495,8 +495,7 @@ func TestIdivDivideByZero(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Arithmetic Exception") ||
-		!strings.Contains(errMsg, "testMethod") {
+	if !strings.Contains(errMsg, "Arithmetic Exception") {
 		t.Errorf("IDIV: Did not get expected error msg, got: %s", errMsg)
 	}
 }
