@@ -12,9 +12,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"jacobin/exceptions"
 	"jacobin/globals"
-	"jacobin/jvm"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"os"
 	"strings"
 )
@@ -48,7 +49,8 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 			log.Log(msg, log.SEVERE)
 		}
 
-		jvm.JVMexception(jvm.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
+		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
+		shutdown.Exit(true)
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
