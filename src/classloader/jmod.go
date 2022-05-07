@@ -9,13 +9,21 @@ package classloader
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/binary"
+	"fmt"
 	"io/ioutil"
+	"jacobin/exceptions"
+	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"os"
 	"strings"
 )
 
 type WalkEntryFunc func(bytes []byte, filename string) error
+
+// MagicNumber JMOD Magic Number
+const MagicNumber = 0x4A4D
 
 // Jmod Holds the file referring to a Java Module (JMOD)
 // Allows walking a Java Module (JMOD). The `Walk` method will walk the module and invoke the `walk` parameter for all
@@ -30,6 +38,19 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 	b, err := ioutil.ReadFile(j.File.Name())
 	if err != nil {
 		return err
+	}
+
+	fileMagic := binary.BigEndian.Uint16(b[:2])
+
+	if fileMagic != MagicNumber {
+
+		if !globals.GetGlobalRef().StrictJDK {
+			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", j.File.Name(), MagicNumber, fileMagic)
+			log.Log(msg, log.SEVERE)
+		}
+
+		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
+		shutdown.Exit(true)
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
