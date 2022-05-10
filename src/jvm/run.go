@@ -256,7 +256,7 @@ func runFrame(fs *list.List) error {
 			val1 := pop(f)
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
-				shutdown.Exit(true)
+				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
 				val2 := pop(f)
 				push(f, val2/val1)
@@ -446,7 +446,7 @@ func runFrame(fs *list.List) error {
 			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(v, fs, className, methodName, methodType)
 				if err != nil {
-					shutdown.Exit(true) // any exceptions message will already have been displayed to the user
+					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
 				break
 			}
@@ -486,7 +486,7 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' {
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methodName, methodType)
 				if err != nil {
-					shutdown.Exit(true) // any exceptions message will already have been displayed to the user
+					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)

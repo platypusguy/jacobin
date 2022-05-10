@@ -14,37 +14,45 @@ import (
 
 // The various flags that can be passed to the exit() function, reflecting
 // the various reasons a shutdown is requested. (OK = normal end of program)
+type ExitStatus int
+
 const (
-	OK = iota
+	OK ExitStatus = iota
 	JVM_EXCEPTION
 	APP_EXCEPTION
-	TEST
+	TEST_OK
+	TEST_ERR
 	UNKNOWN_ERROR
 )
 
 // Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks
 // before closing down in order to have an orderly exit
-func Exit(errorCondition bool) int {
+func Exit(errorCondition ExitStatus) int {
 	globals.LoaderWg.Wait()
 	g := globals.GetGlobalRef()
-
-	err := errorCondition
-	if log.Log("shutdown", log.INFO) != nil {
-		err = true
-	}
-
-	if err {
-		if g.JacobinName == "test" {
-			return 1
+	if g.JacobinName == "test" {
+		if errorCondition == OK {
+			errorCondition = TEST_OK
 		} else {
-			os.Exit(1)
+			errorCondition = TEST_ERR
 		}
 	}
 
-	if g.JacobinName == "test" {
-		return 0
-	} else {
-		os.Exit(0)
+	if log.Log("shutdown", log.INFO) != nil {
+		errorCondition = UNKNOWN_ERROR
 	}
+
+	if errorCondition == TEST_OK {
+		return 0
+	} else if errorCondition == TEST_ERR {
+		return 1
+	}
+
+	if errorCondition == OK {
+		os.Exit(0)
+	} else {
+		os.Exit(1)
+	}
+
 	return 0 // required by go
 }

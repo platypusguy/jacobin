@@ -31,7 +31,7 @@ func TestShutdownOK(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	Exit(false)
+	Exit(UNKNOWN_ERROR)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

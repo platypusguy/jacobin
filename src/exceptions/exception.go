@@ -231,5 +231,5 @@ func Throw(exceptionType int, msg string) {
 // are fatal.
 func JVMexception(excType int, msg string) {
 	_ = log.Log(msg, log.SEVERE)
-	shutdown.Exit(true)
+	shutdown.Exit(shutdown.JVM_EXCEPTION)
 }

@@ -29,17 +29,17 @@ func JVMrun() {
 	LoadOptionsTable(Global)
 	err := HandleCli(os.Args, &Global)
 	if err != nil {
-		shutdown.Exit(true)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 	// some CLI options, like -version, show data and immediately exit. This tests for that.
 	if Global.ExitNow == true {
-		shutdown.Exit(false)
+		shutdown.Exit(shutdown.OK)
 	}
 
 	if Global.StartingClass == "" {
 		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
 		ShowUsage(os.Stdout)
-		shutdown.Exit(true)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 
 	// load the starting class, classes it references, and some base classes
@@ -47,17 +47,17 @@ func JVMrun() {
 	classloader.LoadBaseClasses(&Global)
 	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
 	if err != nil { // the exceptions message will already have been shown to user
-		shutdown.Exit(true)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	classloader.LoadReferencedClasses(mainClass)
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
 	if StartExec(mainClass, &Global) != nil {
-		shutdown.Exit(true)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 
-	shutdown.Exit(false)
+	shutdown.Exit(shutdown.OK)
 }
 
 // // Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks

@@ -1,6 +1,7 @@
 package classloader
 
 import (
+	"jacobin/globals"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,6 +84,11 @@ func TestJmodFileNoClasslist(t *testing.T) {
 }
 
 func TestNotJmodFile(t *testing.T) {
+	// informs shutdown.Exit() that we're in test mode so not to exit on exception
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+
 	pwd, err := os.Getwd()
 	if err != nil {
 		t.Error("Unable to get cwd")

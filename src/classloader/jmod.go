@@ -50,7 +50,7 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 		}
 
 		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
-		shutdown.Exit(true)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
