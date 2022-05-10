@@ -47,3 +47,33 @@ func TestShutdownOK(t *testing.T) {
 		t.Errorf("Expecting shutdown message, but got: %s", msg)
 	}
 }
+
+func TestShutdownReturn(t *testing.T) {
+	globals.InitGlobals("test")
+	gl := globals.GetGlobalRef()
+	gl.JacobinName = "test"
+
+	_ = log.SetLogLevel(log.FINE)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	ret := Exit(OK) // should return from Exit with a 0
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if ret != 0 {
+		t.Errorf("Expecting exit() return value of 0, but got %d", ret)
+	}
+}
