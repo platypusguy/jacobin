@@ -51,7 +51,6 @@ A more-than-minimal JVM written in Go.
 
 ### Execution
 * Execution of bytecode :pencil2: This is the focus of current coding work
-* Replace Java methods with functions written in go :pencil2: This too is a major focus
 
 **To do:**
 * invokedynamic
