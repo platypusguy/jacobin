@@ -59,30 +59,3 @@ func JVMrun() {
 
 	shutdown.Exit(shutdown.OK)
 }
-
-// // Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks
-// // before closing down in order to have an orderly exit
-// func Shutdown(errorCondition bool) int {
-// 	globals.LoaderWg.Wait()
-// 	g := globals.GetGlobalRef()
-//
-// 	err := errorCondition
-// 	if log.Log("shutdown", log.INFO) != nil {
-// 		err = true
-// 	}
-//
-// 	if err {
-// 		if g.JacobinName == "test" {
-// 			return 1
-// 		} else {
-// 			os.Exit(1)
-// 		}
-// 	}
-//
-// 	if g.JacobinName == "test" {
-// 		return 0
-// 	} else {
-// 		os.Exit(0)
-// 	}
-// 	return 0 // required by go
-// }
