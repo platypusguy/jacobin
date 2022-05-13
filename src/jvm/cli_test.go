@@ -362,6 +362,8 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 
 func TestShowCopyright(t *testing.T) {
 	globals.InitGlobals("test")
+	globals.GetGlobalRef().StrictJDK = false // Copyright is shown in a run only when not in strictJDK mode
+
 	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout := os.Stdout

@@ -192,7 +192,9 @@ func showCopyright() {
 		!strings.Contains(g.CommandLine, "--show-version") &&
 		!strings.Contains(g.CommandLine, "-version") &&
 		!strings.Contains(g.CommandLine, "--version") {
-		fmt.Println("Jacobin VM v. " + g.Version +
-			", © 2021-2 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+		if g.StrictJDK == false {
+			fmt.Println("Jacobin VM v. " + g.Version +
+				", © 2021-2 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+		}
 	}
 }
