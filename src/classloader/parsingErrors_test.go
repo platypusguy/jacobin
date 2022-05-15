@@ -99,6 +99,8 @@ func TestBarebonesClassWithInvalidMagicNumber(t *testing.T) {
 		t.Errorf("Expected an error but did not get one: %s", err.Error())
 	}
 
+	classBytes[1] = 0xFE // reset the erroneous byte to its correct value
+
 	_ = w.Close()
 	msgOut, _ := ioutil.ReadAll(r)
 	os.Stderr = normalStderr
@@ -109,5 +111,75 @@ func TestBarebonesClassWithInvalidMagicNumber(t *testing.T) {
 
 	if !strings.Contains(string(msgOut), "Class Format Error: invalid magic number") {
 		t.Errorf("Expected msg: 'Class Format Error: invalid magic number', got: %s", string(msgOut))
+	}
+}
+
+func TestBarebonesClassWithInvalidJavaVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	rout, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	classBytes[7] = 0xFF // this byte should be 0x3D for Java 17
+	_, err := parse(classBytes)
+	if err == nil {
+		t.Errorf("Expected an error but did not get one: %s", err.Error())
+	}
+
+	classBytes[7] = 0x3D // reset the erroneous byte to its correct value
+
+	_ = w.Close()
+	msgOut, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	_, _ = ioutil.ReadAll(rout)
+	os.Stdout = normalStdout
+
+	if !strings.Contains(string(msgOut), "Jacobin supports only Java versions through") {
+		t.Errorf("Expected msg to contain: 'Jacobin supports only Java versions through', \n got: %s", string(msgOut))
+	}
+}
+
+func TestBarebonesClassWithInvalidCPcount(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	rout, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	classBytes[9] = 0x00 // this byte should be 0x22 (0 CP entries is always an error in a class file)
+	_, err := parse(classBytes)
+	if err == nil {
+		t.Errorf("Expected an error but did not get one: %s", err.Error())
+	}
+
+	classBytes[9] = 0x22 // reset the erroneous byte to its correct value
+
+	_ = w.Close()
+	msgOut, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	_, _ = ioutil.ReadAll(rout)
+	os.Stdout = normalStdout
+
+	if !strings.Contains(string(msgOut), "Invalid number of entries in constant pool") {
+		t.Errorf("Expected msg to contain: 'Invalid number of entries in constant pool', \n got: %s", string(msgOut))
 	}
 }
