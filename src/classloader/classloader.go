@@ -27,9 +27,10 @@ import (
 // familiarity with the role of classloaders. More information can be found at:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-5.html#jvms-5.3
 type Classloader struct {
-	Name    string
-	Parent  string
-	Classes map[string]ParsedClass
+	Name     string
+	Parent   string
+	Classes  map[string]ParsedClass
+	Archives map[string]*Archive // TODO: I think this should be moved to classpath when we make it a thing
 }
 
 // AppCL is the application classloader, which loads most of the app's classes
@@ -296,6 +297,8 @@ func LoadClassFromNameOnly(name string) error {
 		name = globals.JacobinHome() + "classes" + string(os.PathSeparator) + name
 		validName = util.ConvertToPlatformPathSeparators(name)
 		_, err = LoadClassFromFile(BootstrapCL, validName)
+	} else if len(globals.GetGlobalRef().StartingJar) > 0 {
+		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 	} else {
 		_, err = LoadClassFromFile(AppCL, validName)
 	}
@@ -316,6 +319,54 @@ func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	// _ = log.Log(filename+" read", log.FINE)
 
 	return loadClassFromBytes(cl, filename, rawBytes)
+}
+
+func getJarFile(cl Classloader, jarFileName string) (*Archive, error) {
+	archive, exists := cl.Archives[jarFileName]
+
+	if exists {
+		return archive, nil
+	}
+
+	jar, err := NewJarFile(jarFileName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cl.Archives[jarFileName] = jar
+
+	return jar, nil
+}
+
+func GetMainClassFromJar(cl Classloader, jarFileName string) (string, error) {
+	jar, err := getJarFile(cl, jarFileName)
+
+	if err != nil {
+		return "", err
+	}
+
+	return jar.getMainClass(), nil
+}
+
+func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (string, error) {
+	jar, err := getJarFile(cl, jarFileName)
+
+	if err != nil {
+		return "", err
+	}
+
+	result, err := jar.loadClass(filename)
+
+	if err != nil {
+		return "", err
+	}
+
+	if !result.Success {
+		return "", fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
+	}
+
+	return ParseAndPostClass(cl, filename, *result.Data)
 }
 
 func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (string, error) {
@@ -648,14 +699,17 @@ func Init() error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""
 	BootstrapCL.Classes = make(map[string]ParsedClass)
+	BootstrapCL.Archives = make(map[string]*Archive)
 
 	ExtensionCL.Name = "extension"
 	ExtensionCL.Parent = "bootstrap"
 	ExtensionCL.Classes = make(map[string]ParsedClass)
+	ExtensionCL.Archives = make(map[string]*Archive)
 
 	AppCL.Name = "app"
 	AppCL.Parent = "extension"
 	AppCL.Classes = make(map[string]ParsedClass)
+	AppCL.Archives = make(map[string]*Archive)
 
 	return nil
 }

@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
@@ -43,23 +44,43 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.OK)
 	}
 
-	if Global.StartingClass == "" {
+	// Init classloader and load base classes
+	_ = classloader.Init()
+	classloader.LoadBaseClasses(&Global)
+
+	var mainClass string
+
+	if Global.StartingJar != "" {
+		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, Global.StartingJar)
+
+		if err != nil {
+			_ = log.Log(err.Error(), log.INFO)
+			return shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
+
+		if manifestClass == "" {
+			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", Global.StartingJar), log.INFO)
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		mainClass, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, Global.StartingJar)
+		if err != nil { // the exceptions message will already have been shown to user
+			return shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
+	} else if Global.StartingClass != "" {
+		mainClass, err = classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+		if err != nil { // the exceptions message will already have been shown to user
+			return shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
+	} else {
 		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
 		ShowUsage(os.Stdout)
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 
-	// load the starting class, classes it references, and some base classes
-	_ = classloader.Init()
-	classloader.LoadBaseClasses(&Global)
-	mainClass, err := classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
-	if err != nil { // the exceptions message will already have been shown to user
-		return shutdown.Exit(shutdown.JVM_EXCEPTION)
-	}
 	classloader.LoadReferencedClasses(mainClass)
 
 	// begin execution
-	_ = log.Log("Starting execution with: "+Global.StartingClass, log.INFO)
+	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
 	if StartExec(mainClass, &Global) != nil {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
