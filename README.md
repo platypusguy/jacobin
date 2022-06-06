@@ -26,7 +26,7 @@ A more-than-minimal JVM written in Go.
 * Responds to most options listed in the `java -help` output
 
 **To do**:
-  * Handling JAR files
+  * Handling JAR files :pencil2: This is a focus of current coding work
   * Handling @files (which contain command-line options)
   * Parsing complex classpaths
 
@@ -50,7 +50,7 @@ A more-than-minimal JVM written in Go.
 * Initialization
 
 ### Execution
-* Execution of bytecode :pencil2: This is the focus of current coding work
+* Execution of bytecode :pencil2: This is a focus of current coding work
 
 **To do:**
 * invokedynamic
