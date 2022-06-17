@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"jacobin/log"
 	"strings"
 )
 
@@ -55,6 +56,7 @@ func (archive *Archive) scanArchive() error {
 	defer reader.Close()
 
 	if err != nil {
+		_ = log.Log("Error: Invalid or corrupt jarfile "+archive.Filename, log.SEVERE)
 		return err
 	}
 

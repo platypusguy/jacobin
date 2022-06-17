@@ -49,3 +49,7 @@ func TestNoExecutable(t *testing.T) {
 		t.Errorf("jvmRun() with no executable specified did not get expected error msg, got: %s", errMsg)
 	}
 }
+
+func TestNoMainClassInJar(t *testing.T) {
+	
+}
