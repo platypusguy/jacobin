@@ -177,15 +177,15 @@ func cfe(msg string) error {
 }
 
 // LoadBaseClasses loads a basic set of classes that are found in
-// JACOBIN_HOME/classes directory. As of Jacobin 0.1.0, that directory
-// consists of roughly 1400 classes from the JDK.
+// JAVA_HOME/jmods/java.base.jmod directory. As of Jacobin 0.1.0,
+// that directory consists of roughly 1400 classes from the JDK.
 func LoadBaseClasses(global *globals.Globals) {
 	if len(global.JavaHome) > 0 {
 		fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
 
 		jmodFile, err := os.Open(fname)
 		if err != nil {
-			log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
+			_ = log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
 		} else {
 			defer jmodFile.Close()
 			jmod := Jmod{File: *jmodFile}
@@ -195,21 +195,21 @@ func LoadBaseClasses(global *globals.Globals) {
 			})
 
 			if err != nil {
-				log.Log("Error loading jmod file "+fname, log.SEVERE)
-				log.Log(err.Error(), log.SEVERE)
+				_ = log.Log("Error loading jmod file "+fname, log.SEVERE)
+				_ = log.Log(err.Error(), log.SEVERE)
 			}
 		}
-
 	}
 
-	if len(global.JacobinHome) == 0 {
-		_ = log.Log("JACOBIN_HOME not specified. Program may fail.", log.WARNING)
-	}
-
-	err := filepath.WalkDir(globals.JacobinHome()+"classes", walk)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error in filepath.Walkdir: %s", err.Error())
-	}
+	// Commented out b/c JacobinHome is no longer used. Might be deletable, depending on JACOBIN-167 resolution.
+	// if len(global.JacobinHome) == 0 {
+	// 	_ = log.Log("JACOBIN_HOME not specified. Program may fail.", log.WARNING)
+	// }
+	//
+	// err := filepath.WalkDir(globals.JacobinHome()+"classes", walk)
+	// if err != nil {
+	// 	_, _ = fmt.Fprintf(os.Stderr, "Error in filepath.Walkdir: %s", err.Error())
+	// }
 }
 
 // walk the directory and load every file (which is known to be a class)
