@@ -345,7 +345,7 @@ func ParseAndPostClass(cl Classloader, filename string, rawBytes []byte) (string
 		Data:   &classToPost,
 	}
 	_ = insert(fullyParsedClass.className, eKF)
-
+	// _ = log.Log("loaded class: "+filename, log.CLASS)
 	return fullyParsedClass.className, nil
 }
 
