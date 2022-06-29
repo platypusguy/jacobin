@@ -378,7 +378,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			//	}
 			// }
 
-			log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
+			_ = log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
 				" is:"+methodName, log.FINEST)
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
