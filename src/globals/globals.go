@@ -117,6 +117,7 @@ func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
 	if javaHome != "" {
+		javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
 		javaHome = cleanupPath(javaHome)
 	}
 	global.JavaHome = javaHome
