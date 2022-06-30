@@ -112,7 +112,8 @@ func InitJacobinHome() {
 
 func JacobinHome() string { return global.JacobinHome }
 
-// InitJavaHome gets JAVA_HOME and formats it as expected
+// InitJavaHome gets JAVA_HOME from the environment and formats it as expected
+// Note: any trailing separator is removed from the retrieved string
 func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
@@ -122,6 +123,7 @@ func InitJavaHome() {
 	}
 	global.JavaHome = javaHome
 }
+
 func JavaHome() string { return global.JavaHome }
 
 // Attempts to normalize a file path.
