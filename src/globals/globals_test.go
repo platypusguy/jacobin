@@ -64,6 +64,19 @@ func TestJacobinHomeFormat(t *testing.T) {
 	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
 }
 
+// verify that a trailing slash in JAVA_HOME is removed
+func TestJacobinHomeRemovalOfTrailingSlash(t *testing.T) {
+	origJavaHome := os.Getenv("JACOBIN_HOME")
+	_ = os.Setenv("JACOBIN_HOME", "foo/bar/")
+	InitJacobinHome()
+	ret := JacobinHome()
+	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	if ret != expectedPath {
+		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
+	}
+	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
+}
+
 func TestVariousInitialDefaultValues(t *testing.T) {
 	InitGlobals("testInit")
 	gl := GetGlobalRef()
