@@ -26,4 +26,9 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
 	if string(res3) != "LL" {
 		t.Errorf("Expected parse would return value of \"LL\", got: %s", string(res3))
 	}
+
+	res4 := ParseIncomingParamsFromMethTypeString("")
+	if len(string(res4)) != 0 {
+		t.Errorf("Expected parse would return value an empty string, got: %s", string(res4))
+	}
 }
