@@ -459,6 +459,85 @@ func TestSuperclassNameEmpty(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+// Test that when the class is java.lang.Object that the superclass is empty
+func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// this will give an error when trying to get the offset
+	// of the superclass info
+	testBytes := []byte{0x00, 0x00, 0x00}
+
+	pc := ParsedClass{} // create a CP with a single entry
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 1,
+		slot:      1,
+	})
+	pc.className = "java/lang/Object"
+	pc.superClass = "this will be set to empty"
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err != nil {
+		t.Error("Got unexpected error")
+	}
+
+	if pc.superClass != "" {
+		t.Errorf("Expected java/lang/Object's superclass to be empty, got %s",
+			pc.superClass)
+	}
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+func TestSuperclassNameInvalidOffset(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// this will give an error when trying to get the offset
+	// of the superclass info
+	testBytes := []byte{0xFF}
+
+	pc := ParsedClass{} // create a CP with a single entry
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 1,
+		slot:      1,
+	})
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for superclass name that's empty")
+	}
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
 func TestSuperclassNameInvalidIndex(t *testing.T) {
 
 	globals.InitGlobals("test")
