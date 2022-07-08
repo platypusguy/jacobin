@@ -981,7 +981,7 @@ func TestFieldWithNoAttributes(t *testing.T) {
 	}
 
 	if f.description != 1 {
-		t.Error("Expectef a field description UTF entry at 1, got: " + strconv.Itoa(f.description))
+		t.Error("Expected a field description UTF entry at 1, got: " + strconv.Itoa(f.description))
 	}
 
 	if len(f.attributes) != 0 {
