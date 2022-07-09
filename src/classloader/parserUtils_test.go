@@ -347,3 +347,40 @@ func TestFetchInvalidAttribute(t *testing.T) {
 		t.Error("Expected an error message but did not get one in fetchAttribute(): " + errMsg)
 	}
 }
+
+func TestFetchInvalidCFmethodRef(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, _, _, err := resolveCPmethodRef(3, &klass) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid index into CP:") {
+		t.Error("Expected different error msg on failed fetch of CP MethodRef. Got: " + msg)
+	}
+}
