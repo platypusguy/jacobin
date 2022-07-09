@@ -348,7 +348,7 @@ func TestFetchInvalidAttribute(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidCFmethodRef(t *testing.T) {
+func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -367,7 +367,7 @@ func TestFetchInvalidCFmethodRef(t *testing.T) {
 
 	_, _, _, err := resolveCPmethodRef(3, &klass) // index (3) can't be bigger than CP entries (2)
 	if err == nil {
-		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
 	}
 
 	// restore stderr and stdout to what they were before
@@ -381,6 +381,46 @@ func TestFetchInvalidCFmethodRef(t *testing.T) {
 	os.Stdout = normalStdout
 
 	if !strings.Contains(msg, "Invalid index into CP:") {
-		t.Error("Expected different error msg on failed fetch of CP MethodRef. Got: " + msg)
+		t.Error("Expected different error msg on failed resolution of CP MethodRef. Got: " + msg)
+	}
+}
+
+func TestFetchInvalidCFmethodRef_Test2(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})
+	klass.cpCount = 2
+
+	_, _, _, err := resolveCPmethodRef(1, &klass)
+
+	if err == nil {
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Expecting MethodRef (10) at CP entry #") {
+		t.Error("Expected different error msg on failed resolution of CP MethodRef. Got: " + msg)
 	}
 }
