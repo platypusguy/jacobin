@@ -103,6 +103,35 @@ func TestGetIntFrom4BytesValid(t *testing.T) {
 	}
 }
 
+func TestGetIntFrom4BytesInvalid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	bytesToTest := []byte{0x01, 0x02, 0x03}
+	_, err := intFrom4Bytes(bytesToTest, 0)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err == nil {
+		t.Error("intFrom4Bytes() should have returned an error, but got none")
+	}
+}
+
 func TestFetchValidUTF8string(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
