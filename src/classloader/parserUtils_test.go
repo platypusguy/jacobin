@@ -167,7 +167,7 @@ func TestFetchValidUTF8string(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestFetchInvalidUTF8string(t *testing.T) {
+func TestFetchInvalidUTF8string_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -203,6 +203,43 @@ func TestFetchInvalidUTF8string(t *testing.T) {
 	os.Stdout = normalStdout
 
 	if !strings.Contains(msg, "attempt to fetch UTF8 string from non-UTF8 CP entry") {
+		t.Error("Expected different error msg on failed fetch of UTF-8 CP entry. Got: " + msg)
+	}
+}
+
+func TestFetchInvalidUTF8string_Test2(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, err := fetchUTF8string(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "attempt to fetch invalid UTF8 at CP entry #") {
 		t.Error("Expected different error msg on failed fetch of UTF-8 CP entry. Got: " + msg)
 	}
 }
