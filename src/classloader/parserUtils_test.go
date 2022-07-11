@@ -240,7 +240,7 @@ func TestFetchInvalidUTF8string_Test2(t *testing.T) {
 	os.Stdout = normalStdout
 
 	if !strings.Contains(msg, "attempt to fetch invalid UTF8 at CP entry #") {
-		t.Error("Expected different error msg on failed fetch of UTF-8 CP entry. Got: " + msg)
+		t.Error("Expected different error msg on failed fetch of UTF8 CP entry. Got: " + msg)
 	}
 }
 
