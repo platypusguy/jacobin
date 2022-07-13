@@ -74,6 +74,34 @@ func TestGetIntFrom2BytesValid(t *testing.T) {
 	}
 }
 
+func TestGetU16fromTwoBytesInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	bytesToTest := []byte{0x01}
+	_, err := u16From2bytes(bytesToTest, 0)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err == nil {
+		t.Error("expected error from invalid u16From2bytes(), but got none")
+	}
+}
+
 func TestGetIntFrom4BytesValid(t *testing.T) {
 
 	globals.InitGlobals("test")
@@ -132,7 +160,7 @@ func TestGetIntFrom4BytesInvalid(t *testing.T) {
 	}
 }
 
-func TestFetchValidUTF8string(t *testing.T) {
+func TestFetchValidUTF8string_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
