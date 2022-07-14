@@ -335,7 +335,7 @@ func TestFetchValidAttribute(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidUTF8Slot(t *testing.T) {
+func TestFetchInvalidUTF8Slot_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -369,6 +369,45 @@ func TestFetchInvalidUTF8Slot(t *testing.T) {
 
 	errMsg := string(out[:])
 	if !strings.Contains(errMsg, "fetch UTF8 string from non-UTF8 CP entry") {
+		t.Errorf("Expected different err msg on fetch of UTF8 from invalid slot, got %s",
+			errMsg)
+	}
+}
+
+func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 2}) // the UTF-8 reference. 2 is > max value for UTF8 slots (1)
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 2
+
+	_, err := fetchUTF8string(&klass, 1)
+	if err == nil {
+		t.Error("Expected error testing fetch of UTF8 slot, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(out[:])
+	if !strings.Contains(errMsg, "invalid index into UTF8 array of CP") {
 		t.Errorf("Expected different err msg on fetch of UTF8 from invalid slot, got %s",
 			errMsg)
 	}
