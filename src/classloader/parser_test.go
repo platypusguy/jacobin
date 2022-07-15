@@ -196,7 +196,7 @@ func TestAccessFlags(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
-	bytes := []byte{0x00, 0x84, 0x21}
+	bytes := []byte{0x00, 0xFF, 0xFF}
 	loc, err := parseAccessFlags(bytes, 0, &pc)
 
 	if err != nil {
@@ -208,8 +208,13 @@ func TestAccessFlags(t *testing.T) {
 	}
 
 	if pc.classIsPublic == false ||
+		pc.classIsFinal == false ||
 		pc.classIsSuper == false ||
+		pc.classIsInterface == false ||
 		pc.classIsAbstract == false ||
+		pc.classIsSynthetic == false ||
+		pc.classIsAnnotation == false ||
+		pc.classIsEnum == false ||
 		pc.classIsModule == false {
 		t.Error("Access flags did not set expected values in the parsed class")
 	}
