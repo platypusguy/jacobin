@@ -354,7 +354,7 @@ func TestFetchInvalidUTF8Slot_Test0(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 2
 
-	_, err := fetchUTF8string(&klass, 1)
+	_, err := fetchUTF8slot(&klass, 1)
 	if err == nil {
 		t.Error("Expected error testing fetch of UTF8 slot, but got none")
 	}
@@ -393,7 +393,7 @@ func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 2
 
-	_, err := fetchUTF8string(&klass, 1)
+	_, err := fetchUTF8slot(&klass, 1)
 	if err == nil {
 		t.Error("Expected error testing fetch of UTF8 slot, but got none")
 	}
