@@ -496,7 +496,7 @@ func TestFetchInvalidAttribute_Test1(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
+func TestFetchInvalidCFmethodRef_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -533,7 +533,7 @@ func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidCFmethodRef_Test2(t *testing.T) {
+func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -570,5 +570,42 @@ func TestFetchInvalidCFmethodRef_Test2(t *testing.T) {
 
 	if !strings.Contains(msg, "Expecting MethodRef (10) at CP entry #") {
 		t.Error("Expected different error msg on failed resolution of CP MethodRef. Got: " + msg)
+	}
+}
+
+func TestResolveCPnameAndType(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, _, err := resolveCPnameAndType(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid nameAndType index into CP: ") {
+		t.Error("Expected different error msg on failed resolution of CPnameAndType. Got: " + msg)
 	}
 }
