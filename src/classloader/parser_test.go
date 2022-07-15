@@ -189,7 +189,7 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 // Access flags consist of a 2-byte integer. In the parsing, a variety of booleans are set in
 // the parsed class to show what access is allowed by the access flags. Both the retrieval of
 // the value and setting of the booleans is tested here.
-func TestAccessFlags(t *testing.T) {
+func TestAccessFlags_Test0(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
@@ -217,6 +217,49 @@ func TestAccessFlags(t *testing.T) {
 		pc.classIsEnum == false ||
 		pc.classIsModule == false {
 		t.Error("Access flags did not set expected values in the parsed class")
+	}
+}
+
+func TestAccessFlags_Test1(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	bytes := []byte{0x00, 0xFF, 0xFF}
+	loc, err := parseAccessFlags(bytes, 0, &pc)
+
+	if err != nil {
+		t.Error("Unexpected error occurred testing parse of Access flags")
+	}
+
+	if loc != 2 {
+		t.Error("Expected location from parse of Access flags to be 2. Got: " + strconv.Itoa(loc))
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+
+	out, _ := ioutil.ReadAll(r)
+	msg := string(out[:])
+	os.Stderr = normalStderr
+
+	if !strings.Contains(msg, "public") ||
+		!strings.Contains(msg, "final") ||
+		!strings.Contains(msg, "super") ||
+		!strings.Contains(msg, "interface") ||
+		!strings.Contains(msg, "abstract") ||
+		!strings.Contains(msg, "synthetic") ||
+		!strings.Contains(msg, "annotation") ||
+		!strings.Contains(msg, "enum") ||
+		!strings.Contains(msg, "module") {
+		t.Errorf("Did not get the expected logging output for the attribute")
 	}
 }
 
