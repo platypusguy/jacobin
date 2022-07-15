@@ -413,7 +413,49 @@ func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidAttribute(t *testing.T) {
+func TestFetchInvalidAttribute_Test0(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+
+	// see TestValidAttribute for info about this test data.
+	bytes := []byte{00} // bytes are too short
+	_, _, err := fetchAttribute(&klass, bytes, 0)
+	if err == nil {
+		t.Error("Expected an error in test of fetchAttribute, but did not get one")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if len(errMsg) <= 0 {
+		t.Error("Expected an error message but did not get one in fetchAttribute(): " + errMsg)
+	}
+
+	if !strings.Contains(errMsg, "error fetching field attribute") {
+		t.Errorf("Expected err msg of 'error fetching field attribute', but got: %s",
+			errMsg)
+	}
+}
+
+func TestFetchInvalidAttribute_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
