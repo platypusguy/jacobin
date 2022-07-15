@@ -129,7 +129,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 	}
 }
 
-func TestParseValidJavaVersion(t *testing.T) {
+func TestParseValidJavaVersion_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -138,6 +138,27 @@ func TestParseValidJavaVersion(t *testing.T) {
 	if err != nil {
 		t.Error("valid Java version # generated an error in version # parser")
 	}
+}
+
+func TestParseValidJavaVersion_Test1(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0x00, 0x00} // this is too short
+	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
+	if err == nil {
+		t.Error("expected error in reading invalid Java version, but got none")
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 func TestConstantPoolCountValid(t *testing.T) {
@@ -220,6 +241,7 @@ func TestAccessFlags_Test0(t *testing.T) {
 	}
 }
 
+// Verifying the logging output for the various access flags.
 func TestAccessFlags_Test1(t *testing.T) {
 
 	globals.InitGlobals("test")
