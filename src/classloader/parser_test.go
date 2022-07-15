@@ -285,6 +285,31 @@ func TestAccessFlags_Test1(t *testing.T) {
 	}
 }
 
+func TestAccessFlags_Test2(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	bytes := []byte{0x00, 0xFF, 0xFF}
+	_, err := parseAccessFlags(bytes, 10, &pc) // 10 is an invalid location
+
+	if err == nil {
+		t.Error("Expected error in reading Access flags, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+
+	os.Stderr = normalStderr
+}
+
 func TestClassNameInvalidLocation(t *testing.T) {
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
@@ -474,6 +499,51 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestClassNameWithConflictingExistingClassName(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	pc.cpCount = 3
+	bytes := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
+		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
+		0x07, 0x00, 0x02, // entry #1, a ClassRef that points to the following UTF-8 record
+		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
+	}
+
+	_, err := parseConstantPool(bytes, &pc)
+	if err != nil {
+		t.Error("Error parsing test CP for setup in testing ClassName")
+	}
+
+	pc.className = "NotHello" // this causes the error we're testing for
+
+	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
+	_, err = parseClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected an error parsing class name, but got none")
+	}
+
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Class appears to have two names") {
+		t.Errorf("Expecting different error message, got: %s ", msg)
+	}
+
+	// restore stderr
+
+	os.Stderr = normalStderr
 }
 
 func TestSuperclassNameEmpty(t *testing.T) {
