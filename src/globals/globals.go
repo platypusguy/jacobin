@@ -102,9 +102,11 @@ type Option struct {
 }
 
 // InitJacobinHome gets JACOBIN_HOME and formats it as expected
+// Note: any trailing separator is removed from the retrieved string per JACOBIN-184
 func InitJacobinHome() {
 	jacobinHome := os.Getenv("JACOBIN_HOME")
 	if jacobinHome != "" {
+		jacobinHome = strings.TrimRight(jacobinHome, "\\/") // remove any trailing separator
 		jacobinHome = cleanupPath(jacobinHome)
 	}
 	global.JacobinHome = jacobinHome
@@ -112,23 +114,22 @@ func InitJacobinHome() {
 
 func JacobinHome() string { return global.JacobinHome }
 
-// InitJavaHome gets JAVA_HOME and formats it as expected
+// InitJavaHome gets JAVA_HOME from the environment and formats it as expected
+// Note: any trailing separator is removed from the retrieved string per JACOBIN-184
 func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
 	if javaHome != "" {
+		javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
 		javaHome = cleanupPath(javaHome)
 	}
 	global.JavaHome = javaHome
 }
+
 func JavaHome() string { return global.JavaHome }
 
-// Attempts to normalize a file path.
-// Slashes are converted to the current platform's path separator if necessary, then a trailing path separator is added.
+// Normalize a file path. Slashes are converted to the current platform's path separator if necessary.
 func cleanupPath(path string) string {
 	path = filepath.FromSlash(path)
-	if !(strings.HasSuffix(path, string(os.PathSeparator))) {
-		path = path + string(os.PathSeparator)
-	}
 	return path
 }

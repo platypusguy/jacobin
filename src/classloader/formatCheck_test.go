@@ -929,75 +929,78 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-// MethodHandles refKind = 8 must have a method name of "<init>
-func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// variables we'll need.
-	klass := ParsedClass{}
-	klass.cpIndex = append(klass.cpIndex, cpEntry{})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
-
-	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
-		referenceKind: 8, // this requires that the method name be <init>,
-		// but it's "methName"
-		referenceIndex: 2, // index into CP of MethodRef entry
-	})
-
-	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
-		classIndex: 7, // points to classRef entry for class name,
-		// which poitns to UTF8 record, here: "methName"
-		nameAndTypeIndex: 3,
-	})
-
-	klass.classRefs = append(klass.classRefs, 4)
-
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"methName"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
-
-	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
-		nameIndex:       5, // points to UTF8[1], i.e., nAndTYpe-methname
-		descriptorIndex: 6, // points to UTF8[2], i.e., "D"
-	})
-
-	klass.cpCount = 8
-
-	err := formatCheckConstantPool(&klass)
-	if err == nil {
-		t.Error("Expected error for invalid method name, but didn't get any")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
-	os.Stderr = normalStderr
-	msg := string(out[:])
-
-	if !strings.Contains(msg, "should be <init>") {
-		t.Error("Got unexpected error message: " + msg)
-	}
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-}
+// MethodHandles refKind = 8 must have a method name of "<init>"
+// Note: this test commented out due to issue JACOBIN-183. Should be reinstated
+//       in some form, when that issue is resolved.
+//
+// func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
+// 	globals.InitGlobals("test")
+// 	log.Init()
+// 	_ = log.SetLogLevel(log.CLASS)
+//
+// 	// redirect stderr & stdout to capture results from stderr
+// 	normalStderr := os.Stderr
+// 	r, w, _ := os.Pipe()
+// 	os.Stderr = w
+//
+// 	normalStdout := os.Stdout
+// 	_, wout, _ := os.Pipe()
+// 	os.Stdout = wout
+//
+// 	// variables we'll need.
+// 	klass := ParsedClass{}
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodHandle, 0})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{MethodRef, 0})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{NameAndType, 0})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
+// 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
+//
+// 	klass.methodHandles = append(klass.methodHandles, methodHandleEntry{
+// 		referenceKind: 8, // this requires that the method name be <init>,
+// 		// but it's "methName"
+// 		referenceIndex: 2, // index into CP of MethodRef entry
+// 	})
+//
+// 	klass.methodRefs = append(klass.methodRefs, methodRefEntry{
+// 		classIndex: 7, // points to classRef entry for class name,
+// 		// which poitns to UTF8 record, here: "methName"
+// 		nameAndTypeIndex: 3,
+// 	})
+//
+// 	klass.classRefs = append(klass.classRefs, 4)
+//
+// 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"methName"})
+// 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
+// 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
+//
+// 	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
+// 		nameIndex:       5, // points to UTF8[1], i.e., nAndTYpe-methname
+// 		descriptorIndex: 6, // points to UTF8[2], i.e., "D"
+// 	})
+//
+// 	klass.cpCount = 8
+//
+// 	err := formatCheckConstantPool(&klass)
+// 	if err == nil {
+// 		t.Error("Expected error for invalid method name, but didn't get any")
+// 	}
+//
+// 	// restore stderr and stdout to what they were before
+// 	_ = w.Close()
+// 	out, _ := ioutil.ReadAll(r)
+// 	os.Stderr = normalStderr
+// 	msg := string(out[:])
+//
+// 	if !strings.Contains(msg, "should be <init>") {
+// 		t.Error("Got unexpected error message: " + msg)
+// 	}
+//
+// 	_ = wout.Close()
+// 	os.Stdout = normalStdout
+// }
 
 func TestInvalidMethodHandleRefKind9(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1367,7 +1370,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestModuleNames(t *testing.T) {
+func TestModuleNames_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.FINEST)
@@ -1397,6 +1400,54 @@ func TestModuleNames(t *testing.T) {
 			"Error message: " + msg)
 	} else {
 		_ = w.Close()
+	}
+
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestModuleNames_Test1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	if checkModuleName("") == nil {
+		t.Error("Expected error on test of empty module name, but got none")
+	}
+
+	if checkModuleName("@invalid") == nil {
+		t.Error("Expected error in module name starting with @, but got none")
+	}
+
+	if checkModuleName("invalid:") == nil {
+		t.Error("Expected error in module name with non-escaped :, but got none")
+	}
+
+	if checkModuleName("invalid"+"\\") == nil {
+		t.Error("Expected error in module name with ending \\:, but got none")
+	}
+
+	if checkModuleName("invalid"+"\\n") == nil {
+		t.Error("Expected error in module name with ending \\n:, but got none")
+	}
+
+	if checkModuleName("valid"+"\\@") != nil {
+		t.Error("Got unexpected error in module name with ending \\@")
+	}
+
+	if checkModuleName("goodname") != nil {
+		t.Error("Expected no error in module name 'goodname', but got one")
 	}
 
 	os.Stderr = normalStderr
@@ -1518,8 +1569,16 @@ func TestPackageName(t *testing.T) {
 		t.Error("Expected error in package name with ending \\:, but got none")
 	}
 
+	if checkPackageName("invalid"+"\\n") == nil {
+		t.Error("Expected error in package name with ending \\n:, but got none")
+	}
+
+	if checkPackageName("valid"+"\\@") != nil {
+		t.Error("Got unexpected error in package name with ending \\@")
+	}
+
 	if checkPackageName("goodname") != nil {
-		t.Error("Expected no error in package name 'goodnae', but got one")
+		t.Error("Expected no error in package name 'goodname', but got one")
 	}
 
 	_ = w.Close()

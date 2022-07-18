@@ -74,6 +74,34 @@ func TestGetIntFrom2BytesValid(t *testing.T) {
 	}
 }
 
+func TestGetU16fromTwoBytesInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	bytesToTest := []byte{0x01}
+	_, err := u16From2bytes(bytesToTest, 0)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err == nil {
+		t.Error("expected error from invalid u16From2bytes(), but got none")
+	}
+}
+
 func TestGetIntFrom4BytesValid(t *testing.T) {
 
 	globals.InitGlobals("test")
@@ -103,7 +131,36 @@ func TestGetIntFrom4BytesValid(t *testing.T) {
 	}
 }
 
-func TestFetchValidUTF8string(t *testing.T) {
+func TestGetIntFrom4BytesInvalid(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	bytesToTest := []byte{0x01, 0x02, 0x03}
+	_, err := intFrom4Bytes(bytesToTest, 0)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if err == nil {
+		t.Error("intFrom4Bytes() should have returned an error, but got none")
+	}
+}
+
+func TestFetchValidUTF8string_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -138,7 +195,7 @@ func TestFetchValidUTF8string(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestFetchInvalidUTF8string(t *testing.T) {
+func TestFetchInvalidUTF8string_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -175,6 +232,43 @@ func TestFetchInvalidUTF8string(t *testing.T) {
 
 	if !strings.Contains(msg, "attempt to fetch UTF8 string from non-UTF8 CP entry") {
 		t.Error("Expected different error msg on failed fetch of UTF-8 CP entry. Got: " + msg)
+	}
+}
+
+func TestFetchInvalidUTF8string_Test2(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, err := fetchUTF8string(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "attempt to fetch invalid UTF8 at CP entry #") {
+		t.Error("Expected different error msg on failed fetch of UTF8 CP entry. Got: " + msg)
 	}
 }
 
@@ -241,7 +335,127 @@ func TestFetchValidAttribute(t *testing.T) {
 	}
 }
 
-func TestFetchInvalidAttribute(t *testing.T) {
+func TestFetchInvalidUTF8Slot_Test0(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{2, 1}) // the UTF-8 reference. 2= non-UTF8 slot
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 2
+
+	_, err := fetchUTF8slot(&klass, 1)
+	if err == nil {
+		t.Error("Expected error testing fetch of UTF8 slot, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(out[:])
+	if !strings.Contains(errMsg, "fetch UTF8 string from non-UTF8 CP entry") {
+		t.Errorf("Expected different err msg on fetch of UTF8 from invalid slot, got %s",
+			errMsg)
+	}
+}
+
+func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 2}) // the UTF-8 reference. 2 is > max value for UTF8 slots (1)
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+	klass.cpCount = 2
+
+	_, err := fetchUTF8slot(&klass, 1)
+	if err == nil {
+		t.Error("Expected error testing fetch of UTF8 slot, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(out[:])
+	if !strings.Contains(errMsg, "invalid index into UTF8 array of CP") {
+		t.Errorf("Expected different err msg on fetch of UTF8 from invalid slot, got %s",
+			errMsg)
+	}
+}
+
+func TestFetchInvalidAttribute_Test0(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+
+	// see TestValidAttribute for info about this test data.
+	bytes := []byte{00} // bytes are too short
+	_, _, err := fetchAttribute(&klass, bytes, 0)
+	if err == nil {
+		t.Error("Expected an error in test of fetchAttribute, but did not get one")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if len(errMsg) <= 0 {
+		t.Error("Expected an error message but did not get one in fetchAttribute(): " + errMsg)
+	}
+
+	if !strings.Contains(errMsg, "error fetching field attribute") {
+		t.Errorf("Expected err msg of 'error fetching field attribute', but got: %s",
+			errMsg)
+	}
+}
+
+func TestFetchInvalidAttribute_Test1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -279,5 +493,119 @@ func TestFetchInvalidAttribute(t *testing.T) {
 
 	if len(errMsg) <= 0 {
 		t.Error("Expected an error message but did not get one in fetchAttribute(): " + errMsg)
+	}
+}
+
+func TestFetchInvalidCFmethodRef_Test0(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, _, _, err := resolveCPmethodRef(3, &klass) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid index into CP:") {
+		t.Error("Expected different error msg on failed resolution of CP MethodRef. Got: " + msg)
+	}
+}
+
+func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpIndex = append(klass.cpIndex, cpEntry{})
+	klass.cpIndex = append(klass.cpIndex, cpEntry{1, 0})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"SourceCode"})
+	klass.cpCount = 2
+
+	_, _, _, err := resolveCPmethodRef(1, &klass)
+
+	if err == nil {
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Expecting MethodRef (10) at CP entry #") {
+		t.Error("Expected different error msg on failed resolution of CP MethodRef. Got: " + msg)
+	}
+}
+
+func TestResolveCPnameAndType(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr & stdout to capture results from stderr and to
+	// prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	klass := ParsedClass{}
+	klass.cpCount = 2
+
+	_, _, err := resolveCPnameAndType(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	if err == nil {
+		t.Error("Expected error testing resolution of CP MethodRef, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid nameAndType index into CP: ") {
+		t.Error("Expected different error msg on failed resolution of CPnameAndType. Got: " + msg)
 	}
 }

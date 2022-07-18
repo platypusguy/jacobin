@@ -31,7 +31,7 @@ func ParseIncomingParamsFromMethTypeString(s string) []byte {
 			params = append(params, 'J')
 		case 'D':
 			params = append(params, 'D')
-		case 'L', '[': // objects and arrays -> object references
+		case 'L', '[': // objects and arrays -> object references (TODO: Should this exit at first [ ?)
 			params = append(params, 'L')
 		}
 	}

@@ -23,13 +23,27 @@ func TestGlobalsInit(t *testing.T) {
 	}
 }
 
-// make sure the JAVA_HOME environment variable is extracted and reformatted correctly
+// make sure the JAVA_HOME environment variable is extracted and the embedded slashes
+// are reformatted correctly
 func TestJavaHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JAVA_HOME")
 	_ = os.Setenv("JAVA_HOME", "foo/bar")
 	InitJavaHome()
 	ret := JavaHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar" + string(os.PathSeparator)
+	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	if ret != expectedPath {
+		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
+	}
+	_ = os.Setenv("JAVA_HOME", origJavaHome)
+}
+
+// verify that a trailing slash in JAVA_HOME is removed
+func TestJavaHomeRemovalOfTrailingSlash(t *testing.T) {
+	origJavaHome := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", "foo/bar/")
+	InitJavaHome()
+	ret := JavaHome()
+	expectedPath := "foo" + string(os.PathSeparator) + "bar"
 	if ret != expectedPath {
 		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
@@ -37,12 +51,26 @@ func TestJavaHomeFormat(t *testing.T) {
 }
 
 // make sure the JACOBIN_HOME environment variable is extracted and reformatted correctly
+// Per JACOBIN-184, the trailing slash is removed.
 func TestJacobinHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JACOBIN_HOME")
 	_ = os.Setenv("JACOBIN_HOME", "foo/bar")
 	InitJacobinHome()
 	ret := JacobinHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar" + string(os.PathSeparator)
+	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	if ret != expectedPath {
+		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
+	}
+	_ = os.Setenv("JACOBIN_HOME", origJavaHome)
+}
+
+// verify that a trailing slash in JAVA_HOME is removed
+func TestJacobinHomeRemovalOfTrailingSlash(t *testing.T) {
+	origJavaHome := os.Getenv("JACOBIN_HOME")
+	_ = os.Setenv("JACOBIN_HOME", "foo/bar/")
+	InitJacobinHome()
+	ret := JacobinHome()
+	expectedPath := "foo" + string(os.PathSeparator) + "bar"
 	if ret != expectedPath {
 		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
 	}

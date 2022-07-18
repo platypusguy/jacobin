@@ -125,6 +125,9 @@ func getClasslist(reader zip.Reader) map[string]struct{} {
 	var empty struct{}
 
 	for _, c := range classes {
+		if strings.HasSuffix(c, "\r") || strings.HasSuffix(c, "\n") {
+			c = strings.TrimRight(c, "\r\n")
+		}
 		classSet[c+".class"] = empty
 	}
 

@@ -129,7 +129,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 	}
 }
 
-func TestParseValidJavaVersion(t *testing.T) {
+func TestParseValidJavaVersion_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 
@@ -138,6 +138,27 @@ func TestParseValidJavaVersion(t *testing.T) {
 	if err != nil {
 		t.Error("valid Java version # generated an error in version # parser")
 	}
+}
+
+func TestParseValidJavaVersion_Test1(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	bytesToTest := []byte{0x00, 0x00} // this is too short
+	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
+	if err == nil {
+		t.Error("expected error in reading invalid Java version, but got none")
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 func TestConstantPoolCountValid(t *testing.T) {
@@ -189,14 +210,14 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 // Access flags consist of a 2-byte integer. In the parsing, a variety of booleans are set in
 // the parsed class to show what access is allowed by the access flags. Both the retrieval of
 // the value and setting of the booleans is tested here.
-func TestAccessFlags(t *testing.T) {
+func TestAccessFlags_Test0(t *testing.T) {
 
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
 
 	pc := ParsedClass{}
-	bytes := []byte{0x00, 0x84, 0x21}
+	bytes := []byte{0x00, 0xFF, 0xFF}
 	loc, err := parseAccessFlags(bytes, 0, &pc)
 
 	if err != nil {
@@ -208,11 +229,85 @@ func TestAccessFlags(t *testing.T) {
 	}
 
 	if pc.classIsPublic == false ||
+		pc.classIsFinal == false ||
 		pc.classIsSuper == false ||
+		pc.classIsInterface == false ||
 		pc.classIsAbstract == false ||
+		pc.classIsSynthetic == false ||
+		pc.classIsAnnotation == false ||
+		pc.classIsEnum == false ||
 		pc.classIsModule == false {
 		t.Error("Access flags did not set expected values in the parsed class")
 	}
+}
+
+// Verifying the logging output for the various access flags.
+func TestAccessFlags_Test1(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	bytes := []byte{0x00, 0xFF, 0xFF}
+	loc, err := parseAccessFlags(bytes, 0, &pc)
+
+	if err != nil {
+		t.Error("Unexpected error occurred testing parse of Access flags")
+	}
+
+	if loc != 2 {
+		t.Error("Expected location from parse of Access flags to be 2. Got: " + strconv.Itoa(loc))
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+
+	out, _ := ioutil.ReadAll(r)
+	msg := string(out[:])
+	os.Stderr = normalStderr
+
+	if !strings.Contains(msg, "public") ||
+		!strings.Contains(msg, "final") ||
+		!strings.Contains(msg, "super") ||
+		!strings.Contains(msg, "interface") ||
+		!strings.Contains(msg, "abstract") ||
+		!strings.Contains(msg, "synthetic") ||
+		!strings.Contains(msg, "annotation") ||
+		!strings.Contains(msg, "enum") ||
+		!strings.Contains(msg, "module") {
+		t.Errorf("Did not get the expected logging output for the attribute")
+	}
+}
+
+func TestAccessFlags_Test2(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr to inspect output
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	bytes := []byte{0x00, 0xFF, 0xFF}
+	_, err := parseAccessFlags(bytes, 10, &pc) // 10 is an invalid location
+
+	if err == nil {
+		t.Error("Expected error in reading Access flags, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+
+	os.Stderr = normalStderr
 }
 
 func TestClassNameInvalidLocation(t *testing.T) {
@@ -406,6 +501,51 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
+func TestClassNameWithConflictingExistingClassName(t *testing.T) {
+
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	pc := ParsedClass{}
+	pc.cpCount = 3
+	bytes := []byte{
+		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
+		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
+		0x07, 0x00, 0x02, // entry #1, a ClassRef that points to the following UTF-8 record
+		0x01, 0x00, 0x05, 'H', 'e', 'l', 'l', 'o', // entry #2, the UTF-8 record containing "Hello"
+	}
+
+	_, err := parseConstantPool(bytes, &pc)
+	if err != nil {
+		t.Error("Error parsing test CP for setup in testing ClassName")
+	}
+
+	pc.className = "NotHello" // this causes the error we're testing for
+
+	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
+	_, err = parseClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected an error parsing class name, but got none")
+	}
+
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "Class appears to have two names") {
+		t.Errorf("Expecting different error message, got: %s ", msg)
+	}
+
+	// restore stderr
+
+	os.Stderr = normalStderr
+}
+
 func TestSuperclassNameEmpty(t *testing.T) {
 
 	globals.InitGlobals("test")
@@ -451,6 +591,85 @@ func TestSuperclassNameEmpty(t *testing.T) {
 		}
 	}
 
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+// Test that when the class is java.lang.Object that the superclass is empty
+func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// this will give an error when trying to get the offset
+	// of the superclass info
+	testBytes := []byte{0x00, 0x00, 0x00}
+
+	pc := ParsedClass{} // create a CP with a single entry
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 1,
+		slot:      1,
+	})
+	pc.className = "java/lang/Object"
+	pc.superClass = "this will be set to empty"
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err != nil {
+		t.Error("Got unexpected error")
+	}
+
+	if pc.superClass != "" {
+		t.Errorf("Expected java/lang/Object's superclass to be empty, got %s",
+			pc.superClass)
+	}
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+func TestSuperclassNameInvalidOffset(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr & stdout to prevent error message from showing up in the test results
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	// this will give an error when trying to get the offset
+	// of the superclass info
+	testBytes := []byte{0xFF}
+
+	pc := ParsedClass{} // create a CP with a single entry
+	pc.cpIndex = append(pc.cpIndex, cpEntry{
+		entryType: 1,
+		slot:      1,
+	})
+
+	_, err := parseSuperClassName(testBytes, 0, &pc)
+	if err == nil {
+		t.Error("Expected but did not get an error for superclass name that's empty")
+	}
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr
@@ -902,7 +1121,7 @@ func TestFieldWithNoAttributes(t *testing.T) {
 	}
 
 	if f.description != 1 {
-		t.Error("Expectef a field description UTF entry at 1, got: " + strconv.Itoa(f.description))
+		t.Error("Expected a field description UTF entry at 1, got: " + strconv.Itoa(f.description))
 	}
 
 	if len(f.attributes) != 0 {
