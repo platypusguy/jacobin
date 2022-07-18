@@ -1521,6 +1521,14 @@ func TestPackageName(t *testing.T) {
 		t.Error("Expected error in package name with ending \\:, but got none")
 	}
 
+	if checkPackageName("invalid"+"\\n") == nil {
+		t.Error("Expected error in package name with ending \\n:, but got none")
+	}
+
+	if checkPackageName("valid"+"\\@") != nil {
+		t.Error("Got unexpected error in package name with ending \\@")
+	}
+
 	if checkPackageName("goodname") != nil {
 		t.Error("Expected no error in package name 'goodnae', but got one")
 	}
