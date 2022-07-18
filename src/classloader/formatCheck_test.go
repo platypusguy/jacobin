@@ -1370,7 +1370,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestModuleNames(t *testing.T) {
+func TestModuleNames_Test0(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.FINEST)
@@ -1400,6 +1400,54 @@ func TestModuleNames(t *testing.T) {
 			"Error message: " + msg)
 	} else {
 		_ = w.Close()
+	}
+
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+}
+
+func TestModuleNames_Test1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINEST)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	if checkModuleName("") == nil {
+		t.Error("Expected error on test of empty module name, but got none")
+	}
+
+	if checkModuleName("@invalid") == nil {
+		t.Error("Expected error in module name starting with @, but got none")
+	}
+
+	if checkModuleName("invalid:") == nil {
+		t.Error("Expected error in module name with non-escaped :, but got none")
+	}
+
+	if checkModuleName("invalid"+"\\") == nil {
+		t.Error("Expected error in module name with ending \\:, but got none")
+	}
+
+	if checkModuleName("invalid"+"\\n") == nil {
+		t.Error("Expected error in module name with ending \\n:, but got none")
+	}
+
+	if checkModuleName("valid"+"\\@") != nil {
+		t.Error("Got unexpected error in module name with ending \\@")
+	}
+
+	if checkModuleName("goodname") != nil {
+		t.Error("Expected no error in module name 'goodname', but got one")
 	}
 
 	os.Stderr = normalStderr
@@ -1530,7 +1578,7 @@ func TestPackageName(t *testing.T) {
 	}
 
 	if checkPackageName("goodname") != nil {
-		t.Error("Expected no error in package name 'goodnae', but got one")
+		t.Error("Expected no error in package name 'goodname', but got one")
 	}
 
 	_ = w.Close()
