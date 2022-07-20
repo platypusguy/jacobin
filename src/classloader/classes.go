@@ -229,7 +229,6 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // If it doesn't find it there, then it looks for it in the class entry in Classes.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
-// func FetchMethodAndCP(class, meth string, methType string) (Method, *CPool, error) {
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
@@ -281,7 +280,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 
 	// if we got this far, the class was not found
 
-	if meth == "main" { // to be consistent withe the JDK, we print this peculiar error message when main() is missing
+	if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
 		_ = log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
 			"   public static void main(String[] args)", log.SEVERE)
 	} else {
