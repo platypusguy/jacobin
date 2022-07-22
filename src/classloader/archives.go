@@ -53,9 +53,11 @@ func NewJarFile(filename string) (*Archive, error) {
 func (archive *Archive) scanArchive() error {
 	reader, err := zip.OpenReader(archive.Filename)
 
-	defer reader.Close()
+	if reader != nil {
+		defer reader.Close()
+	}
 
-	if err != nil {
+	if reader == nil || err != nil {
 		_ = log.Log("Error: Invalid or corrupt jarfile "+archive.Filename, log.SEVERE)
 		return err
 	}
