@@ -132,6 +132,74 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 	}
 }
 
+func TestLoadClassFromInvalidJar(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	_, err := getJarFile(BootstrapCL, "")
+	if err == nil {
+		t.Errorf("expected err msg for loading class from invalid JAR, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid or corrupt jarfile") {
+		t.Error("Got unexpected error msg: " + msg)
+	}
+}
+
+func TestMainClassFromInvalidJar(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	_, err := GetMainClassFromJar(BootstrapCL, "gherkin")
+	if err == nil {
+		t.Errorf("expected err msg for loading main class from invalid JAR, but got none")
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(msg, "Invalid or corrupt jarfile") {
+		t.Error("Got unexpected error msg: " + msg)
+	}
+}
+
 func TestInsertionIntoMethodArea(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
