@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"errors"
 	"io/ioutil"
 	"jacobin/globals"
 	"jacobin/log"
@@ -52,6 +53,32 @@ func TestInitOfClassloaders(t *testing.T) {
 
 	if len(AppCL.Classes) != 0 {
 		t.Errorf("Expected size of application CL's table to be 0, got: %d", len(AppCL.Classes))
+	}
+}
+
+func TestWalkWithError(t *testing.T) {
+	e := errors.New("test error")
+	err := walk("", nil, e)
+	if err != e {
+		t.Errorf("Expected an error = to 'test error', got %s",
+			err.Error())
+	}
+}
+
+// when walk() encounters an invalid file, it is simply skipped
+// with no error generated as it's not clear that entry in jmod
+// will be necessary. If it is, when it's invoked, it will be loaded
+// then and any errors in finding the file will be returned then.
+func TestJmodWalkWithInvalidDirAndFile(t *testing.T) {
+	err := os.Mkdir("subdir", 0755)
+	defer os.RemoveAll("subdir")
+	_ = os.WriteFile("subdir/file1", []byte(""), 0644)
+
+	dirEntry, err := os.ReadDir("subdir")
+	err = walk("gherkin", dirEntry[0], nil)
+	if err != nil {
+		t.Errorf("Expected no error on invalid file in walk(), but got %s",
+			err.Error())
 	}
 }
 
