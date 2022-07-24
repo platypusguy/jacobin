@@ -82,6 +82,42 @@ func TestJmodWalkWithInvalidDirAndFile(t *testing.T) {
 	}
 }
 
+func TestLoadBaseClassesInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	g := globals.GetGlobalRef()
+	g.JavaHome = "gherkin"
+
+	// Loading the base classes from an invalid JAVA_HOME should
+	// result in an error message being logged.
+	LoadBaseClasses(g)
+
+	_ = w.Close()
+	lits, _ := ioutil.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(lits[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Couldn't load JMOD file") {
+		t.Errorf("Expecting err msg 'Couldn't load JMOD file', but got %s",
+			errMsg)
+	}
+}
+
 func TestLoadClassFromFileInvalidName(t *testing.T) {
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
