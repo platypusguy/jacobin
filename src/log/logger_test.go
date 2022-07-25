@@ -142,3 +142,49 @@ func TestLoggingMessageAtInvalidLoggingLevel(t *testing.T) {
 		t.Error("logging message at invalid logging level did not generate ane error")
 	}
 }
+
+func TestThatMsgWithFinerLoggingLevelThanAllowedPrintsNothing(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = SetLogLevel(WARNING)
+
+	// to test the error message, capture the writing done to stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	_ = Log("Test message (log.WARNING)", FINEST)
+
+	// reset stderr to what it was before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStderr
+
+	msg := string(out[:])
+
+	if len(msg) > 0 {
+		t.Errorf("Test should not have logged anything, but it did: %s", msg)
+	}
+}
+
+func TestThatTraceLoggingWithoutCLIsettingPrintsNothing(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = SetLogLevel(TRACE_INST)
+
+	// to test the error message, capture the writing done to stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	_ = Log("Test message (log.WARNING)", TRACE_INST)
+
+	// reset stderr to what it was before
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStderr
+
+	msg := string(out[:])
+
+	if len(msg) > 0 {
+		t.Errorf("Test should not have logged anything, but it did: %s", msg)
+	}
+}
