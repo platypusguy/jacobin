@@ -312,7 +312,7 @@ func LoadClassFromNameOnly(name string) error {
 func LoadClassFromFile(cl Classloader, filename string) (string, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
-		_ = log.Log("Error: could not find or load main class "+filename+". Exiting.", log.SEVERE)
+		_ = log.Log("Error: could not find or load class "+filename+".", log.SEVERE)
 		return "", fmt.Errorf("java.lang.classNotFoundException")
 	}
 
