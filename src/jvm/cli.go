@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -131,10 +131,10 @@ func getEnvArgs() string {
 // log the two environmental variables from which we'll load base classes, if log level allows.
 func showJavaHomeArgs(Global *globals.Globals) {
 	if Global.JavaHome != "" {
-		log.Log("JAVA_HOME: "+Global.JavaHome, log.FINE)
+		_ = log.Log("JAVA_HOME: "+Global.JavaHome, log.FINE)
 	}
 	if Global.JacobinHome != "" {
-		log.Log("JACOBIN_HOME: "+Global.JacobinHome, log.FINE)
+		_ = log.Log("JACOBIN_HOME: "+Global.JacobinHome, log.FINE)
 	}
 }
 
@@ -179,7 +179,7 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 	}
 
 	ver := fmt.Sprintf(
-		"Jacobin VM v. %s (Java 11.0.10) %s\n64-bit %s VM", global.Version, exeDate, global.VmModel)
+		"Jacobin VM v. %s (Java %d) %s\n64-bit %s VM", global.Version, global.MaxJavaVersion, exeDate, global.VmModel)
 	fmt.Fprintln(outStream, ver)
 }
 
