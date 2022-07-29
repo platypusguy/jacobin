@@ -1,3 +1,8 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ */
 package classloader
 
 import (

@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Jacobin authors. All rights reserved.
+ * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -194,7 +194,7 @@ func showCopyright() {
 		!strings.Contains(g.CommandLine, "--version") {
 		if g.StrictJDK == false {
 			fmt.Println("Jacobin VM v. " + g.Version +
-				", © 2021-2 by Andrew Binstock. All rights reserved. MPL 2.0 License.")
+				", © 2021-2 by the Jacobin authors. All rights reserved. MPL 2.0 License.")
 		}
 	}
 }
