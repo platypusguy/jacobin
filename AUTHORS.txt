@@ -1,0 +1,22 @@
+All code files for Jacobin begin with the following header:
+
+    /*
+     * Jacobin VM - A Java virtual machine
+     * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+     * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+     */
+
+ The "Jacobin authors" refers to developers who have contributed a
+ substantial amount of code. Presently, the term refers to:
+
+ Andrew Binstock (@platypusguy)
+ Spencer Uresk (@suresk)
+
+ Several contributors have kindly provided code fixes, as can be
+ seen on GitHub in the pull requests and closed issues. Principal
+ among these helpful contributors is Richard Elkins (@texadactyl)
+
+ Many people have contributed useful comments and suggestions, for
+ which we are most grateful indeed!
+
+
