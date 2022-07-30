@@ -42,7 +42,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		args = append(args, v)
 	}
 	Global.Args = args
-	showCopyright()
+	showCopyright(Global)
 
 	for i := 0; i < len(args); i++ {
 		var option, arg string
@@ -186,8 +186,7 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 // show the copyright. Because the various -version commands show much the
 // same data, rather than printing it twice, we skip showing the copyright
 // info when the -version option variants are specified
-func showCopyright() {
-	g := globals.GetGlobalRef()
+func showCopyright(g *globals.Globals) {
 	if !strings.Contains(g.CommandLine, "-showversion") &&
 		!strings.Contains(g.CommandLine, "--show-version") &&
 		!strings.Contains(g.CommandLine, "-version") &&

@@ -142,7 +142,7 @@ func TestShowVersionMessage(t *testing.T) {
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "Jacobin VM v.") {
-		t.Error("jacobin -version did not generate the correct message to stderr. msg was: " + msg)
+		t.Error("jacobin -showversion did not generate the correct message to stderr. msg was: " + msg)
 	}
 }
 
@@ -361,8 +361,9 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 }
 
 func TestShowCopyright(t *testing.T) {
+	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
-	globals.GetGlobalRef().StrictJDK = false // Copyright is shown in a run only when not in strictJDK mode
+	g.StrictJDK = false // Copyright is shown in a run only when not in strictJDK mode
 
 	_ = log.SetLogLevel(log.WARNING)
 
@@ -370,7 +371,7 @@ func TestShowCopyright(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	showCopyright()
+	showCopyright(g)
 
 	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
