@@ -87,6 +87,9 @@ func LoadOptionsTable(Global globals.Globals) {
 	show_Version := globals.Option{true, false, 0, showVersionStdout}
 	Global.Options["--show-version"] = show_Version
 
+	strictJdk := globals.Option{true, false, 0, strictJDK}
+	Global.Options["-strictJDK"] = strictJdk
+
 	traceInstruction := globals.Option{true, false, 1, enableTraceInstructions}
 	Global.Options["-trace"] = traceInstruction
 
@@ -154,6 +157,12 @@ func showVersionStderr(pos int, name string, gl *globals.Globals) (int, error) {
 func showVersionStdout(pos int, name string, gl *globals.Globals) (int, error) {
 	showVersion(os.Stdout, gl)
 	setOptionToSeen("--show-version", gl)
+	return pos, nil
+}
+
+func strictJDK(pos int, name string, gl *globals.Globals) (int, error) {
+	gl.StrictJDK = true
+	setOptionToSeen("-strictJDK", gl)
 	return pos, nil
 }
 
