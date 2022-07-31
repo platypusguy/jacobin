@@ -12,6 +12,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"runtime/debug"
 	"strings"
 )
 
@@ -32,7 +33,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		cliArgs += v + " "
 	}
 	Global.CommandLine = strings.TrimSpace(cliArgs)
-	log.Log("Commandline: "+Global.CommandLine, log.FINE)
+	_ = log.Log("Commandline: "+Global.CommandLine, log.FINE)
 
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
@@ -72,7 +73,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		if ok {
 			i, _ = opt.Action(i, arg, Global)
 		} else {
-			fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
+			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
@@ -163,7 +164,8 @@ where options include:
 	--version     print product version to the output stream and exit
 	-showversion  print product version to the error stream and continue
 	--show-version
-				  print product version to the output stream and continue`
+				  print product version to the output stream and continue
+	-strictJDK    make user messages conform closely to the JDK's format'`
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }
@@ -180,20 +182,21 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 
 	ver := fmt.Sprintf(
 		"Jacobin VM v. %s (Java %d) %s\n64-bit %s VM", global.Version, global.MaxJavaVersion, exeDate, global.VmModel)
-	fmt.Fprintln(outStream, ver)
+	_, _ = fmt.Fprintln(outStream, ver)
+
+	info, _ := debug.ReadBuildInfo()
+	_, _ = fmt.Fprintf(outStream, "source: %s, dated %s\n",
+		info.Settings[10].Value, info.Settings[11].Value)
 }
 
-// show the copyright. Because the various -version commands show much the
-// same data, rather than printing it twice, we skip showing the copyright
-// info when the -version option variants are specified
+// show the copyright. This appears only in the -version family of options, and
+// then only when -strictJDK is off.
 func showCopyright(g *globals.Globals) {
-	if !strings.Contains(g.CommandLine, "-showversion") &&
-		!strings.Contains(g.CommandLine, "--show-version") &&
-		!strings.Contains(g.CommandLine, "-version") &&
-		!strings.Contains(g.CommandLine, "--version") {
-		if g.StrictJDK == false {
-			fmt.Println("Jacobin VM v. " + g.Version +
-				", © 2021-2 by the Jacobin authors. All rights reserved. MPL 2.0 License.")
-		}
+	if g.StrictJDK == false && (strings.Contains(g.CommandLine, "-showversion") ||
+		strings.Contains(g.CommandLine, "--show-version") ||
+		strings.Contains(g.CommandLine, "-version") ||
+		strings.Contains(g.CommandLine, "--version")) {
+		fmt.Println("Jacobin VM, Copyright " +
+			"© 2021-2 by the Jacobin authors. MPL 2.0 License. www.jacobin.org")
 	}
 }

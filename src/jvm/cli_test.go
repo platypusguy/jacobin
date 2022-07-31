@@ -360,7 +360,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 	}
 }
 
-func TestShowCopyright(t *testing.T) {
+func TestShowCopyrightInVersion(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.StrictJDK = false // Copyright is shown in a run only when not in strictJDK mode
@@ -371,6 +371,9 @@ func TestShowCopyright(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
+	// copyright appears only if one of the -version family of
+	// commands has been specified.
+	g.CommandLine = "-version"
 	showCopyright(g)
 
 	_ = w.Close()
