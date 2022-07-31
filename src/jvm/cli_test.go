@@ -385,6 +385,30 @@ func TestShowCopyright(t *testing.T) {
 	}
 }
 
+func TestShowCopyrightWithStrictJDKswitch(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.StrictJDK = true // Copyright is shown in a run only when not in strictJDK mode
+
+	_ = log.SetLogLevel(log.WARNING)
+
+	normalStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	showCopyright(g)
+
+	_ = w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = normalStdout
+
+	msg := string(out[:])
+
+	if msg != "" {
+		t.Errorf("Expected no copyright notice, but got: %s", msg)
+	}
+}
+
 func TestFoundClassFileWithNoArgs(t *testing.T) {
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
