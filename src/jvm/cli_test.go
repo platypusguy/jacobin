@@ -382,7 +382,7 @@ func TestShowCopyrightInVersion(t *testing.T) {
 
 	msg := string(out[:])
 
-	if !strings.Contains(msg, "All rights reserved.") ||
+	if !strings.Contains(msg, "Copyright") ||
 		!strings.Contains(msg, "2021") {
 		t.Error("Copyright does not contain expected terms")
 	}

@@ -99,9 +99,6 @@ func TestRunHhelp(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slout, _ := io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slout), "Jacobin VM") {
-		t.Errorf("Output did not begin with Jacobin name, instead: %s", string(slout))
-	}
 
 	if !strings.Contains(string(slout), "Usage: jacobin [options] <mainclass> [args...]") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slout))

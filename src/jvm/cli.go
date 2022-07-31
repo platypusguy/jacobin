@@ -184,9 +184,15 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 		"Jacobin VM v. %s (Java %d) %s\n64-bit %s VM", global.Version, global.MaxJavaVersion, exeDate, global.VmModel)
 	_, _ = fmt.Fprintln(outStream, ver)
 
-	info, _ := debug.ReadBuildInfo()
-	_, _ = fmt.Fprintf(outStream, "source: %s, dated %s\n",
-		info.Settings[10].Value, info.Settings[11].Value)
+	if global.StrictJDK == false {
+		info, _ := debug.ReadBuildInfo()
+		if len(info.Settings) >= 12 {
+			_, _ = fmt.Fprintf(outStream, "source: %s, dated %s\n",
+				info.Settings[10].Value, info.Settings[11].Value)
+		} else {
+			fmt.Println("No data on source code available.")
+		}
+	}
 }
 
 // show the copyright. This appears only in the -version family of options, and

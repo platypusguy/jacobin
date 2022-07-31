@@ -90,7 +90,6 @@ func TestRunHelp(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,12 +99,7 @@ func TestRunHelp(t *testing.T) {
 		t.Errorf("Got error running Jacobin: %s", err.Error())
 	}
 
-	// Here begin the actual tests on the output to stderr and stdout
-	slout, _ := io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slout), "Jacobin VM") {
-		t.Errorf("Output did not begin with Jacobin name, instead: %s", string(slout))
-	}
-
+	// Here begin the actual tests on the output to stderr
 	slurp, _ := io.ReadAll(stderr)
 	if !strings.Contains(string(slurp), "Usage: jacobin [options] <mainclass> [args...]") {
 		t.Errorf("Did not get expected output to stderr. Got: %s", string(slurp))

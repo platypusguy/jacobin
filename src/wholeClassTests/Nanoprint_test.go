@@ -118,13 +118,10 @@ func TestRunNanoprint(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stdout)
 	slurpOut := string(slurp)
-	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
-	}
 
 	outStrings := strings.Split(strings.ReplaceAll(slurpOut, "\r\n", "\n"), "\n")
-	time1, err1 := strconv.Atoi(outStrings[1])
-	time2, err2 := strconv.Atoi(outStrings[2])
+	time1, err1 := strconv.Atoi(outStrings[0])
+	time2, err2 := strconv.Atoi(outStrings[1])
 
 	if err1 != nil || err2 != nil {
 		t.Errorf("Error converting nanoTimes to integers in lines[1] and [2]: %s", outStrings)
@@ -166,7 +163,6 @@ func TestRunNanoPrintVerboseClass(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -181,12 +177,6 @@ func TestRunNanoPrintVerboseClass(t *testing.T) {
 	slurpErr := string(slurp)
 	if !strings.Contains(slurpErr, "Class: NanoPrint, loader: bootstrap") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }
 
@@ -221,7 +211,6 @@ func TestRunNanoPrintVerboseFinest(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -236,12 +225,6 @@ func TestRunNanoPrintVerboseFinest(t *testing.T) {
 	slurpErr := string(slurp)
 	if !strings.Contains(slurpErr, "Class NanoPrint has been format-checked.") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }
 
@@ -276,7 +259,6 @@ func TestRunNanoPrintTraceInst(t *testing.T) {
 
 	// get the stdout and stderr contents from the file execution
 	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -291,11 +273,5 @@ func TestRunNanoPrintTraceInst(t *testing.T) {
 	slurpErr := string(slurp)
 	if !strings.Contains(slurpErr, "class: NanoPrint, meth: main, pc: 22, inst: RETURN, tos: -1") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	slurpOut := string(slurp)
-	if !strings.HasPrefix(slurpOut, "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", slurpOut)
 	}
 }

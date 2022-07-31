@@ -106,9 +106,6 @@ func TestRunHello(t *testing.T) {
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
 
 	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
@@ -163,9 +160,6 @@ func TestRunHelloVerboseClass(t *testing.T) {
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
 
 	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
@@ -220,9 +214,6 @@ func TestRunHelloVerboseFinest(t *testing.T) {
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
 
 	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
@@ -278,9 +269,6 @@ func TestRunHelloTraceInst(t *testing.T) {
 	}
 
 	slurp, _ = io.ReadAll(stdout)
-	if !strings.HasPrefix(string(slurp), "Jacobin VM") {
-		t.Errorf("Stdout did not begin with Jacobin copyright, instead: %s", string(slurp))
-	}
 
 	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
