@@ -9,10 +9,10 @@ package jvm
 import (
 	"errors"
 	"fmt"
+	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
-	"runtime/debug"
 	"strings"
 )
 
@@ -185,23 +185,30 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 	_, _ = fmt.Fprintln(outStream, ver)
 
 	if global.StrictJDK == false {
-		info, _ := debug.ReadBuildInfo()
-		if len(info.Settings) >= 12 {
-			_, _ = fmt.Fprintf(outStream, "source: %s, dated %s\n",
-				info.Settings[10].Value, info.Settings[11].Value)
-		} else {
-			fmt.Println("No data on source code available.")
+		execInfo := execdata.GetExecBuildInfo(global)
+		vcsHash, exists := execInfo["vcs.revision"]
+		if !exists {
+			vcsHash = "n/a"
 		}
+
+		vcsDate, exists := execInfo["vcs.time"]
+		if !exists {
+			vcsDate = "n/a"
+		}
+
+		_, _ = fmt.Fprintf(outStream, "source: %s, dated %s\n",
+			vcsHash, vcsDate)
 	}
 }
 
 // show the copyright. This appears only in the -version family of options, and
 // then only when -strictJDK is off.
 func showCopyright(g *globals.Globals) {
-	if g.StrictJDK == false && (strings.Contains(g.CommandLine, "-showversion") ||
-		strings.Contains(g.CommandLine, "--show-version") ||
-		strings.Contains(g.CommandLine, "-version") ||
-		strings.Contains(g.CommandLine, "--version")) {
+	if !strings.Contains(g.CommandLine, "-strictJDK") &&
+		(strings.Contains(g.CommandLine, "-showversion") ||
+			strings.Contains(g.CommandLine, "--show-version") ||
+			strings.Contains(g.CommandLine, "-version") ||
+			strings.Contains(g.CommandLine, "--version")) {
 		fmt.Println("Jacobin VM, Copyright " +
 			"© 2021-2 by the Jacobin authors. MPL 2.0 License. www.jacobin.org")
 	}

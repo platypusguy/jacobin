@@ -15,7 +15,8 @@ import (
 // and makes it available to the JVM
 
 // ReadBuildInfo gets the complete set of available info
-// of the currently executing Jacobin instance.
+// of the currently executing Jacobin instance. Note that
+// this returns the map, rather than a pointer to it.
 func GetExecBuildInfo(g *globals.Globals) map[string]string {
 	execInfo := make(map[string]string)
 	info, _ := debug.ReadBuildInfo()
