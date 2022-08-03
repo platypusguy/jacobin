@@ -9,6 +9,7 @@ package jvm
 import (
 	"errors"
 	"fmt"
+	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -207,6 +208,10 @@ func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) 
 		return pos, errors.New("Invalid logging level specified: " + argValue)
 	}
 	setOptionToSeen("-verbose", gl) // mark the -verbose option as having been specified
+
+	if log.Level == log.FINEST {
+		execdata.PrintJacobinBuildData(gl)
+	}
 	return pos, nil
 }
 

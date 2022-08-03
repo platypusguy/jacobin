@@ -7,7 +7,9 @@
 package execdata
 
 import (
+	"fmt"
 	"jacobin/globals"
+	"os"
 	"runtime/debug"
 )
 
@@ -27,5 +29,18 @@ func GetExecBuildInfo(g *globals.Globals) {
 			v := info.Settings[i].Value
 			g.JacobinBuildData[k] = v
 		}
+	}
+}
+
+func PrintJacobinBuildData(g *globals.Globals) {
+	if g.JacobinBuildData == nil {
+		GetExecBuildInfo(g)
+	}
+	if len(g.JacobinBuildData) > 0 {
+		fmt.Fprintln(os.Stderr, "Jacobin executable:")
+	}
+
+	for key, value := range g.JacobinBuildData {
+		fmt.Fprintf(os.Stderr, "\t%s: %s\n", key, value)
 	}
 }
