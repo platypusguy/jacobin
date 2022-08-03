@@ -49,8 +49,11 @@ type Globals struct {
 	// ---- thread management ----
 	Threads ThreadList // list of all app execution threads
 
+	// ---- execution context ----
+	JacobinBuildData map[string]string
+
 	// ---- special switches ----
-	StrictJDK bool
+	StrictJDK bool // hew closely to actions and error messages of the JDK
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -73,6 +76,7 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
 		Threads:           ThreadList{list.New(), sync.Mutex{}},
+		JacobinBuildData:  nil,
 		StrictJDK:         false,
 	}
 

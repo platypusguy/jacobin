@@ -184,14 +184,14 @@ func showVersion(outStream *os.File, global *globals.Globals) {
 		"Jacobin VM v. %s (Java %d) %s\n64-bit %s VM", global.Version, global.MaxJavaVersion, exeDate, global.VmModel)
 	_, _ = fmt.Fprintln(outStream, ver)
 
-	if global.StrictJDK == false {
-		execInfo := execdata.GetExecBuildInfo(global)
-		vcsHash, exists := execInfo["vcs.revision"]
+	if !strings.Contains(global.CommandLine, "-strictJDK") {
+		execdata.GetExecBuildInfo(global)
+		vcsHash, exists := global.JacobinBuildData["vcs.revision"]
 		if !exists {
 			vcsHash = "n/a"
 		}
 
-		vcsDate, exists := execInfo["vcs.time"]
+		vcsDate, exists := global.JacobinBuildData["vcs.time"]
 		if !exists {
 			vcsDate = "n/a"
 		}

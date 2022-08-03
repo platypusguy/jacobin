@@ -15,15 +15,17 @@ import (
 // and makes it available to the JVM
 
 // ReadBuildInfo gets the complete set of available info
-// of the currently executing Jacobin instance. Note that
-// this returns the map, rather than a pointer to it.
-func GetExecBuildInfo(g *globals.Globals) map[string]string {
-	execInfo := make(map[string]string)
-	info, _ := debug.ReadBuildInfo()
-	for i := 0; i < len(info.Settings); i++ {
-		k := info.Settings[i].Key
-		v := info.Settings[i].Value
-		execInfo[k] = v
+// of the currently executing Jacobin instance and load it
+// into a map in the globals. The fetch of the data occurs
+// only once due to the initial test.
+func GetExecBuildInfo(g *globals.Globals) {
+	if g.JacobinBuildData == nil {
+		g.JacobinBuildData = make(map[string]string)
+		info, _ := debug.ReadBuildInfo()
+		for i := 0; i < len(info.Settings); i++ {
+			k := info.Settings[i].Key
+			v := info.Settings[i].Value
+			g.JacobinBuildData[k] = v
+		}
 	}
-	return execInfo
 }
