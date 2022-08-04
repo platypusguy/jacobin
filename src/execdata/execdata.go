@@ -36,11 +36,12 @@ func PrintJacobinBuildData(g *globals.Globals) {
 	if g.JacobinBuildData == nil {
 		GetExecBuildInfo(g)
 	}
+
 	if len(g.JacobinBuildData) > 0 {
-		fmt.Fprintln(os.Stderr, "Jacobin executable:")
+		_, _ = fmt.Fprintln(os.Stderr, "Jacobin executable:")
 	}
 
 	for key, value := range g.JacobinBuildData {
-		fmt.Fprintf(os.Stderr, "\t%s: %s\n", key, value)
+		_, _ = fmt.Fprintf(os.Stderr, "\t%s: %s\n", key, value)
 	}
 }
