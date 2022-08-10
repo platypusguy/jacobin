@@ -17,9 +17,10 @@ At present, all tasks and defects are logged in and instance of JetBrains' [YouT
 As we progress, we post short explanations of project decisions and explanations of how the JVM works. Current material can be found below:
 
 #### Project Posts
-[Why was Go chosen for this project?](http://binstock.blogspot.com/2021/08/a-whole-new-project-jvm.html)
 
-[Detailed Jacobin status after 6 months](http://binstock.blogspot.com/2022/02/jacobin-jvm-project-after-six-months.html)
+[Jacobin status at the 1-year mark](http://binstock.blogspot.com/2022/08/jacobin-jvm-at-1-year-mark.html)
+
+[Why was Go chosen for this project?](http://binstock.blogspot.com/2021/08/a-whole-new-project-jvm.html)
 
 #### How the Jacobin JVM works
 [Command-line processing](https://github.com/platypusguy/jacobin/wiki/Command-line-Processing)
