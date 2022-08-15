@@ -29,7 +29,7 @@ import (
 type Classloader struct {
 	Name     string
 	Parent   string
-	Classes  map[string]ParsedClass
+	Classes  map[string]Klass
 	Archives map[string]*Archive // TODO: I think this should be moved to classpath when we make it a thing
 }
 
@@ -396,7 +396,9 @@ func ParseAndPostClass(cl Classloader, filename string, rawBytes []byte) (string
 		Data:   &classToPost,
 	}
 	_ = insert(fullyParsedClass.className, eKF)
-	// _ = log.Log("loaded class: "+filename, log.CLASS)
+
+	// record the class in the classloader
+	cl.Classes[fullyParsedClass.className] = eKF
 	return fullyParsedClass.className, nil
 }
 
@@ -412,7 +414,7 @@ func insert(name string, klass Klass) error {
 	return nil
 }
 
-// load the parse class into a form suitable for posting to the method area (which is
+// load the parsed class into a form suitable for posting to the method area (which is
 // exec.Classes. This mostly involves copying the data, converting most indexes to uint16
 // and removing some fields we needed in parsing, but which are no longer required.
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
@@ -698,17 +700,17 @@ func normalizeClassReference(ref string) string {
 func Init() error {
 	BootstrapCL.Name = "bootstrap"
 	BootstrapCL.Parent = ""
-	BootstrapCL.Classes = make(map[string]ParsedClass)
+	BootstrapCL.Classes = make(map[string]Klass)
 	BootstrapCL.Archives = make(map[string]*Archive)
 
 	ExtensionCL.Name = "extension"
 	ExtensionCL.Parent = "bootstrap"
-	ExtensionCL.Classes = make(map[string]ParsedClass)
+	ExtensionCL.Classes = make(map[string]Klass)
 	ExtensionCL.Archives = make(map[string]*Archive)
 
 	AppCL.Name = "app"
 	AppCL.Parent = "extension"
-	AppCL.Classes = make(map[string]ParsedClass)
+	AppCL.Classes = make(map[string]Klass)
 	AppCL.Archives = make(map[string]*Archive)
 
 	return nil
