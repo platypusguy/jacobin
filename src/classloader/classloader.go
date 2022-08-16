@@ -679,6 +679,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	return kd
 }
 
+// GetCountOfLoadedClasses returns the number of classes loaded
+// by the specified classloader
+func GetCountOfLoadedClasses(cl Classloader) int {
+	return len(cl.Classes)
+}
+
 // accepts a string containing a class reference from a class file and converts
 // it into a normalized z/y/x format. It converts references that start with [L
 // and skips all array classes. For these latter cases or any errors, it returns ""
