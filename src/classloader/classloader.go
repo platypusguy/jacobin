@@ -680,8 +680,8 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 }
 
 // GetCountOfLoadedClasses returns the number of classes loaded
-// by the specified classloader
-func GetCountOfLoadedClasses(cl Classloader) int {
+// by the classloader
+func (cl *Classloader) GetCountOfLoadedClasses() int {
 	return len(cl.Classes)
 }
 

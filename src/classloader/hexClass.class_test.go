@@ -7,14 +7,14 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
 	"testing"
 )
 
-var Class_classBytes = []byte{
+var ClassBytes = []byte{
 	0xca, 0xfe, 0xba, 0xbe, 0x00, 0x00, 0x00, 0x37, 0x05, 0x9b, 0x0a, 0x01, 0x25, 0x03, 0x59, 0x09,
 	0x00, 0x35, 0x03, 0x5a, 0x09, 0x00, 0x35, 0x03, 0x5b, 0x07, 0x03, 0x5c, 0x0a, 0x00, 0x04, 0x03,
 	0x59, 0x0a, 0x00, 0x35, 0x03, 0x5d, 0x08, 0x03, 0x5e, 0x0a, 0x00, 0x35, 0x03, 0x5f, 0x08, 0x03,
@@ -3067,7 +3067,7 @@ func TestLoadFullyParsedClass_Class(t *testing.T) {
 	log.Init()
 	_ = log.SetLogLevel(log.CLASS)
 
-	fullyParsedClass, err := parse(Class_classBytes)
+	fullyParsedClass, err := parse(ClassBytes)
 	if err != nil {
 		t.Errorf("Got unexpected error from parse of Class.class: %s", err.Error())
 	}
@@ -3095,7 +3095,7 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	rout, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := ParseAndPostClass(BootstrapCL, "Class.class", Class_classBytes)
+	_, err := ParseAndPostClass(BootstrapCL, "Class.class", ClassBytes)
 	if err != nil {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
@@ -3105,11 +3105,11 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	}
 
 	_ = w.Close()
-	_, _ = ioutil.ReadAll(r)
+	_, _ = io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	_, _ = ioutil.ReadAll(rout)
+	_, _ = io.ReadAll(rout)
 	os.Stdout = normalStdout
 }
 
@@ -3131,13 +3131,18 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	rout, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := ParseAndPostClass(BootstrapCL, "Class.class", Class_classBytes)
+	_, err := ParseAndPostClass(BootstrapCL, "Class.class", ClassBytes)
 	if err != nil {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
 	if len(Classes) != 1 {
 		t.Errorf("Expected Classes to have 1 entry, but it has %d", len(Classes))
+	}
+
+	if BootstrapCL.GetCountOfLoadedClasses() != 1 {
+		t.Errorf("Expected Bootstrap CL to show 1 entry, but got %d",
+			BootstrapCL.GetCountOfLoadedClasses())
 	}
 
 	err = LoadClassFromNameOnly("java/lang/Class")
@@ -3160,10 +3165,10 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	}
 
 	_ = w.Close()
-	_, _ = ioutil.ReadAll(r)
+	_, _ = io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	_, _ = ioutil.ReadAll(rout)
+	_, _ = io.ReadAll(rout)
 	os.Stdout = normalStdout
 }
