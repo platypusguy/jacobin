@@ -262,6 +262,7 @@ func TestDload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // pop twice due to two entries on op stack due to 64-bit width of data type
 	if x != 0x1234562 {
 		t.Errorf("DLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
@@ -1128,7 +1129,7 @@ func TestLconst1(t *testing.T) {
 	}
 }
 
-// LLOAD: test load of lon in locals[index] on to stack
+// LLOAD: test load of long in locals[index] on to stack
 func TestLload(t *testing.T) {
 	f := newFrame(LLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
@@ -1142,6 +1143,7 @@ func TestLload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // pop twice due to two entries on op stack due to 64-bit width of data type
 	if x != 0x1234562 {
 		t.Errorf("LLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}

@@ -153,13 +153,19 @@ func runFrame(fs *list.List) error {
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
-			LLOAD, // 0x16 (push long from local var, using next byte as index)
+			//	LLOAD, // 0x16 handled in next case statement
 			FLOAD, // 0x17 (push float from local var, using next byte as index)
-			DLOAD, // 0x18 (push double from local var, using next byte as index)
+			//	DLOAD, // 0x18 handled in next case statement
 			ALOAD: // 0x19 (push ref from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			push(f, f.Locals[index])
+		case LLOAD, // 0x16 (push long from local var, using next byte as index)
+			DLOAD: // 0x18 (push double from local var, using next byte as index)
+			index := int(f.Meth[f.PC+1])
+			f.PC += 1
+			push(f, f.Locals[index])
+			push(f, f.Locals[index]) // push twice due to item being 64 bits wide
 		case ILOAD_0: // 	0x1A    (push local variable 0)
 			push(f, f.Locals[0])
 		case ILOAD_1: //    OX1B    (push local variable 1)
