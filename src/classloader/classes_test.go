@@ -6,7 +6,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -53,7 +53,7 @@ func TestInsertValid(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -109,7 +109,7 @@ func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -166,7 +166,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -224,7 +224,7 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])

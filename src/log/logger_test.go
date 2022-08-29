@@ -7,7 +7,7 @@
 package log
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"os"
 	"strings"
@@ -88,7 +88,7 @@ func TestValidLogMessageFineLevel(t *testing.T) {
 
 	// reset stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStderr
 
 	msg := string(out[:])
@@ -112,7 +112,7 @@ func TestValidLogMessagelogWarningLevel(t *testing.T) {
 
 	// reset stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStderr
 
 	msg := string(out[:])
@@ -156,7 +156,7 @@ func TestThatMsgWithFinerLoggingLevelThanAllowedPrintsNothing(t *testing.T) {
 
 	// reset stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStderr
 
 	msg := string(out[:])
@@ -179,7 +179,7 @@ func TestThatTraceLoggingWithoutCLIsettingPrintsNothing(t *testing.T) {
 
 	// reset stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStderr
 
 	msg := string(out[:])

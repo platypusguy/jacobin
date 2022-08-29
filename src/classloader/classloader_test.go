@@ -8,7 +8,7 @@ package classloader
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -104,7 +104,7 @@ func TestLoadBaseClassesInvalid(t *testing.T) {
 	LoadBaseClasses(g)
 
 	_ = w.Close()
-	lits, _ := ioutil.ReadAll(r)
+	lits, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	errMsg := string(lits[:])
@@ -138,7 +138,7 @@ func TestLoadClassFromFileInvalidName(t *testing.T) {
 	}
 
 	_ = w.Close()
-	_, _ = ioutil.ReadAll(r)
+	_, _ = io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
@@ -216,7 +216,7 @@ func TestGetInvalidJar(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -250,7 +250,7 @@ func TestGetClassFromInvalidJar(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -284,7 +284,7 @@ func TestMainClassFromInvalidJar(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -323,7 +323,7 @@ func TestInsertionIntoMethodArea(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -365,7 +365,7 @@ func TestInvalidMagicNumberViaParseAndPostFunction(t *testing.T) {
 	}
 
 	_ = w.Close()
-	msg, _ := ioutil.ReadAll(r)
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()

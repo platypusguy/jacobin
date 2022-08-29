@@ -7,7 +7,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -733,7 +733,7 @@ func TestPrintOfCPpart1(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	logMsg := string(out[:])
@@ -860,7 +860,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 
 	logMsg := string(out[:])
 

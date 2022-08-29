@@ -7,7 +7,7 @@
 package jvm
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -488,7 +488,7 @@ func TestIdivDivideByZero(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	errMsg := string(out[:])
@@ -719,7 +719,7 @@ func TestIconstN1(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	var value int64 = pop(&f)
+	var value = pop(&f)
 	if value != -1 {
 		t.Errorf("ICONST_N1: Expected popped value to be -1, got: %d", value)
 	}
@@ -1446,7 +1446,7 @@ func TestInvalidInstruction(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 
 	_ = wout.Close()
 	os.Stdout = normalStdout

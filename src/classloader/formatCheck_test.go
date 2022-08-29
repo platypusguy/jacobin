@@ -7,7 +7,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -90,7 +90,7 @@ func TestInvalidCPsize(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -131,7 +131,7 @@ func TestMissingInitialDummyEntry(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -174,7 +174,7 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -218,7 +218,7 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -268,7 +268,7 @@ func TestIntConsts(t *testing.T) {
 		t.Error("Got unexpected error for valid IntConst")
 	}
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -319,7 +319,7 @@ func TestFloatConsts(t *testing.T) {
 		t.Error("Got unexpected error for valid FloatConst")
 	}
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -371,7 +371,7 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -423,7 +423,7 @@ func TestDoubleConst(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -476,7 +476,7 @@ func TestStringConsts(t *testing.T) {
 		t.Error("Got unexpected error for valid StringConst")
 	}
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -523,7 +523,7 @@ func TestInvalidFieldRef(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -570,7 +570,7 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -630,7 +630,7 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -688,7 +688,7 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -758,7 +758,7 @@ func TestValidMethodHandleEntry(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -828,7 +828,7 @@ func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -917,7 +917,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -990,7 +990,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 //
 // 	// restore stderr and stdout to what they were before
 // 	_ = w.Close()
-// 	out, _ := ioutil.ReadAll(r)
+// 	out, _ := io.ReadAll(r)
 // 	os.Stderr = normalStderr
 // 	msg := string(out[:])
 //
@@ -1058,7 +1058,7 @@ func TestInvalidMethodHandleRefKind9(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -1115,7 +1115,7 @@ func TestValidMethodType(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -1221,7 +1221,7 @@ func TestDynamics(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 	_ = wout.Close()
@@ -1317,7 +1317,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 	_ = wout.Close()
@@ -1358,7 +1358,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 
@@ -1394,7 +1394,7 @@ func TestModuleNames_Test0(t *testing.T) {
 	klass.moduleName = "\\@valid"
 	if checkModuleName(klass.moduleName) != nil {
 		_ = w.Close()
-		out, _ := ioutil.ReadAll(r)
+		out, _ := io.ReadAll(r)
 		msg := string(out[:])
 		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
 			"Error message: " + msg)
@@ -1483,7 +1483,7 @@ func TestCPModuleNames(t *testing.T) {
 
 	if formatCheckConstantPool(&klass) != nil {
 		_ = w.Close()
-		out, _ := ioutil.ReadAll(r)
+		out, _ := io.ReadAll(r)
 		msg := string(out[:])
 		t.Error("Unexpected error occurred with valid module name: \\@valid\n" +
 			"Error message: " + msg)
@@ -1524,7 +1524,7 @@ func TestCPPackageNames(t *testing.T) {
 
 	if formatCheckConstantPool(&klass) != nil {
 		_ = w.Close()
-		out, _ := ioutil.ReadAll(r)
+		out, _ := io.ReadAll(r)
 		msg := string(out[:])
 		t.Error("Unexpected error occurred with valid package name: \\@valid\n" +
 			"Error message: " + msg)
