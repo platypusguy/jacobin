@@ -7,7 +7,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -32,7 +32,7 @@ func TestInvalidMagicNumber(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -61,7 +61,7 @@ func TestTooShortMagicNumber(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -90,7 +90,7 @@ func TestValidMagicNumber(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -115,7 +115,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -193,7 +193,7 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -268,7 +268,7 @@ func TestAccessFlags_Test1(t *testing.T) {
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	msg := string(out[:])
 	os.Stderr = normalStderr
 
@@ -534,7 +534,7 @@ func TestClassNameWithConflictingExistingClassName(t *testing.T) {
 	}
 
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	msg := string(out[:])
 
 	if !strings.Contains(msg, "Class appears to have two names") {
@@ -935,7 +935,7 @@ func TestInterfaceInvalid(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 	msg := string(out[:])
 

@@ -7,7 +7,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -69,7 +69,7 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	// out, _ := ioutil.ReadAll(r)
+	// out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	// msg := string(out[:])
@@ -140,7 +140,7 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -218,7 +218,7 @@ func Test2ValidMethodExceptionAttributes(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -289,7 +289,7 @@ func TestValidMethodParameterAttribute(t *testing.T) {
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])

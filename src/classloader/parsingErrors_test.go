@@ -7,7 +7,7 @@
 package classloader
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -102,11 +102,11 @@ func TestBarebonesClassWithInvalidMagicNumber(t *testing.T) {
 	classBytes[1] = 0xFE // reset the erroneous byte to its correct value
 
 	_ = w.Close()
-	msgOut, _ := ioutil.ReadAll(r)
+	msgOut, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	_, _ = ioutil.ReadAll(rout)
+	_, _ = io.ReadAll(rout)
 	os.Stdout = normalStdout
 
 	if !strings.Contains(string(msgOut), "Class Format Error: invalid magic number") {
@@ -137,11 +137,11 @@ func TestBarebonesClassWithInvalidJavaVersion(t *testing.T) {
 	classBytes[7] = 0x3D // reset the erroneous byte to its correct value
 
 	_ = w.Close()
-	msgOut, _ := ioutil.ReadAll(r)
+	msgOut, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	_, _ = ioutil.ReadAll(rout)
+	_, _ = io.ReadAll(rout)
 	os.Stdout = normalStdout
 
 	if !strings.Contains(string(msgOut), "Jacobin supports only Java versions through") {
@@ -172,11 +172,11 @@ func TestBarebonesClassWithInvalidCPcount(t *testing.T) {
 	classBytes[9] = 0x22 // reset the erroneous byte to its correct value
 
 	_ = w.Close()
-	msgOut, _ := ioutil.ReadAll(r)
+	msgOut, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	_, _ = ioutil.ReadAll(rout)
+	_, _ = io.ReadAll(rout)
 	os.Stdout = normalStdout
 
 	if !strings.Contains(string(msgOut), "Invalid number of entries in constant pool") {
