@@ -12,6 +12,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/log"
+	"strings"
 )
 
 // This function is called from  run(). It execuates a frame whose
@@ -21,11 +22,11 @@ import (
 // Any return value from the method is returned to run() as an interface{}
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
-func runGframe(fr *frames.Frame) (interface{}, error) {
+func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	// get the go method from the MTable
 	me := classloader.MTable[fr.MethName]
 	if me.Meth == nil {
-		return nil, errors.New("go method not found: " + fr.MethName)
+		return nil, 0, errors.New("go method not found: " + fr.MethName)
 	}
 
 	// pull arguments for the function off the frame's operand stack and put them in a slice
@@ -36,7 +37,23 @@ func runGframe(fr *frames.Frame) (interface{}, error) {
 
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(classloader.GmEntry).Fu(*params)
-	return ret, nil
+
+	// how many slots does the return value consume on the op stack?
+	// the last char in the method name indicates the data type of the return
+	// value. If it's 'J' (a long) or 'D' (a double), it will require two
+	// slots on the op stack of the calling function. If the return value
+	// is nil, then no slots will be required. Otherwise, it's one slot
+	// (such as for ints, shorts, boolean, etc.) TODO: return addresses are likely 2 slots
+	var slotCount int
+	if ret == nil {
+		slotCount = 0
+	} else if strings.HasSuffix(fr.MethName, "J") || strings.HasSuffix(fr.MethName, "D") {
+		slotCount = 2
+	} else {
+		slotCount = 1
+	}
+
+	return ret, slotCount, nil
 }
 
 // This function creates a new frame for the go-style function, loads its arguments onto

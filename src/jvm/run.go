@@ -107,11 +107,15 @@ func runFrame(fs *list.List) error {
 	// if the return value (here, retval) is not nil, it is placed on the stack
 	// of the calling frame.
 	if f.Ftype == 'G' {
-		retval, err := runGframe(f)
+		retval, slotCount, err := runGframe(f)
 
 		if retval != nil {
 			f = fs.Front().Next().Value.(*frames.Frame)
-			push(f, retval.(int64))
+			push(f, retval.(int64)) // if slotCount = 1
+
+			if slotCount == 2 {
+				push(f, retval.(int64)) // push a second time, if a long, double, etc.
+			}
 		}
 		return err
 	}
@@ -218,7 +222,7 @@ func runFrame(fs *list.List) error {
 			f.Locals[index] = pop(f)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			if bytecode == LSTORE || bytecode == DSTORE {
-				f.Locals[index+1] = f.Locals[index]
+				f.Locals[index+1] = pop(f)
 			}
 		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.Locals[0] = pop(f)
@@ -230,16 +234,16 @@ func runFrame(fs *list.List) error {
 			f.Locals[3] = pop(f)
 		case LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
 			f.Locals[0] = pop(f)
-			f.Locals[1] = f.Locals[0]
+			f.Locals[1] = pop(f)
 		case LSTORE_1: //   0x40    (store long from top of stack into locals 1 and 2)
 			f.Locals[1] = pop(f)
-			f.Locals[2] = f.Locals[1]
+			f.Locals[2] = pop(f)
 		case LSTORE_2: //   0x41    (store long from top of stack into locals 2 and 3)
 			f.Locals[2] = pop(f)
-			f.Locals[3] = f.Locals[2]
+			f.Locals[3] = pop(f)
 		case LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
 			f.Locals[3] = pop(f)
-			f.Locals[4] = f.Locals[3]
+			f.Locals[4] = pop(f)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -591,7 +595,7 @@ func runFrame(fs *list.List) error {
 			ref, err := instantiateClass(className)
 			if err != nil {
 				_ = log.Log("Error instantiating class: "+className, log.SEVERE)
-				return errors.New("Error instantiating class")
+				return errors.New("error instantiating class")
 			}
 
 			// to push the object reference as an int64, it must first be converted to an unsafe pointer
