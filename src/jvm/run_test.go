@@ -282,8 +282,9 @@ func TestDstore(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
-	push(&f, int64(0x22223))
 
+	push(&f, int64(0x22223)) // pushed twice due to double using two slots
+	push(&f, int64(0x22223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -967,7 +968,7 @@ func TestIreturn(t *testing.T) {
 
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
-	f := newFrame(DSTORE)
+	f := newFrame(ISTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1165,6 +1166,7 @@ func TestLload0(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // due to longs taking 2 slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_0: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
@@ -1188,6 +1190,7 @@ func TestLload1(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_1: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
@@ -1212,6 +1215,7 @@ func TestLload2(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_12: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
@@ -1237,6 +1241,7 @@ func TestLload3(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	x := pop(&f)
+	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_3: Expecting 0x12345678 on stack, got: 0x%x", x)
 	}
@@ -1276,6 +1281,7 @@ func TestLstore(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	push(&f, int64(0x22223))
+	push(&f, int64(0x22223)) // push twice due to longs using two slots
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1300,6 +1306,8 @@ func TestLstore0(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, int64(0x12345678))
+	push(&f, int64(0x12345678))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1323,6 +1331,8 @@ func TestLstore1(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, int64(0x12345678))
+	push(&f, int64(0x12345678))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1347,6 +1357,8 @@ func TestLstore2(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, int64(0x12345678))
+	push(&f, int64(0x12345678))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1372,6 +1384,8 @@ func TestLstore3(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, int64(0x12345678))
+	push(&f, int64(0x12345678))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
