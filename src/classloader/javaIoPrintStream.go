@@ -53,6 +53,12 @@ func Load_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 2,
 			GFunction:  PrintlnLong,
 		}
+
+	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  PrintlnDouble,
+		}
 	return MethodSignatures
 }
 
@@ -75,9 +81,6 @@ func Println(i []interface{}) interface{} {
 // PrintlnI = java/io/Prinstream.println(int) TODO: equivalent (verify that this grabs the right param to print)
 func PrintlnI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
-	// cpi := i[0].(int64)    // int64 which is an index into Statics array
-	// cp := StaticsArray[cpi].CP
-	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
 	fmt.Println(intToPrint)
 	return nil
 }
@@ -85,7 +88,15 @@ func PrintlnI(i []interface{}) interface{} {
 // PrintlnLong = java/io/Prinstream.println(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintlnLong(l []interface{}) interface{} {
-	intToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Println(intToPrint)
+	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+	fmt.Println(longToPrint)
+	return nil
+}
+
+// PrintlnDouble = java/io/Prinstream.println(double)
+// Doubles in Java are 64-bit FP
+func PrintlnDouble(l []interface{}) interface{} {
+	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Println(doubleToPrint)
 	return nil
 }
