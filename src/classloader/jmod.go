@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
@@ -35,7 +35,7 @@ type Jmod struct {
 
 // Walk Walks a JMOD file and invokes `walk` for all classes found in the classlist
 func (j *Jmod) Walk(walk WalkEntryFunc) error {
-	b, err := ioutil.ReadFile(j.File.Name())
+	b, err := os.ReadFile(j.File.Name())
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 
 		if !globals.GetGlobalRef().StrictJDK {
 			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", j.File.Name(), MagicNumber, fileMagic)
-			log.Log(msg, log.SEVERE)
+			_ = log.Log(msg, log.SEVERE)
 		}
 
 		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
@@ -58,7 +58,7 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 
 	r, err := zip.NewReader(offsetReader, int64(len(b)-4))
 	if err != nil {
-		log.Log(err.Error(), log.WARNING)
+		_ = log.Log(err.Error(), log.WARNING)
 		return err
 	}
 
@@ -89,12 +89,12 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 			return err
 		}
 
-		b, err := ioutil.ReadAll(rc)
+		b, err := io.ReadAll(rc)
 		if err != nil {
 			return err
 		}
 
-		walk(b, j.File.Name()+"+"+f.Name)
+		_ = walk(b, j.File.Name()+"+"+f.Name)
 
 		_ = rc.Close()
 	}
@@ -108,15 +108,15 @@ func getClasslist(reader zip.Reader) map[string]struct{} {
 
 	classlist, err := reader.Open("lib/classlist")
 	if err != nil {
-		log.Log(err.Error(), log.CLASS)
-		log.Log("Unable to read lib/classlist from jmod file. Loading all classes in jmod file.", log.CLASS)
+		_ = log.Log(err.Error(), log.CLASS)
+		_ = log.Log("Unable to read lib/classlist from jmod file. Loading all classes in jmod file.", log.CLASS)
 		return classSet
 	}
 
-	classlistContent, err := ioutil.ReadAll(classlist)
+	classlistContent, err := io.ReadAll(classlist)
 	if err != nil {
-		log.Log(err.Error(), log.CLASS)
-		log.Log("Unable to read lib/classlist from jmod file. Loading all classes in jmod file.", log.CLASS)
+		_ = log.Log(err.Error(), log.CLASS)
+		_ = log.Log("Unable to read lib/classlist from jmod file. Loading all classes in jmod file.", log.CLASS)
 		return classSet
 	}
 

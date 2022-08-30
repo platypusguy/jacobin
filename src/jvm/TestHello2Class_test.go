@@ -7,7 +7,7 @@
 package jvm
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
@@ -97,11 +97,11 @@ func TestHexHello2ValidClass(t *testing.T) {
 	}
 
 	_ = w.Close()
-	_, _ = ioutil.ReadAll(r)
+	_, _ = io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
-	msgOut, _ := ioutil.ReadAll(rout)
+	msgOut, _ := io.ReadAll(rout)
 	os.Stdout = normalStdout
 
 	if !strings.Contains(string(msgOut), "-1") {
@@ -132,7 +132,7 @@ func TestHexHello2InvalidMagicNumber(t *testing.T) {
 	}
 
 	_ = w.Close()
-	msg, _ := ioutil.ReadAll(r)
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()
@@ -167,7 +167,7 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	}
 
 	_ = w.Close()
-	msg, _ := ioutil.ReadAll(r)
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	_ = wout.Close()

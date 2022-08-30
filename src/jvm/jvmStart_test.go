@@ -9,7 +9,6 @@ package jvm
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
@@ -93,7 +92,7 @@ func TestInvalidJar(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	errMsg := string(out[:])
 
 	if !strings.Contains(errMsg, "Invalid or corrupt jarfile") {

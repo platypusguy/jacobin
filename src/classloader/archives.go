@@ -9,7 +9,7 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"jacobin/log"
 	"strings"
 )
@@ -111,7 +111,7 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 		return err
 	}
 
-	data, err := ioutil.ReadAll(rc)
+	data, err := io.ReadAll(rc)
 
 	contents := string(data)
 
@@ -165,7 +165,7 @@ func (archive *Archive) loadClass(className string) (*LoadResult, error) {
 		return nil, err
 	}
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 
 	if err != nil {
 		return nil, err

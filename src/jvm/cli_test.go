@@ -7,7 +7,7 @@
 package jvm
 
 import (
-	"io/ioutil"
+	"io"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -67,7 +67,7 @@ func TestHandleUsageMessage(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
@@ -133,7 +133,7 @@ func TestShowVersionMessage(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
@@ -158,7 +158,7 @@ func TestShow__VersionUsingOptionTable(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 
 	os.Stdout = normalStdout
 	msg := string(out[:])
@@ -347,7 +347,7 @@ func TestSpecifyValidButUnsupportedOption(t *testing.T) {
 
 	// restore stderr to what it was before
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
@@ -377,7 +377,7 @@ func TestShowCopyrightInVersion(t *testing.T) {
 	showCopyright(g)
 
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStdout
 
 	msg := string(out[:])
@@ -402,7 +402,7 @@ func TestShowCopyrightWithStrictJDKswitch(t *testing.T) {
 	showCopyright(g)
 
 	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = normalStdout
 
 	msg := string(out[:])
