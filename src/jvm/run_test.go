@@ -1074,12 +1074,19 @@ func TestIsub(t *testing.T) {
 
 func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
+
 	push(&f, int64(22))
+	push(&f, int64(22))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	value := pop(&f)
+
+	value := pop(&f) // longs require two slots, so popped twice
+	pop(&f)
+
 	if value != 43 {
 		t.Errorf("LADD: expected a result of 43, but got: %d", value)
 	}
@@ -1406,15 +1413,23 @@ func TestLstore3(t *testing.T) {
 // LSUB: Subtract two longs
 func TestLsub(t *testing.T) {
 	f := newFrame(LSUB)
+	push(&f, int64(10)) // longs occupy two slots, hence the double pops and pushes
 	push(&f, int64(10))
+
 	push(&f, int64(7))
+	push(&f, int64(7))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("LSUB, Top of stack, expected 0, got: %d", f.TOS)
-	}
+
 	value := pop(&f)
+	pop(&f)
+
+	if f.TOS != -1 {
+		t.Errorf("LSUB, Top of stack, expected -1, got: %d", f.TOS)
+	}
+
 	if value != 3 {
 		t.Errorf("LSUB: Expected popped value to be 3, got: %d", value)
 	}
