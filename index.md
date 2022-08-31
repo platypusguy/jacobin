@@ -4,7 +4,7 @@ Jacobin is an implementation of the [JVM specification for Java 17](https://docs
 
 The goal is to provide a more-than-minimal implementation of the JVM that can run most class files and JARs and deliver the same results as the OpenJDK-based JVMs (that is, the majority of JVM implementations today). A paramount consideration in the design and implementation of Jacobin is the codebase: making it cohesive and containing clear code. The former aspect distinguishes it from the OpenJDK implementations: those codebases are spread out across a vast set of different code repositories, some VM-exclusive, some from the compiler, some from other Java tools and resources--making it very difficult to navigate the codebase unless you already know what you're looking for and how it's been implemented. Because Jacobin is strictly a JVM, its code is smaller and tightly focused on Java program execution. An additional factor in reducing the size of the codebase is that Jacobin relies on Go's built-in memory management to perform garbage collection and so it contains no GC code, which is a substantial part of the OpenJDK implementations.
 
-Jacobin is heavily tested during development. As of May 2022, the testing code base is 2.1x the size of the production code. We're committed to increasing that ratio. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
+Jacobin is heavily tested during development. As of August 2022, the testing code base is 2.21x the size of the production code. We're committed to increasing this ratio. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
 
 ### Current Status
 
