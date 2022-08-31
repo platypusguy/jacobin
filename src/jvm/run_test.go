@@ -1094,20 +1094,6 @@ func TestLadd(t *testing.T) {
 		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
-func TestLdc(t *testing.T) {
-	f := newFrame(LDC)
-	f.Meth = append(f.Meth, 0x05)
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
-	}
-	value := pop(&f)
-	if value != 5 {
-		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
-	}
-}
 
 func TestLconst0(t *testing.T) {
 	f := newFrame(LCONST_0)
@@ -1134,6 +1120,45 @@ func TestLconst1(t *testing.T) {
 	value := pop(&f)
 	if value != 1 {
 		t.Errorf("LCONST_1: Expected popped value to be 1, got: %d", value)
+	}
+}
+
+func TestLdc(t *testing.T) {
+	f := newFrame(LDC)
+	f.Meth = append(f.Meth, 0x05)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f)
+	if value != 5 {
+		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
+	}
+}
+
+// Test LDIV (pop 2 longs, divide second term by top of stack, push result)
+func TestLdiv(t *testing.T) {
+	f := newFrame(LDIV)
+	push(&f, int64(70))
+	push(&f, int64(70))
+
+	push(&f, int64(10))
+	push(&f, int64(10))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 1 { // product is pushed twice b/c it's a long, which occupies 2 slots
+		t.Errorf("LDIV, Top of stack, expected 1, got: %d", f.TOS)
+	}
+
+	value := pop(&f)
+	pop(&f)
+	if value != 7 {
+		t.Errorf("LDIV: Expected popped value to be 70, got: %d", value)
 	}
 }
 
@@ -1266,14 +1291,21 @@ func TestLload3(t *testing.T) {
 func TestLmul(t *testing.T) {
 	f := newFrame(LMUL)
 	push(&f, int64(10))
+	push(&f, int64(10))
+
 	push(&f, int64(7))
+	push(&f, int64(7))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("LMUL, Top of stack, expected 0, got: %d", f.TOS)
+
+	if f.TOS != 1 { // product is pushed twice b/c it's a long, which occupies 2 slots
+		t.Errorf("LMUL, Top of stack, expected 1, got: %d", f.TOS)
 	}
+
 	value := pop(&f)
+	pop(&f)
 	if value != 70 {
 		t.Errorf("LMUL: Expected popped value to be 70, got: %d", value)
 	}

@@ -287,14 +287,22 @@ func runFrame(fs *list.List) error {
 
 			push(f, diff)
 			push(f, diff)
-		case IMUL, //  0x68  	(multiply 2 integers on operand stack, push result)
-			LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
+		case IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
 			i2 := pop(f)
 			i1 := pop(f)
 			product := multiply(i1, i2)
+
 			push(f, product)
-		case IDIV, //  0x6C
-			LDIV: //  0x6D   (divide tos-1 by tos)
+		case LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
+			l2 := pop(f) //    longs occupy two slots, hence double pushes and pops
+			pop(f)
+			l1 := pop(f)
+			pop(f)
+			product := multiply(l1, l2)
+
+			push(f, product)
+			push(f, product)
+		case IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f)
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
@@ -303,13 +311,26 @@ func runFrame(fs *list.List) error {
 				val2 := pop(f)
 				push(f, val2/val1)
 			}
+		case LDIV: //  0x6D   (long divide tos-2 by tos)
+			val1 := pop(f)
+			pop(f) //    longs occupy two slots, hence double pushes and pops
+			if val1 == 0 {
+				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			} else {
+				val2 := pop(f)
+				pop(f)
+				res := val2 / val1
+				push(f, res)
+				push(f, res)
+			}
 		case INEG: //	0x74 	(negate an int)
 			val := pop(f)
 			val = val * (-1)
 			push(f, val)
 		case LNEG: //   0x75	(negate a long)
 			val := pop(f)
-			pop(f) // pop a second time because it's a long
+			pop(f) // pop a second time because it's a long, which occupies 2 slots
 			val = val * (-1)
 			push(f, val)
 			push(f, val)
