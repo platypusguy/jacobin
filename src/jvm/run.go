@@ -136,11 +136,9 @@ func runFrame(fs *list.List) error {
 			break
 		case ICONST_N1: //	0x02	(push -1 onto opStack)
 			push(f, int64(-1))
-		case ICONST_0, // 	0x03	(push int 0 onto opStack)
-			LCONST_0: //   0x09     " " long 0
+		case ICONST_0: // 	0x03	(push int 0 onto opStack)
 			push(f, int64(0))
-		case ICONST_1, //  	0x04	(push int 1 onto opStack)
-			LCONST_1: //   0x0A     " " long 1
+		case ICONST_1: //  	0x04	(push int 1 onto opStack)
 			push(f, int64(1))
 		case ICONST_2: //   0x05	(push 2 onto opStack)
 			push(f, int64(2))
@@ -150,6 +148,12 @@ func runFrame(fs *list.List) error {
 			push(f, int64(4))
 		case ICONST_5: //   0x08	(push 5 onto opStack)
 			push(f, int64(5))
+		case LCONST_0: //   0x09    (push long 0 onto opStack)
+			push(f, int64(0)) // b/c longs take two slots on the stack, it's pushed twice
+			push(f, int64(0))
+		case LCONST_1: //   0x0A    (push long 1 on to opStack)
+			push(f, int64(1)) // b/c longs take two slots on the stack, it's pushed twice
+			push(f, int64(1))
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
@@ -157,10 +161,8 @@ func runFrame(fs *list.List) error {
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
-			//	LLOAD, // 0x16 handled in next case statement
-			FLOAD, // 0x17 (push float from local var, using next byte as index)
-			//	DLOAD, // 0x18 handled in next case statement
-			ALOAD: // 0x19 (push ref from local var, using next byte as index)
+			FLOAD, //  0x17 (push float from local var, using next byte as index)
+			ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			push(f, f.Locals[index])

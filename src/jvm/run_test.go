@@ -1100,8 +1100,8 @@ func TestLconst0(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	if f.TOS != 1 {
+		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 0 {
@@ -1114,8 +1114,8 @@ func TestLconst1(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	if f.TOS != 1 {
+		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
 	}
 	value := pop(&f)
 	if value != 1 {
