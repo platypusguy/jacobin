@@ -1095,6 +1095,7 @@ func TestLadd(t *testing.T) {
 	}
 }
 
+// compare two longs
 func TestLcmp(t *testing.T) {
 	f := newFrame(LCMP)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
@@ -1116,6 +1117,7 @@ func TestLcmp(t *testing.T) {
 	}
 }
 
+// push a long 0 onto opStack
 func TestLconst0(t *testing.T) {
 	f := newFrame(LCONST_0)
 	fs := frames.CreateFrameStack()
@@ -1130,6 +1132,7 @@ func TestLconst0(t *testing.T) {
 	}
 }
 
+// push a long 1 onto opStack
 func TestLconst1(t *testing.T) {
 	f := newFrame(LCONST_1)
 	fs := frames.CreateFrameStack()
@@ -1498,7 +1501,7 @@ func TestReturn(t *testing.T) {
 	}
 
 	if ret != nil {
-		t.Error("RETURN: Expected popped value to be 2, got: " + ret.Error())
+		t.Error("RETURN: Expected popped value to be nil, got: " + ret.Error())
 	}
 }
 
