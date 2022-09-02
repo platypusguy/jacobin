@@ -347,6 +347,18 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex]
 			f.Locals[localVarIndex] = orig + constAmount
+		case LCMP: // 0x94 (compare two longs, push int -1, 0, or 1, depending on result)
+			value2 := pop(f)
+			pop(f)
+			value1 := pop(f)
+			pop(f)
+			if value1 == value2 {
+				push(f, int64(0))
+			} else if value1 > value2 {
+				push(f, int64(1))
+			} else {
+				push(f, int64(-1))
+			}
 		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f)
 			val1 := pop(f)

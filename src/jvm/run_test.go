@@ -1095,6 +1095,27 @@ func TestLadd(t *testing.T) {
 	}
 }
 
+func TestLcmp(t *testing.T) {
+	f := newFrame(LCMP)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	push(&f, int64(22))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f)
+	if value != -1 {
+		t.Errorf("Expected comparison to result in -1, got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LCMP: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 func TestLconst0(t *testing.T) {
 	f := newFrame(LCONST_0)
 	fs := frames.CreateFrameStack()
