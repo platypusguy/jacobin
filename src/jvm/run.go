@@ -347,6 +347,12 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex]
 			f.Locals[localVarIndex] = orig + constAmount
+		case L2D: // 0x8A (convert long to double)
+			longVal := pop(f)
+			pop(f)
+			dblVal := float64(longVal)
+			push(f, dblVal)
+			push(f, dblVal)
 		case LCMP: // 0x94 (compare two longs, push int -1, 0, or 1, depending on result)
 			value2 := pop(f)
 			pop(f)
