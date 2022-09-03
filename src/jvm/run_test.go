@@ -1335,6 +1335,31 @@ func TestLmul(t *testing.T) {
 	}
 }
 
+// LRETURN: Return a long from a function
+func TestLreturn(t *testing.T) {
+	f0 := newFrame(0)
+	push(&f0, int64(20))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f0)
+	f1 := newFrame(LRETURN)
+	push(&f1, int64(21))
+	push(&f1, int64(21))
+	fs.PushFront(&f1)
+	_ = runFrame(fs)
+	_ = frames.PopFrame(fs)
+	f3 := fs.Front().Value.(*frames.Frame)
+	newVal := pop(f3)
+	if newVal != 21 {
+		t.Errorf("After LRETURN, expected a value of 21 in previous frame, got: %d", newVal)
+	}
+	pop(f3) // popped a second time due to longs taking two slots
+
+	prevVal := pop(f3)
+	if prevVal != 20 {
+		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
+	}
+}
+
 // LSTORE: Store long from stack into local specified by following byte, and the local var after it.
 func TestLstore(t *testing.T) {
 	f := newFrame(LSTORE)
