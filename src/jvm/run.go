@@ -340,7 +340,14 @@ func runFrame(fs *list.List) error {
 		// 	val := float64(pop(f))
 		// 	val = val * (-1.0)
 		// 	push(f, val) // CURR: resume here. Consider making opStack []interface{c
-
+		case LAND: //   0x7F    (and two longs together, push result
+			val1 := pop(f)
+			pop(f)
+			val2 := pop(f)
+			pop(f)
+			val3 := val1 & val2
+			push(f, val3)
+			push(f, val3)
 		case IINC: // 	0x84    (increment local variable by a constant)
 			localVarIndex := int64(f.Meth[f.PC+1])
 			constAmount := int64(f.Meth[f.PC+2])
