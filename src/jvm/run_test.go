@@ -30,6 +30,7 @@ func newFrame(code byte) frames.Frame {
 }
 
 var zero = int64(0)
+var zerof = float64(0)
 
 // ---- tests ----
 
@@ -41,12 +42,12 @@ func TestAload(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[4]
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
@@ -61,12 +62,12 @@ func TestAload(t *testing.T) {
 // test load of reference in locals[0] on to stack
 func TestAload0(t *testing.T) {
 	f := newFrame(ALOAD_0)
-	f.Locals = append(f.Locals, 0x1234560) // put value in locals[0]
+	f.Locals = append(f.Locals, int64(0x1234560)) // put value in locals[0]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234560 {
 		t.Errorf("ALOAD_0: Expecting 0x1234560 on stack, got: 0x%x", x)
 	}
@@ -79,12 +80,12 @@ func TestAload0(t *testing.T) {
 func TestAload1(t *testing.T) {
 	f := newFrame(ALOAD_1)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 0x1234561) // put value in locals[1]
+	f.Locals = append(f.Locals, int64(0x1234561)) // put value in locals[1]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234561 {
 		t.Errorf("ALOAD_1: Expecting 0x1234561 on stack, got: 0x%x", x)
 	}
@@ -98,12 +99,12 @@ func TestAload2(t *testing.T) {
 	f := newFrame(ALOAD_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 0x1234562) // put value in locals[2]
+	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[2]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD_2: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
@@ -118,12 +119,12 @@ func TestAload3(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 0x1234563) // put value in locals[3]
+	f.Locals = append(f.Locals, int64(0x1234563)) // put value in locals[3]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234563 {
 		t.Errorf("ALOAD_3: Expecting 0x1234563 on stack, got: 0x%x", x)
 	}
@@ -147,7 +148,7 @@ func TestAstore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[3] != 0x22223 {
+	if f.Locals[3] != int64(0x22223) {
 		t.Errorf("ASTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 	if f.TOS != -1 {
@@ -165,7 +166,7 @@ func TestAstore0(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[0] != 0x22220 {
+	if f.Locals[0] != int64(0x22220) {
 		t.Errorf("ASTORE_0: Expecting 0x22220 on stack, got: 0x%x", f.Locals[0])
 	}
 	if f.TOS != -1 {
@@ -184,7 +185,7 @@ func TestAstore1(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[1] != 0x22221 {
+	if f.Locals[1] != int64(0x22221) {
 		t.Errorf("ASTORE_1: Expecting 0x22221 on stack, got: 0x%x", f.Locals[0])
 	}
 	if f.TOS != -1 {
@@ -204,7 +205,7 @@ func TestAstore2(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x22222 {
+	if f.Locals[2] != int64(0x22222) {
 		t.Errorf("ASTORE_2: Expecting 0x22222 on stack, got: 0x%x", f.Locals[0])
 	}
 	if f.TOS != -1 {
@@ -225,7 +226,7 @@ func TestAstore3(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[3] != 0x22223 {
+	if f.Locals[3] != int64(0x22223) {
 		t.Errorf("ASTORE_3: Expecting 0x22223 on stack, got: 0x%x", f.Locals[0])
 	}
 	if f.TOS != -1 {
@@ -242,7 +243,7 @@ func TestBipush(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 5 {
 		t.Errorf("BIPUSH: Expected popped value to be 5, got: %d", value)
 	}
@@ -252,18 +253,18 @@ func TestBipush(t *testing.T) {
 func TestDload(t *testing.T) {
 	f := newFrame(DLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, float64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(float64)
 	pop(&f) // pop twice due to two entries on op stack due to 64-bit width of data type
-	if x != 0x1234562 {
+	if x != float64(0x1234562) {
 		t.Errorf("DLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
 	if f.TOS != -1 {
@@ -278,22 +279,22 @@ func TestDload(t *testing.T) {
 func TestDstore(t *testing.T) {
 	f := newFrame(DSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
 
-	push(&f, int64(0x22223)) // pushed twice due to double using two slots
-	push(&f, int64(0x22223))
+	push(&f, float64(0x22223)) // pushed twice due to double using two slots
+	push(&f, float64(0x22223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x22223 {
+	if f.Locals[2] != float64(0x22223) {
 		t.Errorf("DSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.Locals[3] != 0x22223 {
+	if f.Locals[3] != float64(0x22223) {
 		t.Errorf("DSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 
@@ -314,8 +315,8 @@ func TestDup(t *testing.T) {
 		t.Errorf("DUP: stack should have two elements with tos > 0, tos was: %d", f.TOS)
 	}
 
-	a := pop(&f)
-	b := pop(&f)
+	a := pop(&f).(int64)
+	b := pop(&f).(int64)
 	if a != 0x22223 || b != 0x22223 {
 		t.Errorf(
 			"DUP: popped values are incorrect. Expecting 0x22223, got: %X and %X", a, b)
@@ -336,9 +337,9 @@ func TestDupX1(t *testing.T) {
 		t.Errorf("DUP_X1: Expecting a top of stack = 3 (so stack size 4), got: %d", f.TOS)
 	}
 
-	a := pop(&f)
-	b := pop(&f)
-	c := pop(&f)
+	a := pop(&f).(int64)
+	b := pop(&f).(int64)
+	c := pop(&f).(int64)
 	if a != 1 || c != 1 {
 		t.Errorf(
 			"DUP_X1: popped values are incorrect. Expecting value of 1, got: %X and %X", a, b)
@@ -353,13 +354,13 @@ func TestFload(t *testing.T) {
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, int64(0x1234562)) // put value in locals[4]
+	f.Locals = append(f.Locals, float64(0x1234562)) // put value in locals[4]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
-	if x != 0x1234562 {
+	x := pop(&f).(float64)
+	if x != float64(0x1234562) {
 		t.Errorf("FLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
 	if f.TOS != -1 {
@@ -374,17 +375,18 @@ func TestFload(t *testing.T) {
 func TestFstore(t *testing.T) {
 	f := newFrame(FSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, zero)
-	push(&f, int64(0x22223))
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	f.Locals = append(f.Locals, zerof)
+	push(&f, float64(0x22223))
+	push(&f, float64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x22223 {
+	if f.Locals[2] != float64(0x22223) {
 		t.Errorf("FSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
@@ -432,7 +434,7 @@ func TestIadd(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 43 {
 		t.Errorf("IADD: expected a result of 43, but got: %d", value)
 	}
@@ -449,7 +451,7 @@ func TestIdiv(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 10 {
 		t.Errorf("IDIV: expected a result of 10, but got: %d", value)
 	}
@@ -720,7 +722,7 @@ func TestIconstN1(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	var value = pop(&f)
+	var value = pop(&f).(int64)
 	if value != -1 {
 		t.Errorf("ICONST_N1: Expected popped value to be -1, got: %d", value)
 	}
@@ -735,7 +737,7 @@ func TestIconst0(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 0 {
 		t.Errorf("ICONST_0: Expected popped value to be 0, got: %d", value)
 	}
@@ -750,7 +752,7 @@ func TestIconst1(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 1 {
 		t.Errorf("ICONST_1: Expected popped value to be 1, got: %d", value)
 	}
@@ -765,7 +767,7 @@ func TestIconst2(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 2 {
 		t.Errorf("ICONST_2: Expected popped value to be 2, got: %d", value)
 	}
@@ -780,7 +782,7 @@ func TestIconst3(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 3 {
 		t.Errorf("ICONST_3: Expected popped value to be 3, got: %d", value)
 	}
@@ -795,7 +797,7 @@ func TestIconst4(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 4 {
 		t.Errorf("ICONST_4: Expected popped value to be 4, got: %d", value)
 	}
@@ -810,7 +812,7 @@ func TestIconst5(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 5 {
 		t.Errorf("ICONST_5: Expected popped value to be 5, got: %d", value)
 	}
@@ -830,7 +832,7 @@ func TestIinc(t *testing.T) {
 		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
 	}
 	value := f.Locals[1]
-	if value != 37 {
+	if value != int64(37) {
 		t.Errorf("IINC: Expected popped value to be 37, got: %d", value)
 	}
 }
@@ -848,7 +850,7 @@ func TestIload(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	if x != 0x1234562 {
 		t.Errorf("ILOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
@@ -863,15 +865,15 @@ func TestIload(t *testing.T) {
 // ILOAD_0
 func TestIload0(t *testing.T) {
 	f := newFrame(ILOAD_0)
-	f.Locals = append(f.Locals, 27)
+	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
-	if value != 27 {
+	value := pop(&f).(int64)
+	if value != int64(27) {
 		t.Errorf("ILOAD_0: Expected popped value to be 27, got: %d", value)
 	}
 }
@@ -879,14 +881,14 @@ func TestIload0(t *testing.T) {
 func TestIload1(t *testing.T) {
 	f := newFrame(ILOAD_1)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 27)
+	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 27 {
 		t.Errorf("ILOAD_1: Expected popped value to be 27, got: %d", value)
 	}
@@ -895,16 +897,16 @@ func TestIload1(t *testing.T) {
 func TestIload2(t *testing.T) {
 	f := newFrame(ILOAD_2)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 1)
-	f.Locals = append(f.Locals, 27)
+	f.Locals = append(f.Locals, int64(1))
+	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
-	if value != 27 {
+	value := pop(&f).(int64)
+	if value != int64(27) {
 		t.Errorf("ILOAD_2: Expected popped value to be 27, got: %d", value)
 	}
 }
@@ -912,16 +914,16 @@ func TestIload2(t *testing.T) {
 func TestIload3(t *testing.T) {
 	f := newFrame(ILOAD_3)
 	f.Locals = append(f.Locals, zero)
-	f.Locals = append(f.Locals, 1)
-	f.Locals = append(f.Locals, 2)
-	f.Locals = append(f.Locals, 27)
+	f.Locals = append(f.Locals, int64(1))
+	f.Locals = append(f.Locals, int64(2))
+	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 27 {
 		t.Errorf("ILOAD_3: Expected popped value to be 27, got: %d", value)
 	}
@@ -938,7 +940,7 @@ func TestImul(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 70 {
 		t.Errorf("IMUL: Expected popped value to be 70, got: %d", value)
 	}
@@ -956,11 +958,11 @@ func TestIreturn(t *testing.T) {
 	_ = runFrame(fs)
 	_ = frames.PopFrame(fs)
 	f3 := fs.Front().Value.(*frames.Frame)
-	newVal := pop(f3)
+	newVal := pop(f3).(int64)
 	if newVal != 21 {
 		t.Errorf("After IRETURN, expected a value of 21 in previous frame, got: %d", newVal)
 	}
-	prevVal := pop(f3)
+	prevVal := pop(f3).(int64)
 	if prevVal != 20 {
 		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
 	}
@@ -980,7 +982,7 @@ func TestIstore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x22223 {
+	if f.Locals[2] != int64(0x22223) {
 		t.Errorf("ISTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
@@ -997,7 +999,7 @@ func TestIstore0(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.Locals[0] != 220 {
+	if f.Locals[0] != int64(220) {
 		t.Errorf("ISTORE_0: expected lcoals[0] to be 220, got: %d", f.Locals[0])
 	}
 	if f.TOS != -1 {
@@ -1013,7 +1015,7 @@ func TestIstore1(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.Locals[1] != 221 {
+	if f.Locals[1] != int64(221) {
 		t.Errorf("ISTORE_1: expected locals[1] to be 221, got: %d", f.Locals[1])
 	}
 	if f.TOS != -1 {
@@ -1030,7 +1032,7 @@ func TestIstore2(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.Locals[2] != 222 {
+	if f.Locals[2] != int64(222) {
 		t.Errorf("ISTORE_2: expected locals[2] to be 222, got: %d", f.Locals[2])
 	}
 	if f.TOS != -1 {
@@ -1048,7 +1050,7 @@ func TestIstore3(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.Locals[3] != 223 {
+	if f.Locals[3] != int64(223) {
 		t.Errorf("ISTORE_3: expected locals[3] to be 223, got: %d", f.Locals[3])
 	}
 	if f.TOS != -1 {
@@ -1067,7 +1069,7 @@ func TestIsub(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("ISUB, Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 3 {
 		t.Errorf("ISUB: Expected popped value to be 3, got: %d", value)
 	}
@@ -1105,7 +1107,7 @@ func TestLadd(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	value := pop(&f) // longs require two slots, so popped twice
+	value := pop(&f).(int64) // longs require two slots, so popped twice
 	pop(&f)
 
 	if value != 43 {
@@ -1129,7 +1131,7 @@ func TestLcmp(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != -1 {
 		t.Errorf("Expected comparison to result in -1, got: %d", value)
 	}
@@ -1147,7 +1149,7 @@ func TestLconst0(t *testing.T) {
 	if f.TOS != 1 {
 		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 0 {
 		t.Errorf("LCONST_0: Expected popped value to be 0, got: %d", value)
 	}
@@ -1162,7 +1164,7 @@ func TestLconst1(t *testing.T) {
 	if f.TOS != 1 {
 		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 1 {
 		t.Errorf("LCONST_1: Expected popped value to be 1, got: %d", value)
 	}
@@ -1177,7 +1179,7 @@ func TestLdc(t *testing.T) {
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
-	value := pop(&f)
+	value := pop(&f).(int64)
 	if value != 5 {
 		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
 	}
@@ -1200,7 +1202,7 @@ func TestLdiv(t *testing.T) {
 		t.Errorf("LDIV, Top of stack, expected 1, got: %d", f.TOS)
 	}
 
-	value := pop(&f)
+	value := pop(&f).(int64)
 	pop(&f)
 	if value != 7 {
 		t.Errorf("LDIV: Expected popped value to be 70, got: %d", value)
@@ -1220,7 +1222,7 @@ func TestLload(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	pop(&f) // pop twice due to two entries on op stack due to 64-bit width of data type
 	if x != 0x1234562 {
 		t.Errorf("LLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
@@ -1242,7 +1244,7 @@ func TestLload0(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	pop(&f) // due to longs taking 2 slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_0: Expecting 0x12345678 on stack, got: 0x%x", x)
@@ -1266,7 +1268,7 @@ func TestLload1(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_1: Expecting 0x12345678 on stack, got: 0x%x", x)
@@ -1291,7 +1293,7 @@ func TestLload2(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_12: Expecting 0x12345678 on stack, got: 0x%x", x)
@@ -1317,7 +1319,7 @@ func TestLload3(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := pop(&f)
+	x := pop(&f).(int64)
 	pop(&f) // due to longs taking two slots
 	if x != 0x12345678 {
 		t.Errorf("LLOAD_3: Expecting 0x12345678 on stack, got: 0x%x", x)
@@ -1349,7 +1351,7 @@ func TestLmul(t *testing.T) {
 		t.Errorf("LMUL, Top of stack, expected 1, got: %d", f.TOS)
 	}
 
-	value := pop(&f)
+	value := pop(&f).(int64)
 	pop(&f)
 	if value != 70 {
 		t.Errorf("LMUL: Expected popped value to be 70, got: %d", value)
@@ -1369,13 +1371,13 @@ func TestLreturn(t *testing.T) {
 	_ = runFrame(fs)
 	_ = frames.PopFrame(fs)
 	f3 := fs.Front().Value.(*frames.Frame)
-	newVal := pop(f3)
+	newVal := pop(f3).(int64)
 	if newVal != 21 {
 		t.Errorf("After LRETURN, expected a value of 21 in previous frame, got: %d", newVal)
 	}
 	pop(f3) // popped a second time due to longs taking two slots
 
-	prevVal := pop(f3)
+	prevVal := pop(f3).(int64)
 	if prevVal != 20 {
 		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
 	}
@@ -1396,11 +1398,11 @@ func TestLstore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x22223 {
+	if f.Locals[2] != int64(0x22223) {
 		t.Errorf("LSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
 	}
 
-	if f.Locals[3] != 0x22223 {
+	if f.Locals[3] != int64(0x22223) {
 		t.Errorf("LSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 
@@ -1421,11 +1423,11 @@ func TestLstore0(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[0] != 0x12345678 {
+	if f.Locals[0] != int64(0x12345678) {
 		t.Errorf("LSTORE_0: expected locals[0] to be 0x12345678, got: %d", f.Locals[0])
 	}
 
-	if f.Locals[1] != 0x12345678 {
+	if f.Locals[1] != int64(0x12345678) {
 		t.Errorf("LSTORE_0: expected locals[1] to be 0x12345678, got: %d", f.Locals[1])
 	}
 
@@ -1446,11 +1448,11 @@ func TestLstore1(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[1] != 0x12345678 {
+	if f.Locals[1] != int64(0x12345678) {
 		t.Errorf("LSTORE_1: expected locals[1] to be 0x12345678, got: %d", f.Locals[1])
 	}
 
-	if f.Locals[2] != 0x12345678 {
+	if f.Locals[2] != int64(0x12345678) {
 		t.Errorf("LSTORE_1: expected locals[2] to be 0x12345678, got: %d", f.Locals[2])
 	}
 
@@ -1472,11 +1474,11 @@ func TestLstore2(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[2] != 0x12345678 {
+	if f.Locals[2] != int64(0x12345678) {
 		t.Errorf("LSTORE_2: expected locals[2] to be 0x12345678, got: %d", f.Locals[2])
 	}
 
-	if f.Locals[3] != 0x12345678 {
+	if f.Locals[3] != int64(0x12345678) {
 		t.Errorf("LSTORE_2: expected locals[3] to be 0x12345678, got: %d", f.Locals[3])
 	}
 
@@ -1499,11 +1501,11 @@ func TestLstore3(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.Locals[3] != 0x12345678 {
+	if f.Locals[3] != int64(0x12345678) {
 		t.Errorf("LSTORE_3: expected locals[3] to be 0x12345678, got: %d", f.Locals[3])
 	}
 
-	if f.Locals[4] != 0x12345678 {
+	if f.Locals[4] != int64(0x12345678) {
 		t.Errorf("LSTORE_3: expected locals[4] to be 0x12345678, got: %d", f.Locals[4])
 	}
 
@@ -1525,7 +1527,7 @@ func TestLsub(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	value := pop(&f)
+	value := pop(&f).(int64)
 	pop(&f)
 
 	if f.TOS != -1 {

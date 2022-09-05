@@ -215,17 +215,22 @@ func runFrame(fs *list.List) error {
 			push(f, f.Locals[3])
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE, //  0x37 (store popped top of stack long into local[index])
-			FSTORE, //  0x38 (store popped top of stack float into local[index])
-			DSTORE, //  0x39 (store popped top of stack double into local[index])
 			ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
-			f.Locals[index] = pop(f).(int64) // <<<<<<<<<<<<<<<<<<
+			f.Locals[index] = pop(f).(int64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
-			if bytecode == LSTORE || bytecode == DSTORE {
+			if bytecode == LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
+		case FSTORE, //  0x38 (store popped top of stack float into local[index])
+			DSTORE: //  0x39 (store popped top of stack double into local[index])
+			index := int(f.Meth[f.PC+1])
+			f.PC += 1
+			f.Locals[index] = pop(f).(float64)
+			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
+			f.Locals[index+1] = pop(f).(float64)
 		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.Locals[0] = pop(f).(int64)
 		case ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
@@ -358,7 +363,7 @@ func runFrame(fs *list.List) error {
 			localVarIndex := int64(f.Meth[f.PC+1])
 			constAmount := int64(f.Meth[f.PC+2])
 			f.PC += 2
-			orig := f.Locals[localVarIndex]
+			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
 		case L2D: // 0x8A (convert long to double)
 			longVal := pop(f).(int64)
