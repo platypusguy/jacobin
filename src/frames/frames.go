@@ -30,7 +30,7 @@ type Frame struct {
 	ClName   string             // class name
 	Meth     []byte             // bytecode of method
 	CP       *classloader.CPool // constant pool of class
-	Locals   []int64            // local variables
+	Locals   []interface{}      // local variables
 	OpStack  []interface{}      // operand stack
 	TOS      int                // top of the operand stack
 	PC       int                // program counter (index into the bytecode of the method)
