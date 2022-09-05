@@ -221,39 +221,45 @@ func runFrame(fs *list.List) error {
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
-			f.Locals[index] = pop(f)
+			f.Locals[index] = pop(f).(int64) // <<<<<<<<<<<<<<<<<<
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			if bytecode == LSTORE || bytecode == DSTORE {
-				f.Locals[index+1] = pop(f)
+				f.Locals[index+1] = pop(f).(int64)
 			}
 		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
-			f.Locals[0] = pop(f)
+			f.Locals[0] = pop(f).(int64)
 		case ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
-			f.Locals[1] = pop(f)
+			f.Locals[1] = pop(f).(int64)
 		case ISTORE_2: //   0x3D   	(store popped top of stack int into local 2)
-			f.Locals[2] = pop(f)
+			f.Locals[2] = pop(f).(int64)
 		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
-			f.Locals[3] = pop(f)
+			f.Locals[3] = pop(f).(int64)
 		case LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
-			f.Locals[0] = pop(f)
-			f.Locals[1] = pop(f)
+			var v = pop(f).(int64)
+			f.Locals[0] = v
+			f.Locals[1] = v
+			pop(f)
 		case LSTORE_1: //   0x40    (store long from top of stack into locals 1 and 2)
-			f.Locals[1] = pop(f)
-			f.Locals[2] = pop(f)
+			var v = pop(f).(int64)
+			f.Locals[1] = v
+			f.Locals[2] = v
+			pop(f)
 		case LSTORE_2: //   0x41    (store long from top of stack into locals 2 and 3)
-			f.Locals[2] = pop(f)
-			f.Locals[3] = pop(f)
+			var v = pop(f).(int64)
+			f.Locals[2] = v
+			f.Locals[3] = v
+			pop(f)
 		case LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
-			f.Locals[3] = pop(f)
-			f.Locals[4] = pop(f)
+			f.Locals[3] = pop(f).(int64)
+			f.Locals[4] = pop(f).(int64)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
-			f.Locals[0] = pop(f)
+			f.Locals[0] = pop(f).(int64)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
-			f.Locals[1] = pop(f)
+			f.Locals[1] = pop(f).(int64)
 		case ASTORE_2: // 	0x4D	(pop reference into local variable 2)
-			f.Locals[2] = pop(f)
+			f.Locals[2] = pop(f).(int64)
 		case ASTORE_3: //	0x4E	(pop reference into local variable 3)
-			f.Locals[3] = pop(f)
+			f.Locals[3] = pop(f).(int64)
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
 			push(f, peek(f))
 		case DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
@@ -263,75 +269,75 @@ func runFrame(fs *list.List) error {
 			push(f, next)
 			push(f, top)
 		case IADD: //  0x60		(add top 2 integers on operand stack, push result)
-			i2 := pop(f)
-			i1 := pop(f)
+			i2 := pop(f).(int64)
+			i1 := pop(f).(int64)
 			sum := add(i1, i2)
 			push(f, sum)
 		case LADD: //  0x61     (add top 2 longs on operand stack, push result)
-			l2 := pop(f) //    longs occupy two slots, hence double pushes and pops
+			l2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
-			l1 := pop(f)
+			l1 := pop(f).(int64)
 			pop(f)
 			sum := add(l1, l2)
 			push(f, sum)
 			push(f, sum)
 		case ISUB: //  0x64	(subtract top 2 integers on operand stack, push result)
-			i2 := pop(f)
-			i1 := pop(f)
+			i2 := pop(f).(int64)
+			i1 := pop(f).(int64)
 			diff := subtract(i1, i2)
 			push(f, diff)
 		case LSUB: //  0x65 (subtract top 2 longs on operand stack, push result)
-			i2 := pop(f) //    longs occupy two slots, hence double pushes and pops
+			i2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
-			i1 := pop(f)
+			i1 := pop(f).(int64)
 			pop(f)
 			diff := subtract(i1, i2)
 
 			push(f, diff)
 			push(f, diff)
 		case IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
-			i2 := pop(f)
-			i1 := pop(f)
+			i2 := pop(f).(int64)
+			i1 := pop(f).(int64)
 			product := multiply(i1, i2)
 
 			push(f, product)
 		case LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
-			l2 := pop(f) //    longs occupy two slots, hence double pushes and pops
+			l2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
-			l1 := pop(f)
+			l1 := pop(f).(int64)
 			pop(f)
 			product := multiply(l1, l2)
 
 			push(f, product)
 			push(f, product)
 		case IDIV: //  0x6C (integer divide tos-1 by tos)
-			val1 := pop(f)
+			val1 := pop(f).(int64)
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
-				val2 := pop(f)
+				val2 := pop(f).(int64)
 				push(f, val2/val1)
 			}
 		case LDIV: //  0x6D   (long divide tos-2 by tos)
-			val1 := pop(f)
+			val1 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
-				val2 := pop(f)
+				val2 := pop(f).(int64)
 				pop(f)
 				res := val2 / val1
 				push(f, res)
 				push(f, res)
 			}
 		case INEG: //	0x74 	(negate an int)
-			val := pop(f)
+			val := pop(f).(int64)
 			val = val * (-1)
 			push(f, val)
 		case LNEG: //   0x75	(negate a long)
-			val := pop(f)
+			val := pop(f).(int64)
 			pop(f) // pop a second time because it's a long, which occupies 2 slots
 			val = val * (-1)
 			push(f, val)
@@ -341,9 +347,9 @@ func runFrame(fs *list.List) error {
 		// 	val = val * (-1.0)
 		// 	push(f, val) // CURR: resume here. Consider making opStack []interface{c
 		case LAND: //   0x7F    (and two longs together, push result
-			val1 := pop(f)
+			val1 := pop(f).(int64)
 			pop(f)
-			val2 := pop(f)
+			val2 := pop(f).(int64)
 			pop(f)
 			val3 := val1 & val2
 			push(f, val3)
@@ -355,15 +361,15 @@ func runFrame(fs *list.List) error {
 			orig := f.Locals[localVarIndex]
 			f.Locals[localVarIndex] = orig + constAmount
 		case L2D: // 0x8A (convert long to double)
-			longVal := pop(f)
+			longVal := pop(f).(int64)
 			pop(f)
 			dblVal := float64(longVal)
 			push(f, dblVal)
 			push(f, dblVal)
 		case LCMP: // 0x94 (compare two longs, push int -1, 0, or 1, depending on result)
-			value2 := pop(f)
+			value2 := pop(f).(int64)
 			pop(f)
-			value1 := pop(f)
+			value1 := pop(f).(int64)
 			pop(f)
 			if value1 == value2 {
 				push(f, int64(0))
@@ -373,8 +379,8 @@ func runFrame(fs *list.List) error {
 				push(f, int64(-1))
 			}
 		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -382,8 +388,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if int32(val1) != int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -391,8 +397,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			val1a := val1
 			val2a := val2
 			if val1a < val2a { // if comp succeeds, next 2 bytes hold instruction index
@@ -402,8 +408,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -411,8 +417,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ICMPGT: //  0xA3    (jump if popped val1 > popped val2)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if int32(val1) > int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -420,8 +426,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ICMPLE: //	0xA4	(jump if popped val1 <= popped val2)
-			val2 := pop(f)
-			val1 := pop(f)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if val1 <= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -683,8 +689,8 @@ func runFrame(fs *list.List) error {
 }
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
-func pop(f *frames.Frame) int64 {
-	value := f.OpStack[f.TOS].(int64)
+func pop(f *frames.Frame) interface{} {
+	value := f.OpStack[f.TOS]
 	f.TOS -= 1
 	return value
 }

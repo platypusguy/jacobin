@@ -79,7 +79,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	// then push them onto the stack of the go function
 	var argList []int64
 	for i := 0; i < paramSlots; i++ {
-		arg := pop(f)
+		arg := pop(f).(int64)
 		intArg := arg
 		argList = append(argList, intArg)
 	}

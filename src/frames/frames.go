@@ -16,7 +16,7 @@ import (
 // The data structures and functions related to JVM frames
 
 type Number interface {
-	int | int64 | float64
+	int64 | float64
 }
 
 // Frame is the fundamental execution environment for a single function/method call.
