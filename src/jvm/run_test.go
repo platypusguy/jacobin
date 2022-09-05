@@ -1056,6 +1056,7 @@ func TestIstore3(t *testing.T) {
 	}
 }
 
+// ISUB: integer subtraction
 func TestIsub(t *testing.T) {
 	f := newFrame(ISUB)
 	push(&f, int64(10))
@@ -1072,6 +1073,26 @@ func TestIsub(t *testing.T) {
 	}
 }
 
+// L2D: Convert long to double
+func TestL2d(t *testing.T) {
+	f := newFrame(L2D)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(float64)
+	if val != 21.0 {
+		t.Errorf("L2D: expected a result of 21.0, but got: %f", val)
+	}
+	if f.TOS != 0 {
+		t.Errorf("L2D: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+}
+
+// LADD: Add two longs
 func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
@@ -1095,7 +1116,7 @@ func TestLadd(t *testing.T) {
 	}
 }
 
-// compare two longs
+// LCMP: compare two longs
 func TestLcmp(t *testing.T) {
 	f := newFrame(LCMP)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
