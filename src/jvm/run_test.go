@@ -1094,6 +1094,30 @@ func TestL2d(t *testing.T) {
 	}
 }
 
+// LAND: Logical and of two longs, push result
+func TestLand(t *testing.T) {
+	f := newFrame(LAND)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	push(&f, int64(22))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 20 { // 21 & 22 = 20
+		t.Errorf("LADD: expected a result of 20, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // LADD: Add two longs
 func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
