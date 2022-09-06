@@ -345,7 +345,7 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
-		case LREM:
+		case LREM: // 	0x71	(remainder after long division)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
@@ -374,15 +374,16 @@ func runFrame(fs *list.List) error {
 		// 	push(f, val) // CURR: resume here
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
-			ushiftBy := uint64(shiftBy) // must be unsigned in golang
+			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)
 			pop(f)
 			val3 := val1 << ushiftBy
 			push(f, val3)
 			push(f, val3)
-		case LSHR: // 	0x7B	(shift value1 (long) right by value2 (int) bits)
+		case LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
+			LUSHR: // 	0x70
 			shiftBy := pop(f).(int64)
-			ushiftBy := uint64(shiftBy) // must be unsigned in golang
+			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)
 			pop(f)
 			val3 := val1 >> ushiftBy
