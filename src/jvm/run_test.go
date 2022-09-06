@@ -1768,6 +1768,29 @@ func TestLsub(t *testing.T) {
 	}
 }
 
+// LUSHR: Right unsigned shift of long
+func TestLushr(t *testing.T) {
+	f := newFrame(LUSHR)
+	push(&f, int64(200)) // longs require two slots, so pushed twice
+	push(&f, int64(200))
+
+	push(&f, int64(3)) // shift left 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 25 { // 200 >> 3 = 25
+		t.Errorf("LUSHR: expected a result of 25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LUSHR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // LXOR: Logical OR of two longs
 func TestLxor(t *testing.T) {
 	f := newFrame(LXOR)
