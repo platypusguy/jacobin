@@ -629,16 +629,34 @@ func runFrame(fs *list.List) error {
 				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
 					for i := 0; i < len(paramsToPass); i++ {
-						if paramsToPass[i] == 'D' || paramsToPass[i] == 'F' {
+						switch paramsToPass[i] {
+						case 'D':
 							arg := pop(f).(float64)
 							argList = append(argList, arg)
-						} else {
+							argList = append(argList, arg)
+							pop(f)
+						case 'F':
+							arg := pop(f).(float64)
+							argList = append(argList, arg)
+						case 'J': // long
+							arg := pop(f).(int64)
+							argList = append(argList, arg)
+							argList = append(argList, arg)
+							pop(f)
+						default:
 							arg := pop(f).(int64)
 							argList = append(argList, arg)
 						}
-						if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
-							pop(f) // doubles and longs occupy two slots on the operand stack
-						}
+						// if paramsToPass[i] == 'D' || paramsToPass[i] == 'F' {
+						// 	arg := pop(f).(float64)
+						// 	argList = append(argList, arg)
+						// } else {
+						// 	arg := pop(f).(int64)
+						// 	argList = append(argList, arg)
+						// }
+						// if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
+						// 	pop(f) // doubles and longs occupy two slots on the operand stack
+						// }
 					}
 				}
 
