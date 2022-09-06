@@ -1538,29 +1538,6 @@ func TestLrem(t *testing.T) {
 	}
 }
 
-// LSHL: Left shify of long
-func TestLshl(t *testing.T) {
-	f := newFrame(LSHL)
-	push(&f, int64(22)) // longs require two slots, so pushed twice
-	push(&f, int64(22))
-
-	push(&f, int64(3)) // shift left 3 bits
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-
-	value := pop(&f).(int64) // longs require two slots, so popped twice
-	pop(&f)
-
-	if value != 176 { // 22 << 3 = 176
-		t.Errorf("LSHL: expected a result of 176, but got: %d", value)
-	}
-	if f.TOS != -1 {
-		t.Errorf("LSHL: Expected an empty stack, but got a tos of: %d", f.TOS)
-	}
-}
-
 // LRETURN: Return a long from a function
 func TestLreturn(t *testing.T) {
 	f0 := newFrame(0)
@@ -1583,6 +1560,52 @@ func TestLreturn(t *testing.T) {
 	prevVal := pop(f3).(int64)
 	if prevVal != 20 {
 		t.Errorf("After IRETURN, expected a value of 20 in 2nd place of previous frame, got: %d", prevVal)
+	}
+}
+
+// LSHL: Left shift of long
+func TestLshl(t *testing.T) {
+	f := newFrame(LSHL)
+	push(&f, int64(22)) // longs require two slots, so pushed twice
+	push(&f, int64(22))
+
+	push(&f, int64(3)) // shift left 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 176 { // 22 << 3 = 176
+		t.Errorf("LSHL: expected a result of 176, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LSHL: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// LSHR: Right shift of long
+func TestLshr(t *testing.T) {
+	f := newFrame(LSHR)
+	push(&f, int64(200)) // longs require two slots, so pushed twice
+	push(&f, int64(200))
+
+	push(&f, int64(3)) // shift left 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 25 { // 200 >> 3 = 25
+		t.Errorf("LSHR: expected a result of 25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LSHR: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 
