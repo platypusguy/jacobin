@@ -358,13 +358,21 @@ func runFrame(fs *list.List) error {
 		// case FNEG: //	0x76	(negate a float)
 		// 	val := float64(pop(f))
 		// 	val = val * (-1.0)
-		// 	push(f, val) // CURR: resume here. Consider making opStack []interface{c
-		case LAND: //   0x7F    (and two longs together, push result
+		// 	push(f, val) // CURR: resume here
+		case LAND: //   0x7F    (logical and of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)
 			pop(f)
 			val3 := val1 & val2
+			push(f, val3)
+			push(f, val3)
+		case LOR: // 0x81  (logical OR of two longs, push result)
+			val1 := pop(f).(int64)
+			pop(f)
+			val2 := pop(f).(int64)
+			pop(f)
+			val3 := val1 | val2
 			push(f, val3)
 			push(f, val3)
 		case IINC: // 	0x84    (increment local variable by a constant)

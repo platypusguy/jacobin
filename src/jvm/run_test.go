@@ -1382,6 +1382,30 @@ func TestLmul(t *testing.T) {
 	}
 }
 
+// LOR: Logical OR of two longs
+func TestLor(t *testing.T) {
+	f := newFrame(LOR)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	push(&f, int64(22))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 23 { // 21 | 22 = 23
+		t.Errorf("LOR: expected a result of 23, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LOR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // LRETURN: Return a long from a function
 func TestLreturn(t *testing.T) {
 	f0 := newFrame(0)
