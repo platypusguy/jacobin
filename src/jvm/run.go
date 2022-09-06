@@ -333,15 +333,28 @@ func runFrame(fs *list.List) error {
 				push(f, val2/val1)
 			}
 		case LDIV: //  0x6D   (long divide tos-2 by tos)
-			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
-			if val1 == 0 {
+			if val2 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
-				val2 := pop(f).(int64)
+				val1 := pop(f).(int64)
 				pop(f)
-				res := val2 / val1
+				res := val1 / val2
+				push(f, res)
+				push(f, res)
+			}
+		case LREM:
+			val2 := pop(f).(int64)
+			pop(f) //    longs occupy two slots, hence double pushes and pops
+			if val2 == 0 {
+				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			} else {
+				val1 := pop(f).(int64)
+				pop(f)
+				res := val1 % val2
 				push(f, res)
 				push(f, res)
 			}

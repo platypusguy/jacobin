@@ -1094,30 +1094,6 @@ func TestL2d(t *testing.T) {
 	}
 }
 
-// LAND: Logical and of two longs, push result
-func TestLand(t *testing.T) {
-	f := newFrame(LAND)
-	push(&f, int64(21)) // longs require two slots, so pushed twice
-	push(&f, int64(21))
-
-	push(&f, int64(22))
-	push(&f, int64(22))
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-
-	value := pop(&f).(int64) // longs require two slots, so popped twice
-	pop(&f)
-
-	if value != 20 { // 21 & 22 = 20
-		t.Errorf("LADD: expected a result of 20, but got: %d", value)
-	}
-	if f.TOS != -1 {
-		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.TOS)
-	}
-}
-
 // LADD: Add two longs
 func TestLadd(t *testing.T) {
 	f := newFrame(LADD)
@@ -1139,6 +1115,30 @@ func TestLadd(t *testing.T) {
 	}
 	if f.TOS != -1 {
 		t.Errorf("LADD: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// LAND: Logical and of two longs, push result
+func TestLand(t *testing.T) {
+	f := newFrame(LAND)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	push(&f, int64(22))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 20 { // 21 & 22 = 20
+		t.Errorf("LAND: expected a result of 20, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LAND: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 
@@ -1406,6 +1406,30 @@ func TestLor(t *testing.T) {
 	}
 }
 
+// LREM: remainder of long division (the % operator)
+func TestLrem(t *testing.T) {
+	f := newFrame(LREM)
+	push(&f, int64(74))
+	push(&f, int64(74))
+
+	push(&f, int64(6))
+	push(&f, int64(6))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 1 { // product is pushed twice b/c it's a long, which occupies 2 slots
+		t.Errorf("LREM, Top of stack, expected 1, got: %d", f.TOS)
+	}
+
+	value := pop(&f).(int64)
+	pop(&f)
+	if value != 2 {
+		t.Errorf("LREM: Expected popped value to be 2, got: %d", value)
+	}
+}
+
 // LRETURN: Return a long from a function
 func TestLreturn(t *testing.T) {
 	f0 := newFrame(0)
@@ -1484,6 +1508,7 @@ func TestLstore0(t *testing.T) {
 	}
 }
 
+// LSTORE_1: Store long from stack in localVar[1] and again in localVar[2]
 func TestLstore1(t *testing.T) {
 	f := newFrame(LSTORE_1)
 	f.Locals = append(f.Locals, zero)
@@ -1509,6 +1534,7 @@ func TestLstore1(t *testing.T) {
 	}
 }
 
+// LSTORE_2: Store long from stack in localVar[2] and again in localVar[3]
 func TestLstore2(t *testing.T) {
 	f := newFrame(LSTORE_2)
 	f.Locals = append(f.Locals, zero)
@@ -1535,6 +1561,7 @@ func TestLstore2(t *testing.T) {
 	}
 }
 
+// LSTORE_3: Store long from stack in localVar[3] and again in localVar[4]
 func TestLstore3(t *testing.T) {
 	f := newFrame(LSTORE_3)
 	f.Locals = append(f.Locals, zero)
