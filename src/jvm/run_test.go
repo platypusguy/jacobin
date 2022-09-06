@@ -1251,7 +1251,7 @@ func TestLcmpLT(t *testing.T) {
 	}
 }
 
-// push a long 0 onto opStack
+// LCONST_0: push a long 0 onto opStack
 func TestLconst0(t *testing.T) {
 	f := newFrame(LCONST_0)
 	fs := frames.CreateFrameStack()
@@ -1266,7 +1266,7 @@ func TestLconst0(t *testing.T) {
 	}
 }
 
-// push a long 1 onto opStack
+// LCONST_1: push a long 1 onto opStack
 func TestLconst1(t *testing.T) {
 	f := newFrame(LCONST_1)
 	fs := frames.CreateFrameStack()
@@ -1535,6 +1535,29 @@ func TestLrem(t *testing.T) {
 	pop(&f)
 	if value != 2 {
 		t.Errorf("LREM: Expected popped value to be 2, got: %d", value)
+	}
+}
+
+// LSHL: Left shify of long
+func TestLshl(t *testing.T) {
+	f := newFrame(LSHL)
+	push(&f, int64(22)) // longs require two slots, so pushed twice
+	push(&f, int64(22))
+
+	push(&f, int64(3)) // shift left 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+	pop(&f)
+
+	if value != 176 { // 22 << 3 = 176
+		t.Errorf("LSHL: expected a result of 176, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LSHL: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 

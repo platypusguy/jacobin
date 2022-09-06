@@ -372,6 +372,14 @@ func runFrame(fs *list.List) error {
 		// 	val := float64(pop(f))
 		// 	val = val * (-1.0)
 		// 	push(f, val) // CURR: resume here
+		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
+			shiftBy := pop(f).(int64)
+			ushiftBy := uint64(shiftBy) // must be unsigned in golang
+			val1 := pop(f).(int64)
+			pop(f)
+			val3 := val1 << ushiftBy
+			push(f, val3)
+			push(f, val3)
 		case LAND: //   0x7F    (logical and of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
