@@ -1164,8 +1164,52 @@ func TestLand(t *testing.T) {
 	}
 }
 
-// LCMP: compare two longs
-func TestLcmp(t *testing.T) {
+// LCMP: compare two longs (using two equal values)
+func TestLcmpEQ(t *testing.T) {
+	f := newFrame(LCMP)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	push(&f, int64(21))
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+	if value != 0 {
+		t.Errorf("LCMP: Expected comparison to result in 0, got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LCMP: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// LCMP: compare two longs (with val1 > val2)
+func TestLcmpGT(t *testing.T) {
+	f := newFrame(LCMP)
+	push(&f, int64(22)) // longs require two slots, so pushed twice
+	push(&f, int64(22))
+
+	push(&f, int64(21))
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+	if value != 1 {
+		t.Errorf("LCMP: Expected comparison to result in 1, got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LCMP: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// LCMP: compare two longs (using val1 < val2)
+func TestLcmpLT(t *testing.T) {
 	f := newFrame(LCMP)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
@@ -1179,7 +1223,7 @@ func TestLcmp(t *testing.T) {
 
 	value := pop(&f).(int64)
 	if value != -1 {
-		t.Errorf("Expected comparison to result in -1, got: %d", value)
+		t.Errorf("LCMP: Expected comparison to result in -1, got: %d", value)
 	}
 	if f.TOS != -1 {
 		t.Errorf("LCMP: Expected an empty stack, but got a tos of: %d", f.TOS)
