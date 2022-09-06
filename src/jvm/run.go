@@ -166,33 +166,39 @@ func runFrame(fs *list.List) error {
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			push(f, f.Locals[index])
-		case LLOAD, // 0x16 (push long from local var, using next byte as index)
-			DLOAD: // 0x18 (push double from local var, using next byte as index)
+		case LLOAD: // 0x16 (push long from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
-			push(f, f.Locals[index])
-			push(f, f.Locals[index]) // push twice due to item being 64 bits wide
+			val := f.Locals[index].(int64)
+			push(f, val)
+			push(f, val) // push twice due to item being 64 bits wide
+		case DLOAD: // 0x18 (push double from local var, using next byte as index)
+			index := int(f.Meth[f.PC+1])
+			f.PC += 1
+			val := f.Locals[index].(float64)
+			push(f, val)
+			push(f, val) // push twice due to item being 64 bits wide
 		case ILOAD_0: // 	0x1A    (push local variable 0)
-			push(f, f.Locals[0])
+			push(f, f.Locals[0].(int64))
 		case ILOAD_1: //    OX1B    (push local variable 1)
-			push(f, f.Locals[1])
+			push(f, f.Locals[1].(int64))
 		case ILOAD_2: //    0X1C    (push local variable 2)
-			push(f, f.Locals[2])
+			push(f, f.Locals[2].(int64))
 		case ILOAD_3: //  	0x1D   	(push local variable 3)
-			push(f, f.Locals[3])
+			push(f, f.Locals[3].(int64))
 		// LLOAD use two slots, so the same value is pushed twice
 		case LLOAD_0: //	0x1E	(push local variable 0, as long)
-			push(f, f.Locals[0])
-			push(f, f.Locals[0])
+			push(f, f.Locals[0].(int64))
+			push(f, f.Locals[0].(int64))
 		case LLOAD_1: //	0x1F	(push local variable 1, as long)
-			push(f, f.Locals[1])
-			push(f, f.Locals[1])
+			push(f, f.Locals[1].(int64))
+			push(f, f.Locals[1].(int64))
 		case LLOAD_2: //	0x20	(push local variable 2, as long)
-			push(f, f.Locals[2])
-			push(f, f.Locals[2])
+			push(f, f.Locals[2].(int64))
+			push(f, f.Locals[2].(int64))
 		case LLOAD_3: //	0x21	(push local variable 3, as long)
-			push(f, f.Locals[3])
-			push(f, f.Locals[3])
+			push(f, f.Locals[3].(int64))
+			push(f, f.Locals[3].(int64))
 		case DLOAD_0: //	0x26	(push local variable 0, as double)
 			push(f, f.Locals[0])
 			push(f, f.Locals[0])
@@ -255,8 +261,10 @@ func runFrame(fs *list.List) error {
 			f.Locals[3] = v
 			pop(f)
 		case LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
-			f.Locals[3] = pop(f).(int64)
-			f.Locals[4] = pop(f).(int64)
+			var v = pop(f).(int64)
+			f.Locals[3] = v
+			f.Locals[4] = v
+			pop(f)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f).(int64)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -365,6 +373,10 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
+		case I2L: // 0x85     (convert int to long)
+			val := pop(f).(int64)
+			push(f, val) // all ints are 64-bits wide so already longs,
+			push(f, val) // so push the int a second time
 		case L2D: // 0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
@@ -617,8 +629,13 @@ func runFrame(fs *list.List) error {
 				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
 					for i := 0; i < len(paramsToPass); i++ {
-						arg := pop(f)
-						argList = append(argList, arg)
+						if paramsToPass[i] == 'D' || paramsToPass[i] == 'F' {
+							arg := pop(f).(float64)
+							argList = append(argList, arg)
+						} else {
+							arg := pop(f).(int64)
+							argList = append(argList, arg)
+						}
 						if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
 							pop(f) // doubles and longs occupy two slots on the operand stack
 						}
@@ -627,7 +644,7 @@ func runFrame(fs *list.List) error {
 
 				destLocal := 0
 				for j := len(argList) - 1; j >= 0; j-- {
-					fram.Locals[destLocal] = argList[j].(int64)
+					fram.Locals[destLocal] = argList[j]
 					destLocal += 1
 				}
 				fram.TOS = -1
