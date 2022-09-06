@@ -647,16 +647,6 @@ func runFrame(fs *list.List) error {
 							arg := pop(f).(int64)
 							argList = append(argList, arg)
 						}
-						// if paramsToPass[i] == 'D' || paramsToPass[i] == 'F' {
-						// 	arg := pop(f).(float64)
-						// 	argList = append(argList, arg)
-						// } else {
-						// 	arg := pop(f).(int64)
-						// 	argList = append(argList, arg)
-						// }
-						// if paramsToPass[i] == 'D' || paramsToPass[i] == 'J' {
-						// 	pop(f) // doubles and longs occupy two slots on the operand stack
-						// }
 					}
 				}
 
