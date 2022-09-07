@@ -419,11 +419,17 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
-		case I2L: // 0x85     (convert int to long)
+		case I2L: // 	0x85     (convert int to long)
 			val := pop(f).(int64)
 			push(f, val) // all ints are 64-bits wide so already longs,
 			push(f, val) // so push the int a second time
-		case L2D: // 0x8A (convert long to double)
+		case L2I: // 	0x88 	(convert long to int)
+			longVal := pop(f).(int64)
+			pop(f)
+			intVal := longVal << 32 // remove high-end 4 bytes. this maintains the sign
+			intVal >>= 32
+			push(f, intVal)
+		case L2D: // 	0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
 			dblVal := float64(longVal)

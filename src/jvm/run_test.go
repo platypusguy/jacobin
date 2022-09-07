@@ -213,7 +213,7 @@ func TestAstore2(t *testing.T) {
 	}
 }
 
-// test store of reference from stack into locals[3]
+// ASTORE3: store of reference from stack into locals[3]
 func TestAstore3(t *testing.T) {
 	f := newFrame(ASTORE_3)
 	f.Locals = append(f.Locals, zero)
@@ -411,7 +411,7 @@ func TestGotoForward(t *testing.T) {
 	}
 }
 
-// test of GOTO instruction -- in backward direction (to an earlier bytecode)
+// GOTO: go to instruction in backward direction (to an earlier bytecode)
 func TestGotoBackward(t *testing.T) {
 	f := newFrame(RETURN)
 	f.Meth = append(f.Meth, GOTO)
@@ -1134,6 +1134,44 @@ func TestL2d(t *testing.T) {
 	}
 	if f.TOS != 0 {
 		t.Errorf("L2D: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+}
+
+// L2I: Convert long to int
+func TestL2i(t *testing.T) {
+	f := newFrame(L2I)
+	push(&f, int64(21)) // longs require two slots, so pushed twice
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != 21 {
+		t.Errorf("L2I: expected a result of 21, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("L2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// L2I: Convert long to int (test with negative value)
+func TestL2ineg(t *testing.T) {
+	f := newFrame(L2I)
+	push(&f, int64(-21)) // longs require two slots, so pushed twice
+	push(&f, int64(-21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != -21 {
+		t.Errorf("L2I: expected a result of -21, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("L2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
