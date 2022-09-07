@@ -429,6 +429,12 @@ func runFrame(fs *list.List) error {
 			intVal := longVal << 32 // remove high-end 4 bytes. this maintains the sign
 			intVal >>= 32
 			push(f, intVal)
+		case L2F: // 	0x89 	(convert long to float)
+			longVal := pop(f).(int64)
+			pop(f)
+			float32Val := float32(longVal) //
+			float64Val := float64(float32Val)
+			push(f, float64Val) // floats tke up only 1 slot in the JVM
 		case L2D: // 	0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
