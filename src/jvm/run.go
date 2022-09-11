@@ -518,9 +518,15 @@ func runFrame(fs *list.List) error {
 			push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
 			return nil
 		case LRETURN: // 0xAD (return a long and exit current frame)
-			valToReturn := pop(f)
+			valToReturn := pop(f).(int64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // pushed twice b/c a long uses two slots
+			push(f, valToReturn)
+			return nil
+		case DRETURN: // 0xAF (return a double and exit current frame)
+			valToReturn := pop(f).(float64)
+			f = fs.Front().Next().Value.(*frames.Frame)
+			push(f, valToReturn) // pushed twice b/c a float uses two slots
 			push(f, valToReturn)
 			return nil
 		case RETURN: // 0xB1    (return from void function)
