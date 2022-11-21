@@ -169,6 +169,7 @@ const LCMP = 0x94
 const LCONST_0 = 0x09
 const LCONST_1 = 0x0A
 const LDC = 0x12
+const LDC_W = 0x13
 const LDC2_W = 0x14
 const LDIV = 0x6D
 const LLOAD = 0x16

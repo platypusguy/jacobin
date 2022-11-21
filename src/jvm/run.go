@@ -160,6 +160,10 @@ func runFrame(fs *list.List) error {
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
+		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
+			idx := (f.PC + 1*256) + (f.PC + 2)
+			push(f, int64(f.Meth[idx]))
+			f.PC += 2
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
 			FLOAD, //  0x17 (push float from local var, using next byte as index)
 			ALOAD: //  0x19 (push ref from local var, using next byte as index)
