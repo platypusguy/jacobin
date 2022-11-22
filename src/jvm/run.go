@@ -158,6 +158,18 @@ func runFrame(fs *list.List) error {
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
+			idx := f.PC + 1
+			rawEntry := f.CP.CpIndex[idx]
+			switch rawEntry.Type {
+			case classloader.IntConst:
+				value := f.CP.IntConsts[rawEntry.Slot]
+				push(f, int64(value))
+			case classloader.FloatConst:
+				value := f.CP.Floats[rawEntry.Slot]
+				push(f, float64(value))
+			case classloader.DoubleConst, classloader.LongConst:
+
+			}
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
 		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
