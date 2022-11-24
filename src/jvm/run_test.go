@@ -8,6 +8,7 @@ package jvm
 
 import (
 	"io"
+	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -1394,6 +1395,39 @@ func TestLconst1(t *testing.T) {
 // 		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
 // 	}
 // }
+
+// LDC2_W: get CP entry for long or dobule indexed by following 2 bytes
+func TestLdc2w(t *testing.T) {
+	f := newFrame(LDC2_W)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	// now create a skeletal, two-entry CP
+	var doubles = make([]float64, 1)
+	f.CP.Doubles = doubles
+	f.CP.Doubles[0] = 25.0
+
+	f.CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	doubleEntry := classloader.CpEntry{
+		Type: classloader.DoubleConst, Slot: 0,
+	}
+	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
+	f.CP.CpIndex = append(f.CP.CpIndex, doubleEntry)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 25.0 {
+		t.Errorf("LDC2_W: Expected popped value to be 25.0, got: %f", value)
+	}
+}
 
 // Test LDIV (pop 2 longs, divide second term by top of stack, push result)
 func TestLdiv(t *testing.T) {
