@@ -177,25 +177,34 @@ func runFrame(fs *list.List) error {
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
-			if idx < 1 || idx > len(f.CP.CpIndex) { // TODO: Determine what the right exception is
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid destination for LDC2_W instruction")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-			}
+			// if idx < 1 || idx > len(f.CP.CpIndex) { // TODO: Determine what the right exception is
+			// 	exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid destination for LDC2_W instruction")
+			// 	shutdown.Exit(shutdown.APP_EXCEPTION)
+			// }
 
-			// if entry is long or double, push value
-			// else throw exception TODO: determine correct exception to throw
-			if f.CP.CpIndex[idx].Type == classloader.LongConst {
-				value := f.CP.LongConsts[f.CP.CpIndex[idx].Slot]
-				push(f, value) // pushed twice due to being a 64-bit value
-				push(f, value)
-			} else if f.CP.CpIndex[idx].Type == classloader.DoubleConst {
-				value := f.CP.Doubles[f.CP.CpIndex[idx].Slot]
+			entryType, _, value := FetchCPentry(f.CP, idx)
+			if entryType != 0 { // if no error, push value twice (due to 64-bit width)
 				push(f, value)
 				push(f, value)
 			} else {
 				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
+			//
+			// // if entry is long or double, push value
+			// // else throw exception TODO: determine correct exception to throw
+			// if f.CP.CpIndex[idx].Type == classloader.LongConst {
+			// 	value := f.CP.LongConsts[f.CP.CpIndex[idx].Slot]
+			// 	push(f, value) // pushed twice due to being a 64-bit value
+			// 	push(f, value)
+			// } else if f.CP.CpIndex[idx].Type == classloader.DoubleConst {
+			// 	value := f.CP.Doubles[f.CP.CpIndex[idx].Slot]
+			// 	push(f, value)
+			// 	push(f, value)
+			// } else {
+			// 	exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
+			// 	shutdown.Exit(shutdown.APP_EXCEPTION)
+			// }
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
 			FLOAD, //  0x17 (push float from local var, using next byte as index)
 			ALOAD: //  0x19 (push ref from local var, using next byte as index)
