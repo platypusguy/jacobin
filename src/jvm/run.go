@@ -186,9 +186,11 @@ func runFrame(fs *list.List) error {
 			// else throw exception TODO: determine correct exception to throw
 			if f.CP.CpIndex[idx].Type == classloader.LongConst {
 				value := f.CP.LongConsts[f.CP.CpIndex[idx].Slot]
+				push(f, value) // pushed twice due to being a 64-bit value
 				push(f, value)
 			} else if f.CP.CpIndex[idx].Type == classloader.DoubleConst {
 				value := f.CP.Doubles[f.CP.CpIndex[idx].Slot]
+				push(f, value)
 				push(f, value)
 			} else {
 				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
