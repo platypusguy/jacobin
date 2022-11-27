@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -22,7 +22,7 @@ import (
 //     0 = error
 //     1 = int64 or address
 //     2 = float64
-//     3 = a string
+//     3 = a string address
 //  3. the value itself
 func FetchCPentry(cpp *classloader.CPool, index int) (uint16, int, any) {
 	if cpp == nil {
@@ -46,6 +46,9 @@ func FetchCPentry(cpp *classloader.CPool, index int) (uint16, int, any) {
 		retInt := cp.LongConsts[entry.Slot]
 		return entry.Type, 1, retInt
 
+	case classloader.MethodType:
+		return entry.Type, 1, int64(cp.MethodTypes[entry.Slot])
+
 	// floating point
 	case classloader.FloatConst:
 		retFloat := float64(cp.Floats[entry.Slot])
@@ -54,13 +57,31 @@ func FetchCPentry(cpp *classloader.CPool, index int) (uint16, int, any) {
 		retFloat := cp.Doubles[entry.Slot]
 		return entry.Type, 2, retFloat
 
-	// addresses
-	case classloader.ClassRef, classloader.Dynamic,
-		classloader.Interface, classloader.InvokeDynamic,
-		classloader.MethodHandle, classloader.MethodRef,
-		classloader.MethodType, classloader.Module,
-		classloader.NameAndType, classloader.Package:
+	// addresses and references
+	case classloader.ClassRef: // points to a UTF-8 string
+		return entry.Type, 3, &(cp.Utf8Refs[entry.Slot])
 
+	case classloader.Dynamic:
+		return entry.Type, 1, &(cp.Dynamics[entry.Slot])
+
+	case classloader.Interface:
+		return entry.Type, 1, &(cp.InterfaceRefs[entry.Slot])
+
+	case classloader.InvokeDynamic:
+		return entry.Type, 1, &(cp.InvokeDynamics[entry.Slot])
+
+	case classloader.MethodHandle:
+		return entry.Type, 1, &(cp.MethodHandles[entry.Slot])
+
+	case classloader.MethodRef:
+		return entry.Type, 1, &(cp.MethodRefs[entry.Slot])
+
+	case classloader.NameAndType:
+		return entry.Type, 1, &(cp.NameAndTypes[entry.Slot])
+
+	// error: name of module would not normally be retrieved here
+	case classloader.Module, classloader.Package:
+		return 0, 0, math.NaN()
 	}
 
 	return classloader.Dummy, 0, math.NaN()

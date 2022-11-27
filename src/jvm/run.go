@@ -186,7 +186,7 @@ func runFrame(fs *list.List) error {
 			if entryType != 0 { // if no error, push value twice (due to 64-bit width)
 				push(f, value)
 				push(f, value)
-			} else {
+			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
