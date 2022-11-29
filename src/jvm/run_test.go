@@ -1421,7 +1421,7 @@ func TestLdc2w(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 1 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
 	}
 	value := pop(&f).(float64)
 	if value != 25.0 {
