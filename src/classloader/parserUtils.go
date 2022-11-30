@@ -86,11 +86,12 @@ func fetchUTF8slot(klass *ParsedClass, index int) (int, error) {
 // code attributes (yes, the word 'attribute' is overloaded in JVM parlance). The spec is here:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7 and the general
 // layout is:
-// attribute_info {
-//    u2 attribute_name_index;  // the name of the attribute
-//    u4 attribute_length;
-//    u1 info[attribute_length];
-// }
+//
+//	attribute_info {
+//	   u2 attribute_name_index;  // the name of the attribute
+//	   u4 attribute_length;
+//	   u1 info[attribute_length];
+//	}
 func fetchAttribute(klass *ParsedClass, bytes []byte, loc int) (attr, int, error) {
 	pos := loc
 	attribute := attr{}
@@ -124,7 +125,8 @@ func fetchAttribute(klass *ParsedClass, bytes []byte, loc int) (attr, int, error
 }
 
 // returns all the elements of a methodRef (10) CP entry when given the CP entry #
-// 	classIndex       int
+//
+//	classIndex       int
 //	nameAndTypeIndex int
 func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, error) {
 	if index < 1 || index >= len(klass.cpIndex) {
@@ -152,7 +154,6 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	}
 
 	return className, methName, methType, nil
-
 }
 
 func resolveCPnameAndType(klass *ParsedClass, index int) (string, string, error) {

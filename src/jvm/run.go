@@ -158,10 +158,11 @@ func runFrame(fs *list.List) error {
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
-			idx := f.PC + 1
+			idx := f.Meth[f.PC+1]
+			// idx := f.PC + 1
 			f.PC += 1
 
-			CPe := FetchCPentry(f.CP, idx)
+			CPe := FetchCPentry(f.CP, int(idx))
 			switch CPe.entryType {
 			case IS_STRUCT_ADDR, IS_STRING_ADDR: // value is a ptr
 				v := int64(CPe.addrVal)

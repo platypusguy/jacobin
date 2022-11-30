@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"fmt"
+	"unsafe"
 )
 
 /*
@@ -71,9 +72,14 @@ func Load_Io_PrintStream() map[string]GMeth {
 // is no return value.
 func Println(i []interface{}) interface{} {
 	sIndex := i[1].(int64) // points to a String constant entry in the CP
-	cpi := i[0].(int64)    // int64 which is an index into Statics array
-	cp := StaticsArray[cpi].CP
-	s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
+	// cpi := i[0].(int64)    // int64 which is an index into Statics array
+	// cp := StaticsArray[cpi].CP
+
+	usIndex := uint64(sIndex)
+	upsIndex := uintptr(usIndex)
+	strAddr := unsafe.Pointer(upsIndex)
+	s := *(*string)(strAddr)
+	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
 	fmt.Println(s)
 	return nil
 }
