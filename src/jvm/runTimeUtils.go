@@ -29,22 +29,21 @@ var IS_STRING_ADDR = 4
 // Utility routines for runtime operations
 
 // Look up an entry in a CP and return its type and its value.
-// The three return fields are:
-//  1. The CP entry type. Equals 0 if an error occurred.
-//  2. an int that identifies the type of the returned value. The
-//     options are:
+// The returned value is a struct that serves as a substitute for a discriminated
+// union.
+// The fields are:
+//  1. entryType: The CP entry type. Equals 0 if an error occurred.
+//     The five entryType values are listed above: IS_ERROR, etc.
+//  2. retType: int that identifies the type of the returned value.
+//     The options are:
 //     0 = error
 //     1 = address of item other than string
 //     2 = float64
 //     3 = int64
 //     4 = address of string
-//  3. the value itself as a string. The problem is that we need to return
-//     an int, a float, or an address. Go does not allow this as of go 1.20,
-//     which does not allow generics in function's return values. You cannot
-//     pass an unsafe.Pointer as part of an interface{}. So everything here
-//     is converted to a string, and then to the proper type by the caller
-//     function. Such is the price for golang's lack of generics in return
-//     values that could include an unsafe pointer.
+//  3. three fields that hold an int64, float64, or 64-bit address, respectively.
+//     The calling function checks the retType field to determine which
+//     of these three fields holds the returned value.
 
 func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 	if cpp == nil {
