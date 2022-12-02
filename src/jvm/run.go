@@ -159,7 +159,6 @@ func runFrame(fs *list.List) error {
 			f.PC += 1
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			idx := f.Meth[f.PC+1]
-			// idx := f.PC + 1
 			f.PC += 1
 
 			CPe := FetchCPentry(f.CP, int(idx))
