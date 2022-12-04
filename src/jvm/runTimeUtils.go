@@ -90,9 +90,10 @@ func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 		return cpType{entryType: IS_STRING_ADDR, addrVal: uintptr(v)}
 
 	// // addresses of structures or other elements
-	// case classloader.Dynamic:
-	// 	return entry.Type, 1, &(cp.Dynamics[entry.Slot])
-	//
+	case classloader.Dynamic:
+		v := unsafe.Pointer(&(cp.Dynamics[entry.Slot]))
+		return cpType{entryType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+
 	// case classloader.Interface:
 	// 	return entry.Type, 1, &(cp.InterfaceRefs[entry.Slot])
 	//
