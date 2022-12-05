@@ -8,7 +8,6 @@ package jvm
 
 import (
 	"jacobin/classloader"
-	"strconv"
 	"unsafe"
 )
 
@@ -61,66 +60,65 @@ func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 	// integers
 	case classloader.IntConst:
 		retInt := int64(cp.IntConsts[entry.Slot])
-		return cpType{entryType: IS_INT64, intVal: retInt}
+		return cpType{entryType: int(entry.Type), retType: IS_INT64, intVal: retInt}
 
 	case classloader.LongConst:
 		retInt := cp.LongConsts[entry.Slot]
-		return cpType{entryType: IS_INT64, intVal: retInt}
+		return cpType{entryType: int(entry.Type), retType: IS_INT64, intVal: retInt}
 
 	case classloader.MethodType: // method type is an integer
 		retInt := int64(cp.MethodTypes[entry.Slot])
-		return cpType{entryType: IS_INT64, intVal: retInt}
+		return cpType{entryType: int(entry.Type), retType: IS_INT64, intVal: retInt}
 
 	// floating point
 	case classloader.FloatConst:
 		retFloat := float64(cp.Floats[entry.Slot])
-		return cpType{entryType: IS_FLOAT64, floatVal: retFloat}
+		return cpType{entryType: int(entry.Type), retType: IS_FLOAT64, floatVal: retFloat}
 
 	case classloader.DoubleConst:
 		retFloat := cp.Doubles[entry.Slot]
-		return cpType{entryType: IS_FLOAT64, floatVal: retFloat}
+		return cpType{entryType: int(entry.Type), retType: IS_FLOAT64, floatVal: retFloat}
 
 	// addresses of strings
 	case classloader.ClassRef: // points to a UTF-8 string
 		v := unsafe.Pointer(&(cp.Utf8Refs[entry.Slot]))
-		return cpType{entryType: IS_STRING_ADDR, addrVal: uintptr(v)}
+		return cpType{entryType: int(entry.Type), retType: IS_STRING_ADDR, addrVal: uintptr(v)}
 
 	case classloader.UTF8: // same code as for ClassRef
 		v := unsafe.Pointer(&(cp.Utf8Refs[entry.Slot]))
-		return cpType{entryType: IS_STRING_ADDR, addrVal: uintptr(v)}
+		return cpType{entryType: int(entry.Type), retType: IS_STRING_ADDR, addrVal: uintptr(v)}
 
-	// // addresses of structures or other elements
+	// addresses of structures or other elements
 	case classloader.Dynamic:
 		v := unsafe.Pointer(&(cp.Dynamics[entry.Slot]))
-		return cpType{entryType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
 
-	// case classloader.Interface:
-	// 	return entry.Type, 1, &(cp.InterfaceRefs[entry.Slot])
-	//
-	// case classloader.InvokeDynamic:
-	// 	return entry.Type, 1, &(cp.InvokeDynamics[entry.Slot])
-	//
-	// case classloader.MethodHandle:
-	// 	return entry.Type, 1, unsafe.Pointer(&(cp.MethodHandles[entry.Slot]))
-	//
-	// case classloader.MethodRef:
-	// 	return entry.Type, 1, unsafe.Pointer(&(cp.MethodRefs[entry.Slot]))
-	//
-	// case classloader.NameAndType:
-	// 	return entry.Type, 1, &(cp.NameAndTypes[entry.Slot])
+	case classloader.Interface:
+		v := unsafe.Pointer(&(cp.InterfaceRefs[entry.Slot]))
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+
+	case classloader.InvokeDynamic:
+		v := unsafe.Pointer(&(cp.InvokeDynamics[entry.Slot]))
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+
+	case classloader.MethodHandle:
+		v := unsafe.Pointer(&(cp.MethodHandles[entry.Slot]))
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+
+	case classloader.MethodRef:
+		v := unsafe.Pointer(&(cp.MethodRefs[entry.Slot]))
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
+
+	case classloader.NameAndType:
+		v := unsafe.Pointer(&(cp.NameAndTypes[entry.Slot]))
+		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
 
 	// error: name of module or package would
 	// not normally be retrieved here
 	case classloader.Module,
 		classloader.Package:
-		return cpType{}
+		return cpType{entryType: 0, retType: IS_ERROR}
 	}
 
-	return cpType{}
-}
-
-func UnsafePtrToString(up unsafe.Pointer) string {
-	val := int(uintptr(up))
-	str := strconv.Itoa(val)
-	return str
+	return cpType{entryType: 0, retType: IS_ERROR}
 }
