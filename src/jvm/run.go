@@ -193,10 +193,10 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 
 			CPe := FetchCPentry(f.CP, idx)
-			if CPe.entryType == IS_INT64 { // push value twice (due to 64-bit width)
+			if CPe.retType == IS_INT64 { // push value twice (due to 64-bit width)
 				push(f, CPe.intVal)
 				push(f, CPe.intVal)
-			} else if CPe.entryType == IS_FLOAT64 {
+			} else if CPe.retType == IS_FLOAT64 {
 				push(f, CPe.floatVal)
 				push(f, CPe.floatVal)
 			} else { // TODO: Determine what exception to throw
