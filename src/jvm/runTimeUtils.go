@@ -46,12 +46,12 @@ var IS_STRING_ADDR = 4
 
 func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 	if cpp == nil {
-		return cpType{}
+		return cpType{entryType: 0, retType: IS_ERROR}
 	}
 	cp := *cpp
 	// if index is out of range, return error
 	if index < 1 || index >= len(cp.CpIndex) {
-		return cpType{}
+		return cpType{entryType: 0, retType: IS_ERROR}
 	}
 
 	entry := cp.CpIndex[index]
