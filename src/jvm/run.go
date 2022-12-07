@@ -162,32 +162,41 @@ func runFrame(fs *list.List) error {
 			f.PC += 1
 
 			CPe := FetchCPentry(f.CP, int(idx))
-			switch CPe.entryType {
-			case IS_STRUCT_ADDR, IS_STRING_ADDR: // value is a ptr
-				v := int64(CPe.addrVal)
-				push(f, v)
-			case IS_INT64:
-				v := CPe.intVal
-				push(f, v)
-			case IS_FLOAT64:
-				v := CPe.floatVal
-				push(f, v)
-			default: // will catch case of IS_ERROR
+			if CPe.entryType != 0 && // 0 = error
+				// this instruction does not load longs or doubles
+				CPe.entryType != classloader.DoubleConst &&
+				CPe.entryType != classloader.LongConst { // if no error
+				if CPe.retType == IS_INT64 {
+					push(f, CPe.intVal)
+				} else if CPe.retType == IS_FLOAT64 {
+					push(f, CPe.floatVal)
+				} else if CPe.retType == IS_STRUCT_ADDR || CPe.retType == IS_STRING_ADDR {
+					push(f, int64(CPe.addrVal))
+				}
+			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-		// case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
-		// 	idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-		// 	f.PC += 2
-		//
-		// 	entryType, _, value := FetchCPentry(f.CP, idx)
-		// 	if entryType != 0 { // if no error, push value
-		// 		push(f, value)
-		// 	} else { // TODO: Determine what exception to throw
-		// 		exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
-		// 		shutdown.Exit(shutdown.APP_EXCEPTION)
-		// 	}
+		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
+			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+			f.PC += 2
+
+			CPe := FetchCPentry(f.CP, idx)
+			if CPe.entryType != 0 && // this instruction does not load longs or doubles
+				CPe.entryType != classloader.DoubleConst &&
+				CPe.entryType != classloader.LongConst { // if no error
+				if CPe.retType == IS_INT64 {
+					push(f, CPe.intVal)
+				} else if CPe.retType == IS_FLOAT64 {
+					push(f, CPe.floatVal)
+				} else {
+					push(f, CPe.addrVal)
+				}
+			} else { // TODO: Determine what exception to throw
+				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
