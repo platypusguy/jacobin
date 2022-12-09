@@ -1365,20 +1365,36 @@ func TestLconst1(t *testing.T) {
 }
 
 // Test LDC_W: get CP entry indexed by following byte TODO: test doesn't test instruction
-// func TestLdc(t *testing.T) {
-// 	f := newFrame(LDC)
-// 	f.Meth = append(f.Meth, 0x05)
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs)
-// 	if f.TOS != 0 {
-// 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
-// 	}
-// 	value := pop(&f).(int64)
-// 	if value != 5 {
-// 		t.Errorf("LDC: Expected popped value to be 5, got: %d", value)
-// 	}
-// }
+func TestLdc(t *testing.T) {
+	f := newFrame(LDC)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	// now create a skeletal, two-entry CP
+	var ints = make([]int32, 1)
+	f.CP.IntConsts = ints
+	f.CP.IntConsts[0] = 25
+
+	f.CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	doubleEntry := classloader.CpEntry{
+		Type: classloader.IntConst, Slot: 0,
+	}
+	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
+	f.CP.CpIndex = append(f.CP.CpIndex, doubleEntry)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(int64)
+	if value != 25 {
+		t.Errorf("LDC_W: Expected popped value to be 25, got: %d", value)
+	}
+}
 
 // Test LDC_W: get CP entry indexed by two bytes
 func TestLdcw(t *testing.T) {
