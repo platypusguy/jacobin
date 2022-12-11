@@ -1364,7 +1364,7 @@ func TestLconst1(t *testing.T) {
 	}
 }
 
-// Test LDC_W: get CP entry indexed by following byte TODO: test doesn't test instruction
+// LDC_W: get CP entry indexed by following byte
 func TestLdc(t *testing.T) {
 	f := newFrame(LDC)
 	f.Meth = append(f.Meth, 0x01)
@@ -1462,7 +1462,7 @@ func TestLdc2w(t *testing.T) {
 	}
 }
 
-// Test LDIV (pop 2 longs, divide second term by top of stack, push result)
+// LDIV: (pop 2 longs, divide second term by top of stack, push result)
 func TestLdiv(t *testing.T) {
 	f := newFrame(LDIV)
 	push(&f, int64(70))
