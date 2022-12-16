@@ -18,6 +18,7 @@ import (
 	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/util"
+	"math"
 	"strconv"
 	"unsafe"
 )
@@ -275,6 +276,7 @@ func runFrame(fs *list.List) error {
 			push(f, f.Locals[3])
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE, //  0x37 (store popped top of stack long into local[index])
+			FSTORE, //  0x38 (store popped top of stack float into local[index])
 			ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
@@ -284,8 +286,7 @@ func runFrame(fs *list.List) error {
 			if bytecode == LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
-		case FSTORE, //  0x38 (store popped top of stack float into local[index])
-			DSTORE: //  0x39 (store popped top of stack double into local[index])
+		case DSTORE: //  0x39 (store popped top of stack double into local[index])
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f).(float64)
@@ -319,6 +320,68 @@ func runFrame(fs *list.List) error {
 			f.Locals[3] = v
 			f.Locals[4] = v
 			pop(f)
+		case FSTORE_0:
+			f.Locals[0] = pop(f).(float64)
+		case FSTORE_1:
+			f.Locals[1] = pop(f).(float64)
+		case FSTORE_2:
+			f.Locals[2] = pop(f).(float64)
+		case FSTORE_3:
+			f.Locals[3] = pop(f).(float64)
+		case FLOAD_0:
+			push(f, f.Locals[0])
+		case FLOAD_1:
+			push(f, f.Locals[1])
+		case FLOAD_2:
+			push(f, f.Locals[2])
+		case FLOAD_3:
+			push(f, f.Locals[3])
+		case F2D:
+			floatVal := pop(f).(float64)
+			push(f, floatVal)
+			push(f, floatVal)
+		case F2I:
+			floatVal := pop(f).(float64)
+			push(f, math.Trunc(floatVal))
+		case F2L:
+			floatVal := pop(f).(float64)
+			truncated := math.Trunc(floatVal)
+			push(f, truncated)
+			push(f, truncated)
+		case FADD:
+			lhs := pop(f).(float64)
+			rhs := pop(f).(float64)
+			push(f, float32(lhs+rhs))
+		case FSUB:
+			i2 := pop(f).(float64)
+			i1 := pop(f).(float64)
+			diff := subtract(i1, i2)
+			push(f, float32(diff))
+		case FDIV:
+			val1 := pop(f).(float64)
+			val2 := pop(f).(float64)
+			if val1 == 0.0 {
+				if val2 == 0.0 {
+					push(f, float32(math.NaN()))
+				} else if math.Signbit(val1) {
+					push(f, float32(math.Inf(1)))
+				} else {
+					push(f, float32(math.Inf(-1)))
+				}
+			} else {
+				push(f, float32(val2/val1))
+			}
+		case FMUL:
+			val1 := pop(f).(float64)
+			val2 := pop(f).(float64)
+			push(f, float32(val1*val2))
+		case FNEG: //	0x76	(negate a float)
+			val := pop(f).(float64)
+			push(f, float32(-val))
+		case FREM:
+			val1 := pop(f).(float64)
+			val2 := pop(f).(float64)
+			push(f, float32(math.Remainder(val2, val1)))
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f).(int64)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -422,10 +485,6 @@ func runFrame(fs *list.List) error {
 			val = val * (-1)
 			push(f, val)
 			push(f, val)
-		// case FNEG: //	0x76	(negate a float)
-		// 	val := float64(pop(f))
-		// 	val = val * (-1.0)
-		// 	push(f, val) // CURR: resume here
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
@@ -589,6 +648,11 @@ func runFrame(fs *list.List) error {
 			valToReturn := pop(f).(float64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // pushed twice b/c a float uses two slots
+			push(f, valToReturn)
+			return nil
+		case FRETURN:
+			valToReturn := pop(f).(float64)
+			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
 			return nil
 		case RETURN: // 0xB1    (return from void function)
@@ -834,8 +898,14 @@ func runFrame(fs *list.List) error {
 			push(f, int64(rawRef))
 
 		default:
-			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
-				f.Meth[f.PC], f.PC, f.MethName, f.ClName)
+			missingOpCode := fmt.Sprintf("0x%X", f.Meth[f.PC])
+
+			if int(f.Meth[f.PC]) < len(BytecodeNames) && int(f.Meth[f.PC]) > 0 {
+				missingOpCode += fmt.Sprintf(" (%s)", BytecodeNames[f.Meth[f.PC]])
+			}
+
+			msg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
+				missingOpCode, f.PC, f.MethName, f.ClName)
 			_ = log.Log(msg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}
