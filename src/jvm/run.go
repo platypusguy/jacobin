@@ -276,7 +276,6 @@ func runFrame(fs *list.List) error {
 			push(f, f.Locals[3])
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE, //  0x37 (store popped top of stack long into local[index])
-			FSTORE, //  0x38 (store popped top of stack float into local[index])
 			ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
@@ -286,6 +285,10 @@ func runFrame(fs *list.List) error {
 			if bytecode == LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
+		case FSTORE: //  0x38 (store popped top of stack float into local[index])
+			index := int(f.Meth[f.PC+1])
+			f.PC += 1
+			f.Locals[index] = pop(f).(float64)
 		case DSTORE: //  0x39 (store popped top of stack double into local[index])
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1

@@ -406,7 +406,6 @@ func TestFstore(t *testing.T) {
 	f.Locals = append(f.Locals, zerof)
 	f.Locals = append(f.Locals, zerof)
 	push(&f, float64(0x22223))
-	push(&f, float64(0x22223))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
