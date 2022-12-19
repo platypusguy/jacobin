@@ -414,8 +414,7 @@ func runFrame(fs *list.List) error {
 			}
 		case INEG: //	0x74 	(negate an int)
 			val := pop(f).(int64)
-			val = val * (-1)
-			push(f, val)
+			push(f, -val)
 		case LNEG: //   0x75	(negate a long)
 			val := pop(f).(int64)
 			pop(f) // pop a second time because it's a long, which occupies 2 slots
@@ -425,7 +424,7 @@ func runFrame(fs *list.List) error {
 		// case FNEG: //	0x76	(negate a float)
 		// 	val := float64(pop(f))
 		// 	val = val * (-1.0)
-		// 	push(f, val) // CURR: resume here
+		// 	push(f, val)
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
