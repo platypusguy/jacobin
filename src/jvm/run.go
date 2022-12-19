@@ -515,6 +515,15 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
+		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value != 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
 		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
