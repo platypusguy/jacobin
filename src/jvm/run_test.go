@@ -902,6 +902,42 @@ func TestIfeqFallThrough(t *testing.T) {
 	}
 }
 
+// IFEQ: jump if int popped off TOS is = 0
+func TestIfne(t *testing.T) {
+	f := newFrame(IFNE)
+	push(&f, int64(1)) // pushed 1, so jump should be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFNE: jump if int popped off TOS is != 0; here it is = 0
+func TestIfneFallThrough(t *testing.T) {
+	f := newFrame(IFNE)
+	push(&f, int64(0)) // pushed 0, so jump should not be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] == ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNE: Invalid fall-through, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
 // IINC:
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
