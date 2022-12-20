@@ -902,7 +902,7 @@ func TestIfeqFallThrough(t *testing.T) {
 	}
 }
 
-// IFEQ: jump if int popped off TOS is = 0
+// IFNE: jump if int popped off TOS is != 0
 func TestIfne(t *testing.T) {
 	f := newFrame(IFNE)
 	push(&f, int64(1)) // pushed 1, so jump should be made.
