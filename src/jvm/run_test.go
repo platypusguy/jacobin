@@ -923,7 +923,7 @@ func TestIfge(t *testing.T) {
 // IFGE: jump if int popped off TOS is >= 0, here = 0
 func TestIfgeEqual0(t *testing.T) {
 	f := newFrame(IFGE)
-	push(&f, int64(0)) // pushed 66, so jump should be made.
+	push(&f, int64(0)) // pushed 0, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -952,6 +952,42 @@ func TestIfgeFallThrough(t *testing.T) {
 	_ = runFrame(fs)
 	if f.Meth[f.PC-1] == ICONST_2 { // -1 b/c the run loop adds 1 before exiting
 		t.Errorf("IFGE: Invalid fall-through, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFGT: jump if int popped off TOS is > 0
+func TestIfgt(t *testing.T) {
+	f := newFrame(IFGT)
+	push(&f, int64(66)) // pushed 66, so jump should be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFGT: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFGT: jump if int popped off TOS is > 0; here = 0
+func TestIfgtFallThrough(t *testing.T) {
+	f := newFrame(IFGT)
+	push(&f, int64(0)) // pushed -1, so jump should not be made.
+
+	f.Meth = append(f.Meth, 0)
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] == ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFGT: Invalid fall-through, got: %s",
 			BytecodeNames[f.PC])
 	}
 }
