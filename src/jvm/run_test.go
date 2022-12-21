@@ -2238,6 +2238,50 @@ func TestLxor(t *testing.T) {
 	}
 }
 
+// POP: pop item off stack and discard it
+func TestPop(t *testing.T) {
+	f := newFrame(POP)
+	push(&f, int64(34)) // push three different values
+	push(&f, int64(21))
+	push(&f, int64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 1 {
+		t.Errorf("POP: Expected stack with 2 items, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 21 {
+		t.Errorf("POP: expected top's value to be 21, but got: %d", top)
+	}
+}
+
+// POP2: pop two items off stack and discard them
+func TestPop2(t *testing.T) {
+	f := newFrame(POP2)
+	push(&f, int64(34)) // push three different values; 34 at bottom
+	push(&f, int64(21))
+	push(&f, int64(10))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 34 {
+		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	}
+}
+
 // RETURN: Does a function return correctly?
 func TestReturn(t *testing.T) {
 	f := newFrame(RETURN)
