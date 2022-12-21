@@ -920,6 +920,24 @@ func TestIfge(t *testing.T) {
 	}
 }
 
+// IFGE: jump if int popped off TOS is >= 0, here = 0
+func TestIfgeEqual0(t *testing.T) {
+	f := newFrame(IFGE)
+	push(&f, int64(0)) // pushed 66, so jump should be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFGE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
 // IFGE: jump if int popped off TOS is >= 0; here < 0
 func TestIfgeFallThrough(t *testing.T) {
 	f := newFrame(IFGE)
