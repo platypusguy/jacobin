@@ -157,6 +157,10 @@ func runFrame(fs *list.List) error {
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
+		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
+			value := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+			f.PC += 2
+			push(f, int64(value))
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			idx := f.Meth[f.PC+1]
 			f.PC += 1

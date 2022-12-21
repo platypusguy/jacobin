@@ -2297,6 +2297,27 @@ func TestReturn(t *testing.T) {
 	}
 }
 
+// SIPUSH: create int from next two bytes and push the int
+func TestSipush(t *testing.T) {
+	f := newFrame(SIPUSH)
+	f.Meth = append(f.Meth, 0x01)
+	f.Meth = append(f.Meth, 0x02)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(int64)
+	if value != 258 {
+		t.Errorf("SIPUSH: Expected popped value to be 258, got: %d", value)
+	}
+
+	if f.PC != 3 {
+		t.Errorf("SIPUSH: Expected PC to be 3, got: %d", f.PC)
+	}
+}
+
 // SWAP: Swap top two items on stack
 func TestSwap(t *testing.T) {
 	f := newFrame(SWAP)
