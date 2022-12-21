@@ -2253,6 +2253,32 @@ func TestReturn(t *testing.T) {
 	}
 }
 
+// SWAP: Swap top two items on stack
+func TestSwap(t *testing.T) {
+	f := newFrame(SWAP)
+	push(&f, int64(34)) // push two different values
+	push(&f, int64(21)) // TOS now = 21
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	top := pop(&f).(int64)
+	next := pop(&f).(int64)
+
+	if top != 34 {
+		t.Errorf("SWAP: expected top's value to be 34, but got: %d", top)
+	}
+
+	if next != 21 {
+		t.Errorf("SWAP: expected next's value to be 21, but got: %d", next)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("SWAP: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
