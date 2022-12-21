@@ -892,6 +892,24 @@ func runFrame(fs *list.List) error {
 			rawRef := uintptr(unsafe.Pointer(ref))
 			push(f, int64(rawRef))
 
+		case IFNULL: // 0xC6 jump if TOS holds a null address
+			// null = 0, so we duplicate logic of IFEQ instruction
+			value := pop(f).(int64)
+			if value == 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
+			// null = 0, so we duplicate logic of IFNE instruction
+			value := pop(f).(int64)
+			if value != 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
 		default:
 			msg := fmt.Sprintf("Invalid bytecode found: %d at location %d in method %s() of class %s\n",
 				f.Meth[f.PC], f.PC, f.MethName, f.ClName)

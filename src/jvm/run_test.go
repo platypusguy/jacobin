@@ -1118,6 +1118,78 @@ func TestIfneFallThrough(t *testing.T) {
 	}
 }
 
+// IFNONNULL: jump if TOS holds a non-null address
+func TestIfn0nnull(t *testing.T) {
+	f := newFrame(IFNONNULL)
+	push(&f, int64(1)) // pushed 1, so jump should be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNONNULL: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFNONNULL: jump if TOS holds a non-null address; here it is null
+func TestIfnonnullFallThrough(t *testing.T) {
+	f := newFrame(IFNONNULL)
+	push(&f, int64(0)) // pushed 0, so jump should not be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] == ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNONNULL: Invalid fall-through, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFNULL: jump if TOS holds null address
+func TestIfnull(t *testing.T) {
+	f := newFrame(IFNULL)
+	push(&f, int64(0)) // pushed null, so jump should be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, NOP)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNULL: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IFNULL: jump if TOS address is null; here not null
+func TestIfnullFallThrough(t *testing.T) {
+	f := newFrame(IFNULL)
+	push(&f, int64(23)) // pushed 23, so jump should not be made.
+
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] == IFNULL { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IFNULL: Invalid fall-through, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
 // IINC:
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
