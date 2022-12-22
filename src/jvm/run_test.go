@@ -454,6 +454,26 @@ func TestGotoBackward(t *testing.T) {
 	}
 }
 
+// IAND: Logical and of two ints, push result
+func TestIand(t *testing.T) {
+	f := newFrame(IAND)
+	push(&f, int64(21))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != 20 { // 21 & 22 = 20
+		t.Errorf("IAND: expected a result of 20, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("IAND: Expected an empty stack, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2L: Convert int to long
 // Note that since ints in Jacobin are int64--which is the same size as a long--
 // so no conversion takes place. However, while ints are stored in one opStack
