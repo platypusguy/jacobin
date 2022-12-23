@@ -1360,6 +1360,26 @@ func TestIneg(t *testing.T) {
 	}
 }
 
+// IOR: Logical OR of two ints
+func TestIor(t *testing.T) {
+	f := newFrame(IOR)
+	push(&f, int64(21))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 23 { // 21 | 22 = 23
+		t.Errorf("IOR: expected a result of 23, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("IOR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // IRETURN: push an int on to the op stack of the calling method and exit the present method/frame
 func TestIreturn(t *testing.T) {
 	f0 := newFrame(0)

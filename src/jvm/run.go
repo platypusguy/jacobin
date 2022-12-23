@@ -468,6 +468,10 @@ func runFrame(fs *list.List) error {
 			val3 := val1 & val2
 			push(f, val3)
 			push(f, val3)
+		case IOR: // 0x 80 (logical OR of two ints, push result)
+			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
+			push(f, val1|val2)
 		case LOR: // 0x81  (logical OR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
