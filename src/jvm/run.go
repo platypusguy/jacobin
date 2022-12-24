@@ -480,7 +480,11 @@ func runFrame(fs *list.List) error {
 			val3 := val1 | val2
 			push(f, val3)
 			push(f, val3)
-		case LXOR: // 0x83  (logical XOR of two longs, push result)
+		case IXOR: // 	0x82	(logical XOR of two ints, push result)
+			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
+			push(f, val1^val2)
+		case LXOR: // 	0x83  	(logical XOR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)

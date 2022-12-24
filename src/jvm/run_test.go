@@ -1509,6 +1509,25 @@ func TestIsub(t *testing.T) {
 	}
 }
 
+// IXOR: Logical XOR of two ints
+func TestIxor(t *testing.T) {
+	f := newFrame(IXOR)
+	push(&f, int64(21))
+	push(&f, int64(22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+	if value != 3 { // 21 ^ 22 = 3
+		t.Errorf("IXOR: expected a result of 3, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("IXOR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // L2D: Convert long to double
 func TestL2d(t *testing.T) {
 	f := newFrame(L2D)
@@ -2326,7 +2345,7 @@ func TestLushr(t *testing.T) {
 	}
 }
 
-// LXOR: Logical OR of two longs
+// LXOR: Logical XOR of two longs
 func TestLxor(t *testing.T) {
 	f := newFrame(LXOR)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
