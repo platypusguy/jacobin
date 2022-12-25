@@ -155,6 +155,12 @@ func runFrame(fs *list.List) error {
 		case LCONST_1: //   0x0A    (push long 1 on to opStack)
 			push(f, int64(1)) // b/c longs take two slots on the stack, it's pushed twice
 			push(f, int64(1))
+		case FCONST_0: // 0x0B
+			push(f, 0.0)
+		case FCONST_1: // 0x0C
+			push(f, 1.0)
+		case FCONST_2: // 0x0D
+			push(f, 2.0)
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
@@ -258,6 +264,14 @@ func runFrame(fs *list.List) error {
 		case LLOAD_3: //	0x21	(push local variable 3, as long)
 			push(f, f.Locals[3].(int64))
 			push(f, f.Locals[3].(int64))
+		case FLOAD_0: // 0x22
+			push(f, f.Locals[0])
+		case FLOAD_1: // 0x23
+			push(f, f.Locals[1])
+		case FLOAD_2: // 0x24
+			push(f, f.Locals[2])
+		case FLOAD_3: // 0x25
+			push(f, f.Locals[3])
 		case DLOAD_0: //	0x26	(push local variable 0, as double)
 			push(f, f.Locals[0])
 			push(f, f.Locals[0])
@@ -327,68 +341,14 @@ func runFrame(fs *list.List) error {
 			f.Locals[3] = v
 			f.Locals[4] = v
 			pop(f)
-		case FSTORE_0:
+		case FSTORE_0: // 0x43
 			f.Locals[0] = pop(f).(float64)
-		case FSTORE_1:
+		case FSTORE_1: // 0x44
 			f.Locals[1] = pop(f).(float64)
-		case FSTORE_2:
+		case FSTORE_2: // 0x45
 			f.Locals[2] = pop(f).(float64)
-		case FSTORE_3:
+		case FSTORE_3: // 0x46
 			f.Locals[3] = pop(f).(float64)
-		case FLOAD_0:
-			push(f, f.Locals[0])
-		case FLOAD_1:
-			push(f, f.Locals[1])
-		case FLOAD_2:
-			push(f, f.Locals[2])
-		case FLOAD_3:
-			push(f, f.Locals[3])
-		case F2D:
-			floatVal := pop(f).(float64)
-			push(f, floatVal)
-			push(f, floatVal)
-		case F2I:
-			floatVal := pop(f).(float64)
-			push(f, math.Trunc(floatVal))
-		case F2L:
-			floatVal := pop(f).(float64)
-			truncated := math.Trunc(floatVal)
-			push(f, truncated)
-			push(f, truncated)
-		case FADD:
-			lhs := pop(f).(float64)
-			rhs := pop(f).(float64)
-			push(f, float32(lhs+rhs))
-		case FSUB:
-			i2 := pop(f).(float64)
-			i1 := pop(f).(float64)
-			diff := subtract(i1, i2)
-			push(f, float32(diff))
-		case FDIV:
-			val1 := pop(f).(float64)
-			val2 := pop(f).(float64)
-			if val1 == 0.0 {
-				if val2 == 0.0 {
-					push(f, float32(math.NaN()))
-				} else if math.Signbit(val1) {
-					push(f, float32(math.Inf(1)))
-				} else {
-					push(f, float32(math.Inf(-1)))
-				}
-			} else {
-				push(f, float32(val2/val1))
-			}
-		case FMUL:
-			val1 := pop(f).(float64)
-			val2 := pop(f).(float64)
-			push(f, float32(val1*val2))
-		case FNEG: //	0x76	(negate a float)
-			val := pop(f).(float64)
-			push(f, float32(-val))
-		case FREM:
-			val1 := pop(f).(float64)
-			val2 := pop(f).(float64)
-			push(f, float32(math.Remainder(val2, val1)))
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f).(int64)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -428,6 +388,10 @@ func runFrame(fs *list.List) error {
 			sum := add(l1, l2)
 			push(f, sum)
 			push(f, sum)
+		case FADD: // 0x62
+			lhs := float32(pop(f).(float64))
+			rhs := float32(pop(f).(float64))
+			push(f, float64(lhs+rhs))
 		case ISUB: //  0x64	(subtract top 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
@@ -442,6 +406,10 @@ func runFrame(fs *list.List) error {
 
 			push(f, diff)
 			push(f, diff)
+		case FSUB: // 0x66
+			i2 := float32(pop(f).(float64))
+			i1 := float32(pop(f).(float64))
+			push(f, float64(i1-i2))
 		case IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
@@ -457,6 +425,10 @@ func runFrame(fs *list.List) error {
 
 			push(f, product)
 			push(f, product)
+		case FMUL: // 0x6A
+			val1 := float32(pop(f).(float64))
+			val2 := float32(pop(f).(float64))
+			push(f, float64(val1*val2))
 		case IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
@@ -479,6 +451,20 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
+		case FDIV: // 0x6E
+			val1 := pop(f).(float64)
+			val2 := pop(f).(float64)
+			if val1 == 0.0 {
+				if val2 == 0.0 {
+					push(f, math.NaN())
+				} else if math.Signbit(val1) {
+					push(f, math.Inf(1))
+				} else {
+					push(f, math.Inf(-1))
+				}
+			} else {
+				push(f, float64(float32(val2)/float32(val1)))
+			}
 		case LREM: // 	0x71	(remainder after long division)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
@@ -492,6 +478,10 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
+		case FREM: // 0x72
+			val1 := pop(f).(float64)
+			val2 := pop(f).(float64)
+			push(f, float64(float32(math.Remainder(val2, val1))))
 		case INEG: //	0x74 	(negate an int)
 			val := pop(f).(int64)
 			push(f, -val)
@@ -501,6 +491,9 @@ func runFrame(fs *list.List) error {
 			val = val * (-1)
 			push(f, val)
 			push(f, val)
+		case FNEG: //	0x76	(negate a float)
+			val := pop(f).(float64)
+			push(f, -val)
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
@@ -582,6 +575,18 @@ func runFrame(fs *list.List) error {
 			dblVal := float64(longVal)
 			push(f, dblVal)
 			push(f, dblVal)
+		case F2I: // 0x8B
+			floatVal := pop(f).(float64)
+			push(f, int64(math.Trunc(floatVal)))
+		case F2D: // 0x8D
+			floatVal := pop(f).(float64)
+			push(f, floatVal)
+			push(f, floatVal)
+		case F2L: // 0x8C
+			floatVal := pop(f).(float64)
+			truncated := int64(math.Trunc(floatVal))
+			push(f, truncated)
+			push(f, truncated)
 		case LCMP: // 0x94 (compare two longs, push int -1, 0, or 1, depending on result)
 			value2 := pop(f).(int64)
 			pop(f)
@@ -718,15 +723,15 @@ func runFrame(fs *list.List) error {
 			push(f, valToReturn) // pushed twice b/c a long uses two slots
 			push(f, valToReturn)
 			return nil
+		case FRETURN: // 0xAE
+			valToReturn := pop(f).(float64)
+			f = fs.Front().Next().Value.(*frames.Frame)
+			push(f, valToReturn)
+			return nil
 		case DRETURN: // 0xAF (return a double and exit current frame)
 			valToReturn := pop(f).(float64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // pushed twice b/c a float uses two slots
-			push(f, valToReturn)
-			return nil
-		case FRETURN:
-			valToReturn := pop(f).(float64)
-			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
 			return nil
 		case RETURN: // 0xB1    (return from void function)
@@ -990,7 +995,7 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		default:
-			missingOpCode := fmt.Sprintf("0x%X", f.Meth[f.PC])
+			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
 			if int(f.Meth[f.PC]) < len(BytecodeNames) && int(f.Meth[f.PC]) > 0 {
 				missingOpCode += fmt.Sprintf(" (%s)", BytecodeNames[f.Meth[f.PC]])
