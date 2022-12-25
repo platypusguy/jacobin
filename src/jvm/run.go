@@ -158,6 +158,10 @@ func runFrame(fs *list.List) error {
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
+		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
+			value := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+			f.PC += 2
+			push(f, int64(value))
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			idx := f.Meth[f.PC+1]
 			f.PC += 1
@@ -401,6 +405,16 @@ func runFrame(fs *list.List) error {
 			push(f, top)
 			push(f, next)
 			push(f, top)
+		case SWAP: // 0x5C 	(swap top two items on stack)
+			top := pop(f)
+			next := pop(f)
+			push(f, top)
+			push(f, next)
+		case POP: // 0x57 	(pop an item off the stack and discard it)
+			pop(f)
+		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
+			pop(f)
+			pop(f)
 		case IADD: //  0x60		(add top 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
@@ -480,8 +494,7 @@ func runFrame(fs *list.List) error {
 			}
 		case INEG: //	0x74 	(negate an int)
 			val := pop(f).(int64)
-			val = val * (-1)
-			push(f, val)
+			push(f, -val)
 		case LNEG: //   0x75	(negate a long)
 			val := pop(f).(int64)
 			pop(f) // pop a second time because it's a long, which occupies 2 slots
@@ -505,6 +518,10 @@ func runFrame(fs *list.List) error {
 			val3 := val1 >> ushiftBy
 			push(f, val3)
 			push(f, val3)
+		case IAND: //	0x7E	(logical and of two ints, push result)
+			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
+			push(f, val1&val2)
 		case LAND: //   0x7F    (logical and of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
@@ -513,6 +530,10 @@ func runFrame(fs *list.List) error {
 			val3 := val1 & val2
 			push(f, val3)
 			push(f, val3)
+		case IOR: // 0x 80 (logical OR of two ints, push result)
+			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
+			push(f, val1|val2)
 		case LOR: // 0x81  (logical OR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
@@ -521,7 +542,11 @@ func runFrame(fs *list.List) error {
 			val3 := val1 | val2
 			push(f, val3)
 			push(f, val3)
-		case LXOR: // 0x83  (logical XOR of two longs, push result)
+		case IXOR: // 	0x82	(logical XOR of two ints, push result)
+			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
+			push(f, val1^val2)
+		case LXOR: // 	0x83  	(logical XOR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)
@@ -572,11 +597,57 @@ func runFrame(fs *list.List) error {
 		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
-			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 			if value == 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
 			}
-			f.PC += 2
+		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value != 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFLT: // 0x9B pop int, if it's < 0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value < 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value >= 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFGT: // 0x9D pop int, if it's > 0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value > 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
+			// specified in the next two bytes
+			value := pop(f).(int64)
+			if value <= 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
 		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
@@ -900,6 +971,24 @@ func runFrame(fs *list.List) error {
 			rawRef := uintptr(unsafe.Pointer(ref))
 			push(f, int64(rawRef))
 
+		case IFNULL: // 0xC6 jump if TOS holds a null address
+			// null = 0, so we duplicate logic of IFEQ instruction
+			value := pop(f).(int64)
+			if value == 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
+		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
+			// null = 0, so we duplicate logic of IFNE instruction
+			value := pop(f).(int64)
+			if value != 0 {
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1
+			} else {
+				f.PC += 2
+			}
 		default:
 			missingOpCode := fmt.Sprintf("0x%X", f.Meth[f.PC])
 
