@@ -499,9 +499,9 @@ func runFrame(fs *list.List) error {
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
 		case I2L: // 	0x85     (convert int to long)
-			val := pop(f).(int64)
-			push(f, val) // all ints are 64-bits wide so already longs,
-			push(f, val) // so push the int a second time
+			// 	ints are already 64-bits, so this just pushes a second instance
+			val := peek(f).(int64) // look without popping
+			push(f, val)           // push the int a second time
 		case L2I: // 	0x88 	(convert long to int)
 			longVal := pop(f).(int64)
 			pop(f)
