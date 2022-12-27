@@ -454,6 +454,25 @@ func TestGotoBackward(t *testing.T) {
 	}
 }
 
+// I2D: Convert int to double
+// Note that while ints are stored in one opStack slot,
+// doubles use two slots.
+func TestI2D(t *testing.T) {
+	f := newFrame(I2D)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(float64)
+	if value != 21.0 {
+		t.Errorf("I2D: expected a result of 21.0, but got: %f", value)
+	}
+	if f.TOS != 0 {
+		t.Errorf("I2D: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2L: Convert int to long
 // Note that since ints in Jacobin are int64--which is the same size as a long--
 // so no conversion takes place. However, while ints are stored in one opStack

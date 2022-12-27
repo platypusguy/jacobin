@@ -502,6 +502,11 @@ func runFrame(fs *list.List) error {
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
 			push(f, val)           // push the int a second time
+		case I2D: // 	0x87	(convert int to double)
+			intVal := pop(f).(int64)
+			dval := float64(intVal)
+			push(f, dval) // doubles use two slots, hence two pushes
+			push(f, dval)
 		case L2I: // 	0x88 	(convert long to int)
 			longVal := pop(f).(int64)
 			pop(f)
