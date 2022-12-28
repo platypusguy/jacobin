@@ -587,12 +587,16 @@ func runFrame(fs *list.List) error {
 			floatVal := pop(f).(float64)
 			push(f, floatVal)
 			push(f, floatVal)
-		case F2L: // 0x8C
+		case F2L: // 	0x8C convert float to long
 			floatVal := pop(f).(float64)
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
-		case LCMP: // 0x94 (compare two longs, push int -1, 0, or 1, depending on result)
+		case I2S: //	0x93 convert int to short
+			intVal := pop(f).(int64)
+			shortVal := int32(intVal)
+			push(f, int64(shortVal))
+		case LCMP: // 	0x94 (compare two longs, push int -1, 0, or 1, depending on result)
 			value2 := pop(f).(int64)
 			pop(f)
 			value1 := pop(f).(int64)

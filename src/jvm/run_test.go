@@ -857,6 +857,23 @@ func TestI2l(t *testing.T) {
 	}
 }
 
+// I2S: convert int to short
+func TestI2s(t *testing.T) {
+	f := newFrame(I2S)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(int64)
+	if value != 21 {
+		t.Errorf("I2S: expected a result of 21, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2S: Expected stack with 0 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // IADD: Add two integers
 func TestIadd(t *testing.T) {
 	f := newFrame(IADD)
