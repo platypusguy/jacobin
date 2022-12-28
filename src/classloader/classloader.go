@@ -262,16 +262,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			Data:   nil,
 		}
 		_ = insert(name, eKI)
-
-		if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
-			strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
-			name = util.ConvertInternalClassNameToFilename(name)
-			name = globals.JacobinHome() + "classes" + string(os.PathSeparator) + name
-			validName := util.ConvertToPlatformPathSeparators(name)
-			_, _ = LoadClassFromFile(BootstrapCL, validName)
-		} else {
-			_, _ = LoadClassFromFile(AppCL, util.ConvertToPlatformPathSeparators(name))
-		}
+		_ = LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
 	}
 	globals.LoaderWg.Done()
 }
@@ -290,7 +281,7 @@ func LoadClassFromNameOnly(name string) error {
 	}
 	err := insert(name, eKI)
 
-	var validName string
+	validName := util.ConvertToPlatformPathSeparators(name)
 	if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
 		strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
 		name = util.ConvertInternalClassNameToFilename(name)

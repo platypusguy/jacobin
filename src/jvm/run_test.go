@@ -13,6 +13,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -32,6 +33,8 @@ func newFrame(code byte) frames.Frame {
 
 var zero = int64(0)
 var zerof = float64(0)
+
+var maxFloatDiff = .00001
 
 // ---- tests ----
 
@@ -373,6 +376,153 @@ func TestDupX1(t *testing.T) {
 	}
 }
 
+// F2D: test convert float to double
+func TestF2d(t *testing.T) {
+	f := newFrame(F2D)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(float64)
+	if val != 2.0 {
+		t.Errorf("F2D: expected a result of 2.0, but got: %f", val)
+	}
+	if f.TOS != 0 {
+		t.Errorf("F2D: Expected stack with 1 item, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// F2I: test convert float to int
+func TestF2iPositive(t *testing.T) {
+	f := newFrame(F2I)
+	push(&f, 2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != 2 {
+		t.Errorf("F2I: expected a result of 2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("F2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+func TestF2iNegative(t *testing.T) {
+	f := newFrame(F2I)
+	push(&f, -2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != -2 {
+		t.Errorf("F2I: expected a result of 2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("F2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// F2L: test convert float to long
+func TestF2l(t *testing.T) {
+	f := newFrame(F2L)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != 2 {
+		t.Errorf("F2L: expected a result of 2.0, but got: %d", val)
+	}
+	if f.TOS != 0 {
+		t.Errorf("F2L: Expected stack with 1 item, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// FADD: Add two floats
+func TestFadd(t *testing.T) {
+	f := newFrame(FADD)
+	push(&f, 2.1)
+	push(&f, 3.1)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(float64)
+	if math.Abs(value-5.2) > maxFloatDiff {
+		t.Errorf("FADD: expected a result of 5.2, but got: %f", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("FADD: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// FCONST_0
+func TestFconst0(t *testing.T) {
+	f := newFrame(FCONST_0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 0.0 {
+		t.Errorf("FCONST_0: Expected popped value to be 0.0, got: %f", value)
+	}
+}
+
+// FCONST_1
+func TestFconst1(t *testing.T) {
+	f := newFrame(FCONST_1)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 1.0 {
+		t.Errorf("FCONST_1: Expected popped value to be 1.0, got: %f", value)
+	}
+}
+
+// FCONST_2
+func TestFconst2(t *testing.T) {
+	f := newFrame(FCONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 2.0 {
+		t.Errorf("FCONST_2: Expected popped value to be 2.0, got: %f", value)
+	}
+}
+
+// FDIV: float divide of.TOS-1 by tos, push result
+func TestFdiv(t *testing.T) {
+	f := newFrame(FDIV)
+	push(&f, 3.0)
+	push(&f, 2.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(float64)
+	if value != 1.5 {
+		t.Errorf("FDIV: expected a result of 1.5, but got: %f", value)
+	}
+}
+
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
@@ -398,6 +548,133 @@ func TestFload(t *testing.T) {
 	}
 }
 
+// FLOAD_0: load of float in locals[0] onto stack
+func TestFload0(t *testing.T) {
+	f := newFrame(FLOAD_0)
+	f.Locals = append(f.Locals, 1.2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 1.2 {
+		t.Errorf("FLOAD_0: Expected popped value to be 1.2, got: %f", value)
+	}
+}
+
+// FLOAD_1: load of float in locals[1] onto stack
+func TestFload1(t *testing.T) {
+	f := newFrame(FLOAD_1)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 1.2 {
+		t.Errorf("FLOAD_1: Expected popped value to be 1.2, got: %f", value)
+	}
+}
+
+// FLOAD_2: load of float in locals[2] onto stack
+func TestFload2(t *testing.T) {
+	f := newFrame(FLOAD_2)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 1.2 {
+		t.Errorf("FLOAD_2: Expected popped value to be 1.2, got: %f", value)
+	}
+}
+
+// FLOAD_3: load of fload in locals[3] onto stack
+func TestFload3(t *testing.T) {
+	f := newFrame(FLOAD_3)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.1)
+	f.Locals = append(f.Locals, 1.2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 1.2 {
+		t.Errorf("FLOAD_3: Expected popped value to be 1.2, got: %f", value)
+	}
+}
+
+// Test FMUL (pop 2 floats, multiply them, push result)
+func TestFmul(t *testing.T) {
+	f := newFrame(FMUL)
+	push(&f, 1.5)
+	push(&f, 2.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("FMUL, Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 3.0 {
+		t.Errorf("FMUL: Expected popped value to be 3.0, got: %f", value)
+	}
+}
+
+// FNEG: negate a float
+func TestFneg(t *testing.T) {
+	f := newFrame(FNEG)
+	push(&f, 10.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("FNEG, Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	value := pop(&f).(float64)
+	if value != -10.0 {
+		t.Errorf("FNEG: Expected popped value to be -10.0, got: %f", value)
+	}
+}
+
+// FREM: remainder of float division (the % operator)
+func TestFrem(t *testing.T) {
+	f := newFrame(FREM)
+	push(&f, 23.5)
+
+	push(&f, 3.3)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("FREM, Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	value := pop(&f).(float64)
+	if math.Abs(value-0.40000033) > maxFloatDiff {
+		t.Errorf("FREM: Expected popped value to be 0.40000033, got: %f", value)
+	}
+}
+
 // FSTORE: Store float from stack into local specified by following byte.
 func TestFstore(t *testing.T) {
 	f := newFrame(FSTORE)
@@ -406,7 +683,6 @@ func TestFstore(t *testing.T) {
 	f.Locals = append(f.Locals, zerof)
 	f.Locals = append(f.Locals, zerof)
 	f.Locals = append(f.Locals, zerof)
-	push(&f, float64(0x22223))
 	push(&f, float64(0x22223))
 
 	fs := frames.CreateFrameStack()
@@ -419,6 +695,94 @@ func TestFstore(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("FSTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
+	}
+}
+
+// FSTORE_0: Store float from stack into localVar[0]
+func TestFstore0(t *testing.T) {
+	f := newFrame(FSTORE_0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[0].(float64) != 1.0 {
+		t.Errorf("FSTORE_0: expected lcoals[0] to be 1.0, got: %f", f.Locals[0].(float64))
+	}
+	if f.TOS != -1 {
+		t.Errorf("FSTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// FSTORE_1: Store float from stack into localVar[0]
+func TestFstore1(t *testing.T) {
+	f := newFrame(FSTORE_1)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[1].(float64) != 1.0 {
+		t.Errorf("FSTORE_1: expected lcoals[1] to be 1.0, got: %f", f.Locals[1].(float64))
+	}
+	if f.TOS != -1 {
+		t.Errorf("FSTORE_1: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// FSTORE_2: Store float from stack into localVar[2]
+func TestFstore2(t *testing.T) {
+	f := newFrame(FSTORE_2)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[2].(float64) != 1.0 {
+		t.Errorf("FSTORE_2: expected lcoals[2] to be 1.0, got: %f", f.Locals[2].(float64))
+	}
+	if f.TOS != -1 {
+		t.Errorf("FSTORE_2: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// FSTORE_3: Store float from stack into localVar[3]
+func TestFstore3(t *testing.T) {
+	f := newFrame(FSTORE_3)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[3].(float64) != 1.0 {
+		t.Errorf("FSTORE_3: expected lcoals[3] to be 1.0, got: %f", f.Locals[3].(float64))
+	}
+	if f.TOS != -1 {
+		t.Errorf("FSTORE_3: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// FSUB: float subtraction
+func TestFsub(t *testing.T) {
+	f := newFrame(FSUB)
+	push(&f, 1.0)
+	push(&f, 0.7)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("FSUB, Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if math.Abs(value-0.3) > maxFloatDiff {
+		t.Errorf("FSUB: Expected popped value to be 0.3, got: %f", value)
 	}
 }
 
