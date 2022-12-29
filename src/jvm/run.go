@@ -593,6 +593,7 @@ func runFrame(fs *list.List) error {
 			push(f, truncated)
 			push(f, truncated)
 		case I2C: //	0x92 convert to 16-bit char
+			// determine what happens in Java if the int is negative
 			intVal := pop(f).(int64)
 			charVal := uint16(intVal) // Java chars are 16-bit unsigned value
 			push(f, int64(charVal))
