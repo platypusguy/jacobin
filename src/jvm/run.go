@@ -553,6 +553,9 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
+		case I2F: //	0x86 	( convert int to float)
+			intVal := pop(f).(int64)
+			push(f, float64(intVal))
 		case I2L: // 	0x85     (convert int to long)
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
