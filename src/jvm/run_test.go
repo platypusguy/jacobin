@@ -818,6 +818,23 @@ func TestGotoBackward(t *testing.T) {
 	}
 }
 
+// I2C: convert int to Java char (16-bit value)
+func TestI2C(t *testing.T) {
+	f := newFrame(I2C)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(int64)
+	if value != 21 {
+		t.Errorf("I2C: expected a result of 21, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2C: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2D: Convert int to double
 // Note that while ints are stored in one opStack slot,
 // doubles use two slots.
