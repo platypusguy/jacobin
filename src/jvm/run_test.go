@@ -854,6 +854,23 @@ func TestI2D(t *testing.T) {
 	}
 }
 
+// I2F: convert int to short
+func TestI2f(t *testing.T) {
+	f := newFrame(I2F)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(float64)
+	if value != 21.0 {
+		t.Errorf("I2F: expected a result of 21.0, but got: %f", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2F: Expected stack with 0 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2L: Convert int to long
 // Note that since ints in Jacobin are int64--which is the same size as a long--
 // so no conversion takes place. However, while ints are stored in one opStack
