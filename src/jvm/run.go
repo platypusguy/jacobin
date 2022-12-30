@@ -161,6 +161,12 @@ func runFrame(fs *list.List) error {
 			push(f, 1.0)
 		case FCONST_2: // 0x0D
 			push(f, 2.0)
+		case DCONST_0: // 0x0E
+			push(f, 0.0)
+			push(f, 0.0)
+		case DCONST_1: // 0xoF
+			push(f, 1.0)
+			push(f, 1.0)
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			push(f, int64(f.Meth[f.PC+1]))
 			f.PC += 1
@@ -539,6 +545,11 @@ func runFrame(fs *list.List) error {
 			push(f, val)
 		case FNEG: //	0x76	(negate a float)
 			val := pop(f).(float64)
+			push(f, -val)
+		case DNEG: // 0x77
+			pop(f)
+			val := pop(f).(float64)
+			push(f, -val)
 			push(f, -val)
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)

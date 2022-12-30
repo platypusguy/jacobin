@@ -425,6 +425,155 @@ func TestDaddInf(t *testing.T) {
 	}
 }
 
+// DCMPG: compare two doubles, 1 on NaN
+func TestDcmpg1(t *testing.T) {
+	f := newFrame(DCMPG)
+	push(&f, 3.0)
+	push(&f, 3.0)
+	push(&f, 2.0)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 1 {
+		t.Errorf("DCMPG: Expected value to be 1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+func TestDcmpgMinus1(t *testing.T) {
+	f := newFrame(DCMPG)
+	push(&f, 2.0)
+	push(&f, 2.0)
+	push(&f, 3.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != -1 {
+		t.Errorf("DCMPG: Expected value to be -1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+func TestDcmpg0(t *testing.T) {
+	f := newFrame(DCMPG)
+	push(&f, 3.0)
+	push(&f, 3.0)
+	push(&f, 3.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 0 {
+		t.Errorf("DCMPG: Expected value to be 0, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+func TestDcmpgNan(t *testing.T) {
+	f := newFrame(DCMPG)
+	push(&f, math.NaN())
+	push(&f, math.NaN())
+	push(&f, 3.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 1 {
+		t.Errorf("DCMPG: Expected value to be 1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+func TestDcmplNan(t *testing.T) {
+	f := newFrame(DCMPL)
+	push(&f, math.NaN())
+	push(&f, math.NaN())
+	push(&f, 3.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != -1 {
+		t.Errorf("DCMPG: Expected value to be -1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// DCONST_0
+func TestDconst0(t *testing.T) {
+	f := newFrame(DCONST_0)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+
+	if value != 0.0 {
+		t.Errorf("DCONST_0: Expected popped value to be 0.0, got: %f", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("Expected empty stack, got: %d", f.TOS)
+	}
+}
+
+// DCONST_1
+func TestDconst1(t *testing.T) {
+	f := newFrame(DCONST_1)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+
+	if value != 1.0 {
+		t.Errorf("DCONST_1: Expected popped value to be 1.0, got: %f", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("Expected empty stack, got: %d", f.TOS)
+	}
+}
+
 // DDIV: double divide of.TOS-1 by tos, push result
 func TestDdiv(t *testing.T) {
 	f := newFrame(DDIV)
@@ -565,7 +714,47 @@ func TestDmul(t *testing.T) {
 	validateFloatingPoint(t, "DMUL", 3.0, pop(&f).(float64))
 
 	if f.TOS != -1 {
-		t.Errorf("FMUL, Top of stack, expected 0, got: %d", f.TOS)
+		t.Errorf("DMUL, Top of stack, expected 0, got: %d", f.TOS)
+	}
+}
+
+// Test DNEG Negate a double
+func TestDneg(t *testing.T) {
+	f := newFrame(DNEG)
+	push(&f, 1.5)
+	push(&f, 1.5)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	validateFloatingPoint(t, "DNEG", -1.5, pop(&f).(float64))
+
+	if f.TOS != -1 {
+		t.Errorf("DNEG, Top of stack, expected 0, got: %d", f.TOS)
+	}
+}
+
+// Test DNEG Negate a double - infinity
+func TestDnegInf(t *testing.T) {
+	f := newFrame(DNEG)
+	push(&f, math.Inf(1))
+	push(&f, math.Inf(1))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(float64)
+
+	if math.Inf(-1) != val {
+		t.Errorf("Expected negative infinity, got %f", val)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 }
 
