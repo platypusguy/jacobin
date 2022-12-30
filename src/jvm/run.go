@@ -494,6 +494,10 @@ func runFrame(fs *list.List) error {
 		case FNEG: //	0x76	(negate a float)
 			val := pop(f).(float64)
 			push(f, -val)
+		case ISHL: //	0x78 	(shift int left)
+			shiftBy := pop(f).(int64)
+			val1 := pop(f).(int64)
+			push(f, val1<<(shiftBy&0x1F)) // only the bottom five bits are used
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
