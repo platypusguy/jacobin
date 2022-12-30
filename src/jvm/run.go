@@ -349,6 +349,18 @@ func runFrame(fs *list.List) error {
 			f.Locals[2] = pop(f).(float64)
 		case FSTORE_3: // 0x46
 			f.Locals[3] = pop(f).(float64)
+		case DSTORE_0: // 0x47
+			pop(f)
+			f.Locals[0] = pop(f).(float64)
+		case DSTORE_1: // 0x48
+			pop(f)
+			f.Locals[1] = pop(f).(float64)
+		case DSTORE_2: // 0x49
+			pop(f)
+			f.Locals[2] = pop(f).(float64)
+		case DSTORE_3: // 0x4A
+			pop(f)
+			f.Locals[3] = pop(f).(float64)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f).(int64)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -392,6 +404,14 @@ func runFrame(fs *list.List) error {
 			lhs := float32(pop(f).(float64))
 			rhs := float32(pop(f).(float64))
 			push(f, float64(lhs+rhs))
+		case DADD: // 0x63
+			lhs := pop(f).(float64)
+			pop(f)
+			rhs := pop(f).(float64)
+			pop(f)
+			res := add(lhs, rhs)
+			push(f, res)
+			push(f, res)
 		case ISUB: //  0x64	(subtract top 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
@@ -429,6 +449,14 @@ func runFrame(fs *list.List) error {
 			val1 := float32(pop(f).(float64))
 			val2 := float32(pop(f).(float64))
 			push(f, float64(val1*val2))
+		case DMUL: // 0x6B
+			val1 := pop(f).(float64)
+			pop(f)
+			val2 := pop(f).(float64)
+			pop(f)
+			res := multiply(val1, val2)
+			push(f, res)
+			push(f, res)
 		case IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
@@ -464,6 +492,24 @@ func runFrame(fs *list.List) error {
 				}
 			} else {
 				push(f, float64(float32(val2)/float32(val1)))
+			}
+		case DDIV: // 0x6F
+			val1 := pop(f).(float64)
+			pop(f)
+			val2 := pop(f).(float64)
+			pop(f)
+			if val1 == 0.0 {
+				if val2 == 0.0 {
+					push(f, math.NaN())
+				} else if math.Signbit(val1) {
+					push(f, math.Inf(1))
+				} else {
+					push(f, math.Inf(-1))
+				}
+			} else {
+				res := val2 / val1
+				push(f, res)
+				push(f, res)
 			}
 		case LREM: // 	0x71	(remainder after long division)
 			val2 := pop(f).(int64)
@@ -580,6 +626,9 @@ func runFrame(fs *list.List) error {
 			dblVal := float64(longVal)
 			push(f, dblVal)
 			push(f, dblVal)
+		case D2I: // 0xBE
+			pop(f)
+			fallthrough
 		case F2I: // 0x8B
 			floatVal := pop(f).(float64)
 			push(f, int64(math.Trunc(floatVal)))
@@ -587,11 +636,18 @@ func runFrame(fs *list.List) error {
 			floatVal := pop(f).(float64)
 			push(f, floatVal)
 			push(f, floatVal)
-		case F2L: // 	0x8C convert float to long
+		case D2L: // 0x8F convert double to long
+			pop(f)
+			fallthrough
+		case F2L: // 0x8C convert float to long
 			floatVal := pop(f).(float64)
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
+		case D2F: // 0x90 Double to float
+			floatVal := float32(pop(f).(float64))
+			pop(f)
+			push(f, float64(floatVal))
 		case I2S: //	0x93 convert int to short
 			intVal := pop(f).(int64)
 			shortVal := int32(intVal)
@@ -607,6 +663,25 @@ func runFrame(fs *list.List) error {
 				push(f, int64(1))
 			} else {
 				push(f, int64(-1))
+			}
+		case DCMPL, DCMPG: // 0x98, 0x97 - double comparison - they only differ in NaN treatment
+			value2 := pop(f).(float64)
+			pop(f)
+			value1 := pop(f).(float64)
+			pop(f)
+
+			if math.IsNaN(value1) || math.IsNaN(value2) {
+				if f.Meth[f.PC] == DCMPG {
+					push(f, int64(1))
+				} else {
+					push(f, int64(-1))
+				}
+			} else if value1 > value2 {
+				push(f, int64(1))
+			} else if value1 < value2 {
+				push(f, int64(-1))
+			} else {
+				push(f, int64(0))
 			}
 		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes

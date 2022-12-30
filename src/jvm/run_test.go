@@ -36,6 +36,12 @@ var zerof = float64(0)
 
 var maxFloatDiff = .00001
 
+func validateFloatingPoint(t *testing.T, op string, expected float64, actual float64) {
+	if math.Abs(expected-actual) > maxFloatDiff {
+		t.Errorf("%s: expected a result of %f, but got: %f", op, expected, actual)
+	}
+}
+
 // ---- tests ----
 
 // test load of reference in locals[index] on to stack
@@ -254,6 +260,191 @@ func TestBipush(t *testing.T) {
 	}
 }
 
+// D2F: test convert double to float
+func TestD2f(t *testing.T) {
+	f := newFrame(D2F)
+	push(&f, 2.9)
+	push(&f, 2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(float64)
+	if math.Abs(val-2.9) > maxFloatDiff {
+		t.Errorf("D2F: expected a result of 2.9, but got: %f", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("D2F: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// D2I: test convert double to int, positive
+func TestD2iPositive(t *testing.T) {
+	f := newFrame(D2I)
+	push(&f, 2.9)
+	push(&f, 2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != 2 {
+		t.Errorf("D2I: expected a result of 2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("D2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// D2I: test convert double to int, negative
+func TestD2iNegative(t *testing.T) {
+	f := newFrame(D2I)
+	push(&f, -2.9)
+	push(&f, -2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	val := pop(&f).(int64)
+	if val != -2 {
+		t.Errorf("D2I: expected a result of -2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("D2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// D2L: test convert double to long, positive
+func TestD2lPositive(t *testing.T) {
+	f := newFrame(D2L)
+	push(&f, 2.9)
+	push(&f, 2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(int64)
+	if val != 2 {
+		t.Errorf("D2L: expected a result of 2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("D2L: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// D2L: test convert double to long, negative
+func TestD2lNegative(t *testing.T) {
+	f := newFrame(D2L)
+	push(&f, -2.9)
+	push(&f, -2.9)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(int64)
+	if val != -2 {
+		t.Errorf("D2L: expected a result of -2, but got: %d", val)
+	}
+	if f.TOS != -1 {
+		t.Errorf("D2L: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// DADD: test add two doubles
+func TestDadd(t *testing.T) {
+	f := newFrame(DADD)
+	push(&f, 15.3)
+	push(&f, 15.3)
+	push(&f, 22.1)
+	push(&f, 22.1)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(float64)
+	validateFloatingPoint(t, "DADD", 37.4, val)
+	if f.TOS != -1 {
+		t.Errorf("DADD: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// DADD: test add two doubles, one is NaN
+func TestDaddNan(t *testing.T) {
+	f := newFrame(DADD)
+	push(&f, 15.3)
+	push(&f, 15.3)
+	push(&f, math.NaN())
+	push(&f, math.NaN())
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(float64)
+
+	if !math.IsNaN(val) {
+		t.Errorf("DADD: Expected NaN, got: %f", val)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DADD: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// DADD: test add two doubles, one is Inf
+func TestDaddInf(t *testing.T) {
+	f := newFrame(DADD)
+	push(&f, 15.3)
+	push(&f, 15.3)
+	push(&f, math.Inf(1))
+	push(&f, math.Inf(1))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	pop(&f)
+	val := pop(&f).(float64)
+
+	if !math.IsInf(val, 1) {
+		t.Errorf("DADD: Expected Inf, got: %f", val)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DADD: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// DDIV: double divide of.TOS-1 by tos, push result
+func TestDdiv(t *testing.T) {
+	f := newFrame(DDIV)
+	push(&f, 3.0)
+	push(&f, 3.0)
+	push(&f, 2.0)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+	validateFloatingPoint(t, "DDIV", 1.5, value)
+	if f.TOS != -1 {
+		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // DLOAD: test load of double in locals[index] on to stack
 func TestDload(t *testing.T) {
 	f := newFrame(DLOAD)
@@ -277,6 +468,104 @@ func TestDload(t *testing.T) {
 	}
 	if f.PC != 2 {
 		t.Errorf("DLOAD: Expected pc to be pointing at byte 2, got: %d", f.PC)
+	}
+}
+
+// DLOAD_0: load of double in locals[0] onto stack
+func TestDload0(t *testing.T) {
+	f := newFrame(DLOAD_0)
+	f.Locals = append(f.Locals, 1.2)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+	validateFloatingPoint(t, "DLOAD_0", 1.2, value)
+
+	if f.TOS != -1 {
+		t.Errorf("DLOAD_0: Expected empty stack, got: %d", f.TOS)
+	}
+}
+
+// DLOAD_1: load of double in locals[1] onto stack
+func TestDload1(t *testing.T) {
+	f := newFrame(DLOAD_1)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.2)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+	validateFloatingPoint(t, "DLOAD_1", 1.2, value)
+
+	if f.TOS != -1 {
+		t.Errorf("DLOAD_1: Expected empty stack, got: %d", f.TOS)
+	}
+}
+
+// DLOAD_2: load of double in locals[2] onto stack
+func TestDload2(t *testing.T) {
+	f := newFrame(DLOAD_2)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.2)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+	validateFloatingPoint(t, "DLOAD_2", 1.2, value)
+
+	if f.TOS != -1 {
+		t.Errorf("DLOAD_2: Expected empty stack, got: %d", f.TOS)
+	}
+}
+
+// DLOAD_3: load of double in locals[3] onto stack
+func TestDload3(t *testing.T) {
+	f := newFrame(DLOAD_3)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.3)
+	f.Locals = append(f.Locals, 1.2)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	value := pop(&f).(float64)
+	validateFloatingPoint(t, "DLOAD_3", 1.2, value)
+
+	if f.TOS != -1 {
+		t.Errorf("DLOAD_3: Expected empty stack, got: %d", f.TOS)
+	}
+}
+
+// Test DMUL (pop 2 doubles, multiply them, push result)
+func TestDmul(t *testing.T) {
+	f := newFrame(DMUL)
+	push(&f, 1.5)
+	push(&f, 1.5)
+	push(&f, 2.0)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	pop(&f)
+	validateFloatingPoint(t, "DMUL", 3.0, pop(&f).(float64))
+
+	if f.TOS != -1 {
+		t.Errorf("FMUL, Top of stack, expected 0, got: %d", f.TOS)
 	}
 }
 
