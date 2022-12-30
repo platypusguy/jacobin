@@ -758,6 +758,28 @@ func TestDnegInf(t *testing.T) {
 	}
 }
 
+// DREM: remainder of float division (the % operator)
+func TestDrem(t *testing.T) {
+	f := newFrame(DREM)
+	push(&f, 23.5)
+	push(&f, 23.5)
+	push(&f, 3.3)
+	push(&f, 3.3)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("DREM, Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	value := pop(&f).(float64)
+	if math.Abs(value-0.40000033) > maxFloatDiff {
+		t.Errorf("DREM: Expected popped value to be 0.40000033, got: %f", value)
+	}
+}
+
 // DRETURN: Return a long from a function
 func TestDreturn(t *testing.T) {
 	f0 := newFrame(0)
@@ -808,6 +830,92 @@ func TestDstore(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("DSTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
+	}
+}
+
+// DSTORE_0: Store double from stack into localVar[0]
+func TestDstore0(t *testing.T) {
+	f := newFrame(DSTORE_0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	push(&f, 1.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.Locals[0].(float64) != 1.0 {
+		t.Errorf("DSTORE_0: expected locals[0] to be 1.0, got: %f", f.Locals[0].(float64))
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// DSTORE_1: Store double from stack into localVar[1]
+func TestDstore1(t *testing.T) {
+	f := newFrame(DSTORE_1)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	push(&f, 1.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.Locals[1].(float64) != 1.0 {
+		t.Errorf("DSTORE_1: expected locals[1] to be 1.0, got: %f", f.Locals[1].(float64))
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSTORE_1: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// DSTORE_2: Store double from stack into localVar[2]
+func TestDstore2(t *testing.T) {
+	f := newFrame(DSTORE_2)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	push(&f, 1.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.Locals[2].(float64) != 1.0 {
+		t.Errorf("DSTORE_2: expected locals[2] to be 1.0, got: %f", f.Locals[2].(float64))
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSTORE_2: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// DSTORE_3: Store double from stack into localVar[3]
+func TestDstore3(t *testing.T) {
+	f := newFrame(DSTORE_3)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
+	push(&f, 1.0)
+	push(&f, 1.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.Locals[3].(float64) != 1.0 {
+		t.Errorf("DSTORE_3: expected locals[3] to be 1.0, got: %f", f.Locals[3].(float64))
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSTORE_3: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
@@ -1247,20 +1355,27 @@ func TestFstore3(t *testing.T) {
 	}
 }
 
-// FSUB: float subtraction
-func TestFsub(t *testing.T) {
-	f := newFrame(FSUB)
+// DSUB: double subtraction
+func TestDsub(t *testing.T) {
+	f := newFrame(DSUB)
+	push(&f, 1.0)
 	push(&f, 1.0)
 	push(&f, 0.7)
+	push(&f, 0.7)
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	if f.TOS != 0 {
-		t.Errorf("FSUB, Top of stack, expected 0, got: %d", f.TOS)
-	}
+
 	value := pop(&f).(float64)
+	pop(&f)
+
 	if math.Abs(value-0.3) > maxFloatDiff {
-		t.Errorf("FSUB: Expected popped value to be 0.3, got: %f", value)
+		t.Errorf("DSUB: Expected popped value to be 0.3, got: %f", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSUB, Empty stack expected, got: %d", f.TOS)
 	}
 }
 

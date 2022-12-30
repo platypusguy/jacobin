@@ -436,6 +436,14 @@ func runFrame(fs *list.List) error {
 			i2 := float32(pop(f).(float64))
 			i1 := float32(pop(f).(float64))
 			push(f, float64(i1-i2))
+		case DSUB: // 0x67
+			val2 := pop(f).(float64)
+			pop(f)
+			val1 := pop(f).(float64)
+			pop(f)
+			res := val1 - val2
+			push(f, res)
+			push(f, res)
 		case IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
@@ -531,9 +539,15 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 			}
 		case FREM: // 0x72
-			val1 := pop(f).(float64)
 			val2 := pop(f).(float64)
-			push(f, float64(float32(math.Remainder(val2, val1))))
+			val1 := pop(f).(float64)
+			push(f, float64(float32(math.Remainder(val1, val2))))
+		case DREM: // 0x73
+			val2 := pop(f).(float64)
+			pop(f)
+			val1 := pop(f).(float64)
+			pop(f)
+			push(f, math.Remainder(val1, val2))
 		case INEG: //	0x74 	(negate an int)
 			val := pop(f).(int64)
 			push(f, -val)
