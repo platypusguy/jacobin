@@ -919,6 +919,30 @@ func TestDstore3(t *testing.T) {
 	}
 }
 
+// DSUB: double subtraction
+func TestDsub(t *testing.T) {
+	f := newFrame(DSUB)
+	push(&f, 1.0)
+	push(&f, 1.0)
+	push(&f, 0.7)
+	push(&f, 0.7)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(float64)
+	pop(&f)
+
+	if math.Abs(value-0.3) > maxFloatDiff {
+		t.Errorf("DSUB: Expected popped value to be 0.3, got: %f", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("DSUB, Empty stack expected, got: %d", f.TOS)
+	}
+}
+
 // DUP: Push a duplicate of the top item on the stack
 func TestDup(t *testing.T) {
 	f := newFrame(DUP)
@@ -1355,12 +1379,10 @@ func TestFstore3(t *testing.T) {
 	}
 }
 
-// DSUB: double subtraction
-func TestDsub(t *testing.T) {
-	f := newFrame(DSUB)
+// FSUB:float subtraction
+func TestFsub(t *testing.T) {
+	f := newFrame(FSUB)
 	push(&f, 1.0)
-	push(&f, 1.0)
-	push(&f, 0.7)
 	push(&f, 0.7)
 
 	fs := frames.CreateFrameStack()
@@ -1368,10 +1390,9 @@ func TestDsub(t *testing.T) {
 	_ = runFrame(fs)
 
 	value := pop(&f).(float64)
-	pop(&f)
 
 	if math.Abs(value-0.3) > maxFloatDiff {
-		t.Errorf("DSUB: Expected popped value to be 0.3, got: %f", value)
+		t.Errorf("FSUB: Expected popped value to be 0.3, got: %f", value)
 	}
 
 	if f.TOS != -1 {
