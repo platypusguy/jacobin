@@ -1856,6 +1856,26 @@ func TestIshl(t *testing.T) {
 	}
 }
 
+// ISHR: Right shift of int
+func TestIshr(t *testing.T) {
+	f := newFrame(ISHR)
+	push(&f, int64(200))
+	push(&f, int64(3)) // shift right 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != 25 { // 200 >> 3 = 25
+		t.Errorf("ISHR: expected a result of 25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISHR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
 	f := newFrame(ISTORE)
