@@ -922,7 +922,7 @@ func runFrame(fs *list.List) error {
 				var argList []interface{}
 				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
-					for i := 0; i < len(paramsToPass); i++ {
+					for i := len(paramsToPass) - 1; i > -1; i-- {
 						switch paramsToPass[i] {
 						case 'D':
 							arg := pop(f).(float64)
