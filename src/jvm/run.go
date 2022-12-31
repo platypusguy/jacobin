@@ -560,11 +560,17 @@ func runFrame(fs *list.List) error {
 		case FNEG: //	0x76	(negate a float)
 			val := pop(f).(float64)
 			push(f, -val)
+
 		case DNEG: // 0x77
 			pop(f)
 			val := pop(f).(float64)
 			push(f, -val)
 			push(f, -val)
+		case ISHL: //	0x78 	(shift int left)
+			shiftBy := pop(f).(int64)
+			val1 := pop(f).(int64)
+			push(f, val1<<(shiftBy&0x1F)) // only the bottom five bits are used
+
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
@@ -573,6 +579,10 @@ func runFrame(fs *list.List) error {
 			val3 := val1 << ushiftBy
 			push(f, val3)
 			push(f, val3)
+		case ISHR: //  0x7A	(shift int value right)
+			shiftBy := pop(f).(int64)
+			val1 := pop(f).(int64)
+			push(f, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
 		case LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
 			LUSHR: // 	0x70
 			shiftBy := pop(f).(int64)
@@ -624,6 +634,9 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + constAmount
+		case I2F: //	0x86 	( convert int to float)
+			intVal := pop(f).(int64)
+			push(f, float64(intVal))
 		case I2L: // 	0x85     (convert int to long)
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
@@ -669,10 +682,16 @@ func runFrame(fs *list.List) error {
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
+
 		case D2F: // 0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
 			push(f, float64(floatVal))
+		case I2C: //	0x92 convert to 16-bit char
+			// determine what happens in Java if the int is negative
+			intVal := pop(f).(int64)
+			charVal := uint16(intVal) // Java chars are 16-bit unsigned value
+			push(f, int64(charVal))
 		case I2S: //	0x93 convert int to short
 			intVal := pop(f).(int64)
 			shortVal := int32(intVal)
@@ -1006,7 +1025,7 @@ func runFrame(fs *list.List) error {
 				var argList []interface{}
 				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
 				if len(paramsToPass) > 0 {
-					for i := 0; i < len(paramsToPass); i++ {
+					for i := len(paramsToPass) - 1; i > -1; i-- {
 						switch paramsToPass[i] {
 						case 'D':
 							arg := pop(f).(float64)

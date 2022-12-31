@@ -1411,6 +1411,23 @@ func TestGotoBackward(t *testing.T) {
 	}
 }
 
+// I2C: convert int to Java char (16-bit value)
+func TestI2C(t *testing.T) {
+	f := newFrame(I2C)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(int64)
+	if value != 21 {
+		t.Errorf("I2C: expected a result of 21, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2C: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2D: Convert int to double
 // Note that while ints are stored in one opStack slot,
 // doubles use two slots.
@@ -1427,6 +1444,23 @@ func TestI2D(t *testing.T) {
 	}
 	if f.TOS != 0 {
 		t.Errorf("I2D: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// I2F: convert int to short
+func TestI2f(t *testing.T) {
+	f := newFrame(I2F)
+	push(&f, int64(21))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(float64)
+	if value != 21.0 {
+		t.Errorf("I2F: expected a result of 21.0, but got: %f", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2F: Expected stack with 0 entry, but got a TOS of: %d", f.TOS)
 	}
 }
 
@@ -2395,6 +2429,46 @@ func TestIreturn(t *testing.T) {
 	}
 }
 
+// ISHL: Left shift of long
+func TestIshl(t *testing.T) {
+	f := newFrame(ISHL)
+	push(&f, int64(22)) // longs require two slots, so pushed twice
+	push(&f, int64(3))  // shift left 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != 176 { // 22 << 3 = 176
+		t.Errorf("ISHL: expected a result of 176, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISHL: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// ISHR: Right shift of int
+func TestIshr(t *testing.T) {
+	f := newFrame(ISHR)
+	push(&f, int64(200))
+	push(&f, int64(3)) // shift right 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != 25 { // 200 >> 3 = 25
+		t.Errorf("ISHR: expected a result of 25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISHR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
 	f := newFrame(ISTORE)
@@ -2434,6 +2508,7 @@ func TestIstore0(t *testing.T) {
 	}
 }
 
+// ISTORE1
 func TestIstore1(t *testing.T) {
 	f := newFrame(ISTORE_1)
 	f.Locals = append(f.Locals, zero)
@@ -2773,7 +2848,7 @@ func TestLdc(t *testing.T) {
 	}
 }
 
-// Test LDC_W: get CP entry indexed by two bytes
+// Test LDC_W: get int64 CP entry indexed by two bytes
 func TestLdcw(t *testing.T) {
 	f := newFrame(LDC_W)
 	f.Meth = append(f.Meth, 0x00)
@@ -2806,7 +2881,40 @@ func TestLdcw(t *testing.T) {
 	}
 }
 
-// LDC2_W: get CP entry for long or dobule indexed by following 2 bytes
+// Test LDC_W: get float64 CP entry indexed by two bytes
+func TestLdcwFloat(t *testing.T) {
+	f := newFrame(LDC_W)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	// now create a skeletal, two-entry CP
+	var floats = make([]float32, 1)
+	f.CP.Floats = floats
+	f.CP.Floats[0] = 25.0
+
+	f.CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	floatEntry := classloader.CpEntry{
+		Type: classloader.FloatConst, Slot: 0,
+	}
+	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
+	f.CP.CpIndex = append(f.CP.CpIndex, floatEntry)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(float64)
+	if value != 25.0 {
+		t.Errorf("LDC_W: Expected popped value to be 25.0, got: %f", value)
+	}
+}
+
+// LDC2_W: get CP entry for long or double indexed by following 2 bytes
 func TestLdc2w(t *testing.T) {
 	f := newFrame(LDC2_W)
 	f.Meth = append(f.Meth, 0x00)
