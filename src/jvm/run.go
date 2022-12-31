@@ -506,6 +506,10 @@ func runFrame(fs *list.List) error {
 			val3 := val1 << ushiftBy
 			push(f, val3)
 			push(f, val3)
+		case ISHR: //  0x7A	(shift int value right)
+			shiftBy := pop(f).(int64)
+			val1 := pop(f).(int64)
+			push(f, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
 		case LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
 			LUSHR: // 	0x70
 			shiftBy := pop(f).(int64)
