@@ -1432,6 +1432,40 @@ func TestGotoBackward(t *testing.T) {
 	}
 }
 
+// I2B: convert int to Java char (16-bit value)
+func TestI2B(t *testing.T) {
+	f := newFrame(I2B)
+	push(&f, int64(2100))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(int64)
+	if value != 52 {
+		t.Errorf("I2B: expected a result of 52, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2B: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// I2B: convert int to Java char (16-bit value) using a negative value
+func TestI2Bneg(t *testing.T) { // TODO: check that this matches Java result
+	f := newFrame(I2B)
+	push(&f, int64(-2100))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	value := pop(&f).(int64)
+	if value != -204 { // looks like 256-52
+		t.Errorf("I2B: expected a result of -204, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("I2B: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)
+	}
+}
+
 // I2C: convert int to Java char (16-bit value)
 func TestI2C(t *testing.T) {
 	f := newFrame(I2C)

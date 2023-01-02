@@ -674,19 +674,27 @@ func runFrame(fs *list.List) error {
 			floatVal := pop(f).(float64)
 			push(f, floatVal)
 			push(f, floatVal)
-		case D2L: // 0x8F convert double to long
+		case D2L: // 	0x8F convert double to long
 			pop(f)
 			fallthrough
-		case F2L: // 0x8C convert float to long
+		case F2L: // 	0x8C convert float to long
 			floatVal := pop(f).(float64)
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
 
-		case D2F: // 0x90 Double to float
+		case D2F: // 	0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
 			push(f, float64(floatVal))
+		case I2B: //	0x91 convert into to byte preserving sign
+			intVal := pop(f).(int64)
+			byteVal := intVal & 0xFF
+			if !(intVal > 0 && byteVal > 0) &&
+				!(intVal < 0 && byteVal < 0) {
+				byteVal = -byteVal
+			}
+			push(f, byteVal)
 		case I2C: //	0x92 convert to 16-bit char
 			// determine what happens in Java if the int is negative
 			intVal := pop(f).(int64)
