@@ -1777,6 +1777,82 @@ func TestIconst5(t *testing.T) {
 	}
 }
 
+// IF_ACMPEQ: jump if two addresses are equal
+func TestIfAcmpEq(t *testing.T) {
+	f := newFrame(IF_ACMPEQ)
+	push(&f, int64(0xFF8899))
+	push(&f, int64(0xFF8899))
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IF_ACMPEQ: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IF_ACMPEQ: jump if two addresses are equal (this tests addresses being unequal)
+func TestIfAcmpeqFail(t *testing.T) {
+	f := newFrame(IF_ACMPEQ)
+	push(&f, int64(0xFF8899))
+	push(&f, int64(0xFF889A))
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST_2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN) // the failed test should drop to this
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("IF_ICMPEQ: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IF_ACMPNE: jump if two addresses are not equal
+func TestIfAcmpNe(t *testing.T) {
+	f := newFrame(IF_ACMPNE)
+	push(&f, int64(0xFF8899))
+	push(&f, int64(0xFF889A))
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, ICONST_1)
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC-1] != ICONST_2 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IF_ACMPNE: expecting a jump to ICONST_2 instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
+// IF_ACMPNE: jump if two addresses are equal (this tests addresses being equal)
+func TestIfAcmpneFail(t *testing.T) {
+	f := newFrame(IF_ACMPNE)
+	push(&f, int64(0xFF8899))
+	push(&f, int64(0xFF8899))
+	// note that the byte passed in newframe() is at f.Meth[0]
+	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST_2
+	f.Meth = append(f.Meth, 4)
+	f.Meth = append(f.Meth, RETURN) // the failed test should drop to this
+	f.Meth = append(f.Meth, ICONST_2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC] != RETURN { // b/c we return directly, we don't subtract 1 from pc
+		t.Errorf("IF_ICMPNE: expecting fall-through to RETURN instuction, got: %s",
+			BytecodeNames[f.PC])
+	}
+}
+
 // IF_ICMPEQ: jump if val1 == val2 (both ints, both popped off stack)
 func TestIfIcmpeq(t *testing.T) {
 	f := newFrame(IF_ICMPEQ)
@@ -2667,6 +2743,26 @@ func TestIsub(t *testing.T) {
 	value := pop(&f).(int64)
 	if value != 3 {
 		t.Errorf("ISUB: Expected popped value to be 3, got: %d", value)
+	}
+}
+
+// IUSHR: unsigned right shift of int
+func TestIushr(t *testing.T) {
+	f := newFrame(IUSHR)
+	push(&f, int64(-200))
+	push(&f, int64(3)) // shift right 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != 25 { // 200 >> 3 = 25
+		t.Errorf("IUSHR: expected a result of 25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("IUSHR: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 

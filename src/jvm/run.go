@@ -604,6 +604,13 @@ func runFrame(fs *list.List) error {
 			val3 := val1 >> ushiftBy
 			push(f, val3)
 			push(f, val3)
+		case IUSHR: // 0x7C (unsigned shift right of int)
+			shiftBy := pop(f).(int64) // TODO: verify the result against JDK
+			val1 := pop(f).(int64)
+			if val1 < 0 {
+				val1 = -val1
+			}
+			push(f, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
 		case IAND: //	0x7E	(logical and of two ints, push result)
 			val1 := pop(f).(int64)
 			val2 := pop(f).(int64)
@@ -852,6 +859,24 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if val1 <= val2 { // if comp succeeds, next 2 bytes hold instruction index
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
+			} else {
+				f.PC += 2
+			}
+		case IF_ACMPEQ: // 0xA5		(jump if two addresses are equal)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
+			if val1 == val2 { // if comp succeeds, next 2 bytes hold instruction index
+				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
+			} else {
+				f.PC += 2
+			}
+		case IF_ACMPNE: // 0xA6		(jump if two addresses are note equal)
+			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
+			if val1 != val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
 			} else {
