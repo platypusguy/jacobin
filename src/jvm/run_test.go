@@ -44,7 +44,22 @@ func validateFloatingPoint(t *testing.T, op string, expected float64, actual flo
 
 // ---- tests ----
 
-// test load of reference in locals[index] on to stack
+// ACONST_NULL: Load null onto opStack
+func TestAconstNull(t *testing.T) {
+	f := newFrame(ACONST_NULL)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	x := peek(&f).(int64)
+	if x != 0 {
+		t.Errorf("ACONST_NULL: Expecting 0 on stack, got: %d", x)
+	}
+	if f.TOS != 0 {
+		t.Errorf("ACONST_NULL: Expecting TOS = 0, but tos is: %d", f.TOS)
+	}
+}
+
+// ALOAD: test load of reference in locals[index] on to stack
 func TestAload(t *testing.T) {
 	f := newFrame(ALOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
