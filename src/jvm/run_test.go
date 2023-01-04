@@ -981,7 +981,7 @@ func TestDup(t *testing.T) {
 	}
 }
 
-// DUP_X1: Duplicate the top stack value and insert two values down
+// DUP_X1: Duplicate the top stack value and insert it two slots down
 func TestDupX1(t *testing.T) {
 	f := newFrame(DUP_X1)
 	push(&f, int64(0x3))
@@ -1001,6 +1001,30 @@ func TestDupX1(t *testing.T) {
 	if a != 1 || c != 1 {
 		t.Errorf(
 			"DUP_X1: popped values are incorrect. Expecting value of 1, got: %X and %X", a, b)
+	}
+}
+
+// DUP_X2: Duplicate the top stack value and insert it three slots down
+func TestDupX2(t *testing.T) {
+	f := newFrame(DUP_X2)
+	push(&f, int64(0x3))
+	push(&f, int64(0x2))
+	push(&f, int64(0x1)) // this will be the dup'ed value
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 3 {
+		t.Errorf("DUP_X2: Expecting a top of stack = 3 (so stack size 4), got: %d", f.TOS)
+	}
+
+	a := pop(&f).(int64)
+	pop(&f)
+	pop(&f)
+	d := pop(&f).(int64)
+	if a != 1 || d != 1 {
+		t.Errorf(
+			"DUP_X2: popped values are incorrect. Expecting value of 1, got: %X and %X", a, d)
 	}
 }
 
