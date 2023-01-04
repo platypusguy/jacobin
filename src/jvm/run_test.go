@@ -84,7 +84,7 @@ func TestAload(t *testing.T) {
 	}
 }
 
-// test load of reference in locals[0] on to stack
+// ALOAD_0: test load of reference in locals[0] on to stack
 func TestAload0(t *testing.T) {
 	f := newFrame(ALOAD_0)
 	f.Locals = append(f.Locals, int64(0x1234560)) // put value in locals[0]
@@ -101,7 +101,7 @@ func TestAload0(t *testing.T) {
 	}
 }
 
-// test load of reference in locals[1] on to stack
+// ALOAD_1: test load of reference in locals[1] on to stack
 func TestAload1(t *testing.T) {
 	f := newFrame(ALOAD_1)
 	f.Locals = append(f.Locals, zero)
@@ -440,7 +440,7 @@ func TestDaddInf(t *testing.T) {
 	}
 }
 
-// DCMPG: compare two doubles, 1 on NaN
+// DCMP0: compare two doubles, 1 on NaN
 func TestDcmpg1(t *testing.T) {
 	f := newFrame(DCMPG)
 	push(&f, 3.0)
@@ -463,6 +463,7 @@ func TestDcmpg1(t *testing.T) {
 	}
 }
 
+// DCMP0: compare two doubles
 func TestDcmpgMinus1(t *testing.T) {
 	f := newFrame(DCMPG)
 	push(&f, 2.0)
@@ -485,6 +486,7 @@ func TestDcmpgMinus1(t *testing.T) {
 	}
 }
 
+// DCMP0: compare two doubles
 func TestDcmpg0(t *testing.T) {
 	f := newFrame(DCMPG)
 	push(&f, 3.0)
@@ -529,6 +531,7 @@ func TestDcmpgNan(t *testing.T) {
 	}
 }
 
+// DCMPL
 func TestDcmplNan(t *testing.T) {
 	f := newFrame(DCMPL)
 	push(&f, math.NaN())
@@ -543,7 +546,7 @@ func TestDcmplNan(t *testing.T) {
 	value := pop(&f).(int64)
 
 	if value != -1 {
-		t.Errorf("DCMPG: Expected value to be -1, got: %d", value)
+		t.Errorf("DCMPL: Expected value to be -1, got: %d", value)
 	}
 
 	if f.TOS != -1 {
@@ -566,7 +569,7 @@ func TestDconst0(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("Expected empty stack, got: %d", f.TOS)
+		t.Errorf("DCONST_0: Expected empty stack, got: %d", f.TOS)
 	}
 }
 
@@ -2474,6 +2477,26 @@ func TestIor(t *testing.T) {
 	}
 	if f.TOS != -1 {
 		t.Errorf("IOR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// IREM: int modulo
+func TestIrem(t *testing.T) {
+	f := newFrame(IREM)
+	push(&f, int64(74))
+	push(&f, int64(6))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 { // product is pushed twice b/c it's a long, which occupies 2 slots
+		t.Errorf("IREM, Top of stack, expected 1, got: %d", f.TOS)
+	}
+
+	value := pop(&f).(int64)
+	if value != 2 {
+		t.Errorf("IREM: Expected result to be 2, got: %d", value)
 	}
 }
 

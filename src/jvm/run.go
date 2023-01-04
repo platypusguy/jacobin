@@ -527,6 +527,16 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
+		case IREM: // 	0x70	(remainder after int division, modulo)
+			val2 := pop(f).(int64)
+			if val2 == 0 {
+				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			} else {
+				val1 := pop(f).(int64)
+				res := val1 % val2
+				push(f, res)
+			}
 		case LREM: // 	0x71	(remainder after long division)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
