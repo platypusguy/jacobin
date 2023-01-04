@@ -981,6 +981,34 @@ func TestDup(t *testing.T) {
 	}
 }
 
+// DUP2: Push duplicate of the top two items on the stack
+func TestDup2(t *testing.T) {
+	f := newFrame(DUP2)
+	push(&f, int64(0x22))
+	push(&f, int64(0x11)) // this is TOS
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 3 {
+		t.Errorf("DUP2: stack should have four elements, got tos was: %d", f.TOS)
+	}
+
+	a := pop(&f).(int64)
+	b := pop(&f).(int64)
+	c := pop(&f).(int64)
+	d := pop(&f).(int64)
+	if a != 0x11 || c != 0x11 {
+		t.Errorf(
+			"DUP2: popped values are incorrect. Expecting 0x11, got: %X and %X", a, c)
+	}
+	if b != 0x22 || d != 0x22 {
+		t.Errorf(
+			"DUP2: popped values are incorrect. Expecting 0x22, got: %X and %X", b, d)
+	}
+}
+
 // DUP_X1: Duplicate the top stack value and insert it two slots down
 func TestDupX1(t *testing.T) {
 	f := newFrame(DUP_X1)
