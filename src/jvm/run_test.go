@@ -1080,6 +1080,32 @@ func TestDup2X1(t *testing.T) {
 	}
 }
 
+// DUP2_X1: Duplicate the top 2 stack values and insert them 4 slots down
+func TestDup2X2(t *testing.T) {
+	f := newFrame(DUP2_X2)
+	push(&f, int64(0x4))
+	push(&f, int64(0x3))
+	push(&f, int64(0x2))
+	push(&f, int64(0x1)) // this is not TOS
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 5 {
+		t.Errorf("DUP2_X2: Expecting a top of stack = 5 (so stack size 6), got: %d", f.TOS)
+	}
+
+	a := pop(&f).(int64)
+	pop(&f)
+	pop(&f)
+	pop(&f)
+	e := pop(&f).(int64)
+	if a != 1 || e != 1 {
+		t.Errorf(
+			"DUP2_X2: popped values are incorrect. Expecting value of 1, got: %X and %X", a, e)
+	}
+}
+
 // F2D: test convert float to double
 func TestF2d(t *testing.T) {
 	f := newFrame(F2D)
