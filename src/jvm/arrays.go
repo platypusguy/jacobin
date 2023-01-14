@@ -6,6 +6,12 @@
 
 package jvm
 
+import (
+	"jacobin/exceptions"
+	"jacobin/shutdown"
+	"unsafe"
+)
+
 /* This file contains the principal operations that Jacobin
    performs on arrays.
 
@@ -30,6 +36,7 @@ package jvm
 type ArrayType int
 
 const (
+	ERROR = 0
 	FLOAT = iota
 	INT   = iota
 	BYTE  = iota
@@ -53,15 +60,30 @@ type ArrType interface {
 }
 
 // the fundamental way that an array is represented in Jacobin
-type ArrayHolder[T ArrType] struct {
-	Type ArrayType
-	Arr  []T
+// type ArrayHolder[T ArrType] struct {
+// 	Type ArrayType
+// 	Arr  []T
+// }
+
+type ByteArray struct {
+	Type  ArrayType
+	Array []byte
+}
+
+type IntArray struct {
+	Type  ArrayType
+	Array []int64
+}
+
+type FloatArray struct {
+	Type  ArrayType
+	Array []float64
 }
 
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
 // by Jacobin in array creation. Returns zero on error.
-func jdkArrayTypeToJacobinType(jdkType byte) int {
+func jdkArrayTypeToJacobinType(jdkType int) int {
 	switch jdkType {
 	case T_BOOLEAN, T_BYTE:
 		return BYTE
@@ -71,5 +93,34 @@ func jdkArrayTypeToJacobinType(jdkType byte) int {
 		return FLOAT
 	default: // this would indicate an error
 		return 0
+	}
+}
+
+// creates an array struct and returns a pointer to it
+// (in the form of an unsafe pointer cast as an int)
+// and an int which identifies the type of array (where 0 = error)
+func createArray(arrayType int, size int) (int, uintptr) {
+	if size < 0 {
+		exceptions.Throw(
+			exceptions.NegativeArraySizeException,
+			"Invalid size for array")
+		shutdown.Exit(shutdown.APP_EXCEPTION)
+	}
+
+	aType := jdkArrayTypeToJacobinType(arrayType)
+	if aType == BYTE {
+		a := make([]byte, size)
+		ba := ByteArray{Type: BYTE, Array: a}
+		return BYTE, uintptr(unsafe.Pointer(&ba))
+	} else if aType == INT {
+		a := make([]int64, size)
+		ia := IntArray{Type: INT, Array: a}
+		return INT, uintptr(unsafe.Pointer(&ia))
+	} else if aType == FLOAT {
+		a := make([]float64, size)
+		fa := FloatArray{Type: FLOAT, Array: a}
+		return FLOAT, uintptr(unsafe.Pointer(&fa))
+	} else {
+		return ERROR, 0
 	}
 }
