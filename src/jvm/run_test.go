@@ -1061,7 +1061,7 @@ func TestDup2X1(t *testing.T) {
 	f := newFrame(DUP2_X1)
 	push(&f, int64(0x3))
 	push(&f, int64(0x2))
-	push(&f, int64(0x1)) // this is now TOS
+	push(&f, int64(0x1)) // this is nowdir TOS
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)

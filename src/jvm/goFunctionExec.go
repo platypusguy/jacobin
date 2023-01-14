@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-// This function is called from  run(). It execuates a frame whose
+// This function is called from run(). It executes a frame whose
 // method is a golang method. It copies the parameters from the
 // operand stack and passes them to the go function, here called Fu,
 // as an array of interface{}, which can be nil if there are no arguments.
@@ -43,7 +43,7 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	// value. If it's 'J' (a long) or 'D' (a double), it will require two
 	// slots on the op stack of the calling function. If the return value
 	// is nil, then no slots will be required. Otherwise, it's one slot
-	// (such as for ints, shorts, boolean, etc.) TODO: return addresses are likely 2 slots
+	// (such as for ints, shorts, boolean, etc.)
 	var slotCount int
 	if ret == nil {
 		slotCount = 0

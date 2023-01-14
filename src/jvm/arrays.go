@@ -19,9 +19,9 @@ package jvm
 
     The official JVM docs suggest that bit arrays (so booleans)
     can be implemented as individual byte elements or aggregated
-    eight a time into a single byte. For simplicity (and very likely
-    for performance benefits) we opted for the former option, even
-    though it uses more RAM for the benefits it delivers.
+    eight a time into a single byte. Like the Oracle JVM,
+    we opted for the former option due to performance and simplicity,
+    even though it uses more RAM for the benefits it delivers.
 
     The code here was implemented by @alb as part of JACOBIN-203,
     based on code ginned up by @suresk.
@@ -36,7 +36,7 @@ const (
 )
 
 // the primitive types as specified in the
-// JVM instructions // for arrays
+// JVM instructions for arrays
 const (
 	T_BOOLEAN = 4
 	T_CHAR    = 5
@@ -52,6 +52,7 @@ type ArrType interface {
 	int64 | byte | float64
 }
 
+// the fundamental way that an array is represented in Jacobin
 type ArrayHolder[T ArrType] struct {
 	Type ArrayType
 	Arr  []T
