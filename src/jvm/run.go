@@ -1183,6 +1183,17 @@ func runFrame(fs *list.List) error {
 			rawRef := uintptr(unsafe.Pointer(ref))
 			push(f, int64(rawRef))
 
+		case NEWARRAY: // 0xBC create a new array of primitives
+			size := pop(f).(int64)
+			arrayType := int(f.Meth[f.PC+1])
+			f.PC += 1
+			actualType, addr := createArray(arrayType, size)
+			if actualType == ERROR {
+				_ = log.Log("Invalid array type specified", log.SEVERE)
+				return errors.New("error instantiating array")
+			}
+			push(f, addr)
+
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)

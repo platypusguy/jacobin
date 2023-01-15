@@ -99,7 +99,7 @@ func jdkArrayTypeToJacobinType(jdkType int) int {
 // creates an array struct and returns a pointer to it
 // (in the form of an unsafe pointer cast as an int)
 // and an int which identifies the type of array (where 0 = error)
-func createArray(arrayType int, size int) (int, uintptr) {
+func createArray(arrayType int, size int64) (int, uintptr) {
 	if size < 0 {
 		exceptions.Throw(
 			exceptions.NegativeArraySizeException,
