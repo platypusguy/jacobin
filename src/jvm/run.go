@@ -1194,6 +1194,26 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, addr)
 
+		case ARRAYLENGTH: // OxBE get size of array
+			ref := pop(f).(int64)
+			if ref == 0 {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			aRef := uintptr(ref)
+			arrayRef := unsafe.Pointer(aRef)
+			arrayStruct := *(*ByteArray)(arrayRef)
+			aType := arrayStruct.Type
+			if aType == BYTE {
+				size := len(arrayStruct.Array)
+				push(f, int64(size))
+			} // CURR: Finish for the other types
+			/*
+				usIndex := uint64(sIndex)
+					upsIndex := uintptr(usIndex)
+					strAddr := unsafe.Pointer(upsIndex)
+					s := *(*string)(strAddr)
+			*/
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)
