@@ -1202,18 +1202,16 @@ func runFrame(fs *list.List) error {
 			}
 			aRef := uintptr(ref)
 			arrayRef := unsafe.Pointer(aRef)
-			arrayStruct := *(*ByteArray)(arrayRef)
-			aType := arrayStruct.Type
+			byteArrayStruct := *(*ByteArray)(arrayRef)
+			aType := byteArrayStruct.Type
 			if aType == BYTE {
-				size := len(arrayStruct.Array)
+				size := len(byteArrayStruct.Array)
 				push(f, int64(size))
-			} // CURR: Finish for the other types
-			/*
-				usIndex := uint64(sIndex)
-					upsIndex := uintptr(usIndex)
-					strAddr := unsafe.Pointer(upsIndex)
-					s := *(*string)(strAddr)
-			*/
+			} else if aType == INT {
+				intArrayStruct := *(*IntArray)(arrayRef)
+				size := len(intArrayStruct.Array)
+				push(f, int64(size))
+			} // CURR: Finish for the float type
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)
