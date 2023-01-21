@@ -137,21 +137,21 @@ func createArray(arrayType int, size int64) (int, uintptr) {
 	aType := jdkArrayTypeToJacobinType(arrayType)
 	if aType == BYTE {
 		a := make([]byte, size)
-		g.ArrayAddressList.PushFront(a) // add address to list so array is not GC'd
+		g.ArrayAddressList.PushFront(&a) // add address to list so array is not GC'd
 		up := unsafe.Pointer(&a)
 		ba := Array{Type: BYTE, ArrPtr: uintptr(up)}
 		return BYTE, uintptr(unsafe.Pointer(&ba))
 
 	} else if aType == INT {
 		a := make([]int64, size)
-		g.ArrayAddressList.PushFront(a)
+		g.ArrayAddressList.PushFront(&a)
 		up := unsafe.Pointer(&a)
 		ia := Array{Type: INT, ArrPtr: uintptr(up)}
 		return INT, uintptr(unsafe.Pointer(&ia))
 
 	} else if aType == FLOAT {
 		a := make([]float64, size)
-		g.ArrayAddressList.PushFront(a)
+		g.ArrayAddressList.PushFront(&a)
 		up := unsafe.Pointer(&a)
 		fa := Array{Type: FLOAT, ArrPtr: uintptr(up)}
 		return FLOAT, uintptr(unsafe.Pointer(&fa))

@@ -42,7 +42,6 @@ func TestNewrray(t *testing.T) {
 	f.Meth = append(f.Meth, T_LONG) // make it an array of longs
 
 	globals.InitGlobals("test")
-	// globals.InitArrayAddressList()  // init address list in globals
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -60,8 +59,9 @@ func TestNewrray(t *testing.T) {
 
 	// now, test the length of the array, which should be 13
 	element := g.ArrayAddressList.Front()
-	val := element.Value.([]int64)
-	if len(val) != 13 {
-		t.Errorf("Expecting array length of 13, got %d", len(val))
+	ptr := element.Value.(*[]int64)
+	// ptr := *(*IntArray)(val)
+	if len(*ptr) != 13 {
+		t.Errorf("Expecting array length of 13, got %d", len(*ptr))
 	}
 }
