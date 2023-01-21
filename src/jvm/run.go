@@ -1192,26 +1192,35 @@ func runFrame(fs *list.List) error {
 				_ = log.Log("Invalid array type specified", log.SEVERE)
 				return errors.New("error instantiating array")
 			}
-			push(f, addr)
+			// the address points to an Array struct, which consists of
+			// a type flag (what type of array?) and a pointer to the
+			// array itself.
+			push(f, int64(addr))
 
-		case ARRAYLENGTH: // OxBE get size of array
-			ref := pop(f).(int64)
-			if ref == 0 {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-			}
-			aRef := uintptr(ref)
-			arrayRef := unsafe.Pointer(aRef)
-			byteArrayStruct := *(*ByteArray)(arrayRef)
-			aType := byteArrayStruct.Type
-			if aType == BYTE {
-				size := len(byteArrayStruct.Array)
-				push(f, int64(size))
-			} else if aType == INT {
-				intArrayStruct := *(*IntArray)(arrayRef)
-				size := len(intArrayStruct.Array)
-				push(f, int64(size))
-			} // CURR: Finish for the float type
+		// case ARRAYLENGTH: // OxBE get size of array
+		// 	ref := pop(f).(int64)
+		// 	if ref == 0 {
+		// 		exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+		// 		shutdown.Exit(shutdown.APP_EXCEPTION)
+		// 	}
+		// 	aRef := uintptr(ref)
+		// 	arrayRef := unsafe.Pointer(aRef)
+		// 	byteArrayStruct := *(*Array)(arrayRef)
+		// 	aType := byteArrayStruct.Type
+		// 	aPtr := unsafe.Pointer(byteArrayStruct.ArrPtr)
+		// 	if aType == BYTE {
+		// 		ptr := *(*ByteArray)(aPtr)
+		// 		size := len(ptr)
+		// 		push(f, int64(size))
+		// 	} else if aType == INT {
+		// 		ptr := *(*IntArray)(aPtr)
+		// 		size := len(ptr)
+		// 		push(f, int64(size))
+		// 	} else if aType == FLOAT {
+		// 		ptr := *(*FloatArray)(aPtr)
+		// 		size := len(ptr)
+		// 		push(f, int64(size))
+		// 	}
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)

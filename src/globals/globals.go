@@ -54,6 +54,9 @@ type Globals struct {
 
 	// ---- special switches ----
 	StrictJDK bool // hew closely to actions and error messages of the JDK
+
+	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
+	ArrayAddressList *list.List
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -78,10 +81,12 @@ func InitGlobals(progName string) Globals {
 		Threads:           ThreadList{list.New(), sync.Mutex{}},
 		JacobinBuildData:  nil,
 		StrictJDK:         false,
+		ArrayAddressList:  InitArrayAddressList(),
 	}
 
 	InitJavaHome()
 	InitJacobinHome()
+	InitArrayAddressList()
 	return global
 }
 
@@ -136,4 +141,10 @@ func JavaHome() string { return global.JavaHome }
 func cleanupPath(path string) string {
 	path = filepath.FromSlash(path)
 	return path
+}
+
+// Array addresses must be kept in a list to avoid being GC'd.
+// This creates that list.
+func InitArrayAddressList() *list.List {
+	return list.New()
 }
