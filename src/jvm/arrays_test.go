@@ -35,7 +35,7 @@ func TestJdkArrayTypeToJacobinType(t *testing.T) {
 	}
 }
 
-// NEWARRAY: creationg of array for primitive values
+// NEWARRAY: creation of array for primitive values
 func TestNewrray(t *testing.T) {
 	f := newFrame(NEWARRAY)
 	push(&f, int64(13))             // make the array 13 elements big
