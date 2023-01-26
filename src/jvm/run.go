@@ -1185,42 +1185,75 @@ func runFrame(fs *list.List) error {
 
 		case NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
+			if size < 0 {
+				exceptions.Throw(
+					exceptions.NegativeArraySizeException,
+					"Invalid size for array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
 			arrayType := int(f.Meth[f.PC+1])
 			f.PC += 1
-			actualType, addr := createArray(arrayType, size)
+
+			g := globals.GetGlobalRef()
+
+			actualType := jdkArrayTypeToJacobinType(arrayType)
 			if actualType == ERROR {
 				_ = log.Log("Invalid array type specified", log.SEVERE)
 				return errors.New("error instantiating array")
+			} else if actualType == BYTE {
+				a := make([]byte, size)
+				jba := JacobinByteArray{
+					Type: BYTE,
+					Arr:  &a,
+				}
+				push(f, unsafe.Pointer(&jba))
+				g.ArrayAddressList.PushFront(&jba)
+			} else if actualType == INT {
+				a := make([]int64, size)
+				jia := JacobinIntArray{
+					Type: INT,
+					Arr:  &a,
+				}
+				push(f, unsafe.Pointer(&jia))
+				g.ArrayAddressList.PushFront(&jia)
+			} else if actualType == FLOAT {
+				a := make([]float64, size)
+				jfa := JacobinFloatArray{
+					Type: FLOAT,
+					Arr:  &a,
+				}
+				push(f, unsafe.Pointer(&jfa))
+				g.ArrayAddressList.PushFront(&jfa)
+			} else {
+				_ = log.Log("Invalid array type specified", log.SEVERE)
+				return errors.New("error instantiating array")
 			}
-			// the address points to an Array struct, which consists of
-			// a type flag (what type of array?) and a pointer to the
-			// array itself.
-			push(f, int64(addr))
 
-		// case ARRAYLENGTH: // OxBE get size of array
-		// 	ref := pop(f).(int64)
-		// 	if ref == 0 {
-		// 		exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
-		// 		shutdown.Exit(shutdown.APP_EXCEPTION)
-		// 	}
-		// 	aRef := uintptr(ref)
-		// 	arrayRef := unsafe.Pointer(aRef)
-		// 	byteArrayStruct := *(*Array)(arrayRef)
-		// 	aType := byteArrayStruct.Type
-		// 	aPtr := unsafe.Pointer(byteArrayStruct.ArrPtr)
-		// 	if aType == BYTE {
-		// 		ptr := *(*ByteArray)(aPtr)
-		// 		size := len(ptr)
-		// 		push(f, int64(size))
-		// 	} else if aType == INT {
-		// 		ptr := *(*IntArray)(aPtr)
-		// 		size := len(ptr)
-		// 		push(f, int64(size))
-		// 	} else if aType == FLOAT {
-		// 		ptr := *(*FloatArray)(aPtr)
-		// 		size := len(ptr)
-		// 		push(f, int64(size))
-		// 	}
+		case ARRAYLENGTH: // OxBE get size of array
+			ref := pop(f).(unsafe.Pointer)
+			bAref := (*JacobinByteArray)(ref)
+			if bAref == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			var size int
+			arrType := bAref.Type
+			if arrType == BYTE {
+				size = len(*bAref.Arr)
+			} else if arrType == INT {
+				intRef := (*JacobinIntArray)(ref)
+				size = len(*intRef.Arr)
+			} else if arrType == FLOAT {
+				intRef := (*JacobinFloatArray)(ref)
+				size = len(*intRef.Arr)
+			} else {
+				_ = log.Log("Invalid array type specified", log.SEVERE)
+				return errors.New("error processing array")
+			}
+			push(f, int64(size))
+
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)
