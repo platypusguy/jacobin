@@ -10,6 +10,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"testing"
+	"unsafe"
 )
 
 func TestJdkArrayTypeToJacobinType(t *testing.T) {
@@ -143,6 +144,51 @@ func TestFloatArrayLength(t *testing.T) {
 	size := pop(&f).(int64)
 	if size != 34 {
 		t.Errorf("Expecting array length of 34, got %d", size)
+	}
+}
+
+// IASTORE: store value in array of ints
+// Create an array of 30 elements, store value 100 in array[20], then
+// sum all the elements in the array, and test for a sum of 100.
+func TestIastore(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))            // make the array 30 elements big
+	f.Meth = append(f.Meth, T_INT) // make it an array of ints
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(IASTORE)
+	push(&f, ptr)        // push the reference to the array
+	push(&f, 20)         // in array[20]
+	push(&f, int64(100)) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	intRef := (*JacobinIntArray)(ptr)
+	array := *(intRef.Arr)
+	var sum int64
+	for i := 0; i < 30; i++ {
+		sum += array[i]
+	}
+	if sum != 100 {
+		t.Errorf("IASTORE: Expected sum of array entries to be 100, got: %d", sum)
 	}
 }
 
