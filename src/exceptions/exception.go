@@ -18,6 +18,7 @@ const (
 	// runtime exceptions
 	AnnotationTypeMismatchException
 	ArithmeticException
+	ArrayIndexOutOfBoundsException // added (from Java 8 iastore spec)
 	ArrayStoreException
 	BufferOverflowException
 	BufferUnderflowException

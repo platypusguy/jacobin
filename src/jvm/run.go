@@ -377,6 +377,31 @@ func runFrame(fs *list.List) error {
 			f.Locals[2] = pop(f).(int64)
 		case ASTORE_3: //	0x4E	(pop reference into local variable 3)
 			f.Locals[3] = pop(f).(int64)
+		case IASTORE: //	0x4F	(store int in an array)
+			var size = 0
+
+			value := pop(f)
+			index := pop(f).(int)
+			ref := pop(f).(unsafe.Pointer)
+			intRef := (*JacobinIntArray)(ref)
+			if intRef == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			if intRef.Type != INT {
+				exceptions.Throw(exceptions.ArrayStoreException, "IASTORE: Attempt to access array of incorrect type")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			size = len(*intRef.Arr)
+			if index >= size {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			array := *(intRef.Arr)
+			array[index] = value.(int64)
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			pop(f)
 		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
