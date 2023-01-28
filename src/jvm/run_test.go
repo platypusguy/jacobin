@@ -21,6 +21,7 @@ import (
 
 // These tests test the individual bytecode instructions. They are presented here in
 // alphabetical order of the instruction name.
+// Note: Test for bytecodes related to array operations are located in arrays_test.go
 
 // set up function to create a frame with a method with the single instruction
 // that's being tested
