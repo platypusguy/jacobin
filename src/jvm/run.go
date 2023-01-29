@@ -300,6 +300,17 @@ func runFrame(fs *list.List) error {
 			push(f, f.Locals[2])
 		case ALOAD_3: //	0x2D	(push reference stored in local variable 3)
 			push(f, f.Locals[3])
+		case IALOAD: //		0x2E	(push contents of an array element)
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			iAref := (*JacobinIntArray)(ref)
+			if iAref == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			array := *(iAref.Arr)
+			var value = array[index]
+			push(f, value)
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE, //  0x37 (store popped top of stack long into local[index])
 			ASTORE: //  0x3A (store popped top of stack ref into localc[index])
