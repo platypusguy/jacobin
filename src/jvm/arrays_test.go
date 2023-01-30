@@ -36,7 +36,7 @@ func TestJdkArrayTypeToJacobinType(t *testing.T) {
 	}
 }
 
-// ARRAYLENGTH
+// ARRAYLENGTH: Test length of byte array
 // First, we create the array of 13 elements, then we push the reference
 // to it and execute the ARRAYLENGTH bytecode using the address stored
 // in the global array address list
@@ -71,10 +71,11 @@ func TestByteArrayLength(t *testing.T) {
 
 	size := pop(&f).(int64)
 	if size != 13 {
-		t.Errorf("Expecting array length of 13, got %d", size)
+		t.Errorf("ARRAYLENGTH: Expecting array length of 13, got %d", size)
 	}
 }
 
+// ARRAYLENGTH: Test length of int array
 func TestIntArrayLength(t *testing.T) {
 	f := newFrame(NEWARRAY)
 	push(&f, int64(22))            // make the array 22 elements big
@@ -107,10 +108,11 @@ func TestIntArrayLength(t *testing.T) {
 
 	size := pop(&f).(int64)
 	if size != 22 {
-		t.Errorf("Expecting array length of 13, got %d", size)
+		t.Errorf("ARRAYLENGTH: Expecting array length of 13, got %d", size)
 	}
 }
 
+// ARRAYLENGTH: Test length of float array
 func TestFloatArrayLength(t *testing.T) {
 	f := newFrame(NEWARRAY)
 	push(&f, int64(34))               // make the array 34 elements big
@@ -143,13 +145,13 @@ func TestFloatArrayLength(t *testing.T) {
 
 	size := pop(&f).(int64)
 	if size != 34 {
-		t.Errorf("Expecting array length of 34, got %d", size)
+		t.Errorf("ARRAYLENGTH: Expecting array length of 34, got %d", size)
 	}
 }
 
-// IASTORE: store value in array of ints
-// Create an array of 30 elements, store value 100 in array[20], then
-// sum all the elements in the array, and test for a sum of 100.
+// FASTORE: store value in array of floats
+// Create an array of 30 elements, store value 100.0 in array[20], then
+// sum all the elements in the array, and test for a sum of 100.0
 func TestFastore(t *testing.T) {
 	f := newFrame(NEWARRAY)
 	push(&f, int64(30))              // make the array 30 elements big
