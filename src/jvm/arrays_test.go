@@ -149,6 +149,55 @@ func TestFloatArrayLength(t *testing.T) {
 	}
 }
 
+// FALOAD: Test fetching and pushing the value of an element in an float array
+func TestFaload(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))              // make the array 30 elements big
+	f.Meth = append(f.Meth, T_FLOAT) // make it an array of ints
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(FASTORE)
+	push(&f, ptr)            // push the reference to the array
+	push(&f, 20)             // in array[20]
+	push(&f, float64(100.0)) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(FALOAD) // now fetch the value in array[30]
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // get contents in array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	res := pop(&f).(float64)
+	if res != 100.0 {
+		t.Errorf("FALOAD: Expected loaded array value of 100, got: %e", res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
+
 // FASTORE: store value in array of floats
 // Create an array of 30 elements, store value 100.0 in array[20], then
 // sum all the elements in the array, and test for a sum of 100.0
