@@ -310,6 +310,11 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			array := *(iAref.Arr)
+
+			if index >= int64(len(array)) {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
 			var value = array[index]
 			push(f, value)
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
