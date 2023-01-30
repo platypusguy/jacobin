@@ -149,6 +149,57 @@ func TestFloatArrayLength(t *testing.T) {
 	}
 }
 
+// CALOAD: Test fetching and pushing the value of an element in an char array
+// Chars in Java are two bytes; we accord each one an int64 element. As a result,
+// the logic here is effectively identical to IALOAD. This code also tests CASTORE.
+func TestCaload(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))             // make the array 30 elements big
+	f.Meth = append(f.Meth, T_CHAR) // make it an array of chars
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(CASTORE)
+	push(&f, ptr)        // push the reference to the array
+	push(&f, 20)         // in array[20]
+	push(&f, int64(100)) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(CALOAD) // now fetch the value in array[30]
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // get contents in array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	res := pop(&f).(int64)
+	if res != 100 {
+		t.Errorf("CALOAD: Expected loaded array value of 100, got: %d", res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("CALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
+
 // FALOAD: Test fetching and pushing the value of an element in an float array
 func TestFaload(t *testing.T) {
 	f := newFrame(NEWARRAY)
