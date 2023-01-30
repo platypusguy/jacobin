@@ -407,11 +407,34 @@ func runFrame(fs *list.List) error {
 
 			size := len(*intRef.Arr)
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			array := *(intRef.Arr)
+			array[index] = value
+		case FASTORE: // 0x51	(store a float in a float array)
+			value := pop(f).(float64)
+			index := pop(f).(int)
+			ref := pop(f).(unsafe.Pointer)
+			floatRef := (*JacobinFloatArray)(ref)
+			if floatRef == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			if floatRef.Type != FLOAT {
+				exceptions.Throw(exceptions.ArrayStoreException, "FASTORE: Attempt to access array of incorrect type")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			size := len(*floatRef.Arr)
+			if index >= size {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			array := *(floatRef.Arr)
 			array[index] = value
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			pop(f)
