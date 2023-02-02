@@ -415,7 +415,7 @@ func runFrame(fs *list.List) error {
 			CASTORE, //		0x55 	(store char (2 bytes) in an array)
 			SASTORE: //    	0x56	(store a short in an array)
 			value := pop(f).(int64)
-			index := pop(f).(int)
+			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
 			intRef := (*JacobinIntArray)(ref)
 			if intRef == nil {
@@ -428,7 +428,7 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := len(*intRef.Arr)
+			size := int64(len(*intRef.Arr))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -438,7 +438,7 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 		case FASTORE: // 0x51	(store a float in a float array)
 			value := pop(f).(float64)
-			index := pop(f).(int)
+			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
 			floatRef := (*JacobinFloatArray)(ref)
 			if floatRef == nil {
@@ -451,7 +451,7 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := len(*floatRef.Arr)
+			size := int64(len(*floatRef.Arr))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
