@@ -404,13 +404,17 @@ func runFrame(fs *list.List) error {
 			pop(f)
 			f.Locals[3] = pop(f).(float64)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
-			f.Locals[0] = pop(f).(int64)
+			// f.Locals[0] = pop(f).(int64) This is almost invariably an unsafe pointer, not an int64
+			f.Locals[0] = pop(f)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
-			f.Locals[1] = pop(f).(int64)
+			// f.Locals[1] = pop(f).(int64) This is almost invariably an unsafe pointer, not an int64
+			f.Locals[1] = pop(f)
 		case ASTORE_2: // 	0x4D	(pop reference into local variable 2)
-			f.Locals[2] = pop(f).(int64)
+			// f.Locals[2] = pop(f).(int64)  This is almost invariably an unsafe pointer, not an int64
+			f.Locals[2] = pop(f)
 		case ASTORE_3: //	0x4E	(pop reference into local variable 3)
-			f.Locals[3] = pop(f).(int64)
+			// f.Locals[3] = pop(f).(int64) This is almost invariably an unsafe pointer, not an int64
+			f.Locals[3] = pop(f)
 		case IASTORE, //	0x4F	(store int in an array)
 			CASTORE, //		0x55 	(store char (2 bytes) in an array)
 			SASTORE: //    	0x56	(store a short in an array)
