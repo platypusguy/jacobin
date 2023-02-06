@@ -60,6 +60,13 @@ func Load_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
 			GFunction:  PrintlnDouble,
 		}
+
+	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
+		GMeth{
+			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+			GFunction:  PrintlnDouble,
+		}
+
 	return MethodSignatures
 }
 

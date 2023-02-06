@@ -67,7 +67,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	paramSlots := mt.Meth.(classloader.GmEntry).ParamSlots
 	gf := frames.CreateFrame(paramSlots)
 	gf.Thread = f.Thread
-	// gf.methName = className + "." + methodName + methodType
+
 	gf.MethName = methodName + methodType
 	gf.ClName = className
 	gf.Meth = nil
@@ -77,9 +77,10 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 
 	// get the args (if any) from the operand stack of the current frame(f)
 	// then push them onto the stack of the go function
-	var argList []int64
+	var argList []interface{}
+
 	for i := 0; i < paramSlots; i++ {
-		arg := pop(f).(int64)
+		arg := pop(f)
 		intArg := arg
 		argList = append(argList, intArg)
 	}
