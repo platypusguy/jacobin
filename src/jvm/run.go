@@ -440,6 +440,30 @@ func runFrame(fs *list.List) error {
 
 			array := *(intRef.Arr)
 			array[index] = value
+		case LASTORE: // 0x50	(store a long in a long array)
+			value := pop(f).(int64)
+			pop(f) // second pop b/c longs use two slots
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			longRef := (*JacobinIntArray)(ref)
+			if longRef == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			if longRef.Type != INT {
+				exceptions.Throw(exceptions.ArrayStoreException, "LASTORE: Attempt to access array of incorrect type")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			size := int64(len(*longRef.Arr))
+			if index >= size {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			array := *(longRef.Arr)
+			array[index] = value
 		case FASTORE: // 0x51	(store a float in a float array)
 			value := pop(f).(float64)
 			index := pop(f).(int64)
