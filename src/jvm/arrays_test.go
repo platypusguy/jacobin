@@ -388,6 +388,58 @@ func TestIastore(t *testing.T) {
 	}
 }
 
+// LALOAD: Test fetching and pushing the value of an element in an long array
+func TestLaload(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))             // make the array 30 elements big
+	f.Meth = append(f.Meth, T_LONG) // make it an array of longs
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(LASTORE)
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // in array[20]
+	push(&f, int64(100)) // the value we're storing
+	push(&f, int64(100)) //    push twice due to being 64-bits wide
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(LALOAD) // now fetch the value in array[30]
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // get contents in array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	// the loaded item should take two slots on the stack, so TOS s/ = 1
+	if f.TOS != 1 {
+		t.Errorf("LALOAD: Top of stack, expected 1, got: %d", f.TOS)
+	}
+
+	res := pop(&f).(int64)
+	if res != 100 {
+		t.Errorf("LALOAD: Expected loaded array value of 100, got: %d", res)
+	}
+
+}
+
 // LASTORE: store value in array of longs
 // See comments for IASTORE for the logic of this test
 func TestLastore(t *testing.T) {
