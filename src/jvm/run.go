@@ -351,6 +351,23 @@ func runFrame(fs *list.List) error {
 			}
 			var value = array[index]
 			push(f, value)
+		case DALOAD: //		0x31	(push contents of an double array element)
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			fAref := (*JacobinFloatArray)(ref)
+			if fAref == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			array := *(fAref.Arr)
+
+			if index >= int64(len(array)) {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			var value = array[index]
+			push(f, value)
+			push(f, value)
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE: //  0x37 (store popped top of stack long into local[index])
 			bytecode := f.Meth[f.PC]
