@@ -200,6 +200,55 @@ func TestCaload(t *testing.T) {
 	}
 }
 
+// DASTORE: store value in array of doubles
+// See comments for IASTORE for the logic of this test
+func TestDastore(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))               // make the array 30 elements big
+	f.Meth = append(f.Meth, T_DOUBLE) // make it an array of doubles
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(DASTORE)
+	push(&f, ptr)                         // push the reference to the array
+	push(&f, int64(20))                   // in array[20]
+	push(&f, float64(100_000_000_000.25)) // the value we're storing
+	push(&f, float64(100_000_000_000.25)) //   pushed twice due to being 64 bits
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
+	}
+
+	floatRef := (*JacobinFloatArray)(ptr)
+	array := *(floatRef.Arr)
+	var sum float64
+	for i := 0; i < 30; i++ {
+		sum += array[i]
+	}
+	if sum != 100_000_000_000.25 {
+		t.Errorf("DASTORE: Expected sum of doubles array to be 100,000,000,000.25, got: %f",
+			sum)
+	}
+}
+
 // FALOAD: Test fetching and pushing the value of an element in an float array
 func TestFaload(t *testing.T) {
 	f := newFrame(NEWARRAY)
