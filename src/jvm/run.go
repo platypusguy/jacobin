@@ -507,6 +507,30 @@ func runFrame(fs *list.List) error {
 
 			array := *(floatRef.Arr)
 			array[index] = value
+		case DASTORE: // 0x52	(store a double in a doubles array)
+			value := pop(f).(float64)
+			pop(f) // second pop b/c doubles take two slots on the operand stack
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			floatRef := (*JacobinFloatArray)(ref)
+			if floatRef == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			if floatRef.Type != FLOAT {
+				exceptions.Throw(exceptions.ArrayStoreException, "DASTORE: Attempt to access array of incorrect type")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			size := int64(len(*floatRef.Arr))
+			if index >= size {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			array := *(floatRef.Arr)
+			array[index] = value
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			pop(f)
 		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
