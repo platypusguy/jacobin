@@ -352,8 +352,7 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, value)
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
-			LSTORE, //  0x37 (store popped top of stack long into local[index])
-			ASTORE: //  0x3A (store popped top of stack ref into localc[index])
+			LSTORE: //  0x37 (store popped top of stack long into local[index])
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
@@ -372,6 +371,10 @@ func runFrame(fs *list.List) error {
 			f.Locals[index] = pop(f).(float64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			f.Locals[index+1] = pop(f).(float64)
+		case ASTORE: //  0x3A (store popped top of stack ref into localc[index])
+			index := int(f.Meth[f.PC+1])
+			f.PC += 1
+			f.Locals[index] = pop(f)
 		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.Locals[0] = pop(f).(int64)
 		case ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
