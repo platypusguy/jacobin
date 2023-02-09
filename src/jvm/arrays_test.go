@@ -226,10 +226,10 @@ func TestDastore(t *testing.T) {
 	ptr := pop(&f).(unsafe.Pointer)
 
 	f = newFrame(DASTORE)
-	push(&f, ptr)                         // push the reference to the array
-	push(&f, int64(20))                   // in array[20]
-	push(&f, float64(100_000_000_000.25)) // the value we're storing
-	push(&f, float64(100_000_000_000.25)) //   pushed twice due to being 64 bits
+	push(&f, ptr)                // push the reference to the array
+	push(&f, int64(20))          // in array[20]
+	push(&f, 100_000_000_000.25) // the value we're storing
+	push(&f, 100_000_000_000.25) //   pushed twice due to being 64 bits
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
@@ -274,9 +274,9 @@ func TestFaload(t *testing.T) {
 	ptr := pop(&f).(unsafe.Pointer)
 
 	f = newFrame(FASTORE)
-	push(&f, ptr)            // push the reference to the array
-	push(&f, int64(20))      // in array[20]
-	push(&f, float64(100.0)) // the value we're storing
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // in array[20]
+	push(&f, 100.0)     // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
@@ -325,9 +325,9 @@ func TestFastore(t *testing.T) {
 	ptr := pop(&f).(unsafe.Pointer)
 
 	f = newFrame(FASTORE)
-	push(&f, ptr)            // push the reference to the array
-	push(&f, int64(20))      // in array[20]
-	push(&f, float64(100.0)) // the value we're storing
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // in array[20]
+	push(&f, 100.0)     // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
