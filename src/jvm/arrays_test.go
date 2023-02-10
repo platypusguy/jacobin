@@ -149,6 +149,52 @@ func TestFloatArrayLength(t *testing.T) {
     }
 }
 
+// BASTORE: store value in array of ints
+// Create an array of 30 elements, store value 100 in array[20], then
+// sum all the elements in the array, and test for a sum of 100.
+// Note the value we store must be an int64 value--not a byte
+func TestBastore(t *testing.T) {
+    f := newFrame(NEWARRAY)
+    push(&f, int64(30))             // make the array 30 elements big
+    f.Meth = append(f.Meth, T_BYTE) // make it an array of bytes
+
+    globals.InitGlobals("test")
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs)
+    if f.TOS != 0 {
+        t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+    }
+
+    // did we capture the address of the new array in globals?
+    g := globals.GetGlobalRef()
+    if g.ArrayAddressList.Len() != 1 {
+        t.Errorf("Expecting array address list to have length 1, got %d",
+            g.ArrayAddressList.Len())
+    }
+
+    // now, get the reference to the array
+    ptr := pop(&f).(unsafe.Pointer)
+
+    f = newFrame(BASTORE)
+    push(&f, ptr)        // push the reference to the array
+    push(&f, int64(20))  // in array[20]
+    push(&f, int64(100)) // the value we're storing
+    fs = frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs) // execute the bytecode
+
+    byteRef := (*JacobinByteArray)(ptr)
+    array := *(byteRef.Arr)
+    var sum int64
+    for i := 0; i < 30; i++ {
+        sum += int64(array[i])
+    }
+    if sum != 100 {
+        t.Errorf("BASTORE: Expected sum of array entries to be 100, got: %d", sum)
+    }
+}
+
 // CALOAD: Test fetching and pushing the value of an element in an char array
 // Chars in Java are two bytes; we accord each one an int64 element. As a result,
 // the logic here is effectively identical to IALOAD. This code also tests CASTORE.
@@ -303,7 +349,7 @@ func TestDastore(t *testing.T) {
 func TestFaload(t *testing.T) {
     f := newFrame(NEWARRAY)
     push(&f, int64(30))              // make the array 30 elements big
-    f.Meth = append(f.Meth, T_FLOAT) // make it an array of ints
+    f.Meth = append(f.Meth, T_FLOAT) // make it an array of floats
 
     globals.InitGlobals("test")
     fs := frames.CreateFrameStack()
@@ -354,7 +400,7 @@ func TestFaload(t *testing.T) {
 func TestFastore(t *testing.T) {
     f := newFrame(NEWARRAY)
     push(&f, int64(30))              // make the array 30 elements big
-    f.Meth = append(f.Meth, T_FLOAT) // make it an array of ints
+    f.Meth = append(f.Meth, T_FLOAT) // make it an array of floats
 
     globals.InitGlobals("test")
     fs := frames.CreateFrameStack()
