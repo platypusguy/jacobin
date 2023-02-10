@@ -558,7 +558,7 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if byteRef.Type != INT {
+			if byteRef.Type != BYTE {
 				exceptions.Throw(exceptions.ArrayStoreException, "BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
