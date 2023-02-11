@@ -565,7 +565,7 @@ func runFrame(fs *list.List) error {
 			array := *(floatRef.Arr)
 			array[index] = value
 		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
-			value := pop(f).(int64)
+			value := pop(f).(JavaByte)
 			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
 			byteRef := (*JacobinByteArray)(ref)
@@ -586,7 +586,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			array := *(byteRef.Arr)
-			array[index] = byte(value)
+			array[index] = value
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			pop(f)
 		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
@@ -1412,7 +1412,7 @@ func runFrame(fs *list.List) error {
 				_ = log.Log("Invalid array type specified", log.SEVERE)
 				return errors.New("error instantiating array")
 			} else if actualType == BYTE {
-				a := make([]byte, size)
+				a := make([]JavaByte, size)
 				jba := JacobinByteArray{
 					Type: BYTE,
 					Arr:  &a,

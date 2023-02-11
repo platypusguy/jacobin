@@ -30,54 +30,57 @@ package jvm
 */
 
 const ( // the ArrayTypes
-	ERROR = 0
-	FLOAT = 1
-	INT   = 2
-	BYTE  = 3
+    ERROR = 0
+    FLOAT = 1
+    INT   = 2
+    BYTE  = 3
 )
 
 // the primitive types as specified in the
 // JVM instructions for arrays
 const (
-	T_BOOLEAN = 4
-	T_CHAR    = 5
-	T_FLOAT   = 6
-	T_DOUBLE  = 7
-	T_BYTE    = 8
-	T_SHORT   = 9
-	T_INT     = 10
-	T_LONG    = 11
+    T_BOOLEAN = 4
+    T_CHAR    = 5
+    T_FLOAT   = 6
+    T_DOUBLE  = 7
+    T_BYTE    = 8
+    T_SHORT   = 9
+    T_INT     = 10
+    T_LONG    = 11
 )
+
+// bytes in Go are uint8, whereas in Java they are int8. Hence this type alias.
+type JavaByte = int8
 
 type ArrayType int
 
 type JacobinByteArray struct {
-	Type ArrayType
-	Arr  *[]byte
+    Type ArrayType
+    Arr  *[]JavaByte
 }
 
 type JacobinIntArray struct {
-	Type ArrayType
-	Arr  *[]int64
+    Type ArrayType
+    Arr  *[]int64
 }
 
 type JacobinFloatArray struct {
-	Type ArrayType
-	Arr  *[]float64
+    Type ArrayType
+    Arr  *[]float64
 }
 
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
 // by Jacobin in array creation. Returns zero on error.
 func jdkArrayTypeToJacobinType(jdkType int) int {
-	switch jdkType {
-	case T_BOOLEAN, T_BYTE:
-		return BYTE
-	case T_CHAR, T_SHORT, T_INT, T_LONG:
-		return INT
-	case T_FLOAT, T_DOUBLE:
-		return FLOAT
-	default: // this would indicate an error
-		return 0
-	}
+    switch jdkType {
+    case T_BOOLEAN, T_BYTE:
+        return BYTE
+    case T_CHAR, T_SHORT, T_INT, T_LONG:
+        return INT
+    case T_FLOAT, T_DOUBLE:
+        return FLOAT
+    default: // this would indicate an error
+        return 0
+    }
 }
