@@ -565,7 +565,9 @@ func runFrame(fs *list.List) error {
 			array := *(floatRef.Arr)
 			array[index] = value
 		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
-			value := pop(f).(JavaByte)
+			var value int8 = 0
+			rawValue := pop(f)
+			value = convertInterfaceToInt8(rawValue)
 			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
 			byteRef := (*JacobinByteArray)(ref)
@@ -1528,4 +1530,18 @@ func multiply[N frames.Number](num1, num2 N) N {
 
 func subtract[N frames.Number](num1, num2 N) N {
 	return num1 - num2
+}
+
+// converts an interface{} value to int8. Used for BASTORE
+func convertInterfaceToInt8(val interface{}) int8 {
+	switch t := val.(type) {
+	case int64:
+
+		return int8(t)
+	case int:
+		return int8(t)
+	case int8:
+		return int8(t)
+	}
+	return 0
 }
