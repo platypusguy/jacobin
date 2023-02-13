@@ -67,6 +67,35 @@ func Load_Io_PrintStream() map[string]GMeth {
 			GFunction:  PrintlnDouble,
 		}
 
+	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
+		GMeth{
+			ParamSlots: 2, // [0] = PrintStream.out object,
+			// [1] = index to StringConst to print
+			GFunction: PrintS,
+		}
+	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  PrintI,
+		}
+	MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
+		GMeth{
+			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
+			GFunction:  PrintLong,
+		}
+
+	MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
+		GMeth{
+			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
+			GFunction:  PrintDouble,
+		}
+
+	MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
+		GMeth{
+			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+			GFunction:  PrintDouble,
+		}
+
 	return MethodSignatures
 }
 
@@ -111,5 +140,40 @@ func PrintlnLong(l []interface{}) interface{} {
 func PrintlnDouble(l []interface{}) interface{} {
 	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Println(doubleToPrint)
+	return nil
+}
+
+// PrintI = java/io/Prinstream.print(int) TODO: equivalent (verify that this grabs the right param to print)
+func PrintI(i []interface{}) interface{} {
+	intToPrint := i[1].(int64) // contains an int
+	fmt.Print(intToPrint)
+	return nil
+}
+
+// PrintLong = java/io/Prinstream.print(long)
+// Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
+func PrintLong(l []interface{}) interface{} {
+	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+	fmt.Print(longToPrint)
+	return nil
+}
+
+// PrintDouble = java/io/Prinstream.print(double)
+// Doubles in Java are 64-bit FP
+func PrintDouble(l []interface{}) interface{} {
+	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Print(doubleToPrint)
+	return nil
+}
+
+// Print string
+func PrintS(i []interface{}) interface{} {
+	sIndex := i[1].(int64) // points to a String constant entry in the CP
+
+	usIndex := uint64(sIndex)
+	upsIndex := uintptr(usIndex)
+	strAddr := unsafe.Pointer(upsIndex)
+	s := *(*string)(strAddr)
+	fmt.Print(s)
 	return nil
 }
