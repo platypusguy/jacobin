@@ -30,7 +30,7 @@ A more-than-minimal JVM written in Go.
  * Parsing classpaths
 
 ### Class loading
-* Correctly reads and parses basic classes
+* Correctly reads and parses most classes
 * Extracts bytecode and parameters needed for execution
 * Automate loading of core Java classes (Object, etc.)
 * Handle straightforward JAR files
