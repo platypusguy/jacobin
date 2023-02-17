@@ -6,6 +6,8 @@
 
 package jvm
 
+import "unsafe"
+
 /*  This file contains some data structures and some functions
  	for array handling in Jacobin
 
@@ -67,6 +69,11 @@ type JacobinIntArray struct {
 type JacobinFloatArray struct {
 	Type ArrayType
 	Arr  *[]float64
+}
+
+type JacobinRefArray struct {
+	Type ArrayType
+	Arr  *[]unsafe.Pointer
 }
 
 // converts one the of the JDK values indicating the primitive

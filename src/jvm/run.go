@@ -1442,6 +1442,23 @@ func runFrame(fs *list.List) error {
 				return errors.New("error instantiating array")
 			}
 
+		case ANEWARRAY: // 0xBD create array of references
+			size := pop(f).(int64)
+			if size < 0 {
+				exceptions.Throw(
+					exceptions.NegativeArraySizeException,
+					"Invalid size for array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			a := make([]unsafe.Pointer, size)
+			jra := JacobinRefArray{
+				Type: BYTE,
+				Arr:  &a,
+			}
+			g := globals.GetGlobalRef()
+			g.ArrayAddressList.PushFront(&jra)
+			push(f, unsafe.Pointer(&jra))
+
 		case ARRAYLENGTH: // OxBE get size of array
 			ref := pop(f).(unsafe.Pointer)
 			bAref := (*JacobinByteArray)(ref)
