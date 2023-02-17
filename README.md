@@ -26,20 +26,19 @@ A more-than-minimal JVM written in Go.
 * Responds to most options listed in the `java -help` output
 
 **To do**:
-  * Handling JAR files :pencil2: This is a primary focus of current coding work
-  * Handling @files (which contain command-line options)
-  * Parsing complex classpaths
+ * Handling @files (which contain command-line options)
+ * Parsing classpaths
 
 ### Class loading
-* Correctly reads and parses basic classes
+* Correctly reads and parses most classes
 * Extracts bytecode and parameters needed for execution
-
+* Automate loading of core Java classes (Object, etc.)
+* Handles straightforward JAR files
+  
 **To do**:
 * Handle more-complex classes
 * Handle interfaces
-* Handle arrays
 * Handle inner classes
-* Automate loading of core Java classes (Object, etc.)
 
 ### Verification, Linking, Preparation, Initialization
 * Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file. 
@@ -51,12 +50,14 @@ A more-than-minimal JVM written in Go.
 
 ### Execution
 * Execution of bytecode :pencil2: This is a primary focus of current coding work
+* One-dimensional arrays
 
 **To do:**
+* Multi-dimensional arrays
 * invokedynamic
 * Calls to superclasses
-* Annotated classes
-* Arrays
+* Exception-tree walking
+* Annotations
 
 ### Instrumentation
 * Instruction-level tracing (use `-trace:inst` to enable this feature)
