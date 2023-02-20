@@ -36,6 +36,35 @@ func TestJdkArrayTypeToJacobinType(t *testing.T) {
 	}
 }
 
+// ANEWARRAY: creation of array for primitive values
+func TestAnewrray(t *testing.T) {
+	f := newFrame(ANEWARRAY)
+	push(&f, int64(13)) // make the array 13 elements big
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, test the length of the array, which should be 13
+	element := g.ArrayAddressList.Front()
+	ptr := element.Value.(*JacobinRefArray)
+	if len(*ptr.Arr) != 13 {
+		t.Errorf("Expecting array length of 13, got %d", len(*ptr.Arr))
+	}
+}
+
 // ARRAYLENGTH: Test length of byte array
 // First, we create the array of 13 elements, then we push the reference
 // to it and execute the ARRAYLENGTH bytecode using the address stored
