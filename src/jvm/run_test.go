@@ -2741,6 +2741,35 @@ func TestIshr(t *testing.T) {
 	}
 }
 
+// ISHR: Right shift of negative int
+func TestIshrNeg(t *testing.T) {
+	f := newFrame(ISHR)
+	push(&f, int64(-200))
+	push(&f, int64(3)) // shift right 3 bits
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64) // longs require two slots, so popped twice
+
+	if value != -25 { // 200 >> 3 = -25
+		t.Errorf("ISHR: expected a result of -25, but got: %d", value)
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISHR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+	/*
+		// The following code runs correctly and prints -25 to the
+		// console during test results.
+		var printArray = make([]interface{}, 2)
+		printArray[0] = 0
+		printArray[1] = value
+		classloader.PrintlnI(printArray)
+	*/
+
+}
+
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
 	f := newFrame(ISTORE)
