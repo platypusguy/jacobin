@@ -827,7 +827,13 @@ func runFrame(fs *list.List) error {
 		case ISHL: //	0x78 	(shift int left)
 			shiftBy := pop(f).(int64)
 			val1 := pop(f).(int64)
-			push(f, val1<<(shiftBy&0x1F)) // only the bottom five bits are used
+			var val2 int64
+			if val1 < 0 { // if neg, shift as pos, then make neg
+				val2 = (-val1) << (shiftBy & 0x1F) // only the bottom five bits are used
+				push(f, -val2)
+			} else {
+				push(f, val1<<(shiftBy&0x1F))
+			}
 
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
@@ -840,7 +846,13 @@ func runFrame(fs *list.List) error {
 		case ISHR: //  0x7A	(shift int value right)
 			shiftBy := pop(f).(int64)
 			val1 := pop(f).(int64)
-			push(f, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
+			var val2 int64
+			if val1 < 0 { // if neg, shift as pos, then make neg
+				val2 = (-val1) >> (shiftBy & 0x1F) // only the bottom five bits are used
+				push(f, -val2)
+			} else {
+				push(f, val1>>(shiftBy&0x1F))
+			}
 		case LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
 			LUSHR: // 	0x70
 			shiftBy := pop(f).(int64)
