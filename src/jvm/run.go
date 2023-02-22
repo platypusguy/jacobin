@@ -564,6 +564,24 @@ func runFrame(fs *list.List) error {
 
 			array := *(floatRef.Arr)
 			array[index] = value
+		case AASTORE: // 0x53   (store a reference in a reference array)
+			value := pop(f).(unsafe.Pointer)
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			refRef := (*JacobinRefArray)(ref)
+			if refRef == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			size := int64(len(*refRef.Arr))
+			if index >= size {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+
+			array := *(refRef.Arr)
+			array[index] = value
 		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
 			var value int8 = 0
 			rawValue := pop(f)
@@ -1570,7 +1588,7 @@ func convertInterfaceToInt8(val interface{}) int8 {
 	case int:
 		return int8(t)
 	case int8:
-		return int8(t)
+		return t
 	}
 	return 0
 }
