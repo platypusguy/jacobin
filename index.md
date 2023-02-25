@@ -18,6 +18,8 @@ As we progress, we post short explanations of project decisions and explanations
 
 #### Project Posts
 
+[Jacobin at 18 months](http://binstock.blogspot.com/2023/02/jacobin-jvm-at-18-months.html)
+
 [Jacobin status at the 1-year mark](http://binstock.blogspot.com/2022/08/jacobin-jvm-at-1-year-mark.html)
 
 [Why was Go chosen for this project?](http://binstock.blogspot.com/2021/08/a-whole-new-project-jvm.html)
