@@ -83,6 +83,41 @@ func initVarsPrimitiveArrays() error {
 	return nil
 }
 
+func TestNoClassSuffix(t *testing.T) {
+	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+		t.Skip()
+	}
+
+    jacobinExec := os.Getenv("JACOBIN_EXE")
+	if jacobinExec == "" {
+		t.Errorf("missing Jacobin executable env spec. Please specify it in JACOBIN_EXE")
+		return		
+	} else if _, err := os.Stat(jacobinExec); err != nil {
+		t.Errorf("missing Jacobin executable, which was specified as %s", jacobinExec)
+		return
+	}
+    testClass := os.Getenv("JACOBIN_TESTDATA") + string(os.PathSeparator) + "testArrays"
+    cmd := exec.Command(jacobinExec, testClass)
+    
+	// Set up to get the stdout and stderr contents from the command execution.
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Run the command.
+	if err = cmd.Start(); err != nil {
+		t.Errorf("TestNoClassSuffix: Got error running Jacobin: %s", err.Error())
+	}
+
+	// Make sure that stderr is empty.
+	slurp, _ := io.ReadAll(stderr)
+	if len(slurp) != 0 {
+		t.Errorf("TestNoClassSuffix: Got unexpected output to stderr: %s", string(slurp))
+	}
+
+}
+
 func TestRunPrimitiveArrays(t *testing.T) {
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
@@ -114,8 +149,11 @@ func TestRunPrimitiveArrays(t *testing.T) {
 		}
 	}
 
-	// get the stdout and stderr contents from the file execution
+	// Set up to get the stdout and stderr contents from the command execution
 	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -123,38 +161,38 @@ func TestRunPrimitiveArrays(t *testing.T) {
 
 	// run the command
 	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
+		t.Errorf("TestRunPrimitiveArrays: Got error running Jacobin: %s", err.Error())
 	}
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Got unexpected output to stderr: %s", string(slurp))
 	}
 
 	slurp, _ = io.ReadAll(stdout)
 
 	if !strings.Contains(string(slurp), "intArray: 600") {
-		t.Errorf("Did not get expected output for intArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for intArray. Got: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "floatArray: 400") {
-		t.Errorf("Did not get expected output for floatArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for floatArray. Got: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "longArray: 5000") {
-		t.Errorf("Did not get expected output for longArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for longArray. Got: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "doubleArray: 1.000003") {
-		t.Errorf("Did not get expected output for doubleArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for doubleArray. Got: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "booleanArray: 3") {
-		t.Errorf("Did not get expected output for booleanArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for booleanArray. Got: %s", string(slurp))
 	}
 
 	if !strings.Contains(string(slurp), "byteArray: 9") {
-		t.Errorf("Did not get expected output for byteArray. Got: %s", string(slurp))
+		t.Errorf("TestRunPrimitiveArrays: Did not get expected output for byteArray. Got: %s", string(slurp))
 	}
 }
