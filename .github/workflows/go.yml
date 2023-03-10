@@ -26,6 +26,8 @@ jobs:
       run: |
         cd src
         go build -o . -v ./...
+        pwd
+        ./jacobin -h
 
     - name: Test
       run: |
