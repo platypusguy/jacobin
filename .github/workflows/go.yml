@@ -23,12 +23,17 @@ jobs:
      #   stable: false
       
     - name: Build
-      run: go build -v ./...
-      working-directory: src
+      run: |
+        cd src
+        go build -o . -v ./...
 
     - name: Test
-      run: go test -short -v ./...
-      working-directory: src
+      run: |
+        export JACOBIN_HOME=.
+        export JACOBIN_TESTDATA=$JACOBIN_HOME/testdata
+        cd src
+        export JACOBIN_EXE=./jacobin 
+        go test -v ./...
 
     - name: Codecov
       uses: codecov/codecov-action@v2.1.0
