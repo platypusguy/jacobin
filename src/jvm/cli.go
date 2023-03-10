@@ -18,7 +18,6 @@ import (
 
 // HandleCli handles all args from the command line, including those from environment
 // variables that the JVM recognizes and prepends to the list of command-line options
-// func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	_ = log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
@@ -49,36 +48,43 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		var option, arg string
 		// if it's a JVM option (so, it begins with a hyphen)
 		// break the option into the option and any embedded arg values, if any
-		if strings.HasPrefix(args[i], "-") {
-			option, arg, err = getOptionRootAndArgs(args[i])
-		} else {
-			option = args[i]
-		}
-
-		if err != nil {
-			continue // skip the arg if there was a problem. (Might want to revisit this.)
-		}
-
-		// if the option is the name of the class to execute, note that then get
-		// all successive arguments and store them as app args in Global
-		if strings.HasSuffix(option, ".class") {
-			Global.StartingClass = option
+		
+		if ! strings.HasPrefix(args[i], "-") {
+		    // Not an option.  It's a class file specification.
+		    // * Append ".class" to the class file name if not already specifed.
+		    // * Save the name of the class file in Global.
+		    // * Get all successive arguments and store them as app args in Global.
+			Global.StartingClass = args[i]
+		    if ! strings.HasSuffix(Global.StartingClass, ".class") {
+		        Global.StartingClass += ".class"
+		    }
 			for i = i + 1; i < len(args); i++ {
 				Global.AppArgs = append(Global.AppArgs, args[i])
 			}
 			break
 		}
 
+	    // It's an option specification.  Might even be a -jar specification.
+	    // Break the option into the keyword and any embedded arg values.
+		option, arg, err = getOptionRootAndArgs(args[i])
+		if err != nil {
+			return err // Command line option syntax error - heading for abnormal termination.
+		}
 		opt, ok := Global.Options[option]
 		if ok {
+		    // Note that one possible "action" is to process a -jar specification
+		    // using getJarFilename() in option_table_loader.go.
 			i, _ = opt.Action(i, arg, Global)
 		} else {
+		    // TODO: Any risk of getting lost by ignoring rubbish?
 			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
 		// recognize the JAR file and insert it into Global, and copy all succeeding args
 		// to app args. However, it does not recognize the JAR file as an executable.
+		// Andrew?      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		// Andrew: They are successfully executed.  Some other meaning of "recognized"?
 
 		// if len(arg) > 0 {
 		// 	fmt.Printf("Option %s has argument value: %s\n", option, arg)
