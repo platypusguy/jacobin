@@ -54,18 +54,18 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		    // * Append ".class" to the class file name if not already specifed.
 		    // * Save the name of the class file in Global.
 		    // * Get all successive arguments and store them as app args in Global.
-			Global.StartingClass = args[i]
+		    Global.StartingClass = args[i]
 		    if ! strings.HasSuffix(Global.StartingClass, ".class") {
 		        Global.StartingClass += ".class"
 		    }
-			for i = i + 1; i < len(args); i++ {
-				Global.AppArgs = append(Global.AppArgs, args[i])
-			}
-			break
+		    for i = i + 1; i < len(args); i++ {
+			Global.AppArgs = append(Global.AppArgs, args[i])
+		    }
+		    break
 		}
 
-	    // It's an option specification.  Might even be a -jar specification.
-	    // Break the option into the keyword and any embedded arg values.
+	        // It's an option specification.  Might even be a -jar specification.
+	        // Break the option into the keyword and any embedded arg values.
 		option, arg, err = getOptionRootAndArgs(args[i])
 		if err != nil {
 			return err // Command line option syntax error - heading for abnormal termination.
