@@ -165,7 +165,10 @@ where options include:
 	-showversion  print product version to the error stream and continue
 	--show-version
 				  print product version to the output stream and continue
-	-strictJDK    make user messages conform closely to the JDK's format'`
+
+Jacobin-specific options:
+	-strictJDK    make user messages conform closely to the JDK's format
+	-trace        display instruction-level tracing data to the console`
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }
