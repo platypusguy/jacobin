@@ -1498,7 +1498,7 @@ func runFrame(fs *list.List) error {
 			}
 			a := make([]unsafe.Pointer, size)
 			jra := JacobinRefArray{
-				Type: BYTE,
+				Type: REF,
 				Arr:  &a,
 			}
 			g := globals.GetGlobalRef()
@@ -1521,8 +1521,11 @@ func runFrame(fs *list.List) error {
 				intRef := (*JacobinIntArray)(ref)
 				size = len(*intRef.Arr)
 			} else if arrType == FLOAT {
-				intRef := (*JacobinFloatArray)(ref)
-				size = len(*intRef.Arr)
+				fltRef := (*JacobinFloatArray)(ref)
+				size = len(*fltRef.Arr)
+			} else if arrType == REF {
+				arrRef := (*JacobinRefArray)(ref)
+				size = len(*arrRef.Arr)
 			} else {
 				_ = log.Log("Invalid array type specified", log.SEVERE)
 				return errors.New("error processing array")
