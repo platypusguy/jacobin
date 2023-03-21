@@ -368,6 +368,22 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, value)
 			push(f, value)
+		case AALOAD: // 0x32    (push contents of a reference array element)
+			index := pop(f).(int64)
+			ref := pop(f).(unsafe.Pointer)
+			rAref := (*JacobinRefArray)(ref)
+			if rAref == nil {
+				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			array := *(rAref.Arr)
+
+			if index >= int64(len(array)) {
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			var value = array[index]
+			push(f, unsafe.Pointer(value))
 		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
