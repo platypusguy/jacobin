@@ -36,6 +36,55 @@ func TestJdkArrayTypeToJacobinType(t *testing.T) {
 	}
 }
 
+// AALOAD: Test fetching and pushing the value of an element in a reference array
+// The logic here is effectively identical to IALOAD. This code also tests AASTORE.
+func TestAaload(t *testing.T) {
+	f := newFrame(ANEWARRAY)
+	push(&f, int64(30)) // make the array 30 elements big
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(unsafe.Pointer)
+
+	f = newFrame(AASTORE)
+	push(&f, ptr)                // push the reference to the array
+	push(&f, int64(20))          // in array[20]
+	push(&f, unsafe.Pointer(&f)) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(AALOAD) // now fetch the value in array[20]
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // get contents in array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	res := pop(&f).(unsafe.Pointer)
+	if res != unsafe.Pointer(&f) {
+		t.Errorf("AALOAD: Expected loaded array value = address of frame, got: %X", res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("AALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
+
 // ANEWARRAY: creation of array for primitive values
 func TestAnewrray(t *testing.T) {
 	f := newFrame(ANEWARRAY)
@@ -61,7 +110,7 @@ func TestAnewrray(t *testing.T) {
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*JacobinRefArray)
 	if len(*ptr.Arr) != 13 {
-		t.Errorf("Expecting array length of 13, got %d", len(*ptr.Arr))
+		t.Errorf("ANEWARRAY: Expecting array length of 13, got %d", len(*ptr.Arr))
 	}
 }
 
@@ -211,7 +260,7 @@ func TestBaload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	f = newFrame(BALOAD) // now fetch the value in array[30]
+	f = newFrame(BALOAD) // now fetch the value in array[20]
 	push(&f, ptr)        // push the reference to the array
 	push(&f, int64(20))  // get contents in array[20]
 	fs = frames.CreateFrameStack()
@@ -351,7 +400,7 @@ func TestCaload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	f = newFrame(CALOAD) // now fetch the value in array[30]
+	f = newFrame(CALOAD) // now fetch the value in array[20]
 	push(&f, ptr)        // push the reference to the array
 	push(&f, int64(20))  // get contents in array[20]
 	fs = frames.CreateFrameStack()
@@ -593,7 +642,7 @@ func TestIaload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	f = newFrame(IALOAD) // now fetch the value in array[30]
+	f = newFrame(IALOAD) // now fetch the value in array[20]
 	push(&f, ptr)        // push the reference to the array
 	push(&f, int64(20))  // get contents in array[20]
 	fs = frames.CreateFrameStack()
@@ -688,7 +737,7 @@ func TestLaload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	f = newFrame(LALOAD) // now fetch the value in array[30]
+	f = newFrame(LALOAD) // now fetch the value in array[20]
 	push(&f, ptr)        // push the reference to the array
 	push(&f, int64(20))  // get contents in array[20]
 	fs = frames.CreateFrameStack()
@@ -773,7 +822,7 @@ func TestNewrray(t *testing.T) {
 	// did we capture the address of the new array in globals?
 	g := globals.GetGlobalRef()
 	if g.ArrayAddressList.Len() != 1 {
-		t.Errorf("Expecting array address list to have length 1, got %d",
+		t.Errorf("NEWARRAY: Expecting array address list to have length 1, got %d",
 			g.ArrayAddressList.Len())
 	}
 
@@ -781,7 +830,7 @@ func TestNewrray(t *testing.T) {
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*JacobinIntArray)
 	if len(*ptr.Arr) != 13 {
-		t.Errorf("Expecting array length of 13, got %d", len(*ptr.Arr))
+		t.Errorf("NEWARRAY: Expecting array length of 13, got %d", len(*ptr.Arr))
 	}
 }
 
@@ -874,6 +923,6 @@ func TestSastore(t *testing.T) {
 		sum += array[i]
 	}
 	if sum != 100 {
-		t.Errorf("IASTORE: Expected sum of array entries to be 100, got: %d", sum)
+		t.Errorf("SASTORE: Expected sum of array entries to be 100, got: %d", sum)
 	}
 }
