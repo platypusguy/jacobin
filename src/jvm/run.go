@@ -1505,6 +1505,12 @@ func runFrame(fs *list.List) error {
 			g.ArrayAddressList.PushFront(&jra)
 			push(f, unsafe.Pointer(&jra))
 
+			// The bytecode is followed by a two-byte index into the CP
+			// which indicates what type the reference points to. We
+			// don't presently check the type, so we skip over these
+			// two bytes.
+			f.PC += 2
+
 		case ARRAYLENGTH: // OxBE get size of array
 			ref := pop(f).(unsafe.Pointer)
 			bAref := (*JacobinByteArray)(ref)
@@ -1513,24 +1519,24 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			var size int
+			var size int64
 			arrType := bAref.Type
 			if arrType == BYTE {
-				size = len(*bAref.Arr)
+				size = int64(len(*bAref.Arr))
 			} else if arrType == INT {
 				intRef := (*JacobinIntArray)(ref)
-				size = len(*intRef.Arr)
+				size = int64(len(*intRef.Arr))
 			} else if arrType == FLOAT {
 				fltRef := (*JacobinFloatArray)(ref)
-				size = len(*fltRef.Arr)
+				size = int64(len(*fltRef.Arr))
 			} else if arrType == REF {
 				arrRef := (*JacobinRefArray)(ref)
-				size = len(*arrRef.Arr)
+				size = int64(len(*arrRef.Arr))
 			} else {
 				_ = log.Log("Invalid array type specified", log.SEVERE)
 				return errors.New("error processing array")
 			}
-			push(f, int64(size))
+			push(f, size)
 
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
