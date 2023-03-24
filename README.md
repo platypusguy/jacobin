@@ -49,13 +49,14 @@ A more-than-minimal JVM written in Go.
 * Initialization
 
 ### Execution
-* Execution of bytecode :pencil2: This is a primary focus of current coding work
-* One-dimensional arrays
+* Execution of bytecode :pencil2: This is a primary focus of current coding work<br>
+  Status: Most bytecodes operational, including one-dimensional arrays (both primitive and reference)
 
 **To do:**
 * Multi-dimensional arrays
-* invokedynamic
+* invokespecial, invokedynamic
 * Calls to superclasses
+* Inner and nested classes
 * Exception-tree walking
 * Annotations
 
@@ -64,7 +65,7 @@ A more-than-minimal JVM written in Go.
 * Extensive logging data (use `-verbose:finest` to enable. Caveat: this produces *a lot* of data)
 
 **To do:**
-* Emit instrumented data to a port, for reading/display by a separate program. :pencil2: This is a primary focus of current coding work
+* Emit instrumented data to a port, for reading/display by a separate program.
 
 ## Garbage Collection
 GC is handled by the golang runtime, which has its own GC
