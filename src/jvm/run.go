@@ -1437,9 +1437,11 @@ func runFrame(fs *list.List) error {
 				return errors.New("error instantiating class")
 			}
 
-			// to push the object reference as an int64, it must first be converted to an unsafe pointer
-			rawRef := uintptr(unsafe.Pointer(ref))
-			push(f, int64(rawRef))
+			push(f, unsafe.Pointer(ref))
+			// Need to verify that the following code can be eliminated
+			// // to push the object reference as an int64, it must first be converted to an unsafe pointer
+			// rawRef := uintptr(unsafe.Pointer(ref))
+			// push(f, int64(rawRef))
 
 		case NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
