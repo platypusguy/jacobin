@@ -212,7 +212,7 @@ func runFrame(fs *list.List) error {
 				} else if CPe.retType == IS_FLOAT64 {
 					push(f, CPe.floatVal)
 				} else {
-					push(f, CPe.addrVal)
+					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
