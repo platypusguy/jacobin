@@ -107,13 +107,14 @@ func Load_Io_PrintStream() map[string]GMeth {
 // into the UTF8 entries of the CP. This string is then printed to stdout. There
 // is no return value.
 func Println(i []interface{}) interface{} {
-	sIndex := i[1].(int64) // points to a String constant entry in the CP
-	// cpi := i[0].(int64)    // int64 which is an index into Statics array
-	// cp := StaticsArray[cpi].CP
-
-	usIndex := uint64(sIndex)
-	upsIndex := uintptr(usIndex)
-	strAddr := unsafe.Pointer(upsIndex)
+	// sIndex := i[1].(int64) // points to a String constant entry in the CP
+	// // cpi := i[0].(int64)    // int64 which is an index into Statics array
+	// // cp := StaticsArray[cpi].CP
+	//
+	// usIndex := uint64(sIndex)
+	// upsIndex := uintptr(usIndex)
+	// strAddr := unsafe.Pointer(upsIndex)
+	strAddr := i[1].(unsafe.Pointer)
 	s := *(*string)(strAddr)
 	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
 	fmt.Println(s)
@@ -168,11 +169,12 @@ func PrintDouble(l []interface{}) interface{} {
 
 // Print string
 func PrintS(i []interface{}) interface{} {
-	sIndex := i[1].(int64) // points to a String constant entry in the CP
-
-	usIndex := uint64(sIndex)
-	upsIndex := uintptr(usIndex)
-	strAddr := unsafe.Pointer(upsIndex)
+	// sIndex := i[1].(int64) // points to a String constant entry in the CP
+	//
+	// usIndex := uint64(sIndex)
+	// upsIndex := uintptr(usIndex)
+	// strAddr := unsafe.Pointer(upsIndex)
+	strAddr := i[1].(unsafe.Pointer)
 	s := *(*string)(strAddr)
 	fmt.Print(s)
 	return nil
