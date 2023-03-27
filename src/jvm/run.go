@@ -183,7 +183,7 @@ func runFrame(fs *list.List) error {
 			CPe := FetchCPentry(f.CP, int(idx))
 			if CPe.entryType != 0 && // 0 = error
 				// Note: an invalid CP entry causes a java.lang.Verify error and
-				//       is caught before execution of the program beings.
+				//       is caught before execution of the program begins.
 				// This instruction does not load longs or doubles
 				CPe.entryType != classloader.DoubleConst &&
 				CPe.entryType != classloader.LongConst { // if no error
