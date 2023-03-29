@@ -76,7 +76,7 @@ recheck:
 func initializeField(f classloader.Field, cp *classloader.CPool, cn string, obj *Object) {
 	name := cp.Utf8Refs[int(f.Name)]
 	desc := cp.Utf8Refs[int(f.Desc)]
-	var attr string = ""
+	var attr = ""
 	var value int64
 	if len(f.Attributes) > 0 {
 		for i := 0; i < len(f.Attributes); i++ {
