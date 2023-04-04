@@ -6,15 +6,33 @@
 
 package object
 
-import "unsafe"
+import (
+	"jacobin/classloader"
+)
 
+// With regard to the layout of a created object in Jacobin, note that
+// on some architectures, but not Jacobin, there is an additional field
+// that insures that the fields that follow the oops (the mark word and
+// the class pointer) are aligned in memory for maximal performance.
 type Object struct {
 	mark   MarkWord
-	class  unsafe.Pointer // pointer to the loaded class
-	fields []any          // slice containing the fields
+	class  *classloader.Klass // pointer to the loaded class
+	Fields []Field            // slice containing the fields
 }
 
+// These mark word contains values for different purposes. Here,
+// we use the first four bytes for a hash value, which is taken
+// from the address of the object. The 'misc' field will eventually
+// contain other values, such as locking and monitoring items.
 type MarkWord struct {
 	hash uint32 // contains hash code which is the lower 32 bits of the address
 	misc uint32 // at present unused
+}
+
+// We need to know the type of the field only to tell whether
+// it occupies one or two slots on the stack when getfield and
+// putfield bytecodes are executed.
+type Field struct {
+	ftype  byte // what type of value is stored in the field
+	fvalue any  // the actual value
 }
