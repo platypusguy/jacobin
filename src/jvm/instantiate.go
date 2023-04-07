@@ -44,8 +44,10 @@ recheck:
     if k.Status == 'I' {                         // the class is being loaded
         goto recheck // recheck the status until it changes (i.e., until the class is loaded)
     } else if !present { // the class has not yet been loaded
-        if classloader.LoadClassFromNameOnly(classname) != nil {
+        err := classloader.LoadClassFromNameOnly(classname)
+        if err != nil {
             _ = log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
+            return nil, err
         }
     }
 

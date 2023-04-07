@@ -1434,7 +1434,7 @@ func runFrame(fs *list.List) error {
 			ref, err := instantiateClass(className)
 			if err != nil {
 				_ = log.Log("Error instantiating class: "+className, log.SEVERE)
-				return errors.New("error instantiating class")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			push(f, unsafe.Pointer(ref))
