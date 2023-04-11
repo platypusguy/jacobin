@@ -7,12 +7,15 @@
 package jvm
 
 import (
+    "errors"
     "fmt"
     "jacobin/classloader"
     "jacobin/log"
     "jacobin/object"
     "os"
     "unsafe"
+	"sync"
+    "time"
 )
 
 // thisObject is the layout of the data fields of an object. It's explained in more detail
@@ -37,22 +40,58 @@ type Field struct {
 // 2) the class fields (if static) and instance fields (if non-static) are allocated. Details
 //    for this second step appear in front of the initializeFields() method.
 
+// Mutex for protecting classloader.Classes during multithreading.
+var mutex = sync.Mutex{}
+
 func instantiateClass(classname string) (*object.Object, error) {
     _ = log.Log("Instantiating class: "+classname, log.FINE)
-recheck:
-    k, present := classloader.Classes[classname] // TODO: Put a mutex around this the same one used for writing.
-    if k.Status == 'I' {                         // the class is being loaded
-        goto recheck // recheck the status until it changes (i.e., until the class is loaded)
-    } else if !present { // the class has not yet been loaded
+    ntries := 10 // Will retry at most this many times
+    
+    for true {
+        mutex.Lock()
+        k, present := classloader.Classes[classname]
+        mutex.Unlock()
+
+        // If still initialising, continue
+        // but guard against an unending loop.
+        // Status value reference: type Klass struct in classloader/classes.go.
+        if k.Status == 'I' {
+            ntries -= 1
+            if ntries < 1 {
+                // I give up!  :(
+                msg := "instantiateClass: Timeout while waiting on class: " + classname
+                _ = log.Log(msg, log.SEVERE)
+                err := errors.New(msg)
+                return nil, err // <============================= ERROR RETURN
+            }
+            // Give it some time to change status
+            time.Sleep(500 * time.Millisecond) 
+            // Re-check for the status leaving the initialisation (I) state.
+            _ = log.Log("instantiateClass: Waiting on class: "+classname, log.FINEST)
+            continue 
+        }
+
+        // Class present?
+        if present {
+            // Finally loaded; break out of closed loop
+            _ = log.Log("instantiateClass: Class present (success): "+classname, log.FINEST)
+            break 
+        }
+
+        // the class has not yet been loaded
         err := classloader.LoadClassFromNameOnly(classname)
         if err != nil {
-            _ = log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
-            return nil, err
+            _ = log.Log("instantiateClass: LoadClassFromNameOnly failed with class: "+classname+".", log.SEVERE)
+            return nil, err // <================================= ERROR RETURN
         }
+        
+        // Success: LoadClassFromNameOnly(classname).  Break out of closed loop.
+        _ = log.Log("instantiateClass: LoadClassFromNameOnly success: "+classname, log.FINEST)
+        break;
     }
 
     // at this point the class has been loaded into the method area (Classes).
-    k, _ = classloader.Classes[classname]
+    k, _ := classloader.Classes[classname]
 
     // obj := thisObject{
     // 	klass:  k,
