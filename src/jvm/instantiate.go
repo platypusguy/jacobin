@@ -14,7 +14,7 @@ import (
     "jacobin/object"
     "os"
     "unsafe"
-	"sync"
+    "sync"
     "time"
 )
 
@@ -45,7 +45,7 @@ var mutex = sync.Mutex{}
 
 func instantiateClass(classname string) (*object.Object, error) {
     _ = log.Log("Instantiating class: "+classname, log.FINE)
-    ntries := 10 // Will retry at most this many times
+    ntries := 20 // Will retry at most this many times (10 seconds)
     
     for true {
         mutex.Lock()
