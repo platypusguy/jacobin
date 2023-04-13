@@ -33,6 +33,6 @@ type MarkWord struct {
 // it occupies one or two slots on the stack when getfield and
 // putfield bytecodes are executed.
 type Field struct {
-    ftype  byte // what type of value is stored in the field
-    fvalue any  // the actual value
+    Ftype  byte // what type of value is stored in the field
+    Fvalue any  // the actual value
 }

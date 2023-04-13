@@ -61,12 +61,33 @@ recheck:
     obj := object.Object{
         Klass: &k,
     }
+
+    // the object's mark field contains the lower 32-bits of the object's
+    // address, which serves as the hash code for the object
     uintp := uintptr(unsafe.Pointer(&obj))
     obj.Mark.Hash = uint32(uintp)
 
     if len(k.Data.Fields) > 0 {
         for i := 0; i < len(k.Data.Fields); i++ {
-            // f := k.Data.Fields[i]
+            f := k.Data.Fields[i]
+            desc := k.Data.CP.CpIndex[f.Desc]
+            if desc.Type != classloader.NameAndType {
+                log.Log("error creating field in "+classname, log.SEVERE)
+            }
+            nameAndType := k.Data.CP.NameAndTypes[desc.Slot]
+            ftype := classloader.FetchUTF8stringFromCPEntryNumber(
+                &k.Data.CP, nameAndType.DescIndex)
+
+            fieldToAdd := new(object.Field)
+            fieldToAdd.Ftype = byte(ftype[0])
+            switch fieldToAdd.Ftype {
+            case 'L': // it's a reference
+                fieldToAdd.Fvalue = nil
+            case 'I', 'C', 'B': // add longs and shorts
+                fieldToAdd.Fvalue = 0
+            case 'D', 'F':
+                fieldToAdd.Fvalue = 0.0
+            }
             // f. // CURR: resume here
             // initializeField(f, &k.Data.CP, classname, &obj)
         }
