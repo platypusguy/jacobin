@@ -63,12 +63,12 @@ jobs:
 
     - name: Test
       run: |
-        set JACOBIN_HOME=%CD%
+        setx JACOBIN_HOME=%CD%
         echo ========== JACOBIN_HOME is %JACOBIN_HOME%
-        set JACOBIN_TESTDATA=%JACOBIN_HOME%\testdata
+        setx JACOBIN_TESTDATA=%JACOBIN_HOME%\testdata
         cd src
         echo ========== JACOBIN_HOME\src is %CD%
-        set JACOBIN_EXE=%CD%\jacobin
+        setx JACOBIN_EXE=%CD%\jacobin
         echo ========== JACOBIN_EXE is %JACOBIN_EXE%
         go test -v ./...
 
