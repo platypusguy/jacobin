@@ -64,9 +64,12 @@ jobs:
     - name: Test
       run: |
         set JACOBIN_HOME=%CD%
+        echo ========== JACOBIN_HOME is %JACOBIN_HOME%
         set JACOBIN_TESTDATA=%JACOBIN_HOME%\testdata
         cd src
-        set JACOBIN_EXE=%JACOBIN_HOME%\src\jacobin
+        echo ========== JACOBIN_HOME\src is %CD%
+        set JACOBIN_EXE=%CD%\jacobin
+        echo ========== JACOBIN_EXE is %JACOBIN_EXE%
         go test -v ./...
 
     - name: Codecov
