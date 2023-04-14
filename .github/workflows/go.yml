@@ -63,13 +63,13 @@ jobs:
 
     - name: Test
       run: |
-        set JACOBIN_HOME=%CD%
-        set JACOBIN_HOME
-        set JACOBIN_TESTDATA=%JACOBIN_HOME%\testdata
-        set JACOBIN_TESTDATA
+        $Env:JACOBIN_HOME=$Env:CD
+        $Env:JACOBIN_HOME
+        $Env:JACOBIN_TESTDATA=$Env:JACOBIN_HOME\testdata
+        $Env:JACOBIN_TESTDATA
         cd src
-        set JACOBIN_EXE=%CD%\jacobin
-        set JACOBIN_EXE
+        $Env:JACOBIN_EXE=$Env:JACOBIN_HOME\src\jacobin.exe
+        $Env:JACOBIN_EXE
         go test -v ./...
 
     - name: Codecov
