@@ -74,7 +74,8 @@ func instantiateClass(classname string) (*object.Object, error) {
             f := k.Data.Fields[i]
             desc := k.Data.CP.CpIndex[f.Desc]
             if desc.Type != classloader.NameAndType {
-                _ = log.Log("error creating field in "+classname, log.SEVERE)
+                _ = log.Log("error creating field in: "+classname, log.SEVERE)
+                return nil, classloader.CFE("invalid field type")
             }
             nameAndType := k.Data.CP.NameAndTypes[desc.Slot]
             ftype := classloader.FetchUTF8stringFromCPEntryNumber(
@@ -85,13 +86,17 @@ func instantiateClass(classname string) (*object.Object, error) {
             switch fieldToAdd.Ftype {
             case 'L': // it's a reference
                 fieldToAdd.Fvalue = nil
-            case 'I', 'C', 'B': // add longs and shorts
+            case 'B', 'C', 'I', 'J', 'S', 'Z':
                 fieldToAdd.Fvalue = 0
             case 'D', 'F':
                 fieldToAdd.Fvalue = 0.0
+            default:
+                _ = log.Log("error creating field in: "+classname+
+                    " Invalid type: "+string(fieldToAdd.Ftype), log.SEVERE)
+                return nil, classloader.CFE("invalid field type")
             }
-            // f. // CURR: resume here
-            // initializeField(f, &k.Data.CP, classname, &obj)
+            obj.Fields = append(obj.Fields, *fieldToAdd)
+            // CURR: resume here
         }
     }
     return &obj, nil
