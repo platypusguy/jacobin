@@ -66,7 +66,7 @@ jobs:
         set JACOBIN_HOME=%CD%
         set JACOBIN_TESTDATA=%JACOBIN_HOME%\testdata
         cd src
-        set JACOBIN_EXE=%JACOBIN_HOME%\src\jacobin.exe
+        set JACOBIN_EXE=%JACOBIN_HOME%\src\jacobin
         go test -v ./...
 
     - name: Codecov
