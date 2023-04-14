@@ -177,6 +177,8 @@ func cfe(msg string) error {
 	return errors.New(errMsg)
 }
 
+func CFE(msg string) error { return cfe(msg) }
+
 // LoadBaseClasses loads a basic set of classes that are found in
 // JAVA_HOME/jmods/java.base.jmod directory. As of Jacobin 0.1.0,
 // that directory consists of roughly 1400 classes from the JDK.
