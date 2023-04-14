@@ -63,12 +63,14 @@ jobs:
 
     - name: Test
       run: |
-        $Env:JACOBIN_HOME=$Env:CD
+        $Env:JACOBIN_HOME = $Env:CD
         $Env:JACOBIN_HOME
-        $Env:JACOBIN_TESTDATA=$Env:JACOBIN_HOME\testdata
+        $Env:JACOBIN_TESTDATA = $Env:JACOBIN_HOME
+        $Env:JACOBIN_TESTDATA += '\testdata'
         $Env:JACOBIN_TESTDATA
         cd src
-        $Env:JACOBIN_EXE=$Env:JACOBIN_HOME\src\jacobin.exe
+        $Env:JACOBIN_EXE = $Env:JACOBIN_HOME
+        $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
         go test -v ./...
 
