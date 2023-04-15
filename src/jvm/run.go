@@ -1433,15 +1433,11 @@ func runFrame(fs *list.List) error {
 
 			ref, err := instantiateClass(className)
 			if err != nil {
-				_ = log.Log("Error instantiating class: "+className, log.SEVERE)
+				// error message(s) already shown to user
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			push(f, unsafe.Pointer(ref))
-			// Need to verify that the following code can be eliminated
-			// // to push the object reference as an int64, it must first be converted to an unsafe pointer
-			// rawRef := uintptr(unsafe.Pointer(ref))
-			// push(f, int64(rawRef))
 
 		case NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
