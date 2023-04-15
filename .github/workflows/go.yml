@@ -9,20 +9,25 @@ on:
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
+  nix-build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
-     #   go-version: 1.18.0-rc1
-     #   go-version: 1.18.0
-     #   go-version: 1.19.0
         go-version: 1.20.2
-     #   stable: false
       
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'oracle'
+        java-version: '17'
+
     - name: Build
       run: |
         cd src
@@ -39,4 +44,47 @@ jobs:
         go test -v ./...
 
     - name: Codecov
-      uses: codecov/codecov-action@v2.1.0
+      uses: codecov/codecov-action@v3
+
+  windows-build-and-test:
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.20.2
+      
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'oracle'
+        java-version: '17'
+
+    - name: Build
+      run: |
+        cd src
+        go build -o . -v ./...
+        echo %CD%
+        dir
+        ./jacobin -h
+
+    - name: Test
+      run: |
+        $Env:JACOBIN_HOME = $PWD
+        $Env:JACOBIN_HOME
+        $Env:JACOBIN_TESTDATA = $Env:JACOBIN_HOME
+        $Env:JACOBIN_TESTDATA += '\testdata'
+        $Env:JACOBIN_TESTDATA
+        cd src
+        $Env:JACOBIN_EXE = $Env:JACOBIN_HOME
+        $Env:JACOBIN_EXE += '\src\jacobin.exe'
+        $Env:JACOBIN_EXE
+        go test -v ./...
+
+    - name: Codecov
+      uses: codecov/codecov-action@v3
