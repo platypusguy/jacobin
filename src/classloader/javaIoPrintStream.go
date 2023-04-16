@@ -38,7 +38,7 @@ type GMeth struct {
 type function func([]interface{}) interface{}
 
 func Load_Io_PrintStream() map[string]GMeth {
-    MethodSignatures["java/io/PrintStream.println(V)V"] = // println string
+    MethodSignatures["java/io/PrintStream.println()V"] = // println string
         GMeth{
             ParamSlots: 1, // [0] = PrintStream.out object,
             GFunction:  PrintlnV,
