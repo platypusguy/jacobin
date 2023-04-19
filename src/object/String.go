@@ -60,3 +60,25 @@ func NewString() *Object {
 
     return s
 }
+
+// NewStringFromGoString converts a go string to a Java string
+// converting the individual chars from runees to bytes (if
+// compact strings are enabled) or UTF-16 values if not.
+func NewStringFromGoString(in string) *Object {
+    s := NewString()
+    s.Fields[0].Fvalue = in // test for compact strings and use GoStringToBytes() if on
+    return s
+}
+
+// Convert go string (consiting of 32-bit runes aka chars) to
+// single-byte values--for use in compact strings
+func GoStringToBytes(in string) []byte {
+    bytes := make([]byte, len(in))
+    runes := []rune(in)
+    for i := 0; i < len(in); i++ {
+        r := runes[i]
+        b := byte(r)
+        bytes[i] = b
+    }
+    return bytes
+}
