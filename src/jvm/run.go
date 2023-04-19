@@ -191,7 +191,9 @@ func runFrame(fs *list.List) error {
 					push(f, CPe.intVal)
 				} else if CPe.retType == IS_FLOAT64 {
 					push(f, CPe.floatVal)
-				} else if CPe.retType == IS_STRUCT_ADDR || CPe.retType == IS_STRING_ADDR {
+				} else if CPe.retType == IS_STRUCT_ADDR {
+					push(f, unsafe.Pointer(CPe.addrVal))
+				} else if CPe.retType == IS_STRING_ADDR {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
