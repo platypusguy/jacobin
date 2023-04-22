@@ -63,8 +63,8 @@ func nanoTime([]interface{}) interface{} {
 
 // Exits the program directly, returning the passed in value
 func exitI(params []interface{}) interface{} {
-	exitCode := params[0] // int64
-	var exitStatus = exitCode.(int)
+	exitCode := params[0].(int64) // int64
+	var exitStatus = int(exitCode)
 	shutdown.Exit(exitStatus)
 	return 0 // this code is not executed as previous line ends Jacobin
 }
