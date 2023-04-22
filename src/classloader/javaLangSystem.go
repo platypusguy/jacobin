@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"jacobin/shutdown"
 	"time"
 )
 
@@ -40,6 +41,12 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  nanoTime,
 		}
 
+	MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  exitI,
+		}
+
 	return MethodSignatures
 }
 
@@ -52,4 +59,12 @@ func currentTimeMillis([]interface{}) interface{} {
 // resolution than Java: two successive calls often return the same value.
 func nanoTime([]interface{}) interface{} {
 	return int64(time.Now().UnixNano())
+}
+
+// Exits the program directly, returning the passed in value
+func exitI(params []interface{}) interface{} {
+	exitCode := params[0] // int64
+	var exitStatus = exitCode.(int)
+	shutdown.Exit(exitStatus)
+	return 0 // this code is not executed as previous line ends Jacobin
 }
