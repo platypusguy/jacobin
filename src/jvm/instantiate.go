@@ -13,6 +13,9 @@ import (
 	"jacobin/object"
 	"os"
 	"unsafe"
+	"sync"
+    "time"
+    "errors"
 )
 
 // instantiating a class is a two-part process:
@@ -20,20 +23,42 @@ import (
 // 2) the class fields (if static) and instance fields (if non-static) are allocated. Details
 //    for this second step appear in front of the initializeFields() method.
 
+// Mutex for protecting the Log function during multithreading.
+var mutex = sync.Mutex{}
+
 func instantiateClass(classname string) (*object.Object, error) {
-	_ = log.Log("Instantiating class: "+classname, log.FINE)
-recheck:
-	k, present := classloader.Classes[classname] // TODO: Put a mutex around this the same one used for writing.
-	if k.Status == 'I' {                         // the class is being loaded
-		goto recheck // recheck the status until it changes (i.e., until the class is loaded)
-	} else if !present { // the class has not yet been loaded
-		if classloader.LoadClassFromNameOnly(classname) != nil {
-			_ = log.Log("Error loading class: "+classname+". Exiting.", log.SEVERE)
-		}
-	}
+    _ = log.Log("instantiateClass: Instantiating class: "+classname, log.FINE)
+    countDown := 40 // 20 seconds maximum time to load a class
+    for true {
+        mutex.Lock()
+        k, present := classloader.Classes[classname]
+        mutex.Unlock()
+        if k.Status == 'I' {                         // the class is being loaded
+            if countDown < 1 { // I've waited too long!
+                msg := "instantiateClass: Status is still 'I' waiting for class: "+classname+". Overdue!"
+                err := errors.New(msg)
+                _ = log.Log(msg, log.SEVERE)
+                return nil, err
+            }
+            countDown -= 1
+            time.Sleep(500 * time.Millisecond)
+            continue // recheck the status until it changes (i.e., until the class is loaded)
+        }
+        
+        if present { break }
+        
+        // Not present - try to load from name
+        if classloader.LoadClassFromNameOnly(classname) != nil {
+            msg := "instantiateClass: LoadClassFromNameOnly("+classname+") failed. Exiting."
+            err := errors.New(msg)
+            _ = log.Log(msg, log.SEVERE)
+            return nil, err
+        }
+        break // loaded by name
+    }
 
 	// at this point the class has been loaded into the method area (Classes).
-	k, _ = classloader.Classes[classname]
+	k, _ := classloader.Classes[classname]
 
 	obj := object.Object{
 		Klass: &k,
