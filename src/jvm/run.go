@@ -1543,6 +1543,22 @@ func runFrame(fs *list.List) error {
             }
             push(f, size)
 
+        case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
+            CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+            f.PC += 2
+            CPentry := f.CP.CpIndex[CPslot]
+            if CPentry.Type != classloader.ClassRef {
+                return errors.New("multi-dimensional array presently supports classes only")
+            } else {
+                // CURR: resume here, remove comments from code below
+            }
+
+            // dimensions := uint8(f.Meth[f.PC+1])
+            // dims := int(dimensions)
+            // f.PC += 1
+            // for range dims {
+            //
+            // }
         case IFNULL: // 0xC6 jump if TOS holds a null address
             // null = 0, so we duplicate logic of IFEQ instruction
             value := pop(f).(int64)
