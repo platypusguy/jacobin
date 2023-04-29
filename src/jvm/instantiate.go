@@ -28,7 +28,7 @@ var mutex = sync.Mutex{}
 
 func instantiateClass(classname string) (*object.Object, error) {
     _ = log.Log("instantiateClass: Instantiating class: "+classname, log.FINE)
-    countDown := 4 // 20 seconds maximum time to load a class
+    countDown := 4 // 2 seconds maximum time to load a class
     for true {
         mutex.Lock()
         k, present := classloader.Classes[classname]
