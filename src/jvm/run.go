@@ -1544,21 +1544,99 @@ func runFrame(fs *list.List) error {
             push(f, size)
 
         case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
+            var arrayDesc string
+            var arrayType uint8
+            var multiArray []unsafe.Pointer = nil // the final array
+
+            // The first two chars after the bytecode point to a
+            // classref entry in the CP. In turn, it points to a
+            // string describing the array. Of the form [[L or
+            // similar, in which one [ is present for every dimension
+            // followed by a single letter describing the type of
+            // entry in the final dimension of the array. The letters
+            // are the usual ones used in the JVM for primitives, etc.
+            // as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
             CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
             f.PC += 2
             CPentry := f.CP.CpIndex[CPslot]
             if CPentry.Type != classloader.ClassRef {
                 return errors.New("multi-dimensional array presently supports classes only")
             } else {
-                // CURR: resume here, remove comments from code below
+                utf8Index := f.CP.ClassRefs[CPentry.Slot]
+                arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+            }
+            for i := 0; i < len(arrayDesc); i++ {
+                if arrayDesc[i] != '[' {
+                    arrayType = arrayDesc[i]
+                }
             }
 
-            // dimensions := uint8(f.Meth[f.PC+1])
-            // dims := int(dimensions)
-            // f.PC += 1
-            // for range dims {
-            //
-            // }
+            // get the number of dimensions, then pop off the operand
+            // stack an int for every dimension, giving the size of that
+            // dimension and put them into a slice that starts with
+            // the highest dimension first. So a two-dimensional array
+            // such as x[4][3], would have entries of 4 and 3 respectively
+            // in the dimsizes slice.
+            dimensionCount := int(uint8(f.Meth[f.PC+1]))
+            f.PC += 1
+            dimSizes := make([]int64, dimensionCount+1)
+            // the values on the operand stack give the last dimension
+            // first when popped off the stack, so, they're stored here
+            // in reverse order, so that dimSizes[0] will hold the first
+            // dimenion.
+            // Note we add a zero after the last dimension. A dimension
+            // of zero (whether actually declared or, as here, added by
+            // us means the previous dimension was the last one.
+            dimSizes[dimensionCount-1] = 0
+            for i := dimensionCount - 2; i <= 0; i-- {
+                dimSizes[i] = pop(f).(int64)
+            }
+
+            // now we build the multidimensional array
+            var prevDim []unsafe.Pointer = nil
+
+            for i := 0; i < dimensionCount; i++ {
+                if dimSizes[i+1] == 0 {
+                    // the current dimension is the last one,
+                    // and so it's an array of type arrayType
+                    for j := 0; j < len(prevDim); j++ {
+                        // into each element in the previous array dimension,
+                        // insert a pointer to a new array of the present size
+                        switch arrayType {
+                        case 'B':
+                            newArray := make([]byte, dimSizes[i])
+                            prevDim[j] = unsafe.Pointer(&newArray)
+                        case 'D', 'F': // floating-point values
+                            newArray := make([]float64, dimSizes[i])
+                            prevDim[j] = unsafe.Pointer(&newArray)
+                        case 'L': // pointers/references
+                            newArray := make([]unsafe.Pointer, dimSizes[i])
+                            prevDim[j] = unsafe.Pointer(&newArray)
+                        default: // all else is int
+                            newArray := make([]int64, dimSizes[i])
+                            prevDim[j] = unsafe.Pointer(&newArray)
+                        }
+                    }
+                    break // we're done. This saves one more loop through for statement
+                } else {
+                    // the current dimension is not the last one
+                    // so it's an array of references.
+                    if i == 0 { // the first dimension
+                        multiArray = make([]unsafe.Pointer, dimSizes[0])
+                        prevDim = multiArray
+                    } else { // there's a previous dimension in existence
+                        for j := 0; j < len(prevDim); j++ {
+                            // into each element in the previous array dimension,
+                            // insert a pointer to a new array of the present size
+                            newArray := make([]unsafe.Pointer, dimSizes[i])
+                            prevDim[j] = unsafe.Pointer(&newArray)
+                        }
+                    }
+                }
+            }
+
+            push(f, unsafe.Pointer(&multiArray))
+
         case IFNULL: // 0xC6 jump if TOS holds a null address
             // null = 0, so we duplicate logic of IFEQ instruction
             value := pop(f).(int64)
