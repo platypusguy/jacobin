@@ -37,6 +37,12 @@ const ( // the ArrayTypes
 	INT   = 2
 	BYTE  = 3
 	REF   = 4
+	ARR   = 5  // points to arrays, used in multidimensional arrays
+	ARRF  = 6  // points to arrays of floats--for multidimensional arrays
+	ARRI  = 7  // points to arrays of ints--for multidimensional arrays
+	ARRB  = 8  // points to arrays of bytes--for multidimensional arrays
+	ARRR  = 9  // points to arrays of references--for multidimensional arrays
+	ARRG  = 10 // generic array (of unsafe.Pointers)
 )
 
 // the primitive types as specified in the
@@ -73,6 +79,38 @@ type JacobinFloatArray struct {
 }
 
 type JacobinRefArray struct {
+	Type ArrayType
+	Arr  *[]unsafe.Pointer
+}
+
+// === The following types are used only in multidimensional arrays
+// Array that points to other arrays.
+type JacobinArrArray struct {
+	Type ArrayType
+	Arr  *[]JacobinArrArray
+}
+
+type JacobinArrFloatArray struct {
+	Type ArrayType
+	Arr  *[]JacobinFloatArray
+}
+
+type JacobinArrIntArray struct {
+	Type ArrayType
+	Arr  *[]JacobinIntArray
+}
+
+type JacobinArrByteArray struct {
+	Type ArrayType
+	Arr  *[]JacobinByteArray
+}
+
+type JacobinArrRefArray struct {
+	Type ArrayType
+	Arr  *[]JacobinRefArray
+}
+
+type JacobinArrGenArray struct {
 	Type ArrayType
 	Arr  *[]unsafe.Pointer
 }
