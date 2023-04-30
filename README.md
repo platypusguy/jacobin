@@ -49,11 +49,10 @@ A more-than-minimal JVM written in Go.
 * Initialization
 
 ### Execution
-* Execution of bytecode :pencil2: This is a primary focus of current coding work<br>
-  Status: Most bytecodes operational, including one-dimensional arrays (both primitive and reference)
-
+* Execution of bytecode :pencil2: The primary focus of current coding work<br>
+  Most bytecodes fully operational, including one- and multi-dimensional arrays
+  
 **To do:**
-* Multi-dimensional arrays
 * invokespecial, invokedynamic
 * Calls to superclasses
 * Inner and nested classes
