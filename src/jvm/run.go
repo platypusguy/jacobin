@@ -1584,6 +1584,7 @@ func runFrame(fs *list.List) error {
             // first when popped off the stack, so, they're stored here
             // in reverse order, so that dimSizes[0] will hold the first
             // dimenion.
+            //
             // Note we add a zero after the last dimension. A dimension
             // of zero (whether actually declared or, as here, added by
             // us means the previous dimension was the last one.
@@ -1597,6 +1598,7 @@ func runFrame(fs *list.List) error {
                 return errors.New("cannot create multidimensional arrays > 2 dimesnions")
             }
 
+            // ptrArr is the array of pointer to the leaf arrays
             ptrArr := make([]unsafe.Pointer, dimSizes[0])
             var i int64
             for i = 0; i < dimSizes[0]; i++ {
@@ -1632,103 +1634,11 @@ func runFrame(fs *list.List) error {
                 }
             }
 
-            multiArr := JacobinArrGenArray{
-                Type: ARRI,
+            multiArr := JacobinRefArray{
+                Type: ARRG,
                 Arr:  &ptrArr,
             }
             push(f, unsafe.Pointer(&multiArr))
-
-            /*
-               			arr := make([]unsafe.Pointer, dimSizes[0])
-               			multiArray := new JacobinArrGenArray{
-               				Type: ARRG, // array of unsafe.Pointers
-               				Arr:  &arr,
-               			}
-
-                           switch arrayType {
-                           case 'B': // byte arrays
-               				var j int64
-               				for j = 0; j<dimSizes[0]; j++ {
-               					bytes := make([]JacobinByteArray, dimSizes[1])
-               					byteArray := new JacobinByteArray{
-               						Type: ARRI,
-               						Arr: bytes,
-               					}
-               					*(multiArray.Arr[j]) = &byteArray
-
-                           }
-                           }
-
-               			// now we build the multidimensional array
-               //--			var prevDim []unsafe.Pointer = nil
-
-                           // the last two dimensions are where the magic is
-                           // so we allocate an array that points to the arrays
-                           // of the final type. All higher dimensions are simply
-                           // arrays pointing to other arrays of pointers to arrays.
-               			for i := 0; i < dimensionCount; i++ {
-                               if dimensionCount - 2 == 0 {
-                                   switch arrayType {
-                               case 'B': // byte arrays
-                                   if multiArray != nil {
-
-                                   }
-                           newArray := make([]byte, dimSizes[i])
-                           prevDim[j] = unsafe.Pointer(&newArray)
-                       case 'D', 'F': // floating-point values
-                           newArray := make([]float64, dimSizes[i])
-                           prevDim[j] = unsafe.Pointer(&newArray)
-                       case 'L': // pointers/references
-                           newArray := make([]unsafe.Pointer, dimSizes[i])
-                           prevDim[j] = unsafe.Pointer(&newArray)
-                       default: // all else is int
-                           newArray := make([]int64, dimSizes[i])
-                           prevDim[j] = unsafe.Pointer(&newArray)
-                       }
-
-
-                               }
-               				if dimSizes[i+1] == 0 {
-               					// the current dimension is the last one,
-               					// and so it's an array of type arrayType
-               					for j := 0; j < len(prevDim); j++ {
-               						// into each element in the previous array dimension,
-               						// insert a pointer to a new array of the present size
-               						switch arrayType {
-               						case 'B':
-               							newArray := make([]byte, dimSizes[i])
-               							prevDim[j] = unsafe.Pointer(&newArray)
-               						case 'D', 'F': // floating-point values
-               							newArray := make([]float64, dimSizes[i])
-               							prevDim[j] = unsafe.Pointer(&newArray)
-               						case 'L': // pointers/references
-               							newArray := make([]unsafe.Pointer, dimSizes[i])
-               							prevDim[j] = unsafe.Pointer(&newArray)
-               						default: // all else is int
-               							newArray := make([]int64, dimSizes[i])
-               							prevDim[j] = unsafe.Pointer(&newArray)
-               						}
-               					}
-               					break // we're done. This saves one more loop through for statement
-               				} else {
-               					// the current dimension is not the last one
-               					// so it's an array of references.
-               					if i == 0 { // the first dimension
-               						multiArray = make([]unsafe.Pointer, dimSizes[0])
-               						prevDim = multiArray
-               					} else { // there's a previous dimension in existence
-               						for j := 0; j < len(prevDim); j++ {
-               							// into each element in the previous array dimension,
-               							// insert a pointer to a new array of the present size
-               							newArray := make([]unsafe.Pointer, dimSizes[i])
-               							prevDim[j] = unsafe.Pointer(&newArray)
-               						}
-               					}
-               				}
-               			}
-
-               			push(f, unsafe.Pointer(&multiArray))
-            */
         case IFNULL: // 0xC6 jump if TOS holds a null address
             // null = 0, so we duplicate logic of IFEQ instruction
             value := pop(f).(int64)
