@@ -50,7 +50,7 @@ A more-than-minimal JVM written in Go.
 
 ### Execution
 * Execution of bytecode :pencil2: The primary focus of current coding work<br>
-  Most bytecodes fully operational, including one- and multi-dimensional arrays
+  Most bytecodes fully operational, including one-dimension and multi-dimensional arrays
   
 **To do:**
 * invokespecial, invokedynamic
