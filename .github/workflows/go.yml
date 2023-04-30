@@ -3,6 +3,8 @@ env:
   GO111MODULE: "on"
 on:
   push:
+    paths-ignore:
+      - '*.md'
     branches: [ main ]
   pull_request:
     branches: [ main ]
