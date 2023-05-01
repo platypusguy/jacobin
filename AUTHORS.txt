@@ -11,10 +11,10 @@ All code files for Jacobin begin with the following header:
 
  Andrew Binstock (@platypusguy)
  Spencer Uresk (@suresk)
+ Richard Elkins (@texadactyl)
 
  Several contributors have kindly provided code fixes, as can be
- seen on GitHub in the pull requests and closed issues. Principal
- among these helpful contributors is Richard Elkins (@texadactyl)
+ seen on GitHub in the pull requests and closed issues. 
 
  Many people have contributed useful comments and suggestions, for
  which we are most grateful indeed!
