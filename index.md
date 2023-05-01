@@ -32,6 +32,6 @@ As we progress, we post short explanations of project decisions and explanations
 [Inside Java class files: the constant pool](https://blogs.oracle.com/javamagazine/post/java-class-file-constant-pool)
 
 ### The Team (and Thanks)
-Jacobin is presently being developed by Andrew Binstock ([platypusguy](https://github.com/platypusguy/)) and [Spencer Uresk](https://twitter.com/suresk). Contributors are more than welcome. If you'd like to show your support the project but can't contribute code, we'd love a GitHub star or for you to follow the project. 
+Jacobin is presently being developed by Andrew Binstock ([platypusguy](https://github.com/platypusguy/)), [Spencer Uresk](https://twitter.com/suresk), and [Richard Elkins](https://twitter.com/texadactyl). Contributors are more than welcome. If you'd like to show your support the project but can't contribute code, we'd love a GitHub star or for you to follow the project. 
 
 This project could not have been possible without Github (for the excellent platform), [JetBrains](https://www.jetbrains.com/go/) (for superb tools), Oracle's Java team (for the great technology and [best-in-class documentation](https://docs.oracle.com/javase/specs/index.html)), and these JVM experts: [Ben Evans](https://github.com/kittylyst), [Aleksey Shipilev](https://shipilev.net/), [Chris Newland](https://github.com/sponsors/chriswhocodes), and [Bill Venners](https://github.com/bvenners) who have written helpful, in-depth articles on the machinery of the JVM. A big thanks to all!
