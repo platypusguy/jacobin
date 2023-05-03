@@ -1605,10 +1605,18 @@ func runFrame(fs *list.List) error {
 			// Because of the possibility of a zero-sized dimension
 			// affecting the valid number of dimensions, dimensionCount
 			// can no longer be considered reliable. Use len(dimSizes).
+			if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
+				multiArr, _ := Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
+				push(f, unsafe.Pointer(multiArr))
+				f.PC += 1
+				continue
+			}
+
 			var multiNewArray *JacobinArrRefArray
 			var prev []*JacobinArrRefArray   // contains all the leaf nodes
 			var newGen []*JacobinArrRefArray // new set of leaf nodes
-			for i := 0; i < len(dimSizes)-2; i++ {
+			var i int
+			for i = 0; i < len(dimSizes)-2; i++ {
 				if i == 0 {
 					multiNewArray = MakeArrRefArray(dimSizes[0])
 					for j := 0; j < len(*multiNewArray.Arr); j++ {
@@ -1631,56 +1639,16 @@ func runFrame(fs *list.List) error {
 					}
 					prev = newGen
 				}
-			} // CURR: fold in processing of the last two dimensions
+			}
 
-			if len(dimSizes) > 2 {
-				_ = log.Log("Only 1- and 2-dimensional arrays supported", log.SEVERE)
-				return errors.New("cannot create multidimensional arrays > 2 dimesnions")
+			for k := 0; k < len(prev); k++ {
+				ptr, _ := Make2DimArray(dimSizes[i], dimSizes[i+1], arrayType)
+				arrPtr := unsafe.Pointer(ptr)
+				prev[k] = (*JacobinArrRefArray)(arrPtr)
 			}
 
 			multiArr, _ := Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 
-			// // ptrArr is the array of pointer to the leaf arrays
-			// ptrArr := make([]unsafe.Pointer, dimSizes[0])
-			// var i int64
-			// for i = 0; i < dimSizes[0]; i++ {
-			// 	switch arrayType {
-			// 	case 'B': // byte arrays
-			// 		barArr := make([]JavaByte, dimSizes[1])
-			// 		ba := JacobinByteArray{
-			// 			Type: BYTE,
-			// 			Arr:  &barArr,
-			// 		}
-			// 		ptrArr[i] = unsafe.Pointer(&ba)
-			// 	case 'F', 'D': // float arrays
-			// 		farArr := make([]float64, dimSizes[1])
-			// 		fa := JacobinFloatArray{
-			// 			Type: FLOAT,
-			// 			Arr:  &farArr,
-			// 		}
-			// 		ptrArr[i] = unsafe.Pointer(&fa)
-			// 	case 'L': // reference/pointer arrays
-			// 		rarArr := make([]unsafe.Pointer, dimSizes[1])
-			// 		ra := JacobinRefArray{
-			// 			Type: REF,
-			// 			Arr:  &rarArr,
-			// 		}
-			// 		ptrArr[i] = unsafe.Pointer(&ra)
-			// 	default: // all the integer types
-			// 		iarArr := make([]int64, dimSizes[1])
-			// 		ia := JacobinIntArray{
-			// 			Type: INT,
-			// 			Arr:  &iarArr,
-			// 		}
-			// 		ptrArr[i] = unsafe.Pointer(&ia)
-			// 	}
-			// }
-			//
-			// multiArr := JacobinRefArray{
-			// 	Type: ARRG,
-			// 	Arr:  &ptrArr,
-			// }
-			//
 			push(f, unsafe.Pointer(multiArr))
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
