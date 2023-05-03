@@ -27,7 +27,7 @@ A more-than-minimal JVM written in Go.
 
 **To do**:
  * Handling @files (which contain command-line options)
- * Parsing classpaths
+ * Parsing complex classpaths
 
 ### Class loading
 * Correctly reads and parses most classes
@@ -41,19 +41,18 @@ A more-than-minimal JVM written in Go.
 * Handle inner classes
 
 ### Verification, Linking, Preparation, Initialization
-* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file. 
+* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file.
+* Linking, preparation, and initialization -- minimally and only as needed at execution time
 
 **To do:**
-* Linking and verification
-* Preparation
-* Initialization
+* Verification
+* Robust preparation and initialization
 
 ### Execution
-* Execution of bytecode :pencil2: This is a primary focus of current coding work<br>
-  Status: Most bytecodes operational, including one-dimensional arrays (both primitive and reference)
-
+* Execution of bytecode :pencil2: The primary focus of current coding work<br>
+  180 bytecodes fully operational, including one- and multi-dimensional arrays
+  
 **To do:**
-* Multi-dimensional arrays
 * invokespecial, invokedynamic
 * Calls to superclasses
 * Inner and nested classes
