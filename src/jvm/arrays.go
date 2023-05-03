@@ -133,7 +133,7 @@ func jdkArrayTypeToJacobinType(jdkType int) int {
 
 // Make2DimArray creates a the last two dimensions of a multi-
 // dimensional array. (All the dimensions > 2 are simply arrays
-// of pointers to arrays.
+// of pointers to arrays.)
 func Make2DimArray(ptrArrSize, leafArrSize int64,
 	arrType uint8) (*JacobinRefArray, error) {
 	// ptrArr is the array of pointer to the leaf arrays
