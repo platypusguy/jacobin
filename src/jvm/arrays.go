@@ -130,3 +130,51 @@ func jdkArrayTypeToJacobinType(jdkType int) int {
 		return 0
 	}
 }
+
+// Make2DimArray creates a the last two dimensions of a multi-
+// dimensional array. (All the dimensions > 2 are simply arrays
+// of pointers to arrays.
+func Make2DimArray(ptrArrSize, leafArrSize int64,
+	arrType uint8) (*JacobinRefArray, error) {
+	// ptrArr is the array of pointer to the leaf arrays
+	ptrArr := make([]unsafe.Pointer, ptrArrSize)
+	var i int64
+	for i = 0; i < ptrArrSize; i++ {
+		switch arrType {
+		case 'B': // byte arrays
+			barArr := make([]JavaByte, leafArrSize)
+			ba := JacobinByteArray{
+				Type: BYTE,
+				Arr:  &barArr,
+			}
+			ptrArr[i] = unsafe.Pointer(&ba)
+		case 'F', 'D': // float arrays
+			farArr := make([]float64, leafArrSize)
+			fa := JacobinFloatArray{
+				Type: FLOAT,
+				Arr:  &farArr,
+			}
+			ptrArr[i] = unsafe.Pointer(&fa)
+		case 'L': // reference/pointer arrays
+			rarArr := make([]unsafe.Pointer, leafArrSize)
+			ra := JacobinRefArray{
+				Type: REF,
+				Arr:  &rarArr,
+			}
+			ptrArr[i] = unsafe.Pointer(&ra)
+		default: // all the integer types
+			iarArr := make([]int64, leafArrSize)
+			ia := JacobinIntArray{
+				Type: INT,
+				Arr:  &iarArr,
+			}
+			ptrArr[i] = unsafe.Pointer(&ia)
+		}
+	}
+
+	multiArr := JacobinRefArray{
+		Type: ARRG,
+		Arr:  &ptrArr,
+	}
+	return &multiArr, nil
+}

@@ -1586,8 +1586,9 @@ func runFrame(fs *list.List) error {
             // dimenion.
             //
             // Note we add a zero after the last dimension. A dimension
-            // of zero (whether actually declared or, as here, added by
-            // us means the previous dimension was the last one.
+            // of zero (whether actually declared in the Java source
+            // or, as here, added by us means the previous dimension
+            // was the last one.
             for i := dimensionCount - 1; i >= 0; i-- {
                 dimSizes[i] = pop(f).(int64)
             }
@@ -1598,47 +1599,50 @@ func runFrame(fs *list.List) error {
                 return errors.New("cannot create multidimensional arrays > 2 dimesnions")
             }
 
-            // ptrArr is the array of pointer to the leaf arrays
-            ptrArr := make([]unsafe.Pointer, dimSizes[0])
-            var i int64
-            for i = 0; i < dimSizes[0]; i++ {
-                switch arrayType {
-                case 'B': // byte arrays
-                    barArr := make([]JavaByte, dimSizes[1])
-                    ba := JacobinByteArray{
-                        Type: BYTE,
-                        Arr:  &barArr,
-                    }
-                    ptrArr[i] = unsafe.Pointer(&ba)
-                case 'F', 'D': // float arrays
-                    farArr := make([]float64, dimSizes[1])
-                    fa := JacobinFloatArray{
-                        Type: FLOAT,
-                        Arr:  &farArr,
-                    }
-                    ptrArr[i] = unsafe.Pointer(&fa)
-                case 'L': // reference/pointer arrays
-                    rarArr := make([]unsafe.Pointer, dimSizes[1])
-                    ra := JacobinRefArray{
-                        Type: REF,
-                        Arr:  &rarArr,
-                    }
-                    ptrArr[i] = unsafe.Pointer(&ra)
-                default: // all the integer types
-                    iarArr := make([]int64, dimSizes[1])
-                    ia := JacobinIntArray{
-                        Type: INT,
-                        Arr:  &iarArr,
-                    }
-                    ptrArr[i] = unsafe.Pointer(&ia)
-                }
-            }
+            multiArr, _ := Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 
-            multiArr := JacobinRefArray{
-                Type: ARRG,
-                Arr:  &ptrArr,
-            }
-            push(f, unsafe.Pointer(&multiArr))
+            // // ptrArr is the array of pointer to the leaf arrays
+            // ptrArr := make([]unsafe.Pointer, dimSizes[0])
+            // var i int64
+            // for i = 0; i < dimSizes[0]; i++ {
+            // 	switch arrayType {
+            // 	case 'B': // byte arrays
+            // 		barArr := make([]JavaByte, dimSizes[1])
+            // 		ba := JacobinByteArray{
+            // 			Type: BYTE,
+            // 			Arr:  &barArr,
+            // 		}
+            // 		ptrArr[i] = unsafe.Pointer(&ba)
+            // 	case 'F', 'D': // float arrays
+            // 		farArr := make([]float64, dimSizes[1])
+            // 		fa := JacobinFloatArray{
+            // 			Type: FLOAT,
+            // 			Arr:  &farArr,
+            // 		}
+            // 		ptrArr[i] = unsafe.Pointer(&fa)
+            // 	case 'L': // reference/pointer arrays
+            // 		rarArr := make([]unsafe.Pointer, dimSizes[1])
+            // 		ra := JacobinRefArray{
+            // 			Type: REF,
+            // 			Arr:  &rarArr,
+            // 		}
+            // 		ptrArr[i] = unsafe.Pointer(&ra)
+            // 	default: // all the integer types
+            // 		iarArr := make([]int64, dimSizes[1])
+            // 		ia := JacobinIntArray{
+            // 			Type: INT,
+            // 			Arr:  &iarArr,
+            // 		}
+            // 		ptrArr[i] = unsafe.Pointer(&ia)
+            // 	}
+            // }
+            //
+            // multiArr := JacobinRefArray{
+            // 	Type: ARRG,
+            // 	Arr:  &ptrArr,
+            // }
+            //
+            push(f, unsafe.Pointer(multiArr))
         case IFNULL: // 0xC6 jump if TOS holds a null address
             // null = 0, so we duplicate logic of IFEQ instruction
             value := pop(f).(int64)
