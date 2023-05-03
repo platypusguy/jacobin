@@ -1602,8 +1602,38 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-			// for the moment only two dimensions
-			if dimensionCount > 2 {
+			// Because of the possibility of a zero-sized dimension
+			// affecting the valid number of dimensions, dimensionCount
+			// can no longer be considered reliable. Use len(dimSizes).
+			var multiNewArray *JacobinArrRefArray
+			var prev []*JacobinArrRefArray   // contains all the leaf nodes
+			var newGen []*JacobinArrRefArray // new set of leaf nodes
+			for i := 0; i < len(dimSizes)-2; i++ {
+				if i == 0 {
+					multiNewArray = MakeArrRefArray(dimSizes[0])
+					for j := 0; j < len(*multiNewArray.Arr); j++ {
+						content := *multiNewArray.Arr
+						element := content[j]
+						prev = append(prev, &element)
+					}
+					continue
+				} else {
+					allPrev := len(prev)
+					for m := 0; m < allPrev; m++ {
+						// make all previous leaf elements now point to new array
+						prev[i] = MakeArrRefArray(dimSizes[i])
+						// all the elements of the new array are stored in newGen
+						// then newGen will become prev
+						newElements := *prev[i].Arr
+						for _, v := range newElements {
+							newGen = append(newGen, &v)
+						}
+					}
+					prev = newGen
+				}
+			} // CURR: fold in processing of the last two dimensions
+
+			if len(dimSizes) > 2 {
 				_ = log.Log("Only 1- and 2-dimensional arrays supported", log.SEVERE)
 				return errors.New("cannot create multidimensional arrays > 2 dimesnions")
 			}

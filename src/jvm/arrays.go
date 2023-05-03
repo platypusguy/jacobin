@@ -107,7 +107,7 @@ type JacobinArrByteArray struct {
 
 type JacobinArrRefArray struct {
 	Type ArrayType
-	Arr  *[]JacobinRefArray
+	Arr  *[]JacobinArrRefArray
 }
 
 type JacobinArrGenArray struct {
@@ -177,4 +177,16 @@ func Make2DimArray(ptrArrSize, leafArrSize int64,
 		Arr:  &ptrArr,
 	}
 	return &multiArr, nil
+}
+
+// MakeArrRefArray makes an array of pointers to other
+// arrays of pointers. Each of these represents the elements
+// of the dimensions > 2.
+func MakeArrRefArray(size int64) *JacobinArrRefArray {
+	rarArr := make([]JacobinArrRefArray, size)
+	ra := JacobinArrRefArray{
+		Type: ARRR,
+		Arr:  &rarArr,
+	}
+	return &ra
 }
