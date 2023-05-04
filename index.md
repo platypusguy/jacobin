@@ -1,6 +1,6 @@
 ## Welcome to Jacobin JVM
 
-Jacobin is an implementation of the [JVM specification for Java 17](https://docs.oracle.com/javase/specs/jvms/se17/html/) as published by Oracle Corp. and filled out by numerous articles and technical reports on the workings of the machinery in the JVM. It is written entirely in Go with no dependencies. 
+Jacobin is an implementation of the [JVM specification for Java 17](https://docs.oracle.com/javase/specs/jvms/se17/html/). It is written entirely in Go with no dependencies. 
 
 The goal is to provide a more-than-minimal implementation of the JVM that can run most class files and JARs and deliver the same results as the OpenJDK-based JVMs (that is, the majority of JVM implementations today). A paramount consideration in the design and implementation of Jacobin is the codebase: making it cohesive and containing clear code. The cohesiveness, extensive commenting, and large test suite enable professionals who want to know more about how the JVM works to find the information quickly and in an easily accessible setting. Additional information on the [Jacobin wiki](https://github.com/platypusguy/jacobin/wiki/Jacobin-Documentation-Home) provides more background and insight. Because Jacobin is strictly a JVM, its code is tightly focused on Java program execution. An important factor in reducing the size of the codebase and executable is that Jacobin relies on Go's built-in memory management to perform garbage collection, and so it contains no GC code.
 
