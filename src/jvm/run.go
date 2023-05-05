@@ -1615,7 +1615,7 @@ func runFrame(fs *list.List) error {
 			var multiNewArray *JacobinArrRefArray
 			var prev []*JacobinArrRefArray   // contains all the leaf nodes
 			var newGen []*JacobinArrRefArray // new set of leaf nodes
-			var i int
+			var i int                        // CURR: need to test 3D arrays
 			for i = 0; i < len(dimSizes)-2; i++ {
 				if i == 0 {
 					multiNewArray = MakeArrRefArray(dimSizes[0])

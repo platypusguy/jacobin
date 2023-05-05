@@ -20,6 +20,7 @@ import (
     "runtime"
     "strconv"
     "strings"
+    "sync"
 )
 
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
@@ -153,7 +154,7 @@ type bootstrapMethod struct {
     args      []int // arguments: indexes to loadable arguments from the CP
 }
 
-// var lock = sync.RWMutex{}
+var ClassesLock = sync.RWMutex{}
 
 // cfe = class format error, which is the error thrown by the parser for most
 // of the errors arising from malformed bytecode. Prints out file and line# where
@@ -395,7 +396,9 @@ func ParseAndPostClass(cl Classloader, filename string, rawBytes []byte) (string
     _ = insert(fullyParsedClass.className, eKF)
 
     // record the class in the classloader
+    ClassesLock.Lock()
     cl.Classes[fullyParsedClass.className] = eKF
+    ClassesLock.Unlock()
     return fullyParsedClass.className, nil
 }
 

@@ -62,7 +62,9 @@ func instantiateClass(classname string) (*object.Object, error) {
     }
 
     // at this point the class has been loaded into the method area (Classes).
+    classloader.ClassesLock.RLock()
     k, _ = classloader.Classes[classname]
+    classloader.ClassesLock.RUnlock()
 
     obj := object.Object{
         Klass: &k,
@@ -76,17 +78,18 @@ func instantiateClass(classname string) (*object.Object, error) {
     if len(k.Data.Fields) > 0 {
         for i := 0; i < len(k.Data.Fields); i++ {
             f := k.Data.Fields[i]
-            desc := k.Data.CP.CpIndex[f.Desc]
-            if desc.Type != classloader.NameAndType {
-                _ = log.Log("error creating field in: "+classname, log.SEVERE)
-                return nil, classloader.CFE("invalid field type")
-            }
-            nameAndType := k.Data.CP.NameAndTypes[desc.Slot]
-            ftype := classloader.FetchUTF8stringFromCPEntryNumber(
-                &k.Data.CP, nameAndType.DescIndex)
+            // name := k.Data.CP.CpIndex[f.Name]
+            desc := k.Data.CP.Utf8Refs[f.Desc]
+            // if desc.Type != classloader.NameAndType {
+            // 	_ = log.Log("error creating field in: "+classname, log.SEVERE)
+            // 	return nil, classloader.CFE("invalid field type")
+            // }
+            // nameAndType := k.Data.CP.NameAndTypes[desc.Slot]
+            // ftype := classloader.FetchUTF8stringFromCPEntryNumber(
+            // 	&k.Data.CP, nameAndType.DescIndex)
 
             fieldToAdd := new(object.Field)
-            fieldToAdd.Ftype = ftype
+            fieldToAdd.Ftype = desc
             switch string(fieldToAdd.Ftype[0]) {
             case "L", "[": // it's a reference
                 fieldToAdd.Fvalue = nil
