@@ -3083,9 +3083,9 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
-	ClassArea = &sync.Map{}
-	if ClassAreaSize() != 0 {
-		t.Errorf("Unexpected error in initializing ClassArea (which is the method area)")
+	MethArea = &sync.Map{}
+	if MethAreaSize() != 0 {
+		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
 	}
 
 	normalStderr := os.Stderr
@@ -3101,9 +3101,9 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if ClassAreaSize() != 1 {
-		t.Errorf("Expected ClassArea to have 1 entry, but it has %d",
-			ClassAreaSize())
+	if MethAreaSize() != 1 {
+		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+			MethAreaSize())
 	}
 
 	_ = w.Close()
@@ -3121,8 +3121,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
 
-	if ClassAreaSize() != 0 {
-		t.Errorf("Unexpected error in initializing ClassArea (which is the method area)")
+	if MethAreaSize() != 0 {
+		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
 	}
 
 	normalStderr := os.Stderr
@@ -3138,9 +3138,9 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if ClassAreaSize() != 1 {
-		t.Errorf("Expected ClassArea to have 1 entry, but it has %d",
-			ClassAreaSize())
+	if MethAreaSize() != 1 {
+		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+			MethAreaSize())
 	}
 
 	if BootstrapCL.ClassCount != 1 {
@@ -3150,12 +3150,12 @@ func TestLoadClassByNameOnly(t *testing.T) {
 
 	err = LoadClassFromNameOnly("java/lang/Class")
 	if err != nil {
-		t.Errorf("Got unexpected error looking up loaded class in ClassArea: %s", err.Error())
+		t.Errorf("Got unexpected error looking up loaded class in MethArea: %s", err.Error())
 	}
 
-	if ClassAreaSize() != 1 { // count should still be 1
-		t.Errorf("Expected ClassArea to have 1 entry, but it has %d",
-			ClassAreaSize())
+	if MethAreaSize() != 1 { // count should still be 1
+		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+			MethAreaSize())
 	}
 
 	// now try loading a non-existent class by name only
@@ -3164,9 +3164,9 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Expected an error for attempt to load non-existent class")
 	}
 
-	if ClassAreaSize() != 2 { // count should still be 2, one for Class.class, and one entry for the unsuccessful SnoopDog
-		t.Errorf("Expected ClassArea to have 2 entry, but it has %d",
-			ClassAreaSize())
+	if MethAreaSize() != 2 { // count should still be 2, one for Class.class, and one entry for the unsuccessful SnoopDog
+		t.Errorf("Expected MethArea to have 2 entry, but it has %d",
+			MethAreaSize())
 	}
 
 	_ = w.Close()

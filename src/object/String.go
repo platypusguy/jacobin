@@ -15,7 +15,7 @@ import "jacobin/classloader"
 func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
-	k := classloader.ClassAreaFetch("java/lang/String")
+	k := classloader.MethAreaFetch("java/lang/String")
 	s.Klass = k
 
 	// ==== now the fields ====

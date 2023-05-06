@@ -315,7 +315,7 @@ func TestInsertionIntoMethodArea(t *testing.T) {
     _, wout, _ := os.Pipe()
     os.Stdout = wout
 
-    ClassArea = &sync.Map{}
+    MethArea = &sync.Map{}
 
     k := Klass{}
     k.Status = 'F'
@@ -323,7 +323,7 @@ func TestInsertionIntoMethodArea(t *testing.T) {
     clData := ClData{}
     clData.Name = "WillyWonkaClass"
     k.Data = &clData
-    ClassAreaInsert("WillyWonkaClass", &k)
+    MethAreaInsert("WillyWonkaClass", &k)
 
     // restore stderr and stdout to what they were before
     _ = w.Close()
@@ -339,9 +339,9 @@ func TestInsertionIntoMethodArea(t *testing.T) {
         t.Error("Got unexpected logging message for insertion of Klass into method area: " + msg)
     }
 
-    if ClassAreaSize() != 1 {
+    if MethAreaSize() != 1 {
         t.Errorf("Expecting method area to have a size of 1, got: %d",
-            ClassAreaSize())
+            MethAreaSize())
     }
 }
 

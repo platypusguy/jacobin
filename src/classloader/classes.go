@@ -50,7 +50,7 @@ type Static struct {
 	CP        *CPool  // the constant pool for the class
 }
 
-var MethAreaMutex sync.RWMutex // All additions or updates to ClassArea map come through this mutex
+var MethAreaMutex sync.RWMutex // All additions or updates to MethArea map come through this mutex
 
 type ClData struct {
 	Name       string
@@ -223,17 +223,17 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 
 // FetchMethodAndCP gets the method and the CP for the class of the method.
 // It searches for the method first by checking the MTable (that is, the method table).
-// If it doesn't find it there, then it looks for it in the class entry in ClassArea.
+// If it doesn't find it there, then it looks for it in the class entry in MethArea.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
 	if methEntry.Meth == nil { // method is not in the MTable, so find it and put it there
-		k := ClassAreaFetch(class)
+		k := MethAreaFetch(class)
 		if k.Status == 'I' { // class is being initialized by a loader, so wait
 			time.Sleep(15 * time.Millisecond) // TODO: must be a better way to do this
-			k = ClassAreaFetch(class)
+			k = MethAreaFetch(class)
 		}
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned

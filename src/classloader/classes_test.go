@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-// test insertion of klass into the method area (called ClassArea[])
+// test insertion of klass into the method area (called MethArea[])
 func TestInsertValid(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
@@ -31,8 +31,8 @@ func TestInsertValid(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	ClassArea = &sync.Map{}
-	currLen := ClassAreaSize()
+	MethArea = &sync.Map{}
+	currLen := MethAreaSize()
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -41,11 +41,11 @@ func TestInsertValid(t *testing.T) {
 	k.Data.Name = "testClass"
 	k.Loader = "testLoader"
 	k.Status = 'F'
-	ClassAreaInsert("TestEntry", &k)
+	MethAreaInsert("TestEntry", &k)
 
-	newLen := ClassAreaSize()
+	newLen := MethAreaSize()
 	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion ClassArea[] to have length of %d, got: %d",
+		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
 
@@ -79,8 +79,8 @@ func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	ClassArea = &sync.Map{}
-	currLen := ClassAreaSize()
+	MethArea = &sync.Map{}
+	currLen := MethAreaSize()
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -89,17 +89,17 @@ func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	k.Data.Name = "testClass"
 	k.Loader = ""
 	k.Status = 'F'
-	ClassAreaInsert("TestEntry", &k)
+	MethAreaInsert("TestEntry", &k)
 
-	newLen := ClassAreaSize()
+	newLen := MethAreaSize()
 	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion ClassArea[] to have length of %d, got: %d",
+		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
 
 	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
 	if err == nil {
-		t.Errorf("Expecting an err msg for invalid ClassAreaFetch in MTable, but got none")
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch in MTable, but got none")
 	}
 
 	// restore stderr and stdout to what they were before
@@ -132,8 +132,8 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	ClassArea = &sync.Map{}
-	currLen := ClassAreaSize()
+	MethArea = &sync.Map{}
+	currLen := MethAreaSize()
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -143,17 +143,17 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 
 	k.Loader = "testloader"
 	k.Status = 'F'
-	ClassAreaInsert("TestEntry", &k)
+	MethAreaInsert("TestEntry", &k)
 
-	newLen := ClassAreaSize()
+	newLen := MethAreaSize()
 	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion ClassArea[] to have length of %d, got: %d",
+		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
 
 	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
 	if err == nil {
-		t.Errorf("Expecting an err msg for invalid ClassAreaFetch of main() in MTable, but got none")
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
 	}
 
 	// restore stderr and stdout to what they were before
@@ -186,8 +186,8 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	ClassArea = &sync.Map{}
-	currLen := ClassAreaSize()
+	MethArea = &sync.Map{}
+	currLen := MethAreaSize()
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -197,18 +197,18 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 
 	k.Loader = "testloader"
 	k.Status = 'F'
-	ClassAreaInsert("TestEntry", &k)
+	MethAreaInsert("TestEntry", &k)
 
-	newLen := ClassAreaSize()
+	newLen := MethAreaSize()
 	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion ClassArea[] to have length of %d, got: %d",
+		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
 
 	// fetch a non-existent class, called 'gherkin'
 	_, err := FetchMethodAndCP("TestEntry", "gherkin", "([L)V")
 	if err == nil {
-		t.Errorf("Expecting an err msg for invalid ClassAreaFetch of main() in MTable, but got none")
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
 	}
 
 	// restore stderr and stdout to what they were before

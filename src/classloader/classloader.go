@@ -232,7 +232,7 @@ func walk(s string, d fs.DirEntry, err error) error {
 // It does this by reading the class entries (7) in the CP and sending the class names it finds
 // there to a go channel that will load the class.
 func LoadReferencedClasses(clName string) {
-	currClass := ClassAreaFetch(clName)
+	currClass := MethAreaFetch(clName)
 	if currClass == nil {
 		return
 	}
@@ -257,7 +257,7 @@ func LoadReferencedClasses(clName string) {
 // determines the classloader, checks if the class is already loaded, and loads it if not.
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
-		present := ClassAreaFetch(name)
+		present := MethAreaFetch(name)
 		if present != nil { // if the class is already loaded, skip rest of this loop
 			continue
 		}
@@ -268,7 +268,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			Loader: "",
 			Data:   nil,
 		}
-		ClassAreaInsert(name, &eKI)
+		MethAreaInsert(name, &eKI)
 		_ = LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
 	}
 	globals.LoaderWg.Done()
@@ -276,7 +276,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 
 func LoadClassFromNameOnly(name string) error {
 	var err error
-	k := ClassAreaFetch(name)
+	k := MethAreaFetch(name)
 	if k != nil && k.Data != nil { // if the class is already loaded, skip rest of this
 		return nil
 	}
@@ -287,7 +287,7 @@ func LoadClassFromNameOnly(name string) error {
 		Loader: "",
 		Data:   nil,
 	}
-	ClassAreaInsert(name, &eKI)
+	MethAreaInsert(name, &eKI)
 
 	validName := util.ConvertToPlatformPathSeparators(name)
 	if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
@@ -398,7 +398,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 		Loader: cl.Name,
 		Data:   &classToPost,
 	}
-	ClassAreaInsert(fullyParsedClass.className, &eKF)
+	MethAreaInsert(fullyParsedClass.className, &eKF)
 
 	// // record the class in the classloader
 	ClassesLock.Lock()
@@ -407,10 +407,10 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	return fullyParsedClass.className, nil
 }
 
-// =====  replaced by ClassArea.ClassAreaInsert
-// // insert the fully parsed class into the method area (exec.ClassArea)
+// =====  replaced by MethArea.MethAreaInsert
+// // insert the fully parsed class into the method area (exec.MethArea)
 // func insert(name string, klass Klass) error {
-// 	classArea.ClassArea.Store(name, klass)
+// 	classArea.MethArea.Store(name, klass)
 //
 // 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
 // 		_ = log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
@@ -419,7 +419,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 // }
 
 // load the parsed class into a form suitable for posting to the method area (which is
-// exec.ClassArea. This mostly involves copying the data, converting most indexes to uint16
+// exec.MethArea. This mostly involves copying the data, converting most indexes to uint16
 // and removing some fields we needed in parsing, but which are no longer required.
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
