@@ -15,6 +15,7 @@ import (
 // var MethArea = make(map[string]Klass)
 var MethArea *sync.Map
 var methAreaSize = 0
+var MethAreaMutex sync.RWMutex // All additions or updates to MethArea map come through this mutex
 
 func MethAreaFetch(key string) *Klass {
     v, _ := MethArea.Load(key)
@@ -26,7 +27,9 @@ func MethAreaFetch(key string) *Klass {
 
 func MethAreaInsert(name string, klass *Klass) {
     MethArea.Store(name, klass)
+    MethAreaMutex.Lock()
     methAreaSize++
+    MethAreaMutex.Unlock()
 
     if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
         _ = log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
@@ -38,7 +41,10 @@ func MethAreaInsert(name string, klass *Klass) {
 // we have to track our additions with a counter, which is
 // returned here.
 func MethAreaSize() int {
-    return methAreaSize
+    MethAreaMutex.RLock()
+    size := methAreaSize
+    MethAreaMutex.RUnlock()
+    return size
 }
 
 func initMethodArea() {
