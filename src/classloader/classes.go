@@ -13,9 +13,6 @@ import (
 	"time"
 )
 
-// Classes contains all the loaded classes. Key is the class name in java/lang/Object format.
-var Classes = make(map[string]Klass) // TODO: make these maps sync.Map
-
 // Statics is a fast-lookup map of static variables and functions. The int64 value
 // contains the index into the statics array where the entry is stored.
 // Statics are placed into this map only when they are first referenced and resolved.
@@ -53,7 +50,7 @@ type Static struct {
 	CP        *CPool  // the constant pool for the class
 }
 
-var MethAreaMutex sync.RWMutex // All additions or updates to Classes map come through this mutex
+var MethAreaMutex sync.RWMutex // All additions or updates to ClassArea map come through this mutex
 
 type ClData struct {
 	Name       string
@@ -226,17 +223,17 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 
 // FetchMethodAndCP gets the method and the CP for the class of the method.
 // It searches for the method first by checking the MTable (that is, the method table).
-// If it doesn't find it there, then it looks for it in the class entry in Classes.
+// If it doesn't find it there, then it looks for it in the class entry in ClassArea.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
 	if methEntry.Meth == nil { // method is not in the MTable, so find it and put it there
-		k := Classes[class]
+		k := ClassAreaFetch(class)
 		if k.Status == 'I' { // class is being initialized by a loader, so wait
 			time.Sleep(15 * time.Millisecond) // TODO: must be a better way to do this
-			k = Classes[class]
+			k = ClassAreaFetch(class)
 		}
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned

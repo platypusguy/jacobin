@@ -86,7 +86,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	err := classloader.Init()
 
-	_, err = classloader.ParseAndPostClass(classloader.BootstrapCL, "Hello2", Hello2Bytes)
+	_, err = classloader.ParseAndPostClass(&classloader.BootstrapCL, "Hello2", Hello2Bytes)
 	if err != nil {
 		t.Errorf("Got error from classloader.ParseAndPostCLass: %s", error.Error(err))
 	}
@@ -126,7 +126,7 @@ func TestHexHello2InvalidMagicNumber(t *testing.T) {
 
 	var testBytes []byte = Hello2Bytes[0:2]
 
-	_, err = classloader.ParseAndPostClass(classloader.BootstrapCL, "Hello2", testBytes)
+	_, err = classloader.ParseAndPostClass(&classloader.BootstrapCL, "Hello2", testBytes)
 	if err == nil {
 		t.Error("Expected an error, but got none.")
 	}
@@ -161,7 +161,7 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	var testBytes = Hello2Bytes[0:8]
 	testBytes[7] = 99 // change class to unsupported version of Java class files
 
-	_, err = classloader.ParseAndPostClass(classloader.BootstrapCL, "Hello2", testBytes)
+	_, err = classloader.ParseAndPostClass(&classloader.BootstrapCL, "Hello2", testBytes)
 	if err == nil {
 		t.Error("Expected an error, but got none.")
 	}
