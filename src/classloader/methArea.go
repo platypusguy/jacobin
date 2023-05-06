@@ -17,6 +17,9 @@ var MethArea *sync.Map
 var methAreaSize = 0
 var MethAreaMutex sync.RWMutex // All additions or updates to MethArea map come through this mutex
 
+// MethAreaFetch retrieves a pointer to a loaded class from the
+// method area. In the event the class is not present there, the
+// function returns nil.
 func MethAreaFetch(key string) *Klass {
     v, _ := MethArea.Load(key)
     if v == nil {
@@ -25,6 +28,8 @@ func MethAreaFetch(key string) *Klass {
     return v.(*Klass)
 }
 
+// MethAreaInsert adds a class to the method area, using a pointer
+// to the parsed class.
 func MethAreaInsert(name string, klass *Klass) {
     MethArea.Store(name, klass)
     MethAreaMutex.Lock()
@@ -47,6 +52,8 @@ func MethAreaSize() int {
     return size
 }
 
+// initMethodArea simply initializes MethArea (the method area
+// table of loaded classes) and initializes the counter of classes.
 func initMethodArea() {
     ma := sync.Map{}
     MethArea = &ma
