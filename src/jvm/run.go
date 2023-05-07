@@ -211,7 +211,8 @@ func runFrame(fs *list.List) error {
 				wint64 = int64(binary.BigEndian.Uint64(wbytes))
 				// debugging: fmt.Printf("SIPUSH DEBUG 1 wbyte1=%x, wbyte2=%x, wint64=%x\n", wbyte1, wbyte2, wint64)
 			} else {
-				// Not negative (left-most bit off) : just cast wbyte as an int64
+				// Not negative (left-most bit off) : just cast wbyte1 and wbyte2 as an int64
+				// and use the following linear formula for deriving the int64 value to push on the stack
 				wint64 = (int64(wbyte1) * 256) + int64(wbyte2)
 				// debugging: fmt.Printf("SIPUSH DEBUG 2 wbyte1=%x, wbyte2=%x, wint64=%x\n", wbyte1, wbyte2, wint64)
 			}
