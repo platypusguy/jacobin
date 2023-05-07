@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"encoding/binary"
 	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/frames"
@@ -121,18 +122,27 @@ func runFrame(fs *list.List) error {
 		return err
 	}
 
-	// the frame's method is not a golang method, so it's Java bytecode, which
-	// is interpreted in the rest of this function.
-	for f.PC < len(f.Meth) {
-		if MainThread.Trace {
-			_ = log.Log("class: "+f.ClName+
-				", meth: "+f.MethName+
-				", pc: "+strconv.Itoa(f.PC)+
-				", inst: "+BytecodeNames[int(f.Meth[f.PC])]+
-				", tos: "+strconv.Itoa(f.TOS),
-				log.TRACE_INST)
-		}
-		switch f.Meth[f.PC] { // cases listed in numerical value of opcode
+    // the frame's method is not a golang method, so it's Java bytecode, which
+    // is interpreted in the rest of this function.
+    for f.PC < len(f.Meth) {
+        if MainThread.Trace {
+            wstr2 := ""
+            // Not working yet!
+            //for j := -1; j < f.TOS; j++ {
+            //	wuint64 := *((*uint64)(unsafe.Pointer(&f.OpStack[f.TOS])))
+            //    wstr2 += fmt.Sprintf(" %08x", wuint64)
+            //}
+            wstr := "class: "+f.ClName+
+                ", meth: "+f.MethName+
+                ", pc: "+strconv.Itoa(f.PC)+
+                ", inst: "+BytecodeNames[int(f.Meth[f.PC])]+
+                ", tos: "+strconv.Itoa(f.TOS)
+            if len(wstr2) > 0 {
+                wstr += ", stack:" + wstr2
+            }           
+            _ = log.Log(wstr, log.TRACE_INST)
+        }
+        switch f.Meth[f.PC] { // cases listed in numerical value of opcode
 		case NOP:
 			break
 		case ACONST_NULL: // 0x01   (push null onto opStack)
@@ -170,12 +180,43 @@ func runFrame(fs *list.List) error {
 			push(f, 1.0)
 			push(f, 1.0)
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
-			push(f, int64(f.Meth[f.PC+1]))
+			wbyte := f.Meth[f.PC+1]
+			var wint64 int64
+			if (wbyte & 0x80) == 0x80 { // Negative wbyte (left-most bit on)?
+				// Negative wbyte : form wbytes = 7 0xFFs concatenated with the wbyte
+				var wbytes = [] byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
+				wbytes[7] = wbyte
+				// Copy byte for byte, as-is, from wbytes to wint64
+				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
+				wint64 = int64(binary.BigEndian.Uint64(wbytes))
+				// debugging: fmt.Printf("BIPUSH DEBUG 1 wbyte=%x, wint64=%x\n", wbyte, wint64)
+			} else {
+				// Not negative (left-most bit off) : just cast wbyte as an int64
+				wint64 = int64(wbyte)
+				// debugging: fmt.Printf("BIPUSH DEBUG 2 wbyte=%x, wint64=%d\n", wbyte, wint64)
+			}
+			push(f, wint64)
 			f.PC += 1
-		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
-			value := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+		case SIPUSH: //	0x11	(nice theory: create int from next two bytes and push the int)
+			wbyte1 := f.Meth[f.PC+1]
+			wbyte2 := f.Meth[f.PC+2]
+			var wint64 int64
+			if (wbyte1 & 0x80) == 0x80 { // Negative wbyte1 (left-most bit on)?
+				// Negative wbyte1 : form wbytes = 6 0xFFs concatenated with the wbyte1 and wbyte2
+				var wbytes = [] byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}
+				wbytes[6] = wbyte1
+				wbytes[7] = wbyte2
+				// Copy byte for byte, as-is, from wbytes to wint64
+				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
+				wint64 = int64(binary.BigEndian.Uint64(wbytes))
+				// debugging: fmt.Printf("SIPUSH DEBUG 1 wbyte1=%x, wbyte2=%x, wint64=%x\n", wbyte1, wbyte2, wint64)
+			} else {
+				// Not negative (left-most bit off) : just cast wbyte as an int64
+				wint64 = (int64(wbyte1) * 256) + int64(wbyte2)
+				// debugging: fmt.Printf("SIPUSH DEBUG 2 wbyte1=%x, wbyte2=%x, wint64=%x\n", wbyte1, wbyte2, wint64)
+			}
 			f.PC += 2
-			push(f, int64(value))
+			push(f, wint64)
 		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			idx := f.Meth[f.PC+1]
 			f.PC += 1
