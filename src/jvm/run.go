@@ -983,12 +983,26 @@ func runFrame(fs *list.List) error {
 			val3 := val1 ^ val2
 			push(f, val3)
 			push(f, val3)
-		case IINC: // 	0x84    (increment local variable by a constant)
+		case IINC: // 	0x84    (increment local variable by a signed byte constant)
 			localVarIndex := int64(f.Meth[f.PC+1])
-			constAmount := int64(f.Meth[f.PC+2])
+			wbyte := f.Meth[f.PC+2]
+			var increment int64 
+			if (wbyte & 0x80) == 0x80 { // Negative wbyte (left-most bit on)?
+				// Negative wbyte : form wbytes = 7 0xFFs concatenated with the wbyte
+				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
+				wbytes[7] = wbyte
+				// Copy byte for byte, as-is, from wbytes to wint64
+				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
+				increment = int64(binary.BigEndian.Uint64(wbytes))
+			} else {
+				// Not negative (left-most bit off) : just cast wbyte as an int64
+				increment = int64(wbyte)
+			}
 			f.PC += 2
 			orig := f.Locals[localVarIndex].(int64)
-			f.Locals[localVarIndex] = orig + constAmount
+			traceInfo := fmt.Sprintf("DEBUG IINC orig=%d, increment=%d", orig, increment)
+			_ = log.Log(traceInfo, log.TRACE_INST)
+			f.Locals[localVarIndex] = orig + increment
 		case I2F: //	0x86 	( convert int to float)
 			intVal := pop(f).(int64)
 			push(f, float64(intVal))
