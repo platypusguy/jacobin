@@ -20,22 +20,23 @@ import (
 //
 // class Hello3 {
 //
-// 	public static void main( String[] args) {
-// 		int x;
-// 		for( int i = 0; i < 10; i++) {
-// 			x = addTwo(i, i-1);
-// 			System.out.println( x );
-// 		}
-// 	}
+//		public static void main( String[] args) {
+//			int x;
+//			for( int i = 0; i < 10; i++) {
+//				x = addTwo(i, i-1);
+//				System.out.println( x );
+//			}
+//		}
 //
-// 	static int addTwo(int j, int k) {
-// 		int m = multTwo(j, k);
-// 		return m+1;
-// 	}
+//		static int addTwo(int j, int k) {
+//			int m = multTwo(j, k);
+//			return m+1;
+//		}
 //
-// 	static int multTwo(int m, int n){
-// 		return m*n;
-// }
+//		static int multTwo(int m, int n){
+//			return m*n;
+//	}
+//
 // }
 //
 // To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
@@ -299,7 +300,7 @@ func TestRunHello3TraceInst(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	slurpErr := string(slurp)
-	if !strings.Contains(slurpErr, "class: Hello3, meth: main, pc: 29, inst: RETURN, tos: -1") {
+	if !strings.Contains(slurpErr, "Hello3     meth: main       PC:  29, RETURN        TOS:  -") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 

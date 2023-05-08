@@ -122,25 +122,29 @@ func runFrame(fs *list.List) error {
 		return err
 	}
 
-    // the frame's method is not a golang method, so it's Java bytecode, which
-    // is interpreted in the rest of this function.
-    for f.PC < len(f.Meth) {
-        if MainThread.Trace {
-            wstr2 := ""
-            for j := -1; j < f.TOS; j++ {
-                wstr2 += fmt.Sprintf(" %v(%T)", f.OpStack[f.TOS], f.OpStack[f.TOS])
-            }
-            wstr := "class: "+f.ClName+
-                ", meth: "+f.MethName+
-                ", pc: "+strconv.Itoa(f.PC)+
-                ", inst: "+BytecodeNames[int(f.Meth[f.PC])]+
-                ", tos: "+strconv.Itoa(f.TOS)
-            if len(wstr2) > 0 {
-                wstr += ", stack:" + wstr2
-            }           
-            _ = log.Log(wstr, log.TRACE_INST)
-        }
-        switch f.Meth[f.PC] { // cases listed in numerical value of opcode
+	// the frame's method is not a golang method, so it's Java bytecode, which
+	// is interpreted in the rest of this function.
+	for f.PC < len(f.Meth) {
+		if MainThread.Trace {
+			var tos string = " -"
+			var stackTop = ""
+			if f.TOS != -1 {
+				tos = fmt.Sprintf("%2d", f.TOS)
+				stackTop = "0x" + fmt.Sprintf("%04v (%T)", f.OpStack[f.TOS], f.OpStack[f.TOS])
+			}
+
+			traceInfo :=
+				"class: " + fmt.Sprintf("%-10s", f.ClName) +
+					" meth: " + fmt.Sprintf("%-10s", f.MethName) +
+					" PC: " + fmt.Sprintf("% 3d", f.PC) +
+					", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
+					" TOS: " + tos +
+					" " + stackTop +
+					" "
+			_ = log.Log(traceInfo, log.TRACE_INST)
+		}
+		switch f.Meth[f.PC] { // cases listed in numerical value of opcode
+
 		case NOP:
 			break
 		case ACONST_NULL: // 0x01   (push null onto opStack)
