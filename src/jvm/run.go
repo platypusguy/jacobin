@@ -128,10 +128,9 @@ func runFrame(fs *list.List) error {
         if MainThread.Trace {
             wstr2 := ""
             // Not working yet!
-            //for j := -1; j < f.TOS; j++ {
-            //	wuint64 := *((*uint64)(unsafe.Pointer(&f.OpStack[f.TOS])))
-            //    wstr2 += fmt.Sprintf(" %08x", wuint64)
-            //}
+            for j := -1; j < f.TOS; j++ {
+                wstr2 += fmt.Sprintf(" %v(%T)", f.OpStack[f.TOS], f.OpStack[f.TOS])
+            }
             wstr := "class: "+f.ClName+
                 ", meth: "+f.MethName+
                 ", pc: "+strconv.Itoa(f.PC)+
