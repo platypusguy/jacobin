@@ -24,6 +24,7 @@ import (
 	"unsafe"
 )
 
+const FudgeNumStackEntries = 10
 var MainThread thread.ExecThread
 
 // StartExec is where execution begins. It initializes various structures, such as
@@ -42,7 +43,8 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	m := me.Meth.(classloader.JmEntry)
-	f := frames.CreateFrame(m.MaxStack) // create a new frame
+	maxStack := m.MaxStack + FudgeNumStackEntries
+	f := frames.CreateFrame(maxStack) // create a new frame
 	f.MethName = "main"
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
@@ -71,6 +73,11 @@ func StartExec(className string, globals *globals.Globals) error {
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID), log.SEVERE)
 		return errors.New("outOfMemory Exception")
+	}
+
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("StartExec: maxStack=%d, m.MaxLocals=%d, len(m.Code)=%d\n", maxStack, m.MaxLocals, len(m.Code))
+		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
 	err = runThread(&MainThread)
@@ -1401,7 +1408,7 @@ func runFrame(fs *list.List) error {
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
-				maxStack := m.MaxStack
+				maxStack := m.MaxStack + FudgeNumStackEntries
 				fram := frames.CreateFrame(maxStack)
 
 				fram.ClName = className
@@ -1436,7 +1443,7 @@ func runFrame(fs *list.List) error {
 							argList = append(argList, arg)
 							pop(f)
 						default:
-							arg := pop(f).(int64)
+							arg := pop(f).(int64) // <--------- arg := pop(f).(unsafe.Pointer)  ?
 							argList = append(argList, arg)
 						}
 					}
@@ -1738,6 +1745,10 @@ func runFrame(fs *list.List) error {
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
 func pop(f *frames.Frame) interface{} {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpop f.TOS=%d\n", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	value := f.OpStack[f.TOS]
 	f.TOS -= 1
 	return value
@@ -1745,11 +1756,19 @@ func pop(f *frames.Frame) interface{} {
 
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpeek f.TOS=%d\n", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	return f.OpStack[f.TOS]
 }
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpush f.TOS=%d\n", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
 }
