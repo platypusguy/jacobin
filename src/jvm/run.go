@@ -1439,8 +1439,7 @@ func runFrame(fs *list.List) error {
 							argList = append(argList, arg)
 							pop(f)
 						default:
-							//arg := pop(f).(int64) // <--------- arg := pop(f).(unsafe.Pointer)  ?
-							arg := pop(f).(unsafe.Pointer)
+							arg := pop(f).(int64) // <--------- arg := pop(f).(unsafe.Pointer)  ?
 							argList = append(argList, arg)
 						}
 					}
