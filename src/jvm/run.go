@@ -127,7 +127,6 @@ func runFrame(fs *list.List) error {
     for f.PC < len(f.Meth) {
         if MainThread.Trace {
             wstr2 := ""
-            // Not working yet!
             for j := -1; j < f.TOS; j++ {
                 wstr2 += fmt.Sprintf(" %v(%T)", f.OpStack[f.TOS], f.OpStack[f.TOS])
             }
