@@ -74,7 +74,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("StartExec: m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d\n", m.MaxStack, m.MaxLocals, len(m.Code))
+		traceInfo := fmt.Sprintf("StartExec: m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d", m.MaxStack, m.MaxLocals, len(m.Code))
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
@@ -98,6 +98,21 @@ func runThread(t *thread.ExecThread) error {
 		}
 	}
 	return nil
+}
+
+// Convert a byte to an int64 by extending the sign-bit
+func byteToInt64(bite byte) int64 {
+	if (bite & 0x80) == 0x80 { // Negative bite (left-most bit on)?
+		// Negative bite - need to extend the sign (left-most) bit
+		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
+		wbytes[7] = bite
+		// Form an int64 from the wbytes array
+		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
+		return int64(binary.BigEndian.Uint64(wbytes))
+	}
+	
+	// Not negative (left-most bit off) : just cast bite as an int64
+	return int64(bite)
 }
 
 // runFrame() is the principal execution function in Jacobin. It first tests for a
@@ -188,19 +203,8 @@ func runFrame(fs *list.List) error {
 			push(f, 1.0)
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			wbyte := f.Meth[f.PC+1]
+			wint64 := byteToInt64(wbyte)
 			f.PC += 1
-			var wint64 int64
-			if (wbyte & 0x80) == 0x80 { // Negative wbyte (left-most bit on)?
-				// Negative wbyte : form wbytes = 7 0xFFs concatenated with the wbyte
-				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
-				wbytes[7] = wbyte
-				// Copy byte for byte, as-is, from wbytes to wint64
-				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
-				wint64 = int64(binary.BigEndian.Uint64(wbytes))
-			} else {
-				// Not negative (left-most bit off) : just cast wbyte as an int64
-				wint64 = int64(wbyte)
-			}
 			push(f, wint64)
 		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
 			wbyte1 := f.Meth[f.PC+1]
@@ -211,8 +215,8 @@ func runFrame(fs *list.List) error {
 				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}
 				wbytes[6] = wbyte1
 				wbytes[7] = wbyte2
-				// Copy byte for byte, as-is, from wbytes to wint64
-				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
+				// Form an int64 from the wbytes array
+				// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
 				wint64 = int64(binary.BigEndian.Uint64(wbytes))
 			} else {
 				// Not negative (left-most bit off) : just cast wbyte as an int64
@@ -987,23 +991,10 @@ func runFrame(fs *list.List) error {
 		case IINC: // 	0x84    (increment local variable by a signed byte constant)
 			localVarIndex := int64(f.Meth[f.PC+1])
 			wbyte := f.Meth[f.PC+2]
-			var increment int64 
-			if (wbyte & 0x80) == 0x80 { // Negative wbyte (left-most bit on)?
-				// Negative wbyte : form wbytes = 7 0xFFs concatenated with the wbyte
-				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
-				wbytes[7] = wbyte
-				// Copy byte for byte, as-is, from wbytes to wint64
-				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
-				increment = int64(binary.BigEndian.Uint64(wbytes))
-			} else {
-				// Not negative (left-most bit off) : just cast wbyte as an int64
-				increment = int64(wbyte)
-			}
-			f.PC += 2
+			increment := byteToInt64(wbyte)
 			orig := f.Locals[localVarIndex].(int64)
-			traceInfo := fmt.Sprintf("DEBUG IINC orig=%d, increment=%d", orig, increment)
-			_ = log.Log(traceInfo, log.TRACE_INST)
 			f.Locals[localVarIndex] = orig + increment
+			f.PC += 2
 		case I2F: //	0x86 	( convert int to float)
 			intVal := pop(f).(int64)
 			push(f, float64(intVal))
