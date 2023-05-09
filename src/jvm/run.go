@@ -74,7 +74,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("StartExec: m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d", m.MaxStack, m.MaxLocals, len(m.Code))
+		traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d", f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
