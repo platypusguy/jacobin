@@ -130,7 +130,8 @@ func runFrame(fs *list.List) error {
 			var stackTop = ""
 			if f.TOS != -1 {
 				tos = fmt.Sprintf("%2d", f.TOS)
-				stackTop = "0x" + fmt.Sprintf("%04v (%T)", f.OpStack[f.TOS], f.OpStack[f.TOS])
+				stackTopValuePrt := convertInterfaceToUint64(f.OpStack[f.TOS])
+				stackTop = fmt.Sprintf("0x%08X (%T)", stackTopValuePrt, f.OpStack[f.TOS])
 			}
 
 			traceInfo :=
@@ -1771,12 +1772,25 @@ func subtract[N frames.Number](num1, num2 N) N {
 func convertInterfaceToInt8(val interface{}) int8 {
 	switch t := val.(type) {
 	case int64:
-
 		return int8(t)
 	case int:
 		return int8(t)
 	case int8:
 		return t
+	}
+	return 0
+}
+
+func convertInterfaceToUint64(val interface{}) uint64 {
+	switch t := val.(type) {
+	case int64:
+		return uint64(t)
+	case float64:
+		return math.Float64bits(t)
+	case unsafe.Pointer:
+		up := unsafe.Pointer(t)
+		intVal := uintptr(up)
+		return uint64(intVal)
 	}
 	return 0
 }
