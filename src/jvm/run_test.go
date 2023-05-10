@@ -2525,7 +2525,7 @@ func TestIfnullFallThrough(t *testing.T) {
 	}
 }
 
-// IINC:
+// IINC: increment local variable
 func TestIinc(t *testing.T) {
 	f := newFrame(IINC)
 	f.Locals = append(f.Locals, zero)
@@ -2541,6 +2541,26 @@ func TestIinc(t *testing.T) {
 	value := f.Locals[1]
 	if value != int64(37) {
 		t.Errorf("IINC: Expected popped value to be 37, got: %d", value)
+	}
+}
+
+// IINC: increment local variable by negative value
+func TestIincNeg(t *testing.T) {
+	f := newFrame(IINC)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
+	f.Meth = append(f.Meth, 1)             // increment local variable[1]
+	val := -27
+	f.Meth = append(f.Meth, byte(val)) // "increment" it by -27
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
+	}
+	value := f.Locals[1]
+	if value != int64(-17) {
+		t.Errorf("IINC: Expected popped value to be -17, got: %d", value)
 	}
 }
 
@@ -2862,6 +2882,7 @@ func TestIstore1(t *testing.T) {
 	}
 }
 
+// ISTORE2
 func TestIstore2(t *testing.T) {
 	f := newFrame(ISTORE_2)
 	f.Locals = append(f.Locals, zero)
