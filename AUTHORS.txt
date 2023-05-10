@@ -19,4 +19,3 @@ All code files for Jacobin begin with the following header:
  Many people have contributed useful comments and suggestions, for
  which we are most grateful indeed!
 
-
