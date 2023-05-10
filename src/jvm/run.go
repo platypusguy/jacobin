@@ -1747,12 +1747,12 @@ func runFrame(fs *list.List) error {
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
 func pop(f *frames.Frame) interface{} {
+	value := f.OpStack[f.TOS]
+	f.TOS -= 1
 	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("\tpop f.TOS=%d", f.TOS)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
-	value := f.OpStack[f.TOS]
-	f.TOS -= 1
 	return value
 }
 
@@ -1767,12 +1767,12 @@ func peek(f *frames.Frame) interface{} {
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
+	f.TOS += 1
+	f.OpStack[f.TOS] = x
 	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("\tpush f.TOS=%d", f.TOS)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
-	f.TOS += 1
-	f.OpStack[f.TOS] = x
 }
 
 func add[N frames.Number](num1, num2 N) N {
