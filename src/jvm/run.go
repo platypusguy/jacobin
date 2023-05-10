@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-3 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -102,15 +102,15 @@ func runThread(t *thread.ExecThread) error {
 
 // Convert a byte to an int64 by extending the sign-bit
 func byteToInt64(bite byte) int64 {
-	if (bite & 0x80) == 0x80 { // Negative bite (left-most bit on)?
-		// Negative bite - need to extend the sign (left-most) bit
+	if (bite & 0x80) == 0x80 { // Negative bite value (left-most bit on)?
+		// Negative byte - need to extend the sign (left-most) bit
 		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
 		wbytes[7] = bite
 		// Form an int64 from the wbytes array
 		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
 		return int64(binary.BigEndian.Uint64(wbytes))
 	}
-	
+
 	// Not negative (left-most bit off) : just cast bite as an int64
 	return int64(bite)
 }
@@ -1460,7 +1460,7 @@ func runFrame(fs *list.List) error {
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				err = runFrame(fs) // 2nd on stack from new crash site
+				err = runFrame(fs)                   // 2nd on stack from new crash site
 				if err != nil {
 					return err
 				}
