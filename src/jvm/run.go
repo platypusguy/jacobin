@@ -73,6 +73,11 @@ func StartExec(className string, globals *globals.Globals) error {
 		return errors.New("outOfMemory Exception")
 	}
 
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d", f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+
 	err = runThread(&MainThread)
 	if err != nil {
 		return err
@@ -93,6 +98,21 @@ func runThread(t *thread.ExecThread) error {
 		}
 	}
 	return nil
+}
+
+// Convert a byte to an int64 by extending the sign-bit
+func byteToInt64(bite byte) int64 {
+	if (bite & 0x80) == 0x80 { // Negative bite (left-most bit on)?
+		// Negative bite - need to extend the sign (left-most) bit
+		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
+		wbytes[7] = bite
+		// Form an int64 from the wbytes array
+		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
+		return int64(binary.BigEndian.Uint64(wbytes))
+	}
+	
+	// Not negative (left-most bit off) : just cast bite as an int64
+	return int64(bite)
 }
 
 // runFrame() is the principal execution function in Jacobin. It first tests for a
@@ -183,19 +203,8 @@ func runFrame(fs *list.List) error {
 			push(f, 1.0)
 		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			wbyte := f.Meth[f.PC+1]
+			wint64 := byteToInt64(wbyte)
 			f.PC += 1
-			var wint64 int64
-			if (wbyte & 0x80) == 0x80 { // Negative wbyte (left-most bit on)?
-				// Negative wbyte : form wbytes = 7 0xFFs concatenated with the wbyte
-				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
-				wbytes[7] = wbyte
-				// Copy byte for byte, as-is, from wbytes to wint64
-				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
-				wint64 = int64(binary.BigEndian.Uint64(wbytes))
-			} else {
-				// Not negative (left-most bit off) : just cast wbyte as an int64
-				wint64 = int64(wbyte)
-			}
 			push(f, wint64)
 		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
 			wbyte1 := f.Meth[f.PC+1]
@@ -206,8 +215,8 @@ func runFrame(fs *list.List) error {
 				var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}
 				wbytes[6] = wbyte1
 				wbytes[7] = wbyte2
-				// Copy byte for byte, as-is, from wbytes to wint64
-				// If you know C, this is identical to memcpy(&wint64, &wbytes, 8)
+				// Form an int64 from the wbytes array
+				// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
 				wint64 = int64(binary.BigEndian.Uint64(wbytes))
 			} else {
 				// Not negative (left-most bit off) : just cast wbyte as an int64
@@ -979,12 +988,13 @@ func runFrame(fs *list.List) error {
 			val3 := val1 ^ val2
 			push(f, val3)
 			push(f, val3)
-		case IINC: // 	0x84    (increment local variable by a constant)
+		case IINC: // 	0x84    (increment local variable by a signed byte constant)
 			localVarIndex := int64(f.Meth[f.PC+1])
-			constAmount := int64(f.Meth[f.PC+2])
-			f.PC += 2
+			wbyte := f.Meth[f.PC+2]
+			increment := byteToInt64(wbyte)
 			orig := f.Locals[localVarIndex].(int64)
-			f.Locals[localVarIndex] = orig + constAmount
+			f.Locals[localVarIndex] = orig + increment
+			f.PC += 2
 		case I2F: //	0x86 	( convert int to float)
 			intVal := pop(f).(int64)
 			push(f, float64(intVal))
@@ -1402,9 +1412,7 @@ func runFrame(fs *list.List) error {
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
-				maxStack := m.MaxStack
-				fram := frames.CreateFrame(maxStack)
-
+				fram := frames.CreateFrame(m.MaxStack)
 				fram.ClName = className
 				fram.MethName = methodName
 				fram.CP = m.Cp                     // add its pointer to the class CP
@@ -1437,7 +1445,7 @@ func runFrame(fs *list.List) error {
 							argList = append(argList, arg)
 							pop(f)
 						default:
-							arg := pop(f).(int64)
+							arg := pop(f).(int64) // <--------- arg := pop(f).(unsafe.Pointer)  ?
 							argList = append(argList, arg)
 						}
 					}
@@ -1452,7 +1460,7 @@ func runFrame(fs *list.List) error {
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				err = runFrame(fs)
+				err = runFrame(fs) // 2nd on stack from new crash site
 				if err != nil {
 					return err
 				}
@@ -1739,6 +1747,10 @@ func runFrame(fs *list.List) error {
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
 func pop(f *frames.Frame) interface{} {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpop f.TOS=%d", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	value := f.OpStack[f.TOS]
 	f.TOS -= 1
 	return value
@@ -1746,11 +1758,19 @@ func pop(f *frames.Frame) interface{} {
 
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpeek f.TOS=%d", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	return f.OpStack[f.TOS]
 }
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tpush f.TOS=%d", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
 }
