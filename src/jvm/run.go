@@ -1361,19 +1361,9 @@ func runFrame(fs *list.List) error {
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			// MethodRef := f.CP.CpIndex[CPslot]
 			ClassName, MethName, MethSig := getMethInfoFromCPmethref(f.CP, CPslot)
-			// Method := f.CP.MethodRefs[MethodRef.Slot]
-			// MethodClassIdx := Method.ClassIndex
 			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
-			// MethodNameTypeIdx := Method.NameAndType
-			// MethodNameIdx := f.CP.NameAndTypes[MethodNameTypeIdx].NameIndex
-			// MethodDescIdx := f.CP.NameAndTypes[MethodNameTypeIdx].DescIndex
 			signature := ClassName + MethName + MethSig
-			// 	// f.CP.Utf8Refs[MethodClassIdx] +
-			// 	MethodName +
-			// 		f.CP.Utf8Refs[MethodNameIdx] +
-			// 		f.CP.Utf8Refs[MethodDescIdx]
 			println(signature)
 
 			MTentry, err := classloader.FetchMethodAndCP(ClassName, MethName, MethSig)
@@ -1453,8 +1443,11 @@ func runFrame(fs *list.List) error {
 							argList = append(argList, arg)
 							argList = append(argList, arg)
 							pop(f)
+						case 'L':
+							arg := pop(f).(unsafe.Pointer)
+							argList = append(argList, arg)
 						default:
-							arg := pop(f).(int64) // <--------- arg := pop(f).(unsafe.Pointer)  ?
+							arg := pop(f).(int64)
 							argList = append(argList, arg)
 						}
 					}
