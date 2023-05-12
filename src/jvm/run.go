@@ -1361,17 +1361,20 @@ func runFrame(fs *list.List) error {
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			MethodRef := f.CP.CpIndex[CPslot]
-			Method := f.CP.MethodRefs[MethodRef.Slot]
-			MethodClassIdx := Method.ClassIndex
-			MethodNameTypeIdx := Method.NameAndType
-			MethodNameIdx := f.CP.NameAndTypes[MethodNameTypeIdx].NameIndex
-			MethodDescIdx := f.CP.NameAndTypes[MethodNameTypeIdx].DescIndex
-			signature :=
-				f.CP.Utf8Refs[MethodClassIdx] +
-					f.CP.Utf8Refs[MethodNameIdx] +
-					f.CP.Utf8Refs[MethodDescIdx]
-			println(signature)
+			// MethodRef := f.CP.CpIndex[CPslot]
+			MethName, _, _ := getMethInfoFromCPmethref(f.CP, CPslot)
+			// Method := f.CP.MethodRefs[MethodRef.Slot]
+			// MethodClassIdx := Method.ClassIndex
+			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
+			// MethodNameTypeIdx := Method.NameAndType
+			// MethodNameIdx := f.CP.NameAndTypes[MethodNameTypeIdx].NameIndex
+			// MethodDescIdx := f.CP.NameAndTypes[MethodNameTypeIdx].DescIndex
+			// signature :=
+			// 	// f.CP.Utf8Refs[MethodClassIdx] +
+			// 	MethodName +
+			// 		f.CP.Utf8Refs[MethodNameIdx] +
+			// 		f.CP.Utf8Refs[MethodDescIdx]
+			println(MethName)
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
