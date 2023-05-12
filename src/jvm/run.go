@@ -169,7 +169,7 @@ func runFrame(fs *list.List) error {
 			break
 		case ACONST_NULL: // 0x01   (push null onto opStack)
 			push(f, int64(0))
-		case ICONST_N1: //	x02	(push -1 onto opStack)
+		case ICONST_M1: //	x02	(push -1 onto opStack)
 			push(f, int64(-1))
 		case ICONST_0: // 	0x03	(push int 0 onto opStack)
 			push(f, int64(0))

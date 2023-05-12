@@ -1811,9 +1811,9 @@ func TestIdivDivideByZero(t *testing.T) {
 	}
 }
 
-// ICONST:
+// ICONST_M1:
 func TestIconstN1(t *testing.T) {
-	f := newFrame(ICONST_N1)
+	f := newFrame(ICONST_M1)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1822,7 +1822,7 @@ func TestIconstN1(t *testing.T) {
 	}
 	var value = pop(&f).(int64)
 	if value != -1 {
-		t.Errorf("ICONST_N1: Expected popped value to be -1, got: %d", value)
+		t.Errorf("ICONST_M1: Expected popped value to be -1, got: %d", value)
 	}
 }
 
