@@ -1363,14 +1363,12 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			ClassName, MethName, MethSig := getMethInfoFromCPmethref(f.CP, CPslot)
 			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
-			signature := ClassName + MethName + MethSig
-			println(signature)
 
 			MTentry, err := classloader.FetchMethodAndCP(ClassName, MethName, MethSig)
 			if err != nil {
 				return errors.New("Class not found: " + ClassName + "." + MethName)
 			}
-			println(MTentry.MType)
+			println(MTentry.MType) // CURR: replace with execution of function
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
