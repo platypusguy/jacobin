@@ -1361,14 +1361,53 @@ func runFrame(fs *list.List) error {
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			ClassName, MethName, MethSig := getMethInfoFromCPmethref(f.CP, CPslot)
+			className, methName, methSig := getMethInfoFromCPmethref(f.CP, CPslot)
 			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
 
-			MTentry, err := classloader.FetchMethodAndCP(ClassName, MethName, MethSig)
+			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil {
-				return errors.New("Class not found: " + ClassName + "." + MethName)
+				return errors.New("Class not found: " + className + "." + methName)
 			}
-			println(MTentry.MType) // CURR: replace with execution of function
+
+			if mtEntry.MType == 'G' {
+				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
+				if err != nil {
+					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
+				}
+			} else if mtEntry.MType == 'J' {
+				m := mtEntry.Meth.(classloader.JmEntry)
+				fram, err := createAndInitNewFrame(
+					className, methName, &m, methSig, f)
+				if err != nil {
+					return errors.New("Error creating frame in: " +
+						className + "." + methName)
+				}
+
+				fs.PushFront(fram)                   // push the new frame
+				f = fs.Front().Value.(*frames.Frame) // point f to the new head
+				err = runFrame(fs)                   // 2nd on stack from new crash site
+				if err != nil {
+					return err
+				}
+
+				// if the static method is main(), when we get here the
+				// frame stack will be empty to exit from here, otherwise
+				// there's still a frame on the stack, pop it off and continue.
+				if fs.Len() == 0 {
+					return nil
+				}
+				fs.Remove(fs.Front()) // pop the frame off
+
+				// the previous frame pop might have been main()
+				// if so, then we can't reset f to a non-existent frame
+				// so we test for this before resetting f.
+				if fs.Len() != 0 {
+					f = fs.Front().Value.(*frames.Frame)
+				} else {
+					return nil
+				}
+			}
+			println(mtEntry.MType) // CURR: replace with execution of function
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
