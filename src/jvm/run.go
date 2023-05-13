@@ -1409,54 +1409,62 @@ func runFrame(fs *list.List) error {
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
-				fram := frames.CreateFrame(m.MaxStack)
-				fram.ClName = className
-				fram.MethName = methodName
-				fram.CP = m.Cp                     // add its pointer to the class CP
-				for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
-					fram.Meth = append(fram.Meth, m.Code[i])
+				fram, err := createAndInitNewFrame(
+					className, methodName, &m, methodType, f)
+				if err != nil {
+					return errors.New("Error creating frame in: " +
+						className + "." + methodName)
 				}
+				/*
+					fram := frames.CreateFrame(m.MaxStack)
+					fram.ClName = className
+					fram.MethName = methodName
+					fram.CP = m.Cp                     // add its pointer to the class CP
+					for i := 0; i < len(m.Code); i++ { // copy the method's bytecodes over
+						fram.Meth = append(fram.Meth, m.Code[i])
+					}
 
-				// allocate the local variables
-				for k := 0; k < m.MaxLocals; k++ {
-					fram.Locals = append(fram.Locals, 0)
-				}
+					// allocate the local variables
+					for k := 0; k < m.MaxLocals; k++ {
+						fram.Locals = append(fram.Locals, 0)
+					}
 
-				// pop the parameters off the present stack and put them in the new frame's locals
-				var argList []interface{}
-				paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
-				if len(paramsToPass) > 0 {
-					for i := len(paramsToPass) - 1; i > -1; i-- {
-						switch paramsToPass[i] {
-						case 'D':
-							arg := pop(f).(float64)
-							argList = append(argList, arg)
-							argList = append(argList, arg)
-							pop(f)
-						case 'F':
-							arg := pop(f).(float64)
-							argList = append(argList, arg)
-						case 'J': // long
-							arg := pop(f).(int64)
-							argList = append(argList, arg)
-							argList = append(argList, arg)
-							pop(f)
-						case 'L':
-							arg := pop(f).(unsafe.Pointer)
-							argList = append(argList, arg)
-						default:
-							arg := pop(f).(int64)
-							argList = append(argList, arg)
+					// pop the parameters off the present stack and put them in the new frame's locals
+					var argList []interface{}
+					paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
+					if len(paramsToPass) > 0 {
+						for i := len(paramsToPass) - 1; i > -1; i-- {
+							switch paramsToPass[i] {
+							case 'D':
+								arg := pop(f).(float64)
+								argList = append(argList, arg)
+								argList = append(argList, arg)
+								pop(f)
+							case 'F':
+								arg := pop(f).(float64)
+								argList = append(argList, arg)
+							case 'J': // long
+								arg := pop(f).(int64)
+								argList = append(argList, arg)
+								argList = append(argList, arg)
+								pop(f)
+							case 'L':
+								arg := pop(f).(unsafe.Pointer)
+								argList = append(argList, arg)
+							default:
+								arg := pop(f).(int64)
+								argList = append(argList, arg)
+							}
 						}
 					}
-				}
 
-				destLocal := 0
-				for j := len(argList) - 1; j >= 0; j-- {
-					fram.Locals[destLocal] = argList[j]
-					destLocal += 1
-				}
-				fram.TOS = -1
+					destLocal := 0
+					for j := len(argList) - 1; j >= 0; j-- {
+						fram.Locals[destLocal] = argList[j]
+						destLocal += 1
+					}
+					fram.TOS = -1
+				*/
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -1813,4 +1821,62 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 		return uint64(intVal)
 	}
 	return 0
+}
+
+func createAndInitNewFrame(
+	className string, methodName string, m *classloader.JmEntry,
+	methodType string, currFrame *frames.Frame) (*frames.Frame, error) {
+	f := currFrame
+
+	fram := frames.CreateFrame(m.MaxStack)
+	fram.ClName = className
+	fram.MethName = methodName
+	fram.CP = m.Cp                     // add its pointer to the class CP
+	for i := 0; i < len(m.Code); i++ { // copy the method's bytecodes over
+		fram.Meth = append(fram.Meth, m.Code[i])
+	}
+
+	// allocate the local variables
+	for k := 0; k < m.MaxLocals; k++ {
+		fram.Locals = append(fram.Locals, 0)
+	}
+
+	// pop the parameters off the present stack and put them in the new frame's locals
+	var argList []interface{}
+	paramsToPass :=
+		util.ParseIncomingParamsFromMethTypeString(methodType)
+	if len(paramsToPass) > 0 {
+		for i := len(paramsToPass) - 1; i > -1; i-- {
+			switch paramsToPass[i] {
+			case 'D':
+				arg := pop(f).(float64)
+				argList = append(argList, arg)
+				argList = append(argList, arg)
+				pop(f)
+			case 'F':
+				arg := pop(f).(float64)
+				argList = append(argList, arg)
+			case 'J': // long
+				arg := pop(f).(int64)
+				argList = append(argList, arg)
+				argList = append(argList, arg)
+				pop(f)
+			case 'L':
+				arg := pop(f).(unsafe.Pointer)
+				argList = append(argList, arg)
+			default:
+				arg := pop(f).(int64)
+				argList = append(argList, arg)
+			}
+		}
+	}
+
+	destLocal := 0
+	for j := len(argList) - 1; j >= 0; j-- {
+		fram.Locals[destLocal] = argList[j]
+		destLocal += 1
+	}
+	fram.TOS = -1
+
+	return fram, nil
 }
