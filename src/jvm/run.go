@@ -146,7 +146,7 @@ func runFrame(fs *list.List) error {
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
 		if MainThread.Trace {
-			var tos string = " -"
+			var tos = " -"
 			var stackTop = ""
 			if f.TOS != -1 {
 				tos = fmt.Sprintf("%2d", f.TOS)
@@ -245,7 +245,7 @@ func runFrame(fs *list.List) error {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
+				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
@@ -264,7 +264,7 @@ func runFrame(fs *list.List) error {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
+				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC_W instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
@@ -432,7 +432,7 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
-			push(f, unsafe.Pointer(value))
+			push(f, value) // unsafe.Pointer
 		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
 			ref := pop(f).(unsafe.Pointer)
@@ -1801,6 +1801,7 @@ func convertInterfaceToInt8(val interface{}) int8 {
 	return 0
 }
 
+// converts an interface{} value into uint64
 func convertInterfaceToUint64(val interface{}) uint64 {
 	switch t := val.(type) {
 	case int64:
@@ -1808,8 +1809,7 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	case float64:
 		return math.Float64bits(t)
 	case unsafe.Pointer:
-		up := unsafe.Pointer(t)
-		intVal := uintptr(up)
+		intVal := uintptr(t)
 		return uint64(intVal)
 	}
 	return 0
