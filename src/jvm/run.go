@@ -1342,6 +1342,7 @@ func runFrame(fs *list.List) error {
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
+
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
 				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
@@ -1378,6 +1379,13 @@ func runFrame(fs *list.List) error {
 				if err != nil {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
+				// } else {
+				// 	objectRef := pop(f) // the object on which the method is found
+				// 	if objectRef == nil {
+				// 		return fmt.Errorf("Invalid objectRef on stack in method %s of class %s\n",
+				// 			f.MethName, f.ClName)
+				// 	}
+				// }
 				break
 			}
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
