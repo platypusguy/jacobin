@@ -16,6 +16,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/util"
@@ -1319,17 +1320,25 @@ func runFrame(fs *list.List) error {
 		case PUTFIELD: // place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
-			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+			fieldEntry := f.CP.CpIndex[CPslot]
+			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
 				return fmt.Errorf("Expected a field ref for PUTFIELD, but got %d in"+
 					"location %d in method %s of class %s\n",
-					CPentry.Type, f.PC, f.MethName, f.ClName)
+					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
 
 			value := pop(f)
 			ref := convertInterfaceToPointer(pop(f))
-			fmt.Printf("PUTFIELD -- slot: %d, value: %d, ref: %v\n",
-				CPslot, value, ref) // CURR: resume finding field
+			obj := *(*object.Object)(ref)
+
+			// the fields in the object are numbered in the same
+			// order they are declared in the constant pool. So,
+			// to get to the right field, we only need to know
+			// the slot number in CP.Fields. It will be the same
+			// index into the object's fields.
+			obj.Fields[fieldEntry.Slot].Fvalue = value
+			fmt.Printf("PUTFIELD -- slot: %d, value: %d, ref: %v, field count: %d\n",
+				CPslot, value, ref, len(obj.Fields)) // CURR: resume finding field
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
