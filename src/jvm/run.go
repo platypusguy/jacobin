@@ -1316,7 +1316,20 @@ func runFrame(fs *list.List) error {
 
 			// push the pointer to the stack of the frame
 			push(f, int64(len(classloader.StaticsArray)-1))
+		case PUTFIELD: // place value into an object's field
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			f.PC += 2
+			CPentry := f.CP.CpIndex[CPslot]
+			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+				return fmt.Errorf("Expected a field ref for PUTFIELD, but got %d in"+
+					"location %d in method %s of class %s\n",
+					CPentry.Type, f.PC, f.MethName, f.ClName)
+			}
 
+			value := pop(f)
+			ref := convertInterfaceToPointer(pop(f))
+			fmt.Printf("PUTFIELD -- slot: %d, value: %d, ref: %v\n",
+				CPslot, value, ref) // CURR: resume finding field
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
@@ -1378,8 +1391,8 @@ func runFrame(fs *list.List) error {
 				// in a Java method (that is, non-native), pop the
 				// class reference into local[0] and the arguments,
 				// if any, into local[1]...local[x]
-				f.Locals[0] = convertInterfaceToPointer(pop(f))
-				// TODO: handle arguments if any
+
+				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
 					className, methName, &m, methSig, f)
@@ -1387,6 +1400,7 @@ func runFrame(fs *list.List) error {
 					return errors.New("Error creating frame in: " +
 						className + "." + methName)
 				}
+				fram.Locals[0] = convertInterfaceToPointer(pop(f))
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -1412,7 +1426,6 @@ func runFrame(fs *list.List) error {
 					return nil
 				}
 			}
-			println(mtEntry.MType) // CURR: replace with execution of function
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
@@ -1727,7 +1740,7 @@ func runFrame(fs *list.List) error {
 			var multiNewArray *JacobinArrRefArray
 			var prev []*JacobinArrRefArray   // contains all the leaf nodes
 			var newGen []*JacobinArrRefArray // new set of leaf nodes
-			var i int                        // CURR: need to test 3D arrays
+			var i int                        // TODO: need to test 3D arrays
 			for i = 0; i < len(dimSizes)-2; i++ {
 				if i == 0 {
 					multiNewArray = MakeArrRefArray(dimSizes[0])
