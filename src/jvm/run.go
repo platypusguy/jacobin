@@ -1337,8 +1337,8 @@ func runFrame(fs *list.List) error {
 			// the slot number in CP.Fields. It will be the same
 			// index into the object's fields.
 			obj.Fields[fieldEntry.Slot].Fvalue = value
-			fmt.Printf("PUTFIELD -- slot: %d, value: %d, ref: %v, field count: %d\n",
-				CPslot, value, ref, len(obj.Fields)) // CURR: resume finding field
+			// fmt.Printf("PUTFIELD -- slot: %d, value: %d, ref: %v, field count: %d\n",
+			// 	CPslot, value, ref, len(obj.Fields))
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
@@ -1418,12 +1418,12 @@ func runFrame(fs *list.List) error {
 					return err
 				}
 
-				// if the static method is main(), when we get here the
-				// frame stack will be empty to exit from here, otherwise
-				// there's still a frame on the stack, pop it off and continue.
-				if fs.Len() == 0 {
-					return nil
-				}
+				// // if the method is main(), then when we get here the
+				// // frame stack will be empty to exit from here, otherwise
+				// // there's still a frame on the stack, pop it off and continue.
+				// if fs.Len() == 0 {
+				// 	return nil
+				// }
 				fs.Remove(fs.Front()) // pop the frame off
 
 				// the previous frame pop might have been main()
