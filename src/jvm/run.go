@@ -1369,12 +1369,17 @@ func runFrame(fs *list.List) error {
 				return errors.New("Class not found: " + className + "." + methName)
 			}
 
-			if mtEntry.MType == 'G' {
+			if mtEntry.MType == 'G' { // it's a golang method
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
 				if err != nil {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
-			} else if mtEntry.MType == 'J' {
+			} else if mtEntry.MType == 'J' { // it's a Java method
+				// in a Java method (that is, non-native), pop the
+				// class reference into local[0] and the arguments,
+				// if any, into local[1]...local[x]
+				f.Locals[0] = convertInterfaceToPointer(pop(f))
+				// TODO: handle arguments if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
 					className, methName, &m, methSig, f)
@@ -1860,6 +1865,23 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 		return uint64(intVal)
 	}
 	return 0
+}
+
+// converts an interface{} value into unsafe.Pointer
+func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
+	var ptr unsafe.Pointer
+	switch t := val.(type) {
+	case int64:
+	case int:
+	case byte:
+		uip := uintptr(t)
+		ptr = unsafe.Pointer(uip)
+	case float64:
+		ptr = nil
+	case unsafe.Pointer:
+		ptr = t
+	}
+	return ptr
 }
 
 func createAndInitNewFrame(
