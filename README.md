@@ -53,7 +53,7 @@ A more-than-minimal JVM written in Go.
   180 bytecodes fully operational, including one- and multi-dimensional arrays
   
 **To do:**
-* invokespecial, invokedynamic
+* invokedynamic
 * Calls to superclasses
 * Inner and nested classes
 * Exception-tree walking
