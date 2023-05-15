@@ -1374,19 +1374,28 @@ func runFrame(fs *list.List) error {
 			// println("Method signature for invokevirtual: " + methodName + methodType)
 
 			v := classloader.MTable[methodName+methodType]
-			if v.Meth != nil && v.MType == 'G' { // so we have a golang function
+			if v.Meth == nil {
+				// TODO: search the classpath and retry
+				// for the nonce, show an error
+				return fmt.Errorf("INVOKEVIRTUAL: %s on stack in method %s of class %s is unknown\n",
+					methodName+methodType, f.MethName, f.ClName)
+			}
+
+			if v.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(v, fs, className, methodName, methodType)
 				if err != nil {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
-				// } else {
-				// 	objectRef := pop(f) // the object on which the method is found
-				// 	if objectRef == nil {
-				// 		return fmt.Errorf("Invalid objectRef on stack in method %s of class %s\n",
-				// 			f.MethName, f.ClName)
-				// 	}
-				// }
 				break
+			}
+
+			if v.MType == 'J' { // we have a Java function
+				objectRef := pop(f) // the object on which the method is found
+				if objectRef == nil {
+					return fmt.Errorf("Invalid objectRef on stack in method %s of class %s\n",
+						f.MethName, f.ClName)
+				}
+				fmt.Println("method type: " + methodType)
 			}
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
