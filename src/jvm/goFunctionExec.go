@@ -24,9 +24,10 @@ import (
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	// get the go method from the MTable
-	me := classloader.MTable[fr.MethName]
+	me := classloader.MTable[fr.ClName+"."+fr.MethName]
 	if me.Meth == nil {
-		return nil, 0, errors.New("go method not found: " + fr.MethName)
+		return nil, 0, errors.New("go method not found: " +
+			fr.ClName + "." + fr.MethName)
 	}
 
 	// pull arguments for the function off the frame's operand stack and put them in a slice

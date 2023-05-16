@@ -1366,19 +1366,21 @@ func runFrame(fs *list.List) error {
 			nAndT := f.CP.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodNameIndex)
-			methodName = className + "." + methodName
+			// methodName = className + "." + methodName
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodSigIndex)
-			// println("Method signature for invokevirtual: " + methodName + methodType)
 
-			v := classloader.MTable[methodName+methodType]
-			if v.Meth == nil {
-				// TODO: search the classpath and retry
-				// for the nonce, show an error
-				return fmt.Errorf("INVOKEVIRTUAL: %s on stack in method %s of class %s is unknown\n",
-					methodName+methodType, f.MethName, f.ClName)
+			v := classloader.MTable[className+"."+methodName+methodType]
+			if v.Meth == nil { // if the method is not in the method table, find it
+				mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
+				if err != nil || mtEntry.Meth == nil {
+					// TODO: search the classpath and retry
+					return errors.New("Class not found: " + className + "." + methodName)
+				} else {
+					v = mtEntry
+				}
 			}
 
 			if v.MType == 'G' { // so we have a golang function
@@ -1389,12 +1391,8 @@ func runFrame(fs *list.List) error {
 				break
 			}
 
-			if v.MType == 'J' { // we have a Java function
-				objectRef := pop(f) // the object on which the method is found
-				if objectRef == nil {
-					return fmt.Errorf("Invalid objectRef on stack in method %s of class %s\n",
-						f.MethName, f.ClName)
-				}
+			if v.MType == 'J' { // it's a Java function (that is, non-native)
+				// CURR: continue with createAndInitNewFrame()
 				fmt.Println("method type: " + methodType)
 			}
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
@@ -1413,7 +1411,7 @@ func runFrame(fs *list.List) error {
 				if err != nil {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
-			} else if mtEntry.MType == 'J' { // it's a Java method
+			} else if mtEntry.MType == 'J' {
 				// in a Java method (that is, non-native), pop the
 				// class reference into local[0] and the arguments,
 				// if any, into local[1]...local[x]
@@ -1486,7 +1484,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' {
-				f, err = runGmethod(mtEntry, fs, className, className+"."+methodName, methodType)
+				f, err = runGmethod(mtEntry, fs, className, methodName, methodType)
+
 				if err != nil {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
