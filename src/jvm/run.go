@@ -1382,6 +1382,12 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
+			// get the objectRef (pointer to object data)
+			objectRef := classloader.MethAreaFetch(className)
+			if objectRef == nil {
+				objectRef = classloader.MethAreaFetch("java/lang/Object")
+			}
+
 			if mtEntry.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(mtEntry, fs, className, methodName, methodType)
 				if err != nil {
@@ -1394,12 +1400,11 @@ func runFrame(fs *list.List) error {
 				// CURR: continue with createAndInitNewFrame()
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methodName, &m, methodType, f)
+					className, methodName, methodType, &m, objectRef, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methodName)
 				}
-				// fram.Locals[0] = convertInterfaceToPointer(pop(f))
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -1431,7 +1436,10 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			className, methName, methSig := getMethInfoFromCPmethref(f.CP, CPslot)
 			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
-
+			objectRef := classloader.MethAreaFetch(className)
+			if objectRef == nil {
+				objectRef = classloader.MethAreaFetch("java/lang/Object")
+			}
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil {
 				return errors.New("Class not found: " + className + "." + methName)
@@ -1450,7 +1458,7 @@ func runFrame(fs *list.List) error {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methName, &m, methSig, f)
+					className, methName, methSig, &m, objectRef, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methName)
@@ -1523,7 +1531,7 @@ func runFrame(fs *list.List) error {
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methodName, &m, methodType, f)
+					className, methodName, methodType, &m, nil, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methodName)
@@ -1953,9 +1961,16 @@ func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
 	return ptr
 }
 
+// create a new frame and load up the local variables with the passed
+// arguments, set up the stack, and all the remaining items to begin execution
+// Note: the objectRef parameter contains a pointer to the object for the
+// versions on invoke* bytecodes that require and objectRef in the locals[0]
+// field. If objectRef is nil, then it's not included in the locals.
 func createAndInitNewFrame(
-	className string, methodName string, m *classloader.JmEntry,
-	methodType string, currFrame *frames.Frame) (*frames.Frame, error) {
+	className string, methodName string, methodType string,
+	m *classloader.JmEntry,
+	objectRef *classloader.Klass,
+	currFrame *frames.Frame) (*frames.Frame, error) {
 	f := currFrame
 
 	fram := frames.CreateFrame(m.MaxStack)
@@ -2001,7 +2016,15 @@ func createAndInitNewFrame(
 		}
 	}
 
+	// if objectRef != nil, insert it in the local[0]
+	// this is used in invokevirtual, invokespecial, and
+	// invokeinterface.
 	destLocal := 0
+	if objectRef != nil {
+		fram.Locals[0] = objectRef
+		destLocal = 1
+	}
+
 	for j := len(argList) - 1; j >= 0; j-- {
 		fram.Locals[destLocal] = argList[j]
 		destLocal += 1
