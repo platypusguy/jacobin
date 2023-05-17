@@ -1413,12 +1413,12 @@ func runFrame(fs *list.List) error {
 					return err
 				}
 
-				// // if the method is main(), then when we get here the
-				// // frame stack will be empty to exit from here, otherwise
-				// // there's still a frame on the stack, pop it off and continue.
-				// if fs.Len() == 0 {
-				// 	return nil
-				// }
+				// if the method is main(), then when we get here the
+				// frame stack will be empty to exit from here, otherwise
+				// there's still a frame on the stack, pop it off and continue.
+				if fs.Len() == 0 {
+					return nil
+				}
 				fs.Remove(fs.Front()) // pop the frame off
 
 				// the previous frame pop might have been main()
@@ -1429,7 +1429,6 @@ func runFrame(fs *list.List) error {
 				} else {
 					return nil
 				}
-				fmt.Println("method type: " + methodType)
 			}
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
