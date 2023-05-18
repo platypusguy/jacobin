@@ -1326,6 +1326,12 @@ func runFrame(fs *list.List) error {
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
+
+			ref := convertInterfaceToPointer(pop(f))
+			obj := *(*object.Object)(ref)
+			value := obj.Fields[fieldEntry.Slot].Fvalue
+			push(f, value)
+
 		case PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
