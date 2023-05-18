@@ -1382,12 +1382,6 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-			// get the objectRef (pointer to object data)
-			objectRef := classloader.MethAreaFetch(className)
-			if objectRef == nil {
-				objectRef = classloader.MethAreaFetch("java/lang/Object")
-			}
-
 			if mtEntry.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(mtEntry, fs, className, methodName, methodType)
 				if err != nil {
@@ -1397,10 +1391,10 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'J' { // it's a Java function (that is, non-native)
-				// CURR: continue with createAndInitNewFrame()
+				// CURR: continue making sure call is correct, then GETFIELD
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methodName, methodType, &m, objectRef, f)
+					className, methodName, methodType, &m, true, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methodName)
@@ -1435,10 +1429,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			className, methName, methSig := getMethInfoFromCPmethref(f.CP, CPslot)
 			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
-			objectRef := classloader.MethAreaFetch(className)
-			if objectRef == nil {
-				objectRef = classloader.MethAreaFetch("java/lang/Object")
-			}
+
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil {
 				return errors.New("Class not found: " + className + "." + methName)
@@ -1450,19 +1441,14 @@ func runFrame(fs *list.List) error {
 					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
 				}
 			} else if mtEntry.MType == 'J' {
-				// in a Java method (that is, non-native), pop the
-				// class reference into local[0] and the arguments,
-				// if any, into local[1]...local[x]
-
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methName, methSig, &m, objectRef, f)
+					className, methName, methSig, &m, true, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methName)
 				}
-				fram.Locals[0] = convertInterfaceToPointer(pop(f))
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -1530,7 +1516,7 @@ func runFrame(fs *list.List) error {
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					className, methodName, methodType, &m, nil, f)
+					className, methodName, methodType, &m, false, f)
 				if err != nil {
 					return errors.New("Error creating frame in: " +
 						className + "." + methodName)
@@ -1962,13 +1948,15 @@ func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
 
 // create a new frame and load up the local variables with the passed
 // arguments, set up the stack, and all the remaining items to begin execution
-// Note: the objectRef parameter contains a pointer to the object for the
-// versions on invoke* bytecodes that require and objectRef in the locals[0]
-// field. If objectRef is nil, then it's not included in the locals.
+// Note: the includeOjectRef parameter is a boolean. When true, it indicates
+// that in addition to the method parameter, an object reference is also on
+// the stack and needs to be popped off the caller's opStack and passed in.
+// (This would be the case for invokevirtual, among others.) When false, no
+// object pointer is needed (for invokestatic, among others).
 func createAndInitNewFrame(
 	className string, methodName string, methodType string,
 	m *classloader.JmEntry,
-	objectRef *classloader.Klass,
+	includeOjectRef bool,
 	currFrame *frames.Frame) (*frames.Frame, error) {
 	f := currFrame
 
@@ -2019,8 +2007,8 @@ func createAndInitNewFrame(
 	// this is used in invokevirtual, invokespecial, and
 	// invokeinterface.
 	destLocal := 0
-	if objectRef != nil {
-		fram.Locals[0] = objectRef
+	if includeOjectRef {
+		fram.Locals[0] = pop(f).(unsafe.Pointer)
 		destLocal = 1
 	}
 
