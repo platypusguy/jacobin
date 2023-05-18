@@ -1317,7 +1317,16 @@ func runFrame(fs *list.List) error {
 
 			// push the pointer to the stack of the frame
 			push(f, int64(len(classloader.StaticsArray)-1))
-		case PUTFIELD: // place value into an object's field
+		case GETFIELD: // 0xB4 get field in pointed-to-object
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			f.PC += 2
+			fieldEntry := f.CP.CpIndex[CPslot]
+			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+				return fmt.Errorf("Expected a field ref for GETFIELD, but got %d in"+
+					"location %d in method %s of class %s\n",
+					fieldEntry.Type, f.PC, f.MethName, f.ClName)
+			}
+		case PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			fieldEntry := f.CP.CpIndex[CPslot]
