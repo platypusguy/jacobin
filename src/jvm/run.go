@@ -406,13 +406,15 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			fAref := (*JacobinFloatArray)(ref)
 			if fAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"DALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			array := *(fAref.Arr)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"DALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
@@ -423,13 +425,15 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			rAref := (*JacobinRefArray)(ref)
 			if rAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"AALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			array := *(rAref.Arr)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"AALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
@@ -439,13 +443,15 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			bAref := (*JacobinByteArray)(ref)
 			if bAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"BALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			array := *(bAref.Arr)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"BALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
@@ -566,7 +572,7 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			longRef := (*JacobinIntArray)(ref)
 			if longRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException, "LASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -577,7 +583,7 @@ func runFrame(fs *list.List) error {
 
 			size := int64(len(*longRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "LASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -589,18 +595,21 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			floatRef := (*JacobinFloatArray)(ref)
 			if floatRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"FASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			if floatRef.Type != FLOAT {
-				exceptions.Throw(exceptions.ArrayStoreException, "FASTORE: Attempt to access array of incorrect type")
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"FASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			size := int64(len(*floatRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"FASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -613,18 +622,21 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			floatRef := (*JacobinFloatArray)(ref)
 			if floatRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"DASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			if floatRef.Type != FLOAT {
-				exceptions.Throw(exceptions.ArrayStoreException, "DASTORE: Attempt to access array of incorrect type")
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"DASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			size := int64(len(*floatRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"DASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -636,13 +648,15 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			refRef := (*JacobinRefArray)(ref)
 			if refRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"AASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			size := int64(len(*refRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"AASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -656,7 +670,7 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			byteRef := (*JacobinByteArray)(ref)
 			if byteRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException, "BASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
