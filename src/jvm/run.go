@@ -580,13 +580,15 @@ func runFrame(fs *list.List) error {
 			}
 
 			if longRef.Type != INT {
-				exceptions.Throw(exceptions.ArrayStoreException, "LASTORE: Attempt to access array of incorrect type")
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"LASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			size := int64(len(*longRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "LASTORE: Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"LASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -673,18 +675,21 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			byteRef := (*JacobinByteArray)(ref)
 			if byteRef == nil {
-				exceptions.Throw(exceptions.NullPointerException, "BASTORE: Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"BASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			if byteRef.Type != BYTE {
-				exceptions.Throw(exceptions.ArrayStoreException, "BASTORE: Attempt to access array of incorrect type")
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
 			size := int64(len(*byteRef.Arr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"BASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -823,7 +828,8 @@ func runFrame(fs *list.List) error {
 		case IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				exceptions.Throw(exceptions.ArithmeticException, ""+
+					"IDIV: Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
 				val2 := pop(f).(int64)
@@ -833,7 +839,8 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				exceptions.Throw(exceptions.ArithmeticException, ""+
+					"LDIV: Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
 				val1 := pop(f).(int64)
@@ -877,7 +884,8 @@ func runFrame(fs *list.List) error {
 		case IREM: // 	0x70	(remainder after int division, modulo)
 			val2 := pop(f).(int64)
 			if val2 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				exceptions.Throw(exceptions.ArithmeticException,
+					"IREM: Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
 				val1 := pop(f).(int64)
@@ -888,7 +896,8 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException, "Arithmetic Exception: divide by zero")
+				exceptions.Throw(exceptions.ArithmeticException,
+					"LREM: Arithmetic Exception: divide by zero")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			} else {
 				val1 := pop(f).(int64)
@@ -1285,7 +1294,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-				return fmt.Errorf("Expected a field ref on getstatic, but got %d in"+
+				return fmt.Errorf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 			}
@@ -1339,7 +1348,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			fieldEntry := f.CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
-				return fmt.Errorf("Expected a field ref for GETFIELD, but got %d in"+
+				return fmt.Errorf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
@@ -1354,7 +1363,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			fieldEntry := f.CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
-				return fmt.Errorf("Expected a field ref for PUTFIELD, but got %d in"+
+				return fmt.Errorf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
@@ -1378,7 +1387,7 @@ func runFrame(fs *list.List) error {
 
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
-				return fmt.Errorf("Expected a method ref for invokevirtual, but got %d in"+
+				return fmt.Errorf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 			}
@@ -1410,7 +1419,7 @@ func runFrame(fs *list.List) error {
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the classpath and retry
-					return errors.New("Class not found: " + className + "." + methodName)
+					return errors.New("INVOKEVIRTUAL: Class not found: " + className + "." + methodName)
 				}
 			}
 
@@ -1428,7 +1437,7 @@ func runFrame(fs *list.List) error {
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
-					return errors.New("Error creating frame in: " +
+					return errors.New("INVOKEVIRTUAL: Error creating frame in: " +
 						className + "." + methodName)
 				}
 
@@ -1464,7 +1473,7 @@ func runFrame(fs *list.List) error {
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil {
-				return errors.New("Class not found: " + className + "." + methName)
+				return errors.New("INVOKESPECIAL: Class not found: " + className + "." + methName)
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
@@ -1478,7 +1487,7 @@ func runFrame(fs *list.List) error {
 				fram, err := createAndInitNewFrame(
 					className, methName, methSig, &m, true, f)
 				if err != nil {
-					return errors.New("Error creating frame in: " +
+					return errors.New("INVOKESPECIAL: Error creating frame in: " +
 						className + "." + methName)
 				}
 
@@ -1536,7 +1545,7 @@ func runFrame(fs *list.List) error {
 			// m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
-				return errors.New("Class not found: " + className + methodName)
+				return errors.New("INVOKESTATIC: Class not found: " + className + methodName)
 			}
 
 			if mtEntry.MType == 'G' {
@@ -1550,7 +1559,7 @@ func runFrame(fs *list.List) error {
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, false, f)
 				if err != nil {
-					return errors.New("Error creating frame in: " +
+					return errors.New("INVOKESTATIC: Error creating frame in: " +
 						className + "." + methodName)
 				}
 				/*
@@ -1633,7 +1642,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
-				msg := fmt.Sprintf("Invalid type for new object")
+				msg := fmt.Sprintf("NEW: Invalid type for new object")
 				_ = log.Log(msg, log.SEVERE)
 			}
 
@@ -1657,7 +1666,7 @@ func runFrame(fs *list.List) error {
 			if size < 0 {
 				exceptions.Throw(
 					exceptions.NegativeArraySizeException,
-					"Invalid size for array")
+					"NEWARRAY: Invalid size for array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -1668,8 +1677,8 @@ func runFrame(fs *list.List) error {
 
 			actualType := jdkArrayTypeToJacobinType(arrayType)
 			if actualType == ERROR {
-				_ = log.Log("Invalid array type specified", log.SEVERE)
-				return errors.New("error instantiating array")
+				_ = log.Log("NEWARRAY: Invalid array type specified", log.SEVERE)
+				return errors.New("NEWARRAY: error instantiating array")
 			} else if actualType == BYTE {
 				a := make([]JavaByte, size)
 				jba := JacobinByteArray{
@@ -1695,8 +1704,8 @@ func runFrame(fs *list.List) error {
 				push(f, unsafe.Pointer(&jfa))
 				g.ArrayAddressList.PushFront(&jfa)
 			} else {
-				_ = log.Log("Invalid array type specified", log.SEVERE)
-				return errors.New("error instantiating array")
+				_ = log.Log("NEWARRAY: Invalid array type specified", log.SEVERE)
+				return errors.New("NEWARRAY: error instantiating array")
 			}
 
 		case ANEWARRAY: // 0xBD create array of references
@@ -1704,7 +1713,7 @@ func runFrame(fs *list.List) error {
 			if size < 0 {
 				exceptions.Throw(
 					exceptions.NegativeArraySizeException,
-					"Invalid size for array")
+					"ANEWARRAY: Invalid size for array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			a := make([]unsafe.Pointer, size)
@@ -1726,7 +1735,8 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			bAref := (*JacobinByteArray)(ref)
 			if bAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"ARRAYLENGTH: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
@@ -1744,8 +1754,8 @@ func runFrame(fs *list.List) error {
 				arrRef := (*JacobinRefArray)(ref)
 				size = int64(len(*arrRef.Arr))
 			} else {
-				_ = log.Log("Invalid array type specified", log.SEVERE)
-				return errors.New("error processing array")
+				_ = log.Log("ARRAYLENGTH: Invalid array type specified", log.SEVERE)
+				return errors.New("ARRAYLENGTH: error processing array")
 			}
 			push(f, size)
 
@@ -1766,7 +1776,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef {
-				return errors.New("multi-dimensional array presently supports classes only")
+				return errors.New("MULTIANEWARRAY: multi-dimensional array presently supports classes only")
 			} else {
 				utf8Index := f.CP.ClassRefs[CPentry.Slot]
 				arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
@@ -1802,7 +1812,7 @@ func runFrame(fs *list.List) error {
 			for i := range dimSizes {
 				if dimSizes[i] == 0 {
 					dimSizes = dimSizes[i+1:] // lop off the prev dims
-					_ = log.Log("Multidimensional array with one dimension of size 0 encountered.",
+					_ = log.Log("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.",
 						log.WARNING)
 					break
 				}
@@ -1875,16 +1885,16 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		default:
-			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
+			missingOpCode := fmt.Sprintf("IFNONNULL: %d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
 			if int(f.Meth[f.PC]) < len(BytecodeNames) && int(f.Meth[f.PC]) > 0 {
-				missingOpCode += fmt.Sprintf(" (%s)", BytecodeNames[f.Meth[f.PC]])
+				missingOpCode += fmt.Sprintf("IFNONNULL:  (%s)", BytecodeNames[f.Meth[f.PC]])
 			}
 
-			msg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
+			msg := fmt.Sprintf("IFNONNULL: Invalid bytecode found: %s at location %d in method %s() of class %s\n",
 				missingOpCode, f.PC, f.MethName, f.ClName)
 			_ = log.Log(msg, log.SEVERE)
-			return errors.New("invalid bytecode encountered")
+			return errors.New("IFNONNULL: invalid bytecode encountered")
 		}
 		f.PC += 1
 	}
