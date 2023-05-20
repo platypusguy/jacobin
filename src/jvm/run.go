@@ -1795,6 +1795,14 @@ func runFrame(fs *list.List) error {
 			// in the dimsizes slice.
 			dimensionCount := int(f.Meth[f.PC+1])
 			f.PC += 1
+
+			if dimensionCount > 4 { // TODO: explore arrays of > 5-256 dimensions
+				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to four dimensions",
+					log.SEVERE)
+				return errors.New(
+					"MULTIANEWARRAY: Jacobin supports arrays only up to four dimensions")
+			}
+
 			dimSizes := make([]int64, dimensionCount)
 
 			// the values on the operand stack give the last dimension
@@ -1864,7 +1872,6 @@ func runFrame(fs *list.List) error {
 			}
 
 			multiArr, _ := Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
-
 			push(f, unsafe.Pointer(multiArr))
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
