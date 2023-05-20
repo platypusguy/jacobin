@@ -1892,16 +1892,16 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		default:
-			missingOpCode := fmt.Sprintf("IFNONNULL: %d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
+			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
 			if int(f.Meth[f.PC]) < len(BytecodeNames) && int(f.Meth[f.PC]) > 0 {
-				missingOpCode += fmt.Sprintf("IFNONNULL:  (%s)", BytecodeNames[f.Meth[f.PC]])
+				missingOpCode += fmt.Sprintf("(%s)", BytecodeNames[f.Meth[f.PC]])
 			}
 
-			msg := fmt.Sprintf("IFNONNULL: Invalid bytecode found: %s at location %d in method %s() of class %s\n",
+			msg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
 				missingOpCode, f.PC, f.MethName, f.ClName)
 			_ = log.Log(msg, log.SEVERE)
-			return errors.New("IFNONNULL: invalid bytecode encountered")
+			return errors.New("invalid bytecode encountered")
 		}
 		f.PC += 1
 	}
