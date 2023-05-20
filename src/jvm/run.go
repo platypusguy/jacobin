@@ -246,7 +246,8 @@ func runFrame(fs *list.List) error {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC instruction")
+				exceptions.Throw(exceptions.InaccessibleObjectException,
+					"Invalid type for LDC instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
@@ -373,13 +374,15 @@ func runFrame(fs *list.List) error {
 			ref := pop(f).(unsafe.Pointer)
 			iAref := (*JacobinIntArray)(ref)
 			if iAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException,
+					"LALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			array := *(iAref.Arr)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"LALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
