@@ -6,7 +6,11 @@
 
 package object
 
-import "jacobin/classloader"
+import (
+	"jacobin/classloader"
+	"jacobin/javaTypes"
+	"unsafe"
+)
 
 // Strings are so commonly used in Java, that it makes sense
 // to have a means of creating them quickly, rather than building
@@ -25,7 +29,8 @@ func NewString() *Object {
 	// enable compact strings. Here, for better compatibility with
 	// go, for the nonce we make it an array of Java chars's
 	// equivalent in go: runes.
-	s.Fields = append(s.Fields, Field{Ftype: "[C", Fvalue: make([]rune, 0)})
+	s.Fields = append(s.Fields, Field{Ftype: "[C",
+		Fvalue: JacobinByteArray{Type: BYTE, Arr: nil}})
 
 	// field 02 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
 	s.Fields = append(s.Fields, Field{Ftype: "B", Fvalue: 1})
@@ -72,13 +77,28 @@ func NewStringFromGoString(in string) *Object {
 
 // Convert go string (consiting of 32-bit runes aka chars) to
 // single-byte values--for use in compact strings
-func GoStringToBytes(in string) []byte {
-	bytes := make([]byte, len(in))
+func GoStringToJavaBytes(in string) []javaTypes.JavaByte {
+	bytes := make([]javaTypes.JavaByte, len(in))
 	runes := []rune(in)
 	for i := 0; i < len(in); i++ {
 		r := runes[i]
 		b := byte(r)
-		bytes[i] = b
+		bytes[i] = javaTypes.JavaByte(b)
 	}
 	return bytes
+}
+
+func CreateJavaStringFromGoString(in unsafe.Pointer) *Object {
+	ins := (*string)(in)
+	stringBytes := GoStringToJavaBytes(*ins)
+	s := NewString()
+	// set the value of the string
+	s.Fields[0].Ftype = "[B"
+	s.Fields[0].Fvalue = JacobinByteArray{
+		Type: BYTE,
+		Arr:  &stringBytes,
+	}
+	// set the string to LATIN
+	s.Fields[1].Fvalue = 0
+	return s
 }

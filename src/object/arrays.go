@@ -4,9 +4,12 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package jvm
+package object
 
-import "unsafe"
+import (
+	"jacobin/javaTypes"
+	"unsafe"
+)
 
 /*  This file contains some data structures and some functions
  	for array handling in Jacobin
@@ -58,14 +61,11 @@ const (
 	T_LONG    = 11
 )
 
-// bytes in Go are uint8, whereas in Java they are int8. Hence this type alias.
-type JavaByte = int8
-
 type ArrayType int
 
 type JacobinByteArray struct {
 	Type ArrayType
-	Arr  *[]JavaByte
+	Arr  *[]javaTypes.JavaByte
 }
 
 type JacobinIntArray struct {
@@ -118,7 +118,7 @@ type JacobinArrGenArray struct {
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
 // by Jacobin in array creation. Returns zero on error.
-func jdkArrayTypeToJacobinType(jdkType int) int {
+func JdkArrayTypeToJacobinType(jdkType int) int {
 	switch jdkType {
 	case T_BOOLEAN, T_BYTE:
 		return BYTE
@@ -142,7 +142,7 @@ func Make2DimArray(ptrArrSize, leafArrSize int64,
 	for i = 0; i < ptrArrSize; i++ {
 		switch arrType {
 		case 'B': // byte arrays
-			barArr := make([]JavaByte, leafArrSize)
+			barArr := make([]javaTypes.JavaByte, leafArrSize)
 			ba := JacobinByteArray{
 				Type: BYTE,
 				Arr:  &barArr,
