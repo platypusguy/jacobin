@@ -1966,11 +1966,13 @@ func convertInterfaceToInt8(val interface{}) int8 {
 
 // converts an interface{} value into uint64
 func convertInterfaceToUint64(val interface{}) uint64 {
+	// in theory, the only types passed to this function are those
+	// found on the operand stack: ints, floats, pointers
 	switch t := val.(type) {
 	case int64:
 		return uint64(t)
 	case float64:
-		return math.Float64bits(t)
+		return uint64(math.Round(t))
 	case unsafe.Pointer:
 		intVal := uintptr(t)
 		return uint64(intVal)
@@ -1982,8 +1984,7 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
 	var ptr unsafe.Pointer
 	switch t := val.(type) {
-	case int64:
-	case int:
+	case int64, int:
 	case byte:
 		uip := uintptr(t)
 		ptr = unsafe.Pointer(uip)

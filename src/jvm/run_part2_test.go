@@ -11,12 +11,13 @@ package jvm
 
 import (
     "testing"
+    "unsafe"
 )
 
 func TestConvertInterfaceToUint64(t *testing.T) {
     var i64 int64 = 200
-    // var f64 float64 = 345.0
-    // var ref unsafe.Pointer = unsafe.Pointer(&f64)
+    var f64 float64 = 345.0
+    var ptr = unsafe.Pointer(&f64)
 
     ret := convertInterfaceToUint64(i64)
     if ret != 200 {
@@ -24,9 +25,14 @@ func TestConvertInterfaceToUint64(t *testing.T) {
             ret)
     }
 
-    // ret = convertInterfaceToUint64(f64)
-    // if ret != 345 {
-    // 	t.Errorf("Expected TestConvertInterfaceToUint64() to retun 345, got %d\n",
-    // 		ret)
-    // }
+    ret = convertInterfaceToUint64(f64)
+    if ret != 345 {
+        t.Errorf("Expected TestConvertInterfaceToUint64() to retun 345, got %d\n",
+            ret)
+    }
+
+    ret = convertInterfaceToUint64(ptr)
+    if ret == 0 { // a minimal test
+        t.Error("Expected TestConvertInterfaceToUint64() to !=0, got 0\n")
+    }
 }
