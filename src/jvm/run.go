@@ -1581,56 +1581,6 @@ func runFrame(fs *list.List) error {
 					return errors.New("INVOKESTATIC: Error creating frame in: " +
 						className + "." + methodName)
 				}
-				/*
-					fram := frames.CreateFrame(m.MaxStack)
-					fram.ClName = className
-					fram.MethName = methodName
-					fram.CP = m.Cp                     // add its pointer to the class CP
-					for i := 0; i < len(m.Code); i++ { // copy the method's bytecodes over
-						fram.Meth = append(fram.Meth, m.Code[i])
-					}
-
-					// allocate the local variables
-					for k := 0; k < m.MaxLocals; k++ {
-						fram.Locals = append(fram.Locals, 0)
-					}
-
-					// pop the parameters off the present stack and put them in the new frame's locals
-					var argList []interface{}
-					paramsToPass := util.ParseIncomingParamsFromMethTypeString(methodType)
-					if len(paramsToPass) > 0 {
-						for i := len(paramsToPass) - 1; i > -1; i-- {
-							switch paramsToPass[i] {
-							case 'D':
-								arg := pop(f).(float64)
-								argList = append(argList, arg)
-								argList = append(argList, arg)
-								pop(f)
-							case 'F':
-								arg := pop(f).(float64)
-								argList = append(argList, arg)
-							case 'J': // long
-								arg := pop(f).(int64)
-								argList = append(argList, arg)
-								argList = append(argList, arg)
-								pop(f)
-							case 'L':
-								arg := pop(f).(unsafe.Pointer)
-								argList = append(argList, arg)
-							default:
-								arg := pop(f).(int64)
-								argList = append(argList, arg)
-							}
-						}
-					}
-
-					destLocal := 0
-					for j := len(argList) - 1; j >= 0; j-- {
-						fram.Locals[destLocal] = argList[j]
-						destLocal += 1
-					}
-					fram.TOS = -1
-				*/
 
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -1677,7 +1627,6 @@ func runFrame(fs *list.List) error {
 				// error message(s) already shown to user
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
 			push(f, unsafe.Pointer(ref))
 
 		case NEWARRAY: // 0xBC create a new array of primitives
@@ -1752,57 +1701,20 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 
 		case ARRAYLENGTH: // OxBE get size of array
-			// expects a pointer to a Jacobin array
-			// var bAref *object.JacobinByteArray
+			// expects a pointer to a Jacobin array (see jacobin/arrays)
 			ref := pop(f)
-			size := ref.(arrays.Ilength).Length()
-
-			// var pointer unsafe.Pointer
-			// pointer = unsafe.Pointer(&ref)
-			// bAref = (*object.JacobinByteArray)(pointer)
-			// unbAref := unsafe.Pointer(bAref)
-			// // switch t := ref.(type) {
-			// case *object.JacobinByteArray:
-			// 	p := unsafe.Pointer(ref)
-			// 	bAref = ref
-			// default:
-			// 	:
-			// 	return int8(t)
-			// case int8:
-			// 	return t
-			// }
-			//
-			// bAref = (*object.JacobinByteArray)(ref)
 			if ref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"ARRAYLENGTH: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			// var size int64
-			// arrType := &ref.Type
-			// if arrType == object.BYTE {
-			// 	size = int64(len(*bAref.Arr))
-			// } else if arrType == object.INT {
-			//
-			// 	intRef := (*object.JacobinIntArray)(ref)
-			// 	size = int64(len(*intRef.Arr))
-			// } else if arrType == object.FLOAT {
-			// 	fltRef := (*object.JacobinFloatArray)(unbAref)
-			// 	size = int64(len(*fltRef.Arr))
-			// } else if arrType == object.REF {
-			// 	arrRef := (*object.JacobinRefArray)(unbAref)
-			// 	size = int64(len(*arrRef.Arr))
-			// } else {
-			// 	_ = log.Log("ARRAYLENGTH: Invalid array type specified", log.SEVERE)
-			// 	return errors.New("ARRAYLENGTH: error processing array")
-			// }
+			size := ref.(arrays.Ilength).Length()
 			push(f, size)
 
 		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
 			var arrayType uint8
-			// var multiArray unsafe.Pointer = nil // the final array
 
 			// The first two chars after the bytecode point to a
 			// classref entry in the CP. In turn, it points to a
@@ -2098,7 +2010,7 @@ func createAndInitNewFrame(
 	// invokeinterface.
 	destLocal := 0
 	if includeOjectRef {
-		fram.Locals[0] = pop(f).(unsafe.Pointer)
+		fram.Locals[0] = pop(f)
 		destLocal = 1
 	}
 
