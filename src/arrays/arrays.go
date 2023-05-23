@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package object
+package arrays
 
 import (
 	"jacobin/javaTypes"
@@ -63,9 +63,18 @@ const (
 
 type ArrayType int
 
+type Ilength interface {
+	Length() int64
+}
+
 type JacobinByteArray struct {
 	Type ArrayType
 	Arr  *[]javaTypes.JavaByte
+}
+
+func (jba JacobinByteArray) Length() int64 {
+	i := len(*(jba.Arr))
+	return int64(i)
 }
 
 type JacobinIntArray struct {
@@ -73,14 +82,29 @@ type JacobinIntArray struct {
 	Arr  *[]int64
 }
 
+func (jba JacobinIntArray) Length() int64 {
+	i := len(*(jba.Arr))
+	return int64(i)
+}
+
 type JacobinFloatArray struct {
 	Type ArrayType
 	Arr  *[]float64
 }
 
+func (jba JacobinFloatArray) Length() int64 {
+	i := len(*(jba.Arr))
+	return int64(i)
+}
+
 type JacobinRefArray struct {
 	Type ArrayType
 	Arr  *[]unsafe.Pointer
+}
+
+func (jba JacobinRefArray) Length() int64 {
+	i := len(*(jba.Arr))
+	return int64(i)
 }
 
 // === The following types are used only in multidimensional arrays

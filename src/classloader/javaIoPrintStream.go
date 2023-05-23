@@ -7,8 +7,9 @@
 package classloader
 
 import (
-	"fmt"
-	"unsafe"
+    "fmt"
+    "jacobin/arrays"
+    "jacobin/object"
 )
 
 /*
@@ -31,77 +32,77 @@ import (
 var MethodSignatures = make(map[string]GMeth)
 
 type GMeth struct {
-	ParamSlots int
-	GFunction  function
+    ParamSlots int
+    GFunction  function
 }
 
 type function func([]interface{}) interface{}
 
 func Load_Io_PrintStream() map[string]GMeth {
-	MethodSignatures["java/io/PrintStream.println()V"] = // println string
-		GMeth{
-			ParamSlots: 1, // [0] = PrintStream.out object,
-			GFunction:  PrintlnV,
-		}
-	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
-		GMeth{
-			ParamSlots: 2, // [0] = PrintStream.out object,
-			// [1] = index to StringConst to print
-			GFunction: Println,
-		}
-	MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  PrintlnI,
-		}
-	MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
-		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
-			GFunction:  PrintlnLong,
-		}
+    MethodSignatures["java/io/PrintStream.println()V"] = // println string
+        GMeth{
+            ParamSlots: 1, // [0] = PrintStream.out object,
+            GFunction:  PrintlnV,
+        }
+    MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
+        GMeth{
+            ParamSlots: 2, // [0] = PrintStream.out object,
+            // [1] = index to StringConst to print
+            GFunction: Println,
+        }
+    MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
+        GMeth{
+            ParamSlots: 2,
+            GFunction:  PrintlnI,
+        }
+    MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
+        GMeth{
+            ParamSlots: 3, // PrintStream.out object + 2 slots for the long
+            GFunction:  PrintlnLong,
+        }
 
-	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
-		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
-			GFunction:  PrintlnDouble,
-		}
+    MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
+        GMeth{
+            ParamSlots: 3, // PrintStream.out object + 2 slots for the double
+            GFunction:  PrintlnDouble,
+        }
 
-	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
-		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
-			GFunction:  PrintlnDouble,
-		}
+    MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
+        GMeth{
+            ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+            GFunction:  PrintlnDouble,
+        }
 
-	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
-		GMeth{
-			ParamSlots: 2, // [0] = PrintStream.out object,
-			// [1] = index to StringConst to print
-			GFunction: PrintS,
-		}
-	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  PrintI,
-		}
-	MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
-		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
-			GFunction:  PrintLong,
-		}
+    MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
+        GMeth{
+            ParamSlots: 2, // [0] = PrintStream.out object,
+            // [1] = index to StringConst to print
+            GFunction: PrintS,
+        }
+    MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
+        GMeth{
+            ParamSlots: 2,
+            GFunction:  PrintI,
+        }
+    MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
+        GMeth{
+            ParamSlots: 3, // PrintStream.out object + 2 slots for the long
+            GFunction:  PrintLong,
+        }
 
-	MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
-		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
-			GFunction:  PrintDouble,
-		}
+    MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
+        GMeth{
+            ParamSlots: 3, // PrintStream.out object + 2 slots for the double
+            GFunction:  PrintDouble,
+        }
 
-	MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
-		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
-			GFunction:  PrintDouble,
-		}
+    MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
+        GMeth{
+            ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+            GFunction:  PrintDouble,
+        }
 
-	return MethodSignatures
+    return MethodSignatures
 }
 
 // Println is the go equivalent of System.out.println(). It accepts two args,
@@ -112,82 +113,82 @@ func Load_Io_PrintStream() map[string]GMeth {
 // into the UTF8 entries of the CP. This string is then printed to stdout. There
 // is no return value.
 func Println(i []interface{}) interface{} {
-	// sIndex := i[1].(int64) // points to a String constant entry in the CP
-	// // cpi := i[0].(int64)    // int64 which is an index into Statics array
-	// // cp := StaticsArray[cpi].CP
-	//
-	// usIndex := uint64(sIndex)
-	// upsIndex := uintptr(usIndex)
-	// strAddr := unsafe.Pointer(upsIndex)
-	strAddr := i[1].(unsafe.Pointer)
-	s := *(*string)(strAddr)
-	// s := FetchUTF8stringFromCPEntryNumber(cp, uint16(sIndex))
-	fmt.Println(s)
-	return nil
+    strAddr := i[1].(*object.Object)
+    s := (strAddr.Fields[0].Fvalue).(*arrays.JacobinByteArray)
+    t := *(s.Arr)
+    goChars := make([]byte, len(t), len(t))
+    for i, c := range t {
+        goChars[i] = byte(c)
+    }
+
+    fmt.Println(string(goChars))
+    return nil
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline
 func PrintlnV(i []interface{}) interface{} {
-	// intToPrint := i[1].(int64) // contains an int
-	fmt.Println("")
-	return nil
+    // intToPrint := i[1].(int64) // contains an int
+    fmt.Println("")
+    return nil
 }
 
 // PrintlnI = java/io/Prinstream.println(int) TODO: equivalent (verify that this grabs the right param to print)
 func PrintlnI(i []interface{}) interface{} {
-	intToPrint := i[1].(int64) // contains an int
-	fmt.Println(intToPrint)
-	return nil
+    intToPrint := i[1].(int64) // contains an int
+    fmt.Println(intToPrint)
+    return nil
 }
 
 // PrintlnLong = java/io/Prinstream.println(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintlnLong(l []interface{}) interface{} {
-	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Println(longToPrint)
-	return nil
+    longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+    fmt.Println(longToPrint)
+    return nil
 }
 
 // PrintlnDouble = java/io/Prinstream.println(double)
 // Doubles in Java are 64-bit FP
 func PrintlnDouble(l []interface{}) interface{} {
-	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Println(doubleToPrint)
-	return nil
+    doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+    fmt.Println(doubleToPrint)
+    return nil
 }
 
 // PrintI = java/io/Prinstream.print(int) TODO: equivalent (verify that this grabs the right param to print)
 func PrintI(i []interface{}) interface{} {
-	intToPrint := i[1].(int64) // contains an int
-	fmt.Print(intToPrint)
-	return nil
+    intToPrint := i[1].(int64) // contains an int
+    fmt.Print(intToPrint)
+    return nil
 }
 
 // PrintLong = java/io/Prinstream.print(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintLong(l []interface{}) interface{} {
-	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Print(longToPrint)
-	return nil
+    longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+    fmt.Print(longToPrint)
+    return nil
 }
 
 // PrintDouble = java/io/Prinstream.print(double)
 // Doubles in Java are 64-bit FP
 func PrintDouble(l []interface{}) interface{} {
-	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Print(doubleToPrint)
-	return nil
+    doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+    fmt.Print(doubleToPrint)
+    return nil
 }
 
 // Print string
 func PrintS(i []interface{}) interface{} {
-	// sIndex := i[1].(int64) // points to a String constant entry in the CP
-	//
-	// usIndex := uint64(sIndex)
-	// upsIndex := uintptr(usIndex)
-	// strAddr := unsafe.Pointer(upsIndex)
-	strAddr := i[1].(unsafe.Pointer)
-	s := *(*string)(strAddr)
-	fmt.Print(s)
-	return nil
+
+    strAddr := i[1].(*object.Object)
+    s := (strAddr.Fields[0].Fvalue).(*arrays.JacobinByteArray)
+    t := *(s.Arr)
+    goChars := make([]byte, len(t), len(t))
+    for i, c := range t {
+        goChars[i] = byte(c)
+    }
+
+    fmt.Print(string(goChars))
+    return nil
 }

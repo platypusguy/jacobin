@@ -6,18 +6,15 @@
 
 package object
 
-import (
-	"jacobin/classloader"
-)
-
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark   MarkWord
-	Klass  *classloader.Klass // pointer to the loaded class
-	Fields []Field            // slice containing the fields
+	Mark MarkWord
+	// Klass  *classloader.Klass // pointer to the loaded class
+	Klass  any
+	Fields []Field // slice containing the fields
 }
 
 // These mark word contains values for different purposes. Here,

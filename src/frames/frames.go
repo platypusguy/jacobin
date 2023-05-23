@@ -11,9 +11,13 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/log"
+	"unsafe"
 )
 
 // The data structures and functions related to JVM frames
+type StackValue interface {
+	int64 | float64 | unsafe.Pointer
+}
 
 type Number interface {
 	int64 | float64

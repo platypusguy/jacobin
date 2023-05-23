@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"jacobin/arrays"
 	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/frames"
@@ -23,6 +24,7 @@ import (
 	"jacobin/util"
 	"math"
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -244,9 +246,11 @@ func runFrame(fs *list.List) error {
 				} else if CPe.retType == IS_STRUCT_ADDR {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				} else if CPe.retType == IS_STRING_ADDR {
-					stringAddr := object.CreateJavaStringFromGoString(unsafe.Pointer(CPe.addrVal))
+					stringAddr :=
+						object.CreateJavaStringFromGoString(CPe.stringVal)
+					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
 					// push(f, unsafe.Pointer(CPe.addrVal))
-					push(f, unsafe.Pointer(stringAddr))
+					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException,
@@ -358,8 +362,8 @@ func runFrame(fs *list.List) error {
 			CALOAD, //		0x34	(push contents of a (two-byte) char array element)
 			SALOAD: //		0x35    (push contents of a short array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			iAref := (*object.JacobinIntArray)(ref)
+			iAref := pop(f).(*arrays.JacobinIntArray)
+			// iAref := (*object.JacobinIntArray)(ref)
 			if iAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -374,8 +378,8 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case LALOAD: //		0x2F	(push contents of a long array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			iAref := (*object.JacobinIntArray)(ref)
+			iAref := pop(f).(*arrays.JacobinIntArray)
+			// iAref := (*object.JacobinIntArray)(ref)
 			if iAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"LALOAD: Invalid (null) reference to an array")
@@ -393,8 +397,8 @@ func runFrame(fs *list.List) error {
 			push(f, value) // pushed twice due to longs being 64 bits wide
 		case FALOAD: //		0x30	(push contents of an float array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			fAref := (*object.JacobinFloatArray)(ref)
+			fAref := pop(f).(*arrays.JacobinFloatArray)
+			// fAref := (*object.JacobinFloatArray)(ref)
 			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -409,8 +413,8 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case DALOAD: //		0x31	(push contents of a double array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			fAref := (*object.JacobinFloatArray)(ref)
+			fAref := pop(f).(*arrays.JacobinFloatArray)
+			// fAref := (*object.JacobinFloatArray)(ref)
 			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DALOAD: Invalid (null) reference to an array")
@@ -428,8 +432,8 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			rAref := (*object.JacobinRefArray)(ref)
+			rAref := pop(f).(*arrays.JacobinRefArray)
+			// rAref := (*object.JacobinRefArray)(ref)
 			if rAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"AALOAD: Invalid (null) reference to an array")
@@ -446,8 +450,10 @@ func runFrame(fs *list.List) error {
 			push(f, value) // unsafe.Pointer
 		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			bAref := (*object.JacobinByteArray)(ref)
+			// ref := pop(f).(unsafe.Pointer)
+			// bAref := (*object.JacobinByteArray)(ref)
+			bAref := pop(f).(*arrays.JacobinByteArray)
+			// bAref := (*object.JacobinByteArray)(ref)
 			if bAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BALOAD: Invalid (null) reference to an array")
@@ -551,14 +557,14 @@ func runFrame(fs *list.List) error {
 			SASTORE: //    	0x56	(store a short in an array)
 			value := pop(f).(int64)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			intRef := (*object.JacobinIntArray)(ref)
+			intRef := pop(f).(*arrays.JacobinIntArray)
+			// intRef := (*object.JacobinIntArray)(ref)
 			if intRef == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if intRef.Type != object.INT {
+			if intRef.Type != arrays.INT {
 				exceptions.Throw(exceptions.ArrayStoreException, "IASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
@@ -575,14 +581,14 @@ func runFrame(fs *list.List) error {
 			value := pop(f).(int64)
 			pop(f) // second pop b/c longs use two slots
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			longRef := (*object.JacobinIntArray)(ref)
+			longRef := pop(f).(*arrays.JacobinIntArray)
+			// longRef := (*object.JacobinIntArray)(ref)
 			if longRef == nil {
 				exceptions.Throw(exceptions.NullPointerException, "LASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if longRef.Type != object.INT {
+			if longRef.Type != arrays.INT {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -600,15 +606,15 @@ func runFrame(fs *list.List) error {
 		case FASTORE: // 0x51	(store a float in a float array)
 			value := pop(f).(float64)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			floatRef := (*object.JacobinFloatArray)(ref)
+			floatRef := pop(f).(*arrays.JacobinFloatArray)
+			// floatRef := (*object.JacobinFloatArray)(ref)
 			if floatRef == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if floatRef.Type != object.FLOAT {
+			if floatRef.Type != arrays.FLOAT {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -627,15 +633,15 @@ func runFrame(fs *list.List) error {
 			value := pop(f).(float64)
 			pop(f) // second pop b/c doubles take two slots on the operand stack
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			floatRef := (*object.JacobinFloatArray)(ref)
+			floatRef := pop(f).(*arrays.JacobinFloatArray)
+			// floatRef := (*object.JacobinFloatArray)(ref)
 			if floatRef == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if floatRef.Type != object.FLOAT {
+			if floatRef.Type != arrays.FLOAT {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -653,8 +659,8 @@ func runFrame(fs *list.List) error {
 		case AASTORE: // 0x53   (store a reference in a reference array)
 			value := pop(f).(unsafe.Pointer)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			refRef := (*object.JacobinRefArray)(ref)
+			refRef := pop(f).(*arrays.JacobinRefArray)
+			// refRef := (*object.JacobinRefArray)(ref)
 			if refRef == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
@@ -675,15 +681,15 @@ func runFrame(fs *list.List) error {
 			rawValue := pop(f)
 			value = convertInterfaceToInt8(rawValue)
 			index := pop(f).(int64)
-			ref := pop(f).(unsafe.Pointer)
-			byteRef := (*object.JacobinByteArray)(ref)
+			// ref := pop(f).(unsafe.Pointer)
+			byteRef := pop(f).(*arrays.JacobinByteArray)
 			if byteRef == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if byteRef.Type != object.BYTE {
+			if byteRef.Type != arrays.BYTE {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -1358,8 +1364,18 @@ func runFrame(fs *list.List) error {
 
 			ref := convertInterfaceToPointer(pop(f))
 			obj := *(*object.Object)(ref)
-			value := obj.Fields[fieldEntry.Slot].Fvalue
-			push(f, value)
+			fieldType := obj.Fields[fieldEntry.Slot].Ftype
+			fieldValue := obj.Fields[fieldEntry.Slot].Fvalue
+
+			// if the field is an array (principally in Strings as an
+			// array of bytes or chars, then push the address of the array.
+			// Otherwise, push the actual value
+			if strings.HasPrefix(fieldType, "[B") {
+				// fieldValue is a *object.JacobinByteArray
+				push(f, fieldValue)
+			} else {
+				push(f, fieldValue)
+			}
 
 		case PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -1678,33 +1694,34 @@ func runFrame(fs *list.List) error {
 
 			g := globals.GetGlobalRef()
 
-			actualType := object.JdkArrayTypeToJacobinType(arrayType)
-			if actualType == object.ERROR {
+			actualType := arrays.JdkArrayTypeToJacobinType(arrayType)
+			if actualType == arrays.ERROR {
 				_ = log.Log("NEWARRAY: Invalid array type specified", log.SEVERE)
 				return errors.New("NEWARRAY: error instantiating array")
-			} else if actualType == object.BYTE {
+			} else if actualType == arrays.BYTE {
 				a := make([]javaTypes.JavaByte, size)
-				jba := object.JacobinByteArray{
-					Type: object.BYTE,
+				jba := arrays.JacobinByteArray{
+					Type: arrays.BYTE,
 					Arr:  &a,
 				}
-				push(f, unsafe.Pointer(&jba))
+				push(f, &jba)
 				g.ArrayAddressList.PushFront(&jba)
-			} else if actualType == object.INT {
+			} else if actualType == arrays.INT {
 				a := make([]int64, size)
-				jia := object.JacobinIntArray{
-					Type: object.INT,
+				jia := arrays.JacobinIntArray{
+					Type: arrays.INT,
 					Arr:  &a,
 				}
-				push(f, unsafe.Pointer(&jia))
+				push(f, &jia)
+				// push(f, unsafe.Pointer(&jia))
 				g.ArrayAddressList.PushFront(&jia)
-			} else if actualType == object.FLOAT {
+			} else if actualType == arrays.FLOAT {
 				a := make([]float64, size)
-				jfa := object.JacobinFloatArray{
-					Type: object.FLOAT,
+				jfa := arrays.JacobinFloatArray{
+					Type: arrays.FLOAT,
 					Arr:  &a,
 				}
-				push(f, unsafe.Pointer(&jfa))
+				push(f, &jfa)
 				g.ArrayAddressList.PushFront(&jfa)
 			} else {
 				_ = log.Log("NEWARRAY: Invalid array type specified", log.SEVERE)
@@ -1720,13 +1737,13 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			a := make([]unsafe.Pointer, size)
-			jra := object.JacobinRefArray{
-				Type: object.REF,
+			jra := arrays.JacobinRefArray{
+				Type: arrays.REF,
 				Arr:  &a,
 			}
 			g := globals.GetGlobalRef()
 			g.ArrayAddressList.PushFront(&jra)
-			push(f, unsafe.Pointer(&jra))
+			push(f, &jra)
 
 			// The bytecode is followed by a two-byte index into the CP
 			// which indicates what type the reference points to. We
@@ -1736,31 +1753,50 @@ func runFrame(fs *list.List) error {
 
 		case ARRAYLENGTH: // OxBE get size of array
 			// expects a pointer to a Jacobin array
-			ref := pop(f).(unsafe.Pointer)
-			bAref := (*object.JacobinByteArray)(ref)
-			if bAref == nil {
+			// var bAref *object.JacobinByteArray
+			ref := pop(f)
+			size := ref.(arrays.Ilength).Length()
+
+			// var pointer unsafe.Pointer
+			// pointer = unsafe.Pointer(&ref)
+			// bAref = (*object.JacobinByteArray)(pointer)
+			// unbAref := unsafe.Pointer(bAref)
+			// // switch t := ref.(type) {
+			// case *object.JacobinByteArray:
+			// 	p := unsafe.Pointer(ref)
+			// 	bAref = ref
+			// default:
+			// 	:
+			// 	return int8(t)
+			// case int8:
+			// 	return t
+			// }
+			//
+			// bAref = (*object.JacobinByteArray)(ref)
+			if ref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"ARRAYLENGTH: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			var size int64
-			arrType := bAref.Type
-			if arrType == object.BYTE {
-				size = int64(len(*bAref.Arr))
-			} else if arrType == object.INT {
-				intRef := (*object.JacobinIntArray)(ref)
-				size = int64(len(*intRef.Arr))
-			} else if arrType == object.FLOAT {
-				fltRef := (*object.JacobinFloatArray)(ref)
-				size = int64(len(*fltRef.Arr))
-			} else if arrType == object.REF {
-				arrRef := (*object.JacobinRefArray)(ref)
-				size = int64(len(*arrRef.Arr))
-			} else {
-				_ = log.Log("ARRAYLENGTH: Invalid array type specified", log.SEVERE)
-				return errors.New("ARRAYLENGTH: error processing array")
-			}
+			// var size int64
+			// arrType := &ref.Type
+			// if arrType == object.BYTE {
+			// 	size = int64(len(*bAref.Arr))
+			// } else if arrType == object.INT {
+			//
+			// 	intRef := (*object.JacobinIntArray)(ref)
+			// 	size = int64(len(*intRef.Arr))
+			// } else if arrType == object.FLOAT {
+			// 	fltRef := (*object.JacobinFloatArray)(unbAref)
+			// 	size = int64(len(*fltRef.Arr))
+			// } else if arrType == object.REF {
+			// 	arrRef := (*object.JacobinRefArray)(unbAref)
+			// 	size = int64(len(*arrRef.Arr))
+			// } else {
+			// 	_ = log.Log("ARRAYLENGTH: Invalid array type specified", log.SEVERE)
+			// 	return errors.New("ARRAYLENGTH: error processing array")
+			// }
 			push(f, size)
 
 		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
@@ -1834,19 +1870,19 @@ func runFrame(fs *list.List) error {
 			// affecting the valid number of dimensions, dimensionCount
 			// can no longer be considered reliable. Use len(dimSizes).
 			if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
-				multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
+				multiArr, _ := arrays.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 				push(f, unsafe.Pointer(multiArr))
 				f.PC += 1
 				continue
 			}
 
-			var multiNewArray *object.JacobinArrRefArray
-			var prev []*object.JacobinArrRefArray   // contains all the leaf nodes
-			var newGen []*object.JacobinArrRefArray // new set of leaf nodes
+			var multiNewArray *arrays.JacobinArrRefArray
+			var prev []*arrays.JacobinArrRefArray   // contains all the leaf nodes
+			var newGen []*arrays.JacobinArrRefArray // new set of leaf nodes
 			var i int                               // TODO: need to test 3D arrays
 			for i = 0; i < len(dimSizes)-2; i++ {
 				if i == 0 {
-					multiNewArray = object.MakeArrRefArray(dimSizes[0])
+					multiNewArray = arrays.MakeArrRefArray(dimSizes[0])
 					for j := 0; j < len(*multiNewArray.Arr); j++ {
 						content := *multiNewArray.Arr
 						element := content[j]
@@ -1857,7 +1893,7 @@ func runFrame(fs *list.List) error {
 					allPrev := len(prev)
 					for m := 0; m < allPrev; m++ {
 						// make all previous leaf elements now point to new array
-						prev[i] = object.MakeArrRefArray(dimSizes[i])
+						prev[i] = arrays.MakeArrRefArray(dimSizes[i])
 						// all the elements of the new array are stored in newGen
 						// then newGen will become prev
 						newElements := *prev[i].Arr
@@ -1870,12 +1906,12 @@ func runFrame(fs *list.List) error {
 			}
 
 			for k := 0; k < len(prev); k++ {
-				ptr, _ := object.Make2DimArray(dimSizes[i], dimSizes[i+1], arrayType)
+				ptr, _ := arrays.Make2DimArray(dimSizes[i], dimSizes[i+1], arrayType)
 				arrPtr := unsafe.Pointer(ptr)
-				prev[k] = (*object.JacobinArrRefArray)(arrPtr)
+				prev[k] = (*arrays.JacobinArrRefArray)(arrPtr)
 			}
 
-			multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
+			multiArr, _ := arrays.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 			push(f, unsafe.Pointer(multiArr))
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
