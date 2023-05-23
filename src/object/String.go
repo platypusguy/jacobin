@@ -22,7 +22,7 @@ func NewString() *Object {
 
     // ==== now the fields ====
 
-    // field 01 -- value: the content of the string as array of chars
+    // field 00 -- value: the content of the string as array of chars
     // Note: Post JDK9, this field is an array of bytes, so as to
     // enable compact strings. Here, for better compatibility with
     // go, for the nonce we make it an array of Java chars's
@@ -30,35 +30,35 @@ func NewString() *Object {
     s.Fields = append(s.Fields, Field{Ftype: "[C",
         Fvalue: arrays.JacobinByteArray{Type: arrays.BYTE, Arr: nil}})
 
-    // field 02 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
+    // field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
     s.Fields = append(s.Fields, Field{Ftype: "B", Fvalue: 1})
 
-    // field 03 -- string hash
+    // field 02 -- string hash
     s.Fields = append(s.Fields, Field{Ftype: "I", Fvalue: 0})
 
-    // field 04 -- COMPACT_STRINGS (always true for JDK >= 9)
+    // field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
     s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: true})
 
-    // field 05 -- UTF_8.INSTANCE ptr to encoder
+    // field 04 -- UTF_8.INSTANCE ptr to encoder
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
-    // field 06 -- ISO_8859_1.INSTANCE ptr to encoder
+    // field 05 -- ISO_8859_1.INSTANCE ptr to encoder
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
-    // field 07 -- sun/nio/cs/US_ASCII.INSTANCE
+    // field 06 -- sun/nio/cs/US_ASCII.INSTANCE
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
-    // field 08 -- java/nio/charset/CodingErrorAction.REPLACE
+    // field 07 -- java/nio/charset/CodingErrorAction.REPLACE
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
-    // field 09 -- java/lang/String.CASE_INSENSITIVE_ORDER
+    // field 08 -- java/lang/String.CASE_INSENSITIVE_ORDER
     // points to a comparator. Will be useful to fill in later
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
-    // field 10 -- hashIsZero (only true in rare case where hash is 0
+    // field 09 -- hashIsZero (only true in rare case where hash is 0
     s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: false})
 
-    // field 11 -- serialPersistentFields
+    // field 10 -- serialPersistentFields
     s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
     return s
