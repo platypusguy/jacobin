@@ -1362,8 +1362,8 @@ func runFrame(fs *list.List) error {
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
 
-			ref := convertInterfaceToPointer(pop(f))
-			obj := *(*object.Object)(ref)
+			ref := pop(f).(*object.Object)
+			obj := *ref
 			fieldType := obj.Fields[fieldEntry.Slot].Ftype
 			fieldValue := obj.Fields[fieldEntry.Slot].Fvalue
 
