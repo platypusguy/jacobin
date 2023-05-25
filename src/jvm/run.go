@@ -1285,7 +1285,7 @@ func runFrame(fs *list.List) error {
 			push(f, valToReturn)
 			return nil
 		case ARETURN: // 0xB0	(return a reference)
-			valToReturn := pop(f).(unsafe.Pointer)
+			valToReturn := pop(f)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
 			return nil
@@ -1989,6 +1989,8 @@ func createAndInitNewFrame(
 			for i = 0; i < len(param); i++ {
 				if param[i] == '[' {
 					arrayDimensions += 1
+				} else {
+					break
 				}
 			}
 			// param[i] now holds the primitive of the array
