@@ -12,7 +12,7 @@ package object
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
 	Mark MarkWord
-	// Klass  *classloader.Klass // pointer to the loaded class
+	// Klass *classloader.Klass // pointer to the loaded class
 	Klass  any
 	Fields []Field // slice containing the fields
 }
