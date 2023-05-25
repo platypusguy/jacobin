@@ -1980,10 +1980,10 @@ func createAndInitNewFrame(
 	// arrays, we pass the kind of pointer that applies and mark off
 	// a single instance of [
 	for j := len(paramsToPass) - 1; j > -1; j-- {
-		primitive := paramsToPass[j]
+		primitive := paramsToPass[j][0]
 
 		arrayDimensions := 0
-		for j > 0 && paramsToPass[j-1] == '[' {
+		for j > 0 && paramsToPass[j-1][0] == '[' {
 			arrayDimensions += 1
 		}
 
