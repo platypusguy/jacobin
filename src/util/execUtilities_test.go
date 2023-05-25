@@ -34,6 +34,6 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
 
     res = ParseIncomingParamsFromMethTypeString("")
     if len(res) != 0 {
-        t.Errorf("Expected parse would return value an empty string, got: %s", res)
+        t.Errorf("Expected parse would return value an empty string array, got: %s", res)
     }
 }
