@@ -1980,14 +1980,25 @@ func createAndInitNewFrame(
 	// arrays, we pass the kind of pointer that applies and mark off
 	// a single instance of [
 	for j := len(paramsToPass) - 1; j > -1; j-- {
-		primitive := paramsToPass[j][0]
+		param := paramsToPass[j]
+		primitive := param[0]
 
 		arrayDimensions := 0
-		for j > 0 && paramsToPass[j-1][0] == '[' {
-			arrayDimensions += 1
+		if primitive == '[' {
+			i := 0
+			for i = 0; i < len(param); i++ {
+				if param[i] == '[' {
+					arrayDimensions += 1
+				}
+			}
+			// param[i] now holds the primitive of the array
+			primitive = param[i]
 		}
+		// for j > 0 && paramsToPass[j-1][0] == '[' {
+		// 	arrayDimensions += 1
+		// }
 
-		j -= arrayDimensions
+		// j -= arrayDimensions
 		if arrayDimensions > 1 { // a multidimensional array
 			// if the array is multidimensional, then we are
 			// passing in an pointer to an array of references
