@@ -653,7 +653,8 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 
 		case AASTORE: // 0x53   (store a reference in a reference array)
-			value := pop(f).(unsafe.Pointer)
+			// value := pop(f).(unsafe.Pointer)
+			value := pop(f).(*object.Object) // reference we're inserting
 			index := pop(f).(int64)
 			refRef := pop(f).(*arrays.JacobinRefArray)
 			// refRef := (*object.JacobinRefArray)(ref)
@@ -671,7 +672,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			array := *(refRef.Arr)
-			array[index] = value
+			array[index] = unsafe.Pointer(value)
 
 		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
 			var value int8 = 0
@@ -1962,33 +1963,84 @@ func createAndInitNewFrame(
 		fram.Locals = append(fram.Locals, int64(0))
 	}
 
-	// pop the parameters off the present stack and put them in the new frame's locals
+	// pop the parameters off the present stack and put them in
+	// the new frame's locals. This is done in reverse order so
+	// that the parameters are pushed in the right order to be
+	// popped off by the receiving function
 	var argList []interface{}
 	paramsToPass :=
 		util.ParseIncomingParamsFromMethTypeString(methodType)
-	if len(paramsToPass) > 0 {
-		for i := len(paramsToPass) - 1; i > -1; i-- {
-			switch paramsToPass[i] {
+
+	// primitives use a single byte/letter, but arrays can be many bytes:
+	// a minimum of two (e.g., [I for array of ints). If the array
+	// is multidimensional, the bytes will be [[I with one instance
+	// of [ for every dimension. In the case of multidimensional
+	// arrays, the arrays are always pushed as arrays of references,
+	// and we simply mark off the number of [. For single-dimensional
+	// arrays, we pass the kind of pointer that applies and mark off
+	// a single instance of [
+	for j := len(paramsToPass) - 1; j > -1; j-- {
+		primitive := paramsToPass[j]
+
+		arrayDimensions := 0
+		for j > 0 && paramsToPass[j-1] == '[' {
+			arrayDimensions += 1
+		}
+
+		j -= arrayDimensions
+		if arrayDimensions > 1 { // a multidimensional array
+			// if the array is multidimensional, then we are
+			// passing in an pointer to an array of references
+			// regardless of the lowest level of primitive in
+			// the array
+			arg := pop(f).(*arrays.JacobinRefArray)
+			argList = append(argList, arg)
+			continue
+		}
+		if arrayDimensions == 1 { // a single-dimension array
+			switch primitive {
+			case 'B':
+				arg := pop(f).(*arrays.JacobinByteArray)
+				argList = append(argList, arg)
 			case 'D':
-				arg := pop(f).(float64)
-				argList = append(argList, arg)
-				argList = append(argList, arg)
-				pop(f)
 			case 'F':
-				arg := pop(f).(float64)
+				arg := pop(f).(*arrays.JacobinFloatArray)
 				argList = append(argList, arg)
-			case 'J': // long
-				arg := pop(f).(int64)
-				argList = append(argList, arg)
-				argList = append(argList, arg)
-				pop(f)
 			case 'L':
-				arg := pop(f).(unsafe.Pointer)
+				arg := pop(f).(*arrays.JacobinRefArray)
 				argList = append(argList, arg)
 			default:
-				arg := pop(f).(int64)
+				arg := pop(f).(*arrays.JacobinIntArray)
 				argList = append(argList, arg)
 			}
+			continue
+		}
+
+		switch primitive { // it's not an array
+		case 'D':
+			arg := pop(f).(float64)
+			argList = append(argList, arg)
+			argList = append(argList, arg)
+			pop(f)
+		case 'F':
+			arg := pop(f).(float64)
+			argList = append(argList, arg)
+		case 'B':
+		case 'C':
+		case 'I':
+			arg := pop(f).(int64)
+			argList = append(argList, arg)
+		case 'J': // long
+			arg := pop(f).(int64)
+			argList = append(argList, arg)
+			argList = append(argList, arg)
+			pop(f)
+		case 'L':
+			arg := pop(f).(unsafe.Pointer)
+			argList = append(argList, arg)
+		default:
+			arg := pop(f)
+			argList = append(argList, arg)
 		}
 	}
 
