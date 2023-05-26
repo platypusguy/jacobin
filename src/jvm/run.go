@@ -439,10 +439,8 @@ func runFrame(fs *list.List) error {
 
 			arrayPtr := rAref.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
-			// CURR: get the array size as a separate routine
-			//  copy from ARRAYLEN
-			// CURR: extract the array (ctl-shift-v)
-			// CURR: then continue with the other store/load
+
+			// CURR: continue with the other store/load start w/ BALOAD
 			// CURR: and finish up with multidimensional arrays
 
 			if index >= size {
