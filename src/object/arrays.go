@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package arrays
+package object
 
 import (
 	"jacobin/javaTypes"
@@ -39,13 +39,14 @@ const ( // the ArrayTypes
 	FLOAT = 1
 	INT   = 2
 	BYTE  = 3
-	REF   = 4
-	ARR   = 5  // points to arrays, used in multidimensional arrays
-	ARRF  = 6  // points to arrays of floats--for multidimensional arrays
-	ARRI  = 7  // points to arrays of ints--for multidimensional arrays
-	ARRB  = 8  // points to arrays of bytes--for multidimensional arrays
-	ARRR  = 9  // points to arrays of references--for multidimensional arrays
-	ARRG  = 10 // generic array (of unsafe.Pointers)
+	REF   = 4 // arrays of object references
+	STR   = 5 // arrays of strings (these are references too, but for speed)
+	ARR   = 6 // points to arrays, used in multidimensional arrays
+	// ARRF  = 6  // points to arrays of floats--for multidimensional arrays
+	// ARRI  = 7  // points to arrays of ints--for multidimensional arrays
+	// ARRB  = 8  // points to arrays of bytes--for multidimensional arrays
+	ARRR = 9  // points to arrays of references--for multidimensional arrays
+	ARRG = 10 // generic array (of unsafe.Pointers)
 )
 
 // the primitive types as specified in the
@@ -99,7 +100,7 @@ func (jba JacobinFloatArray) Length() int64 {
 
 type JacobinRefArray struct {
 	Type ArrayType
-	Arr  *[]unsafe.Pointer
+	Arr  *[]*Object
 }
 
 func (jba JacobinRefArray) Length() int64 {
@@ -161,46 +162,75 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 func Make2DimArray(ptrArrSize, leafArrSize int64,
 	arrType uint8) (*JacobinRefArray, error) {
 	// ptrArr is the array of pointer to the leaf arrays
-	ptrArr := make([]unsafe.Pointer, ptrArrSize)
-	var i int64
-	for i = 0; i < ptrArrSize; i++ {
-		switch arrType {
-		case 'B': // byte arrays
-			barArr := make([]javaTypes.JavaByte, leafArrSize)
-			ba := JacobinByteArray{
-				Type: BYTE,
-				Arr:  &barArr,
-			}
-			ptrArr[i] = unsafe.Pointer(&ba)
-		case 'F', 'D': // float arrays
-			farArr := make([]float64, leafArrSize)
-			fa := JacobinFloatArray{
-				Type: FLOAT,
-				Arr:  &farArr,
-			}
-			ptrArr[i] = unsafe.Pointer(&fa)
-		case 'L': // reference/pointer arrays
-			rarArr := make([]unsafe.Pointer, leafArrSize)
-			ra := JacobinRefArray{
-				Type: REF,
-				Arr:  &rarArr,
-			}
-			ptrArr[i] = unsafe.Pointer(&ra)
-		default: // all the integer types
-			iarArr := make([]int64, leafArrSize)
-			ia := JacobinIntArray{
-				Type: INT,
-				Arr:  &iarArr,
-			}
-			ptrArr[i] = unsafe.Pointer(&ia)
-		}
-	}
+	ptrArr := make([]*Object, ptrArrSize)
+	// TODO: ** COMMENTED OUT DUE to partial implementation of JACOBIN-261
+	// var i int64
+	// for i = 0; i < ptrArrSize; i++ {
+	// 	switch arrType {
+	// 	case 'B': // byte arrays
+	// 		barArr := make([]javaTypes.JavaByte, leafArrSize)
+	// 		ba := JacobinByteArray{
+	// 			Type: BYTE,
+	// 			Arr:  &barArr,
+	// 		}
+	// 		ptrArr[i] = unsafe.Pointer(&ba)
+	// 	case 'F', 'D': // float arrays
+	// 		farArr := make([]float64, leafArrSize)
+	// 		fa := JacobinFloatArray{
+	// 			Type: FLOAT,
+	// 			Arr:  &farArr,
+	// 		}
+	// 		ptrArr[i] = unsafe.Pointer(&fa)
+	// 	case 'L': // reference/pointer arrays
+	// 		rarArr := make([]*object.Object, leafArrSize)
+	// 		ra := JacobinRefArray{
+	// 			Type: REF,
+	// 			Arr:  &rarArr,
+	// 		}
+	// 		ptrArr[i] = unsafe.Pointer(&ra)
+	// 	default: // all the integer types
+	// 		iarArr := make([]int64, leafArrSize)
+	// 		ia := JacobinIntArray{
+	// 			Type: INT,
+	// 			Arr:  &iarArr,
+	// 		}
+	// 		ptrArr[i] = unsafe.Pointer(&ia)
+	// 	}
+	// }
 
 	multiArr := JacobinRefArray{
 		Type: ARRG,
 		Arr:  &ptrArr,
 	}
 	return &multiArr, nil
+}
+
+func Make1DimArray(arrType int, size int64) *Object {
+	o := MakeObject()
+	o.Klass = nil // arrays don't have a pointer to a parsed class
+
+	switch arrType {
+	case 'B': // byte arrays
+		barArr := make([]javaTypes.JavaByte, size)
+		of := Field{Ftype: "[B", Fvalue: &barArr}
+		o.Fields = append(o.Fields, of)
+		return o
+	case 'F', 'D': // float arrays
+		farArr := make([]float64, size)
+		of := Field{Ftype: "[F", Fvalue: &farArr}
+		o.Fields = append(o.Fields, of)
+		return o
+	case 'L': // reference/pointer arrays
+		rarArr := make([]*Object, size)
+		of := Field{Ftype: "[L", Fvalue: &rarArr}
+		o.Fields = append(o.Fields, of)
+		return o
+	default: // all the integer types
+		iarArr := make([]int64, size)
+		of := Field{Ftype: "[I", Fvalue: &iarArr}
+		o.Fields = append(o.Fields, of)
+		return o
+	}
 }
 
 // MakeArrRefArray makes an array of pointers to other
