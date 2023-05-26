@@ -348,7 +348,7 @@ func TestBastoreInt64(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinByteArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(BASTORE)
     push(&f, ptr)        // push the reference to the array
@@ -358,8 +358,7 @@ func TestBastoreInt64(t *testing.T) {
     fs.PushFront(&f) // push the new frame
     _ = runFrame(fs) // execute the bytecode
 
-    byteRef := (*object.JacobinByteArray)(ptr)
-    array := *(byteRef.Arr)
+    array := *(ptr.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
     var sum int64
     for i := 0; i < 30; i++ {
         sum += int64(array[i])
