@@ -454,22 +454,24 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
-			// ref := pop(f).(unsafe.Pointer)
-			// bAref := (*object.JacobinByteArray)(ref)
-			bAref := pop(f).(*object.JacobinByteArray)
-			// bAref := (*object.JacobinByteArray)(ref)
+			bAref := pop(f).(*object.Object) // the array object
 			if bAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			array := *(bAref.Arr)
+			// array := *(bAref.Arr)
 
-			if index >= int64(len(array)) {
+			arrayPtr := bAref.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
+			size := int64(len(*arrayPtr))
+
+			if index >= int64(size) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
+
+			array := *(arrayPtr)
 			var value = array[index]
 			push(f, int64(value))
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
@@ -685,28 +687,27 @@ func runFrame(fs *list.List) error {
 			rawValue := pop(f)
 			value = convertInterfaceToInt8(rawValue)
 			index := pop(f).(int64)
-			// ref := pop(f).(unsafe.Pointer)
-			byteRef := pop(f).(*object.JacobinByteArray)
-			if byteRef == nil {
+			ptrObj := pop(f).(*object.Object) // ptr to array object
+			if ptrObj == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if byteRef.Type != object.BYTE {
+			if ptrObj.Fields[0].Ftype != "[B" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := int64(len(*byteRef.Arr))
+			array := *(ptrObj.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
+			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			array := *(byteRef.Arr)
 			array[index] = value
 
 		case POP: // 0x57 	(pop an item off the stack and discard it)
@@ -1661,7 +1662,7 @@ func runFrame(fs *list.List) error {
 			//     Arr:  &a,
 			// }
 
-			arrayPtr := object.Make1DimArray('L', size)
+			arrayPtr := object.Make1DimArray(object.REF, size)
 			g := globals.GetGlobalRef()
 			g.ArrayAddressList.PushFront(arrayPtr)
 			push(f, arrayPtr)

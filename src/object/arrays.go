@@ -62,6 +62,8 @@ const (
 	T_LONG    = 11
 )
 
+const T_REF = 12 // used only in Jacobin
+
 type ArrayType int
 
 type Ilength interface {
@@ -210,17 +212,19 @@ func Make1DimArray(arrType int, size int64) *Object {
 	o.Klass = nil // arrays don't have a pointer to a parsed class
 
 	switch arrType {
-	case 'B': // byte arrays
+	// case 'B': // byte arrays
+	case BYTE:
 		barArr := make([]javaTypes.JavaByte, size)
 		of := Field{Ftype: "[B", Fvalue: &barArr}
 		o.Fields = append(o.Fields, of)
 		return o
-	case 'F', 'D': // float arrays
+	// case 'F', 'D': // float arrays
+	case FLOAT:
 		farArr := make([]float64, size)
 		of := Field{Ftype: "[F", Fvalue: &farArr}
 		o.Fields = append(o.Fields, of)
 		return o
-	case 'L': // reference/pointer arrays
+	case REF: // reference/pointer arrays
 		rarArr := make([]*Object, size)
 		of := Field{Ftype: "[L", Fvalue: &rarArr}
 		o.Fields = append(o.Fields, of)
