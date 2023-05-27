@@ -1914,21 +1914,24 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	return 0
 }
 
+// ** Presently unused. May be deleted if not found useful
 // converts an interface{} value into unsafe.Pointer
-func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
-	var ptr unsafe.Pointer
-	switch t := val.(type) {
-	case int64, int:
-	case byte:
-		uip := uintptr(t)
-		ptr = unsafe.Pointer(uip)
-	case float64:
-		ptr = nil
-	case unsafe.Pointer:
-		ptr = t
-	}
-	return ptr
-}
+// func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
+// 	var ptr unsafe.Pointer
+// 	switch t := val.(type) {
+// 	case int64, int:
+// 		uip := uintptr(&t)
+// 		ptr = unsafe.Pointer(uip)
+// 	case byte:
+// 		uip := uintptr(t)
+// 		ptr = unsafe.Pointer(uip)
+// 	case float64:
+// 		ptr = nil
+// 	case unsafe.Pointer:
+// 		ptr = t
+// 	}
+// 	return ptr
+// }
 
 // create a new frame and load up the local variables with the passed
 // arguments, set up the stack, and all the remaining items to begin execution
@@ -2008,17 +2011,15 @@ func createAndInitNewFrame(
 		}
 
 		switch primitive { // it's not an array
-		case 'D':
+		case 'D': // double
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
 			argList = append(argList, arg)
 			pop(f)
-		case 'F':
+		case 'F': // float
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
-		case 'B':
-		case 'C':
-		case 'I':
+		case 'B', 'C', 'I', 'S': // byte, char, integer, short
 			arg := pop(f).(int64)
 			argList = append(argList, arg)
 		case 'J': // long
@@ -2026,7 +2027,7 @@ func createAndInitNewFrame(
 			argList = append(argList, arg)
 			argList = append(argList, arg)
 			pop(f)
-		case 'L':
+		case 'L': // pointer/referene
 			arg := pop(f).(unsafe.Pointer)
 			argList = append(argList, arg)
 		default:
