@@ -375,15 +375,14 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case LALOAD: //		0x2F	(push contents of a long array element)
 			index := pop(f).(int64)
-			iAref := pop(f).(*object.JacobinIntArray)
-			// iAref := (*object.JacobinIntArray)(ref)
+			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"LALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			array := *(iAref.Arr)
 
+			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LALOAD: Invalid array subscript")
@@ -391,23 +390,25 @@ func runFrame(fs *list.List) error {
 			}
 			var value = array[index]
 			push(f, value)
-			push(f, value) // pushed twice due to longs being 64 bits wide
+			push(f, value) // pushed twice due to JDK longs being 64 bits wide
+
 		case FALOAD: //		0x30	(push contents of an float array element)
 			index := pop(f).(int64)
-			fAref := pop(f).(*object.JacobinFloatArray)
+			fAref := pop(f).(*object.Object) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
 			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			array := *(fAref.Arr)
 
+			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 			var value = array[index]
 			push(f, value)
+
 		case DALOAD: //		0x31	(push contents of a double array element)
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
@@ -442,10 +443,10 @@ func runFrame(fs *list.List) error {
 					"AALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
 			array := *(arrayPtr)
 			var value = array[index]
 			push(f, value)
+
 		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
 			bAref := pop(f).(*object.Object) // the array object
@@ -464,10 +465,10 @@ func runFrame(fs *list.List) error {
 					"BALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
 			array := *(arrayPtr)
 			var value = array[index]
 			push(f, int64(value))
+
 		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			LSTORE: //  0x37 (store popped top of stack long into local[index])
 			bytecode := f.Meth[f.PC]
@@ -576,54 +577,54 @@ func runFrame(fs *list.List) error {
 			value := pop(f).(int64)
 			pop(f) // second pop b/c longs use two slots
 			index := pop(f).(int64)
-			longRef := pop(f).(*object.JacobinIntArray)
-			// longRef := (*object.JacobinIntArray)(ref)
-			if longRef == nil {
+			lAref := pop(f).(*object.Object) // ptr to array object
+			if lAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "LASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if longRef.Type != object.INT {
+			arrType := lAref.Fields[0].Ftype
+
+			if arrType != "[I" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := int64(len(*longRef.Arr))
+			array := *(lAref.Fields[0].Fvalue).(*[]int64)
+			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
-			array := *(longRef.Arr)
 			array[index] = value
+
 		case FASTORE: // 0x51	(store a float in a float array)
 			value := pop(f).(float64)
 			index := pop(f).(int64)
-			floatRef := pop(f).(*object.JacobinFloatArray)
-			// faRef := (*object.JacobinFloatArray)(ref)
-			if floatRef == nil {
+			fAref := pop(f).(*object.Object) // ptr to array object
+			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if floatRef.Type != object.FLOAT {
+			if fAref.Fields[0].Ftype != "[F" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := int64(len(*floatRef.Arr))
+			array := *(fAref.Fields[0].Fvalue).(*[]float64)
+			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
-			array := *(floatRef.Arr)
 			array[index] = value
+
 		case DASTORE: // 0x52	(store a double in a doubles array)
 			value := pop(f).(float64)
 			pop(f) // second pop b/c doubles take two slots on the operand stack

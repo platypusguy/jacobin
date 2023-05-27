@@ -539,7 +539,7 @@ func TestFaload(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinFloatArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(FASTORE)
     push(&f, ptr)       // push the reference to the array
@@ -590,7 +590,7 @@ func TestFastore(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinFloatArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(FASTORE)
     push(&f, ptr)       // push the reference to the array
@@ -600,8 +600,7 @@ func TestFastore(t *testing.T) {
     fs.PushFront(&f) // push the new frame
     _ = runFrame(fs) // execute the bytecode
 
-    floatRef := (*object.JacobinFloatArray)(ptr)
-    array := *(floatRef.Arr)
+    array := *(ptr.Fields[0].Fvalue).(*[]float64)
     var fsum float64
     for i := 0; i < 30; i++ {
         fsum += array[i]
@@ -633,7 +632,7 @@ func TestIaload(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinIntArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(IASTORE)
     push(&f, ptr)        // push the reference to the array
@@ -684,7 +683,7 @@ func TestIastore(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinIntArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(IASTORE)
     push(&f, ptr)        // push the reference to the array
@@ -694,8 +693,7 @@ func TestIastore(t *testing.T) {
     fs.PushFront(&f) // push the new frame
     _ = runFrame(fs) // execute the bytecode
 
-    intRef := (*object.JacobinIntArray)(ptr)
-    array := *(intRef.Arr)
+    array := *(ptr.Fields[0].Fvalue).(*[]int64)
     var sum int64
     for i := 0; i < 30; i++ {
         sum += array[i]
@@ -780,7 +778,7 @@ func TestLastore(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinIntArray)
+    ptr := pop(&f).(*object.Object)
 
     f = newFrame(LASTORE)
     push(&f, ptr)        // push the reference to the array
@@ -794,8 +792,7 @@ func TestLastore(t *testing.T) {
         t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
     }
 
-    intRef := (*object.JacobinIntArray)(ptr)
-    array := *(intRef.Arr)
+    array := *(ptr.Fields[0].Fvalue).(*[]int64)
     var sum int64
     for i := 0; i < 30; i++ {
         sum += array[i]
@@ -858,9 +855,9 @@ func TestSaload(t *testing.T) {
     }
 
     // now, get the reference to the array
-    ptr := pop(&f).(*object.JacobinIntArray)
+    ptr := pop(&f).(*object.Object)
 
-    f = newFrame(IASTORE)
+    f = newFrame(SASTORE)
     push(&f, ptr)        // push the reference to the array
     push(&f, int64(20))  // in array[20]
     push(&f, int64(100)) // the value we're storing
@@ -917,4 +914,13 @@ func TestSastore(t *testing.T) {
     fs = frames.CreateFrameStack()
     fs.PushFront(&f) // push the new frame
     _ = runFrame(fs) // execute the bytecode
+
+    array := *(ptr.Fields[0].Fvalue).(*[]int64)
+    var sum int64
+    for i := 0; i < 30; i++ {
+        sum += array[i]
+    }
+    if sum != 100 {
+        t.Errorf("SASTORE: Expected sum of array entries to be 100, got: %d", sum)
+    }
 }
