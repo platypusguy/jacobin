@@ -1990,36 +1990,20 @@ func createAndInitNewFrame(
 			// param[i] now holds the primitive of the array
 			primitive = param[i]
 		}
-		// for j > 0 && paramsToPass[j-1][0] == '[' {
-		// 	arrayDimensions += 1
-		// }
 
-		// j -= arrayDimensions
 		if arrayDimensions > 1 { // a multidimensional array
 			// if the array is multidimensional, then we are
 			// passing in an pointer to an array of references
-			// regardless of the lowest level of primitive in
-			// the array
-			arg := pop(f).(*object.JacobinRefArray)
+			// to objects (lower arrays) regardless of the
+			// lowest level of primitive in the array
+			arg := pop(f).(*object.Object)
 			argList = append(argList, arg)
 			continue
 		}
+
 		if arrayDimensions == 1 { // a single-dimension array
-			switch primitive {
-			case 'B':
-				arg := pop(f).(*object.JacobinByteArray)
-				argList = append(argList, arg)
-			case 'D':
-			case 'F':
-				arg := pop(f).(*object.JacobinFloatArray)
-				argList = append(argList, arg)
-			case 'L':
-				arg := pop(f).(*object.JacobinRefArray)
-				argList = append(argList, arg)
-			default:
-				arg := pop(f).(*object.JacobinIntArray)
-				argList = append(argList, arg)
-			}
+			arg := pop(f).(*object.Object)
+			argList = append(argList, arg)
 			continue
 		}
 
