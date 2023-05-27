@@ -360,13 +360,12 @@ func runFrame(fs *list.List) error {
 			CALOAD, //		0x34	(push contents of a (two-byte) char array element)
 			SALOAD: //		0x35    (push contents of a short array element)
 			index := pop(f).(int64)
-			iAref := pop(f).(*object.JacobinIntArray)
-			// iAref := (*object.JacobinIntArray)(ref)
+			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			array := *(iAref.Arr)
+			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
@@ -411,14 +410,13 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case DALOAD: //		0x31	(push contents of a double array element)
 			index := pop(f).(int64)
-			fAref := pop(f).(*object.JacobinFloatArray)
-			// fAref := (*object.JacobinFloatArray)(ref)
+			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			array := *(fAref.Arr)
+			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
@@ -439,10 +437,6 @@ func runFrame(fs *list.List) error {
 
 			arrayPtr := rAref.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
-
-			// CURR: continue with the other store/load start w/ BALOAD
-			// CURR: and finish up with multidimensional arrays
-
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"AALOAD: Invalid array subscript")
@@ -559,26 +553,25 @@ func runFrame(fs *list.List) error {
 			SASTORE: //    	0x56	(store a short in an array)
 			value := pop(f).(int64)
 			index := pop(f).(int64)
-			intRef := pop(f).(*object.JacobinIntArray)
-			// intRef := (*object.JacobinIntArray)(ref)
-			if intRef == nil {
+			arrObj := pop(f).(*object.Object) // the array object
+			if arrObj == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if intRef.Type != object.INT {
+			if arrObj.Fields[0].Ftype != "[I" {
 				exceptions.Throw(exceptions.ArrayStoreException, "IASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := int64(len(*intRef.Arr))
+			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
+			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
-			array := *(intRef.Arr)
 			array[index] = value
+
 		case LASTORE: // 0x50	(store a long in a long array)
 			value := pop(f).(int64)
 			pop(f) // second pop b/c longs use two slots
@@ -609,7 +602,7 @@ func runFrame(fs *list.List) error {
 			value := pop(f).(float64)
 			index := pop(f).(int64)
 			floatRef := pop(f).(*object.JacobinFloatArray)
-			// floatRef := (*object.JacobinFloatArray)(ref)
+			// faRef := (*object.JacobinFloatArray)(ref)
 			if floatRef == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
@@ -635,28 +628,27 @@ func runFrame(fs *list.List) error {
 			value := pop(f).(float64)
 			pop(f) // second pop b/c doubles take two slots on the operand stack
 			index := pop(f).(int64)
-			floatRef := pop(f).(*object.JacobinFloatArray)
-			// floatRef := (*object.JacobinFloatArray)(ref)
-			if floatRef == nil {
+			dAref := pop(f).(*object.Object)
+			if dAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			if floatRef.Type != object.FLOAT {
+			if dAref.Fields[0].Ftype != "[F" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			size := int64(len(*floatRef.Arr))
+			array := *(dAref.Fields[0].Fvalue).(*[]float64)
+			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			array := *(floatRef.Arr)
 			array[index] = value
 
 		case AASTORE: // 0x53   (store a reference in a reference array)
