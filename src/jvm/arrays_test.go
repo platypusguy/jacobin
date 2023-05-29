@@ -802,6 +802,21 @@ func TestLastore(t *testing.T) {
     }
 }
 
+// MULTIANEWARRAY: test creation of a multidimensional array
+func Test2DimArray1(t *testing.T) {
+    arr, err := object.Make2DimArray(3, 4, object.BYTE)
+    if err != nil {
+        t.Error("Error creating 2-dimensional array")
+    }
+
+    arrLevelArray := (arr.Fields[0].Fvalue).(*[]*object.Object)
+    if len(*arrLevelArray) != 3 {
+        t.Errorf("MULTIANEWARRAY: Expected length of pointer array of 3, got: %d",
+            len(*arrLevelArray))
+    }
+
+}
+
 // NEWARRAY: creation of array for primitive values
 func TestNewrray(t *testing.T) {
     f := newFrame(NEWARRAY)

@@ -162,9 +162,30 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 // dimensional array. (All the dimensions > 2 are simply arrays
 // of pointers to arrays.)
 func Make2DimArray(ptrArrSize, leafArrSize int64,
-    arrType uint8) (*JacobinRefArray, error) {
-    // ptrArr is the array of pointer to the leaf arrays
-    ptrArr := make([]*Object, ptrArrSize)
+    arrType uint8) (*Object, error) {
+
+    ptrArr := MakeObject()                           // ptrArr is the pointer to the array of pointers to the leaf arrays
+    value := make([]*Object, ptrArrSize, ptrArrSize) // the actual ptr-level array
+    ptrArr.Fields = append(ptrArr.Fields, Field{Fvalue: &(value)})
+    for i := 0; i < len(value); i++ { // for each entry in the ptr array
+        value[i] = Make1DimArray(int(arrType), leafArrSize)
+    }
+
+    // the type of the pointer array will be the type of the leaf
+    // array with a [ pre pended.
+    ptrArrType := "[" + value[0].Fields[0].Ftype
+    ptrArr.Fields[0].Ftype = ptrArrType
+    // switch arrType {
+    // case 'B': // byte arrays
+    // 	ptrArr.Fields[0].Ftype = "[[B"
+    // 	value[i].Fields[0].Ftype = "[B"
+    // 	value[i].Fields[0].Fvalue =
+
+    // value[i].Fields[0].Ftype = "[B"
+    // actualArray := make([]byte, leafArrSize, leafArrSize)
+    // value[i].Fields[0].Fvalue = &actualArray
+    // 	}
+    // }
     // TODO: ** COMMENTED OUT DUE to partial implementation of JACOBIN-261
     // var i int64
     // for i = 0; i < ptrArrSize; i++ {
@@ -199,12 +220,12 @@ func Make2DimArray(ptrArrSize, leafArrSize int64,
     // 		ptrArr[i] = unsafe.Pointer(&ia)
     // 	}
     // }
-
-    multiArr := JacobinRefArray{
-        Type: ARRG,
-        Arr:  &ptrArr,
-    }
-    return &multiArr, nil
+    //
+    // multiArr := JacobinRefArray{
+    // 	Type: ARRG,
+    // 	Arr:  &ptrArr,
+    // }
+    return ptrArr, nil
 }
 
 func Make1DimArray(arrType int, size int64) *Object {

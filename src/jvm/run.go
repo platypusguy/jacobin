@@ -1730,11 +1730,11 @@ func runFrame(fs *list.List) error {
 			dimensionCount := int(f.Meth[f.PC+1])
 			f.PC += 1
 
-			if dimensionCount > 4 { // TODO: explore arrays of > 5-256 dimensions
-				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to four dimensions",
+			if dimensionCount > 3 { // TODO: explore arrays of > 5-256 dimensions
+				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions",
 					log.SEVERE)
 				return errors.New(
-					"MULTIANEWARRAY: Jacobin supports arrays only up to four dimensions")
+					"MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions")
 			}
 
 			dimSizes := make([]int64, dimensionCount)
