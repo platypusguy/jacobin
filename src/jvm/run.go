@@ -1715,10 +1715,23 @@ func runFrame(fs *list.List) error {
 				utf8Index := f.CP.ClassRefs[CPentry.Slot]
 				arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 			}
+
+			var rawArrayType uint8
 			for i := 0; i < len(arrayDesc); i++ {
 				if arrayDesc[i] != '[' {
-					arrayType = arrayDesc[i]
+					rawArrayType = arrayDesc[i]
 				}
+			}
+
+			switch rawArrayType {
+			case 'B', 'Z':
+				arrayType = object.BYTE
+			case 'F', 'D':
+				arrayType = object.FLOAT
+			case 'L':
+				arrayType = object.REF
+			default:
+				arrayType = object.INT
 			}
 
 			// get the number of dimensions, then pop off the operand
@@ -1730,11 +1743,11 @@ func runFrame(fs *list.List) error {
 			dimensionCount := int(f.Meth[f.PC+1])
 			f.PC += 1
 
-			if dimensionCount > 3 { // TODO: explore arrays of > 5-256 dimensions
-				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions",
+			if dimensionCount > 2 { // TODO: explore arrays of > 5-256 dimensions
+				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to two dimensions",
 					log.SEVERE)
 				return errors.New(
-					"MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions")
+					"MULTIANEWARRAY: Jacobin supports arrays only up to two dimensions")
 			}
 
 			dimSizes := make([]int64, dimensionCount)
@@ -1765,48 +1778,13 @@ func runFrame(fs *list.List) error {
 			// can no longer be considered reliable. Use len(dimSizes).
 			if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
 				multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
-				push(f, unsafe.Pointer(multiArr))
+				push(f, multiArr)
 				f.PC += 1
 				continue
 			}
 
-			var multiNewArray *object.JacobinArrRefArray
-			var prev []*object.JacobinArrRefArray   // contains all the leaf nodes
-			var newGen []*object.JacobinArrRefArray // new set of leaf nodes
-			var i int                               // TODO: need to test 3D arrays
-			for i = 0; i < len(dimSizes)-2; i++ {
-				if i == 0 {
-					multiNewArray = object.MakeArrRefArray(dimSizes[0])
-					for j := 0; j < len(*multiNewArray.Arr); j++ {
-						content := *multiNewArray.Arr
-						element := content[j]
-						prev = append(prev, &element)
-					}
-					continue
-				} else {
-					allPrev := len(prev)
-					for m := 0; m < allPrev; m++ {
-						// make all previous leaf elements now point to new array
-						prev[i] = object.MakeArrRefArray(dimSizes[i])
-						// all the elements of the new array are stored in newGen
-						// then newGen will become prev
-						newElements := *prev[i].Arr
-						for _, v := range newElements {
-							newGen = append(newGen, &v)
-						}
-					}
-					prev = newGen
-				}
-			}
+			// CURR: handle 3-d arrays
 
-			for k := 0; k < len(prev); k++ {
-				ptr, _ := object.Make2DimArray(dimSizes[i], dimSizes[i+1], arrayType)
-				arrPtr := unsafe.Pointer(ptr)
-				prev[k] = (*object.JacobinArrRefArray)(arrPtr)
-			}
-
-			multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
-			push(f, unsafe.Pointer(multiArr))
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(int64)
@@ -2027,7 +2005,7 @@ func createAndInitNewFrame(
 			argList = append(argList, arg)
 			argList = append(argList, arg)
 			pop(f)
-		case 'L': // pointer/referene
+		case 'L': // pointer/reference
 			arg := pop(f).(unsafe.Pointer)
 			argList = append(argList, arg)
 		default:
