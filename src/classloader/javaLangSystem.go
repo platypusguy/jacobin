@@ -7,8 +7,9 @@
 package classloader
 
 import (
-	"jacobin/shutdown"
-	"time"
+    "jacobin/shutdown"
+    "runtime"
+    "time"
 )
 
 /*
@@ -29,42 +30,54 @@ import (
 
 func Load_Lang_System() map[string]GMeth {
 
-	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  currentTimeMillis,
-		}
+    MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
+        GMeth{
+            ParamSlots: 0,
+            GFunction:  currentTimeMillis,
+        }
 
-	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  nanoTime,
-		}
+    MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
+        GMeth{
+            ParamSlots: 0,
+            GFunction:  nanoTime,
+        }
 
-	MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  exitI,
-		}
+    MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
+        GMeth{
+            ParamSlots: 1,
+            GFunction:  exitI,
+        }
 
-	return MethodSignatures
+    MethodSignatures["java/lang/System.gc()V"] = // for a GC cycle
+        GMeth{
+            ParamSlots: 0,
+            GFunction:  forceGC,
+        }
+
+    return MethodSignatures
 }
 
 // Return time in milliseconds, measured since midnight of Jan 1, 1970
 func currentTimeMillis([]interface{}) interface{} {
-	return int64(time.Now().UnixMilli())
+    return time.Now().UnixMilli() // is int64
 }
 
 // Return time in nanoseconds. Note that in golang this function has a lower (that is, less good)
 // resolution than Java: two successive calls often return the same value.
 func nanoTime([]interface{}) interface{} {
-	return int64(time.Now().UnixNano())
+    return time.Now().UnixNano() // is int64
 }
 
 // Exits the program directly, returning the passed in value
 func exitI(params []interface{}) interface{} {
-	exitCode := params[0].(int64) // int64
-	var exitStatus = int(exitCode)
-	shutdown.Exit(exitStatus)
-	return 0 // this code is not executed as previous line ends Jacobin
+    exitCode := params[0].(int64) // int64
+    var exitStatus = int(exitCode)
+    shutdown.Exit(exitStatus)
+    return 0 // this code is not executed as previous line ends Jacobin
+}
+
+// Force a garbage collection cycle.
+func forceGC([]interface{}) interface{} {
+    runtime.GC()
+    return nil
 }
