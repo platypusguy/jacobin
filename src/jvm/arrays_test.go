@@ -809,12 +809,18 @@ func Test2DimArray1(t *testing.T) {
         t.Error("Error creating 2-dimensional array")
     }
 
-    arrLevelArray := (arr.Fields[0].Fvalue).(*[]*object.Object)
-    if len(*arrLevelArray) != 3 {
+    arrLevelArrayPtr := (arr.Fields[0].Fvalue).(*[]*object.Object)
+    if len(*arrLevelArrayPtr) != 3 {
         t.Errorf("MULTIANEWARRAY: Expected length of pointer array of 3, got: %d",
-            len(*arrLevelArray))
+            len(*arrLevelArrayPtr))
     }
 
+    leafLevelArrayPtr := ((*arrLevelArrayPtr)[0].Fields[0].Fvalue).(*[]javaTypes.JavaByte)
+    arrLen := len(*leafLevelArrayPtr)
+    if arrLen != 4 {
+        t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d",
+            arrLen)
+    }
 }
 
 // NEWARRAY: creation of array for primitive values
