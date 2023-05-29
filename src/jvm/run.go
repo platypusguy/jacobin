@@ -2006,7 +2006,7 @@ func createAndInitNewFrame(
 			argList = append(argList, arg)
 			pop(f)
 		case 'L': // pointer/reference
-			arg := pop(f).(unsafe.Pointer)
+			arg := pop(f).(*object.Object)
 			argList = append(argList, arg)
 		default:
 			arg := pop(f)
