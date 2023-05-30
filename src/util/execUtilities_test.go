@@ -37,3 +37,16 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
         t.Errorf("Expected parse would return value an empty string array, got: %s", res)
     }
 }
+
+// test that pointer/refernce in the params is handled correctly
+func TestParseIncomingReferenceParamsFromMethType(t *testing.T) {
+    res := ParseIncomingParamsFromMethTypeString("(LString;Ljava/lang/Integer;JJ)")
+    if len(res) != 4 { // short, byte and int all become 'I'
+        t.Errorf("Expected 4 parsed parameters, got %d", len(res))
+    }
+
+    var params string = res[0] + res[1] + res[2] + res[3]
+    if params != "LLJJ" {
+        t.Errorf("Expected param string of 'LLJJ', got: %s", params)
+    }
+}

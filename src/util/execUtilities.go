@@ -38,9 +38,8 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
                     continue
                 } else {
                     i = j // j now points to the ;, continue will add 1
-                    continue
+                    break
                 }
-
             }
         case '[': // arrays
             elements := make([]byte, 0)
