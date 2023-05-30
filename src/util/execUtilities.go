@@ -33,6 +33,15 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
             params = append(params, "D")
         case 'L':
             params = append(params, "L")
+            for j := i + 1; j < len(paramChars); j++ {
+                if paramChars[j] != ';' { // the end of the link is a ;
+                    continue
+                } else {
+                    i = j // j now points to the ;, continue will add 1
+                    continue
+                }
+
+            }
         case '[': // arrays
             elements := make([]byte, 0)
             for paramChars[i] == '[' {
