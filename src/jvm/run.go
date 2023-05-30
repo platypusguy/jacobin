@@ -460,7 +460,7 @@ func runFrame(fs *list.List) error {
 			arrayPtr := bAref.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
 			size := int64(len(*arrayPtr))
 
-			if index >= int64(size) {
+			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -1637,7 +1637,7 @@ func runFrame(fs *list.List) error {
 				return errors.New("NEWARRAY: error instantiating array")
 			}
 
-			arrayPtr := object.Make1DimArray(actualType, size)
+			arrayPtr := object.Make1DimArray(uint8(actualType), size)
 			g.ArrayAddressList.PushFront(arrayPtr)
 			push(f, arrayPtr)
 
@@ -1649,11 +1649,6 @@ func runFrame(fs *list.List) error {
 					"ANEWARRAY: Invalid size for array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-			// a := make([]*object.Object, size)
-			// jra := object.JacobinRefArray{
-			//     Type: object.REF,
-			//     Arr:  &a,
-			// }
 
 			arrayPtr := object.Make1DimArray(object.REF, size)
 			g := globals.GetGlobalRef()
@@ -1743,11 +1738,11 @@ func runFrame(fs *list.List) error {
 			dimensionCount := int(f.Meth[f.PC+1])
 			f.PC += 1
 
-			if dimensionCount > 2 { // TODO: explore arrays of > 5-256 dimensions
-				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to two dimensions",
+			if dimensionCount > 3 { // TODO: explore arrays of > 5-256 dimensions
+				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions",
 					log.SEVERE)
 				return errors.New(
-					"MULTIANEWARRAY: Jacobin supports arrays only up to two dimensions")
+					"MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions")
 			}
 
 			dimSizes := make([]int64, dimensionCount)
@@ -1776,14 +1771,29 @@ func runFrame(fs *list.List) error {
 			// Because of the possibility of a zero-sized dimension
 			// affecting the valid number of dimensions, dimensionCount
 			// can no longer be considered reliable. Use len(dimSizes).
-			if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
+			if len(dimSizes) == 3 {
+				multiArr := object.Make1DimArray(object.REF, dimSizes[0])
+				actualArray := multiArr.Fields[0].Fvalue.([]*object.Object)
+				for i := 0; i < len(actualArray); i++ {
+					actualArray[i], _ = object.Make2DimArray(dimSizes[1],
+						dimSizes[2], arrayType)
+				}
+				push(f, multiArr)
+				f.PC += 1
+				continue
+			} else if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
 				multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 				push(f, multiArr)
 				f.PC += 1
 				continue
+				// It's possible due to a zero-length dimension, that we
+				// need to create a single-dimension array.
+			} else if len(dimSizes) == 1 {
+				oneDimArr := object.Make1DimArray(arrayType, dimSizes[0])
+				push(f, oneDimArr)
+				f.PC += 1
+				continue
 			}
-
-			// CURR: handle 3-d arrays
 
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
