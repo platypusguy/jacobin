@@ -7,6 +7,7 @@
 package jvm
 
 import (
+    "jacobin/classloader"
     "jacobin/frames"
     "jacobin/globals"
     "jacobin/javaTypes"
@@ -802,7 +803,7 @@ func TestLastore(t *testing.T) {
     }
 }
 
-// MULTIANEWARRAY: test creation of a multidimensional array
+// MULTIANEWARRAY: test creation of a two-dimensional array
 func Test2DimArray1(t *testing.T) {
     arr, err := object.Make2DimArray(3, 4, object.BYTE)
     if err != nil {
@@ -821,6 +822,36 @@ func Test2DimArray1(t *testing.T) {
         t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d",
             arrLen)
     }
+}
+
+// MULTINEWARRAY
+func Test3DimArray1(t *testing.T) {
+    // create the constant pool we'll point to
+    CP := classloader.CPool{}
+    CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+    CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+    CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+    CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+    CP.ClassRefs = append(CP.ClassRefs, 0)
+    CP.Utf8Refs = append(CP.Utf8Refs, "[[I")
+
+    // create the frame
+    f := newFrame(MULTIANEWARRAY)
+    f.Meth = append(f.Meth, 0x00) // this byte and next form index into CP
+    f.Meth = append(f.Meth, 0x02)
+    f.Meth = append(f.Meth, 0x03) // the number of dimensions
+    push(&f, int64(0x03))         // size of the three dimensions: 4x3x2
+    push(&f, int64(0x03))
+    push(&f, int64(0x04))
+    f.CP = &CP
+
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs) // execute the bytecode
+    if f.TOS != 0 {
+        t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+    }
+    // CURR: finish testing generated array (dimensions, sizes, etc.)
 }
 
 // NEWARRAY: creation of array for primitive values
