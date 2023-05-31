@@ -1,7 +1,10 @@
 ![Go version](https://img.shields.io/github/go-mod/go-version/platypusguy/jacobin?filename=src%2Fgo.mod)
-![Workflow](https://github.com/platypusguy/jacobin/actions/workflows/go.yml/badge.svg)
-[![Go_report_card](https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat)](https://goreportcard.com/report/github.com/platypusguy/jacobin)
 ![GitHub](https://img.shields.io/github/license/platypusguy/jacobin)
+![Workflow](https://github.com/platypusguy/jacobin/actions/workflows/go.yml/badge.svg)
+<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/platypusguy/jacobin">
+<!--
+[![Go_report_card](https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat)](https://goreportcard.com/report/github.com/platypusguy/jacobin) -->
+
 
 # jacobin
 
