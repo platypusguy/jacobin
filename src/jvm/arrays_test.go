@@ -833,7 +833,7 @@ func Test3DimArray1(t *testing.T) {
     CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
     CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
     CP.ClassRefs = append(CP.ClassRefs, 0)
-    CP.Utf8Refs = append(CP.Utf8Refs, "[[I")
+    CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
 
     // create the frame
     f := newFrame(MULTIANEWARRAY)
@@ -849,9 +849,54 @@ func Test3DimArray1(t *testing.T) {
     fs.PushFront(&f) // push the new frame
     _ = runFrame(fs) // execute the bytecode
     if f.TOS != 0 {
-        t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+        t.Errorf("MULTIANEWARRAY: Top of stack, expected 0, got: %d", f.TOS)
     }
-    // CURR: finish testing generated array (dimensions, sizes, etc.)
+
+    arrayPtr := pop(&f)
+    if arrayPtr == nil {
+        t.Error("MULTIANEWARRAY: Expected a pointer to an array, got nil")
+    }
+
+    topLevelArray := *(arrayPtr.(*object.Object))
+    if topLevelArray.Fields[0].Ftype != "[L" {
+        t.Errorf("MULTIANEWARRAY: Expected 1st dim to be type '[L', got %s",
+            topLevelArray.Fields[0].Ftype)
+    }
+
+    dim1 := *(topLevelArray.Fields[0].Fvalue.(*[]*object.Object))
+    if len(dim1) != 3 {
+        t.Errorf("MULTINEWARRAY: Expected 1st dim to have 3 elements, got: %d",
+            len(dim1))
+    }
+
+    dim2type := dim1[0].Fields[0].Ftype
+    if dim2type != "[[I" {
+        t.Errorf("MULTIANEWARRAY: Expected 2nd dim to be type '[[I', got %s",
+            dim2type)
+    }
+
+    dim2 := *(dim1[0].Fields[0].Fvalue.(*[]*object.Object))
+    if len(dim2) != 3 {
+        t.Errorf("MULTINEWARRAY: Expected 2nd dim to have 3 elements, got: %d",
+            len(dim2))
+    }
+
+    dim3type := dim2[0].Fields[0].Ftype
+    if dim3type != "[I" {
+        t.Errorf("MULTIANEWARRAY: Expected leaf dim to be type '[I', got %s",
+            dim3type)
+    }
+
+    dim3 := *(dim2[0].Fields[0].Fvalue.(*[]int64))
+    if len(dim3) != 4 {
+        t.Errorf("MULTINEWARRAY: Expected leaf dim to have 4 elements, got: %d",
+            len(dim3))
+    }
+
+    elementValue := dim3[2] // an element in the leaf array
+    if elementValue != 0 {
+        t.Errorf("Expected element value to be 0, got %d", elementValue)
+    }
 }
 
 // NEWARRAY: creation of array for primitive values
