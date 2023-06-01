@@ -824,7 +824,7 @@ func Test2DimArray1(t *testing.T) {
     }
 }
 
-// MULTINEWARRAY
+// MULTINEWARRAY: Test a straightforward 3x3x4 array of int64's
 func Test3DimArray1(t *testing.T) {
     // create the constant pool we'll point to
     CP := classloader.CPool{}
@@ -897,6 +897,83 @@ func Test3DimArray1(t *testing.T) {
     if elementValue != 0 {
         t.Errorf("Expected element value to be 0, got %d", elementValue)
     }
+}
+
+// MULTINEWARRAY: Test an array 4x3x3 array of int64's. The zero
+// size of the second dimension should result in an single-dimension
+// array of int64s
+func Test3DimArray2(t *testing.T) {
+    // create the constant pool we'll point to
+    CP := classloader.CPool{}
+    CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+    CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+    CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+    CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+    CP.ClassRefs = append(CP.ClassRefs, 0)
+    CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
+
+    // create the frame
+    f := newFrame(MULTIANEWARRAY)
+    f.Meth = append(f.Meth, 0x00) // this byte and next form index into CP
+    f.Meth = append(f.Meth, 0x02)
+    f.Meth = append(f.Meth, 0x03) // the number of dimensions
+    push(&f, int64(0x03))         // size of the three dimensions: 4x3x2
+    push(&f, int64(0x00))
+    push(&f, int64(0x04))
+    f.CP = &CP
+
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs) // execute the bytecode
+    if f.TOS != 0 {
+        t.Errorf("MULTIANEWARRAY: Top of stack, expected 0, got: %d", f.TOS)
+    }
+
+    arrayPtr := pop(&f)
+    if arrayPtr == nil {
+        t.Error("MULTIANEWARRAY: Expected a pointer to an array, got nil")
+    }
+
+    topLevelArray := *(arrayPtr.(*object.Object))
+    if topLevelArray.Fields[0].Ftype != "[I" {
+        t.Errorf("MULTIANEWARRAY: Expected 1st dim to be type '[I', got %s",
+            topLevelArray.Fields[0].Ftype)
+    }
+
+    dim1 := *(topLevelArray.Fields[0].Fvalue.(*[]int64))
+    if len(dim1) != 4 {
+        t.Errorf("MULTINEWARRAY: Expected 1st dim to have 4 elements, got: %d",
+            len(dim1))
+    }
+    //
+    // dim2type := dim1[0].Fields[0].Ftype
+    // if dim2type != "[[I" {
+    //     t.Errorf("MULTIANEWARRAY: Expected 2nd dim to be type '[[I', got %s",
+    //         dim2type)
+    // }
+    //
+    // dim2 := *(dim1[0].Fields[0].Fvalue.(*[]*object.Object))
+    // if len(dim2) != 3 {
+    //     t.Errorf("MULTINEWARRAY: Expected 2nd dim to have 3 elements, got: %d",
+    //         len(dim2))
+    // }
+    //
+    // dim3type := dim2[0].Fields[0].Ftype
+    // if dim3type != "[I" {
+    //     t.Errorf("MULTIANEWARRAY: Expected leaf dim to be type '[I', got %s",
+    //         dim3type)
+    // }
+    //
+    // dim3 := *(dim2[0].Fields[0].Fvalue.(*[]int64))
+    // if len(dim3) != 4 {
+    //     t.Errorf("MULTINEWARRAY: Expected leaf dim to have 4 elements, got: %d",
+    //         len(dim3))
+    // }
+    //
+    // elementValue := dim3[2] // an element in the leaf array
+    // if elementValue != 0 {
+    //     t.Errorf("Expected element value to be 0, got %d", elementValue)
+    // }
 }
 
 // NEWARRAY: creation of array for primitive values
