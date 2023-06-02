@@ -31,10 +31,10 @@ func NewString() *Object {
         Field{Ftype: "[B", Fvalue: &array})
 
     // field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
-    s.Fields = append(s.Fields, Field{Ftype: "B", Fvalue: 1})
+    s.Fields = append(s.Fields, Field{Ftype: "B", Fvalue: int64(1)})
 
     // field 02 -- string hash
-    s.Fields = append(s.Fields, Field{Ftype: "I", Fvalue: 0})
+    s.Fields = append(s.Fields, Field{Ftype: "I", Fvalue: int64(0)})
 
     // field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
     s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: true})
@@ -94,6 +94,6 @@ func CreateJavaStringFromGoString(in *string) *Object {
     s.Fields[0].Ftype = "[B"
     s.Fields[0].Fvalue = &stringBytes
     // set the string to LATIN
-    s.Fields[1].Fvalue = 0
+    s.Fields[1].Fvalue = int64(0)
     return s
 }
