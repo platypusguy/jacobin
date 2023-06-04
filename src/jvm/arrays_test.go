@@ -7,11 +7,15 @@
 package jvm
 
 import (
+    "io"
     "jacobin/classloader"
     "jacobin/frames"
     "jacobin/globals"
     "jacobin/javaTypes"
+    "jacobin/log"
     "jacobin/object"
+    "os"
+    "strings"
     "testing"
 )
 
@@ -701,6 +705,118 @@ func TestIastore(t *testing.T) {
     }
     if sum != 100 {
         t.Errorf("IASTORE: Expected sum of array entries to be 100, got: %d", sum)
+    }
+}
+
+// IASTORE: Test error conditions: invalid array address
+func TestIastoreInvalid1(t *testing.T) {
+    f := newFrame(IASTORE)
+    push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
+    push(&f, int64(30))             // the index into the array
+    push(&f, int64(20))             // the value to insert
+
+    log.Init()
+    globals.InitGlobals("test")
+    normalStderr := os.Stderr
+    r, w, _ := os.Pipe()
+    os.Stderr = w
+
+    normalStdout := os.Stdout
+    _, wout, _ := os.Pipe()
+    os.Stdout = wout
+
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs)
+
+    // restore stderr and stdout to what they were before
+    _ = w.Close()
+    out, _ := io.ReadAll(r)
+    os.Stderr = normalStderr
+
+    errMsg := string(out[:])
+
+    _ = wout.Close()
+    os.Stdout = normalStdout
+
+    if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+        t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
+    }
+}
+
+// IASTORE: Test error conditions: wrong type of array (not [I)
+func TestIastoreInvalid2(t *testing.T) {
+
+    o := object.Make1DimArray(object.FLOAT, 10)
+    f := newFrame(IASTORE)
+    push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
+    push(&f, int64(30)) // the index into the array
+    push(&f, int64(20)) // the value to insert
+
+    log.Init()
+    globals.InitGlobals("test")
+    normalStderr := os.Stderr
+    r, w, _ := os.Pipe()
+    os.Stderr = w
+
+    normalStdout := os.Stdout
+    _, wout, _ := os.Pipe()
+    os.Stdout = wout
+
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs)
+
+    // restore stderr and stdout to what they were before
+    _ = w.Close()
+    out, _ := io.ReadAll(r)
+    os.Stderr = normalStderr
+
+    errMsg := string(out[:])
+
+    _ = wout.Close()
+    os.Stdout = normalStdout
+
+    if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+        t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
+    }
+}
+
+// IASTORE: Test error conditions: index out of range
+func TestIastoreInvalid3(t *testing.T) {
+
+    o := object.Make1DimArray(object.INT, 10)
+    f := newFrame(IASTORE)
+    push(&f, o)         // an array of 10 ints, not floats
+    push(&f, int64(30)) // the index into the array: it's too big, causing error
+    push(&f, int64(20)) // the value to insert
+
+    log.Init()
+    globals.InitGlobals("test")
+    normalStderr := os.Stderr
+    r, w, _ := os.Pipe()
+    os.Stderr = w
+
+    normalStdout := os.Stdout
+    _, wout, _ := os.Pipe()
+    os.Stdout = wout
+
+    fs := frames.CreateFrameStack()
+    fs.PushFront(&f) // push the new frame
+    _ = runFrame(fs)
+
+    // restore stderr and stdout to what they were before
+    _ = w.Close()
+    out, _ := io.ReadAll(r)
+    os.Stderr = normalStderr
+
+    errMsg := string(out[:])
+
+    _ = wout.Close()
+    os.Stdout = normalStdout
+
+    if !strings.Contains(errMsg, "IA/CA/SATORE: Invalid array subscript") {
+        t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
     }
 }
 

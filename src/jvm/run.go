@@ -558,18 +558,25 @@ func runFrame(fs *list.List) error {
 			if arrObj == nil {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("IA/CA/SASTORE: Invalid array address")
 			}
 
 			if arrObj.Fields[0].Ftype != "[I" {
-				exceptions.Throw(exceptions.ArrayStoreException, "IASTORE: Attempt to access array of incorrect type")
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"IA/CA/SASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("IA/CA/SASTORE: Invalid array index")
 			}
 
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "IA/CA/SATORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("IA/CA/SASTORE: Invalid array index")
 			}
 			array[index] = value
 
