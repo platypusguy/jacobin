@@ -567,7 +567,7 @@ func runFrame(fs *list.List) error {
 					"IA/CA/SASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				// the following is needed only to make unit tests work
-				return errors.New("IA/CA/SASTORE: Invalid array index")
+				return errors.New("IA/CA/SASTORE: Invalid array type")
 			}
 
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
@@ -588,6 +588,8 @@ func runFrame(fs *list.List) error {
 			if lAref == nil {
 				exceptions.Throw(exceptions.NullPointerException, "LASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("LASTORE: Invalid array reference")
 			}
 
 			arrType := lAref.Fields[0].Ftype
@@ -596,6 +598,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("LASTORE: Invalid array type")
 			}
 
 			array := *(lAref.Fields[0].Fvalue).(*[]int64)
@@ -604,6 +608,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("LASTORE: Invalid array index")
 			}
 			array[index] = value
 
@@ -641,12 +647,16 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("DASTORE: Invalid array reference")
 			}
 
 			if dAref.Fields[0].Ftype != "[F" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("DASTORE: Invalid array type")
 			}
 
 			array := *(dAref.Fields[0].Fvalue).(*[]float64)
@@ -655,6 +665,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("DASTORE: Invalid array index")
 			}
 
 			array[index] = value
