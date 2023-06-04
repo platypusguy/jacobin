@@ -621,12 +621,16 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("FASTORE: Invalid array address")
 			}
 
 			if fAref.Fields[0].Ftype != "[F" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("FASTORE: Invalid array type")
 			}
 
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
@@ -635,6 +639,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("FASTORE: Invalid array index")
 			}
 			array[index] = value
 
@@ -672,8 +678,8 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 
 		case AASTORE: // 0x53   (store a reference in a reference array)
-			value := pop(f).(*object.Object) // reference we're inserting
-			index := pop(f).(int64)
+			value := pop(f).(*object.Object)  // reference we're inserting
+			index := pop(f).(int64)           // index into the array
 			ptrObj := pop(f).(*object.Object) // ptr to the array object
 
 			if ptrObj == nil {
