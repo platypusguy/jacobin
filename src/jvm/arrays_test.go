@@ -175,43 +175,43 @@ func TestAastoreInvalid1(t *testing.T) {
 	}
 }
 
-// // AASTORE: Test error conditions: wrong type of array (not [I)
-// func TestAastoreInvalid2(t *testing.T) {
-//
-//     o := object.Make1DimArray(object.FLOAT, 10)
-//     f := newFrame(BASTORE)
-//     push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
-//     push(&f, int64(30)) // the index into the array
-//     push(&f, int64(20)) // the value to insert
-//
-//     log.Init()
-//     globals.InitGlobals("test")
-//     normalStderr := os.Stderr
-//     r, w, _ := os.Pipe()
-//     os.Stderr = w
-//
-//     normalStdout := os.Stdout
-//     _, wout, _ := os.Pipe()
-//     os.Stdout = wout
-//
-//     fs := frames.CreateFrameStack()
-//     fs.PushFront(&f) // push the new frame
-//     _ = runFrame(fs)
-//
-//     // restore stderr and stdout to what they were before
-//     _ = w.Close()
-//     out, _ := io.ReadAll(r)
-//     os.Stderr = normalStderr
-//
-//     errMsg := string(out[:])
-//
-//     _ = wout.Close()
-//     os.Stdout = normalStdout
-//
-//     if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
-//         t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
-//     }
-// }
+// AASTORE: Test error conditions: wrong type of array (not [I)
+func TestAastoreInvalid2(t *testing.T) {
+
+	o := object.Make1DimArray(object.INT, 10)
+	f := newFrame(AASTORE)
+	push(&f, o)        // this should point to an array of refs, not ints, will here cause the error
+	push(&f, int64(5)) // the index into the array
+	push(&f, o)        // the value to insert
+
+	log.Init()
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
 
 // AASTORE: Test error conditions: index out of range
 func TestAastoreInvalid3(t *testing.T) {

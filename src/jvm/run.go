@@ -690,6 +690,14 @@ func runFrame(fs *list.List) error {
 				return errors.New("AASTORE: Invalid array address")
 			}
 
+			if ptrObj.Fields[0].Ftype != "[L" {
+				exceptions.Throw(exceptions.ArrayStoreException,
+					"AASTORE: Attempt to access array of incorrect type")
+				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("AASTORE: Invalid array type")
+			}
+
 			// get pointer to the actual array
 			arrayPtr := ptrObj.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
