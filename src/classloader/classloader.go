@@ -193,7 +193,7 @@ func LoadBaseClasses(global *globals.Globals) {
 
 		jmodFile, err := os.Open(fname)
 		if err != nil {
-			_ = log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
+			_ = log.Log("LoadBaseClasses: Couldn't load JMOD file from "+fname, log.WARNING)
 			_ = log.Log(err.Error(), log.SEVERE)
 			shutdown.Exit(shutdown.APP_EXCEPTION)
 		} else {
@@ -205,7 +205,7 @@ func LoadBaseClasses(global *globals.Globals) {
 			})
 
 			if err != nil {
-				_ = log.Log("Error loading jmod file "+fname, log.SEVERE)
+				_ = log.Log("LoadBaseClasses: Error loading jmod file "+fname, log.SEVERE)
 				_ = log.Log(err.Error(), log.SEVERE)
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
@@ -272,7 +272,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			Data:   nil,
 		}
 		MethAreaInsert(name, &eKI)
-		_ = LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
+		LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
 	}
 	globals.LoaderWg.Done()
 }
@@ -299,10 +299,22 @@ func LoadClassFromNameOnly(name string) error {
 		name = globals.JavaHome() + "classes" + string(os.PathSeparator) + name
 		validName = util.ConvertToPlatformPathSeparators(name)
 		_, err = LoadClassFromFile(BootstrapCL, validName)
+		if err != nil {
+			_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
+			_ = log.Log(err.Error(), log.SEVERE)
+		}
 	} else if len(globals.GetGlobalRef().StartingJar) > 0 {
 		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
+		if err != nil {
+			_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName+" failed", log.SEVERE)
+			_ = log.Log(err.Error(), log.SEVERE)
+		}
 	} else {
 		_, err = LoadClassFromFile(AppCL, validName)
+		if err != nil {
+			_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
+			_ = log.Log(err.Error(), log.SEVERE)
+		}
 	}
 	return err
 }
