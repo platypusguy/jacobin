@@ -686,6 +686,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("AASTORE: Invalid array address")
 			}
 
 			// get pointer to the actual array
@@ -695,6 +697,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"AASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("AASTORE: Invalid array index")
 			}
 
 			array := *arrayPtr
