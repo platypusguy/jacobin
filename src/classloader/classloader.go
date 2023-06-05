@@ -15,6 +15,7 @@ import (
     "jacobin/globals"
     "jacobin/log"
     "jacobin/util"
+	"jacobin/shutdown"
     "os"
     "path/filepath"
     "runtime"
@@ -26,7 +27,7 @@ import (
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
 // and moved to an execution role. Most of the comments and code presuppose some
 // familiarity with the role of classloaders. More information can be found at:
-// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-5.html#jvms-5.3
+// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.3
 type Classloader struct {
     Name       string
     Parent     string
@@ -182,8 +183,10 @@ func cfe(msg string) error {
 func CFE(msg string) error { return cfe(msg) }
 
 // LoadBaseClasses loads a basic set of classes that are found in
-// JAVA_HOME/jmods/java.base.jmod directory. As of Jacobin 0.1.0,
-// that directory consists of roughly 1400 classes from the JDK.
+// the JAVA_HOME/jmods/java.base.jmod zip file.
+// In Java 1.7, there are currently a total of 6401 embedded classes, of which,
+// 1402 are actually bootstrap-loaded.
+// File JAVA_HOME/lib/classlist has the bootstrap selection list.
 func LoadBaseClasses(global *globals.Globals) {
     if len(global.JavaHome) > 0 {
         fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
@@ -191,6 +194,8 @@ func LoadBaseClasses(global *globals.Globals) {
         jmodFile, err := os.Open(fname)
         if err != nil {
             _ = log.Log("Couldn't load JMOD file from "+fname, log.WARNING)
+			_ = log.Log(err.Error(), log.SEVERE)
+			shutdown.Exit(shutdown.APP_EXCEPTION)
         } else {
             defer jmodFile.Close()
             jmod := Jmod{File: *jmodFile}
@@ -202,19 +207,11 @@ func LoadBaseClasses(global *globals.Globals) {
             if err != nil {
                 _ = log.Log("Error loading jmod file "+fname, log.SEVERE)
                 _ = log.Log(err.Error(), log.SEVERE)
+				shutdown.Exit(shutdown.APP_EXCEPTION)
             }
         }
     }
 
-    // Commented out b/c JacobinHome is no longer used. Might be deletable, depending on JACOBIN-167 resolution.
-    // if len(global.JacobinHome) == 0 {
-    // 	_ = log.Log("JACOBIN_HOME not specified. Program may fail.", log.WARNING)
-    // }
-    //
-    // err := filepath.WalkDir(globals.JacobinHome()+"classes", walk)
-    // if err != nil {
-    // 	_, _ = fmt.Fprintf(os.Stderr, "Error in filepath.Walkdir: %s", err.Error())
-    // }
 }
 
 // walk the directory and load every file (which is known to be a class)
@@ -229,9 +226,14 @@ func walk(s string, d fs.DirEntry, err error) error {
     return nil
 }
 
-// LoadReferencedClasses loads the classes referenced in the loading of the class named clName.
-// It does this by reading the class entries (7) in the CP and sending the class names it finds
+// LoadReferencedClasses loads the classes referenced in the class named clName.
+// It does this by reading the class entries (ClassRefs=7) in the CP and sending the class names it finds
 // there to a go channel that will load the class.
+// Note that CP refers to the class constant pool = the array of records that a method refers to
+// when accessing fields, methods, values, etc.
+// Reference: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.4
+// Note that The class being loaded has records in the CP that indicate all the other classes it interacts with.
+// Thus, classes are preloaded prior to need.
 func LoadReferencedClasses(clName string) {
     currClass := MethAreaFetch(clName)
     if currClass == nil {
