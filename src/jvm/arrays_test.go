@@ -92,6 +92,53 @@ func TestAaload(t *testing.T) {
 	}
 }
 
+// AASTORE: store value in array of bytes
+// Create an array of 30 elements, store ptr value in array[20],
+// then go through all the elements in the array, and test for
+// a non-nil value. Should result in a single non-nil value.
+func TestAastore(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))                   // make the array 30 elements big
+	f.Meth = append(f.Meth, object.T_REF) // make it an array of references
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(*object.Object)
+
+	f = newFrame(AASTORE)
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // index to array[20]
+	push(&f, ptr)       // store any viable address
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	array := *(ptr.Fields[0].Fvalue.(*[]*object.Object))
+	var total int64
+	for i := 0; i < 30; i++ {
+		if array[i] != nil {
+			total += 1
+		}
+	}
+	if total != 1 {
+		t.Errorf("AASTORE: Expected 1 value not to be nil, got: %d", total)
+	}
+}
+
 // ANEWARRAY: creation of array for references
 func TestAnewrray(t *testing.T) {
 	f := newFrame(ANEWARRAY)
