@@ -710,12 +710,16 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BASTORE: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("BASTORE: Invalid array address")
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("BASTORE: Invalid array type")
 			}
 
 			array := *(ptrObj.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
@@ -724,6 +728,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// the following is needed only to make unit tests work
+				return errors.New("BASTORE: Invalid array index")
 			}
 
 			array[index] = value
