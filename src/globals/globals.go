@@ -8,6 +8,7 @@ package globals
 
 import (
 	"container/list"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -117,6 +118,22 @@ func InitJacobinHome() {
 	if jacobinHome != "" {
 		jacobinHome = strings.TrimRight(jacobinHome, "\\/") // remove any trailing separator
 		jacobinHome = cleanupPath(jacobinHome)
+	} else {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.UserHomeDir() failed. Exiting.\n")
+			_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+			os.Exit(1)
+		}
+		jacobinHome = userHomeDir + string(os.PathSeparator) + "jacobin"
+	}
+	// 0755 (Unix octal): user(owner) can do anything, group and other can read and visit directory ("execute").
+	// Ref: https://opensource.com/article/19/8/linux-permissions-101
+	err := os.MkdirAll(jacobinHome, 0755)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.MkDirAll(%s) failed. Exiting.\n", jacobinHome)
+		_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		os.Exit(1)
 	}
 	global.JacobinHome = jacobinHome
 }
@@ -128,10 +145,12 @@ func JacobinHome() string { return global.JacobinHome }
 func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
-	if javaHome != "" {
-		javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
-		javaHome = cleanupPath(javaHome)
+	if javaHome == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Environment variable JAVA_HOME missing but is required. Exiting.\n")
+		os.Exit(1)
 	}
+	javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
+	javaHome = cleanupPath(javaHome)
 	global.JavaHome = javaHome
 }
 

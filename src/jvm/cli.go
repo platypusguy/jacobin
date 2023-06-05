@@ -12,6 +12,7 @@ import (
 	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/shutdown"
 	"os"
 	"strings"
 )
@@ -29,7 +30,6 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	// add command-line args to those extracted from the environment (if any)
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
-		//		fmt.Printf("\t%q\n", v)
 		cliArgs += v + " "
 	}
 	Global.CommandLine = strings.TrimSpace(cliArgs)
@@ -39,7 +39,6 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	// within quotes is treated as a single arg
 	args := strings.Fields(javaEnvOptions)
 	for _, v := range osArgs[1:] {
-		//		fmt.Printf("\t%q\n", v)
 		args = append(args, v)
 	}
 	Global.Args = args
@@ -73,16 +72,14 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		if ok {
 			i, _ = opt.Action(i, arg, Global)
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Ignored.\n", args[i])
+			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Exiting.\n", args[i])
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
 		// recognize the JAR file and insert it into Global, and copy all succeeding args
 		// to app args. However, it does not recognize the JAR file as an executable.
 
-		// if len(arg) > 0 {
-		// 	fmt.Printf("Option %s has argument value: %s\n", option, arg)
-		// }
 	}
 	return nil
 }
