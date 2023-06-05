@@ -41,9 +41,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 	}
 
 	// at this point the class has been loaded into the method area (MethArea).
-	classloader.ClassesLock.RLock()
 	k = classloader.MethAreaFetch(classname)
-	classloader.ClassesLock.RUnlock()
 
 	obj := object.Object{
 		Klass: k,
