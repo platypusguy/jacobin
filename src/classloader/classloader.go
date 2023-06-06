@@ -184,9 +184,8 @@ func CFE(msg string) error { return cfe(msg) }
 
 // LoadBaseClasses loads a basic set of classes that are found in
 // the JAVA_HOME/jmods/java.base.jmod zip file.
-// In Java 1.7, there are currently a total of 6401 embedded classes, of which,
-// 1402 are actually bootstrap-loaded.
-// File JAVA_HOME/lib/classlist has the bootstrap selection list.
+// In Java 17.0.7, there are currently a total of 6401 embedded classes in java.base.jmod.
+// Based on the lib/classlist member in java.base.jmod, only 1402 class files are actually loaded by this function.
 func LoadBaseClasses(global *globals.Globals) {
 	if len(global.JavaHome) > 0 {
 		fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
