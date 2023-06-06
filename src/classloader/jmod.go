@@ -35,7 +35,8 @@ type Jmod struct {
 
 // Walk a Jmod file and invoke the indicated WalkEntryFunc for each class found in the classlist
 // Only called in one place: LoadBaseClasses.
-// TODO: For clearity of reading, it might be better to not pass a sub-function reference. Instead, move the sub-function into Walk itself.
+// Passing the sub-function loadClassFromBytes from LoadBaseClasses makes this code challenging to read
+// but it might be the lesser of evils.
 func (jmodFile *Jmod) Walk(walk WalkEntryFunc) error {
 	b, err := os.ReadFile(jmodFile.File.Name())
 	if err != nil {
