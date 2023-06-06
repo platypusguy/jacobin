@@ -7,7 +7,9 @@
 package globals
 
 import (
+	"bufio"
 	"container/list"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,8 +44,11 @@ type Globals struct {
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
 
-	// ---- paths for finding the base classes to load ----
+	// ---- Java Home and Version ----
 	JavaHome    string
+	JavaVersion string
+
+	// ---- Jacobin Home ----
 	JacobinHome string
 
 	// ---- thread management ----
@@ -73,6 +78,7 @@ func InitGlobals(progName string) Globals {
 		JacobinName:       progName,
 		JacobinHome:       "",
 		JavaHome:          "",
+		JavaVersion:       "",
 		Options:           make(map[string]Option),
 		StartingClass:     "",
 		StartingJar:       "",
@@ -85,7 +91,13 @@ func InitGlobals(progName string) Globals {
 	}
 
 	InitJavaHome()
+	if global.JavaHome == "" || global.JavaVersion == "" {
+		os.Exit(1)
+	}
 	InitJacobinHome()
+	if global.JacobinHome == "" {
+		os.Exit(1)
+	}
 	InitArrayAddressList()
 	return global
 }
@@ -117,7 +129,25 @@ func InitJacobinHome() {
 	if jacobinHome != "" {
 		jacobinHome = strings.TrimRight(jacobinHome, "\\/") // remove any trailing separator
 		jacobinHome = cleanupPath(jacobinHome)
+	} else {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.UserHomeDir() failed. Exiting.\n")
+			_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+			return
+		}
+		jacobinHome = userHomeDir + string(os.PathSeparator) + "jacobin"
 	}
+	// 0755 (Unix octal): user(owner) can do anything, group and other can read and visit directory ("execute").
+	// Ref: https://opensource.com/article/19/8/linux-permissions-101
+	err := os.MkdirAll(jacobinHome, 0755)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.MkDirAll(%s) failed. Exiting.\n", jacobinHome)
+		_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		return
+	}
+
+	// Success!
 	global.JacobinHome = jacobinHome
 }
 
@@ -128,14 +158,45 @@ func JacobinHome() string { return global.JacobinHome }
 func InitJavaHome() {
 
 	javaHome := os.Getenv("JAVA_HOME")
-	if javaHome != "" {
-		javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
-		javaHome = cleanupPath(javaHome)
+	if javaHome == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Environment variable JAVA_HOME missing but is required. Exiting.\n")
+		return
 	}
+	javaHome = strings.TrimRight(javaHome, "\\/") // remove any trailing separator
+	javaHome = cleanupPath(javaHome)
 	global.JavaHome = javaHome
+
+	releasePath := javaHome + string(os.PathSeparator) + "release"
+	handle, err := os.Open(releasePath)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: os.Open(%s) failed. Exiting.\n", releasePath)
+		_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		return
+	}
+	defer handle.Close()
+	scanner := bufio.NewScanner(handle)
+	for scanner.Scan() {
+		// do something with a line
+		line := scanner.Text()
+		tokens := strings.Split(line, "=")
+		if len(tokens) != 2 {
+			_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: File format error in %s. Exiting.\n", releasePath)
+			return
+		}
+		if tokens[0] == "JAVA_VERSION" {
+			global.JavaVersion = strings.Trim(tokens[1], "\"")
+			return
+		}
+	}
+
+	// At this pint, we did not find a Java version record
+	_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n", releasePath)
+	os.Exit(1)
+
 }
 
-func JavaHome() string { return global.JavaHome }
+func JavaHome() string    { return global.JavaHome }
+func JavaVersion() string { return global.JavaVersion }
 
 // Normalize a file path. Slashes are converted to the current platform's path separator if necessary.
 func cleanupPath(path string) string {
