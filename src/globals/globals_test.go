@@ -7,6 +7,7 @@
 package globals
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -35,6 +36,20 @@ func TestJavaHomeFormat(t *testing.T) {
 		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
 	_ = os.Setenv("JAVA_HOME", origJavaHome)
+}
+
+// test original java home + version
+func TestJavaHomeAndVersion(t *testing.T) {
+	InitJavaHome()
+	home := JavaHome()
+	version := JavaVersion()
+	if home == "" {
+		t.Errorf("JAVA_HOME is nil")
+	}
+	if version == "" {
+		t.Errorf("JAVA_VERSION is nil")
+	}
+	fmt.Printf("TestJavaHomeAndVersion: JAVA_HOME=%s, JAVA_VERSION=%s\n", home, version)
 }
 
 // verify that a trailing slash in JAVA_HOME is removed
