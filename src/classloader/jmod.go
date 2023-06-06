@@ -33,9 +33,11 @@ type Jmod struct {
 	File os.File
 }
 
-// Walk Walks a JMOD file and invokes `walk` for all classes found in the classlist
-func (j *Jmod) Walk(walk WalkEntryFunc) error {
-	b, err := os.ReadFile(j.File.Name())
+// Walk a Jmod file and invoke the indicated WalkEntryFunc for each class found in the classlist
+// Only called in one place: LoadBaseClasses.
+// TODO: For clearity of reading, it might be better to not pass a sub-function reference. Instead, move the sub-function into Walk itself.
+func (jmodFile *Jmod) Walk(walk WalkEntryFunc) error {
+	b, err := os.ReadFile(jmodFile.File.Name())
 	if err != nil {
 		return err
 	}
@@ -45,11 +47,11 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 	if fileMagic != MagicNumber {
 
 		if !globals.GetGlobalRef().StrictJDK {
-			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", j.File.Name(), MagicNumber, fileMagic)
+			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", jmodFile.File.Name(), MagicNumber, fileMagic)
 			_ = log.Log(msg, log.SEVERE)
 		}
 
-		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", j.File.Name()))
+		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", jmodFile.File.Name()))
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
@@ -94,7 +96,7 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 			return err
 		}
 
-		_ = walk(b, j.File.Name()+"+"+f.Name)
+		_ = walk(b, jmodFile.File.Name()+"+"+f.Name)
 
 		_ = rc.Close()
 	}
@@ -102,7 +104,10 @@ func (j *Jmod) Walk(walk WalkEntryFunc) error {
 	return nil
 }
 
-// Returns lib/classlist from the JMOD file, returning an empty map if the classlist cannot be found or read
+// getClasslist returns the bootstrap lib/classlist as a Go-language map from the Java installation.
+// There is a lib/classlist under the Java installation. 
+// However, that file only has entries from jmods/java.base.jmod and this classlist is duplicated as a member in that file.
+// So, this function uses jmods/java.base.jmod to fetch the bootstrap map.
 func getClasslist(reader zip.Reader) map[string]struct{} {
 	classSet := make(map[string]struct{})
 
