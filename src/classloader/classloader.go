@@ -192,7 +192,7 @@ func LoadBaseClasses(global *globals.Globals) {
 
 		jmodFile, err := os.Open(fname)
 		if err != nil {
-			_ = log.Log("LoadBaseClasses: Couldn't load JMOD file from "+fname, log.WARNING)
+			_ = log.Log("LoadBaseClasses: Couldn't load JMOD file from "+fname, log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
 			shutdown.Exit(shutdown.APP_EXCEPTION)
 		} else {

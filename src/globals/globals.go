@@ -191,7 +191,7 @@ func InitJavaHome() {
 
 	// At this pint, we did not find a Java version record
 	_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n", releasePath)
-	os.Exit(1)
+	global.JavaVersion = ""
 
 }
 
