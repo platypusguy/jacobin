@@ -15,7 +15,8 @@ import (
 
 func TestJacobinHomeTempdir(t *testing.T) {
 
-	tempDir := "/tmp/cjmap_test"
+	tempDir := os.TempDir()
+	defer os.RemoveAll(tempDir)
 	t.Setenv("JACOBIN_HOME", tempDir)
 	_ = os.RemoveAll(tempDir) // Make sure that JACOBIN_HOME does not exist
 	globals.InitGlobals("test")
