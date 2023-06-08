@@ -39,8 +39,8 @@ jobs:
 
     - name: Test
       run: |
-        export JACOBIN_HOME=`pwd`
-        export JACOBIN_TESTDATA=$JACOBIN_HOME/testdata
+        export JACOBIN_TOP=`pwd`
+        export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
         export JACOBIN_EXE=`pwd`/jacobin 
         go test -v ./...
@@ -77,13 +77,13 @@ jobs:
 
     - name: Test
       run: |
-        $Env:JACOBIN_HOME = $PWD
-        $Env:JACOBIN_HOME
-        $Env:JACOBIN_TESTDATA = $Env:JACOBIN_HOME
+        $Env:JACOBIN_TOP = $PWD
+        $Env:JACOBIN_TOP
+        $Env:JACOBIN_TESTDATA = $Env:JACOBIN_TOP
         $Env:JACOBIN_TESTDATA += '\testdata'
         $Env:JACOBIN_TESTDATA
         cd src
-        $Env:JACOBIN_EXE = $Env:JACOBIN_HOME
+        $Env:JACOBIN_EXE = $Env:JACOBIN_TOP
         $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
         go test -v ./...
