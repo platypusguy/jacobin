@@ -17,15 +17,15 @@ func checkMap(t *testing.T, key string, expectedJmod string) {
 
 	jmod := CJMapFetch(key)
 	if len(jmod) < 1 {
-		t.Errorf("Nil jmod returned with key={%s}", key)
+		t.Errorf("checkMap: Nil jmod returned with key={%s}", key)
 		return
 	}
 	if jmod != expectedJmod {
-		t.Errorf("Expected jmod={%s} but observed jmod={%s}", expectedJmod, jmod)
+		t.Errorf("checkMap: Expected jmod={%s} but observed jmod={%s}", expectedJmod, jmod)
 		return
 	}
 
-	t.Logf("Key {%s} fetched jmod={%s}\n", key, jmod)
+	t.Logf("checkMap: Key {%s} fetched jmod={%s}\n", key, jmod)
 
 }
 
