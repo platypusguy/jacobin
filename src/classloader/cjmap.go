@@ -292,7 +292,7 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 		}
 
 		// Remove the "classes" + string(os.PathSeparator) prefix.
-		classFileName := strings.Replace(fileEntry.Name, "classes"+string(os.PathSeparator), "", 1)
+		classFileName := strings.Replace(fileEntry.Name, "classes/", "", 1)
 
 		// Add to map
 		CJMAP[classFileName] = jmodFileName
