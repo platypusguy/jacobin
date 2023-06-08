@@ -136,7 +136,7 @@ func InitJacobinHome() {
 			_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
 			return
 		}
-		jacobinHome = userHomeDir + string(os.PathSeparator) + "jacobin"
+		jacobinHome = userHomeDir + string(os.PathSeparator) + "jacobin_data"
 	}
 	// 0755 (Unix octal): user(owner) can do anything, group and other can read and visit directory ("execute").
 	// Ref: https://opensource.com/article/19/8/linux-permissions-101

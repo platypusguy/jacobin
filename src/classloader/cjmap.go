@@ -158,8 +158,8 @@ func buildMapFromGob(gobFilePath string) {
 	defer inFile.Close()
 
 	// Create a decoder and receive a value.
-	dinky := gob.NewDecoder(inFile)
-	err = dinky.Decode(&CJMAP)
+	decoder := gob.NewDecoder(inFile)
+	err = decoder.Decode(&CJMAP)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: gob Decode(%s) failed", gobFilePath)
 		_ = log.Log(msg, log.SEVERE)
@@ -319,6 +319,7 @@ func saveMapToGob() {
 	global := globals.GetGlobalRef()
 	gobFile := global.JacobinHome + string(os.PathSeparator) + global.JavaVersion + ".gob"
 	// Open output gob file
+	_ = os.Remove(gobFile)
 	outFile, err := os.Create(gobFile)
 	if err != nil {
 		msg := fmt.Sprintf("saveMapToGob: os.Create(%s) failed", gobFile)
@@ -329,8 +330,8 @@ func saveMapToGob() {
 	}
 
 	// Create a gob encoder and encode the cross-reference map
-	inky := gob.NewEncoder(outFile)
-	err = inky.Encode(&CJMAP)
+	encoder := gob.NewEncoder(outFile)
+	err = encoder.Encode(CJMAP)
 	if err != nil {
 		msg := fmt.Sprintf("saveMapToGob: gob Encode(%s) failed", gobFile)
 		_ = log.Log(msg, log.SEVERE)
