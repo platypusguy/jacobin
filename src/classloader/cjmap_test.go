@@ -13,6 +13,22 @@ import (
 	"time"
 )
 
+func checkMap(t *testing.T, key string, expectedJmod string) {
+
+	jmod := CJMapFetch(key)
+	if len(jmod) < 1 {
+		t.Errorf("Nil jmod returned with key={%s}", key)
+		return
+	}
+	if jmod != expectedJmod {
+		t.Errorf("Expected jmod={%s} but observed jmod={%s}", expectedJmod, jmod)
+		return
+	}
+
+	t.Logf("Key {%s} fetched jmod={%s}\n", key, jmod)
+
+}
+
 func TestJacobinHomeTempdir(t *testing.T) {
 
 	homeDir, err := os.UserHomeDir()
@@ -31,15 +47,9 @@ func TestJacobinHomeTempdir(t *testing.T) {
 	tStart := time.Now()
 	CJMapInit()
 	tStop := time.Now()
+	elapsed := tStop.Sub(tStart)
+	t.Logf("CJMapInit finished in %s seconds\n", elapsed.Round(time.Second).String())
 
-	if CJMapFoundGob() {
-		t.Errorf("Expected gob not found but one was found")
-	} else {
-		t.Logf("Gob not found as expected")
-	}
-
-	key := "java/lang/String.class"
-	jmod := CJMapFetch(key)
 	mapSize := CJMapSize()
 	if mapSize < 1 {
 		t.Errorf("CJMAP size < 1 (cjmap error)")
@@ -47,22 +57,14 @@ func TestJacobinHomeTempdir(t *testing.T) {
 	}
 	t.Logf("Map size is %d\n", mapSize)
 
-	elapsed := tStop.Sub(tStart)
-	t.Logf("Key %s fetched %s in %s seconds\n", key, jmod, elapsed.Round(time.Second).String())
-	if jmod != "java.base.jmod" {
-		t.Errorf("Expected jmod=java.base.jmod, observed jmod=%s", jmod)
+	if CJMapFoundGob() {
+		t.Errorf("Expected gob not found but one was found")
 	} else {
-		t.Logf("jmod=java.base.jmod as expected")
+		t.Logf("Gob not found as expected")
 	}
 
-	key = "com/sun/accessibility/internal/resources/accessibility.class"
-	jmod = CJMapFetch(key)
-	mapSize = CJMapSize()
-	if mapSize < 1 {
-		t.Errorf("CJMAP size < 1 (cjmap error)")
-		return
-	}
-	t.Logf("Key %s fetched %s\n", key, jmod)
+	checkMap(t, "java/lang/String.class", "java.base.jmod")
+	checkMap(t, "com/sun/accessibility/internal/resources/accessibility.class", "java.desktop.jmod")
 
 }
 
@@ -88,23 +90,14 @@ func TestJacobinHomeDefault(t *testing.T) {
 		t.Logf("Gob found as expected")
 	}
 
-	key := "java/lang/String.class"
-	jmod := CJMapFetch(key)
 	mapSize := CJMapSize()
 	if mapSize < 1 {
 		t.Errorf("CJMAP size < 1 (cjmap error)")
 		return
 	}
-	t.Logf("Key %s fetched %s\n", key, jmod)
 	t.Logf("Map size is %d\n", mapSize)
 
-	key = "com/sun/accessibility/internal/resources/accessibility.class"
-	jmod = CJMapFetch(key)
-	mapSize = CJMapSize()
-	if mapSize < 1 {
-		t.Errorf("CJMAP size < 1 (cjmap error)")
-		return
-	}
-	t.Logf("Key %s fetched %s\n", key, jmod)
+	checkMap(t, "java/lang/String.class", "java.base.jmod")
+	checkMap(t, "com/sun/accessibility/internal/resources/accessibility.class", "java.desktop.jmod")
 
 }
