@@ -12,6 +12,18 @@ import (
 	"testing"
 )
 
+var foobar string
+
+func nameFooBar(t *testing.T) bool {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Errorf("nameFooBar: os.UserHomeDir failed: %s", err.Error())
+		return false
+	}
+	foobar = userHomeDir + string(os.PathSeparator) + "foo" + string(os.PathSeparator) + "bar"
+	return true
+}
+
 func TestGlobalsInit(t *testing.T) {
 	g := InitGlobals("testInit")
 
@@ -27,11 +39,16 @@ func TestGlobalsInit(t *testing.T) {
 // make sure the JAVA_HOME environment variable is extracted and the embedded slashes
 // are reformatted correctly
 func TestJavaHomeFormat(t *testing.T) {
+	if !nameFooBar(t) {
+		return
+	}
+	defer os.RemoveAll(foobar)
+
 	origJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "foo/bar")
+	_ = os.Setenv("JAVA_HOME", foobar)
 	InitJavaHome()
 	ret := JavaHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	expectedPath := foobar
 	if ret != expectedPath {
 		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
@@ -54,11 +71,16 @@ func TestJavaHomeAndVersion(t *testing.T) {
 
 // verify that a trailing slash in JAVA_HOME is removed
 func TestJavaHomeRemovalOfTrailingSlash(t *testing.T) {
+	if !nameFooBar(t) {
+		return
+	}
+	defer os.RemoveAll(foobar)
+
 	origJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "foo/bar/")
+	_ = os.Setenv("JAVA_HOME", foobar)
 	InitJavaHome()
 	ret := JavaHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	expectedPath := foobar
 	if ret != expectedPath {
 		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
@@ -68,11 +90,16 @@ func TestJavaHomeRemovalOfTrailingSlash(t *testing.T) {
 // make sure the JACOBIN_HOME environment variable is extracted and reformatted correctly
 // Per JACOBIN-184, the trailing slash is removed.
 func TestJacobinHomeFormat(t *testing.T) {
+	if !nameFooBar(t) {
+		return
+	}
+	defer os.RemoveAll(foobar)
+
 	origJavaHome := os.Getenv("JACOBIN_HOME")
-	_ = os.Setenv("JACOBIN_HOME", "foo/bar")
+	_ = os.Setenv("JACOBIN_HOME", foobar)
 	InitJacobinHome()
 	ret := JacobinHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	expectedPath := foobar
 	if ret != expectedPath {
 		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
 	}
@@ -81,11 +108,16 @@ func TestJacobinHomeFormat(t *testing.T) {
 
 // verify that a trailing slash in JAVA_HOME is removed
 func TestJacobinHomeRemovalOfTrailingSlash(t *testing.T) {
+	if !nameFooBar(t) {
+		return
+	}
+	defer os.RemoveAll(foobar)
+
 	origJavaHome := os.Getenv("JACOBIN_HOME")
-	_ = os.Setenv("JACOBIN_HOME", "foo/bar/")
+	_ = os.Setenv("JACOBIN_HOME", foobar)
 	InitJacobinHome()
 	ret := JacobinHome()
-	expectedPath := "foo" + string(os.PathSeparator) + "bar"
+	expectedPath := foobar
 	if ret != expectedPath {
 		t.Errorf("Expecting a JACOBIN_HOME of '%s', got: %s", expectedPath, ret)
 	}

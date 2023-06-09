@@ -263,7 +263,7 @@ func LoadReferencedClasses(clName string) {
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
 		present := MethAreaFetch(name)
-		if present != nil { // if the class is already loaded, skip rest of this loop
+		if present != nil { // if the class is already loaded, skip it
 			continue
 		}
 

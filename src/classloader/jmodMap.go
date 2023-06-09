@@ -22,22 +22,22 @@ import (
 	"sync"
 )
 
-// CJMAP contains class-to-Jmod-File relationships for all installed jmod files.
+// JMODMAP contains class-to-Jmod-File relationships for all installed jmod files.
 // No class information is stored.
 // The key to the map is the class name in String format.
 // The value associated with the key is the file name (not the full path) of the jmod file where the class is stored.
-var CJMAP map[string]string
+var JMODMAP map[string]string
 
 // Counting the map size (# of entries) since Go map has no such facility
-// When CJMapInit is done (detected by CJMapFetch), a value of zero means that a severe error has occurred.
+// When JmodMapInit is done (detected by JmodMapFetch), a value of zero means that a severe error has occurred.
 // In this case, a jacobin Shutdown should be executed.
-var cjMapSize = 0
+var jmodMapSize = 0
 
 // Did we find a matching gob or did we build the map and gob?
-var cjMapFoundGob bool
+var jmodMapFoundGob bool
 
-// Mutex for blocking CJMapFetch until the map is constructed
-var cjMapMutex sync.Mutex
+// Mutex for blocking JmodMapFetch until the map is constructed
+var jmodMapMutex sync.Mutex
 
 // Magic number of a jmod file:
 const expectedMagicNumber = 0x4A4D
@@ -48,59 +48,59 @@ const counterElementName = "$COUNT"
 // Log level for debugging:
 const logLevel = log.FINE
 
-// CJMapFetch retrieves the jmod file name associated with key = the class name.
+// JmodMapFetch retrieves the jmod file name associated with key = the class name.
 // In the event that the class is not present there, nil is returned.
-func CJMapFetch(key string) string {
-	cjMapMutex.Lock()   // Is the map still being built by initialisation?
-	cjMapMutex.Unlock() // Immediately unlock.
-	if cjMapSize == 0 {
-		msg := fmt.Sprintf("CJMapFetch: CJMAP size = 0 detected when key=%s", key)
+func JmodMapFetch(key string) string {
+	jmodMapMutex.Lock()   // Is the map still being built by initialisation?
+	jmodMapMutex.Unlock() // Immediately unlock.
+	if jmodMapSize == 0 {
+		msg := fmt.Sprintf("JmodMapFetch: JMODMAP size = 0 detected when key=%s", key)
 		_ = log.Log(msg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
-	//fmt.Printf("DEBUG key=%s, jmod={%s}\n", key, CJMAP[key])
-	return CJMAP[key]
+	//fmt.Printf("DEBUG key=%s, jmod={%s}\n", key, JMODMAP[key])
+	return JMODMAP[key]
 }
 
-// This function returns the number of entries in CJMAP.
-func CJMapSize() int {
-	return cjMapSize
+// This function returns the number of entries in JMODMAP.
+func JmodMapSize() int {
+	return jmodMapSize
 }
 
-// This function returns the number of entries in CJMAP.
-func CJMapFoundGob() bool {
-	return cjMapFoundGob
+// This function returns the number of entries in JMODMAP.
+func JmodMapFoundGob() bool {
+	return jmodMapFoundGob
 }
 
-// This function initializes CJMAP and cjMapSize.
+// This function initializes JMODMAP and jmodMapSize.
 // Look for an existing gob file that matches global.JavaVersion value.
 // If found, load the map from the gob file using buildMapFromGob.
 // Otherwise,
 //   - Create a new map from that installation's jmod files using buildMapFromJmods.
 //   - Save the map to a gob file using saveMapToGob.
-func CJMapInit() {
+func JmodMapInit() {
 
 	global := globals.GetGlobalRef()
 
 	// Open JacobinHome directory
 	dirOpened, err := os.Open(global.JacobinHome)
 	if err != nil {
-		msg := fmt.Sprintf("CJMapInit: os.Open(%s) failed", global.JacobinHome)
+		msg := fmt.Sprintf("JmodMapInit: os.Open(%s) failed", global.JacobinHome)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
-	msg := fmt.Sprintf("CJMapInit: JacobinHome is %s", global.JacobinHome)
+	msg := fmt.Sprintf("JmodMapInit: JacobinHome is %s", global.JacobinHome)
 	_ = log.Log(msg, logLevel)
 
 	// Get all the file entries in the JacobinHome directory
 	names, err := dirOpened.Readdirnames(0) // get all entries
 	if err != nil {
-		msg := fmt.Sprintf("CJMapInit: Readdirnames(%s) failed", global.JacobinHome)
+		msg := fmt.Sprintf("JmodMapInit: Readdirnames(%s) failed", global.JacobinHome)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
@@ -113,22 +113,22 @@ func CJMapInit() {
 			if version == global.JavaVersion {
 				// Got a match!  Build map from it.
 				gobFullPath := global.JacobinHome + string(os.PathSeparator) + name
-				msg := fmt.Sprintf("CJMapInit: Gob file %s selected", gobFullPath)
+				msg := fmt.Sprintf("JmodMapInit: Gob file %s selected", gobFullPath)
 				_ = log.Log(msg, logLevel)
 				buildMapFromGob(gobFullPath)
-				// If cjMapSize = 0, buildMapFrom Gob failed.
-				cjMapFoundGob = true
+				// If jmodMapSize = 0, buildMapFrom Gob failed.
+				jmodMapFoundGob = true
 				return
 			}
 		}
 	}
 
 	// No matching gob file
-	msg = fmt.Sprintf("CJMapInit: No gob files matched Java version %s", global.JavaVersion)
+	msg = fmt.Sprintf("JmodMapInit: No gob files matched Java version %s", global.JavaVersion)
 	_ = log.Log(msg, logLevel)
-	cjMapFoundGob = false
+	jmodMapFoundGob = false
 	buildMapFromJmods()
-	if cjMapSize == 0 {
+	if jmodMapSize == 0 {
 		return
 	}
 	saveMapToGob()
@@ -141,10 +141,10 @@ func CJMapInit() {
 func buildMapFromGob(gobFilePath string) {
 
 	// Initialise a new map.
-	cjMapMutex.Lock()
-	defer cjMapMutex.Unlock()
-	CJMAP = make(map[string]string)
-	cjMapSize = 0
+	jmodMapMutex.Lock()
+	defer jmodMapMutex.Unlock()
+	JMODMAP = make(map[string]string)
+	jmodMapSize = 0
 
 	// Open input file
 	inFile, err := os.Open(gobFilePath)
@@ -152,32 +152,32 @@ func buildMapFromGob(gobFilePath string) {
 		msg := fmt.Sprintf("buildMapFromGob: os.Open(%s) failed", gobFilePath)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 	defer inFile.Close()
 
 	// Create a decoder and receive a value.
 	decoder := gob.NewDecoder(inFile)
-	err = decoder.Decode(&CJMAP)
+	err = decoder.Decode(&JMODMAP)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: gob Decode(%s) failed", gobFilePath)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
-	gobSize := CJMAP[counterElementName]
-	cjMapSize, err = strconv.Atoi(gobSize)
+	gobSize := JMODMAP[counterElementName]
+	jmodMapSize, err = strconv.Atoi(gobSize)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: Element (%s) is missing or misformatted", counterElementName)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
-	msg := fmt.Sprintf("buildMapFromGob: Map size from gob file = %d", cjMapSize)
+	msg := fmt.Sprintf("buildMapFromGob: Map size from gob file = %d", jmodMapSize)
 	_ = log.Log(msg, logLevel)
 
 }
@@ -190,10 +190,10 @@ func buildMapFromJmods() {
 	global := globals.GetGlobalRef()
 
 	// Initialise a new map.
-	cjMapMutex.Lock()
-	defer cjMapMutex.Unlock()
-	CJMAP = make(map[string]string)
-	cjMapSize = 0
+	jmodMapMutex.Lock()
+	defer jmodMapMutex.Unlock()
+	JMODMAP = make(map[string]string)
+	jmodMapSize = 0
 
 	// Get path of jmods directory
 	dirPath := global.JavaHome + string(os.PathSeparator) + "jmods"
@@ -204,7 +204,7 @@ func buildMapFromJmods() {
 		msg := fmt.Sprintf("buildMapFromJmods: os.Open(%s) failed", dirPath)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
@@ -213,7 +213,7 @@ func buildMapFromJmods() {
 	if err != nil {
 		_ = log.Log("buildMapFromJmods: Readdirnames(jmods directory) failed", log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
@@ -224,12 +224,12 @@ func buildMapFromJmods() {
 		name := names[index]
 		jmodFullPath := filepath.Join(dirPath, name)
 		if !processJmodFile(name, jmodFullPath) {
-			cjMapSize = 0
+			jmodMapSize = 0
 			return
 		}
 	}
 
-	CJMAP[counterElementName] = fmt.Sprint(cjMapSize)
+	JMODMAP[counterElementName] = fmt.Sprint(jmodMapSize)
 	msg := fmt.Sprintf("buildMapFromJmods: Map built from %d jmod files", count)
 	_ = log.Log(msg, logLevel)
 
@@ -295,14 +295,14 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 		classFileName := strings.Replace(fileEntry.Name, "classes/", "", 1)
 
 		// Add to map
-		CJMAP[classFileName] = jmodFileName
+		JMODMAP[classFileName] = jmodFileName
 		//fmt.Printf("DEBUG processJmodFile: classFileName=%s, jmodFileName=%s\n", classFileName, jmodFileName)
 
 		// Add to count of classes
 		countClasses++
 
-		// Add to size of CJMAP
-		cjMapSize++
+		// Add to size of JMODMAP
+		jmodMapSize++
 	}
 
 	msg := fmt.Sprintf("processJmodFile: Total classes added for %s = %d", jmodFileName, countClasses)
@@ -325,18 +325,18 @@ func saveMapToGob() {
 		msg := fmt.Sprintf("saveMapToGob: os.Create(%s) failed", gobFile)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
 	// Create a gob encoder and encode the cross-reference map
 	encoder := gob.NewEncoder(outFile)
-	err = encoder.Encode(CJMAP)
+	err = encoder.Encode(JMODMAP)
 	if err != nil {
 		msg := fmt.Sprintf("saveMapToGob: gob Encode(%s) failed", gobFile)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 		return
 	}
 
@@ -346,7 +346,7 @@ func saveMapToGob() {
 		msg := fmt.Sprintf("saveMapToGob: close(%s) failed", gobFile)
 		_ = log.Log(msg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
-		cjMapSize = 0
+		jmodMapSize = 0
 	}
 
 }

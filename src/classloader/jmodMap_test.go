@@ -15,7 +15,7 @@ import (
 
 func checkMap(t *testing.T, key string, expectedJmod string) {
 
-	jmod := CJMapFetch(key)
+	jmod := JmodMapFetch(key)
 	if len(jmod) < 1 {
 		t.Errorf("checkMap: Nil jmod returned with key={%s}", key)
 		return
@@ -29,7 +29,7 @@ func checkMap(t *testing.T, key string, expectedJmod string) {
 
 }
 
-func TestJacobinHomeTempdir(t *testing.T) {
+func TestJmodMapHomeTempdir(t *testing.T) {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -45,19 +45,19 @@ func TestJacobinHomeTempdir(t *testing.T) {
 	_ = log.SetLogLevel(log.FINEST)
 
 	tStart := time.Now()
-	CJMapInit()
+	JmodMapInit()
 	tStop := time.Now()
 	elapsed := tStop.Sub(tStart)
-	t.Logf("CJMapInit finished in %s seconds\n", elapsed.Round(time.Second).String())
+	t.Logf("JmodMapInit finished in %s seconds\n", elapsed.Round(time.Second).String())
 
-	mapSize := CJMapSize()
+	mapSize := JmodMapSize()
 	if mapSize < 1 {
-		t.Errorf("CJMAP size < 1 (cjmap error)")
+		t.Errorf("map size < 1 (fatal error)")
 		return
 	}
 	t.Logf("Map size is %d\n", mapSize)
 
-	if CJMapFoundGob() {
+	if JmodMapFoundGob() {
 		t.Errorf("Expected gob not found but one was found")
 	} else {
 		t.Logf("Gob not found as expected")
@@ -68,31 +68,31 @@ func TestJacobinHomeTempdir(t *testing.T) {
 
 }
 
-func TestJacobinHomeDefault(t *testing.T) {
+func TestJmodMapHomeDefault(t *testing.T) {
 
 	saved := os.Getenv("JACOBIN_HOME")
 	if saved != "" {
 		defer os.Setenv("JACOBIN_HOME", saved)
-		os.Unsetenv("JACOBIN_HOME")
+		_ = os.Unsetenv("JACOBIN_HOME")
 	}
 	globals.InitGlobals("test")
 	log.Init()
-	CJMapInit() // Create gob file if it does not yet exist.
+	JmodMapInit() // Create gob file if it does not yet exist.
 
 	globals.InitGlobals("test")
 	log.Init()
-	CJMapInit() // Process a pre-existing gob file.
+	JmodMapInit() // Process a pre-existing gob file.
 	_ = log.SetLogLevel(log.FINEST)
 
-	if !CJMapFoundGob() {
+	if !JmodMapFoundGob() {
 		t.Errorf("Expected gob found but one was not found")
 	} else {
 		t.Logf("Gob found as expected")
 	}
 
-	mapSize := CJMapSize()
+	mapSize := JmodMapSize()
 	if mapSize < 1 {
-		t.Errorf("CJMAP size < 1 (cjmap error)")
+		t.Errorf("map size < 1 (fatal error)")
 		return
 	}
 	t.Logf("Map size is %d\n", mapSize)

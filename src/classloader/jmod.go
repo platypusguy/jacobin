@@ -34,9 +34,7 @@ type Jmod struct {
 }
 
 // Walk a Jmod file and invoke the indicated WalkEntryFunc for each class found in the classlist
-// Only called in one place: LoadBaseClasses.
-// Passing the sub-function loadClassFromBytes from LoadBaseClasses makes this code challenging to read
-// but it might be the lesser of evils.
+// Only called in one place: LoadJmodClasses.
 func (jmodFile *Jmod) Walk(walk WalkEntryFunc) error {
 	b, err := os.ReadFile(jmodFile.File.Name())
 	if err != nil {
@@ -106,7 +104,7 @@ func (jmodFile *Jmod) Walk(walk WalkEntryFunc) error {
 }
 
 // getClasslist returns the bootstrap lib/classlist as a Go-language map from the Java installation.
-// There is a lib/classlist under the Java installation. 
+// There is a lib/classlist under the Java installation.
 // However, that file only has entries from jmods/java.base.jmod and this classlist is duplicated as a member in that file.
 // So, this function uses jmods/java.base.jmod to fetch the bootstrap map.
 func getClasslist(reader zip.Reader) map[string]struct{} {
