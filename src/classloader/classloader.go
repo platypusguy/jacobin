@@ -187,27 +187,30 @@ func CFE(msg string) error { return cfe(msg) }
 // In Java 17.0.7, there are currently a total of 6401 embedded classes in java.base.jmod.
 // Based on the lib/classlist member in java.base.jmod, only 1402 class files are actually loaded by this function.
 func LoadBaseClasses(global *globals.Globals) {
-	if len(global.JavaHome) > 0 {
-		fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
+	fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
+	LoadJmodClasses(BootstrapCL, fname)
+}
 
-		jmodFile, err := os.Open(fname)
+// For a given jmod file and class loader, load the jmod classes
+func LoadJmodClasses(classLoader Classloader, fname string) {
+
+	jmodFile, err := os.Open(fname)
+	if err != nil {
+		_ = log.Log("LoadJmodClasses: Couldn't load JMOD file from "+fname, log.WARNING)
+		_ = log.Log(err.Error(), log.SEVERE)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
+	} else {
+		defer jmodFile.Close()
+		jmod := Jmod{File: *jmodFile}
+		err = jmod.Walk(func(bytes []byte, filename string) error {
+			_, err := loadClassFromBytes(classLoader, filename, bytes)
+			return err
+		})
+
 		if err != nil {
-			_ = log.Log("LoadBaseClasses: Couldn't load JMOD file from "+fname, log.WARNING)
+			_ = log.Log("LoadJmodClasses: Error loading jmod file "+fname, log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
 			shutdown.Exit(shutdown.APP_EXCEPTION)
-		} else {
-			defer jmodFile.Close()
-			jmod := Jmod{File: *jmodFile}
-			err = jmod.Walk(func(bytes []byte, filename string) error {
-				_, err := loadClassFromBytes(BootstrapCL, filename, bytes)
-				return err
-			})
-
-			if err != nil {
-				_ = log.Log("LoadBaseClasses: Error loading jmod file "+fname, log.SEVERE)
-				_ = log.Log(err.Error(), log.SEVERE)
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-			}
 		}
 	}
 
