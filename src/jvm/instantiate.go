@@ -55,9 +55,12 @@ func instantiateClass(classname string) (*object.Object, error) {
 	if len(k.Data.Fields) > 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
-			if (f.AccessFlags & 0b00001000) != 0 {
-				fmt.Fprintf(os.Stdout, "%s is static",
-					classloader.FetchUTF8stringFromCPEntryNumber(&k.Data.CP, f.Name))
+			// if (f.AccessFlags & 0b00001000) != 0 {
+			// 	_ = log.Log(fmt.Sprintf("%s is static",
+			// 		classloader.FetchUTF8stringFromCPEntryNumber(&k.Data.CP, f.Name)), log.FINEST)
+			// }
+			if f.IsStatic {
+
 			}
 			// name := k.Data.CP.CpIndex[f.Name]
 			desc := k.Data.CP.Utf8Refs[f.Desc]

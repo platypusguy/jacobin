@@ -215,7 +215,6 @@ func TestAastoreInvalid2(t *testing.T) {
 
 // AASTORE: Test error conditions: index out of range
 func TestAastoreInvalid3(t *testing.T) {
-
 	o := object.Make1DimArray(object.REF, 10)
 	f := newFrame(AASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
