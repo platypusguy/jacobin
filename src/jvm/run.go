@@ -1379,9 +1379,9 @@ func runFrame(fs *list.List) error {
 			fieldType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldTypeIndex)
 			// println("full field name: " + fieldName + ", type: " + fieldType)
 			newStatic := classloader.Static{
-				Class:     'L',
+				Class:     "L",
 				Type:      fieldType,
-				ValueRef:  "",
+				ValueRef:  nil,
 				ValueInt:  0,
 				ValueFP:   0,
 				ValueStr:  "",
