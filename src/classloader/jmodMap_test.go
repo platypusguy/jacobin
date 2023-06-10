@@ -37,9 +37,8 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 		return
 	}
 	tempDir := homeDir + string(os.PathSeparator) + "temp"
-	defer os.RemoveAll(tempDir)
+	_ = os.RemoveAll(tempDir) // in case that it pre-exists
 	t.Setenv("JACOBIN_HOME", tempDir)
-	_ = os.RemoveAll(tempDir) // Make sure that JACOBIN_HOME does not yet exist
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.FINEST)
@@ -63,8 +62,14 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 		t.Logf("Gob not found as expected")
 	}
 
-	checkMap(t, "java/lang/String.class", "java.base.jmod")
-	checkMap(t, "com/sun/accessibility/internal/resources/accessibility.class", "java.desktop.jmod")
+	checkMap(t, "java/lang/String", "java.base.jmod")
+	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
+
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		t.Errorf("os.RemoveAll(%s) failed: %s", tempDir, err.Error())
+		return
+	}
 
 }
 
@@ -77,6 +82,7 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	}
 	globals.InitGlobals("test")
 	log.Init()
+	global := globals.GetGlobalRef()
 	JmodMapInit() // Create gob file if it does not yet exist.
 
 	globals.InitGlobals("test")
@@ -97,7 +103,13 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	}
 	t.Logf("Map size is %d\n", mapSize)
 
-	checkMap(t, "java/lang/String.class", "java.base.jmod")
-	checkMap(t, "com/sun/accessibility/internal/resources/accessibility.class", "java.desktop.jmod")
+	checkMap(t, "java/lang/String", "java.base.jmod")
+	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
+
+	err := os.RemoveAll(global.JacobinHome)
+	if err != nil {
+		t.Errorf("os.RemoveAll(%s) failed: %s", global.JacobinHome, err.Error())
+		return
+	}
 
 }

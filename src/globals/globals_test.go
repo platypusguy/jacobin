@@ -13,6 +13,7 @@ import (
 )
 
 var foobar string
+var foo string
 
 func nameFooBar(t *testing.T) bool {
 	userHomeDir, err := os.UserHomeDir()
@@ -20,7 +21,8 @@ func nameFooBar(t *testing.T) bool {
 		t.Errorf("nameFooBar: os.UserHomeDir failed: %s", err.Error())
 		return false
 	}
-	foobar = userHomeDir + string(os.PathSeparator) + "foo" + string(os.PathSeparator) + "bar"
+	foo = userHomeDir + string(os.PathSeparator) + "foo"
+	foobar = foo + string(os.PathSeparator) + "bar"
 	return true
 }
 
@@ -42,7 +44,7 @@ func TestJavaHomeFormat(t *testing.T) {
 	if !nameFooBar(t) {
 		return
 	}
-	defer os.RemoveAll(foobar)
+	defer os.RemoveAll(foo)
 
 	origJavaHome := os.Getenv("JAVA_HOME")
 	_ = os.Setenv("JAVA_HOME", foobar)
@@ -93,7 +95,7 @@ func TestJacobinHomeFormat(t *testing.T) {
 	if !nameFooBar(t) {
 		return
 	}
-	defer os.RemoveAll(foobar)
+	defer os.RemoveAll(foo)
 
 	origJavaHome := os.Getenv("JACOBIN_HOME")
 	_ = os.Setenv("JACOBIN_HOME", foobar)
@@ -111,7 +113,7 @@ func TestJacobinHomeRemovalOfTrailingSlash(t *testing.T) {
 	if !nameFooBar(t) {
 		return
 	}
-	defer os.RemoveAll(foobar)
+	defer os.RemoveAll(foo)
 
 	origJavaHome := os.Getenv("JACOBIN_HOME")
 	_ = os.Setenv("JACOBIN_HOME", foobar)

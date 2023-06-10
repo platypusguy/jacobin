@@ -72,7 +72,7 @@ var global Globals
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
-		Version:           "0.2.1",
+		Version:           "0.3.1",
 		VmModel:           "server",
 		ExitNow:           false,
 		JacobinName:       progName,

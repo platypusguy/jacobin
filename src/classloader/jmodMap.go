@@ -49,17 +49,19 @@ const counterElementName = "$COUNT"
 const logLevel = log.FINE
 
 // JmodMapFetch retrieves the jmod file name associated with key = the class name.
+// The input class name is suffixed with ".class" before accessing the map.
 // In the event that the class is not present there, nil is returned.
-func JmodMapFetch(key string) string {
-	jmodMapMutex.Lock()   // Is the map still being built by initialisation?
+func JmodMapFetch(className string) string {
+	jmodMapMutex.Lock()   // Wait if the map still being built by initialisation.
 	jmodMapMutex.Unlock() // Immediately unlock.
 	if jmodMapSize == 0 {
-		msg := fmt.Sprintf("JmodMapFetch: JMODMAP size = 0 detected when key=%s", key)
+		msg := fmt.Sprintf("JmodMapFetch: JMODMAP size = 0 detected when key=%s", className)
 		_ = log.Log(msg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
-	//fmt.Printf("DEBUG key=%s, jmod={%s}\n", key, JMODMAP[key])
-	return JMODMAP[key]
+	jmodFile := JMODMAP[className+".class"]
+	//fmt.Printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$ DEBUG key={%s}, jmod={%s}\n", className, jmodFile)
+	return jmodFile
 }
 
 // This function returns the number of entries in JMODMAP.
@@ -115,8 +117,13 @@ func JmodMapInit() {
 				gobFullPath := global.JacobinHome + string(os.PathSeparator) + name
 				msg := fmt.Sprintf("JmodMapInit: Gob file %s selected", gobFullPath)
 				_ = log.Log(msg, logLevel)
-				buildMapFromGob(gobFullPath)
-				// If jmodMapSize = 0, buildMapFrom Gob failed.
+				if !buildMapFromGob(gobFullPath) {
+					// Gob file trouble
+					// Force re-creation
+					break
+				}
+
+				// Map built form gob file succeeded
 				jmodMapFoundGob = true
 				return
 			}
@@ -138,7 +145,7 @@ func JmodMapInit() {
 // This is the case where the map must be built from a gob file in global.JacobinHome.
 // Lock the mutex and schedule (defer) an unlock upon return or crash.
 // gobFile is the full path of the gob file in global.JacobinHome.
-func buildMapFromGob(gobFilePath string) {
+func buildMapFromGob(gobFilePath string) bool {
 
 	// Initialise a new map.
 	jmodMapMutex.Lock()
@@ -150,10 +157,10 @@ func buildMapFromGob(gobFilePath string) {
 	inFile, err := os.Open(gobFilePath)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: os.Open(%s) failed", gobFilePath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		_ = log.Log(msg, log.WARNING)
+		_ = log.Log(err.Error(), log.WARNING)
 		jmodMapSize = 0
-		return
+		return false
 	}
 	defer inFile.Close()
 
@@ -162,23 +169,26 @@ func buildMapFromGob(gobFilePath string) {
 	err = decoder.Decode(&JMODMAP)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: gob Decode(%s) failed", gobFilePath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		_ = log.Log(msg, log.WARNING)
+		_ = log.Log(err.Error(), log.WARNING)
 		jmodMapSize = 0
-		return
+		return false
 	}
 
 	gobSize := JMODMAP[counterElementName]
 	jmodMapSize, err = strconv.Atoi(gobSize)
 	if err != nil {
 		msg := fmt.Sprintf("buildMapFromGob: Element (%s) is missing or misformatted", counterElementName)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		_ = log.Log(msg, log.WARNING)
+		_ = log.Log(err.Error(), log.WARNING)
 		jmodMapSize = 0
-		return
+		return false
 	}
 	msg := fmt.Sprintf("buildMapFromGob: Map size from gob file = %d", jmodMapSize)
 	_ = log.Log(msg, logLevel)
+
+	// Success!
+	return true
 
 }
 
