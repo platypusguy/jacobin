@@ -1388,6 +1388,9 @@ func runFrame(fs *list.List) error {
 				ValueFunc: nil,
 				CP:        f.CP,
 			}
+			// to solve the generic need, the static is appended to an array
+			// and the statics table is loaded with a K,V of static name and
+			// index into the array. TODO: make this more idiomatic
 			classloader.StaticsArray = append(classloader.StaticsArray, newStatic)
 			classloader.Statics[fieldName] = int64(len(classloader.StaticsArray) - 1)
 
