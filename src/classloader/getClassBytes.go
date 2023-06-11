@@ -17,7 +17,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 
 	global := globals.GetGlobalRef()
 	jmodPath := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + jmodFileName
-	classFileName := className + ".class"
+	classFileName := "classes/" + className + ".class"
 
 	msg := fmt.Sprintf("GetClassBytes: jmodPath %s, className %s\n", jmodPath, className)
 	log.Log(msg, log.TRACE_INST)
