@@ -1341,11 +1341,6 @@ func runFrame(fs *list.List) error {
 			f.TOS = -1 // empty the stack
 			return nil
 		case GETSTATIC: // 0xB2		(get static field)
-			// TODO: getstatic will instantiate a static class if it's not already instantiated
-			// that logic has not yet been implemented and the code here is simply a reasonable
-			// placeholder, which consists of creating a struct that holds most of the needed info
-			// puts it into a slice of such static fields and pushes the index of this item in the slice
-			// onto the stack of the frame.
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
@@ -1375,32 +1370,47 @@ func runFrame(fs *list.List) error {
 
 			// was this static field previously loaded? Is so, get its location and move on.
 			prevLoaded, ok := classloader.Statics[fieldName]
-			if ok { // if preloaded, then push the index into the array of constant fields
-				push(f, prevLoaded)
-				break
+			if !ok { // if field is not already loaded,
+				// instantiate the class
+				_, err := instantiateClass(className)
+				if err == nil {
+					prevLoaded, ok = classloader.Statics[fieldName]
+				} else {
+					ok = false
+				}
 			}
 
-			fieldTypeIndex := nAndT.DescIndex
-			fieldType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldTypeIndex)
-			// println("full field name: " + fieldName + ", type: " + fieldType)
-			newStatic := classloader.Static{
-				Class:     "L",
-				Type:      fieldType,
-				ValueRef:  nil,
-				ValueInt:  0,
-				ValueFP:   0,
-				ValueStr:  "",
-				ValueFunc: nil,
-				CP:        f.CP,
+			if !ok {
+				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
+					"\n", fieldName, className)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
-			// to solve the generic need, the static is appended to an array
-			// and the statics table is loaded with a K,V of static name and
-			// index into the array. TODO: make this more idiomatic
-			classloader.StaticsArray = append(classloader.StaticsArray, newStatic)
-			classloader.Statics[fieldName] = int64(len(classloader.StaticsArray) - 1)
+
+			push(f, prevLoaded.Value)
+
+			//
+			// fieldTypeIndex := nAndT.DescIndex
+			// fieldType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldTypeIndex)
+			// // println("full field name: " + fieldName + ", type: " + fieldType)
+			// newStatic := classloader.Static{
+			// 	// Class:     "L",
+			// 	Type: fieldType,
+			// 	// ValueRef:  nil,
+			// 	// ValueInt:  0,
+			// 	// ValueFP:   0,
+			// 	// ValueStr:  "",
+			// 	// ValueFunc: nil,
+			// 	// CP:        f.CP,
+			// }
+			// // to solve the generic need, the static is appended to an array
+			// // and the statics table is loaded with a K,V of static name and
+			// // index into the array. TODO: make this more idiomatic
+			// classloader.StaticsArray = append(classloader.StaticsArray, newStatic)
+			// classloader.Statics[fieldName] = int64(len(classloader.StaticsArray) - 1)
 
 			// push the pointer to the stack of the frame
-			push(f, int64(len(classloader.StaticsArray)-1))
+			// push(f, int64(len(classloader.StaticsArray)-1))
 
 		case GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
