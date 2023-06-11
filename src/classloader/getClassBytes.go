@@ -4,29 +4,40 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"jacobin/globals"
-	"log"
+	"jacobin/log"
 	"os"
 )
 
 const ExpectedMagicNumber = 0x4A4D
 
-func getClassBytes(jmodFileName string, classFileName string) []byte {
+func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 
 	global := globals.GetGlobalRef()
 	jmodPath := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + jmodFileName
+	classFileName := className + ".class"
+
+	msg := fmt.Sprintf("GetClassBytes: jmodPath %s, className %s\n", jmodPath, className)
+	log.Log(msg, log.TRACE_INST)
 
 	// Read entire jmod file contents
 	jmodBytes, err := os.ReadFile(jmodPath)
 	if err != nil {
-		log.Fatalf("getClassBytes: os.ReadFile(%s) failed:\n%s\n", jmodPath, err.Error())
+		msg = fmt.Sprintf("GetClassBytes: os.ReadFile(%s) failed", jmodPath)
+		_ = log.Log(msg, log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
+		return nil, err
 	}
 
 	// Validate the file's magic number
 	fileMagicNumber := binary.BigEndian.Uint16(jmodBytes[:2])
 	if fileMagicNumber != ExpectedMagicNumber {
-		log.Fatalf("getClassBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s\n", jmodPath)
+		msg = fmt.Sprintf("GetClassBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s\n", jmodPath)
+		_ = log.Log(msg, log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
+		return nil, err
 	}
 
 	// Skip over the jmod header so that it is recognized as a ZIP file
@@ -35,21 +46,31 @@ func getClassBytes(jmodFileName string, classFileName string) []byte {
 	// Prepare the reader for the zip archive
 	zipReader, err := zip.NewReader(ioReader, int64(len(jmodBytes)-4))
 	if err != nil {
-		log.Fatalf("getClassBytes: zip.NewReader(%s) failed:\n%s\n", jmodPath, err.Error())
+		msg = fmt.Sprintf("GetClassBytes: zip.NewReader(%s) failed", jmodPath)
+		_ = log.Log(msg, log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
+		return nil, err
 	}
 
 	// Open the file within the zip archive
 	fileHandle, err := zipReader.Open(classFileName)
 	if err != nil {
-		log.Fatalf("getClassBytes: zipReader.Open(%s in %s) failed:\n%s\n", classFileName, jmodPath, err.Error())
+		msg = fmt.Sprintf("GetClassBytes: zipReader.Open(class file %s in jmod file %s) failed", classFileName, jmodPath)
+		_ = log.Log(msg, log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
+		return nil, err
 	}
 
 	// Read entire class file contents
 	bytes, err := io.ReadAll(fileHandle)
 	if err != nil {
-		log.Fatalf("getClassBytes: os.ReadAll(%s in %s) failed:\n%s\n", classFileName, jmodPath, err.Error())
+		msg = fmt.Sprintf("GetClassBytes: os.ReadAll(class file %s in jmod file %s) failed", classFileName, jmodPath)
+		_ = log.Log(msg, log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
+		return nil, err
 	}
 
-	return bytes
+	// Success!
+	return bytes, nil
 
 }
