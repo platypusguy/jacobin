@@ -287,9 +287,9 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	globals.LoaderWg.Done()
 }
 
-func LoadClassFromNameOnly(name string) error {
+func LoadClassFromNameOnly(className string) error {
 	var err error
-	k := MethAreaFetch(name)
+	k := MethAreaFetch(className)
 	if k != nil { // if the class is already loaded, skip rest of this
 		return nil
 	}
@@ -301,23 +301,27 @@ func LoadClassFromNameOnly(name string) error {
 		Data:   nil,
 	}
 
-	MethAreaInsert(name, &eKI)
+	MethAreaInsert(className, &eKI)
 
-	jmodFileName := JmodMapFetch(name)
-	msg := fmt.Sprintf("LoadClassFromNameOnly after JmodMapFetch: class=%s, jmodFileName=%s", name, jmodFileName)
+	jmodFileName := JmodMapFetch(className)
+	msg := fmt.Sprintf("LoadClassFromNameOnly after JmodMapFetch: class=%s, jmodFileName=%s", className, jmodFileName)
 	_ = log.Log(msg, log.FINE)
 
 	// Load class from a jmod?
 	if jmodFileName != "" {
-		_ = log.Log("LoadClassFromNameOnly: loadClassFromBytes "+name, log.TRACE_INST)
-		classBytes := getClassBytes(jmodFileName, name)
-		_, err := loadClassFromBytes(AppCL, name, classBytes)
+		_ = log.Log("LoadClassFromNameOnly: Getting class bytes "+className+" from jmod "+jmodFileName, log.TRACE_INST)
+		classBytes, err := GetClassBytes(jmodFileName, className)
+		if err != nil {
+			_ = log.Log("LoadClassFromNameOnly: GetClassBytes className="+className+" from jmodFileName="+jmodFileName+" failed", log.SEVERE)
+			_ = log.Log(err.Error(), log.SEVERE)
+		}
+		_, err = loadClassFromBytes(AppCL, className, classBytes)
 		return err
 	}
 
 	// Load class from a jar file?
 	if len(globals.GetGlobalRef().StartingJar) > 0 {
-		validName := util.ConvertToPlatformPathSeparators(name)
+		validName := util.ConvertToPlatformPathSeparators(className)
 		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.TRACE_INST)
 		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
@@ -329,7 +333,7 @@ func LoadClassFromNameOnly(name string) error {
 
 	// Loading from a local file system class
 	// TODO: classpath
-	validName := util.ConvertToPlatformPathSeparators(name)
+	validName := util.ConvertToPlatformPathSeparators(className)
 	_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName, log.TRACE_INST)
 	_, err = LoadClassFromFile(AppCL, validName)
 	if err != nil {
@@ -441,17 +445,6 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	ClassesLock.Unlock()
 	return fullyParsedClass.className, nil
 }
-
-// =====  replaced by MethArea.MethAreaInsert
-// // insert the fully parsed class into the method area (exec.MethArea)
-// func insert(name string, klass Klass) error {
-// 	classArea.MethArea.Store(name, klass)
-//
-// 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
-// 		_ = log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
-// 	}
-// 	return nil
-// }
 
 // load the parsed class into a form suitable for posting to the method area (which is
 // exec.MethArea. This mostly involves copying the data, converting most indexes to uint16
@@ -761,7 +754,7 @@ func Init() error {
 	AppCL.Archives = make(map[string]*Archive)
 
 	// Launch JmodMap initialisation
-	// go JmodMapInit()
+	// commented out: go JmodMapInit()
 	JmodMapInit()
 
 	// initialize the method area
