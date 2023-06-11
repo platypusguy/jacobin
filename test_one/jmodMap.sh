@@ -1,5 +1,4 @@
 set -e
-set batdir=`pwd`
 cd ../src
 
 echo

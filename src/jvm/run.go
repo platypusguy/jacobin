@@ -247,6 +247,11 @@ func runFrame(fs *list.List) error {
 					stringAddr :=
 						object.CreateJavaStringFromGoString(CPe.stringVal)
 					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
+					if stringAddr.Klass == nil {
+						msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class java/lang/String")
+						_ = log.Log(msg, log.SEVERE)
+						shutdown.Exit(shutdown.JVM_EXCEPTION)
+					}
 					// push(f, unsafe.Pointer(CPe.addrVal))
 					push(f, stringAddr)
 				}

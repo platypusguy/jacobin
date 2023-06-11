@@ -8,8 +8,8 @@ package classloader
 
 import (
 	"errors"
+	"fmt"
 	"jacobin/log"
-	"time"
 )
 
 type Klass struct {
@@ -197,16 +197,24 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
 	if methEntry.Meth == nil { // method is not in the MTable, so find it and put it there
+		err := WaitForClassStatus(class)
+		if err != nil {
+			msg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
+			_ = log.Log(msg, log.SEVERE)
+			return MTentry{}, errors.New(msg)
+		}
 		k := MethAreaFetch(class)
-		if k.Status == 'I' { // class is being initialized by a loader, so wait
-			time.Sleep(15 * time.Millisecond) // TODO: must be a better way to do this
-			k = MethAreaFetch(class)
+		if k == nil {
+			msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class {%s}", class)
+			_ = log.Log(msg, log.SEVERE)
+			return MTentry{}, errors.New(msg)
 		}
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			_ = log.Log("Could not find class: "+class, log.SEVERE)
-			return MTentry{}, errors.New("class not found")
+			msg := "FetchMethodAndCP: Could not find class: " + class
+			_ = log.Log(msg, log.SEVERE)
+			return MTentry{}, errors.New(msg)
 		}
 
 		// the class has been found (k) so now go down the list of methods until

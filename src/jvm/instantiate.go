@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"errors"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/log"
@@ -25,23 +26,24 @@ import (
 // var mutex = sync.Mutex{}
 
 func instantiateClass(classname string) (*object.Object, error) {
+
 	_ = log.Log("instantiateClass: Instantiating class: "+classname, log.FINE)
-	k := classloader.MethAreaFetch(classname)
-	if k == nil || k.Data == nil {
-
-		// Not present - try to load from name
-		if classloader.LoadClassFromNameOnly(classname) != nil {
-			msg := "instantiateClass: Failed to load class " + classname
-			_ = log.Log(msg, log.SEVERE)
-			shutdown.Exit(shutdown.APP_EXCEPTION)
-		}
-
-		// Success in loaded by name
-
+	// Try to load class by name
+	if classloader.LoadClassFromNameOnly(classname) != nil {
+		msg := "instantiateClass: Failed to load class " + classname
+		_ = log.Log(msg, log.SEVERE)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
+	// Success in loaded by name
 
 	// at this point the class has been loaded into the method area (MethArea).
-	k = classloader.MethAreaFetch(classname)
+	err := classloader.WaitForClassStatus(classname)
+	if err != nil {
+		msg := fmt.Sprintf("instantiateClass: %s", err.Error())
+		_ = log.Log(msg, log.SEVERE)
+		return nil, errors.New(msg)
+	}
+	k := classloader.MethAreaFetch(classname)
 
 	obj := object.Object{
 		Klass: k,

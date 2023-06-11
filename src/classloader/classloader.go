@@ -189,6 +189,8 @@ func CFE(msg string) error { return cfe(msg) }
 func LoadBaseClasses(global *globals.Globals) {
 	fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
 	LoadJmodClasses(BootstrapCL, fname)
+	msg := fmt.Sprintf("LoadBaseClasses: bootstrap classes from %s have been loaded", fname)
+	_ = log.Log(msg, log.FINE)
 }
 
 // For a given jmod file and class loader, load the jmod classes
@@ -198,7 +200,7 @@ func LoadJmodClasses(classLoader Classloader, fname string) {
 	if err != nil {
 		_ = log.Log("LoadJmodClasses: Couldn't load JMOD file from "+fname, log.WARNING)
 		_ = log.Log(err.Error(), log.SEVERE)
-		shutdown.Exit(shutdown.APP_EXCEPTION)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	} else {
 		defer jmodFile.Close()
 		jmod := Jmod{File: *jmodFile}
@@ -210,7 +212,7 @@ func LoadJmodClasses(classLoader Classloader, fname string) {
 		if err != nil {
 			_ = log.Log("LoadJmodClasses: Error loading jmod file "+fname, log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
-			shutdown.Exit(shutdown.APP_EXCEPTION)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	}
 
@@ -237,10 +239,13 @@ func walk(s string, d fs.DirEntry, err error) error {
 // Note that The class being loaded has records in the CP that indicate all the other classes it interacts with.
 // Thus, classes are preloaded prior to need.
 func LoadReferencedClasses(clName string) {
-	currClass := MethAreaFetch(clName)
-	if currClass == nil {
-		return
+	err := WaitForClassStatus(clName)
+	if err != nil {
+		msg := fmt.Sprintf("LoadReferencedClasses: %s", err.Error())
+		_ = log.Log(msg, log.SEVERE)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
+	currClass := MethAreaFetch(clName)
 	cpClassCP := currClass.Data.CP
 	classRefs := cpClassCP.ClassRefs
 
@@ -274,7 +279,10 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 			Data:   nil,
 		}
 		MethAreaInsert(name, &eKI)
-		LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
+		err := LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
+		if err != nil {
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
 	}
 	globals.LoaderWg.Done()
 }
@@ -282,7 +290,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 func LoadClassFromNameOnly(name string) error {
 	var err error
 	k := MethAreaFetch(name)
-	if k != nil && k.Data != nil { // if the class is already loaded, skip rest of this
+	if k != nil { // if the class is already loaded, skip rest of this
 		return nil
 	}
 
@@ -292,31 +300,41 @@ func LoadClassFromNameOnly(name string) error {
 		Loader: "",
 		Data:   nil,
 	}
+
 	MethAreaInsert(name, &eKI)
 
-	validName := util.ConvertToPlatformPathSeparators(name)
-	if strings.HasPrefix(name, "java/") || strings.HasPrefix(name, "jdk/") ||
-		strings.HasPrefix(name, "javax/") || strings.HasPrefix(name, "sun/") {
-		name = util.ConvertInternalClassNameToFilename(name)
-		name = globals.JavaHome() + "classes" + string(os.PathSeparator) + name
-		validName = util.ConvertToPlatformPathSeparators(name)
-		_, err = LoadClassFromFile(BootstrapCL, validName)
-		if err != nil {
-			_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
-		}
-	} else if len(globals.GetGlobalRef().StartingJar) > 0 {
+	jmodFileName := JmodMapFetch(name)
+	msg := fmt.Sprintf("LoadClassFromNameOnly after JmodMapFetch: class=%s, jmodFileName=%s", name, jmodFileName)
+	_ = log.Log(msg, log.FINE)
+
+	// Load class from a jmod?
+	if jmodFileName != "" {
+		_ = log.Log("LoadClassFromNameOnly: loadClassFromBytes "+name, log.TRACE_INST)
+		classBytes := getClassBytes(jmodFileName, name)
+		_, err := loadClassFromBytes(AppCL, name, classBytes)
+		return err
+	}
+
+	// Load class from a jar file?
+	if len(globals.GetGlobalRef().StartingJar) > 0 {
+		validName := util.ConvertToPlatformPathSeparators(name)
+		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.TRACE_INST)
 		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
 			_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName+" failed", log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
 		}
-	} else {
-		_, err = LoadClassFromFile(AppCL, validName)
-		if err != nil {
-			_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
-		}
+		return err
+	}
+
+	// Loading from a local file system class
+	// TODO: classpath
+	validName := util.ConvertToPlatformPathSeparators(name)
+	_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName, log.TRACE_INST)
+	_, err = LoadClassFromFile(AppCL, validName)
+	if err != nil {
+		_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
+		_ = log.Log(err.Error(), log.SEVERE)
 	}
 	return err
 }
@@ -741,6 +759,10 @@ func Init() error {
 	AppCL.Parent = "extension"
 	AppCL.ClassCount = 0
 	AppCL.Archives = make(map[string]*Archive)
+
+	// Launch JmodMap initialisation
+	// go JmodMapInit()
+	JmodMapInit()
 
 	// initialize the method area
 	initMethodArea()
