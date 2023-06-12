@@ -28,8 +28,10 @@ func MethAreaFetch(key string) *Klass {
 	v, _ := MethArea.Load(key)
 	MethAreaMutex.RUnlock()
 	if v == nil {
+		_ = log.Log("MethAreaFetch: key("+key+") --> nil", log.TRACE_INST)
 		return nil
 	}
+	_ = log.Log("MethAreaFetch: key("+key+") --> not nil", log.TRACE_INST)
 	return v.(*Klass)
 }
 
@@ -60,6 +62,7 @@ func MethAreaSize() int {
 // Wait for klass.Status to no longer be "I"
 // TODO: must be a better way to do this!
 func WaitForClassStatus(className string) error {
+	_ = log.Log("WaitForClassStatus: class name: "+className, log.TRACE_INST)
 	klass := MethAreaFetch(className)
 	if klass == nil { // class not there yet
 		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds

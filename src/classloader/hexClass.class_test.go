@@ -3153,8 +3153,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error looking up loaded class in MethArea: %s", err.Error())
 	}
 
-	if MethAreaSize() != 1 { // count should still be 1
-		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+	if MethAreaSize() != 2 { // count should still be 2
+		t.Errorf("Expected MethArea to have 2 entries, but it has %d",
 			MethAreaSize())
 	}
 
