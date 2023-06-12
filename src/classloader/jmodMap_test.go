@@ -41,7 +41,7 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 	t.Setenv("JACOBIN_HOME", tempDir)
 	globals.InitGlobals("test")
 	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.WARNING)
 
 	tStart := time.Now()
 	JmodMapInit()
@@ -88,7 +88,7 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	JmodMapInit() // Process a pre-existing gob file.
-	_ = log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.WARNING)
 
 	if !JmodMapFoundGob() {
 		t.Errorf("Expected gob found but one was not found")
