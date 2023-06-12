@@ -195,11 +195,14 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
-	err := LoadClassFromNameOnly(class)
-	if err != nil {
-		_ = log.Log("LoadBaseClasses: Loading "+class+" failed: "+err.Error(), log.WARNING)
-		_ = log.Log(err.Error(), log.SEVERE)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
+
+	if MethAreaFetch(class) == nil {
+		err := LoadClassFromNameOnly(class)
+		if err != nil {
+			_ = log.Log("LoadBaseClasses: Loading "+class+" failed: "+err.Error(), log.WARNING)
+			_ = log.Log(err.Error(), log.SEVERE)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
 	}
 
 	methFQN := class + "." + meth + methType // FQN = fully qualified name
