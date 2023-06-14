@@ -76,7 +76,6 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	}
 	globals.InitGlobals("test")
 	log.Init()
-	global := globals.GetGlobalRef()
 	JmodMapInit() // Create gob file if it does not yet exist.
 
 	globals.InitGlobals("test")
