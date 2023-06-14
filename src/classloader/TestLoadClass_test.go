@@ -11,8 +11,6 @@ import (
 	"testing"
 )
 
-const MyLogLevel = log.TRACE_INST
-
 func checkClass(t *testing.T, className string, expectedJmod string) bool {
 
 	jmod := JmodMapFetch(className)
@@ -52,7 +50,6 @@ func TestJmodToClass(t *testing.T) {
 	// Initialise global and logging
 	globals.InitGlobals("test")
 	log.Init()
-	_ = log.SetLogLevel(MyLogLevel)
 	t.Logf("globals.InitGlobals(test) ok\n")
 
 	// Initialise JMODMAP
