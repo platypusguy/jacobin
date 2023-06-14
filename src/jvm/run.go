@@ -1724,7 +1724,7 @@ func runFrame(fs *list.List) error {
 
 		case ARRAYLENGTH: // OxBE get size of array
 			// expects a pointer to an array
-			ref := pop(f).(*object.Object)
+			ref := pop(f)
 			if ref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"ARRAYLENGTH: Invalid (null) reference to an array")
@@ -1732,24 +1732,32 @@ func runFrame(fs *list.List) error {
 			}
 
 			var size int64
-			arrayType := ref.Fields[0].Ftype
-			switch arrayType {
-			case "[B":
-				arrayPtr := ref.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
-				size = int64(len(*arrayPtr))
-			case "[L":
-				arrayPtr := ref.Fields[0].Fvalue.(*[]*object.Object)
-				size = int64(len(*arrayPtr))
-			case "[F":
-				arrayPtr := ref.Fields[0].Fvalue.(*[]float64)
-				size = int64(len(*arrayPtr))
-			default:
-				arrayPtr := ref.Fields[0].Fvalue.(*[]int64)
-				size = int64(len(*arrayPtr))
+			switch ref.(type) {
+			// some arrays internal to Java classes are simply
+			// collections of primitives. This switch covers the
+			// possibilities
+			case *[]int8:
+				array := *ref.(*[]int8)
+				size = int64(len(array))
+			case *object.Object:
+				r := ref.(*object.Object)
+				arrayType := r.Fields[0].Ftype
+				switch arrayType {
+				case "[B":
+					arrayPtr := r.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
+					size = int64(len(*arrayPtr))
+				case "[L":
+					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
+					size = int64(len(*arrayPtr))
+				case "[F":
+					arrayPtr := r.Fields[0].Fvalue.(*[]float64)
+					size = int64(len(*arrayPtr))
+				default:
+					arrayPtr := r.Fields[0].Fvalue.(*[]int64)
+					size = int64(len(*arrayPtr))
+				}
+				push(f, size)
 			}
-
-			push(f, size)
-
 		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
 			var arrayType uint8

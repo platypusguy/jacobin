@@ -404,7 +404,7 @@ func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (strin
 // if no errors occurred, posts/loads it to the method area.
 func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (string, error) {
 
-	_ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.TRACE_INST)
+	// _ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.TRACE_INST)
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
@@ -430,7 +430,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	ClassesLock.Lock()
 	cl.ClassCount += 1
 	ClassesLock.Unlock()
-	_ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.TRACE_INST)
+	// _ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.TRACE_INST)
 
 	return fullyParsedClass.className, nil
 }

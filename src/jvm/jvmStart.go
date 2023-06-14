@@ -50,6 +50,7 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	classloader.LoadBaseClasses(&Global)
+	classloader.StaticsPreload()
 
 	var mainClass string
 
