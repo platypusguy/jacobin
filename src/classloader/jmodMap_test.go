@@ -65,12 +65,6 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 	checkMap(t, "java/lang/String", "java.base.jmod")
 	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
 
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Errorf("os.RemoveAll(%s) failed: %s", tempDir, err.Error())
-		return
-	}
-
 }
 
 func TestJmodMapHomeDefault(t *testing.T) {
@@ -82,7 +76,6 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	}
 	globals.InitGlobals("test")
 	log.Init()
-	global := globals.GetGlobalRef()
 	JmodMapInit() // Create gob file if it does not yet exist.
 
 	globals.InitGlobals("test")
@@ -105,11 +98,5 @@ func TestJmodMapHomeDefault(t *testing.T) {
 
 	checkMap(t, "java/lang/String", "java.base.jmod")
 	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
-
-	err := os.RemoveAll(global.JacobinHome)
-	if err != nil {
-		t.Errorf("os.RemoveAll(%s) failed: %s", global.JacobinHome, err.Error())
-		return
-	}
 
 }

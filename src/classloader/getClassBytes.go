@@ -26,7 +26,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	classFileName := "classes/" + className + ".class"
 
 	msg := fmt.Sprintf("GetClassBytes: jmodPath %s, className %s\n", jmodPath, className)
-	log.Log(msg, log.TRACE_INST)
+	log.Log(msg, log.CLASS)
 
 	// Read entire jmod file contents
 	jmodBytes, err := os.ReadFile(jmodPath)
