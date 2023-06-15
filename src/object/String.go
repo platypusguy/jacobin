@@ -37,7 +37,7 @@ func NewString() *Object {
 	s.Fields = append(s.Fields, Field{Ftype: "I", Fvalue: int64(0)})
 
 	// field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
-	s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: true})
+	s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: javaTypes.JavaBoolTrue})
 
 	// field 04 -- UTF_8.INSTANCE ptr to encoder
 	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
@@ -56,7 +56,7 @@ func NewString() *Object {
 	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
 
 	// field 09 -- hashIsZero (only true in rare case where hash is 0
-	s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: false})
+	s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: javaTypes.JavaBoolFalse})
 
 	// field 10 -- serialPersistentFields
 	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
