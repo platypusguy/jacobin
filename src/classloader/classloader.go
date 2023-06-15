@@ -295,7 +295,7 @@ func LoadClassFromNameOnly(className string) error {
 
 	// Load class from a jmod?
 	if jmodFileName != "" {
-		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.TRACE_INST)
+		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.CLASS)
 		classBytes, err := GetClassBytes(jmodFileName, className)
 		if err != nil {
 			_ = log.Log("LoadClassFromNameOnly: GetClassBytes className="+className+" from jmodFileName="+jmodFileName+" failed", log.SEVERE)
@@ -308,7 +308,7 @@ func LoadClassFromNameOnly(className string) error {
 	// Load class from a jar file?
 	if len(globals.GetGlobalRef().StartingJar) > 0 {
 		validName := util.ConvertToPlatformPathSeparators(className)
-		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.TRACE_INST)
+		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.CLASS)
 		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
 			_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName+" failed", log.SEVERE)
@@ -320,7 +320,7 @@ func LoadClassFromNameOnly(className string) error {
 	// Loading from a local file system class
 	// TODO: classpath
 	validName := util.ConvertToPlatformPathSeparators(className)
-	_ = log.Log("LoadClassFromNameOnly: Load class from file "+validName, log.TRACE_INST)
+	_ = log.Log("LoadClassFromNameOnly: Load class from file "+validName, log.CLASS)
 	_, err = LoadClassFromFile(AppCL, validName)
 	if err != nil {
 		_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
@@ -343,7 +343,7 @@ func LoadClassFromFile(cl Classloader, fname string) (string, error) {
 		_ = log.Log("LoadClassFromFile: os.ReadFile("+filename+") failed", log.SEVERE)
 		return "", err
 	}
-	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.TRACE_INST)
+	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
 
 	return loadClassFromBytes(cl, filename, rawBytes)
 }
@@ -404,7 +404,7 @@ func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (strin
 // if no errors occurred, posts/loads it to the method area.
 func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (string, error) {
 
-	// _ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.TRACE_INST)
+	_ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.CLASS)
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
@@ -430,7 +430,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	ClassesLock.Lock()
 	cl.ClassCount += 1
 	ClassesLock.Unlock()
-	// _ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.TRACE_INST)
+	_ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.CLASS)
 
 	return fullyParsedClass.className, nil
 }
