@@ -1387,6 +1387,21 @@ func runFrame(fs *list.List) error {
 				return errors.New(errMsg)
 			}
 
+			if prevLoaded.Type == "Z" { // a boolean, which might
+				// be stored as a boolean, a byte (in an array), or int64
+				// We want all forms normalized to int64
+				switch prevLoaded.Value.(type) {
+				case bool:
+					if prevLoaded.Value == true {
+						prevLoaded.Value = javaTypes.JavaBoolTrue
+					} else {
+						prevLoaded.Value = javaTypes.JavaBoolFalse
+					}
+				case byte:
+					value := prevLoaded.Value.(byte)
+					prevLoaded.Value = int64(value)
+				}
+			}
 			push(f, prevLoaded.Value)
 
 			//
