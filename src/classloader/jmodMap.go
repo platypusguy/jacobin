@@ -46,7 +46,7 @@ const expectedMagicNumber = 0x4A4D
 const counterElementName = "$COUNT"
 
 // Log level for debugging:
-const logLevel = log.FINE
+const logLevel = log.CLASS
 
 // JmodMapFetch retrieves the jmod file name associated with key = the class name.
 // The input class name is suffixed with ".class" before accessing the map.

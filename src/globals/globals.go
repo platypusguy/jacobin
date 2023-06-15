@@ -62,6 +62,9 @@ type Globals struct {
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
+
+	// ----- Byte cache for java.base.jmod
+	JmodBaseBytes []byte
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -88,6 +91,7 @@ func InitGlobals(progName string) Globals {
 		JacobinBuildData:  nil,
 		StrictJDK:         false,
 		ArrayAddressList:  InitArrayAddressList(),
+		JmodBaseBytes:     nil,
 	}
 
 	InitJavaHome()

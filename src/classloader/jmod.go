@@ -9,95 +9,69 @@ package classloader
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/binary"
-	"fmt"
 	"io"
-	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/shutdown"
-	"os"
 	"strings"
 )
 
-type WalkEntryFunc func(bytes []byte, filename string) error
-
-// MagicNumber JMOD Magic Number
-const MagicNumber = 0x4A4D
-
-// Jmod Holds the file referring to a Java Module (JMOD)
-// Allows walking a Java Module (JMOD). The `Walk` method will walk the module and invoke the `walk` parameter for all
-// classes found. If there is a classlist file in lib\classlist (in the module), it will filter out any classes not
-// contained in the classlist file; otherwise, all classes found in classes/ in the module.
-type Jmod struct {
-	File os.File
-}
-
-// Walk a Jmod file and invoke the indicated WalkEntryFunc for each class found in the classlist
-// Only called in one place: LoadJmodClasses.
-func (jmodFile *Jmod) Walk(walk WalkEntryFunc) error {
-	b, err := os.ReadFile(jmodFile.File.Name())
-	if err != nil {
-		return err
-	}
-
-	fileMagic := binary.BigEndian.Uint16(b[:2])
-
-	if fileMagic != MagicNumber {
-
-		if !globals.GetGlobalRef().StrictJDK {
-			msg := fmt.Sprintf("An IOException occurred reading %s: the magic number is invalid. Expected: %x, Got: %x", jmodFile.File.Name(), MagicNumber, fileMagic)
-			_ = log.Log(msg, log.SEVERE)
-		}
-
-		exceptions.JVMexception(exceptions.IOException, fmt.Sprintf("Invalid JMOD file: %s", jmodFile.File.Name()))
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
-	}
+// Walk the Base Jmod file and invoke ParseAndPostClass for each class found in the classlist
+// Only called in one place: LoadBaseClasses.
+func WalkBaseJmod() error {
 
 	// Skip over the JMOD header so that it is recognized as a ZIP file
-	offsetReader := bytes.NewReader(b[4:])
-
-	r, err := zip.NewReader(offsetReader, int64(len(b)-4))
+	global := globals.GetGlobalRef()
+	ioReader := bytes.NewReader(global.JmodBaseBytes[4:])
+	zipReader, err := zip.NewReader(ioReader, int64(len(global.JmodBaseBytes)-4))
 	if err != nil {
 		_ = log.Log(err.Error(), log.WARNING)
 		return err
 	}
 
-	classSet := getClasslist(*r)
+	// Get the lib/classlist (bootstrap set of classes) if it exists
+	bootstrapSet := getClasslist(*zipReader)
+	useBootstrapSet := len(bootstrapSet) > 0
 
-	useClassSet := len(classSet) > 0
+	// For each class file in the base jmod,
+	// if it is in the classlist
+	for _, classFile := range zipReader.File {
 
-	for _, f := range r.File {
-		if !strings.HasPrefix(f.Name, "classes") {
+		// If not prefixed by "classes" or suffixed by ".class", skip this file
+		if !strings.HasPrefix(classFile.Name, "classes") {
+			continue
+		}
+		if !strings.HasSuffix(classFile.Name, ".class") {
 			continue
 		}
 
-		classFileName := strings.Replace(f.Name, "classes/", "", 1)
+		// Remove prefix for bootstrap list check
+		strapFileName := strings.Replace(classFile.Name, "classes/", "", 1)
 
-		if useClassSet {
-			_, ok := classSet[classFileName]
-			if !ok {
-				continue
-			}
-		} else {
-			if !strings.HasSuffix(f.Name, ".class") {
+		// Is there a bootstrap list?
+		if useBootstrapSet {
+			// Yes, make sure that this class is on the list
+			_, onList := bootstrapSet[strapFileName]
+			if !onList {
 				continue
 			}
 		}
 
-		rc, err := f.Open()
+		// Open the class file
+		rc, err := classFile.Open()
 		if err != nil {
 			return err
 		}
 
-		b, err := io.ReadAll(rc)
+		// Read all of the bytes
+		classBytes, err := io.ReadAll(rc)
 		if err != nil {
 			return err
 		}
-
-		_ = walk(b, jmodFile.File.Name()+"+"+f.Name)
-
 		_ = rc.Close()
+
+		// Parse and post class into MethArea
+		ParseAndPostClass(&BootstrapCL, classFile.Name, classBytes)
+
 	}
 
 	return nil

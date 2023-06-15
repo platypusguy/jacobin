@@ -45,11 +45,11 @@ func JVMrun() int {
 	}
 
 	// Init classloader and load base classes
-	err = classloader.Init()
+	err = classloader.Init() // must precede classloader.LoadBaseClasses
 	if err != nil {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
-	classloader.LoadBaseClasses(&Global)
+	classloader.LoadBaseClasses() // must follow classloader.Init
 	classloader.StaticsPreload()
 
 	var mainClass string
