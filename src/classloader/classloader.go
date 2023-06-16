@@ -186,35 +186,19 @@ func CFE(msg string) error { return cfe(msg) }
 // the JAVA_HOME/jmods/java.base.jmod zip file.
 // In Java 17.0.7, there are currently a total of 6401 embedded classes in java.base.jmod.
 // Based on the lib/classlist member in java.base.jmod, only 1402 class files are actually loaded by this function.
-func LoadBaseClasses(global *globals.Globals) {
-	fname := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
-	LoadJmodClasses(BootstrapCL, fname)
-	msg := fmt.Sprintf("LoadBaseClasses: bootstrap classes from %s have been loaded", fname)
-	_ = log.Log(msg, log.FINE)
-}
+func LoadBaseClasses() {
+	global := globals.GetGlobalRef()
+	jmodFilePath := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + "java.base.jmod"
 
-// For a given jmod file and class loader, load the jmod classes
-func LoadJmodClasses(classLoader Classloader, fname string) {
-
-	jmodFile, err := os.Open(fname)
+	err := WalkBaseJmod()
 	if err != nil {
-		_ = log.Log("LoadJmodClasses: Couldn't load JMOD file from "+fname, log.WARNING)
+		_ = log.Log("LoadBaseClasses: Error loading jmod file classes "+jmodFilePath, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
-	} else {
-		defer jmodFile.Close()
-		jmod := Jmod{File: *jmodFile}
-		err = jmod.Walk(func(bytes []byte, filename string) error {
-			_, err := loadClassFromBytes(classLoader, filename, bytes)
-			return err
-		})
-
-		if err != nil {
-			_ = log.Log("LoadJmodClasses: Error loading jmod file "+fname, log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
-		}
 	}
+
+	msg := fmt.Sprintf("LoadBaseClasses: Bootstrap classes from %s have been loaded", jmodFilePath)
+	_ = log.Log(msg, log.CLASS)
 
 }
 
@@ -746,8 +730,19 @@ func Init() error {
 	// commented out: go JmodMapInit()
 	JmodMapInit()
 
+	// Load the base jmod
+	GetBaseJmodBytes()
+	_, err := GetClassBytes("java.base.jmod", "java/lang/String")
+	if err != nil {
+		msg := fmt.Sprintf("classloader.Init: GetClassBytes failed for java/lang/String in java.base.jmod")
+		_ = log.Log(msg, log.SEVERE)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+	}
+
 	// initialize the method area
 	initMethodArea()
 
+	// Success!
+	_ = log.Log("classloader.Init: ok", log.CLASS)
 	return nil
 }

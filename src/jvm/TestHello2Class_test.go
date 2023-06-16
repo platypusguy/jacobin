@@ -107,8 +107,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	t.Logf("classloader.Init ok\n")
 
 	// Load the base classes
-	global := *globals.GetGlobalRef()
-	classloader.LoadBaseClasses(&global)
+	classloader.LoadBaseClasses()
 	t.Logf("LoadBaseClasses ok\n")
 
 	// Show the map size and check it for java/lang/System

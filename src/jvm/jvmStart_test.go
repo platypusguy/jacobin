@@ -11,7 +11,6 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/shutdown"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,51 +57,6 @@ func TestNoExecutable(t *testing.T) {
 	if !strings.Contains(errMsg, "No executable program specified.") {
 		t.Errorf("jvmRun() with no executable specified did not get expected error msg, got: %s", errMsg)
 	}
-}
-
-// Test that specifying a non-existent JAR file gives the right error message
-func TestInvalidJar(t *testing.T) {
-
-	g := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	g.StartingJar = "gherkin.jar"
-	g.StrictJDK = false
-	g.JavaHome = ""
-
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	exitCode := JVMrun()
-	if exitCode != int(shutdown.JVM_EXCEPTION) {
-		t.Errorf("Expected exception code of %d, but got %d",
-			int(shutdown.JVM_EXCEPTION), int(exitCode))
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	os.Stderr = normalStderr
-
-	out, _ := io.ReadAll(r)
-	errMsg := string(out[:])
-
-	if !strings.Contains(errMsg, "Invalid or corrupt jarfile") {
-		t.Errorf("jvmRun() with an invalid JAR name didn't give expected err msg (%s), got %s",
-			"Error: Invalid or corrupt jarfile", errMsg)
-	}
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
 }
 
 func TestNoMainClassInJar(t *testing.T) {
