@@ -1370,7 +1370,8 @@ func runFrame(fs *list.List) error {
 
 			// was this static field previously loaded? Is so, get its location and move on.
 			prevLoaded, ok := classloader.Statics[fieldName]
-			if !ok { // if field is not already loaded,
+			if !ok { // if field is not already loaded, then
+				// the class has not been instantiated, so
 				// instantiate the class
 				_, err := instantiateClass(className)
 				if err == nil {
@@ -1380,6 +1381,8 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
+			// if the field can't be found even after instantiating the
+			// containing class, something is wrong so get out of here.
 			if !ok {
 				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
@@ -1392,40 +1395,15 @@ func runFrame(fs *list.List) error {
 				// We want all forms normalized to int64
 				switch prevLoaded.Value.(type) {
 				case bool:
-					if prevLoaded.Value == true {
-						prevLoaded.Value = javaTypes.JavaBoolTrue
-					} else {
-						prevLoaded.Value = javaTypes.JavaBoolFalse
-					}
+					value := prevLoaded.Value.(bool)
+					prevLoaded.Value =
+						javaTypes.ConvertGoBoolToJavaBool(value)
 				case byte:
 					value := prevLoaded.Value.(byte)
 					prevLoaded.Value = int64(value)
 				}
 			}
 			push(f, prevLoaded.Value)
-
-			//
-			// fieldTypeIndex := nAndT.DescIndex
-			// fieldType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldTypeIndex)
-			// // println("full field name: " + fieldName + ", type: " + fieldType)
-			// newStatic := classloader.Static{
-			// 	// Class:     "L",
-			// 	Type: fieldType,
-			// 	// ValueRef:  nil,
-			// 	// ValueInt:  0,
-			// 	// ValueFP:   0,
-			// 	// ValueStr:  "",
-			// 	// ValueFunc: nil,
-			// 	// CP:        f.CP,
-			// }
-			// // to solve the generic need, the static is appended to an array
-			// // and the statics table is loaded with a K,V of static name and
-			// // index into the array. TODO: make this more idiomatic
-			// classloader.StaticsArray = append(classloader.StaticsArray, newStatic)
-			// classloader.Statics[fieldName] = int64(len(classloader.StaticsArray) - 1)
-
-			// push the pointer to the stack of the frame
-			// push(f, int64(len(classloader.StaticsArray)-1))
 
 		case GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
