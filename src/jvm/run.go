@@ -1860,8 +1860,8 @@ func runFrame(fs *list.List) error {
 
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
-			value := pop(f).(int64)
-			if value == 0 {
+			value := pop(f).(*object.Object)
+			if value == nil {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -1869,8 +1869,8 @@ func runFrame(fs *list.List) error {
 			}
 		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
 			// null = 0, so we duplicate logic of IFNE instruction
-			value := pop(f).(int64)
-			if value != 0 {
+			value := pop(f).(*object.Object)
+			if value != nil {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {

@@ -12,6 +12,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/thread"
 	"math"
 	"os"
@@ -2456,7 +2457,8 @@ func TestIfneFallThrough(t *testing.T) {
 // IFNONNULL: jump if TOS holds a non-null address
 func TestIfn0nnull(t *testing.T) {
 	f := newFrame(IFNONNULL)
-	push(&f, int64(1)) // pushed 1, so jump should be made.
+	o := object.NewString()
+	push(&f, o) // pushed a valid address, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -2474,8 +2476,9 @@ func TestIfn0nnull(t *testing.T) {
 // IFNONNULL: jump if TOS holds a non-null address; here it is null
 func TestIfnonnullFallThrough(t *testing.T) {
 	f := newFrame(IFNONNULL)
-	push(&f, int64(0)) // pushed 0, so jump should not be made.
-
+	var oAddr *object.Object
+	oAddr = nil
+	push(&f, oAddr)
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
 	f.Meth = append(f.Meth, RETURN)
@@ -2492,7 +2495,9 @@ func TestIfnonnullFallThrough(t *testing.T) {
 // IFNULL: jump if TOS holds null address
 func TestIfnull(t *testing.T) {
 	f := newFrame(IFNULL)
-	push(&f, int64(0)) // pushed null, so jump should be made.
+	var oAddr *object.Object
+	oAddr = nil
+	push(&f, oAddr) // pushed null, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -2510,7 +2515,8 @@ func TestIfnull(t *testing.T) {
 // IFNULL: jump if TOS address is null; here not null
 func TestIfnullFallThrough(t *testing.T) {
 	f := newFrame(IFNULL)
-	push(&f, int64(23)) // pushed 23, so jump should not be made.
+	o := object.MakeObject()
+	push(&f, o) // pushed non-null address, so jump should not be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
