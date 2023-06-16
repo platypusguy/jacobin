@@ -1749,8 +1749,9 @@ func runFrame(fs *list.List) error {
 					arrayPtr := r.Fields[0].Fvalue.(*[]int64)
 					size = int64(len(*arrayPtr))
 				}
-				push(f, size)
 			}
+			push(f, size)
+
 		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
 			var arrayType uint8
