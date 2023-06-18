@@ -7,9 +7,10 @@
 package classloader
 
 import (
-    "jacobin/shutdown"
-    "runtime"
-    "time"
+	"jacobin/object"
+	"jacobin/shutdown"
+	"runtime"
+	"time"
 )
 
 /*
@@ -30,54 +31,76 @@ import (
 
 func Load_Lang_System() map[string]GMeth {
 
-    MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
-        GMeth{
-            ParamSlots: 0,
-            GFunction:  currentTimeMillis,
-        }
+	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  currentTimeMillis,
+		}
 
-    MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
-        GMeth{
-            ParamSlots: 0,
-            GFunction:  nanoTime,
-        }
+	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  nanoTime,
+		}
 
-    MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
-        GMeth{
-            ParamSlots: 1,
-            GFunction:  exitI,
-        }
+	MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  exitI,
+		}
 
-    MethodSignatures["java/lang/System.gc()V"] = // for a GC cycle
-        GMeth{
-            ParamSlots: 0,
-            GFunction:  forceGC,
-        }
+	MethodSignatures["java/lang/System.gc()V"] = // for a GC cycle
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  forceGC,
+		}
 
-    return MethodSignatures
+	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  getProperty,
+		}
+
+	return MethodSignatures
 }
 
 // Return time in milliseconds, measured since midnight of Jan 1, 1970
 func currentTimeMillis([]interface{}) interface{} {
-    return time.Now().UnixMilli() // is int64
+	return time.Now().UnixMilli() // is int64
 }
 
 // Return time in nanoseconds. Note that in golang this function has a lower (that is, less good)
 // resolution than Java: two successive calls often return the same value.
 func nanoTime([]interface{}) interface{} {
-    return time.Now().UnixNano() // is int64
+	return time.Now().UnixNano() // is int64
 }
 
 // Exits the program directly, returning the passed in value
 func exitI(params []interface{}) interface{} {
-    exitCode := params[0].(int64) // int64
-    var exitStatus = int(exitCode)
-    shutdown.Exit(exitStatus)
-    return 0 // this code is not executed as previous line ends Jacobin
+	exitCode := params[0].(int64) // int64
+	var exitStatus = int(exitCode)
+	shutdown.Exit(exitStatus)
+	return 0 // this code is not executed as previous line ends Jacobin
 }
 
 // Force a garbage collection cycle.
 func forceGC([]interface{}) interface{} {
-    runtime.GC()
-    return nil
+	runtime.GC()
+	return nil
+}
+
+// Get a property
+func getProperty(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object) // string
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	str := *strPtr
+	// strb := []uint8(str)
+	prop := string(str)
+	var value string
+	switch prop {
+	case "java.vm.name":
+		value = "Jacobin JVM"
+	}
+	obj := object.NewStringFromGoString(value)
+	return obj
 }
