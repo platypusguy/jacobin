@@ -400,7 +400,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
 		return "", fmt.Errorf("format-checking error")
 	}
-	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.CLASS)
 
 	classToPost := convertToPostableClass(&fullyParsedClass)
 	eKF := Klass{
@@ -676,10 +676,10 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
-	if log.Level == log.FINEST {
+	if log.Level == log.CLASS {
 		b := new(bytes.Buffer)
 		if gob.NewEncoder(b).Encode(kd) == nil {
-			_ = log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
+			_ = log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.CLASS)
 		}
 	}
 	return kd

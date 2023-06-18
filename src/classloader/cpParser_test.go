@@ -664,7 +664,7 @@ func TestPrintOfCPpart1(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_ = log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.CLASS)
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -805,7 +805,7 @@ func TestPrintOfCPpart2(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_ = log.SetLogLevel(log.FINEST)
+	_ = log.SetLogLevel(log.CLASS)
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
