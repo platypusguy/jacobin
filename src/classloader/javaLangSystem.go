@@ -101,6 +101,6 @@ func getProperty(params []interface{}) interface{} {
 	case "java.vm.name":
 		value = "Jacobin JVM"
 	}
-	obj := object.NewStringFromGoString(value)
+	obj := object.CreateJavaStringFromGoString(&value)
 	return obj
 }
