@@ -26,7 +26,7 @@ func NewString() *Object {
 	// enable compact strings. Here, for better compatibility with
 	// go, for the nonce we make it an array of Java chars's
 	// equivalent in go: runes.
-	array := make([]javaTypes.JavaByte, 10)
+	array := make([]byte, 10)
 	s.Fields = append(s.Fields,
 		Field{Ftype: "[B", Fvalue: &array})
 
@@ -87,8 +87,8 @@ func GoStringToJavaBytes(in string) []javaTypes.JavaByte {
 }
 
 func CreateJavaStringFromGoString(in *string) *Object {
-	ins := in
-	stringBytes := GoStringToJavaBytes(*ins)
+	// stringBytes := GoStringToJavaBytes(*ins)
+	stringBytes := []byte(*in)
 	s := NewString()
 	// set the value of the string
 	s.Fields[0].Ftype = "[B"
