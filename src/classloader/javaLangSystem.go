@@ -7,8 +7,10 @@
 package classloader
 
 import (
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"os"
 	"runtime"
 	"time"
 )
@@ -94,12 +96,40 @@ func getProperty(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object) // string
 	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
 	str := *strPtr
-	// strb := []uint8(str)
 	prop := string(str)
+
 	var value string
+	g := globals.GetGlobalRef()
+
 	switch prop {
+	case "java.home":
+		value = g.JavaHome
+	case "java.vendor":
+		value = "Jacobin"
+	case "java.vendor.url":
+		value = "http://jacobin.org"
+	case "java.vendor.version":
+		value = g.Version
+	case "java.version":
+		value = g.JavaVersion
 	case "java.vm.name":
 		value = "Jacobin JVM"
+	case "java.vm.specification.name":
+		value = "The Java® Virtual Machine Specification--Java SE 17 Edition"
+	case "java.vm.specification.vendor":
+		value = "Oracle and Jacobin"
+	case "java.vm.specification.version":
+		value = g.JavaVersion
+	case "java.vm.vendor":
+		value = "Jacobin"
+	case "java.vm.version":
+		value = g.JavaVersion
+	case "os.arch":
+		value = runtime.GOARCH
+	case "os.name":
+		value = runtime.GOOS
+	case "path.separator":
+		value = os.PathSeparator
 	}
 	obj := object.CreateJavaStringFromGoString(&value)
 	return obj
