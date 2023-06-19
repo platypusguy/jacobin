@@ -2062,10 +2062,12 @@ func createAndInitNewFrame(
 
 		if arrayDimensions == 1 { // a single-dimension array
 			// a bunch of Java functions return raw arrays (like String.toCharArray()), which
-			// are not really viewed by the JVM as objects in the full sense of the word. These
+			// are not really viewed by the JVM as objects in the full sense of the term. These
 			// almost invariably are single-dimension arrays. So we test for these here and
-			// return the corresponding entity.
-			arg := pop(f).(*object.Object)
+			// return the corresponding object entity.
+			value := pop(f)
+			arg := object.MakeArrayFromRawArray(value)
+			// arg := pop(f).(*object.Object)
 			argList = append(argList, arg)
 			continue
 		}

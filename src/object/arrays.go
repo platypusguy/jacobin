@@ -225,3 +225,19 @@ func MakeArrRefArray(size int64) *JacobinArrRefArray {
 	}
 	return &ra
 }
+
+func MakeArrayFromRawArray(rawArray interface{}) *Object {
+	switch rawArray.(type) {
+	case *Object:
+		arr := rawArray.(*Object)
+		return arr
+	case *[]uint8:
+		raw := rawArray.(*[]uint8)
+		o := MakeObject()
+		o.Klass = nil
+		of := Field{Ftype: "[B", Fvalue: raw}
+		o.Fields = append(o.Fields, of)
+		return o
+	}
+	return nil
+}
