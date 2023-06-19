@@ -135,10 +135,10 @@ func runFrame(fs *list.List) error {
 
 		if retval != nil {
 			f = fs.Front().Next().Value.(*frames.Frame)
-			push(f, retval.(int64)) // if slotCount = 1
+			push(f, retval) // if slotCount = 1
 
 			if slotCount == 2 {
-				push(f, retval.(int64)) // push a second time, if a long, double, etc.
+				push(f, retval) // push a second time, if a long, double, etc.
 			}
 		}
 		return err
