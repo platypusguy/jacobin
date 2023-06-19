@@ -7,7 +7,6 @@
 package object
 
 import (
-	"jacobin/javaTypes"
 	"unsafe"
 )
 
@@ -182,6 +181,8 @@ func Make2DimArray(ptrArrSize, leafArrSize int64,
 	return ptrArr, nil
 }
 
+// Make1DimArray creates and 1-diminensional Jacobin-style array
+// of the specified type (passed as a byte) and size.
 func Make1DimArray(arrType uint8, size int64) *Object {
 	o := MakeObject()
 	o.Klass = nil // arrays don't have a pointer to a parsed class
@@ -189,7 +190,8 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	switch arrType {
 	// case 'B': // byte arrays
 	case BYTE:
-		barArr := make([]javaTypes.JavaByte, size)
+		// barArr := make([]javaTypes.JavaByte, size) // changed with JACOBIN-282
+		barArr := make([]byte, size)
 		of := Field{Ftype: "[B", Fvalue: &barArr}
 		o.Fields = append(o.Fields, of)
 		return o

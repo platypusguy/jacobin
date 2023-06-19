@@ -462,7 +462,8 @@ func runFrame(fs *list.List) error {
 			}
 			// array := *(bAref.Arr)
 
-			arrayPtr := bAref.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
+			// arrayPtr := bAref.Fields[0].Fvalue.(*[]javaTypes.JavaByte) // changed in JACOBIN-282
+			arrayPtr := bAref.Fields[0].Fvalue.(*[]byte)
 			size := int64(len(*arrayPtr))
 
 			if index >= size {
@@ -718,9 +719,9 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 
 		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
-			var value int8 = 0
+			var value byte = 0
 			rawValue := pop(f)
-			value = convertInterfaceToInt8(rawValue)
+			value = convertInterfaceToByte(rawValue)
 			index := pop(f).(int64)
 			ptrObj := pop(f).(*object.Object) // ptr to array object
 			if ptrObj == nil {
@@ -739,7 +740,8 @@ func runFrame(fs *list.List) error {
 				return errors.New("BASTORE: Invalid array type")
 			}
 
-			array := *(ptrObj.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
+			// array := *(ptrObj.Fields[0].Fvalue.(*[]javaTypes.JavaByte)) // changed w/ JACOBIN-282
+			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
@@ -1737,7 +1739,8 @@ func runFrame(fs *list.List) error {
 				arrayType := r.Fields[0].Ftype
 				switch arrayType {
 				case "[B":
-					arrayPtr := r.Fields[0].Fvalue.(*[]javaTypes.JavaByte)
+					// arrayPtr := r.Fields[0].Fvalue.(*[]javaTypes.JavaByte) // Change w/ JACOBIN-282
+					arrayPtr := r.Fields[0].Fvalue.(*[]byte)
 					size = int64(len(*arrayPtr))
 				case "[L":
 					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
@@ -1937,13 +1940,15 @@ func subtract[N frames.Number](num1, num2 N) N {
 }
 
 // converts an interface{} value to int8. Used for BASTORE
-func convertInterfaceToInt8(val interface{}) int8 {
+func convertInterfaceToByte(val interface{}) byte {
 	switch t := val.(type) {
 	case int64:
-		return int8(t)
+		return byte(t)
 	case int:
-		return int8(t)
+		return byte(t)
 	case int8:
+		return byte(t)
+	case byte:
 		return t
 	}
 	return 0
@@ -2056,6 +2061,10 @@ func createAndInitNewFrame(
 		}
 
 		if arrayDimensions == 1 { // a single-dimension array
+			// a bunch of Java functions return raw arrays (like String.toCharArray()), which
+			// are not really viewed by the JVM as objects in the full sense of the word. These
+			// almost invariably are single-dimension arrays. So we test for these here and
+			// return the corresponding entity.
 			arg := pop(f).(*object.Object)
 			argList = append(argList, arg)
 			continue

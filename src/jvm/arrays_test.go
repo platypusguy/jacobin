@@ -11,7 +11,6 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/javaTypes"
 	"jacobin/log"
 	"jacobin/object"
 	"os"
@@ -420,9 +419,9 @@ func TestBaload(t *testing.T) {
 	ptr := pop(&f)
 
 	f = newFrame(BASTORE)
-	push(&f, ptr)                     // push the reference to the array
-	push(&f, int64(20))               // in array[20]
-	push(&f, javaTypes.JavaByte(100)) // the value we're storing
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // in array[20]
+	push(&f, byte(100)) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
@@ -472,14 +471,14 @@ func TestBastore(t *testing.T) {
 	ptr := pop(&f).(*object.Object)
 
 	f = newFrame(BASTORE)
-	push(&f, ptr)                     // push the reference to the array
-	push(&f, int64(20))               // in array[20]
-	push(&f, javaTypes.JavaByte(100)) // the value we're storing
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // in array[20]
+	push(&f, byte(100)) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
+	array := *(ptr.Fields[0].Fvalue.(*[]byte)) // changed in JACOBIN-282
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
@@ -521,7 +520,7 @@ func TestBastoreInt64(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]javaTypes.JavaByte))
+	array := *(ptr.Fields[0].Fvalue.(*[]byte))
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
@@ -1542,7 +1541,7 @@ func Test2DimArray1(t *testing.T) {
 			len(*arrLevelArrayPtr))
 	}
 
-	leafLevelArrayPtr := ((*arrLevelArrayPtr)[0].Fields[0].Fvalue).(*[]javaTypes.JavaByte)
+	leafLevelArrayPtr := ((*arrLevelArrayPtr)[0].Fields[0].Fvalue).(*[]byte)
 	arrLen := len(*leafLevelArrayPtr)
 	if arrLen != 4 {
 		t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d",
