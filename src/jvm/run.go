@@ -170,7 +170,8 @@ func runFrame(fs *list.List) error {
 		case NOP:
 			break
 		case ACONST_NULL: // 0x01   (push null onto opStack)
-			push(f, int64(0))
+			// push(f, int64(0)) // replaced in JACOBIN-286
+			push(f, object.Null)
 		case ICONST_M1: //	x02	(push -1 onto opStack)
 			push(f, int64(-1))
 		case ICONST_0: // 	0x03	(push int 0 onto opStack)
@@ -1292,8 +1293,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ACMPEQ: // 0xA5		(jump if two addresses are equal)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			val2 := pop(f)
+			val1 := pop(f)
 			if val1 == val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1301,8 +1302,8 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IF_ACMPNE: // 0xA6		(jump if two addresses are note equal)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			val2 := pop(f)
+			val1 := pop(f)
 			if val1 != val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1864,7 +1865,7 @@ func runFrame(fs *list.List) error {
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f).(*object.Object)
-			if value == nil {
+			if value == object.Null {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -1873,7 +1874,7 @@ func runFrame(fs *list.List) error {
 		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
 			// null = 0, so we duplicate logic of IFNE instruction
 			value := pop(f).(*object.Object)
-			if value != nil {
+			if value != object.Null {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -2082,7 +2083,11 @@ func createAndInitNewFrame(
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
 		case 'B', 'C', 'I', 'S': // byte, char, integer, short
-			arg := pop(f).(int64)
+			arg := pop(f)
+			switch arg.(type) {
+			case int: // the arg should be int64, but is occasionally int. Tracking this down.
+				arg = int64(arg.(int))
+			}
 			argList = append(argList, arg)
 		case 'J': // long
 			arg := pop(f).(int64)
