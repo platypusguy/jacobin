@@ -53,9 +53,9 @@ func TestAconstNull(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
-	x := peek(&f).(int64)
-	if x != 0 {
-		t.Errorf("ACONST_NULL: Expecting 0 on stack, got: %d", x)
+	x := peek(&f)
+	if x != object.Null {
+		t.Errorf("ACONST_NULL: Expecting nil on stack, got: %d", x)
 	}
 	if f.TOS != 0 {
 		t.Errorf("ACONST_NULL: Expecting TOS = 0, but tos is: %d", f.TOS)
@@ -2496,7 +2496,7 @@ func TestIfnonnullFallThrough(t *testing.T) {
 func TestIfnull(t *testing.T) {
 	f := newFrame(IFNULL)
 	var oAddr *object.Object
-	oAddr = nil
+	oAddr = nil     // note either nil or object.Null will give same result
 	push(&f, oAddr) // pushed null, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2

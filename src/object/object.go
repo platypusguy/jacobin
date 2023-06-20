@@ -36,18 +36,11 @@ type Field struct {
 	Fvalue any    // the actual value
 }
 
+var Null *Object = nil
+
 func MakeObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
-	return &o
-}
-
-// MakeNull creates a null object, which is distinguished by a Mark.Hash = 0
-// and an absence of fields. // CURR: there should be only one null instance
-// and there should be an isNull() call on objects
-func MakeNull() *Object {
-	o := Object{}
-	o.Mark.Hash = 0
 	return &o
 }
