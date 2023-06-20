@@ -154,6 +154,8 @@ func getProperty(params []interface{}) interface{} {
 	case "user.name":
 		currentUser, _ := user.Current()
 		value = currentUser.Name
+	default:
+		value = "null" // TODO: make it that a string of nil prints out "null"
 	}
 	obj := object.CreateJavaStringFromGoString(&value)
 	return obj
