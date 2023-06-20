@@ -7,11 +7,14 @@
 package classloader
 
 import (
+	"fmt"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"os"
+	"os/user"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -102,7 +105,13 @@ func getProperty(params []interface{}) interface{} {
 	g := globals.GetGlobalRef()
 
 	switch prop {
+	case "file.separator":
+		value = string(os.PathSeparator)
+	case "java.compiler": // the name of the JIT compiler (we don't have a JIT)
+		value = "no JIT"
 	case "java.home":
+		value = g.JavaHome
+	case "java.library.path":
 		value = g.JavaHome
 	case "java.vendor":
 		value = "Jacobin"
@@ -111,25 +120,40 @@ func getProperty(params []interface{}) interface{} {
 	case "java.vendor.version":
 		value = g.Version
 	case "java.version":
-		value = g.JavaVersion
+		value = strconv.Itoa(g.MaxJavaVersion)
+	// case "java.version.date":
+	// 	value = // need to get this
 	case "java.vm.name":
-		value = "Jacobin JVM"
+		value = fmt.Sprintf(
+			"Jacobin VM v. %s (Java %d) 64-bit VM", g.Version, g.MaxJavaVersion)
 	case "java.vm.specification.name":
-		value = "The Java® Virtual Machine Specification--Java SE 17 Edition"
+		value = "Java Virtual Machine Specification"
 	case "java.vm.specification.vendor":
 		value = "Oracle and Jacobin"
 	case "java.vm.specification.version":
-		value = g.JavaVersion
+		value = strconv.Itoa(g.MaxJavaVersion)
 	case "java.vm.vendor":
 		value = "Jacobin"
 	case "java.vm.version":
-		value = g.JavaVersion
+		value = strconv.Itoa(g.MaxJavaVersion)
+	// case "line.separator":
+	// TODO: find out how to get this
+	case "native.encoding": // hard to find out what this is, so hard-coding to UTF8
+		value = "UTF8"
 	case "os.arch":
 		value = runtime.GOARCH
 	case "os.name":
 		value = runtime.GOOS
 	case "path.separator":
-		value = os.PathSeparator
+		value = string(os.PathSeparator)
+	case "user.dir": // present working directory
+		value, _ = os.Getwd()
+	case "user.home":
+		currentUser, _ := user.Current()
+		value = currentUser.HomeDir
+	case "user.name":
+		currentUser, _ := user.Current()
+		value = currentUser.Name
 	}
 	obj := object.CreateJavaStringFromGoString(&value)
 	return obj
