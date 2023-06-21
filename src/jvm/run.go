@@ -570,6 +570,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if arrObj.Fields[0].Ftype != "[I" {
+				msg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"IA/CA/SASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -580,6 +582,8 @@ func runFrame(fs *list.List) error {
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
+				msg := fmt.Sprintf("IA/CA/SASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "IA/CA/SATORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				// the following is needed only to make unit tests work
@@ -602,6 +606,8 @@ func runFrame(fs *list.List) error {
 			arrType := lAref.Fields[0].Ftype
 
 			if arrType != "[I" {
+				msg := fmt.Sprintf("LASTORE: field type expected=[I, observed=%s", arrType)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -612,6 +618,8 @@ func runFrame(fs *list.List) error {
 			array := *(lAref.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
+				msg := fmt.Sprintf("LASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -633,6 +641,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if fAref.Fields[0].Ftype != "[F" {
+				msg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", fAref.Fields[0].Ftype)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -643,6 +653,8 @@ func runFrame(fs *list.List) error {
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
+				msg := fmt.Sprintf("FASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -665,6 +677,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if dAref.Fields[0].Ftype != "[F" {
+				msg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", dAref.Fields[0].Ftype)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -675,6 +689,8 @@ func runFrame(fs *list.List) error {
 			array := *(dAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
+				msg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -698,6 +714,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if ptrObj.Fields[0].Ftype != "[L" {
+				msg := fmt.Sprintf("AASTORE: field type expected=[L, observed=%s", ptrObj.Fields[0].Ftype)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -709,6 +727,8 @@ func runFrame(fs *list.List) error {
 			arrayPtr := ptrObj.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
+				msg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"AASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -734,6 +754,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
+				msg := fmt.Sprintf("BASTORE: field type expected=[B, observed=%s", ptrObj.Fields[0].Ftype)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"BASTORE: Attempt to access array of incorrect type")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
@@ -745,6 +767,8 @@ func runFrame(fs *list.List) error {
 			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
+				msg := fmt.Sprintf("BASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BASTORE: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
