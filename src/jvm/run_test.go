@@ -2457,7 +2457,7 @@ func TestIfneFallThrough(t *testing.T) {
 // IFNONNULL: jump if TOS holds a non-null address
 func TestIfn0nnull(t *testing.T) {
 	f := newFrame(IFNONNULL)
-	o := object.NewString()
+	o := classloader.MakeString()
 	push(&f, o) // pushed a valid address, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
@@ -3265,7 +3265,7 @@ func TestLdcw(t *testing.T) {
 	}
 }
 
-// Test LDC_W: get float64 CP entry indexed by two bytes
+// LDC_W: get float64 CP entry indexed by two bytes
 func TestLdcwFloat(t *testing.T) {
 	f := newFrame(LDC_W)
 	f.Meth = append(f.Meth, 0x00)
@@ -3851,6 +3851,34 @@ func TestLxor(t *testing.T) {
 	}
 	if f.TOS != -1 {
 		t.Errorf("LXOR: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// MONITORENTER: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
+func TestMonitorEnter(t *testing.T) {
+	f := newFrame(MONITORENTER)
+	push(&f, &f) // push any value and make sure it gets popped off
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != -1 {
+		t.Errorf("MONITORENTER: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// MONITOREXIT: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
+func TestMonitorExit(t *testing.T) {
+	f := newFrame(MONITOREXIT)
+	push(&f, &f) // push any value and make sure it gets popped off
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != -1 {
+		t.Errorf("MONITOREXIT: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
 }
 

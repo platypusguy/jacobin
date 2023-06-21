@@ -246,7 +246,7 @@ func runFrame(fs *list.List) error {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				} else if CPe.retType == IS_STRING_ADDR {
 					stringAddr :=
-						object.CreateJavaStringFromGoString(CPe.stringVal)
+						classloader.CreateJavaStringFromGoString(CPe.stringVal)
 					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
 					if stringAddr.Klass == nil {
 						msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class java/lang/String")
@@ -1780,6 +1780,33 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, size)
 
+		case INSTANCEOF: // 0xC1 validate the type of object
+			ref := pop(f).(*object.Object)
+			if ref == nil || ref == object.Null {
+				push(f, int64(0))
+				f.PC += 2
+				continue
+			} else {
+				CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				CPentry := f.CP.CpIndex[CPslot]
+				if CPentry.Type == classloader.ClassRef {
+					utf8Index := f.CP.ClassRefs[CPentry.Slot]
+					className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+					classPtr := classloader.MethAreaFetch(className)
+					if classPtr == nil { // class wasn't loaded, so load it now
+						classloader.LoadClassFromNameOnly(className)
+						classPtr = classloader.MethAreaFetch(className)
+					}
+					if classPtr == ref.Klass.(*classloader.Klass) {
+						push(f, int64(1))
+					}
+				}
+			}
+
+		case MONITORENTER, MONITOREXIT: // OxC2 and OxC3. These  are not implemented in the JDK JVM
+			_ = pop(f) // so just pop off the reference on the stack
+
 		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
 			var arrayType uint8
@@ -1896,9 +1923,9 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
-			// null = 0, so we duplicate logic of IFNE instruction
-			value := pop(f).(*object.Object)
-			if value != object.Null {
+			// null = nil or object.Null, so we duplicate logic of IFNE instruction
+			value := pop(f)
+			if value != nil {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -1994,25 +2021,6 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	}
 	return 0
 }
-
-// ** Presently unused. May be deleted if not found useful
-// converts an interface{} value into unsafe.Pointer
-// func convertInterfaceToPointer(val interface{}) unsafe.Pointer {
-// 	var ptr unsafe.Pointer
-// 	switch t := val.(type) {
-// 	case int64, int:
-// 		uip := uintptr(&t)
-// 		ptr = unsafe.Pointer(uip)
-// 	case byte:
-// 		uip := uintptr(t)
-// 		ptr = unsafe.Pointer(uip)
-// 	case float64:
-// 		ptr = nil
-// 	case unsafe.Pointer:
-// 		ptr = t
-// 	}
-// 	return ptr
-// }
 
 // create a new frame and load up the local variables with the passed
 // arguments, set up the stack, and all the remaining items to begin execution
