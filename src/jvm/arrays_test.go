@@ -68,7 +68,7 @@ func TestAaload(t *testing.T) {
 	f = newFrame(AASTORE)
 	push(&f, ptr)       // push the reference to the array
 	push(&f, int64(20)) // in array[20]
-	oPtr := object.NewString()
+	oPtr := classloader.MakeString()
 	push(&f, oPtr) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame

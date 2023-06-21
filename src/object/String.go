@@ -14,10 +14,14 @@ import (
 // to have a means of creating them quickly, rather than building
 // them from scratch each time by walking through the constant pool.
 
+// NewString creates an empty string. However, it lacks an updated
+// Klass field, which due to circularity issues, is updated in
+// classloader.MakeString(). DO NOT CALL THIS FUNCTION DIRECTLYy.
+// It should be called ONLY by classloader.MakeString
 func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
-	// s.Klass is loaded by the calling function/method
+	s.Klass = nil
 
 	// ==== now the fields ====
 
@@ -64,15 +68,6 @@ func NewString() *Object {
 	return s
 }
 
-// NewStringFromGoString converts a go string to a Java string
-// converting the individual chars from runees to bytes (if
-// compact strings are enabled) or UTF-16 values if not.
-func NewStringFromGoString(in string) *Object {
-	s := NewString()
-	s.Fields[0].Fvalue = in // test for compact strings and use GoStringToBytes() if on
-	return s
-}
-
 // Convert go string (consiting of 32-bit runes aka chars) to
 // single-byte values--for use in compact strings
 func GoStringToJavaBytes(in string) []javaTypes.JavaByte {
@@ -84,16 +79,4 @@ func GoStringToJavaBytes(in string) []javaTypes.JavaByte {
 		bytes[i] = javaTypes.JavaByte(b)
 	}
 	return bytes
-}
-
-func CreateJavaStringFromGoString(in *string) *Object {
-	// stringBytes := GoStringToJavaBytes(*ins)
-	stringBytes := []byte(*in)
-	s := NewString()
-	// set the value of the string
-	s.Fields[0].Ftype = "[B"
-	s.Fields[0].Fvalue = &stringBytes
-	// set the string to LATIN
-	s.Fields[1].Fvalue = int64(0)
-	return s
 }

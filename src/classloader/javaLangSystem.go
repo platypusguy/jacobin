@@ -157,6 +157,6 @@ func getProperty(params []interface{}) interface{} {
 	default:
 		value = "null" // TODO: make it that a string of nil prints out "null"
 	}
-	obj := object.CreateJavaStringFromGoString(&value)
+	obj := CreateJavaStringFromGoString(&value)
 	return obj
 }

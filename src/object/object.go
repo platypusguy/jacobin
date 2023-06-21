@@ -6,16 +6,18 @@
 
 package object
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark MarkWord
-	// Klass *classloader.Klass // pointer to the loaded class
-	Klass  any
+	Mark  MarkWord
+	Klass any // can't be what it really is: a pointer to classloader.Klass,
+	// due to go circularity error
 	Fields []Field // slice containing the fields
 }
 
@@ -36,11 +38,15 @@ type Field struct {
 	Fvalue any    // the actual value
 }
 
+// Null is the Jacobin implementation of Java's null
 var Null *Object = nil
 
+// MakeObject() creates an empty basis Object. It is expected that other
+// code will fill in the fields and the Klass field.
 func MakeObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
+	o.Klass = nil // should be filled in later, when class is filled in.
 	return &o
 }
