@@ -1922,13 +1922,17 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address
-			// null = nil or object.Null, so we duplicate logic of IFNE instruction
+		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address, where null = nil or object.Null
 			value := pop(f)
-			if value != nil {
-				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
-				f.PC = f.PC + int(jumpTo) - 1
-			} else {
+			if value != nil { // it's not nil, but is it a null pointer?
+				checkForPtr := value.(*object.Object)
+				if checkForPtr == nil { // it really is a null pointer, so just move on
+					f.PC += 2
+				} else { // no, it's not nil nor a null pointer--so do the jump
+					jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+					f.PC = f.PC + int(jumpTo) - 1
+				}
+			} else { // value is nil, so just move along
 				f.PC += 2
 			}
 		default:
