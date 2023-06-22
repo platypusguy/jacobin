@@ -23,6 +23,7 @@ import (
 	"jacobin/util"
 	"math"
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -1461,6 +1462,18 @@ func runFrame(fs *list.List) error {
 			value := pop(f)
 			ref := pop(f).(*object.Object)
 			obj := *ref
+
+			// if the value we're inserting is a reference to an
+			// array object, we have to modify it to point directly
+			// to the array of primitives, rather than to the array
+			// object
+			switch value.(type) {
+			case *object.Object:
+				v := *value.(*object.Object)
+				if strings.HasPrefix(v.Fields[0].Ftype, "[") {
+					value = v.Fields[0].Fvalue
+				}
+			}
 
 			// the fields in the object are numbered in the same
 			// order they are declared in the constant pool. So,
