@@ -1753,11 +1753,17 @@ func runFrame(fs *list.List) error {
 
 			var size int64
 			switch ref.(type) {
-			// some arrays internal to Java classes are simply
-			// collections of primitives. This switch covers the
-			// possibilities
+			// the type of array reference can vary. For many instances,
+			// it will be a pointer to an array object. In other cases,
+			// such as inside Java String class, the actual primitive
+			// array of bytes will be extracted as a field and passed
+			// to this function, so we need to accommodate all types--
+			// hence, the switch on type.
 			case *[]int8:
 				array := *ref.(*[]int8)
+				size = int64(len(array))
+			case *[]uint8: // = go byte
+				array := *ref.(*[]uint8)
 				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
@@ -1935,6 +1941,7 @@ func runFrame(fs *list.List) error {
 			} else { // value is nil, so just move along
 				f.PC += 2
 			}
+
 		default:
 			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
