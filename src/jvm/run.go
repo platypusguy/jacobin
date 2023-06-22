@@ -1822,7 +1822,7 @@ func runFrame(fs *list.List) error {
 			// string describing the array. Of the form [[L or
 			// similar, in which one [ is present for every dimension
 			// followed by a single letter describing the type of
-			// entry in the final dimension of the array. The letters
+			// entry in the leaf dimension of the array. The letters
 			// are the usual ones used in the JVM for primitives, etc.
 			// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -1839,6 +1839,7 @@ func runFrame(fs *list.List) error {
 			for i := 0; i < len(arrayDesc); i++ {
 				if arrayDesc[i] != '[' {
 					rawArrayType = arrayDesc[i]
+					break
 				}
 			}
 
@@ -1862,7 +1863,7 @@ func runFrame(fs *list.List) error {
 			dimensionCount := int(f.Meth[f.PC+1])
 			f.PC += 1
 
-			if dimensionCount > 3 { // TODO: explore arrays of > 5-256 dimensions
+			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
 				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions",
 					log.SEVERE)
 				return errors.New(
