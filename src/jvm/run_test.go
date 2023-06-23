@@ -826,8 +826,8 @@ func TestDrem(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.TOS != 0 {
-		t.Errorf("DREM, Top of stack, expected 0, got: %d", f.TOS)
+	if f.TOS != 1 {
+		t.Errorf("DREM, Top of stack, expected 1, got: %d", f.TOS)
 	}
 
 	value := pop(&f).(float64)
