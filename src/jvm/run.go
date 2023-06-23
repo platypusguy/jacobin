@@ -1447,9 +1447,15 @@ func runFrame(fs *list.List) error {
 
 			ref := pop(f).(*object.Object)
 			obj := *ref
-			// fieldType := obj.Fields[fieldEntry.Slot].Ftype
+			fieldType := obj.Fields[fieldEntry.Slot].Ftype
 			fieldValue := obj.Fields[fieldEntry.Slot].Fvalue
 			push(f, fieldValue)
+
+			// doubles and longs consume two slots on the op stack
+			// so push a second time
+			if fieldType == "D" || fieldType == "L" {
+				push(f, fieldValue)
+			}
 
 		case PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
