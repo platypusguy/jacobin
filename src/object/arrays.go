@@ -1,14 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2023 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
 package object
-
-import (
-	"unsafe"
-)
 
 /*  This file contains some data structures and some functions
  	for array handling in Jacobin
@@ -16,15 +12,14 @@ import (
     An array is implemented as a struct with two fields:
 	a value indicating the type of elements in the array and
     a pointer to the array itself
-	.
 
 	We use a pointer to the array b/c in Go, if you pass an
 	array to a function, the entire array is copied over. We
 	don't want that!
 
-    For our purposes, there are three possible array types:
-    int64 (all integral types and addresses), float64 (all
-    FP types), and bytes (for bytes and boolean/bits)
+    For our purposes, there are four possible array types:
+    int64 (all integral types ), float64 (all FP types), bytes
+	(for bytes and boolean/bits), and references (i.e. pointers)
 
     The official JVM docs suggest that bit arrays (so booleans)
     can be implemented as individual byte elements or aggregated
@@ -39,13 +34,6 @@ const ( // the ArrayTypes
 	INT   = 2
 	BYTE  = 3
 	REF   = 4 // arrays of object references
-	STR   = 5 // arrays of strings (these are references too, but for speed)
-	ARR   = 6 // points to arrays, used in multidimensional arrays
-	// ARRF  = 6  // points to arrays of floats--for multidimensional arrays
-	// ARRI  = 7  // points to arrays of ints--for multidimensional arrays
-	// ARRB  = 8  // points to arrays of bytes--for multidimensional arrays
-	ARRR = 9  // points to arrays of references--for multidimensional arrays
-	ARRG = 10 // generic array (of unsafe.Pointers)
 )
 
 // the primitive types as specified in the
@@ -62,84 +50,6 @@ const (
 )
 
 const T_REF = 12 // used only in Jacobin
-
-type ArrayType int
-
-type Ilength interface {
-	Length() int64
-}
-
-// type JacobinByteArray struct {
-// 	Type ArrayType
-// 	Arr  *[]javaTypes.JavaByte
-// }
-
-// func (jba JacobinByteArray) Length() int64 {
-// 	i := len(*(jba.Arr))
-// 	return int64(i)
-// }
-
-type JacobinIntArray struct {
-	Type ArrayType
-	Arr  *[]int64
-}
-
-func (jba JacobinIntArray) Length() int64 {
-	i := len(*(jba.Arr))
-	return int64(i)
-}
-
-type JacobinFloatArray struct {
-	Type ArrayType
-	Arr  *[]float64
-}
-
-func (jba JacobinFloatArray) Length() int64 {
-	i := len(*(jba.Arr))
-	return int64(i)
-}
-
-type JacobinRefArray struct {
-	Type ArrayType
-	Arr  *[]*Object
-}
-
-func (jba JacobinRefArray) Length() int64 {
-	i := len(*(jba.Arr))
-	return int64(i)
-}
-
-// === The following types are used only in multidimensional arrays
-// Array that points to other arrays.
-type JacobinArrArray struct {
-	Type ArrayType
-	Arr  *[]JacobinArrArray
-}
-
-type JacobinArrFloatArray struct {
-	Type ArrayType
-	Arr  *[]JacobinFloatArray
-}
-
-type JacobinArrIntArray struct {
-	Type ArrayType
-	Arr  *[]JacobinIntArray
-}
-
-// type JacobinArrByteArray struct {
-// 	Type ArrayType
-// 	Arr  *[]JacobinByteArray
-// }
-
-type JacobinArrRefArray struct {
-	Type ArrayType
-	Arr  *[]JacobinArrRefArray
-}
-
-type JacobinArrGenArray struct {
-	Type ArrayType
-	Arr  *[]unsafe.Pointer
-}
 
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
@@ -163,9 +73,7 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 // Make2DimArray creates a the last two dimensions of a multi-
 // dimensional array. (All the dimensions > 2 are simply arrays
 // of pointers to arrays.)
-func Make2DimArray(ptrArrSize, leafArrSize int64,
-	arrType uint8) (*Object, error) {
-
+func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error) {
 	ptrArr := MakeObject()                           // ptrArr is the pointer to the array of pointers to the leaf arrays
 	value := make([]*Object, ptrArrSize, ptrArrSize) // the actual ptr-level array
 	ptrArr.Fields = append(ptrArr.Fields, Field{Fvalue: &(value)})
@@ -214,24 +122,14 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	}
 }
 
-// MakeArrRefArray makes an array of pointers to other
-// arrays of pointers. Each of these represents the elements
-// of the dimensions > 2.
-func MakeArrRefArray(size int64) *JacobinArrRefArray {
-	rarArr := make([]JacobinArrRefArray, size)
-	ra := JacobinArrRefArray{
-		Type: ARRR,
-		Arr:  &rarArr,
-	}
-	return &ra
-}
-
+// MakeArrayFromRawArray accepts a raw array (such as []byte) and
+// converts it into an array *object*.
 func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	switch rawArray.(type) {
-	case *Object:
+	case *Object: // if it's a ref to an array object, just return it
 		arr := rawArray.(*Object)
 		return arr
-	case *[]uint8:
+	case *[]uint8: // an array of bytes
 		raw := rawArray.(*[]uint8)
 		o := MakeObject()
 		o.Klass = nil
