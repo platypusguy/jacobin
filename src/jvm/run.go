@@ -1453,7 +1453,7 @@ func runFrame(fs *list.List) error {
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if fieldType == "D" || fieldType == "L" {
+			if fieldType == "D" || fieldType == "J" {
 				push(f, fieldValue)
 			}
 
