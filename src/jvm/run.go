@@ -1433,7 +1433,13 @@ func runFrame(fs *list.List) error {
 					prevLoaded.Value = int64(value)
 				}
 			}
+
 			push(f, prevLoaded.Value)
+			// doubles and longs consume two slots on the op stack
+			// so push a second time
+			if prevLoaded.Type == "D" || prevLoaded.Type == "J" {
+				push(f, prevLoaded.Value)
+			}
 
 		case GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -1950,6 +1956,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
+
 		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address, where null = nil or object.Null
 			value := pop(f)
 			if value != nil { // it's not nil, but is it a null pointer?
