@@ -231,7 +231,7 @@ func TestInstanceofTwoStrings(t *testing.T) {
 	// classloader.LoadBaseClasses()
 	classloader.MethAreaInsert("java/lang/String",
 		&(classloader.Klass{
-			Status: 'X',
+			Status: 'X', // use a status that's not subsequently tested for.
 			Loader: "bootstrap",
 			Data:   nil,
 		}))
