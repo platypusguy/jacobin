@@ -68,15 +68,5 @@ func NewString() *Object {
 	return s
 }
 
-// Convert go string (consiting of 32-bit runes aka chars) to
-// single-byte values--for use in compact strings
-func GoStringToJavaBytes(in string) []javaTypes.JavaByte {
-	bytes := make([]javaTypes.JavaByte, len(in))
-	runes := []rune(in)
-	for i := 0; i < len(in); i++ {
-		r := runes[i]
-		b := byte(r)
-		bytes[i] = javaTypes.JavaByte(b)
-	}
-	return bytes
-}
+// Functions for creating strings are in classloader/misc.go due to Go's
+// circularity prohibition.
