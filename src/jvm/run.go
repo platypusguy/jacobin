@@ -1834,7 +1834,7 @@ func runFrame(fs *list.List) error {
 					CPentry := f.CP.CpIndex[CPslot]
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 						// a CP entry for a UTF8 record w/ name of class
-						utf8Index := CPentry.Slot
+						utf8Index := f.CP.ClassRefs[CPentry.Slot]
 						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
