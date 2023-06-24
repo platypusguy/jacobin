@@ -132,7 +132,6 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 			i++
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
-			// cre := classRefEntry{index}
 			klass.classRefs = append(klass.classRefs, index)
 			klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
 			pos += 2

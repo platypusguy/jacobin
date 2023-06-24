@@ -8,7 +8,7 @@ package classloader
 
 import "jacobin/object"
 
-// Miscellaneous functions (often placed here because of circularity issues0
+// Miscellaneous functions (often placed here because of circularity issues)
 
 // MakeString retuns an empty String object. It would normally be placed
 // in String.go, except that the updating of the Klass field as done here

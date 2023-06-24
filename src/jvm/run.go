@@ -1813,26 +1813,39 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, size)
 
-		case INSTANCEOF: // 0xC1 validate the type of object
-			ref := pop(f).(*object.Object)
+		case INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
+			ref := pop(f)
 			if ref == nil || ref == object.Null {
 				push(f, int64(0))
 				f.PC += 2
 				continue
-			} else {
-				CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-				f.PC += 2
-				CPentry := f.CP.CpIndex[CPslot]
-				if CPentry.Type == classloader.ClassRef {
-					utf8Index := f.CP.ClassRefs[CPentry.Slot]
-					className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
-					classPtr := classloader.MethAreaFetch(className)
-					if classPtr == nil { // class wasn't loaded, so load it now
-						classloader.LoadClassFromNameOnly(className)
-						classPtr = classloader.MethAreaFetch(className)
-					}
-					if classPtr == ref.Klass.(*classloader.Klass) {
-						push(f, int64(1))
+			}
+
+			switch ref.(type) {
+			case *object.Object:
+				if ref == object.Null {
+					push(f, int64(0))
+					f.PC += 2
+					break
+				} else {
+					obj := *ref.(*object.Object)
+					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+					f.PC += 2
+					CPentry := f.CP.CpIndex[CPslot]
+					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
+						// a CP entry for a UTF8 record w/ name of class
+						utf8Index := CPentry.Slot
+						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+						classPtr := classloader.MethAreaFetch(className)
+						if classPtr == nil { // class wasn't loaded, so load it now
+							classloader.LoadClassFromNameOnly(className)
+							classPtr = classloader.MethAreaFetch(className)
+						}
+						if classPtr == obj.Klass.(*classloader.Klass) {
+							push(f, int64(1))
+						} else {
+							push(f, int64(0))
+						}
 					}
 				}
 			}

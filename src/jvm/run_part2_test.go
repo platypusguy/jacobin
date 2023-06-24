@@ -12,6 +12,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"os"
 	"strings"
 	"testing"
@@ -189,6 +190,78 @@ func TestIneg(t *testing.T) {
 	value := pop(&f).(int64)
 	if value != -10 {
 		t.Errorf("INEG: Expected popped value to be -10, got: %d", value)
+	}
+}
+
+// INSTANCEOF: Is the TOS item an instance of a particular class?
+func TestInstanceofNilAndNull(t *testing.T) {
+	f := newFrame(INSTANCEOF)
+	push(&f, nil)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+	if value != 0 {
+		t.Errorf("INSTANCEOF: Expected nil to return a 0, got %d", value)
+	}
+
+	f = newFrame(INSTANCEOF)
+	push(&f, object.Null)
+
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value = pop(&f).(int64)
+	if value != 0 {
+		t.Errorf("INSTANCEOF: Expected null to return a 0, got %d", value)
+	}
+}
+
+// INSTANCEOF for two strings
+func TestInstanceofTwoStrings(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	log.Init()
+
+	classloader.Init()
+	// classloader.LoadBaseClasses()
+	classloader.MethAreaInsert("java/lang/String",
+		&(classloader.Klass{
+			Status: 'X',
+			Loader: "bootstrap",
+			Data:   nil,
+		}))
+	s := classloader.NewStringFromGoString("hello world")
+
+	f := newFrame(INSTANCEOF)
+	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
+	f.Meth = append(f.Meth, 2) // " "
+
+	// now create the CP. First entry is perforce 0
+	// [1] entry points to a UTF8 entry with the class name
+	// [2] is a ClassRef that points to the UTF8 string in [1]
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 1}
+	CP.ClassRefs = append(CP.ClassRefs, 0) // point to record 0 in Utf8Refs
+	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	f.CP = &CP
+
+	push(&f, s)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+	if value != 1 { // a 1 = it's a match between class and object
+		t.Errorf("INSTANCEOF: Expected string to return a 1, got %d", value)
 	}
 }
 
