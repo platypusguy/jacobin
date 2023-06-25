@@ -277,11 +277,15 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 // for that string in the designated ClData.CP. Returns "" on error.
 func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
+		msg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)", entry, uint16(len(cp.CpIndex)))
+		_ = log.Log(msg, log.SEVERE)
 		return ""
 	}
 
 	u := cp.CpIndex[entry]
 	if u.Type != UTF8 {
+		msg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: cp.CpIndex[%d].Type=%d, expected UTF8", entry, u.Type)
+		_ = log.Log(msg, log.SEVERE)
 		return ""
 	}
 
