@@ -1420,21 +1420,26 @@ func runFrame(fs *list.List) error {
 				return errors.New(errMsg)
 			}
 
-			if prevLoaded.Type == "Z" { // a boolean, which might
+			switch prevLoaded.Value.(type) {
+			case bool:
+				// a boolean, which might
 				// be stored as a boolean, a byte (in an array), or int64
 				// We want all forms normalized to int64
-				switch prevLoaded.Value.(type) {
-				case bool:
-					value := prevLoaded.Value.(bool)
-					prevLoaded.Value =
-						javaTypes.ConvertGoBoolToJavaBool(value)
-				case byte:
-					value := prevLoaded.Value.(byte)
-					prevLoaded.Value = int64(value)
-				}
+				value := prevLoaded.Value.(bool)
+				prevLoaded.Value =
+					javaTypes.ConvertGoBoolToJavaBool(value)
+				push(f, prevLoaded.Value)
+			case byte:
+				value := prevLoaded.Value.(byte)
+				prevLoaded.Value = int64(value)
+				push(f, prevLoaded.Value)
+			case int:
+				value := prevLoaded.Value.(int)
+				push(f, int64(value))
+			default:
+				push(f, prevLoaded.Value)
 			}
 
-			push(f, prevLoaded.Value)
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
 			if prevLoaded.Type == "D" || prevLoaded.Type == "J" {
