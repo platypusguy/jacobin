@@ -220,8 +220,8 @@ func TestInstanceofNilAndNull(t *testing.T) {
 	}
 }
 
-// INSTANCEOF for two strings
-func TestInstanceofTwoStrings(t *testing.T) {
+// INSTANCEOF for a string
+func TestInstanceofString(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
