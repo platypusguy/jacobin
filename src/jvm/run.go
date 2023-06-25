@@ -1846,7 +1846,9 @@ func runFrame(fs *list.List) error {
 						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
-							classloader.LoadClassFromNameOnly(className)
+							if classloader.LoadClassFromNameOnly(className) != nil {
+								shutdown.Exit(shutdown.JVM_EXCEPTION)
+							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
 						if classPtr == obj.Klass.(*classloader.Klass) {
@@ -1885,7 +1887,9 @@ func runFrame(fs *list.List) error {
 						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
-							classloader.LoadClassFromNameOnly(className)
+							if classloader.LoadClassFromNameOnly(className) != nil {
+								shutdown.Exit(shutdown.JVM_EXCEPTION)
+							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
 						if classPtr == obj.Klass.(*classloader.Klass) {

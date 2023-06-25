@@ -277,6 +277,12 @@ func LoadClassFromNameOnly(className string) error {
 
 	jmodFileName := JmodMapFetch(className)
 
+	if className == "" {
+		msg := "LoadClassFromNameOnly: null class name is invalid"
+		_ = log.Log(msg, log.SEVERE)
+		return errors.New(msg)
+	}
+
 	// Load class from a jmod?
 	if jmodFileName != "" {
 		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.CLASS)
@@ -321,6 +327,11 @@ func LoadClassFromFile(cl Classloader, fname string) (string, error) {
 		filename = fname + ".class"
 	} else {
 		filename = fname
+	}
+	if filename == ".class" {
+		msg := "LoadClassFromFile: class name" + fname + " is invalid"
+		_ = log.Log(msg, log.SEVERE)
+		return "", errors.New(msg)
 	}
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
