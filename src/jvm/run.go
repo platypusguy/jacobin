@@ -1813,7 +1813,48 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, size)
 
+		case CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
+			// because this uses the same logic as INSTANCEOF, any change here should
+			// be made to INSTANCEOF
+			ref := pop(f)
+			if ref == nil {
+				push(f, int64(0))
+				f.PC += 2
+				continue
+			}
+
+			switch ref.(type) {
+			case *object.Object:
+				if ref == object.Null {
+					exceptions.Throw(exceptions.ClassCastException,
+						"CLASSCAST: Unexpected null pointer for class in classcast")
+					break
+				} else {
+					obj := *ref.(*object.Object)
+					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+					f.PC += 2
+					CPentry := f.CP.CpIndex[CPslot]
+					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
+						// a CP entry for a UTF8 record w/ name of class
+						utf8Index := CPentry.Slot
+						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+						classPtr := classloader.MethAreaFetch(className)
+						if classPtr == nil { // class wasn't loaded, so load it now
+							classloader.LoadClassFromNameOnly(className)
+							classPtr = classloader.MethAreaFetch(className)
+						}
+						if classPtr == obj.Klass.(*classloader.Klass) {
+							push(f, int64(1))
+						} else {
+							push(f, int64(0))
+						}
+					}
+				}
+			}
+
 		case INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
+			// because this uses the same logic as CHECKCAST, any change here should
+			// be made to CHECKCAST
 			ref := pop(f)
 			if ref == nil || ref == object.Null {
 				push(f, int64(0))
