@@ -436,14 +436,15 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
-			rAref := pop(f).(*object.Object) // the array object
+			// rAref := pop(f).(*object.Object) // the array object
+			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"AALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 
-			arrayPtr := rAref.Fields[0].Fvalue.(*[]*object.Object)
+			arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
@@ -2008,8 +2009,8 @@ func runFrame(fs *list.List) error {
 
 		case IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
-			value := pop(f).(*object.Object)
-			if value == object.Null {
+			value := pop(f)
+			if value == nil || value == object.Null {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -2226,7 +2227,8 @@ func createAndInitNewFrame(
 			argList = append(argList, arg)
 			pop(f)
 		case 'L': // pointer/reference
-			arg := pop(f).(*object.Object)
+			// arg := pop(f).(*object.Object)
+			arg := pop(f) // can't be case to *Object b/c it could be nil, which would panic
 			argList = append(argList, arg)
 		default:
 			arg := pop(f)
