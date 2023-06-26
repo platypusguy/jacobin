@@ -113,7 +113,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 // is no return value.
 func Println(i []interface{}) interface{} {
 	strAddr := i[1].(*object.Object)
-	// t := (strAddr.Fields[0].Fvalue).(*[]javaTypes.JavaByte) // changed due to JAcOBIN-282
+	// t := (strAddr.Fields[0].Fvalue).(*[]types.JavaByte) // changed due to JAcOBIN-282
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
 
 	// goChars := make([]byte, len(*t), len(*t))
@@ -181,7 +181,7 @@ func PrintDouble(l []interface{}) interface{} {
 func PrintS(i []interface{}) interface{} {
 
 	strAddr := i[1].(*object.Object)
-	// t := (strAddr.Fields[0].Fvalue).(*[]javaTypes.JavaByte) // changed due to JACOBIN-282
+	// t := (strAddr.Fields[0].Fvalue).(*[]types.JavaByte) // changed due to JACOBIN-282
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
 	//
 	// goChars := make([]byte, len(*t), len(*t))

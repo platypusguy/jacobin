@@ -98,7 +98,7 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	switch arrType {
 	// case 'B': // byte arrays
 	case BYTE:
-		// barArr := make([]javaTypes.JavaByte, size) // changed with JACOBIN-282
+		// barArr := make([]types.JavaByte, size) // changed with JACOBIN-282
 		barArr := make([]byte, size)
 		of := Field{Ftype: "[B", Fvalue: &barArr}
 		o.Fields = append(o.Fields, of)

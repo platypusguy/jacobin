@@ -15,11 +15,11 @@ import (
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/javaTypes"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/thread"
+	"jacobin/types"
 	"jacobin/util"
 	"math"
 	"strconv"
@@ -254,7 +254,6 @@ func runFrame(fs *list.List) error {
 						_ = log.Log(msg, log.SEVERE)
 						shutdown.Exit(shutdown.JVM_EXCEPTION)
 					}
-					// push(f, unsafe.Pointer(CPe.addrVal))
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
@@ -465,7 +464,7 @@ func runFrame(fs *list.List) error {
 			}
 			// array := *(bAref.Arr)
 
-			// arrayPtr := bAref.Fields[0].Fvalue.(*[]javaTypes.JavaByte) // changed in JACOBIN-282
+			// arrayPtr := bAref.Fields[0].Fvalue.(*[]types.JavaByte) // changed in JACOBIN-282
 			arrayPtr := bAref.Fields[0].Fvalue.(*[]byte)
 			size := int64(len(*arrayPtr))
 
@@ -765,7 +764,7 @@ func runFrame(fs *list.List) error {
 				return errors.New("BASTORE: Invalid array type")
 			}
 
-			// array := *(ptrObj.Fields[0].Fvalue.(*[]javaTypes.JavaByte)) // changed w/ JACOBIN-282
+			// array := *(ptrObj.Fields[0].Fvalue.(*[]types.JavaByte)) // changed w/ JACOBIN-282
 			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
@@ -1428,7 +1427,7 @@ func runFrame(fs *list.List) error {
 				// We want all forms normalized to int64
 				value := prevLoaded.Value.(bool)
 				prevLoaded.Value =
-					javaTypes.ConvertGoBoolToJavaBool(value)
+					types.ConvertGoBoolToJavaBool(value)
 				push(f, prevLoaded.Value)
 			case byte:
 				value := prevLoaded.Value.(byte)
@@ -1803,7 +1802,7 @@ func runFrame(fs *list.List) error {
 				arrayType := r.Fields[0].Ftype
 				switch arrayType {
 				case "[B":
-					// arrayPtr := r.Fields[0].Fvalue.(*[]javaTypes.JavaByte) // Change w/ JACOBIN-282
+					// arrayPtr := r.Fields[0].Fvalue.(*[]types.JavaByte) // Change w/ JACOBIN-282
 					arrayPtr := r.Fields[0].Fvalue.(*[]byte)
 					size = int64(len(*arrayPtr))
 				case "[L":

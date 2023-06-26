@@ -4,7 +4,61 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package javaTypes
+package types
+
+import "strings"
+
+const Bool = "Z"
+const Byte = "B"
+const Char = "C"
+const Double = "D"
+const Float = "F"
+const Int = "I"
+const Long = "J"
+const Short = "S"
+
+const Array = "["
+const Ref = "Z"
+const String = "T"
+const Static = "X"
+
+const Error = "0" // if an error occurred in getting a type
+
+func IsIntegral(t string) bool {
+	if t == "B" || t == "C" || t == "I" ||
+		t == "J" || t == "S" || t == "Z" {
+		return true
+	}
+	return false
+}
+
+func IsFloatingPoint(t string) bool {
+	if t == "F" || t == "D" {
+		return true
+	}
+	return false
+}
+
+func IsAddress(t string) bool {
+	if strings.HasPrefix(t, "L") || strings.HasPrefix(t, "[") || t == "T" {
+		return true
+	}
+	return false
+}
+
+func IsStatic(t string) bool {
+	if strings.HasPrefix(t, "X") {
+		return true
+	}
+	return false
+}
+
+func IsError(t string) bool {
+	if t == "0" {
+		return true
+	}
+	return false
+}
 
 // bytes in Go are uint8, whereas in Java they are int8. Hence this type alias.
 type JavaByte = int8
