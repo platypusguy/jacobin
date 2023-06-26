@@ -18,6 +18,7 @@ const Long = "J"
 const Short = "S"
 
 const Array = "["
+const ByteArray = "[B"
 const Ref = "Z"
 
 // Jacobin-specific types
