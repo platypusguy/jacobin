@@ -1506,6 +1506,11 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
+			objType := obj.Fields[fieldEntry.Slot].Ftype
+			if types.UsesTwoSlots(objType) {
+				pop(f) // pop off second slot entry used by longs and doubles
+			}
+
 			// the fields in the object are numbered in the same
 			// order they are declared in the constant pool. So,
 			// to get to the right field, we only need to know
