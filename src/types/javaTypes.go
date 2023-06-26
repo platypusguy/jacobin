@@ -66,6 +66,15 @@ func IsError(t string) bool {
 	return false
 }
 
+// UsesTwoSlots identifies longs and doubles -- the two data items
+// that occupy two slots on the op stack and elsewhere
+func UsesTwoSlots(t string) bool {
+	if t == "D" || t == "J" {
+		return true
+	}
+	return false
+}
+
 // bytes in Go are uint8, whereas in Java they are int8. Hence this type alias.
 type JavaByte = int8
 
