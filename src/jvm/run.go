@@ -367,15 +367,19 @@ func runFrame(fs *list.List) error {
 			SALOAD: //		0x35    (push contents of a short array element)
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
-			if iAref == nil {
+			if iAref == object.Null {
 				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("IALOAD error") // running code exits on prev line, but this needed for testing
 			}
+
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("IALOAD error") // running code exits on prev line, but this needed for testing
 			}
 			var value = array[index]
 			push(f, value)
@@ -386,6 +390,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"LALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LALOAD error") // running code exits on prev line, but this needed for testing
 			}
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
@@ -393,6 +398,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LALOAD error") // running code exits on prev line, but this needed for testing
 			}
 			var value = array[index]
 			push(f, value)
@@ -409,8 +415,10 @@ func runFrame(fs *list.List) error {
 
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "Invalid array subscript")
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"FALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("FALOAD error") // running code exits on prev line, but this needed for testing
 			}
 			var value = array[index]
 			push(f, value)
@@ -422,6 +430,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("DALOAD error") // running code exits on prev line, but this needed for testing
+
 			}
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
@@ -429,6 +439,8 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("DALOAD error") // running code exits on prev line, but this needed for testing
+
 			}
 			var value = array[index]
 			push(f, value)
@@ -461,6 +473,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("BALOAD error") // running code exits on prev line, but this needed for testing
 			}
 			// array := *(bAref.Arr)
 
@@ -472,6 +485,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("BALOAD error") // running code exits on prev line, but this needed for testing
 			}
 			array := *(arrayPtr)
 			var value = array[index]
@@ -1832,7 +1846,7 @@ func runFrame(fs *list.List) error {
 			case *object.Object:
 				if ref == object.Null {
 					exceptions.Throw(exceptions.ClassCastException,
-						"CLASSCAST: Unexpected null pointer for class in classcast")
+						"CHECKCAST: Unexpected null pointer for class in classcast")
 					break
 				} else {
 					obj := *ref.(*object.Object)

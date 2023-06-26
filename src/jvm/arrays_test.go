@@ -68,7 +68,7 @@ func TestAaload(t *testing.T) {
 	f = newFrame(AASTORE)
 	push(&f, ptr)       // push the reference to the array
 	push(&f, int64(20)) // in array[20]
-	oPtr := classloader.MakeString()
+	oPtr := object.MakeObject()
 	push(&f, oPtr) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1158,6 +1158,92 @@ func TestIaload(t *testing.T) {
 	}
 }
 
+// IALOAD: Test exception on nil array address
+func TestIaloadNilArray(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(IALOAD)
+	push(&f, object.Null) // push the reference to the array, here nil
+	push(&f, int64(20))   // get contents in array[20]
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode -- should generate exception
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+		t.Errorf("IALOAD: Did not get expected err msg for nil array, got: %s",
+			errMsg)
+	}
+}
+
+// IALOAD: using an invalid subscript into the array
+func TestIaloadInvalidSubscript(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))                   // make the array 30 elements big
+	f.Meth = append(f.Meth, object.T_INT) // make it an array of ints
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	globals.InitGlobals("test")
+	log.Init()
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(*object.Object)
+
+	f = newFrame(IASTORE)
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(20))  // in array[20]
+	push(&f, int64(100)) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(IALOAD) // now fetch the value
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(200)) // get contents in array[200] which is invalid
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid array subscript") {
+		t.Errorf("IALOAD: Did not get expected err msg for invalid subscript, got: %s",
+			errMsg)
+	}
+}
+
 // IASTORE: store value in array of ints
 // Create an array of 30 elements, store value 100 in array[20], then
 // sum all the elements in the array, and test for a sum of 100.
@@ -1363,7 +1449,77 @@ func TestLaload(t *testing.T) {
 	if res != 100 {
 		t.Errorf("LALOAD: Expected loaded array value of 100, got: %d", res)
 	}
+}
 
+// LALOAD: Test exception on nil array address
+func TestLaloadNilArray(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(LALOAD)
+	push(&f, object.Null) // push the reference to the array, here nil
+	push(&f, int64(20))   // get contents in array[20]
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode -- should generate exception
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+		t.Errorf("LALOAD: Did not get expected err msg for nil array, got: %s",
+			errMsg)
+	}
+}
+
+// LALOAD: using an invalid subscript into the array
+func TestLaloadInvalidSubscript(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))                    // make the array 30 elements big
+	f.Meth = append(f.Meth, object.T_LONG) // make it an array of longs
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	globals.InitGlobals("test")
+	log.Init()
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(*object.Object)
+
+	f = newFrame(LALOAD) // now fetch the value
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(200)) // get contents in array[200] which is invalid
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid array subscript") {
+		t.Errorf("LALOAD: Did not get expected err msg for invalid subscript, got: %s",
+			errMsg)
+	}
 }
 
 // LASTORE: store value in array of longs
