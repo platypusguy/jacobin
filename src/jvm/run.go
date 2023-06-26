@@ -431,7 +431,6 @@ func runFrame(fs *list.List) error {
 					"DALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				return errors.New("DALOAD error") // running code exits on prev line, but this needed for testing
-
 			}
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
@@ -440,7 +439,6 @@ func runFrame(fs *list.List) error {
 					"DALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				return errors.New("DALOAD error") // running code exits on prev line, but this needed for testing
-
 			}
 			var value = array[index]
 			push(f, value)
