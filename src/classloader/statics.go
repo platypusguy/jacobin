@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"errors"
+	"jacobin/types"
 	"sync"
 )
 
@@ -20,7 +21,8 @@ var Statics = make(map[string]Static)
 
 // Static contains all the various items needed for a static variable or function.
 type Static struct {
-	Type string // the kind of entity we're dealing with. Can be:
+	Type string // see the possible returns in types/javatypes.go
+	// the kind of entity we're dealing with. Can be:
 	/*
 		B	byte signed byte (includes booleans)
 		C	char	Unicode character code point (UTF-16)
@@ -73,9 +75,9 @@ func StaticsPreload() {
 // is done primarily for speed.
 func LoadStringStatics() {
 	AddStatic("java/lang/String.COMPACT_STRINGS",
-		Static{Type: "Z", Value: true})
+		Static{Type: types.Bool, Value: true})
 	AddStatic("java/lang/String.UTF16",
-		Static{Type: "B", Value: int64(1)})
+		Static{Type: types.Byte, Value: int64(1)})
 	AddStatic("java/lang/String.LATIN1",
-		Static{Type: "B", Value: int64(0)})
+		Static{Type: types.Byte, Value: int64(0)})
 }

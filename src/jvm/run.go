@@ -1442,7 +1442,7 @@ func runFrame(fs *list.List) error {
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if prevLoaded.Type == "D" || prevLoaded.Type == "J" {
+			if prevLoaded.Type == types.Double || prevLoaded.Type == types.Long {
 				push(f, prevLoaded.Value)
 			}
 
@@ -1464,7 +1464,7 @@ func runFrame(fs *list.List) error {
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if fieldType == "D" || fieldType == "J" {
+			if fieldType == types.Double || fieldType == types.Long {
 				push(f, fieldValue)
 			}
 
@@ -1478,8 +1478,8 @@ func runFrame(fs *list.List) error {
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
 
-			value := pop(f)
-			ref := pop(f).(*object.Object)
+			value := pop(f)                // the value we're placing in the field
+			ref := pop(f).(*object.Object) // ptr to object containing the field
 			obj := *ref
 
 			// if the value we're inserting is a reference to an
@@ -1489,7 +1489,7 @@ func runFrame(fs *list.List) error {
 			switch value.(type) {
 			case *object.Object:
 				v := *value.(*object.Object)
-				if strings.HasPrefix(v.Fields[0].Ftype, "[") {
+				if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
 					value = v.Fields[0].Fvalue
 				}
 			}

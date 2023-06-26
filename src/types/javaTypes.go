@@ -13,16 +13,21 @@ const Byte = "B"
 const Char = "C"
 const Double = "D"
 const Float = "F"
-const Int = "I"
+const Int = "I" // can be either 32- or 64-bit int
 const Long = "J"
 const Short = "S"
 
 const Array = "["
 const Ref = "Z"
+
+// Jacobin-specific types
 const String = "T"
 const Static = "X"
 
-const Error = "0" // if an error occurred in getting a type
+const GoMeth = "G" // a go mehod
+
+const Error = "0"  // if an error occurred in getting a type
+const Struct = "9" // used primarily in returning items from the CP
 
 func IsIntegral(t string) bool {
 	if t == "B" || t == "C" || t == "I" ||
