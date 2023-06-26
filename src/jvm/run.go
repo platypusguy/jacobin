@@ -1454,7 +1454,7 @@ func runFrame(fs *list.List) error {
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if prevLoaded.Type == types.Double || prevLoaded.Type == types.Long {
+			if types.UsesTwoSlots(prevLoaded.Type) {
 				push(f, prevLoaded.Value)
 			}
 
@@ -1476,7 +1476,7 @@ func runFrame(fs *list.List) error {
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if fieldType == types.Double || fieldType == types.Long {
+			if types.UsesTwoSlots(fieldType) {
 				push(f, fieldValue)
 			}
 

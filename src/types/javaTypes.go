@@ -69,7 +69,7 @@ func IsError(t string) bool {
 // UsesTwoSlots identifies longs and doubles -- the two data items
 // that occupy two slots on the op stack and elsewhere
 func UsesTwoSlots(t string) bool {
-	if t == "D" || t == "J" {
+	if t == "D" || t == "J" || t == "XD" || t == "XJ" {
 		return true
 	}
 	return false
