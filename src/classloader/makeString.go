@@ -6,9 +6,13 @@
 
 package classloader
 
-import "jacobin/object"
+import (
+	"jacobin/object"
+	"jacobin/types"
+)
 
-// Miscellaneous functions (often placed here because of circularity issues)
+// Functions for creating String objects (placed here due to circularity issues)
+// The definition of a string is found object\String.go
 
 // MakeString retuns an empty String object. It would normally be placed
 // in String.go, except that the updating of the Klass field as done here
@@ -29,12 +33,13 @@ func NewStringFromGoString(in string) *object.Object {
 }
 
 func CreateJavaStringFromGoString(in *string) *object.Object {
-	// stringBytes := GoStringToJavaBytes(*ins)
 	stringBytes := []byte(*in)
 	s := MakeString()
+
 	// set the value of the string
-	s.Fields[0].Ftype = "[B"
+	s.Fields[0].Ftype = types.ByteArray
 	s.Fields[0].Fvalue = &stringBytes
+
 	// set the string to LATIN
 	s.Fields[1].Fvalue = int64(0)
 	return s

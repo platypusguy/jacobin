@@ -68,5 +68,5 @@ func NewString() *Object {
 	return s
 }
 
-// Functions for creating strings are in classloader/misc.go due to Go's
+// Functions for creating strings are in classloader/makeString.go due to Go's
 // circularity prohibition.
