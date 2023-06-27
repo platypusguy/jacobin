@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/thread"
+	"jacobin/types"
 	"math"
 	"os"
 	"strings"
@@ -1603,6 +1604,97 @@ func TestFsub(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("DSUB, Empty stack expected, got: %d", f.TOS)
+	}
+}
+
+// GETFIELD: Get a field from an object
+func TestGetField(t *testing.T) {
+	f := newFrame(GETFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	// push the string whose field[0] we'll be getting
+	str := object.NewString()
+	str.Fields[0].Fvalue = "hello"
+	push(&f, str)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	// preceding should mean that the field value is on the stack
+	ret := pop(&f)
+	if ret != "hello" {
+		t.Errorf("GETFIELD: did not get expected pointer to a string 'hello'")
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD: Expected an empty op stack, got TOS: %d", f.TOS)
+	}
+}
+
+// GETFIELD: Get a long field, make sure that it's value is pushed twice
+func TestGetFieldWithLong(t *testing.T) {
+	f := newFrame(GETFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	// push the string whose field[0] we'll be getting
+	obj := object.MakeObject()
+	obj.Fields = make([]object.Field, 1, 1)
+	obj.Fields[0].Fvalue = int64(222)
+	obj.Fields[0].Ftype = types.Long
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	// preceding should mean that the field value is on the stack
+	ret := pop(&f).(int64)
+	if ret != 222 {
+		t.Errorf("GETFIELD: expected popped value of 222, got: %d", ret)
+	}
+
+	if f.TOS != 0 {
+		t.Errorf("GETFIELD: Expected 1 remaining value op stack, got TOS: %d", f.TOS)
+	}
+}
+
+// GETFIELD: Get a field from an object (here, with error)
+func TestGetFieldInvalidFieldEntry(t *testing.T) {
+	f := newFrame(GETFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	// pointing to the next CP entry, which s/be a FieldRef but is a UTF8 record
+	CP.CpIndex[0] = classloader.CpEntry{Type: 1, Slot: 0}
+	f.CP = &CP
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+	if !strings.Contains(ret.Error(), "Expected a field ref, but got") {
+		t.Errorf("GETFIELD: Expected a different error, got: %s",
+			ret.Error())
 	}
 }
 
