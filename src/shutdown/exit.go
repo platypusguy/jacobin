@@ -40,7 +40,9 @@ func Exit(errorCondition ExitStatus) int {
 	}
 
 	msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
-	_ = log.Log(msg, log.INFO)
+	if log.Log(msg, log.INFO) != nil {
+		errorCondition = UNKNOWN_ERROR
+	}
 
 	if errorCondition == TEST_OK {
 		return 0
