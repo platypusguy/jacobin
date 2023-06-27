@@ -1500,9 +1500,11 @@ func runFrame(fs *list.List) error {
 			// object
 			switch value.(type) {
 			case *object.Object:
-				v := *value.(*object.Object)
-				if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
-					value = v.Fields[0].Fvalue
+				if value != object.Null {
+					v := *(value.(*object.Object))
+					if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
+						value = v.Fields[0].Fvalue
+					}
 				}
 			}
 
