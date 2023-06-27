@@ -264,12 +264,12 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	// if we got this far, something went wrong with locating the method
 
 	if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
-		_ = log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
+		_ = log.Log("FetchMethodAndCP: Main method not found in class "+class+", please define the main method as:\n"+
 			"   public static void main(String[] args)", log.SEVERE)
 	} else {
-		_ = log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+		_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 	}
-
+	
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
 	return MTentry{}, errors.New("method not found") // dummy return
 }
