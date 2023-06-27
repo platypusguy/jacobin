@@ -199,7 +199,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	if MethAreaFetch(class) == nil {
 		err := LoadClassFromNameOnly(class)
 		if err != nil {
-			_ = log.Log("LoadBaseClasses: Loading "+class+" failed: "+err.Error(), log.WARNING)
+			_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
 			_ = log.Log(err.Error(), log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
@@ -212,7 +212,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		if err != nil {
 			msg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
 			_ = log.Log(msg, log.SEVERE)
-			return MTentry{}, errors.New(msg)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 		k := MethAreaFetch(class)
 		if k == nil {
@@ -223,7 +223,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			msg := "FetchMethodAndCP: Could not find class: " + class
+			msg := "FetchMethodAndCP: Null Loader in class: " + class
 			_ = log.Log(msg, log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
