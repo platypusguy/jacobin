@@ -199,7 +199,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	if MethAreaFetch(class) == nil {
 		err := LoadClassFromNameOnly(class)
 		if err != nil {
-			_ = log.Log("LoadBaseClasses: Loading "+class+" failed: "+err.Error(), log.WARNING)
+			_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
 			_ = log.Log(err.Error(), log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
@@ -212,20 +212,20 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		if err != nil {
 			msg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
 			_ = log.Log(msg, log.SEVERE)
-			return MTentry{}, errors.New(msg)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 		k := MethAreaFetch(class)
 		if k == nil {
 			msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class {%s}", class)
 			_ = log.Log(msg, log.SEVERE)
-			return MTentry{}, errors.New(msg)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			msg := "FetchMethodAndCP: Could not find class: " + class
+			msg := "FetchMethodAndCP: Null Loader in class: " + class
 			_ = log.Log(msg, log.SEVERE)
-			return MTentry{}, errors.New(msg)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		// the class has been found (k) so now go down the list of methods until
@@ -261,16 +261,17 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		}
 	}
 
-	// if we got this far, the class was not found
+	// if we got this far, something went wrong with locating the method
 
 	if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
-		_ = log.Log("Error: Main method not found in class "+class+", please define the main method as:\n"+
+		_ = log.Log("FetchMethodAndCP: Main method not found in class "+class+", please define the main method as:\n"+
 			"   public static void main(String[] args)", log.SEVERE)
 	} else {
-		_ = log.Log("Found class: "+class+", but it did not contain method: "+meth, log.SEVERE)
+		_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 	}
-
-	return MTentry{}, errors.New("method not found")
+	
+	shutdown.Exit(shutdown.JVM_EXCEPTION)
+	return MTentry{}, errors.New("method not found") // dummy return
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number

@@ -7,6 +7,7 @@
 package shutdown
 
 import (
+	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
@@ -38,7 +39,8 @@ func Exit(errorCondition ExitStatus) int {
 		}
 	}
 
-	if log.Log("shutdown", log.INFO) != nil {
+	msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
+	if log.Log(msg, log.INFO) != nil {
 		errorCondition = UNKNOWN_ERROR
 	}
 
@@ -48,11 +50,7 @@ func Exit(errorCondition ExitStatus) int {
 		return 1
 	}
 
-	if errorCondition == OK {
-		os.Exit(0)
-	} else {
-		os.Exit(1)
-	}
+	os.Exit(errorCondition);
 
 	return 0 // required by go
 }

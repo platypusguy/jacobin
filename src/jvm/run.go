@@ -250,7 +250,7 @@ func runFrame(fs *list.List) error {
 						classloader.CreateJavaStringFromGoString(CPe.stringVal)
 					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
 					if stringAddr.Klass == nil {
-						msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class java/lang/String")
+						msg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(msg, log.SEVERE)
 						shutdown.Exit(shutdown.JVM_EXCEPTION)
 					}
@@ -368,7 +368,7 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
+				exceptions.Throw(exceptions.NullPointerException, "IALOAD: Invalid (null) reference to an array")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				return errors.New("IALOAD error") // running code exits on prev line, but this needed for testing
 			}
@@ -377,7 +377,7 @@ func runFrame(fs *list.List) error {
 
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"Invalid array subscript")
+					"IALOAD: Invalid array subscript")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 				return errors.New("IALOAD error") // running code exits on prev line, but this needed for testing
 			}
