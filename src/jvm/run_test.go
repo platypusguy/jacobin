@@ -1340,6 +1340,22 @@ func TestFdiv(t *testing.T) {
 	}
 }
 
+// FDIV: with divide zero by zero, should = NaN
+func TestFdivDivideByZero(t *testing.T) {
+	f := newFrame(FDIV)
+	push(&f, float64(0))
+	push(&f, float64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	ret := pop(&f)
+
+	if !math.IsNaN(ret.(float64)) {
+		t.Errorf("FDIV: Did not get an expected NaN")
+	}
+}
+
 // FLOAD: test load of float in locals[index] on to stack
 func TestFload(t *testing.T) {
 	f := newFrame(FLOAD)
@@ -1435,7 +1451,7 @@ func TestFload3(t *testing.T) {
 	}
 }
 
-// Test FMUL (pop 2 floats, multiply them, push result)
+// FMUL (pop 2 floats, multiply them, push result)
 func TestFmul(t *testing.T) {
 	f := newFrame(FMUL)
 	push(&f, 1.5)
