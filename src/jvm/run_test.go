@@ -1341,7 +1341,7 @@ func TestFdiv(t *testing.T) {
 }
 
 // FDIV: with divide zero by zero, should = NaN
-func TestFdivDivideByZero(t *testing.T) {
+func TestFdivDivideZeroByZero(t *testing.T) {
 	f := newFrame(FDIV)
 	push(&f, float64(0))
 	push(&f, float64(0))
@@ -1353,6 +1353,22 @@ func TestFdivDivideByZero(t *testing.T) {
 
 	if !math.IsNaN(ret.(float64)) {
 		t.Errorf("FDIV: Did not get an expected NaN")
+	}
+}
+
+// FDIV: with divide positive number by zero, should = +Inf
+func TestFdivDividePosNumberByZero(t *testing.T) {
+	f := newFrame(FDIV)
+	push(&f, float64(10))
+	push(&f, float64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	ret := pop(&f)
+
+	if !math.IsInf(ret.(float64), 1) {
+		t.Errorf("FDIV: Did not get an expected +Infinity")
 	}
 }
 

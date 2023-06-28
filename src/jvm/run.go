@@ -910,20 +910,22 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
+
 		case FDIV: // 0x6E
 			val1 := pop(f).(float64)
 			val2 := pop(f).(float64)
 			if val1 == 0.0 {
 				if val2 == 0.0 {
 					push(f, math.NaN())
-				} else if math.Signbit(val1) {
-					push(f, math.Inf(1))
+				} else if math.Signbit(val1) { // this test for negative zero
+					push(f, math.Inf(-1)) // but alas there is no -0 in golang (as of 1.20)
 				} else {
-					push(f, math.Inf(-1))
+					push(f, math.Inf(1))
 				}
 			} else {
 				push(f, float64(float32(val2)/float32(val1)))
 			}
+
 		case DDIV: // 0x6F
 			val1 := pop(f).(float64)
 			pop(f)
@@ -932,10 +934,10 @@ func runFrame(fs *list.List) error {
 			if val1 == 0.0 {
 				if val2 == 0.0 {
 					push(f, math.NaN())
-				} else if math.Signbit(val1) {
-					push(f, math.Inf(1))
+				} else if math.Signbit(val1) { // this tests for negative zero
+					push(f, math.Inf(-1)) // but golang has no -0 as of v. 1.20
 				} else {
-					push(f, math.Inf(-1))
+					push(f, math.Inf(1))
 				}
 			} else {
 				res := val2 / val1
