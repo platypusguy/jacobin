@@ -277,7 +277,8 @@ func runFrame(fs *list.List) error {
 					push(f, unsafe.Pointer(CPe.addrVal))
 				}
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC_W instruction")
+				exceptions.Throw(exceptions.InaccessibleObjectException,
+					"Invalid type for LDC_W instruction")
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
@@ -292,8 +293,9 @@ func runFrame(fs *list.List) error {
 				push(f, CPe.floatVal)
 				push(f, CPe.floatVal)
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException, "Invalid type for LDC2_W instruction")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				exceptions.Throw(exceptions.InaccessibleObjectException,
+					"Invalid type for LDC2_W instruction")
+				return errors.New("LDC2_W: Invalid type for LDC2_W instruction")
 			}
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
 			FLOAD, //  0x17 (push float from local var, using next byte as index)
@@ -369,8 +371,7 @@ func runFrame(fs *list.List) error {
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
 				exceptions.Throw(exceptions.NullPointerException, "IALOAD: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				return errors.New("IALOAD error") // running code exits on prev line, but this needed for testing
+				return errors.New("IALOAD error")
 			}
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
@@ -389,16 +390,14 @@ func runFrame(fs *list.List) error {
 			if iAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"LALOAD: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				return errors.New("LALOAD error") // running code exits on prev line, but this needed for testing
+				return errors.New("LALOAD error")
 			}
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LALOAD: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				return errors.New("LALOAD error") // running code exits on prev line, but this needed for testing
+				return errors.New("LALOAD error")
 			}
 			var value = array[index]
 			push(f, value)
@@ -406,19 +405,20 @@ func runFrame(fs *list.List) error {
 
 		case FALOAD: //		0x30	(push contents of an float array element)
 			index := pop(f).(int64)
-			fAref := pop(f).(*object.Object) // ptr to array object
+			ref := pop(f) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
-			if fAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+			if ref == nil || ref == object.Null {
+				exceptions.Throw(exceptions.NullPointerException,
+					"FALOAD: Invalid (null) reference to an array")
+				return errors.New("FALOAD error")
 			}
 
+			fAref := ref.(*object.Object)
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FALOAD: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				return errors.New("FALOAD error") // running code exits on prev line, but this needed for testing
+				return errors.New("FALOAD error")
 			}
 			var value = array[index]
 			push(f, value)

@@ -1025,6 +1025,77 @@ func TestFaload(t *testing.T) {
 	}
 }
 
+// FALOAD: Test exception on nil array address
+func TestFaloadNilArray(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(FALOAD)
+	push(&f, object.Null) // push the reference to the array, here nil
+	push(&f, int64(20))   // get contents in array[20]
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode -- should generate exception
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+		t.Errorf("FALOAD: Did not get expected err msg for nil array, got: %s",
+			errMsg)
+	}
+}
+
+// FALOAD: using an invalid subscript into the array
+func TestFaloadInvalidSubscript(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(30))                     // make the array 30 elements big
+	f.Meth = append(f.Meth, object.T_FLOAT) // make it an array of floats
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	globals.InitGlobals("test")
+	log.Init()
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(*object.Object)
+
+	f = newFrame(FALOAD) // now fetch the value
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(200)) // get contents in array[200] which is invalid
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid array subscript") {
+		t.Errorf("DALOAD: Did not get expected err msg for invalid subscript, got: %s",
+			errMsg)
+	}
+}
+
 // FASTORE: store value in array of floats
 // Create an array of 30 elements, store value 100.0 in array[20], then
 // sum all the elements in the array, and test for a sum of 100.0
