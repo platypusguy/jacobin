@@ -592,9 +592,8 @@ func runFrame(fs *list.List) error {
 			if index >= size {
 				msg := fmt.Sprintf("IA/CA/SASTORE: array size=%d but index=%d (too large)", size, index)
 				_ = log.Log(msg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, "IA/CA/SATORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
+					"IA/CA/SATORE: Invalid array subscript")
 				return errors.New("IA/CA/SASTORE: Invalid array index")
 			}
 			array[index] = value
@@ -605,9 +604,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			lAref := pop(f).(*object.Object) // ptr to array object
 			if lAref == nil {
-				exceptions.Throw(exceptions.NullPointerException, "LASTORE: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
+				exceptions.Throw(exceptions.NullPointerException,
+					"LASTORE: Invalid (null) reference to an array")
 				return errors.New("LASTORE: Invalid array reference")
 			}
 
@@ -618,8 +616,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("LASTORE: Invalid array type")
 			}
 
@@ -630,8 +626,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LASTORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("LASTORE: Invalid array index")
 			}
 			array[index] = value
@@ -643,8 +637,6 @@ func runFrame(fs *list.List) error {
 			if fAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("FASTORE: Invalid array address")
 			}
 
@@ -653,8 +645,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("FASTORE: Invalid array type")
 			}
 
@@ -665,8 +655,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FASTORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("FASTORE: Invalid array index")
 			}
 			array[index] = value
@@ -679,8 +667,6 @@ func runFrame(fs *list.List) error {
 			if dAref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("DASTORE: Invalid array reference")
 			}
 
@@ -689,8 +675,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("DASTORE: Invalid array type")
 			}
 
@@ -701,8 +685,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DASTORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("DASTORE: Invalid array index")
 			}
 
@@ -716,8 +698,6 @@ func runFrame(fs *list.List) error {
 			if ptrObj == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("AASTORE: Invalid array address")
 			}
 
@@ -726,8 +706,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("AASTORE: Invalid array type")
 			}
 
@@ -739,8 +717,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"AASTORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("AASTORE: Invalid array index")
 			}
 
@@ -756,8 +732,6 @@ func runFrame(fs *list.List) error {
 			if ptrObj == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"BASTORE: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("BASTORE: Invalid array address")
 			}
 
@@ -766,8 +740,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"BASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("BASTORE: Invalid array type")
 			}
 
@@ -779,8 +751,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"BASTORE: Invalid array subscript")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("BASTORE: Invalid array index")
 			}
 
@@ -932,7 +902,7 @@ func runFrame(fs *list.List) error {
 			if val2 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, ""+
 					"LDIV: Arithmetic Exception: divide by zero")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LDIV: Divide by zero")
 			} else {
 				val1 := pop(f).(int64)
 				pop(f)
