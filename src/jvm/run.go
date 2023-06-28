@@ -17,7 +17,6 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
-	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/types"
 	"jacobin/util"
@@ -252,14 +251,14 @@ func runFrame(fs *list.List) error {
 					if stringAddr.Klass == nil {
 						msg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(msg, log.SEVERE)
-						shutdown.Exit(shutdown.JVM_EXCEPTION)
+						return errors.New("LDC: MethAreaFetch could not find class java/lang/String")
 					}
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException,
 					"Invalid type for LDC instruction")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LDC: invalid type")
 			}
 		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -279,7 +278,7 @@ func runFrame(fs *list.List) error {
 			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException,
 					"Invalid type for LDC_W instruction")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LDC_W: Invalid type for instruction")
 			}
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -571,9 +570,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			arrObj := pop(f).(*object.Object) // the array object
 			if arrObj == nil {
-				exceptions.Throw(exceptions.NullPointerException, "Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
+				exceptions.Throw(exceptions.NullPointerException,
+					"IA/CA/SASTORE: Invalid (null) reference to an array")
 				return errors.New("IA/CA/SASTORE: Invalid array address")
 			}
 
@@ -582,8 +580,6 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(msg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"IA/CA/SASTORE: Attempt to access array of incorrect type")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
-				// the following is needed only to make unit tests work
 				return errors.New("IA/CA/SASTORE: Invalid array type")
 			}
 
@@ -891,7 +887,7 @@ func runFrame(fs *list.List) error {
 			if val1 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException, ""+
 					"IDIV: Arithmetic Exception: divide by zero")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("IDIV: Arithmetic Exception: divide by zero")
 			} else {
 				val2 := pop(f).(int64)
 				push(f, val2/val1)
@@ -949,7 +945,7 @@ func runFrame(fs *list.List) error {
 			if val2 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException,
 					"IREM: Arithmetic Exception: divide by zero")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("IREM: Arithmetic Exception: divide by zero")
 			} else {
 				val1 := pop(f).(int64)
 				res := val1 % val2
@@ -961,7 +957,7 @@ func runFrame(fs *list.List) error {
 			if val2 == 0 {
 				exceptions.Throw(exceptions.ArithmeticException,
 					"LREM: Arithmetic Exception: divide by zero")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("LREM: Arithmetic Exception: divide by zero")
 			} else {
 				val1 := pop(f).(int64)
 				pop(f)
@@ -1533,7 +1529,9 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' { // so we have a golang function
 				_, err := runGmethod(mtEntry, fs, className, methodName, methodType)
 				if err != nil {
-					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
+					// any exception message will already have been displayed to the user
+					return errors.New("INVOKEVIRTUAL: Error encountered in: " +
+						className + "." + methodName)
 				}
 				break
 			}
@@ -1585,7 +1583,9 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' { // it's a golang method
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
 				if err != nil {
-					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
+					// any exceptions message will already have been displayed to the user
+					return errors.New("INVOKESPECIAL: Error encountered in: " +
+						className + "." + methName)
 				}
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
@@ -1658,7 +1658,9 @@ func runFrame(fs *list.List) error {
 				f, err = runGmethod(mtEntry, fs, className, methodName, methodType)
 
 				if err != nil {
-					shutdown.Exit(shutdown.APP_EXCEPTION) // any exceptions message will already have been displayed to the user
+					// any exceptions message will already have been displayed to the user
+					return errors.New("INVOKESTATIC: Error encountered in: " +
+						className + "." + methodName)
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
@@ -1712,7 +1714,7 @@ func runFrame(fs *list.List) error {
 			ref, err := instantiateClass(className)
 			if err != nil {
 				// error message(s) already shown to user
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("NEW: Error occurred instantiating class: " + className)
 			}
 			push(f, ref)
 
@@ -1722,7 +1724,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(
 					exceptions.NegativeArraySizeException,
 					"NEWARRAY: Invalid size for array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("NEWARRAY: Invalid size for array")
 			}
 
 			arrayType := int(f.Meth[f.PC+1])
@@ -1746,7 +1748,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(
 					exceptions.NegativeArraySizeException,
 					"ANEWARRAY: Invalid size for array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("ANEWARRAY: invalid size for an array")
 			}
 
 			arrayPtr := object.Make1DimArray(object.REF, size)
@@ -1766,7 +1768,7 @@ func runFrame(fs *list.List) error {
 			if ref == nil {
 				exceptions.Throw(exceptions.NullPointerException,
 					"ARRAYLENGTH: Invalid (null) reference to an array")
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				return errors.New("ARRAYLENGTHY: invalid (null) reference to an array")
 			}
 
 			var size int64
@@ -1832,7 +1834,8 @@ func runFrame(fs *list.List) error {
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
-								shutdown.Exit(shutdown.JVM_EXCEPTION)
+								return errors.New("CHECKCAST: Could not load class: " +
+									className)
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
@@ -1873,7 +1876,8 @@ func runFrame(fs *list.List) error {
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
-								shutdown.Exit(shutdown.JVM_EXCEPTION)
+								return errors.New("INSTANCEOF: Could not load class: " +
+									className)
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}

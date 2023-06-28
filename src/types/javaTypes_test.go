@@ -21,7 +21,7 @@ func TestJavaBoolean(t *testing.T) {
 	}
 }
 
-func TestTheIsFunctions(t *testing.T) {
+func TestTheIsFunctionsValidate(t *testing.T) {
 	if !IsIntegral(Bool) {
 		t.Errorf("IsIntegral() returned false for boolean, should be true")
 	}
@@ -48,5 +48,35 @@ func TestTheIsFunctions(t *testing.T) {
 
 	if !UsesTwoSlots(Double) {
 		t.Errorf("UsesTwoSlots() returned false for double, should be true")
+	}
+
+	if !IsError("0") {
+		t.Errorf("IsError returned false for Error, should be true")
+	}
+}
+
+func TestTheIsFunctionsNegatively(t *testing.T) {
+	if IsIntegral(Error) {
+		t.Errorf("Error incorrectly was true in IsIntegral()")
+	}
+
+	if IsFloatingPoint(Bool) {
+		t.Errorf("Error: Bool incorrectly is true in IsFloatingPoint()")
+	}
+
+	if IsAddress(Int) {
+		t.Errorf("Error: Int incorrectly is true in IsAddress()")
+	}
+
+	if IsStatic(ByteArray) {
+		t.Errorf(("Error: ByteArray incorrectly is true in IsStatic()"))
+	}
+
+	if IsError(Short) {
+		t.Errorf("Error: Short is incorrectly true in IsError()")
+	}
+
+	if UsesTwoSlots(Int) {
+		t.Errorf("Error: Int is incorrectly true in UsesTwoSlots()")
 	}
 }
