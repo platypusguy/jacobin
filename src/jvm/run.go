@@ -2123,6 +2123,12 @@ func createAndInitNewFrame(
 	m *classloader.JmEntry,
 	includeOjectRef bool,
 	currFrame *frames.Frame) (*frames.Frame, error) {
+
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: includeOjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", includeOjectRef, m.MaxStack, m.MaxLocals)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+	
 	f := currFrame
 
 	fram := frames.CreateFrame(m.MaxStack)
@@ -2131,11 +2137,6 @@ func createAndInitNewFrame(
 	fram.CP = m.Cp                     // add its pointer to the class CP
 	for i := 0; i < len(m.Code); i++ { // copy the method's bytecodes over
 		fram.Meth = append(fram.Meth, m.Code[i])
-	}
-
-	// allocate the local variables
-	for k := 0; k < m.MaxLocals; k++ {
-		fram.Locals = append(fram.Locals, int64(0))
 	}
 
 	// pop the parameters off the present stack and put them in
@@ -2225,19 +2226,42 @@ func createAndInitNewFrame(
 		}
 	}
 
-	// if objectRef != nil, insert it in the local[0]
-	// this is used in invokevirtual, invokespecial, and
-	// invokeinterface.
+	// Initialise lenLocals = max (m.MaxLocals, len(argList)) but at least 1
+	lenArgList := len(argList)
+	lenLocals := m.MaxLocals
+	if lenArgList > m.MaxLocals {
+		lenLocals = lenArgList
+	}
+	if lenLocals < 1 {
+		lenLocals = 1
+	}
+
+	// allocate the local variables
+	for k := 0; k < lenLocals; k++ {
+		fram.Locals = append(fram.Locals, int64(0))
+	}
+
+	// if includeOjectRef is true then objectRef != nil.
+	// Insert it in the local[0]
+	// This is used in invokevirtual, invokespecial, and invokeinterface.
 	destLocal := 0
 	if includeOjectRef {
 		fram.Locals[0] = pop(f)
+		fram.Locals = append(fram.Locals, int64(0)) // add some space for objectRef
 		destLocal = 1
+		lenLocals++ // There is one more needed
 	}
 
-	for j := len(argList) - 1; j >= 0; j-- {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d", lenArgList, lenLocals, )
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+
+	for j := lenArgList - 1; j >= 0; j-- {
 		fram.Locals[destLocal] = argList[j]
 		destLocal += 1
 	}
+
 	fram.TOS = -1
 
 	return fram, nil
