@@ -699,6 +699,44 @@ func TestDdiv(t *testing.T) {
 	}
 }
 
+// DDIV: with divide zero by zero, should = NaN
+func TestDdivDivideZeroByZero(t *testing.T) {
+	f := newFrame(DDIV)
+	push(&f, float64(0))
+	push(&f, float64(0))
+
+	push(&f, float64(0))
+	push(&f, float64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	ret := pop(&f)
+
+	if !math.IsNaN(ret.(float64)) {
+		t.Errorf("DDIV: Did not get an expected NaN")
+	}
+}
+
+// DDIV: with divide positive number by zero, should = +Inf
+func TestDdivDividePosNumberByZero(t *testing.T) {
+	f := newFrame(DDIV)
+	push(&f, float64(10))
+	push(&f, float64(10))
+
+	push(&f, float64(0))
+	push(&f, float64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	ret := pop(&f)
+
+	if !math.IsInf(ret.(float64), 1) {
+		t.Errorf("DDIV: Did not get an expected +Infinity")
+	}
+}
+
 // DLOAD: test load of double in locals[index] on to stack
 func TestDload(t *testing.T) {
 	f := newFrame(DLOAD)
