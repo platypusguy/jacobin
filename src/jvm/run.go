@@ -1538,6 +1538,7 @@ func runFrame(fs *list.List) error {
 
 			if mtEntry.MType == 'J' { // it's a Java function (that is, non-native)
 				m := mtEntry.Meth.(classloader.JmEntry)
+				push(f, CPentry)
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
@@ -2129,7 +2130,8 @@ func createAndInitNewFrame(
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", includeObjectRef, m.MaxStack, m.MaxLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, method=%s, methodType=%s, includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", 
+		                         className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	
@@ -2141,7 +2143,7 @@ func createAndInitNewFrame(
 		objectRef = pop(f).(*object.Object)
 	}
 	
-	fram := frames.CreateFrame(m.MaxStack)
+	fram := frames.CreateFrame(m.MaxStack+8)
 	fram.ClName = className
 	fram.MethName = methodName
 	fram.CP = m.Cp                     // add its pointer to the class CP
