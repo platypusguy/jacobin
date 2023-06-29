@@ -2136,12 +2136,6 @@ func createAndInitNewFrame(
 	
 	f := currFrame
 
-	// If there is an object reference, I have to pop it first and save it for later.
-	var objectRef *object.Object
-	if includeObjectRef {
-		objectRef = pop(f).(*object.Object)
-	}
-	
 	stackSize := m.MaxStack
 	if stackSize < 1 {
 		stackSize = 1
@@ -2261,10 +2255,10 @@ func createAndInitNewFrame(
 	// This is used in invokevirtual, invokespecial, and invokeinterface.
 	destLocal := 0
 	if includeObjectRef {
-		fram.Locals[0] = objectRef
-		fram.Locals = append(fram.Locals, int64(0)) // add some space for objectRef
-		destLocal = 1
-		lenLocals++ // There is one more needed
+		fram.Locals[0] = pop(f)
+		fram.Locals = append(fram.Locals, int64(0)) // add the slot taken up by objectRef
+		destLocal = 1 // The first parameter starts at index 1
+		lenLocals++ // There is 1 more local needed
 	}
 
 	if MainThread.Trace {
