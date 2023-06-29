@@ -2117,7 +2117,7 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 
 // create a new frame and load up the local variables with the passed
 // arguments, set up the stack, and all the remaining items to begin execution
-// Note: the includeOjectRef parameter is a boolean. When true, it indicates
+// Note: the includeObjectRef parameter is a boolean. When true, it indicates
 // that in addition to the method parameter, an object reference is also on
 // the stack and needs to be popped off the caller's opStack and passed in.
 // (This would be the case for invokevirtual, among others.) When false, no
@@ -2125,16 +2125,22 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 func createAndInitNewFrame(
 	className string, methodName string, methodType string,
 	m *classloader.JmEntry,
-	includeOjectRef bool,
+	includeObjectRef bool,
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: includeOjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", includeOjectRef, m.MaxStack, m.MaxLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", includeObjectRef, m.MaxStack, m.MaxLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	
 	f := currFrame
 
+	// If there is an object reference, I have to pop it first and save it for later.
+	var objectRef *object.Object
+	if includeObjectRef {
+		objectRef = pop(f).(*object.Object)
+	}
+	
 	fram := frames.CreateFrame(m.MaxStack)
 	fram.ClName = className
 	fram.MethName = methodName
@@ -2245,12 +2251,12 @@ func createAndInitNewFrame(
 		fram.Locals = append(fram.Locals, int64(0))
 	}
 
-	// if includeOjectRef is true then objectRef != nil.
+	// if includeObjectRef is true then objectRef != nil.
 	// Insert it in the local[0]
 	// This is used in invokevirtual, invokespecial, and invokeinterface.
 	destLocal := 0
-	if includeOjectRef {
-		fram.Locals[0] = pop(f)
+	if includeObjectRef {
+		fram.Locals[0] = objectRef
 		fram.Locals = append(fram.Locals, int64(0)) // add some space for objectRef
 		destLocal = 1
 		lenLocals++ // There is one more needed
