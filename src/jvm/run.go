@@ -1538,7 +1538,6 @@ func runFrame(fs *list.List) error {
 
 			if mtEntry.MType == 'J' { // it's a Java function (that is, non-native)
 				m := mtEntry.Meth.(classloader.JmEntry)
-				push(f, CPentry)
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
