@@ -8,19 +8,7 @@ package types
 
 import "testing"
 
-func TestJavaBoolean(t *testing.T) {
-
-	val := ConvertGoBoolToJavaBool(true)
-	if val != JavaBoolTrue {
-		t.Errorf("JavaBool: expected a result of 1, but got: %d", val)
-	}
-
-	val = ConvertGoBoolToJavaBool(false)
-	if val != JavaBoolFalse {
-		t.Errorf("JavaBool: expected a result of 0, but got: %d", val)
-	}
-}
-
+// Test that the functions return the correct results
 func TestTheIsFunctionsValidate(t *testing.T) {
 	if !IsIntegral(Bool) {
 		t.Errorf("IsIntegral() returned false for boolean, should be true")
@@ -55,6 +43,7 @@ func TestTheIsFunctionsValidate(t *testing.T) {
 	}
 }
 
+// Test that the functions don't return invalid results
 func TestTheIsFunctionsNegatively(t *testing.T) {
 	if IsIntegral(Error) {
 		t.Errorf("Error incorrectly was true in IsIntegral()")
@@ -69,7 +58,7 @@ func TestTheIsFunctionsNegatively(t *testing.T) {
 	}
 
 	if IsStatic(ByteArray) {
-		t.Errorf(("Error: ByteArray incorrectly is true in IsStatic()"))
+		t.Errorf("Error: ByteArray incorrectly is true in IsStatic()")
 	}
 
 	if IsError(Short) {
@@ -78,5 +67,19 @@ func TestTheIsFunctionsNegatively(t *testing.T) {
 
 	if UsesTwoSlots(Int) {
 		t.Errorf("Error: Int is incorrectly true in UsesTwoSlots()")
+	}
+}
+
+// Test the go-to-Java conversion of booleans
+func TestJavaBoolean(t *testing.T) {
+
+	val := ConvertGoBoolToJavaBool(true)
+	if val != JavaBoolTrue {
+		t.Errorf("JavaBool: expected a result of 1, but got: %d", val)
+	}
+
+	val = ConvertGoBoolToJavaBool(false)
+	if val != JavaBoolFalse {
+		t.Errorf("JavaBool: expected a result of 0, but got: %d", val)
 	}
 }
