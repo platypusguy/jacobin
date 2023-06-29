@@ -2143,7 +2143,7 @@ func createAndInitNewFrame(
 		objectRef = pop(f).(*object.Object)
 	}
 	
-	fram := frames.CreateFrame(m.MaxStack+8)
+	fram := frames.CreateFrame(m.MaxStack)
 	fram.ClName = className
 	fram.MethName = methodName
 	fram.CP = m.Cp                     // add its pointer to the class CP
