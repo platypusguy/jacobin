@@ -1747,9 +1747,30 @@ func TestGetFieldWithLong(t *testing.T) {
 	}
 }
 
-// GETFIELD: Get a field from an object (here, with error)
+// GETFIELD: Get a field from an object (here, with error that it's not a fieldref)
 func TestGetFieldInvalidFieldEntry(t *testing.T) {
 	f := newFrame(GETFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	// pointing to the next CP entry, which s/be a FieldRef but is a UTF8 record
+	CP.CpIndex[0] = classloader.CpEntry{Type: 1, Slot: 0}
+	f.CP = &CP
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+	if !strings.Contains(ret.Error(), "Expected a field ref, but got") {
+		t.Errorf("GETFIELD: Expected a different error, got: %s",
+			ret.Error())
+	}
+}
+
+// GETSTATIC: Get a static field's value (here, with error that it's not a fieldref)
+func TestGetStaticInvalidFieldEntry(t *testing.T) {
+	f := newFrame(GETSTATIC)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
