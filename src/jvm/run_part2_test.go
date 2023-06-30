@@ -305,6 +305,21 @@ func TestIrem(t *testing.T) {
 	}
 }
 
+// IREM: int modulo -- divide by zero
+func TestIremDivideByZero(t *testing.T) {
+	f := newFrame(IREM)
+	push(&f, int64(6))
+	push(&f, int64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "divide by zero") {
+		t.Errorf("IREM: Expected divide by zero error msg, got: %s", errMsg)
+	}
+}
+
 // IRETURN: push an int on to the op stack of the calling method and exit the present method/frame
 func TestIreturn(t *testing.T) {
 	f0 := newFrame(0)
@@ -1156,6 +1171,23 @@ func TestLrem(t *testing.T) {
 	pop(&f)
 	if value != 2 {
 		t.Errorf("LREM: Expected popped value to be 2, got: %d", value)
+	}
+}
+
+// LREM: long modulo -- divide by zero
+func TestLremDivideByZero(t *testing.T) {
+	f := newFrame(LREM)
+	push(&f, int64(6))
+	push(&f, int64(6))
+	push(&f, int64(0))
+	push(&f, int64(0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "divide by zero") {
+		t.Errorf("LREM: Expected divide by zero error msg, got: %s", errMsg)
 	}
 }
 
