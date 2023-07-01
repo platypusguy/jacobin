@@ -1829,8 +1829,14 @@ func runFrame(fs *list.List) error {
 					CPentry := f.CP.CpIndex[CPslot]
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 						// a CP entry for a UTF8 record w/ name of class
-						utf8Index := CPentry.Slot
-						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+						var className string
+						classNamePtr := FetchCPentry(f.CP, CPslot)
+						if classNamePtr.retType != IS_STRING_ADDR {
+							_ = log.Log("CHECKCAST: Invalid classRef found", log.SEVERE)
+							return errors.New(" CHECKCAST: Invalid classRef found")
+						} else {
+							className = *(classNamePtr.stringVal)
+						}
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
@@ -1879,8 +1885,6 @@ func runFrame(fs *list.List) error {
 						} else {
 							className = *(classNamePtr.stringVal)
 						}
-						// utf8Index := CPentry.Slot
-						// className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
