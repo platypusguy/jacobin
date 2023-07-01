@@ -36,7 +36,7 @@ type ClData struct {
 
 type CPool struct {
 	CpIndex        []CpEntry // the constant pool index to entries
-	ClassRefs      []uint16  // points to a UTF8 entry in the CP
+	ClassRefs      []uint16  // points to a UTF8 entry in the CP bearing class name
 	Doubles        []float64
 	Dynamics       []DynamicEntry
 	FieldRefs      []FieldRefEntry
@@ -269,7 +269,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	} else {
 		_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 	}
-	
+
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
 	return MTentry{}, errors.New("method not found") // dummy return
 }

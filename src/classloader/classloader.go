@@ -68,7 +68,7 @@ type ParsedClass struct {
 	// ---- constant pool data items ----
 	cpCount        int       // count of constant pool entries
 	cpIndex        []cpEntry // the constant pool index to entries
-	classRefs      []int     // points to a UTF-8 entry in the CP
+	classRefs      []int     // points to a UTF8 entry in the CP bearing the class name
 	doubles        []float64
 	dynamics       []dynamic
 	fieldRefs      []fieldRefEntry

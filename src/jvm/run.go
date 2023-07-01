@@ -1871,8 +1871,16 @@ func runFrame(fs *list.List) error {
 					CPentry := f.CP.CpIndex[CPslot]
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 						// a CP entry for a UTF8 record w/ name of class
-						utf8Index := CPentry.Slot
-						className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+						var className string
+						classNamePtr := FetchCPentry(f.CP, CPslot)
+						if classNamePtr.retType != IS_STRING_ADDR {
+							_ = log.Log("INSTANCEOF: Invalid classRef found", log.SEVERE)
+							return errors.New(" INSTANCEOF: Invalid classRef found")
+						} else {
+							className = *(classNamePtr.stringVal)
+						}
+						// utf8Index := CPentry.Slot
+						// className := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
@@ -2129,11 +2137,11 @@ func createAndInitNewFrame(
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, method=%s, methodType=%s, includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d", 
-		                         className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, method=%s, methodType=%s, includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d",
+			className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
-	
+
 	f := currFrame
 
 	stackSize := m.MaxStack
@@ -2257,12 +2265,12 @@ func createAndInitNewFrame(
 	if includeObjectRef {
 		fram.Locals[0] = pop(f)
 		fram.Locals = append(fram.Locals, int64(0)) // add the slot taken up by objectRef
-		destLocal = 1 // The first parameter starts at index 1
-		lenLocals++ // There is 1 more local needed
+		destLocal = 1                               // The first parameter starts at index 1
+		lenLocals++                                 // There is 1 more local needed
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d", lenArgList, lenLocals, )
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d", lenArgList, lenLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
