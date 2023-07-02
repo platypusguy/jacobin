@@ -1809,7 +1809,7 @@ func runFrame(fs *list.List) error {
 		case CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
-			ref := pop(f)
+			ref := peek(f)
 			if ref == nil {
 				push(f, int64(0))
 				f.PC += 2
@@ -1845,18 +1845,19 @@ func runFrame(fs *list.List) error {
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
-						if classPtr == obj.Klass.(*classloader.Klass) {
-							push(f, int64(1))
-						} else {
-							push(f, int64(0))
+
+						if classPtr != obj.Klass.(*classloader.Klass) {
+							exceptions.Throw(exceptions.ClassCastException,
+								"CHECKCAST: Unexpected null pointer for class in classcast")
+							break
 						}
 					}
 				}
 			}
 
 		case INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
-			// because this uses the same logic as CHECKCAST, any change here should
-			// be made to CHECKCAST
+			// because this uses similar logic to CHECKCAST, any change here should
+			// likely be made to CHECKCAST as well
 			ref := pop(f)
 			if ref == nil || ref == object.Null {
 				push(f, int64(0))

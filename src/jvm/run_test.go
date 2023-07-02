@@ -316,7 +316,7 @@ func TestBipushNeg(t *testing.T) {
 	}
 }
 
-// CHECKCAST: This bytecode uses the same logic as INSTANCEOF, except how
+// CHECKCAST: This bytecode uses similar logic to INSTANCEOF, except how
 // it handles exceptional conditions.
 func TestCheckcastOfString(t *testing.T) {
 	g := globals.GetGlobalRef()
@@ -356,9 +356,9 @@ func TestCheckcastOfString(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	value := pop(&f).(int64)
-	if value != 1 { // a 1 = it's a match between class and object
-		t.Errorf("CHECKCAST: Expected string to return a 1, got %d", value)
+	value := pop(&f).(*object.Object)
+	if value != s { // if the stack is unchanged, we got a match
+		t.Errorf(" CHECKCAST: Expected stack not found on successful check")
 	}
 }
 
