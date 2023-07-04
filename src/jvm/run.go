@@ -1421,6 +1421,101 @@ func runFrame(fs *list.List) error {
 				push(f, prevLoaded.Value)
 			}
 
+		case PUTSTATIC: // 0xB2		(get static field)
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			f.PC += 2
+			CPentry := f.CP.CpIndex[CPslot]
+			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+				errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
+					"location %d in method %s of class %s\n",
+					CPentry.Type, f.PC, f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				return fmt.Errorf(errMsg)
+			}
+
+			// get the field entry
+			field := f.CP.FieldRefs[CPentry.Slot]
+
+			// get the class entry from the field entry for this field. It's the class name.
+			classRef := field.ClassIndex
+			classNameIndex := f.CP.ClassRefs[f.CP.CpIndex[classRef].Slot]
+			classNameEntry := f.CP.CpIndex[classNameIndex]
+			className := f.CP.Utf8Refs[classNameEntry.Slot]
+
+			// process the name and type entry for this field
+			nAndTindex := field.NameAndType
+			nAndTentry := f.CP.CpIndex[nAndTindex]
+			nAndTslot := nAndTentry.Slot
+			nAndT := f.CP.NameAndTypes[nAndTslot]
+			fieldNameIndex := nAndT.NameIndex
+			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldNameIndex)
+			fieldName = className + "." + fieldName
+
+			// was this static field previously loaded? Is so, get its location and move on.
+			prevLoaded, ok := classloader.Statics[fieldName]
+			if !ok { // if field is not already loaded, then
+				// the class has not been instantiated, so
+				// instantiate the class
+				_, err := instantiateClass(className)
+				if err == nil {
+					prevLoaded, ok = classloader.Statics[fieldName]
+				} else {
+					ok = false
+				}
+			}
+
+			// if the field can't be found even after instantiating the
+			// containing class, something is wrong so get out of here.
+			if !ok {
+				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s in class %s"+
+					"\n", fieldName, className)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
+			}
+
+			var value interface{}
+			switch prevLoaded.Type {
+			case types.Bool:
+				// a boolean, which might
+				// be stored as a boolean, a byte (in an array), or int64
+				// We want all forms normalized to int64
+				value = pop(f).(int64) & 0x01
+				classloader.Statics[fieldName] = classloader.Static{
+					Type:  prevLoaded.Type,
+					Value: value,
+				}
+			case types.Char, types.Short, types.Int, types.Long:
+				value = pop(f).(int64)
+				classloader.Statics[fieldName] = classloader.Static{
+					Type:  prevLoaded.Type,
+					Value: value,
+				}
+			case types.Byte:
+				value = pop(f).(byte)
+				classloader.Statics[fieldName] = classloader.Static{
+					Type:  prevLoaded.Type,
+					Value: value,
+				}
+			case types.Float, types.Double:
+				value = pop(f).(float64)
+				classloader.Statics[fieldName] = classloader.Static{
+					Type:  prevLoaded.Type,
+					Value: value,
+				}
+			default:
+				value = pop(f).(float64)
+				classloader.Statics[fieldName] = classloader.Static{
+					Type:  prevLoaded.Type,
+					Value: value,
+				}
+			}
+
+			// doubles and longs consume two slots on the op stack
+			// so push a second time
+			if types.UsesTwoSlots(prevLoaded.Type) {
+				pop(f)
+			}
+
 		case GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
