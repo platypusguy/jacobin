@@ -103,10 +103,13 @@ func getProperty(params []interface{}) interface{} {
 
 	var value string
 	g := globals.GetGlobalRef()
+	operSys := runtime.GOOS
 
 	switch prop {
 	case "file.separator":
 		value = string(os.PathSeparator)
+	case "java.class.path":
+		value = "." // OpenJDK JVM default value
 	case "java.compiler": // the name of the JIT compiler (we don't have a JIT)
 		value = "no JIT"
 	case "java.home":
@@ -136,14 +139,20 @@ func getProperty(params []interface{}) interface{} {
 		value = "Jacobin"
 	case "java.vm.version":
 		value = strconv.Itoa(g.MaxJavaVersion)
-	// case "line.separator":
-	// TODO: find out how to get this
+	case "line.separator":
+		if operSys == "windows" {
+			value = "\\r\\n"
+		} else {
+			value = "\\n"
+		}
 	case "native.encoding": // hard to find out what this is, so hard-coding to UTF8
 		value = "UTF8"
 	case "os.arch":
 		value = runtime.GOARCH
 	case "os.name":
-		value = runtime.GOOS
+		value = operSys
+	case "os.version":
+		value = "not yet available"
 	case "path.separator":
 		value = string(os.PathSeparator)
 	case "user.dir": // present working directory
