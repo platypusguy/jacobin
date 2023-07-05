@@ -129,7 +129,7 @@ func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 // accepts the index of a CP entry, which should point to a classref
 // and resolves it to return a string containing the class name.
 // Returns an empty string if an error occurred
-func getClassNameFromCPclassref(CP *classloader.CPool, cpIndex uint16) string {
+func getClassNameFromCPclassref(CP *classloader.CPool, cpIndex uint16) (string, int) {
 	var className = ""
 	cpEntry := FetchCPentry(CP, int(cpIndex))
 	if cpEntry.retType != IS_ERROR {
@@ -139,7 +139,7 @@ func getClassNameFromCPclassref(CP *classloader.CPool, cpIndex uint16) string {
 		// classnameUTF8idx := cpEntry.entryType
 		// className = CP.Utf8Refs[classnameUTF8idx]
 	}
-	return className
+	return className, cpEntry.entryType
 }
 
 func getMethInfoFromCPmethref(CP *classloader.CPool, cpIndex int) (string, string, string) {

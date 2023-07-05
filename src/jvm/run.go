@@ -1554,9 +1554,12 @@ func runFrame(fs *list.List) error {
 			// reference to the object. On longs and doubles
 			// it will be the second pop of the value field,
 			// so we check for this.
+
 			switch ref.(type) {
 			case int64, float64: // if it is a float or double, then pop
-				// once more to get the pointer to object
+				// once more to get the pointer to object. If it's an int64,
+				// we know it's a double b/c that's the only reason an int64
+				// value would be pushed twice.
 				ref = pop(f).(*object.Object)
 			}
 
