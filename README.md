@@ -53,7 +53,7 @@ A more-than-minimal JVM written in Go.
 
 ### Execution
 * Execution of bytecode :pencil2: The primary focus of current coding work<br>
-  180 bytecodes fully operational, including one- and multi-dimensional arrays
+  190 bytecodes fully operational, including one- and multi-dimensional arrays
   
 **To do:**
 * invokedynamic
