@@ -1548,9 +1548,23 @@ func runFrame(fs *list.List) error {
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 			}
 
-			value := pop(f)                // the value we're placing in the field
-			ref := pop(f).(*object.Object) // ptr to object containing the field
-			obj := *ref
+			var ref interface{} // pointer to object we're updating
+			value := pop(f)     // the value we're placing in the field
+			ref = pop(f)        // on non-long, non-double values, this will be a
+			// reference to the object. On longs and doubles
+			// it will be the second pop of the value field,
+			// so we check for this.
+			switch ref.(type) {
+			case int64, float64: // if it is a float or double, then pop
+				// once more to get the pointer to object
+				ref = pop(f).(*object.Object)
+			}
+
+			obj := *(ref.(*object.Object))
+			// objType := obj.Fields[fieldEntry.Slot].Ftype
+			// if types.UsesTwoSlots(objType) {
+			// 	pop(f) // pop off second slot entry used by longs and doubles
+			// }
 
 			// if the value we're inserting is a reference to an
 			// array object, we have to modify it to point directly
@@ -1564,11 +1578,6 @@ func runFrame(fs *list.List) error {
 						value = v.Fields[0].Fvalue
 					}
 				}
-			}
-
-			objType := obj.Fields[fieldEntry.Slot].Ftype
-			if types.UsesTwoSlots(objType) {
-				pop(f) // pop off second slot entry used by longs and doubles
 			}
 
 			// the fields in the object are numbered in the same
