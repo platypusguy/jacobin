@@ -1558,16 +1558,14 @@ func runFrame(fs *list.List) error {
 			switch ref.(type) {
 			case int64, float64: // if it is a float or double, then pop
 				// once more to get the pointer to object. If it's an int64,
-				// we know it's a double b/c that's the only reason an int64
-				// value would be pushed twice.
+				// we know it's a long (likewise a float64 shows a double)
+				// because that's the only reason a second pop would find
+				// identical value types pushed twice. So pop once more to
+				// get the object reference.
 				ref = pop(f).(*object.Object)
 			}
 
 			obj := *(ref.(*object.Object))
-			// objType := obj.Fields[fieldEntry.Slot].Ftype
-			// if types.UsesTwoSlots(objType) {
-			// 	pop(f) // pop off second slot entry used by longs and doubles
-			// }
 
 			// if the value we're inserting is a reference to an
 			// array object, we have to modify it to point directly
