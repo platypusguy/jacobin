@@ -2164,7 +2164,7 @@ func pop(f *frames.Frame) interface{} {
 	value := f.OpStack[f.TOS]
 	f.TOS -= 1
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tpop f.TOS=%d", f.TOS)
+		traceInfo := fmt.Sprintf("\tpop f.TOS=%d %v(%T)", f.TOS, value, value)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	return value
@@ -2173,7 +2173,8 @@ func pop(f *frames.Frame) interface{} {
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tpeek f.TOS=%d", f.TOS)
+		value := f.OpStack[f.TOS]
+		traceInfo := fmt.Sprintf("\tpeek f.TOS=%d %v(%T)", f.TOS, value, value)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	return f.OpStack[f.TOS]
@@ -2184,7 +2185,7 @@ func push(f *frames.Frame, x interface{}) {
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tpush f.TOS=%d", f.TOS)
+		traceInfo := fmt.Sprintf("\tpush f.TOS=%d %v(%T)", f.TOS, x, x)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 }
