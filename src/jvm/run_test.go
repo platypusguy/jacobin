@@ -1789,6 +1789,54 @@ func TestGetStaticInvalidFieldEntry(t *testing.T) {
 	}
 }
 
+// GETSTATIC: Get a static field's value (here, a boolean in the String class, set to true)
+func TestGetStaticBoolean(t *testing.T) {
+	f := newFrame(GETSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	classloader.StaticsPreload() // load the statics table with the String class
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 2}
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
+
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 2, 2)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 2, NameAndType: 4}
+
+	CP.Utf8Refs = make([]string, 5, 5)
+	CP.Utf8Refs[0] = "java/lang/String"
+	CP.Utf8Refs[1] = "COMPACT_STRINGS"
+
+	CP.ClassRefs = make([]uint16, 5, 5)
+	CP.ClassRefs[0] = 2 // point to CpIndex[2] -- need to validate this is right
+
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 5, 5)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
+		NameIndex: 5, // field name as UTF8 entry, here the CPindex index
+		DescIndex: 0,
+	}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+	if ret != nil {
+		t.Errorf("GETSTATIC: Expected a different error, got: %s",
+			ret.Error())
+	}
+
+	retVal := pop(&f).(int64)
+	if retVal != 1 {
+		t.Errorf("GETSTATIC: Expected a return of 1 (true) for a boolean, got: %d", retVal)
+	}
+}
+
 // GOTO: in forward direction (to a later bytecode)
 func TestGotoForward(t *testing.T) {
 	f := newFrame(GOTO)
