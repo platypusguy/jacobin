@@ -1574,7 +1574,45 @@ func TestPutFieldSimpleInt(t *testing.T) {
 
 	res := obj.Fields[0].Fvalue.(int64)
 	if res != 26 {
-		t.Errorf("PUTFIELD: Expected a new value of 24, got: %d", res)
+		t.Errorf("PUTFIELD: Expected a new value of 26, got: %d", res)
+	}
+}
+
+func TestPutFieldDouble(t *testing.T) {
+	f := newFrame(PUTFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	// now create the object we're updating, with one int field
+	obj := object.MakeObject()
+	obj.Fields = make([]object.Field, 1, 1)
+	obj.Fields[0].Fvalue = float64(42.0) // set the field = 42
+	obj.Fields[0].Ftype = types.Double
+	push(&f, obj)
+
+	push(&f, float64(26.8)) // update the field to 26.8
+	push(&f, float64(26.8)) // push a second time b/c it's a double
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err != nil {
+		t.Errorf("PUTFIELD: Got unexpected error msg: %s", err.Error())
+	}
+
+	res := obj.Fields[0].Fvalue.(float64)
+	if res != 26.8 {
+		t.Errorf("PUTFIELD: Expected a new value of 26.8, got: %f", res)
 	}
 }
 
