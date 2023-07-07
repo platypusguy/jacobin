@@ -158,14 +158,12 @@ func runFrame(fs *list.List) error {
 				// if the TOS is a string, say so and print the first 10 chars of the string
 				case *object.Object:
 					obj := *(f.OpStack[f.TOS].(*object.Object))
-					klass := obj.Klass.(*classloader.Klass)
-					if klass == classloader.MethAreaFetch("java/lang/String") ||
-						obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+					if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
 						strVal := (obj.Fields[0].Fvalue).(*[]byte)
 						str := string(*strVal)
 						stackTop = fmt.Sprintf("String: %10s", str)
 					} else {
-						stackTop = "object"
+						stackTop = "Object: "
 					}
 				default:
 					stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
@@ -2190,8 +2188,24 @@ func pop(f *frames.Frame) interface{} {
 				traceInfo = fmt.Sprintf("                                            "+
 					"POP           TOS:%3d <nil>", f.TOS)
 			} else {
-				traceInfo = fmt.Sprintf("                                            "+
-					"POP           TOS:%3d %T %v", f.TOS, value, value)
+				// traceInfo = fmt.Sprintf("                                            "+
+				// 	"POP           TOS:%3d %T %v", f.TOS, value, value)
+				switch value.(type) {
+				case *object.Object:
+					obj := value.(*object.Object)
+					if obj.Fields[0].Ftype == "[B" {
+						strVal := (obj.Fields[0].Fvalue).(*[]byte)
+						str := string(*strVal)
+						traceInfo = fmt.Sprintf("                                            "+
+							"POP           TOS:%3d String: %10s", f.TOS, str)
+					} else {
+						traceInfo = fmt.Sprintf("                                            "+
+							"POP           TOS:%3d *Object: %v", f.TOS, value)
+					}
+				default:
+					traceInfo = fmt.Sprintf("                                            "+
+						"POP           TOS:%3d %T %v", f.TOS, value, value)
+				}
 			}
 		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
@@ -2205,13 +2219,30 @@ func peek(f *frames.Frame) interface{} {
 		var traceInfo string
 		value := f.OpStack[f.TOS]
 		if f.TOS == -1 {
-			traceInfo = fmt.Sprintf("                                                    "+
-				"pop TOS:  - %T %v", value, value)
+			traceInfo = fmt.Sprintf("                                                    " +
+				"PEEK TOS:  - ")
 		} else {
-			traceInfo = fmt.Sprintf("                                                    "+
-				"pop TOS:%3d %T %v", f.TOS, value, value)
-			_ = log.Log(traceInfo, log.TRACE_INST)
+			switch value.(type) {
+			case *object.Object:
+				obj := value.(*object.Object)
+				if obj.Fields[0].Ftype == "[B" {
+					strVal := (obj.Fields[0].Fvalue).(*[]byte)
+					str := string(*strVal)
+					traceInfo = fmt.Sprintf("                                            "+
+						"PEEK          TOS:%3d String: %10s", f.TOS, str)
+				} else {
+					traceInfo = fmt.Sprintf("                                            "+
+						"PEEK          TOS:%3d *Object: %v", f.TOS, value)
+				}
+			default:
+				traceInfo = fmt.Sprintf("                                            "+
+					"PEEK          TOS:%3d %T %v", f.TOS, value, value)
+			}
 		}
+		// 	traceInfo = fmt.Sprintf("                                                    "+
+		// 		"pop TOS:%3d %T %v", f.TOS, value, value)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+		// }
 	}
 	return f.OpStack[f.TOS]
 }
@@ -2227,8 +2258,22 @@ func push(f *frames.Frame, x interface{}) {
 			traceInfo = fmt.Sprintf("                                            "+
 				"PUSH          TOS:%3d <nil>", f.TOS)
 		} else {
-			traceInfo = fmt.Sprintf("                                            "+
-				"PUSH          TOS:%3d %T %v", f.TOS, x, x)
+			switch x.(type) {
+			case *object.Object:
+				obj := x.(*object.Object)
+				if obj.Fields[0].Ftype == "[B" {
+					strVal := (obj.Fields[0].Fvalue).(*[]byte)
+					str := string(*strVal)
+					traceInfo = fmt.Sprintf("                                            "+
+						"PUSH          TOS:%3d String: %10s", f.TOS, str)
+				} else {
+					traceInfo = fmt.Sprintf("                                            "+
+						"PUSH          TOS:%3d *Object: %v", f.TOS, x)
+				}
+			default:
+				traceInfo = fmt.Sprintf("                                            "+
+					"PUSH          TOS:%3d %T %v", f.TOS, x, x)
+			}
 		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
