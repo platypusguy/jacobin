@@ -155,7 +155,7 @@ func runFrame(fs *list.List) error {
 			if f.TOS != -1 {
 				tos = fmt.Sprintf("%2d", f.TOS)
 				switch f.OpStack[f.TOS].(type) {
-				// if the TOS is a string, say so and print the first 10 chars of the string
+				// if the value at TOS is a string, say so and print the first 10 chars of the string
 				case *object.Object:
 					obj := *(f.OpStack[f.TOS].(*object.Object))
 					if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
@@ -171,7 +171,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			traceInfo :=
-				"class: " + fmt.Sprintf("%-16s", f.ClName) +
+				"class: " + fmt.Sprintf("%-22s", f.ClName) +
 					" meth: " + fmt.Sprintf("%-10s", f.MethName) +
 					" PC: " + fmt.Sprintf("% 3d", f.PC) +
 					", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
@@ -2182,15 +2182,12 @@ func pop(f *frames.Frame) interface{} {
 	if MainThread.Trace {
 		var traceInfo string
 		if f.TOS == -1 {
-			traceInfo = fmt.Sprintf("                                                           " +
-				"POP           TOS:  -")
+			traceInfo = fmt.Sprintf("%-64s", "POP           TOS:  -")
 		} else {
 			if value == nil {
-				traceInfo = fmt.Sprintf("                                                        "+
-					"POP           TOS:%3d <nil>", f.TOS)
+				traceInfo = fmt.Sprintf("%-64s", "POP           TOS:") +
+					fmt.Sprintf("%3d <nil>", f.TOS)
 			} else {
-				// traceInfo = fmt.Sprintf("                                            "+
-				// 	"POP           TOS:%3d %T %v", f.TOS, value, value)
 				switch value.(type) {
 				case *object.Object:
 					obj := value.(*object.Object)
@@ -2237,10 +2234,10 @@ func peek(f *frames.Frame) interface{} {
 					strVal := (obj.Fields[0].Fvalue).(*[]byte)
 					str := string(*strVal)
 					traceInfo = fmt.Sprintf("                                                  "+
-						"PEEK          TOS:%3d String: %10s", f.TOS, str)
+						"      PEEK          TOS:%3d String: %10s", f.TOS, str)
 				} else {
 					traceInfo = fmt.Sprintf("                                                  "+
-						"PEEK          TOS:%3d *Object: %v", f.TOS, value)
+						"      PEEK          TOS:%3d *Object: %v", f.TOS, value)
 				}
 			default:
 				traceInfo = fmt.Sprintf("                                                  "+
@@ -2257,34 +2254,43 @@ func peek(f *frames.Frame) interface{} {
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
-	f.TOS += 1
-	f.OpStack[f.TOS] = x
 
+	// we show trace info of the TOS *before* we change its value--
+	// all traces show TOS before the instruction is executed.
 	if MainThread.Trace {
 		var traceInfo string
-		if x == nil {
-			traceInfo = fmt.Sprintf("                                            "+
-				"PUSH          TOS:%3d <nil>", f.TOS)
+
+		if f.TOS == -1 {
+			traceInfo = fmt.Sprintf("%77s", "PUSH          TOS:  -")
 		} else {
-			switch x.(type) {
-			case *object.Object:
-				obj := x.(*object.Object)
-				if obj.Fields[0].Ftype == "[B" {
-					strVal := (obj.Fields[0].Fvalue).(*[]byte)
-					str := string(*strVal)
-					traceInfo = fmt.Sprintf("                                                  "+
-						"PUSH          TOS:%3d String: %10s", f.TOS, str)
-				} else {
-					traceInfo = fmt.Sprintf("                                                  "+
-						"PUSH          TOS:%3d *Object: %v", f.TOS, x)
+			if x == nil {
+				traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+					fmt.Sprintf("%3d <nil>", f.TOS)
+			} else {
+				switch x.(type) {
+				case *object.Object:
+					obj := x.(*object.Object)
+					if obj.Fields[0].Ftype == "[B" {
+						strVal := (obj.Fields[0].Fvalue).(*[]byte)
+						str := string(*strVal)
+						traceInfo = fmt.Sprintf("%56s", " ") +
+							fmt.Sprintf("PUSH          TOS:%3d String: %10s", f.TOS, str)
+					} else {
+						traceInfo = fmt.Sprintf("%56s", " ") +
+							fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
+					}
+				default:
+					traceInfo = fmt.Sprintf("%56s", " ") +
+						fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
 				}
-			default:
-				traceInfo = fmt.Sprintf("                                                  "+
-					"PUSH          TOS:%3d %T %v", f.TOS, x, x)
 			}
 		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
+
+	// the actual push
+	f.TOS += 1
+	f.OpStack[f.TOS] = x
 }
 
 func add[N frames.Number](num1, num2 N) N {
