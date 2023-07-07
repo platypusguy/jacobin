@@ -71,12 +71,14 @@ func StartExec(className string, globals *globals.Globals) error {
 	f.Thread = MainThread.ID
 
 	if frames.PushFrame(MainThread.Stack, f) != nil {
-		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID), log.SEVERE)
+		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID),
+			log.SEVERE)
 		return errors.New("outOfMemory Exception")
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d", f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
+		traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d",
+			f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
@@ -152,8 +154,22 @@ func runFrame(fs *list.List) error {
 			var stackTop = ""
 			if f.TOS != -1 {
 				tos = fmt.Sprintf("%2d", f.TOS)
-				stackTopValuePrt := convertInterfaceToUint64(f.OpStack[f.TOS])
-				stackTop = fmt.Sprintf("0x%08X (%T)", stackTopValuePrt, f.OpStack[f.TOS])
+				switch f.OpStack[f.TOS].(type) {
+				// if the TOS is a string, say so and print the first 10 chars of the string
+				case *object.Object:
+					obj := *(f.OpStack[f.TOS].(*object.Object))
+					klass := obj.Klass.(*classloader.Klass)
+					if klass == classloader.MethAreaFetch("java/lang/String") ||
+						obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+						strVal := (obj.Fields[0].Fvalue).(*[]byte)
+						str := string(*strVal)
+						stackTop = fmt.Sprintf("String: %10s", str)
+					} else {
+						stackTop = "object"
+					}
+				default:
+					stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
+				}
 			}
 
 			traceInfo :=
@@ -2163,8 +2179,21 @@ func runFrame(fs *list.List) error {
 func pop(f *frames.Frame) interface{} {
 	value := f.OpStack[f.TOS]
 	f.TOS -= 1
+
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tpop f.TOS=%d %T %v", f.TOS, value, value)
+		var traceInfo string
+		if f.TOS == -1 {
+			traceInfo = fmt.Sprintf("                                            " +
+				"POP           TOS:  -")
+		} else {
+			if value == nil {
+				traceInfo = fmt.Sprintf("                                            "+
+					"POP           TOS:%3d <nil>", f.TOS)
+			} else {
+				traceInfo = fmt.Sprintf("                                            "+
+					"POP           TOS:%3d %T %v", f.TOS, value, value)
+			}
+		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	return value
@@ -2173,9 +2202,16 @@ func pop(f *frames.Frame) interface{} {
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if MainThread.Trace {
+		var traceInfo string
 		value := f.OpStack[f.TOS]
-		traceInfo := fmt.Sprintf("\tpeek f.TOS=%d %T %v", f.TOS, value, value)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		if f.TOS == -1 {
+			traceInfo = fmt.Sprintf("                                                    "+
+				"pop TOS:  - %T %v", value, value)
+		} else {
+			traceInfo = fmt.Sprintf("                                                    "+
+				"pop TOS:%3d %T %v", f.TOS, value, value)
+			_ = log.Log(traceInfo, log.TRACE_INST)
+		}
 	}
 	return f.OpStack[f.TOS]
 }
@@ -2184,8 +2220,16 @@ func peek(f *frames.Frame) interface{} {
 func push(f *frames.Frame, x interface{}) {
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
+
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tpush f.TOS=%d %T %v", f.TOS, x, x)
+		var traceInfo string
+		if x == nil {
+			traceInfo = fmt.Sprintf("                                            "+
+				"PUSH          TOS:%3d <nil>", f.TOS)
+		} else {
+			traceInfo = fmt.Sprintf("                                            "+
+				"PUSH          TOS:%3d %T %v", f.TOS, x, x)
+		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 }
@@ -2354,7 +2398,7 @@ func createAndInitNewFrame(
 		}
 	}
 
-	// Initialise lenLocals = max (m.MaxLocals, len(argList)) but at least 1
+	// Initialize lenLocals = max (m.MaxLocals, len(argList)) but at least 1
 	lenArgList := len(argList)
 	lenLocals := m.MaxLocals
 	if lenArgList > m.MaxLocals {
@@ -2381,7 +2425,8 @@ func createAndInitNewFrame(
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d", lenArgList, lenLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d",
+			lenArgList, lenLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
