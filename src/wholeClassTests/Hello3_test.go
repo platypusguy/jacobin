@@ -300,7 +300,7 @@ func TestRunHello3TraceInst(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	slurpErr := string(slurp)
-	if !strings.Contains(slurpErr, "Hello3     meth: main       PC:  29, RETURN        TOS:  -") {
+	if !strings.Contains(slurpErr, "class: Hello3                 meth: main       PC:  29, RETURN        TOS:  - ") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 
