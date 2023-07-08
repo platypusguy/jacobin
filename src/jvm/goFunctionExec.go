@@ -26,7 +26,7 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	// get the go method from the MTable
 	me := classloader.MTable[fr.ClName+"."+fr.MethName]
 	if me.Meth == nil {
-		return nil, 0, errors.New("go method not found: " +
+		return nil, 0, errors.New("runGframe: go method not found: " +
 			fr.ClName + "." + fr.MethName)
 	}
 
