@@ -38,6 +38,7 @@ func MethAreaFetch(key string) *Klass {
 // MethAreaInsert adds a class to the method area, using a pointer
 // to the parsed class.
 func MethAreaInsert(name string, klass *Klass) {
+	_ = log.Log("MethAreaInsert: key("+name+")", log.CLASS)
 	MethAreaMutex.Lock()
 	MethArea.Store(name, klass)
 	methAreaSize++
