@@ -1954,7 +1954,11 @@ func runFrame(fs *list.List) error {
 							_ = log.Log("CHECKCAST: Invalid classRef found", log.SEVERE)
 							return errors.New(" CHECKCAST: Invalid classRef found")
 						} else {
-							className = *(classNamePtr.stringVal)
+							if MainThread.Trace {
+								className = *(classNamePtr.stringVal)
+								msg := fmt.Sprintf("CHECKCAST: className = %s", className)
+								_ = log.Log(msg, log.TRACE_INST)
+							}
 						}
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
@@ -2003,7 +2007,11 @@ func runFrame(fs *list.List) error {
 							_ = log.Log("INSTANCEOF: Invalid classRef found", log.SEVERE)
 							return errors.New(" INSTANCEOF: Invalid classRef found")
 						} else {
-							className = *(classNamePtr.stringVal)
+							if MainThread.Trace {
+								className = *(classNamePtr.stringVal)
+								msg := fmt.Sprintf("INSTANCEOF: className = %s", className)
+								_ = log.Log(msg, log.TRACE_INST)
+							}
 						}
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now

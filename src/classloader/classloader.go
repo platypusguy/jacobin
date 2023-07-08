@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -280,9 +281,16 @@ func LoadClassFromNameOnly(className string) error {
 	if className == "" {
 		msg := "LoadClassFromNameOnly: null class name is invalid"
 		_ = log.Log(msg, log.SEVERE)
+		debug.PrintStack()
 		return errors.New(msg)
 	}
 
+	if strings.HasSuffix(className, ";") {
+		msg := fmt.Sprintf("LoadClassFromNameOnly: invalid class name: %s", className)
+		_ = log.Log(msg, log.SEVERE)
+		debug.PrintStack()
+		return errors.New(msg)
+	}
 	// Load class from a jmod?
 	if jmodFileName != "" {
 		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.CLASS)
@@ -328,9 +336,10 @@ func LoadClassFromFile(cl Classloader, fname string) (string, error) {
 	} else {
 		filename = fname
 	}
-	if filename == ".class" {
+	if filename == ".class" || strings.HasSuffix(filename, ";.class") {
 		msg := "LoadClassFromFile: class name" + fname + " is invalid"
 		_ = log.Log(msg, log.SEVERE)
+		debug.PrintStack()
 		return "", errors.New(msg)
 	}
 	rawBytes, err := os.ReadFile(filename)
