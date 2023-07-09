@@ -68,8 +68,8 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/Math.getExponent(F)I"] = GMeth{ParamSlots: 1, GFunction: getExponentFloat64}
 	MethodSignatures["java/lang/Math.hypot(DD)D"] = GMeth{ParamSlots: 2, GFunction: hypotFloat64}
 	MethodSignatures["java/lang/Math.IEEEremainder(DD)D"] = GMeth{ParamSlots: 2, GFunction: IEEEremainderFloat64}
-	MethodSignatures["java/lang/Math.incrementExact(I)I"] = GMeth{ParamSlots: 1, GFunction: decrementExactInt64}
-	MethodSignatures["java/lang/Math.incrementExact(J)J"] = GMeth{ParamSlots: 1, GFunction: decrementExactInt64}
+	MethodSignatures["java/lang/Math.incrementExact(I)I"] = GMeth{ParamSlots: 1, GFunction: incrementExactInt64}
+	MethodSignatures["java/lang/Math.incrementExact(J)J"] = GMeth{ParamSlots: 1, GFunction: incrementExactInt64}
 	MethodSignatures["java/lang/Math.log(D)D"] = GMeth{ParamSlots: 1, GFunction: logFloat64}
 	MethodSignatures["java/lang/Math.log10(D)D"] = GMeth{ParamSlots: 1, GFunction: log10Float64}
 	MethodSignatures["java/lang/Math.log1p(D)D"] = GMeth{ParamSlots: 1, GFunction: log1pFloat64}
