@@ -162,7 +162,7 @@ func runFrame(fs *list.List) error {
 						if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
 							strVal := (obj.Fields[0].Fvalue).(*[]byte)
 							str := string(*strVal)
-							stackTop = fmt.Sprintf("String: %10s", str)
+							stackTop = fmt.Sprintf("String: %-10s", str)
 						} else {
 							stackTop = "Object: "
 						}
@@ -2206,7 +2206,7 @@ func pop(f *frames.Frame) interface{} {
 					strPtr := value.(*[]byte)
 					str := string(*strPtr)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-						fmt.Sprintf("%3d String: %10s", f.TOS, str)
+						fmt.Sprintf("%3d String: %-10s", f.TOS, str)
 				default:
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d %T %v", f.TOS, value, value)
@@ -2236,7 +2236,7 @@ func peek(f *frames.Frame) interface{} {
 					strVal := (obj.Fields[0].Fvalue).(*[]byte)
 					str := string(*strVal)
 					traceInfo = fmt.Sprintf("                                                  "+
-						"      PEEK          TOS:%3d String: %10s", f.TOS, str)
+						"      PEEK          TOS:%3d String: %-10s", f.TOS, str)
 				} else {
 					traceInfo = fmt.Sprintf("                                                  "+
 						"      PEEK          TOS:%3d *Object: %v", f.TOS, value)
@@ -2246,8 +2246,6 @@ func peek(f *frames.Frame) interface{} {
 					"PEEK          TOS:%3d %T %v", f.TOS, value, value)
 			}
 		}
-		// 	traceInfo = fmt.Sprintf("                                                    "+
-		// 		"pop TOS:%3d %T %v", f.TOS, value, value)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 		// }
 	}
@@ -2276,7 +2274,7 @@ func push(f *frames.Frame, x interface{}) {
 						strVal := (obj.Fields[0].Fvalue).(*[]byte)
 						str := string(*strVal)
 						traceInfo = fmt.Sprintf("%56s", " ") +
-							fmt.Sprintf("PUSH          TOS:%3d String: %10s", f.TOS, str)
+							fmt.Sprintf("PUSH          TOS:%3d String: %-10s", f.TOS, str)
 					} else {
 						traceInfo = fmt.Sprintf("%56s", " ") +
 							fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
