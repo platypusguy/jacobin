@@ -2279,6 +2279,11 @@ func push(f *frames.Frame, x interface{}) {
 						traceInfo = fmt.Sprintf("%56s", " ") +
 							fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
 					}
+				case *[]uint8:
+					strPtr := x.(*[]byte)
+					str := string(*strPtr)
+					traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+						fmt.Sprintf("%3d String: %-10s", f.TOS, str)
 				default:
 					traceInfo = fmt.Sprintf("%56s", " ") +
 						fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
