@@ -150,35 +150,37 @@ func runFrame(fs *list.List) error {
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
 		if MainThread.Trace {
-			var tos = " -"
-			var stackTop = ""
-			if f.TOS != -1 {
-				tos = fmt.Sprintf("%2d", f.TOS)
-				switch f.OpStack[f.TOS].(type) {
-				// if the value at TOS is a string, say so and print the first 10 chars of the string
-				case *object.Object:
-					obj := *(f.OpStack[f.TOS].(*object.Object))
-					if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
-						strVal := (obj.Fields[0].Fvalue).(*[]byte)
-						str := string(*strVal)
-						stackTop = fmt.Sprintf("String: %10s", str)
-					} else {
-						stackTop = "Object: "
+			if f.Meth[f.PC] != POP && f.Meth[f.PC] != POP2 { // POPs are logged in the call to pop()
+				var tos = " -"
+				var stackTop = ""
+				if f.TOS != -1 {
+					tos = fmt.Sprintf("%2d", f.TOS)
+					switch f.OpStack[f.TOS].(type) {
+					// if the value at TOS is a string, say so and print the first 10 chars of the string
+					case *object.Object:
+						obj := *(f.OpStack[f.TOS].(*object.Object))
+						if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+							strVal := (obj.Fields[0].Fvalue).(*[]byte)
+							str := string(*strVal)
+							stackTop = fmt.Sprintf("String: %10s", str)
+						} else {
+							stackTop = "Object: "
+						}
+					default:
+						stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
 					}
-				default:
-					stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
 				}
-			}
 
-			traceInfo :=
-				"class: " + fmt.Sprintf("%-22s", f.ClName) +
-					" meth: " + fmt.Sprintf("%-10s", f.MethName) +
-					" PC: " + fmt.Sprintf("% 3d", f.PC) +
-					", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
-					" TOS: " + tos +
-					" " + stackTop +
-					" "
-			_ = log.Log(traceInfo, log.TRACE_INST)
+				traceInfo :=
+					"class: " + fmt.Sprintf("%-22s", f.ClName) +
+						" meth: " + fmt.Sprintf("%-10s", f.MethName) +
+						" PC: " + fmt.Sprintf("% 3d", f.PC) +
+						", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
+						" TOS: " + tos +
+						" " + stackTop +
+						" "
+				_ = log.Log(traceInfo, log.TRACE_INST)
+			}
 		}
 		switch f.Meth[f.PC] { // cases listed in numerical value of opcode
 		case NOP:
@@ -2182,10 +2184,10 @@ func pop(f *frames.Frame) interface{} {
 	if MainThread.Trace {
 		var traceInfo string
 		if f.TOS == -1 {
-			traceInfo = fmt.Sprintf("%-64s", "POP           TOS:  -")
+			traceInfo = fmt.Sprintf("%74s", "POP           TOS:  -")
 		} else {
 			if value == nil {
-				traceInfo = fmt.Sprintf("%-64s", "POP           TOS:") +
+				traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 					fmt.Sprintf("%3d <nil>", f.TOS)
 			} else {
 				switch value.(type) {
@@ -2194,20 +2196,20 @@ func pop(f *frames.Frame) interface{} {
 					if obj.Fields[0].Ftype == "[B" {
 						strVal := (obj.Fields[0].Fvalue).(*[]byte)
 						str := string(*strVal)
-						traceInfo = fmt.Sprintf("                                                        "+
-							"POP           TOS:%3d String: %10s", f.TOS, str)
+						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+							fmt.Sprintf("%3d String: %-10s", f.TOS, str)
 					} else {
-						traceInfo = fmt.Sprintf("                                                        "+
-							"POP           TOS:%3d *Object: %v", f.TOS, value)
+						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+							fmt.Sprintf("%3d *Object: %v", f.TOS, value)
 					}
 				case *[]uint8:
 					strPtr := value.(*[]byte)
 					str := string(*strPtr)
-					traceInfo = fmt.Sprintf("                                                        "+
-						"POP           TOS:%3d String: %10s", f.TOS, str)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d String: %10s", f.TOS, str)
 				default:
-					traceInfo = fmt.Sprintf("                                                        "+
-						"POP           TOS:%3d %T %v", f.TOS, value, value)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d %T %v", f.TOS, value, value)
 				}
 			}
 		}
