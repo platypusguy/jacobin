@@ -142,7 +142,7 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.floorDiv(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorDivJx}
 	MethodSignatures["java/lang/StrictMath.floorDiv(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorDivJx}
 	MethodSignatures["java/lang/StrictMath.floorMod(II)I"] = GMeth{ParamSlots: 2, GFunction: floorModII}
-	MethodSignatures["java/lang/StrictMath.floorMod(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
+	MethodSignatures["java/lang/StrictMath.floorMod(JI)I"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
 	MethodSignatures["java/lang/StrictMath.floorMod(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorModJx}
 	MethodSignatures["java/lang/StrictMath.fma(DDD)D"] = GMeth{ParamSlots: 6, GFunction: fmaDDD}
 	MethodSignatures["java/lang/StrictMath.fma(FFF)F"] = GMeth{ParamSlots: 3, GFunction: fmaFFF}
