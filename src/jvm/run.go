@@ -1210,6 +1210,23 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, int64(-1))
 			}
+		case FCMPL, FCMPG: // Ox95, 0x96 - float comparison - they differ only in NaN treatment
+			value2 := pop(f).(float64)
+			value1 := pop(f).(float64)
+
+			if math.IsNaN(value1) || math.IsNaN(value2) {
+				if f.Meth[f.PC] == FCMPG {
+					push(f, int64(1))
+				} else {
+					push(f, int64(-1))
+				}
+			} else if value1 > value2 {
+				push(f, int64(1))
+			} else if value1 < value2 {
+				push(f, int64(-1))
+			} else {
+				push(f, int64(0))
+			}
 		case DCMPL, DCMPG: // 0x98, 0x97 - double comparison - they only differ in NaN treatment
 			value2 := pop(f).(float64)
 			pop(f)
@@ -1754,12 +1771,6 @@ func runFrame(fs *list.List) error {
 					return err
 				}
 
-				// // if the method is main(), then when we get here the
-				// // frame stack will be empty to exit from here, otherwise
-				// // there's still a frame on the stack, pop it off and continue.
-				// if fs.Len() == 0 {
-				// 	return nil
-				// }
 				fs.Remove(fs.Front()) // pop the frame off
 
 				// the previous frame pop might have been main()

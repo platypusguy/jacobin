@@ -546,11 +546,11 @@ func TestDcmpg1(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+		t.Errorf("DCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
-// DCMP0: compare two doubles
+// DCMPG: compare two doubles
 func TestDcmpgMinus1(t *testing.T) {
 	f := newFrame(DCMPG)
 	push(&f, 2.0)
@@ -569,7 +569,7 @@ func TestDcmpgMinus1(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+		t.Errorf("DCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
@@ -592,7 +592,7 @@ func TestDcmpg0(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+		t.Errorf("DCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
@@ -614,7 +614,7 @@ func TestDcmpgNan(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+		t.Errorf("DCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
@@ -637,7 +637,7 @@ func TestDcmplNan(t *testing.T) {
 	}
 
 	if f.TOS != -1 {
-		t.Errorf("DDIV: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+		t.Errorf("DCMPL: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
@@ -1316,6 +1316,111 @@ func TestFadd(t *testing.T) {
 	}
 	if f.TOS != -1 {
 		t.Errorf("FADD: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// FCMPG: compare two floats
+func TestFcmpg1(t *testing.T) {
+	f := newFrame(FCMPG)
+	push(&f, 3.0)
+	push(&f, 2.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 1 {
+		t.Errorf("FCMPG: Expected value to be 1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// FCMPG: compare two floats
+func TestFcmpgMinus1(t *testing.T) {
+	f := newFrame(FCMPG)
+	push(&f, 2.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != -1 {
+		t.Errorf("FCMPG: Expected value to be -1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// FCMPG: compare two floats
+func TestFcmpg0(t *testing.T) {
+	f := newFrame(FCMPG)
+	push(&f, 3.0)
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 0 {
+		t.Errorf("FCMPG: Expected value to be 0, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// FCMPG
+func TestFcmpgNan(t *testing.T) {
+	f := newFrame(FCMPG)
+	push(&f, math.NaN())
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != 1 {
+		t.Errorf("FCMPG: Expected value to be 1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FCMPG: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
+	}
+}
+
+// FCMPL
+func TestFcmplNan(t *testing.T) {
+	f := newFrame(FCMPL)
+	push(&f, math.NaN())
+	push(&f, 3.0)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	_ = runFrame(fs)
+
+	value := pop(&f).(int64)
+
+	if value != -1 {
+		t.Errorf("FCMPL: Expected value to be -1, got: %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("FCMPL: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
 }
 
