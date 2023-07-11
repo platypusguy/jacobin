@@ -358,7 +358,7 @@ func getExponentFloat64(params []interface{}) interface{} {
 
 	// Extract the exponent bits using math.Float64bits
 	bits := math.Float64bits(number)
-	exponentBits := int((bits >> 52) & 0x7FF)
+	exponentBits := int64((bits >> 52) & 0x7FF)
 
 	// Subtract the bias to get the actual exponent
 	return exponentBits - MAX_DOUBLE_EXPONENT
