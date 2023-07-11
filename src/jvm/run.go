@@ -271,7 +271,7 @@ func runFrame(fs *list.List) error {
 				} else if CPe.retType == IS_FLOAT64 {
 					push(f, CPe.floatVal)
 				} else if CPe.retType == IS_STRUCT_ADDR {
-					push(f, unsafe.Pointer(CPe.addrVal))
+					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
 				} else if CPe.retType == IS_STRING_ADDR {
 					stringAddr :=
 						classloader.CreateJavaStringFromGoString(CPe.stringVal)
@@ -300,8 +300,21 @@ func runFrame(fs *list.List) error {
 					push(f, CPe.intVal)
 				} else if CPe.retType == IS_FLOAT64 {
 					push(f, CPe.floatVal)
-				} else {
-					push(f, unsafe.Pointer(CPe.addrVal))
+					// } else {
+					// 	push(f, unsafe.Pointer(CPe.addrVal))
+					// } (*T)(unsafe.Pointer(u))
+				} else if CPe.retType == IS_STRUCT_ADDR {
+					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
+				} else if CPe.retType == IS_STRING_ADDR {
+					stringAddr :=
+						classloader.CreateJavaStringFromGoString(CPe.stringVal)
+					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
+					if stringAddr.Klass == nil {
+						msg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
+						_ = log.Log(msg, log.SEVERE)
+						return errors.New("LDC_W: MethAreaFetch could not find class java/lang/String")
+					}
+					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
 				exceptions.Throw(exceptions.InaccessibleObjectException,
