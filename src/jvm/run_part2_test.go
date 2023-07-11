@@ -1541,6 +1541,7 @@ func TestPop2(t *testing.T) {
 	}
 }
 
+// PUTFIELD
 func TestPutFieldSimpleInt(t *testing.T) {
 	f := newFrame(PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
@@ -1578,6 +1579,7 @@ func TestPutFieldSimpleInt(t *testing.T) {
 	}
 }
 
+// PUTFIELD
 func TestPutFieldDouble(t *testing.T) {
 	f := newFrame(PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
