@@ -240,7 +240,7 @@ func atanFloat64(params []interface{}) interface{} {
 // Returns the angle theta from the conversion of rectangular coordinates (x, y)
 // to polar coordinates (r, theta).
 func atan2Float64(params []interface{}) interface{} {
-	return math.Atan2(params[0].(float64), params[1].(float64))
+	return math.Atan2(params[0].(float64), params[2].(float64))
 }
 
 // Cube root of a double value.
