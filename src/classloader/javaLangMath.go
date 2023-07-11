@@ -60,7 +60,7 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/Math.floorDiv(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorDivJx}
 	MethodSignatures["java/lang/Math.floorDiv(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorDivJx}
 	MethodSignatures["java/lang/Math.floorMod(II)I"] = GMeth{ParamSlots: 2, GFunction: floorModII}
-	MethodSignatures["java/lang/Math.floorMod(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
+	MethodSignatures["java/lang/Math.floorMod(JI)I"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
 	MethodSignatures["java/lang/Math.floorMod(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorModJx}
 	MethodSignatures["java/lang/Math.fma(DDD)D"] = GMeth{ParamSlots: 6, GFunction: fmaDDD}
 	MethodSignatures["java/lang/Math.fma(FFF)F"] = GMeth{ParamSlots: 3, GFunction: fmaFFF}
@@ -329,7 +329,7 @@ func floorModII(params []interface{}) interface{} {
 }
 func floorModJx(params []interface{}) interface{} {
 	fldiv := (floorDivJx(params)).(int64)
-	return params[0].(int64) - fldiv*params[1].(int64)
+	return params[0].(int64) - fldiv*params[2].(int64)
 }
 
 // FMA (fused multiply add) the three arguments; that is, returns the exact product
