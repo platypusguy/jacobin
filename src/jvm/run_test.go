@@ -841,7 +841,7 @@ func TestDload3(t *testing.T) {
 	}
 }
 
-// Test DMUL (pop 2 doubles, multiply them, push result)
+// DMUL (pop 2 doubles, multiply them, push result)
 func TestDmul(t *testing.T) {
 	f := newFrame(DMUL)
 	push(&f, 1.5)
@@ -861,7 +861,7 @@ func TestDmul(t *testing.T) {
 	}
 }
 
-// Test DNEG Negate a double
+// DNEG Negate a double
 func TestDneg(t *testing.T) {
 	f := newFrame(DNEG)
 	push(&f, 1.5)
@@ -879,7 +879,7 @@ func TestDneg(t *testing.T) {
 	}
 }
 
-// Test DNEG Negate a double - infinity
+// DNEG Negate a double - infinity
 func TestDnegInf(t *testing.T) {
 	f := newFrame(DNEG)
 	push(&f, math.Inf(1))
@@ -980,6 +980,7 @@ func TestDstore(t *testing.T) {
 func TestDstore0(t *testing.T) {
 	f := newFrame(DSTORE_0)
 	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
 	push(&f, 1.0)
 
@@ -999,6 +1000,7 @@ func TestDstore0(t *testing.T) {
 // DSTORE_1: Store double from stack into localVar[1]
 func TestDstore1(t *testing.T) {
 	f := newFrame(DSTORE_1)
+	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
@@ -1023,6 +1025,7 @@ func TestDstore2(t *testing.T) {
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
+	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
 	push(&f, 1.0)
 
@@ -1042,6 +1045,7 @@ func TestDstore2(t *testing.T) {
 // DSTORE_3: Store double from stack into localVar[3]
 func TestDstore3(t *testing.T) {
 	f := newFrame(DSTORE_3)
+	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)

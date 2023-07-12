@@ -585,17 +585,17 @@ func runFrame(fs *list.List) error {
 		case FSTORE_3: // 0x46
 			f.Locals[3] = pop(f).(float64)
 		case DSTORE_0: // 0x47
-			pop(f)
 			f.Locals[0] = pop(f).(float64)
-		case DSTORE_1: // 0x48
-			pop(f)
 			f.Locals[1] = pop(f).(float64)
-		case DSTORE_2: // 0x49
-			pop(f)
+		case DSTORE_1: // 0x48
+			f.Locals[1] = pop(f).(float64)
 			f.Locals[2] = pop(f).(float64)
-		case DSTORE_3: // 0x4A
-			pop(f)
+		case DSTORE_2: // 0x49
+			f.Locals[2] = pop(f).(float64)
 			f.Locals[3] = pop(f).(float64)
+		case DSTORE_3: // 0x4A
+			f.Locals[3] = pop(f).(float64)
+			f.Locals[4] = pop(f).(float64)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
