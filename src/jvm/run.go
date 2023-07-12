@@ -585,17 +585,17 @@ func runFrame(fs *list.List) error {
 		case FSTORE_3: // 0x46
 			f.Locals[3] = pop(f).(float64)
 		case DSTORE_0: // 0x47
-			pop(f)
 			f.Locals[0] = pop(f).(float64)
-		case DSTORE_1: // 0x48
-			pop(f)
 			f.Locals[1] = pop(f).(float64)
-		case DSTORE_2: // 0x49
-			pop(f)
+		case DSTORE_1: // 0x48
+			f.Locals[1] = pop(f).(float64)
 			f.Locals[2] = pop(f).(float64)
-		case DSTORE_3: // 0x4A
-			pop(f)
+		case DSTORE_2: // 0x49
+			f.Locals[2] = pop(f).(float64)
 			f.Locals[3] = pop(f).(float64)
+		case DSTORE_3: // 0x4A
+			f.Locals[3] = pop(f).(float64)
+			f.Locals[4] = pop(f).(float64)
 		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f)
 		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
@@ -1753,7 +1753,12 @@ func runFrame(fs *list.List) error {
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			className, methName, methSig := getMethInfoFromCPmethref(f.CP, CPslot)
-			// MethodName := getClassNameFromCPclassref(f.CP, MethodClassIdx)
+
+			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
+			// that function simply returns. So test for it here and if it is, skip the rest
+			if className+"."+methName+methSig == "java/lang/Object.\"<init>\"()V" {
+				continue
+			}
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil {
@@ -1820,9 +1825,7 @@ func runFrame(fs *list.List) error {
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodSigIndex)
-			// println("Method signature for invokestatic: " + methodName + methodType)
 
-			// m, cpp, err := fetchMethodAndCP(className, methodName, methodType)
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil {
 				return errors.New("INVOKESTATIC: Class not found: " + className + methodName)
