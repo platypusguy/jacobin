@@ -9,6 +9,7 @@ package classloader
 import (
 	"jacobin/exceptions"
 	"math"
+	"math/big"
 	"math/rand"
 )
 
@@ -93,7 +94,7 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/Math.nextDown(F)F"] = GMeth{ParamSlots: 1, GFunction: nextDownFloat64}
 	MethodSignatures["java/lang/Math.nextUp(D)D"] = GMeth{ParamSlots: 2, GFunction: nextUpFloat64}
 	MethodSignatures["java/lang/Math.nextUp(F)F"] = GMeth{ParamSlots: 1, GFunction: nextUpFloat64}
-	MethodSignatures["java/lang/Math.pow(D)D"] = GMeth{ParamSlots: 2, GFunction: powFloat64}
+	MethodSignatures["java/lang/Math.pow(DD)D"] = GMeth{ParamSlots: 4, GFunction: powFloat64}
 	MethodSignatures["java/lang/Math.random()D"] = GMeth{ParamSlots: 0, GFunction: randomFloat64}
 	MethodSignatures["java/lang/Math.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/Math.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
@@ -175,7 +176,7 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.nextDown(F)F"] = GMeth{ParamSlots: 1, GFunction: nextDownFloat64}
 	MethodSignatures["java/lang/StrictMath.nextUp(D)D"] = GMeth{ParamSlots: 2, GFunction: nextUpFloat64}
 	MethodSignatures["java/lang/StrictMath.nextUp(F)F"] = GMeth{ParamSlots: 1, GFunction: nextUpFloat64}
-	MethodSignatures["java/lang/StrictMath.pow(D)D"] = GMeth{ParamSlots: 2, GFunction: powFloat64}
+	MethodSignatures["java/lang/StrictMath.pow(DD)D"] = GMeth{ParamSlots: 4, GFunction: powFloat64}
 	MethodSignatures["java/lang/StrictMath.random()D"] = GMeth{ParamSlots: 0, GFunction: randomFloat64}
 	MethodSignatures["java/lang/StrictMath.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/StrictMath.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
@@ -452,13 +453,12 @@ func multiplyExactJx(params []interface{}) interface{} {
 
 // Most significant 64 bits of the 128-bit product of two 64-bit factors.
 func multiplyHighJJ(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[2].(int64)
-	shift := 63
-	mask := int64(1 << shift)
-	prod := x * y
-	high := (prod >> shift) + (((prod & mask) + (x >> 1) + (y >> 1)) >> shift)
-	return high
+	x := big.NewInt(params[0].(int64))
+	y := big.NewInt(params[2].(int64))
+	z := big.NewInt(0)
+	z.Mul(x, y)
+	z.Rsh(z, 64)
+	return z.Int64()
 }
 
 // Negation of the argument for int and long.
@@ -486,7 +486,7 @@ func nextUpFloat64(params []interface{}) interface{} {
 
 // Value of the first argument raised to the power of the second argument.
 func powFloat64(params []interface{}) interface{} {
-	return math.Pow(params[0].(float64), math.Inf(+1))
+	return math.Pow(params[0].(float64), params[2].(float64))
 }
 
 // Generate a random number >= 0.0 and < 1.0
