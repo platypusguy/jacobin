@@ -501,11 +501,7 @@ func rintFloat64(params []interface{}) interface{} {
 
 // Computes the closest long to the argument, with ties rounding towards positive infinity.
 func roundInt64(params []interface{}) interface{} {
-	x := params[0].(float64)
-	if x < 0.0 {
-		return int64(params[0].(float64))
-	}
-	return 1 + int64(params[0].(float64))
+	return int64(math.Round(params[0].(float64)))
 }
 
 // Compute the product of the argument and 2^scaleFactor.
