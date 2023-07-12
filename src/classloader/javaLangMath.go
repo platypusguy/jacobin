@@ -99,8 +99,8 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/Math.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/Math.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
 	MethodSignatures["java/lang/Math.round(F)I"] = GMeth{ParamSlots: 1, GFunction: roundInt64}
-	MethodSignatures["java/lang/Math.scaleb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalebDI}
-	MethodSignatures["java/lang/Math.scaleb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalebFI}
+	MethodSignatures["java/lang/Math.scalb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalbDI}
+	MethodSignatures["java/lang/Math.scalb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalbFI}
 	MethodSignatures["java/lang/Math.signum(D)D"] = GMeth{ParamSlots: 2, GFunction: signumFloat64}
 	MethodSignatures["java/lang/Math.signum(F)F"] = GMeth{ParamSlots: 1, GFunction: signumFloat64}
 	MethodSignatures["java/lang/Math.sin(D)D"] = GMeth{ParamSlots: 2, GFunction: sinFloat64}
@@ -181,8 +181,8 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/StrictMath.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
 	MethodSignatures["java/lang/StrictMath.round(F)I"] = GMeth{ParamSlots: 1, GFunction: roundInt64}
-	MethodSignatures["java/lang/StrictMath.scaleb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalebDI}
-	MethodSignatures["java/lang/StrictMath.scaleb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalebFI}
+	MethodSignatures["java/lang/StrictMath.scalb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalbDI}
+	MethodSignatures["java/lang/StrictMath.scalb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalbFI}
 	MethodSignatures["java/lang/StrictMath.signum(D)D"] = GMeth{ParamSlots: 2, GFunction: signumFloat64}
 	MethodSignatures["java/lang/StrictMath.signum(F)F"] = GMeth{ParamSlots: 1, GFunction: signumFloat64}
 	MethodSignatures["java/lang/StrictMath.sin(D)D"] = GMeth{ParamSlots: 2, GFunction: sinFloat64}
@@ -505,12 +505,13 @@ func roundInt64(params []interface{}) interface{} {
 }
 
 // Compute the product of the argument and 2^scaleFactor.
-func scalebDI(params []interface{}) interface{} {
+func scalbDI(params []interface{}) interface{} {
 	x := params[0].(float64)
 	scaleFactor := params[2].(int64)
-	return x * math.Pow(2.0, float64(scaleFactor))
+	result := x * math.Pow(2.0, float64(scaleFactor))
+	return result
 }
-func scalebFI(params []interface{}) interface{} {
+func scalbFI(params []interface{}) interface{} {
 	x := params[0].(float64)
 	scaleFactor := params[1].(int64)
 	return x * math.Pow(2.0, float64(scaleFactor))
