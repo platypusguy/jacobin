@@ -545,10 +545,10 @@ func sqrtFloat64(params []interface{}) interface{} {
 
 // Difference of its arguments
 func subtractExactII(params []interface{}) interface{} {
-	return params[0].(float64) - params[1].(float64)
+	return params[0].(int64) - params[1].(int64)
 }
 func subtractExactJJ(params []interface{}) interface{} {
-	return params[0].(float64) - params[2].(float64)
+	return params[0].(int64) - params[2].(int64)
 }
 
 // Compute the tangent of an angle expressed in radians.
