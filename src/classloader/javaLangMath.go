@@ -9,6 +9,7 @@ package classloader
 import (
 	"jacobin/exceptions"
 	"math"
+	"math/big"
 	"math/rand"
 )
 
@@ -93,13 +94,13 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/Math.nextDown(F)F"] = GMeth{ParamSlots: 1, GFunction: nextDownFloat64}
 	MethodSignatures["java/lang/Math.nextUp(D)D"] = GMeth{ParamSlots: 2, GFunction: nextUpFloat64}
 	MethodSignatures["java/lang/Math.nextUp(F)F"] = GMeth{ParamSlots: 1, GFunction: nextUpFloat64}
-	MethodSignatures["java/lang/Math.pow(D)D"] = GMeth{ParamSlots: 2, GFunction: powFloat64}
+	MethodSignatures["java/lang/Math.pow(DD)D"] = GMeth{ParamSlots: 4, GFunction: powFloat64}
 	MethodSignatures["java/lang/Math.random()D"] = GMeth{ParamSlots: 0, GFunction: randomFloat64}
 	MethodSignatures["java/lang/Math.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/Math.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
 	MethodSignatures["java/lang/Math.round(F)I"] = GMeth{ParamSlots: 1, GFunction: roundInt64}
-	MethodSignatures["java/lang/Math.scaleb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalebDI}
-	MethodSignatures["java/lang/Math.scaleb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalebFI}
+	MethodSignatures["java/lang/Math.scalb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalbDI}
+	MethodSignatures["java/lang/Math.scalb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalbFI}
 	MethodSignatures["java/lang/Math.signum(D)D"] = GMeth{ParamSlots: 2, GFunction: signumFloat64}
 	MethodSignatures["java/lang/Math.signum(F)F"] = GMeth{ParamSlots: 1, GFunction: signumFloat64}
 	MethodSignatures["java/lang/Math.sin(D)D"] = GMeth{ParamSlots: 2, GFunction: sinFloat64}
@@ -142,7 +143,7 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.floorDiv(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorDivJx}
 	MethodSignatures["java/lang/StrictMath.floorDiv(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorDivJx}
 	MethodSignatures["java/lang/StrictMath.floorMod(II)I"] = GMeth{ParamSlots: 2, GFunction: floorModII}
-	MethodSignatures["java/lang/StrictMath.floorMod(JI)J"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
+	MethodSignatures["java/lang/StrictMath.floorMod(JI)I"] = GMeth{ParamSlots: 3, GFunction: floorModJx}
 	MethodSignatures["java/lang/StrictMath.floorMod(JJ)J"] = GMeth{ParamSlots: 4, GFunction: floorModJx}
 	MethodSignatures["java/lang/StrictMath.fma(DDD)D"] = GMeth{ParamSlots: 6, GFunction: fmaDDD}
 	MethodSignatures["java/lang/StrictMath.fma(FFF)F"] = GMeth{ParamSlots: 3, GFunction: fmaFFF}
@@ -175,13 +176,13 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.nextDown(F)F"] = GMeth{ParamSlots: 1, GFunction: nextDownFloat64}
 	MethodSignatures["java/lang/StrictMath.nextUp(D)D"] = GMeth{ParamSlots: 2, GFunction: nextUpFloat64}
 	MethodSignatures["java/lang/StrictMath.nextUp(F)F"] = GMeth{ParamSlots: 1, GFunction: nextUpFloat64}
-	MethodSignatures["java/lang/StrictMath.pow(D)D"] = GMeth{ParamSlots: 2, GFunction: powFloat64}
+	MethodSignatures["java/lang/StrictMath.pow(DD)D"] = GMeth{ParamSlots: 4, GFunction: powFloat64}
 	MethodSignatures["java/lang/StrictMath.random()D"] = GMeth{ParamSlots: 0, GFunction: randomFloat64}
 	MethodSignatures["java/lang/StrictMath.rint(D)D"] = GMeth{ParamSlots: 2, GFunction: rintFloat64}
 	MethodSignatures["java/lang/StrictMath.round(D)J"] = GMeth{ParamSlots: 2, GFunction: roundInt64}
 	MethodSignatures["java/lang/StrictMath.round(F)I"] = GMeth{ParamSlots: 1, GFunction: roundInt64}
-	MethodSignatures["java/lang/StrictMath.scaleb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalebDI}
-	MethodSignatures["java/lang/StrictMath.scaleb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalebFI}
+	MethodSignatures["java/lang/StrictMath.scalb(DI)D"] = GMeth{ParamSlots: 3, GFunction: scalbDI}
+	MethodSignatures["java/lang/StrictMath.scalb(FI)F"] = GMeth{ParamSlots: 2, GFunction: scalbFI}
 	MethodSignatures["java/lang/StrictMath.signum(D)D"] = GMeth{ParamSlots: 2, GFunction: signumFloat64}
 	MethodSignatures["java/lang/StrictMath.signum(F)F"] = GMeth{ParamSlots: 1, GFunction: signumFloat64}
 	MethodSignatures["java/lang/StrictMath.sin(D)D"] = GMeth{ParamSlots: 2, GFunction: sinFloat64}
@@ -452,13 +453,12 @@ func multiplyExactJx(params []interface{}) interface{} {
 
 // Most significant 64 bits of the 128-bit product of two 64-bit factors.
 func multiplyHighJJ(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[2].(int64)
-	shift := 63
-	mask := int64(1 << shift)
-	prod := x * y
-	high := (prod >> shift) + (((prod & mask) + (x >> 1) + (y >> 1)) >> shift)
-	return high
+	x := big.NewInt(params[0].(int64))
+	y := big.NewInt(params[2].(int64))
+	z := big.NewInt(0)
+	z.Mul(x, y)
+	z.Rsh(z, 64)
+	return z.Int64()
 }
 
 // Negation of the argument for int and long.
@@ -486,7 +486,7 @@ func nextUpFloat64(params []interface{}) interface{} {
 
 // Value of the first argument raised to the power of the second argument.
 func powFloat64(params []interface{}) interface{} {
-	return math.Pow(params[0].(float64), math.Inf(+1))
+	return math.Pow(params[0].(float64), params[2].(float64))
 }
 
 // Generate a random number >= 0.0 and < 1.0
@@ -501,20 +501,17 @@ func rintFloat64(params []interface{}) interface{} {
 
 // Computes the closest long to the argument, with ties rounding towards positive infinity.
 func roundInt64(params []interface{}) interface{} {
-	x := params[0].(float64)
-	if x < 0.0 {
-		return int64(params[0].(float64))
-	}
-	return 1 + int64(params[0].(float64))
+	return int64(math.Round(params[0].(float64)))
 }
 
 // Compute the product of the argument and 2^scaleFactor.
-func scalebDI(params []interface{}) interface{} {
+func scalbDI(params []interface{}) interface{} {
 	x := params[0].(float64)
 	scaleFactor := params[2].(int64)
-	return x * math.Pow(2.0, float64(scaleFactor))
+	result := x * math.Pow(2.0, float64(scaleFactor))
+	return result
 }
-func scalebFI(params []interface{}) interface{} {
+func scalbFI(params []interface{}) interface{} {
 	x := params[0].(float64)
 	scaleFactor := params[1].(int64)
 	return x * math.Pow(2.0, float64(scaleFactor))
@@ -548,10 +545,10 @@ func sqrtFloat64(params []interface{}) interface{} {
 
 // Difference of its arguments
 func subtractExactII(params []interface{}) interface{} {
-	return params[0].(float64) - params[1].(float64)
+	return params[0].(int64) - params[1].(int64)
 }
 func subtractExactJJ(params []interface{}) interface{} {
-	return params[0].(float64) - params[2].(float64)
+	return params[0].(int64) - params[2].(int64)
 }
 
 // Compute the tangent of an angle expressed in radians.
