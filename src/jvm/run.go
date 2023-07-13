@@ -2028,9 +2028,10 @@ func runFrame(fs *list.List) error {
 						}
 
 						if classPtr != obj.Klass.(*classloader.Klass) {
-							exceptions.Throw(exceptions.ClassCastException,
-								"CHECKCAST: Unexpected null pointer for class in classcast")
-							break
+							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+								className, classPtr.Data.Name)
+							exceptions.Throw(exceptions.ClassCastException, errMsg)
+							return errors.New(errMsg)
 						}
 					}
 				}
