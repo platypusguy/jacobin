@@ -29,6 +29,14 @@ import (
  could mean an empty slice).
 */
 
+/*
+Math constant references:
+
+	Java: https://docs.oracle.com/en/java/javase/17/docs/api/constant-values.html#java.math
+	Golang: https://pkg.go.dev/math#pkg-constants
+
+*/
+
 const MAX_DOUBLE_EXPONENT = 1023
 const PI = 3.14159265358979323846
 
@@ -208,11 +216,11 @@ func absFloat64(params []interface{}) interface{} {
 
 // Absolute value function for Java int and long
 func absInt64(params []interface{}) interface{} {
-	value := params[0].(int64)
-	if value < 0 {
-		return -value
+	xx := params[0].(int64)
+	if xx < 0 {
+		return -xx
 	}
-	return value
+	return xx
 }
 
 // Arc cosine of a value; the returned angle is in the range 0.0 through pi.
@@ -300,7 +308,7 @@ func floorDivInt64(dividend int64, divisor int64) int64 {
 	if divisor == 0 {
 		exceptions.Throw(exceptions.ArithmeticException, "floorDivInt64: Divide by zero attempted")
 	}
-	if dividend == math.MinInt64 && divisor == -1 {
+	if dividend <= math.MinInt64 && divisor == -1 {
 		return math.MinInt64
 	}
 	if (dividend <= 0 && divisor < 00) || (dividend >= 0 && divisor > 00) {
@@ -336,29 +344,29 @@ func floorModJx(params []interface{}) interface{} {
 // FMA (fused multiply add) the three arguments; that is, returns the exact product
 // of the first two arguments summed with the third argument and then rounded once to the nearest double.
 func fmaDDD(params []interface{}) interface{} {
-	a := params[0].(float64)
-	b := params[2].(float64)
-	c := params[4].(float64)
-	return math.FMA(a, b, c)
+	xx := params[0].(float64)
+	yy := params[2].(float64)
+	zz := params[4].(float64)
+	return math.FMA(xx, yy, zz)
 }
 func fmaFFF(params []interface{}) interface{} {
-	a := params[0].(float64)
-	b := params[1].(float64)
-	c := params[2].(float64)
-	return math.FMA(a, b, c)
+	xx := params[0].(float64)
+	yy := params[1].(float64)
+	zz := params[2].(float64)
+	return math.FMA(xx, yy, zz)
 }
 
 // Unbiased exponent used in the representation of a double or float.
 func getExponentFloat64(params []interface{}) interface{} {
-	number := params[0].(float64)
+	xx := params[0].(float64)
 
 	// Check if the number is NaN or infinite
-	if math.IsNaN(number) || math.IsInf(number, 0) {
-		return MAX_DOUBLE_EXPONENT
+	if math.IsNaN(xx) || math.IsInf(xx, 0) {
+		return MAX_DOUBLE_EXPONENT + 1
 	}
 
 	// Extract the exponent bits using math.Float64bits
-	bits := math.Float64bits(number)
+	bits := math.Float64bits(xx)
 	exponentBits := int64((bits >> 52) & 0x7FF)
 
 	// Subtract the bias to get the actual exponent
@@ -403,20 +411,20 @@ func maxFF(params []interface{}) interface{} {
 	return math.Max(params[0].(float64), params[1].(float64))
 }
 func maxII(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[1].(int64)
-	if x > y {
-		return x
+	xx := params[0].(int64)
+	yy := params[1].(int64)
+	if xx > yy {
+		return xx
 	}
-	return y
+	return yy
 }
 func maxJJ(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[2].(int64)
-	if x > y {
-		return x
+	xx := params[0].(int64)
+	yy := params[2].(int64)
+	if xx > yy {
+		return xx
 	}
-	return y
+	return yy
 }
 
 // Minimum functions.
@@ -427,20 +435,20 @@ func minFF(params []interface{}) interface{} {
 	return math.Min(params[0].(float64), params[1].(float64))
 }
 func minII(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[1].(int64)
-	if x < y {
-		return x
+	xx := params[0].(int64)
+	yy := params[1].(int64)
+	if xx < yy {
+		return xx
 	}
-	return y
+	return yy
 }
 func minJJ(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[2].(int64)
-	if x < y {
-		return x
+	xx := params[0].(int64)
+	yy := params[2].(int64)
+	if xx < yy {
+		return xx
 	}
-	return y
+	return yy
 }
 
 // Product of the arguments.
@@ -453,12 +461,12 @@ func multiplyExactJx(params []interface{}) interface{} {
 
 // Most significant 64 bits of the 128-bit product of two 64-bit factors.
 func multiplyHighJJ(params []interface{}) interface{} {
-	x := big.NewInt(params[0].(int64))
-	y := big.NewInt(params[2].(int64))
-	z := big.NewInt(0)
-	z.Mul(x, y)
-	z.Rsh(z, 64)
-	return z.Int64()
+	xx := big.NewInt(params[0].(int64))
+	yy := big.NewInt(params[2].(int64))
+	zz := big.NewInt(0)
+	zz.Mul(xx, yy)
+	zz.Rsh(zz, 64)
+	return zz.Int64()
 }
 
 // Negation of the argument for int and long.
@@ -504,25 +512,40 @@ func roundInt64(params []interface{}) interface{} {
 	return int64(math.Round(params[0].(float64)))
 }
 
-// Compute the product of the argument and 2^scaleFactor.
-func scalbDI(params []interface{}) interface{} {
-	x := params[0].(float64)
-	scaleFactor := params[2].(int64)
-	result := x * math.Pow(2.0, float64(scaleFactor))
+// Compute the product of the argument and 2 raised to the power of the scaleFactor.
+func scalbFloat64I(xx float64, scaleFactor int64) float64 {
+	if math.IsNaN(xx) {
+		return math.NaN()
+	}
+	if math.IsInf(xx, -1) {
+		return math.Inf(-1)
+	}
+	if math.IsInf(xx, 1) {
+		return math.Inf(1)
+	}
+	result := xx * math.Pow(2.0, float64(scaleFactor))
 	return result
 }
+func scalbDI(params []interface{}) interface{} {
+	xx := params[0].(float64)
+	scaleFactor := params[2].(int64)
+	return scalbFloat64I(xx, scaleFactor)
+}
 func scalbFI(params []interface{}) interface{} {
-	x := params[0].(float64)
+	xx := params[0].(float64)
 	scaleFactor := params[1].(int64)
-	return x * math.Pow(2.0, float64(scaleFactor))
+	return scalbFloat64I(xx, scaleFactor)
 }
 
 // Compute the signum value of an argument.
 func signumFloat64(params []interface{}) interface{} {
-	x := params[0].(float64)
-	if x > 0 {
+	xx := params[0].(float64)
+	if math.IsNaN(xx) {
+		return math.NaN()
+	}
+	if xx > 0 {
 		return 1.0
-	} else if x < 0 {
+	} else if xx < 0 {
 		return -1.0
 	}
 	return 0.0
@@ -581,6 +604,12 @@ func ulpFloat64(params []interface{}) interface{} {
 	xx := params[0].(float64)
 	if math.IsNaN(xx) {
 		return xx
+	}
+	if math.IsInf(xx, -1) {
+		return math.Inf(1) // "If the argument is positive or negative infinity, then the result is positive infinity."
+	}
+	if math.IsInf(xx, 1) {
+		return math.Inf(1)
 	}
 	xx = math.Abs(xx)
 	if math.IsInf(xx, +1) {
