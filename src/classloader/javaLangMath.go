@@ -578,7 +578,18 @@ func toRadiansFloat64(params []interface{}) interface{} {
 
 // ULP: Unit of Least Precision.
 func ulpFloat64(params []interface{}) interface{} {
-	x := params[0].(float64)
-	next := math.Nextafter(x, x+1)
-	return next - x
+	xx := params[0].(float64)
+	if math.IsNaN(xx) {
+		return xx
+	}
+	xx = math.Abs(xx)
+	if math.IsInf(xx, +1) {
+		return xx
+	}
+	next := math.Nextafter(xx, math.Inf(1))
+	if math.IsInf(next, 1) {
+		next = math.Nextafter(xx, math.Inf(-1))
+		return xx - next
+	}
+	return next - xx
 }
