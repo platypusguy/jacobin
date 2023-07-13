@@ -2479,7 +2479,7 @@ func createAndInitNewFrame(
 
 	stackSize := m.MaxStack
 	if stackSize < 1 {
-		stackSize = 1
+		stackSize = 2
 	}
 	fram := frames.CreateFrame(stackSize)
 	fram.ClName = className
@@ -2603,8 +2603,8 @@ func createAndInitNewFrame(
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d",
-			lenArgList, lenLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
+			lenArgList, lenLocals, stackSize)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
