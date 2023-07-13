@@ -85,9 +85,10 @@ func JVMrun() int {
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
-	if StartExec(mainClass, &Global) != nil {
+	status := StartExec(mainClass, &Global)
+
+	if status != nil {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
-
 	return shutdown.Exit(shutdown.OK)
 }

@@ -50,7 +50,7 @@ func Exit(errorCondition ExitStatus) int {
 		return 1
 	}
 
-	os.Exit(errorCondition);
+	os.Exit(errorCondition)
 
 	return 0 // required by go
 }
