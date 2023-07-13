@@ -1987,53 +1987,83 @@ func runFrame(fs *list.List) error {
 			// because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
 			ref := peek(f)
-			if ref == nil {
-				push(f, int64(0))
+			if ref == nil { // if ref is nil, just carry on
 				f.PC += 2
 				continue
 			}
 
+			var obj *object.Object
 			switch ref.(type) {
 			case *object.Object:
-				if ref == object.Null {
-					exceptions.Throw(exceptions.ClassCastException,
-						"CHECKCAST: Unexpected null pointer for class in classcast")
-					break
-				} else {
-					obj := *ref.(*object.Object)
-					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				if ref == object.Null { // if ref is null, just carry on
 					f.PC += 2
-					CPentry := f.CP.CpIndex[CPslot]
-					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
-						// a CP entry for a UTF8 record w/ name of class
-						var className string
-						classNamePtr := FetchCPentry(f.CP, CPslot)
-						if classNamePtr.retType != IS_STRING_ADDR {
-							_ = log.Log("CHECKCAST: Invalid classRef found", log.SEVERE)
-							return errors.New(" CHECKCAST: Invalid classRef found")
-						} else {
-							className = *(classNamePtr.stringVal)
-							if MainThread.Trace {
-								msg := fmt.Sprintf("CHECKCAST: className = %s", className)
-								_ = log.Log(msg, log.TRACE_INST)
-							}
-						}
-						classPtr := classloader.MethAreaFetch(className)
-						if classPtr == nil { // class wasn't loaded, so load it now
-							if classloader.LoadClassFromNameOnly(className) != nil {
-								return errors.New("CHECKCAST: Could not load class: " +
-									className)
-							}
-							classPtr = classloader.MethAreaFetch(className)
-						}
+					continue
+				} else {
+					obj = (ref).(*object.Object)
+				}
+			default:
+				exceptions.Throw(exceptions.ClassCastException,
+					"CHECKCAST: Invalid class reference")
+				return errors.New("CHECKCAST: Invalid class reference")
+			}
 
-						if classPtr != obj.Klass.(*classloader.Klass) {
+			// at this point, we know we have a valid non-nil, non-null pointer to an object
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+			f.PC += 2
+			CPentry := f.CP.CpIndex[CPslot]
+			if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
+				// a CP entry for a UTF8 record w/ name of class
+				var className string
+				classNamePtr := FetchCPentry(f.CP, CPslot)
+				if classNamePtr.retType != IS_STRING_ADDR {
+					_ = log.Log("CHECKCAST: Invalid classRef found", log.SEVERE)
+					return errors.New(" CHECKCAST: Invalid classRef found")
+				}
+
+				className = *(classNamePtr.stringVal)
+				if MainThread.Trace {
+					var msg string
+					if strings.HasPrefix(className, "[") {
+						msg = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
+					} else {
+						msg = fmt.Sprintf("CHECKCAST: className = %s", className)
+					}
+					_ = log.Log(msg, log.TRACE_INST)
+				}
+
+				if strings.HasPrefix(className, "[") { // the object being checked is an array
+					if obj.Klass != nil {
+						sptr := obj.Klass.(*string)
+						if *sptr == className {
+							continue
+						} else {
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-								className, classPtr.Data.Name)
+								className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
 							return errors.New(errMsg)
 						}
+					} else {
+						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
+						exceptions.Throw(exceptions.ClassCastException, errMsg)
+						return errors.New(errMsg)
 					}
+				} else { // the object being checked is a class
+					classPtr := classloader.MethAreaFetch(className)
+					if classPtr == nil { // class wasn't loaded, so load it now
+						if classloader.LoadClassFromNameOnly(className) != nil {
+							return errors.New("CHECKCAST: Could not load class: " + className)
+						}
+						classPtr = classloader.MethAreaFetch(className)
+					}
+
+					if classPtr != obj.Klass.(*classloader.Klass) {
+						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+							className, classPtr.Data.Name)
+						exceptions.Throw(exceptions.ClassCastException, errMsg)
+						return errors.New(errMsg)
+					}
+					// note that if the classPtr == obj.Klass, which is the desired outcome,
+					// do nothing. That is, the incoming stack should remain the same.
 				}
 			}
 
