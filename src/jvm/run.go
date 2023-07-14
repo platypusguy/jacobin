@@ -21,8 +21,10 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"runtime/debug"
 	"strconv"
 	"strings"
+	"syscall"
 	"unsafe"
 )
 
@@ -2288,6 +2290,12 @@ func pop(f *frames.Frame) interface{} {
 				switch value.(type) {
 				case *object.Object:
 					obj := value.(*object.Object)
+					if obj == nil {
+						traceInfo = fmt.Sprintf("pop: TOS value is type *object.Object but obj is nil")
+						_ = log.Log(traceInfo, log.SEVERE)
+						debug.PrintStack()
+						syscall.Exit(1)
+					}
 					if obj.Fields[0].Ftype == "[B" {
 						if obj.Fields[0].Fvalue == nil {
 							traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
@@ -2479,7 +2487,7 @@ func createAndInitNewFrame(
 
 	stackSize := m.MaxStack
 	if stackSize < 1 {
-		stackSize = 1
+		stackSize = 2
 	}
 	fram := frames.CreateFrame(stackSize)
 	fram.ClName = className
@@ -2603,8 +2611,8 @@ func createAndInitNewFrame(
 	}
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d",
-			lenArgList, lenLocals)
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
+			lenArgList, lenLocals, stackSize)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
