@@ -88,6 +88,8 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 	ptrArrType := "[" + value[0].Fields[0].Ftype
 	ptrArr.Fields[0].Ftype = ptrArrType
 
+	ptrArr.Klass = &value[0].Fields[0].Ftype
+
 	return ptrArr, nil
 }
 

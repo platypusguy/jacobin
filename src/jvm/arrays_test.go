@@ -13,6 +13,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/types"
 	"os"
 	"strings"
 	"testing"
@@ -138,7 +139,7 @@ func TestAastore(t *testing.T) {
 	}
 }
 
-// BASTORE: Test error conditions: invalid array address
+// AASTORE: Test error conditions: invalid array address
 func TestAastoreInvalid1(t *testing.T) {
 	f := newFrame(AASTORE)
 	push(&f, (*object.Object)(nil))                // this should point to an array, will here cause the error
@@ -276,6 +277,36 @@ func TestAnewrray(t *testing.T) {
 	arrayPtr := ptr.Fields[0].Fvalue.(*[]*object.Object)
 	if len(*arrayPtr) != 13 {
 		t.Errorf("ANEWARRAY: Expecting array length of 13, got %d", len(*arrayPtr))
+	}
+}
+
+// ANEWARRAY: creation of array for references; test contents of Klass field
+func TestAnewrrayKlassField(t *testing.T) {
+	f := newFrame(ANEWARRAY)
+	push(&f, int64(13)) // make the array 13 elements big
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, test the length of the array, which should be 13
+	element := g.ArrayAddressList.Front()
+	ptr := element.Value.(*object.Object)
+	klassString := ptr.Klass.(*string)
+	if !strings.HasPrefix(*klassString, types.RefArray) {
+		t.Errorf("ANEWARRAY: Expecting class to start with '[L', got %s", *klassString)
 	}
 }
 
@@ -1897,7 +1928,7 @@ func TestLastoreInvalid3(t *testing.T) {
 	}
 }
 
-// MULTIANEWARRAY: test creation of a two-dimensional array
+// MULTIANEWARRAY: test creation of a two-dimensional byte array
 func Test2DimArray1(t *testing.T) {
 	arr, err := object.Make2DimArray(3, 4, object.BYTE)
 	if err != nil {
@@ -1918,8 +1949,30 @@ func Test2DimArray1(t *testing.T) {
 	}
 }
 
+// MULTIANEWARRAY: test creation of a two-dimensional byte array and its Klass field
+func Test2DimArrayKlassField(t *testing.T) {
+	arr, err := object.Make2DimArray(3, 4, object.BYTE)
+	if err != nil {
+		t.Error("Error creating 2-dimensional array")
+	}
+
+	if arr.Klass == nil {
+		t.Errorf("Array Klass field was nil")
+		return
+	}
+
+	arrKlass := arr.Klass.(*string)
+	if *arrKlass != "[B" {
+		t.Errorf("Expecting array with Klass of '[B', got: %s", *arrKlass)
+	}
+}
+
 // MULTINEWARRAY: Test a straightforward 3x3x4 array of int64's
 func Test3DimArray1(t *testing.T) {
+	g := globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	_ = log.SetLogLevel(log.SEVERE)
+
 	// create the constant pool we'll point to
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -1997,6 +2050,10 @@ func Test3DimArray1(t *testing.T) {
 // size of the second dimension should result in an single-dimension
 // array of int64s
 func Test3DimArray2(t *testing.T) {
+	g := globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	_ = log.SetLogLevel(log.SEVERE)
+
 	// create the constant pool we'll point to
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
