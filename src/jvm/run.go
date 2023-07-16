@@ -2090,8 +2090,9 @@ func runFrame(fs *list.List) error {
 			case *object.Object:
 				if ref == object.Null {
 					push(f, int64(0))
-					f.PC += 2
-					break
+					f.PC += 2 // move past two bytes pointing to comp object
+					f.PC += 1 // move to next bytecode instruction
+					continue
 				} else {
 					obj := *ref.(*object.Object)
 					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
