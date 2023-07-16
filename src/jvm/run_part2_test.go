@@ -228,7 +228,7 @@ func TestInstanceofString(t *testing.T) {
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
 	log.Init()
 
-	classloader.Init()
+	_ = classloader.Init()
 	// classloader.LoadBaseClasses()
 	classloader.MethAreaInsert("java/lang/String",
 		&(classloader.Klass{

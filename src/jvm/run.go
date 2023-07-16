@@ -1759,6 +1759,7 @@ func runFrame(fs *list.List) error {
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
 			if className+"."+methName+methSig == "java/lang/Object.\"<init>\"()V" {
+				f.PC += 1 // move to next bytecode
 				continue
 			}
 
@@ -2041,8 +2042,8 @@ func runFrame(fs *list.List) error {
 						// for the nonce if they're both the same type of arrays, we're good
 						// TODO: if both are arrays of reference, check the leaf types
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
-							f.PC += 1
-							continue
+							f.PC += 1 // move to next bytecode
+							continue  // and exit this bytecode processing
 						} else {
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
 								className, *sptr)
@@ -2080,7 +2081,8 @@ func runFrame(fs *list.List) error {
 			ref := pop(f)
 			if ref == nil || ref == object.Null {
 				push(f, int64(0))
-				f.PC += 2
+				f.PC += 2 // move past index bytes to comp object
+				f.PC += 1 // move to next bytecode
 				continue
 			}
 
