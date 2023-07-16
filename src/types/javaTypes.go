@@ -19,6 +19,9 @@ const Short = "S"
 
 const Array = "["
 const ByteArray = "[B"
+const IntArray = "[I"
+const FloatArray = "[F"
+const RefArray = "[L"
 const Ref = "Z"
 
 // Jacobin-specific types

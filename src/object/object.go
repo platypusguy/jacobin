@@ -16,8 +16,8 @@ import (
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
 	Mark  MarkWord
-	Klass any // can't be what it really is: a pointer to classloader.Klass,
-	// due to go circularity error
+	Klass any // can't be what it really is: mostly a pointer to classloader.Klass,
+	// (due to go circularity error). On arrays, it's a pointer to a string showing array type
 	Fields []Field // slice containing the fields
 }
 

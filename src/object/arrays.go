@@ -6,6 +6,8 @@
 
 package object
 
+import "jacobin/types"
+
 /*  This file contains some data structures and some functions
  	for array handling in Jacobin
 
@@ -93,33 +95,31 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 // of the specified type (passed as a byte) and size.
 func Make1DimArray(arrType uint8, size int64) *Object {
 	o := MakeObject()
-	o.Klass = nil // arrays don't have a pointer to a parsed class
+	var of Field
 
 	switch arrType {
 	// case 'B': // byte arrays
 	case BYTE:
 		// barArr := make([]types.JavaByte, size) // changed with JACOBIN-282
 		barArr := make([]byte, size)
-		of := Field{Ftype: "[B", Fvalue: &barArr}
+		of = Field{Ftype: types.ByteArray, Fvalue: &barArr}
 		o.Fields = append(o.Fields, of)
-		return o
 	// case 'F', 'D': // float arrays
 	case FLOAT:
 		farArr := make([]float64, size)
-		of := Field{Ftype: "[F", Fvalue: &farArr}
+		of := Field{Ftype: types.FloatArray, Fvalue: &farArr}
 		o.Fields = append(o.Fields, of)
-		return o
 	case REF: // reference/pointer arrays
 		rarArr := make([]*Object, size)
-		of := Field{Ftype: "[L", Fvalue: &rarArr}
+		of := Field{Ftype: types.RefArray, Fvalue: &rarArr}
 		o.Fields = append(o.Fields, of)
-		return o
 	default: // all the integer types
 		iarArr := make([]int64, size)
-		of := Field{Ftype: "[I", Fvalue: &iarArr}
+		of := Field{Ftype: types.IntArray, Fvalue: &iarArr}
 		o.Fields = append(o.Fields, of)
-		return o
 	}
+	o.Klass = &o.Fields[0].Ftype // in arrays, Klass field is a pointer to the array type string
+	return o
 }
 
 // MakeArrayFromRawArray accepts a raw array (such as []byte) and

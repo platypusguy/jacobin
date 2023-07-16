@@ -1990,7 +1990,8 @@ func runFrame(fs *list.List) error {
 			// be made to INSTANCEOF
 			ref := peek(f)
 			if ref == nil { // if ref is nil, just carry on
-				f.PC += 2
+				f.PC += 2 // move past two bytes pointing to comp object
+				f.PC += 1 // move to next bytecode instruction
 				continue
 			}
 
@@ -1998,7 +1999,8 @@ func runFrame(fs *list.List) error {
 			switch ref.(type) {
 			case *object.Object:
 				if ref == object.Null { // if ref is null, just carry on
-					f.PC += 2
+					f.PC += 2 // move past two bytes pointing to comp object
+					f.PC += 1 // move to next bytecode instruction
 					continue
 				} else {
 					obj = (ref).(*object.Object)
@@ -2036,7 +2038,10 @@ func runFrame(fs *list.List) error {
 				if strings.HasPrefix(className, "[") { // the object being checked is an array
 					if obj.Klass != nil {
 						sptr := obj.Klass.(*string)
-						if *sptr == className {
+						// for the nonce if they're both the same type of arrays, we're good
+						// TODO: if both are arrays of reference, check the leaf types
+						if *sptr == className || strings.HasPrefix(className, *sptr) {
+							f.PC += 1
 							continue
 						} else {
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
