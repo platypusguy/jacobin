@@ -45,7 +45,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 	// At this point, classname is ready
 	k := classloader.MethAreaFetch(classname)
 	obj := object.Object{
-		Klass: k,
+		Klass: &classname,
 	}
 
 	// the object's mark field contains the lower 32-bits of the object's
