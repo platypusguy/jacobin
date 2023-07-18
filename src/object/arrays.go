@@ -76,7 +76,7 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 // dimensional array. (All the dimensions > 2 are simply arrays
 // of pointers to arrays.)
 func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error) {
-	ptrArr := MakeObject()                           // ptrArr is the pointer to the array of pointers to the leaf arrays
+	ptrArr := MakeEmptyObject()                      // ptrArr is the pointer to the array of pointers to the leaf arrays
 	value := make([]*Object, ptrArrSize, ptrArrSize) // the actual ptr-level array
 	ptrArr.Fields = append(ptrArr.Fields, Field{Fvalue: &(value)})
 	for i := 0; i < len(value); i++ { // for each entry in the ptr array
@@ -96,7 +96,7 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 // Make1DimArray creates and 1-diminensional Jacobin-style array
 // of the specified type (passed as a byte) and size.
 func Make1DimArray(arrType uint8, size int64) *Object {
-	o := MakeObject()
+	o := MakeEmptyObject()
 	var of Field
 
 	switch arrType {
@@ -133,7 +133,7 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		return arr
 	case *[]uint8: // an array of bytes
 		raw := rawArray.(*[]uint8)
-		o := MakeObject()
+		o := MakeEmptyObject()
 		o.Klass = nil
 		of := Field{Ftype: "[B", Fvalue: raw}
 		o.Fields = append(o.Fields, of)

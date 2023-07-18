@@ -14,6 +14,9 @@ import (
 // to have a means of creating them quickly, rather than building
 // them from scratch each time by walking through the constant pool.
 
+var StringClassName = "java/lang/String"
+var EmptyString = ""
+
 // NewString creates an empty string. However, it lacks an updated
 // Klass field, which due to circularity issues, is updated in
 // classloader.MakeString(). DO NOT CALL THIS FUNCTION DIRECTLYy.
@@ -21,7 +24,7 @@ import (
 func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
-	s.Klass = nil
+	s.Klass = &StringClassName // java/lang/String
 
 	// ==== now the fields ====
 
@@ -68,5 +71,28 @@ func NewString() *Object {
 	return s
 }
 
-// Functions for creating strings are in classloader/makeString.go due to Go's
-// circularity prohibition.
+// NewStringFromGoString converts a go string to a Java string-like
+// entity, in which the chars are stored as runes, rather than chars.
+// TODO: it needs to determine whether a string can be stored as bytes or
+// chars and set the flags in the String instance correctly.
+func NewStringFromGoString(in string) *Object {
+	s := NewString()
+	s.Fields[0].Ftype = types.RuneArray
+	s.Fields[0].Fvalue = in // test for compact strings and use GoStringToBytes() if on
+	return s
+}
+
+// CreateCompactStringFromGoString creates a string in which the chars
+// are stored as bytes--that is, a compact string.
+func CreateCompactStringFromGoString(in *string) *Object {
+	stringBytes := []byte(*in)
+	s := NewString()
+
+	// set the value of the string
+	s.Fields[0].Ftype = types.ByteArray
+	s.Fields[0].Fvalue = &stringBytes
+
+	// set the string to LATIN
+	s.Fields[1].Fvalue = int64(0)
+	return s
+}

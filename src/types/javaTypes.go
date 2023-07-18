@@ -22,6 +22,7 @@ const ByteArray = "[B"
 const IntArray = "[I"
 const FloatArray = "[F"
 const RefArray = "[L"
+const RuneArray = "[R" // used only in strings that are not compact
 const Ref = "Z"
 
 // Jacobin-specific types

@@ -276,9 +276,9 @@ func runFrame(fs *list.List) error {
 					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
 				} else if CPe.retType == IS_STRING_ADDR {
 					stringAddr :=
-						classloader.CreateJavaStringFromGoString(CPe.stringVal)
-					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
-					if stringAddr.Klass == nil {
+						object.CreateCompactStringFromGoString(CPe.stringVal)
+					stringAddr.Klass = &object.StringClassName
+					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
 						msg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(msg, log.SEVERE)
 						return errors.New("LDC: MethAreaFetch could not find class java/lang/String")
@@ -309,9 +309,9 @@ func runFrame(fs *list.List) error {
 					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
 				} else if CPe.retType == IS_STRING_ADDR {
 					stringAddr :=
-						classloader.CreateJavaStringFromGoString(CPe.stringVal)
-					stringAddr.Klass = classloader.MethAreaFetch("java/lang/String")
-					if stringAddr.Klass == nil {
+						object.CreateCompactStringFromGoString(CPe.stringVal)
+					stringAddr.Klass = &object.StringClassName
+					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
 						msg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(msg, log.SEVERE)
 						return errors.New("LDC_W: MethAreaFetch could not find class java/lang/String")
@@ -2038,7 +2038,7 @@ func runFrame(fs *list.List) error {
 
 				if strings.HasPrefix(className, "[") { // the object being checked is an array
 					if obj.Klass != nil {
-						sptr := obj.Klass.(*string)
+						sptr := obj.Klass
 						// for the nonce if they're both the same type of arrays, we're good
 						// TODO: if both are arrays of reference, check the leaf types
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
@@ -2064,7 +2064,7 @@ func runFrame(fs *list.List) error {
 						classPtr = classloader.MethAreaFetch(className)
 					}
 
-					if classPtr != obj.Klass.(*classloader.Klass) {
+					if classPtr != classloader.MethAreaFetch(*obj.Klass) {
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
 							className, classPtr.Data.Name)
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2120,7 +2120,7 @@ func runFrame(fs *list.List) error {
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
-						if classPtr == obj.Klass.(*classloader.Klass) {
+						if classPtr == classloader.MethAreaFetch(*obj.Klass) {
 							push(f, int64(1))
 						} else {
 							push(f, int64(0))

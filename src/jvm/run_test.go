@@ -332,7 +332,7 @@ func TestCheckcastOfString(t *testing.T) {
 			Loader: "bootstrap",
 			Data:   nil,
 		}))
-	s := classloader.NewStringFromGoString("hello world")
+	s := object.NewStringFromGoString("hello world")
 
 	f := newFrame(CHECKCAST)
 	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
@@ -1835,7 +1835,7 @@ func TestGetFieldWithLong(t *testing.T) {
 	f.CP = &CP
 
 	// push the string whose field[0] we'll be getting
-	obj := object.MakeObject()
+	obj := object.MakeEmptyObject()
 	obj.Fields = make([]object.Field, 1, 1)
 	obj.Fields[0].Fvalue = int64(222)
 	obj.Fields[0].Ftype = types.Long
@@ -2845,7 +2845,7 @@ func TestIfneFallThrough(t *testing.T) {
 // IFNONNULL: jump if TOS holds a non-null address
 func TestIfn0nnull(t *testing.T) {
 	f := newFrame(IFNONNULL)
-	o := classloader.MakeString()
+	o := object.NewString()
 	push(&f, o) // pushed a valid address, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
@@ -2903,7 +2903,7 @@ func TestIfnull(t *testing.T) {
 // IFNULL: jump if TOS address is null; here not null
 func TestIfnullFallThrough(t *testing.T) {
 	f := newFrame(IFNULL)
-	o := object.MakeObject()
+	o := object.MakeEmptyObject()
 	push(&f, o) // pushed non-null address, so jump should not be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2

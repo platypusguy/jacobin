@@ -69,7 +69,7 @@ func TestAaload(t *testing.T) {
 	f = newFrame(AASTORE)
 	push(&f, ptr)       // push the reference to the array
 	push(&f, int64(20)) // in array[20]
-	oPtr := object.MakeObject()
+	oPtr := object.MakeEmptyObject()
 	push(&f, oPtr) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -304,7 +304,7 @@ func TestAnewrrayKlassField(t *testing.T) {
 	// now, test the length of the array, which should be 13
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*object.Object)
-	klassString := ptr.Klass.(*string)
+	klassString := ptr.Klass
 	if !strings.HasPrefix(*klassString, types.RefArray) {
 		t.Errorf("ANEWARRAY: Expecting class to start with '[L', got %s", *klassString)
 	}
@@ -1961,7 +1961,7 @@ func Test2DimArrayKlassField(t *testing.T) {
 		return
 	}
 
-	arrKlass := arr.Klass.(*string)
+	arrKlass := arr.Klass
 	if *arrKlass != "[B" {
 		t.Errorf("Expecting array with Klass of '[B', got: %s", *arrKlass)
 	}

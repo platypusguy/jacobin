@@ -236,7 +236,7 @@ func TestInstanceofString(t *testing.T) {
 			Loader: "bootstrap",
 			Data:   nil,
 		}))
-	s := classloader.NewStringFromGoString("hello world")
+	s := object.NewStringFromGoString("hello world")
 
 	f := newFrame(INSTANCEOF)
 	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
@@ -1557,7 +1557,7 @@ func TestPutFieldSimpleInt(t *testing.T) {
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
-	obj := object.MakeObject()
+	obj := object.MakeEmptyObject()
 	obj.Fields = make([]object.Field, 1, 1)
 	obj.Fields[0].Fvalue = int64(42) // set the field = 42
 	obj.Fields[0].Ftype = types.Int
@@ -1595,7 +1595,7 @@ func TestPutFieldDouble(t *testing.T) {
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
-	obj := object.MakeObject()
+	obj := object.MakeEmptyObject()
 	obj.Fields = make([]object.Field, 1, 1)
 	obj.Fields[0].Fvalue = float64(42.0) // set the field = 42
 	obj.Fields[0].Ftype = types.Double

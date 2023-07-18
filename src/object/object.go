@@ -15,9 +15,8 @@ import (
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark  MarkWord
-	Klass any // can't be what it really is: mostly a pointer to classloader.Klass,
-	// (due to go circularity error). On arrays, it's a pointer to a string showing array type
+	Mark   MarkWord
+	Klass  *string // the class name in the method area
 	Fields []Field // slice containing the fields
 }
 
@@ -41,12 +40,12 @@ type Field struct {
 // Null is the Jacobin implementation of Java's null
 var Null *Object = nil
 
-// MakeObject() creates an empty basis Object. It is expected that other
+// MakeEmptyObject() creates an empty basis Object. It is expected that other
 // code will fill in the fields and the Klass field.
-func MakeObject() *Object {
+func MakeEmptyObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
-	o.Klass = nil // should be filled in later, when class is filled in.
+	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
 	return &o
 }
