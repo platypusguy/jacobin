@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-23 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/log"
+	"jacobin/types"
 	"sync"
 	"time"
 )
@@ -45,7 +46,7 @@ func MethAreaInsert(name string, klass *Klass) {
 	MethAreaMutex.Unlock()
 
 	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
-		_ = log.Log("Class: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
+		_ = log.Log("Method area insert: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
 	}
 }
 
@@ -92,4 +93,27 @@ func initMethodArea() {
 	MethArea = &ma
 	methAreaSize = 0
 	MethAreaMutex.Unlock()
+
+	// preload the synthetic classes for arrays
+	MethAreaPreload()
+}
+
+// MethAreaPreload preloads the synthetic entries for arrays into
+// the method areas.
+func MethAreaPreload() {
+	emptyKlass := Klass{
+		Status: 'N', // N = instantiated
+		Loader: "bootstrap",
+		Data:   &ClData{}, // empty class info
+	}
+	classesToPreload := []string{
+		types.ByteArray, types.FloatArray, types.IntArray,
+		types.RefArray, types.RuneArray,
+	}
+
+	for _, x := range classesToPreload {
+		k := emptyKlass
+		k.Data.Name = x
+		MethAreaInsert(x, &emptyKlass)
+	}
 }

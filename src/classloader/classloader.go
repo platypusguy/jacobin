@@ -273,7 +273,6 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 }
 
 func LoadClassFromNameOnly(className string) error {
-
 	var err error
 
 	jmodFileName := JmodMapFetch(className)
