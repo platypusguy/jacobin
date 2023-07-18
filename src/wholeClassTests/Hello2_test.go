@@ -168,7 +168,7 @@ func TestRunHello2VerboseClass(t *testing.T) {
 
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class: Hello2, loader: bootstrap") {
+	if !strings.Contains(string(slurp), "Method area insert: Hello2, loader: bootstrap") {
 		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
 	}
 

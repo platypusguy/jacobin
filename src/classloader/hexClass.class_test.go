@@ -3084,7 +3084,7 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
 	MethArea = &sync.Map{}
-	if MethAreaSize() != 0 {
+	if MethAreaSize() != 5 { // for the 5 synthetic array classes that are preloaded
 		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
 	}
 
@@ -3101,7 +3101,7 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if MethAreaSize() != 1 {
+	if MethAreaSize() != 6 { // the 1 from here + 5 preloaded synthetic array classes
 		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
 			MethAreaSize())
 	}
@@ -3121,7 +3121,7 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
 
-	if MethAreaSize() != 0 {
+	if MethAreaSize() != 5 { // 5 synthetic array entries are preloaded to the methArea
 		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
 	}
 
@@ -3138,7 +3138,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if MethAreaSize() != 1 {
+	if MethAreaSize() != 6 {
+		// 1 for this class + 5 for the preloaded array classes
 		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
 			MethAreaSize())
 	}
@@ -3153,7 +3154,7 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error looking up loaded class in MethArea: %s", err.Error())
 	}
 
-	if MethAreaSize() != 2 { // count should still be 2
+	if MethAreaSize() != 7 { // count should still be 2 (+5 preloaded array classes)
 		t.Errorf("Expected MethArea to have 2 entries, but it has %d",
 			MethAreaSize())
 	}
@@ -3164,7 +3165,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Expected an error for attempt to load non-existent class")
 	}
 
-	if MethAreaSize() != 2 { // count should still be 2, one for Class.class, and one entry for the unsuccessful SnoopDog
+	if MethAreaSize() != 7 { // count should still be 7: one for Class.class,
+		// one entry for the unsuccessful SnoopDog, and 5 for the preloaded array classes
 		t.Errorf("Expected MethArea to have 2 entry, but it has %d",
 			MethAreaSize())
 	}
