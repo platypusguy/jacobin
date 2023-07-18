@@ -759,7 +759,7 @@ func Init() error {
 	}
 
 	// initialize the method area
-	initMethodArea()
+	InitMethodArea()
 
 	// Success!
 	_ = log.Log("classloader.Init: ok", log.CLASS)

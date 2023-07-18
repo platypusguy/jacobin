@@ -85,9 +85,9 @@ func WaitForClassStatus(className string) error {
 	return nil
 }
 
-// initMethodArea simply initializes MethArea (the method area
+// InitMethodArea simply initializes MethArea (the method area
 // table of loaded classes) and initializes the counter of classes.
-func initMethodArea() {
+func InitMethodArea() {
 	MethAreaMutex.Lock()
 	ma := sync.Map{}
 	MethArea = &ma

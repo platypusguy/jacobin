@@ -181,7 +181,7 @@ func TestRunHello3VerboseClass(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	slurpErr := string(slurp)
-	if !strings.Contains(slurpErr, "Class: Hello3, loader: bootstrap") {
+	if !strings.Contains(slurpErr, "Method area insert: Hello3, loader: bootstrap") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 

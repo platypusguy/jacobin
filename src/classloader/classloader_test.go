@@ -303,7 +303,7 @@ func TestInsertionIntoMethodArea(t *testing.T) {
 		t.Error("Got unexpected logging message for insertion of Klass into method area: " + msg)
 	}
 
-	if MethAreaSize() != 1 {
+	if MethAreaSize() != 6 { // the 1 from here + 5 preloaded synthetic array classes
 		t.Errorf("Expecting method area to have a size of 1, got: %d",
 			MethAreaSize())
 	}

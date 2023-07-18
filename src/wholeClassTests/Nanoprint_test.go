@@ -175,7 +175,7 @@ func TestRunNanoPrintVerboseClass(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	slurpErr := string(slurp)
-	if !strings.Contains(slurpErr, "Class: NanoPrint, loader: bootstrap") {
+	if !strings.Contains(slurpErr, "Method area insert: NanoPrint, loader: bootstrap") {
 		t.Errorf("Got unexpected output to stderr: %s", slurpErr)
 	}
 }

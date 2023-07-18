@@ -59,8 +59,8 @@ func TestInsertValid(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Class: testClass") {
-		t.Errorf("Expecting log message containing 'Class: testClass', got: %s", msg)
+	if !strings.Contains(msg, "Method area insert: testClass, loader: testLoader") {
+		t.Errorf("Expecting log message containing 'testClass', got: %s", msg)
 	}
 }
 
@@ -112,7 +112,7 @@ func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Class: testClass") {
+	if !strings.Contains(msg, "Method area insert: testClass, loader:") {
 		t.Errorf("Expecting log message containing 'Class: testClass', got: %s", msg)
 	}
 }

@@ -14,32 +14,35 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"os"
+	"strings"
 	"unsafe"
 )
 
-// instantiating a class is a two-part process:
+// instantiating a class is a two-part process (except for arrays, where nothing happens)
 //  1. the class needs to be loaded, so that its details and its methods are knowable
 //  2. the class fields (if static) and instance fields (if non-static) are allocated. Details
 //     for this second step appear in front of the initializeFields() method.
 func instantiateClass(classname string) (*object.Object, error) {
 
-	// Try to load class by name
-	err := classloader.LoadClassFromNameOnly(classname)
-	if err != nil {
-		msg := "instantiateClass: Failed to load class " + classname
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
-		shutdown.Exit(shutdown.APP_EXCEPTION)
-	}
-	// Success in loaded by name
-	_ = log.Log("instantiateClass: Success in LoadClassFromNameOnly("+classname+")", log.TRACE_INST)
+	if !strings.HasPrefix(classname, "[") { // do this only for real objects, not arrays
+		// Try to load class by name
+		err := classloader.LoadClassFromNameOnly(classname)
+		if err != nil {
+			msg := "instantiateClass: Failed to load class " + classname
+			_ = log.Log(msg, log.SEVERE)
+			_ = log.Log(err.Error(), log.SEVERE)
+			shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		// Success in loaded by name
+		_ = log.Log("instantiateClass: Success in LoadClassFromNameOnly("+classname+")", log.TRACE_INST)
 
-	// at this point the class has been loaded into the method area (MethArea). Wait for it to be ready.
-	err = classloader.WaitForClassStatus(classname)
-	if err != nil {
-		msg := fmt.Sprintf("instantiateClass: %s", err.Error())
-		_ = log.Log(msg, log.SEVERE)
-		return nil, errors.New(msg)
+		// at this point the class has been loaded into the method area (MethArea). Wait for it to be ready.
+		err = classloader.WaitForClassStatus(classname)
+		if err != nil {
+			msg := fmt.Sprintf("instantiateClass: %s", err.Error())
+			_ = log.Log(msg, log.SEVERE)
+			return nil, errors.New(msg)
+		}
 	}
 
 	// At this point, classname is ready
