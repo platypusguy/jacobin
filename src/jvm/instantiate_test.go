@@ -14,15 +14,19 @@ import (
 )
 
 // Arrays are preloaded, so this should only confirm the presence of the class
-// in the method area.
+// in the method area--and make sure it has no fields.
 func TestInstantiateArray(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
 	classloader.InitMethodArea()
 
-	_, err := instantiateClass("[B")
+	obj, err := instantiateClass("[B")
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
+	}
+
+	if len(obj.Fields) != 0 {
+		t.Errorf("Expected 0 fields in array class, got %d fields", len(obj.Fields))
 	}
 }
