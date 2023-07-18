@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-23 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -13,7 +13,6 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
-	"os"
 	"strings"
 	"unsafe"
 )
@@ -76,94 +75,62 @@ func instantiateClass(classname string) (*object.Object, error) {
 				return nil, classloader.CFE("invalid field type")
 			}
 
+			presentType := fieldToAdd.Ftype
 			if f.IsStatic {
 				// in the instantiated class, add an 'X' before the
 				// type, which notifies future users that the field
 				// is static and should be fetched from the Statics
 				// table.
-				presentType := fieldToAdd.Ftype
+
 				fieldToAdd.Ftype = "X" + presentType
+			}
 
-				// static fields can have ConstantValue attributes,
-				// which specify their initial value.
-				if len(f.Attributes) > 0 {
-					for j := 0; j < len(f.Attributes); j++ {
-						attr := k.Data.CP.Utf8Refs[int(f.Attributes[j].AttrName)]
-						if attr == "ConstantValue" {
-							valueIndex := int(f.Attributes[j].AttrContent[0])*256 +
-								int(f.Attributes[j].AttrContent[1])
-							valueType := k.Data.CP.CpIndex[valueIndex].Type
-							valueSlot := k.Data.CP.CpIndex[valueIndex].Slot
-							switch valueType {
-							case classloader.IntConst:
-								fieldToAdd.Fvalue = int64(k.Data.CP.IntConsts[valueSlot])
-							case classloader.LongConst:
-								fieldToAdd.Fvalue = k.Data.CP.LongConsts[valueSlot]
-							case classloader.FloatConst:
-								fieldToAdd.Fvalue = float64(k.Data.CP.Floats[valueSlot])
-							case classloader.DoubleConst:
-								fieldToAdd.Fvalue = k.Data.CP.Doubles[valueSlot]
-							case classloader.StringConst:
-								str := k.Data.CP.Utf8Refs[valueSlot]
-								fieldToAdd.Fvalue = object.NewStringFromGoString(str)
-							default:
-								errMsg := fmt.Sprintf(
-									"Unexpected ConstantValue type in instantiate: %d", valueType)
-								_ = log.Log(errMsg, log.SEVERE)
-								return nil, errors.New(errMsg)
-							} // end of ConstantValue type switch
-						} // end of ConstantValue attribute processing
-					} // end of processing attributes
-				} // end of search through attributes
-				s := classloader.Static{
-					Type:  fieldToAdd.Ftype,
-					Value: fieldToAdd.Fvalue,
-				}
-				// add the field to the Statics table
-				fieldName := k.Data.CP.Utf8Refs[f.Name]
-				fullFieldName := classname + "." + fieldName
+			// static fields can have ConstantValue attributes,
+			// which specify their initial value.
+			if len(f.Attributes) > 0 {
+				for j := 0; j < len(f.Attributes); j++ {
+					attr := k.Data.CP.Utf8Refs[int(f.Attributes[j].AttrName)]
+					if attr == "ConstantValue" && f.IsStatic { // only statics can have ConstantValue attribute
+						valueIndex := int(f.Attributes[j].AttrContent[0])*256 +
+							int(f.Attributes[j].AttrContent[1])
+						valueType := k.Data.CP.CpIndex[valueIndex].Type
+						valueSlot := k.Data.CP.CpIndex[valueIndex].Slot
+						switch valueType {
+						case classloader.IntConst:
+							fieldToAdd.Fvalue = int64(k.Data.CP.IntConsts[valueSlot])
+						case classloader.LongConst:
+							fieldToAdd.Fvalue = k.Data.CP.LongConsts[valueSlot]
+						case classloader.FloatConst:
+							fieldToAdd.Fvalue = float64(k.Data.CP.Floats[valueSlot])
+						case classloader.DoubleConst:
+							fieldToAdd.Fvalue = k.Data.CP.Doubles[valueSlot]
+						case classloader.StringConst:
+							str := k.Data.CP.Utf8Refs[valueSlot]
+							fieldToAdd.Fvalue = object.NewStringFromGoString(str)
+						default:
+							errMsg := fmt.Sprintf(
+								"Unexpected ConstantValue type in instantiate: %d", valueType)
+							_ = log.Log(errMsg, log.SEVERE)
+							return nil, errors.New(errMsg)
+						} // end of ConstantValue type switch
+					} // end of ConstantValue attribute processing
+				} // end of processing attributes
+			} // end of search through attributes
+			s := classloader.Static{
+				Type:  fieldToAdd.Ftype,
+				Value: fieldToAdd.Fvalue,
+			}
+			// add the field to the Statics table
+			fieldName := k.Data.CP.Utf8Refs[f.Name]
+			fullFieldName := classname + "." + fieldName
 
-				_, alreadyPresent := classloader.Statics[fullFieldName]
-				if !alreadyPresent { // add only if field has not been pre-loaded
-					_ = classloader.AddStatic(fullFieldName, s)
-				}
+			_, alreadyPresent := classloader.Statics[fullFieldName]
+			if !alreadyPresent { // add only if field has not been pre-loaded
+				_ = classloader.AddStatic(fullFieldName, s)
 			}
 			obj.Fields = append(obj.Fields, *fieldToAdd)
-		} // end of processing fields
-	}
-	return &obj, nil
-}
-
-// the only fields allocated during class instantiation are instance fields--
-// method-local fields are created on the stack during method execution.
-// The allocated fields are in a structure that is defined in object.go
-func initializeField(f classloader.Field, cp *classloader.CPool, cn string, obj *object.Object) {
-	name := cp.Utf8Refs[int(f.Name)]
-	desc := cp.Utf8Refs[int(f.Desc)]
-	var attr = ""
-	// var value int64
-	if len(f.Attributes) > 0 {
-		for i := 0; i < len(f.Attributes); i++ {
-			attr = cp.Utf8Refs[int(f.Attributes[i].AttrName)]
-			if attr == "ConstantValue" {
-				// valueIndex := int(f.Attributes[i].AttrContent[0])*256 +
-				//     int(f.Attributes[i].AttrContent[1])
-				// // valueType := cp.CpIndex[valueIndex].Type
-				// // valueSlot := cp.CpIndex[valueIndex].Slot
-			}
-			// } else {
-			// 	value = 0
-			// }
-
 		}
 	}
-	// append field to the object.fields slice TODO: check that this is a good solution.
-	// obj.fields = append(obj.fields, Field{
-	// 	metadata: classloader.Field{},
-	// 	value:    value,
-	// })
-	_, _ = fmt.Fprintf(os.Stdout, "Class: %s, Field to initialize: %s, type: %s\n", cn, name, desc)
-	if attr != "" {
-		_, _ = fmt.Fprintf(os.Stdout, "Attribute name: %s\n", attr)
-	}
+
+	return &obj, nil
 }
