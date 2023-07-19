@@ -310,6 +310,26 @@ func TestAnewrrayKlassField(t *testing.T) {
 	}
 }
 
+// ANEWARRAY: creation of array for references; test invalid array size
+func TestAnewrrayInvalidSize(t *testing.T) {
+	f := newFrame(ANEWARRAY)
+	push(&f, int64(-1)) // make the array an invalid size
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+	if err == nil {
+		t.Errorf("ANEWARRAY: Did not get expected error")
+	}
+
+	msg := err.Error()
+	if !(msg == "ANEWARRAY: invalid size for an array") {
+		t.Errorf("ANEWARRAY: Expecting different error msg, got %s", msg)
+	}
+}
+
 // ARRAYLENGTH: Test length of byte array
 // First, we create the array of 13 elements, then we push the reference
 // to it and execute the ARRAYLENGTH bytecode using the address stored
