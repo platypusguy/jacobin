@@ -423,6 +423,99 @@ func TestFloatArrayLength(t *testing.T) {
 	}
 }
 
+// ARRAYLENGTH: Test length of array of longs
+func TestLongArrayLength(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(34))                    // make the array 34 elements big
+	f.Meth = append(f.Meth, object.T_LONG) // make it an array of longs
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f)
+
+	f = newFrame(ARRAYLENGTH)
+	// uptr := uintptr(unsafe.Pointer(ptr))
+	push(&f, ptr) // push the reference to the array
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	size := pop(&f).(int64)
+	if size != 34 {
+		t.Errorf("ARRAYLENGTH: Expecting array length of 34, got %d", size)
+	}
+}
+
+// ARRAYLENGTH: Test length of raw byte array
+func TestRawByteArrayLength(t *testing.T) {
+	array := []byte{'a', 'b', 'c'}
+	f := newFrame(ARRAYLENGTH)
+	push(&f, &array) // push the reference to the array
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)    // push the new frame
+	err := runFrame(fs) // execute the bytecode
+
+	if err != nil {
+		t.Errorf("ARRAYLENGTH: Got unexpected error message: %s", err.Error())
+	}
+
+	length := pop(&f).(int64)
+	if length != 3 {
+		t.Errorf("ARRAYLENGTH: Expecting length of 3, got: %d", length)
+	}
+}
+
+// ARRAYLENGTH: Test length of raw int8 array
+func TestRawInt8ArrayLength(t *testing.T) {
+	array := []int8{'a', 'b', 'c'}
+	f := newFrame(ARRAYLENGTH)
+	push(&f, &array) // push the reference to the array
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)    // push the new frame
+	err := runFrame(fs) // execute the bytecode
+
+	if err != nil {
+		t.Errorf("ARRAYLENGTH: Got unexpected error message: %s", err.Error())
+	}
+
+	length := pop(&f).(int64)
+	if length != 3 {
+		t.Errorf("ARRAYLENGTH: Expecting length of 3, got: %d", length)
+	}
+}
+
+// ARRAYLENGTH: Test length of nil array -- should return an error
+func TestNilArrayLength(t *testing.T) {
+	f := newFrame(ARRAYLENGTH)
+	push(&f, nil) // push the reference to the array
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)    // push the new frame
+	err := runFrame(fs) // execute the bytecode
+
+	if err == nil {
+		t.Errorf("ARRAYLENGTH: Expecting an error message, but got none")
+	}
+
+	errMsg := err.Error()
+	if errMsg != "ARRAYLENGTHY: invalid (null) reference to an array" {
+		t.Errorf("ARRAYLENGTH: Expecting different error msg, got: %s", errMsg)
+	}
+}
+
 // BALOAD: Test fetching and pushing the value of an element in a byte/boolean array
 // The logic here is effectively identical to IALOAD. This code also tests BASTORE.
 func TestBaload(t *testing.T) {
