@@ -1541,7 +1541,7 @@ func TestPop2(t *testing.T) {
 	}
 }
 
-// PUTFIELD
+// PUTFIELD: Update a non-static field
 func TestPutFieldSimpleInt(t *testing.T) {
 	f := newFrame(PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
