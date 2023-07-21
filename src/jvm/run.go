@@ -1663,7 +1663,14 @@ func runFrame(fs *list.List) error {
 			// to get to the right field, we only need to know
 			// the slot number in CP.Fields. It will be the same
 			// index into the object's fields.
-			obj.Fields[fieldEntry.Slot].Fvalue = value
+			if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
+				errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
+					f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				return fmt.Errorf(errMsg)
+			} else {
+				obj.Fields[fieldEntry.Slot].Fvalue = value
+			}
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			var err error
