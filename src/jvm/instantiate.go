@@ -66,7 +66,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 			case "L", "[": // it's a reference
 				fieldToAdd.Fvalue = nil
 			case "B", "C", "I", "J", "S", "Z":
-				fieldToAdd.Fvalue = 0
+				fieldToAdd.Fvalue = int64(0)
 			case "D", "F":
 				fieldToAdd.Fvalue = 0.0
 			default:
