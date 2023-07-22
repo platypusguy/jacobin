@@ -81,7 +81,6 @@ func instantiateClass(classname string) (*object.Object, error) {
 				// type, which notifies future users that the field
 				// is static and should be fetched from the Statics
 				// table.
-
 				fieldToAdd.Ftype = "X" + presentType
 			}
 
@@ -116,21 +115,24 @@ func instantiateClass(classname string) (*object.Object, error) {
 					} // end of ConstantValue attribute processing
 				} // end of processing attributes
 			} // end of search through attributes
-			s := classloader.Static{
-				Type:  fieldToAdd.Ftype,
-				Value: fieldToAdd.Fvalue,
-			}
-			// add the field to the Statics table
-			fieldName := k.Data.CP.Utf8Refs[f.Name]
-			fullFieldName := classname + "." + fieldName
 
-			_, alreadyPresent := classloader.Statics[fullFieldName]
-			if !alreadyPresent { // add only if field has not been pre-loaded
-				_ = classloader.AddStatic(fullFieldName, s)
+			if f.IsStatic {
+				s := classloader.Static{
+					Type:  presentType, // we use the type without the 'X" prefix in the statics table.
+					Value: fieldToAdd.Fvalue,
+				}
+				// add the field to the Statics table
+				fieldName := k.Data.CP.Utf8Refs[f.Name]
+				fullFieldName := classname + "." + fieldName
+
+				_, alreadyPresent := classloader.Statics[fullFieldName]
+				if !alreadyPresent { // add only if field has not been pre-loaded
+					_ = classloader.AddStatic(fullFieldName, s)
+				}
 			}
 			obj.Fields = append(obj.Fields, *fieldToAdd)
-		}
-	}
+		} // loop through the fields if any
+	} // test if there are any declared fields
 
 	return &obj, nil
 }
