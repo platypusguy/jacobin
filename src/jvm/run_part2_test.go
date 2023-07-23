@@ -1642,6 +1642,44 @@ func TestPutFieldNonFieldCPentry(t *testing.T) {
 	}
 }
 
+// PUTFIELD: Error: attempt to update a non-static field
+func TestPutFieldErrorUpdatingStatic(t *testing.T) {
+	f := newFrame(PUTFIELD)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	// now create the object we're updating, with one int field
+	obj := object.MakeEmptyObject()
+	obj.Fields = make([]object.Field, 1, 1)
+	obj.Fields[0].Fvalue = int64(42) // set the field = 42
+	obj.Fields[0].Ftype = types.Static + types.Int
+	push(&f, obj)
+
+	push(&f, int64(26)) // update the field to 26
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("PUTFIELD: Expected error message but got none")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "invalid attempt to update a static variable") {
+		t.Errorf("PUTFIELD: Did not get expected error message, got %s", errMsg)
+	}
+}
+
 // RETURN: Does a function return correctly?
 func TestReturn(t *testing.T) {
 	f := newFrame(RETURN)
