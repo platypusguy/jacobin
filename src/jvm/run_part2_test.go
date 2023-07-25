@@ -266,6 +266,35 @@ func TestInstanceofString(t *testing.T) {
 	}
 }
 
+// INVOKEVIRTUAL : invoke method -- here testing for error
+func TestInvokevirtualInvalid(t *testing.T) {
+	f := newFrame(INVOKEVIRTUAL)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a method ref
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
+	} else {
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "Expected a method ref, but got") {
+			t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got: %s", errMsg)
+		}
+	}
+}
+
 // IOR: Logical OR of two ints
 func TestIor(t *testing.T) {
 	f := newFrame(IOR)

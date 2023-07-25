@@ -1679,9 +1679,11 @@ func runFrame(fs *list.List) error {
 
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
-				return fmt.Errorf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
+				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				return fmt.Errorf(errMsg)
 			}
 
 			// get the methodRef entry
