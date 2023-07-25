@@ -35,8 +35,9 @@ A more-than-minimal JVM written in Go.
 ### Class loading
 * Correctly reads and parses most classes
 * Extracts bytecode and parameters needed for execution
-* Automate loading of core Java classes (Object, etc.)
-* Handles straightforward JAR files
+* Automated pre-loading of core Java classes (`Object`, etc.)
+* `java.*`, `javax.*`, `jdk.*`, `sun.*` classes are loaded from the `JAVA_HOME` directory (i.e., from JDK binaries)
+* Handles JAR files
   
 **To do**:
 * Handle more-complex classes
