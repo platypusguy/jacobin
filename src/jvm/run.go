@@ -1978,14 +1978,13 @@ func runFrame(fs *list.List) error {
 				r := ref.(*object.Object)
 				arrayType := r.Fields[0].Ftype
 				switch arrayType {
-				case "[B":
-					// arrayPtr := r.Fields[0].Fvalue.(*[]types.JavaByte) // Change w/ JACOBIN-282
+				case types.ByteArray:
 					arrayPtr := r.Fields[0].Fvalue.(*[]byte)
 					size = int64(len(*arrayPtr))
-				case "[L":
+				case types.RefArray:
 					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
 					size = int64(len(*arrayPtr))
-				case "[F":
+				case types.FloatArray:
 					arrayPtr := r.Fields[0].Fvalue.(*[]float64)
 					size = int64(len(*arrayPtr))
 				default:

@@ -480,6 +480,43 @@ func TestLongArrayLength(t *testing.T) {
 	}
 }
 
+// ARRAYLENGTH: Test length of array of references
+func TestRefArrayLength(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(34))                   // make the array 34 elements big
+	f.Meth = append(f.Meth, object.T_REF) // make it an array of references
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f)
+
+	f = newFrame(ARRAYLENGTH)
+	// uptr := uintptr(unsafe.Pointer(ptr))
+	push(&f, ptr) // push the reference to the array
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	size := pop(&f).(int64)
+	if size != 34 {
+		t.Errorf("ARRAYLENGTH: Expecting array length of 34, got %d", size)
+	}
+}
+
 // ARRAYLENGTH: Test length of raw byte array
 func TestRawByteArrayLength(t *testing.T) {
 	array := []byte{'a', 'b', 'c'}
