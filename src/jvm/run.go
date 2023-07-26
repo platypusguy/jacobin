@@ -1919,15 +1919,15 @@ func runFrame(fs *list.List) error {
 			arrayType := int(f.Meth[f.PC+1])
 			f.PC += 1
 
-			g := globals.GetGlobalRef()
-
 			actualType := object.JdkArrayTypeToJacobinType(arrayType)
 			if actualType == object.ERROR {
-				_ = log.Log("NEWARRAY: Invalid array type specified", log.SEVERE)
-				return errors.New("NEWARRAY: error instantiating array")
+				errMsg := "NEWARRAY: Invalid array type specified"
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			arrayPtr := object.Make1DimArray(uint8(actualType), size)
+			g := globals.GetGlobalRef()
 			g.ArrayAddressList.PushFront(arrayPtr)
 			push(f, arrayPtr)
 
