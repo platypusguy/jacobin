@@ -2243,6 +2243,29 @@ func TestNewrray(t *testing.T) {
 	}
 }
 
+// NEWARRAY: Create new array of 13 bytes
+func TestNewrrayForByteArray(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(13))                    // size
+	f.Meth = append(f.Meth, object.T_BYTE) // make it an array of bytes
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err != nil {
+		t.Errorf("NEWARRAY: Got unexpected error: %s", err.Error())
+	}
+
+	arrayPtr := pop(&f).(*object.Object)
+	array := arrayPtr.Fields[0].Fvalue.(*[]byte)
+	if len(*array) != 13 {
+		t.Errorf("NEWARRAY: Got unexpected array size: %d", len(*array))
+	}
+}
+
 // NEWARRAY: Create new array -- test with invalid size
 func TestNewrrayInvalidSize(t *testing.T) {
 	f := newFrame(NEWARRAY)
@@ -2261,6 +2284,28 @@ func TestNewrrayInvalidSize(t *testing.T) {
 
 	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid size for array") {
+		t.Errorf("NEWARRAY: Got unexpected error message: %s", errMsg)
+	}
+}
+
+// NEWARRAY: Create new array -- test with invalid type
+func TestNewrrayInvalidType(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(13))                   // size
+	f.Meth = append(f.Meth, object.ERROR) // invalid type
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("NEWARRAY: Expected an error message, but got none")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Invalid array type specified") {
 		t.Errorf("NEWARRAY: Got unexpected error message: %s", errMsg)
 	}
 }
