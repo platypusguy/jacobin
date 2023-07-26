@@ -1889,8 +1889,9 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
-				msg := fmt.Sprintf("NEW: Invalid type for new object")
-				_ = log.Log(msg, log.SEVERE)
+				errMsg := fmt.Sprintf("NEW: Invalid type for new object")
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			// the classref points to a UTF8 record with the name of the class to instantiate
