@@ -1911,10 +1911,9 @@ func runFrame(fs *list.List) error {
 		case NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
 			if size < 0 {
-				exceptions.Throw(
-					exceptions.NegativeArraySizeException,
-					"NEWARRAY: Invalid size for array")
-				return errors.New("NEWARRAY: Invalid size for array")
+				errMsg := "NEWARRAY: Invalid size for array"
+				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			arrayType := int(f.Meth[f.PC+1])

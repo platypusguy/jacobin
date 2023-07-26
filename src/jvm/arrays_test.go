@@ -2209,35 +2209,7 @@ func Test3DimArray2(t *testing.T) {
 		t.Errorf("MULTINEWARRAY: Expected 1st dim to have 4 elements, got: %d",
 			len(dim1))
 	}
-	//
-	// dim2type := dim1[0].Fields[0].Ftype
-	// if dim2type != "[[I" {
-	//     t.Errorf("MULTIANEWARRAY: Expected 2nd dim to be type '[[I', got %s",
-	//         dim2type)
-	// }
-	//
-	// dim2 := *(dim1[0].Fields[0].Fvalue.(*[]*object.Object))
-	// if len(dim2) != 3 {
-	//     t.Errorf("MULTINEWARRAY: Expected 2nd dim to have 3 elements, got: %d",
-	//         len(dim2))
-	// }
-	//
-	// dim3type := dim2[0].Fields[0].Ftype
-	// if dim3type != "[I" {
-	//     t.Errorf("MULTIANEWARRAY: Expected leaf dim to be type '[I', got %s",
-	//         dim3type)
-	// }
-	//
-	// dim3 := *(dim2[0].Fields[0].Fvalue.(*[]int64))
-	// if len(dim3) != 4 {
-	//     t.Errorf("MULTINEWARRAY: Expected leaf dim to have 4 elements, got: %d",
-	//         len(dim3))
-	// }
-	//
-	// elementValue := dim3[2] // an element in the leaf array
-	// if elementValue != 0 {
-	//     t.Errorf("Expected element value to be 0, got %d", elementValue)
-	// }
+
 }
 
 // NEWARRAY: creation of array for primitive values
@@ -2268,6 +2240,28 @@ func TestNewrray(t *testing.T) {
 	arrayPtr := ptr.Fields[0].Fvalue.(*[]int64)
 	if len(*arrayPtr) != 13 {
 		t.Errorf("NEWARRAY: Expecting array length of 13, got %d", len(*arrayPtr))
+	}
+}
+
+// NEWARRAY: Create new array -- test with invalid size
+func TestNewrrayInvalidSize(t *testing.T) {
+	f := newFrame(NEWARRAY)
+	push(&f, int64(-13))                   // invalid size (less than 0)
+	f.Meth = append(f.Meth, object.T_LONG) // make it an array of longs
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("NEWARRAY: Expected an error message, but got none")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Invalid size for array") {
+		t.Errorf("NEWARRAY: Got unexpected error message: %s", errMsg)
 	}
 }
 
