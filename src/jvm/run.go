@@ -106,21 +106,6 @@ func runThread(t *thread.ExecThread) error {
 	return nil
 }
 
-// Convert a byte to an int64 by extending the sign-bit
-func byteToInt64(bite byte) int64 {
-	if (bite & 0x80) == 0x80 { // Negative bite value (left-most bit on)?
-		// Negative byte - need to extend the sign (left-most) bit
-		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
-		wbytes[7] = bite
-		// Form an int64 from the wbytes array
-		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
-		return int64(binary.BigEndian.Uint64(wbytes))
-	}
-
-	// Not negative (left-most bit off) : just cast bite as an int64
-	return int64(bite)
-}
-
 // runFrame() is the principal execution function in Jacobin. It first tests for a
 // golang function in the present frame. If it is a golang function, it's sent to
 // a different function for execution. Otherwise, bytecode interpretation takes
@@ -2640,4 +2625,19 @@ func createAndInitNewFrame(
 	fram.TOS = -1
 
 	return fram, nil
+}
+
+// Convert a byte to an int64 by extending the sign-bit
+func byteToInt64(bite byte) int64 {
+	if (bite & 0x80) == 0x80 { // Negative bite value (left-most bit on)?
+		// Negative byte - need to extend the sign (left-most) bit
+		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}
+		wbytes[7] = bite
+		// Form an int64 from the wbytes array
+		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
+		return int64(binary.BigEndian.Uint64(wbytes))
+	}
+
+	// Not negative (left-most bit off) : just cast bite as an int64
+	return int64(bite)
 }
