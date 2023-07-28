@@ -92,6 +92,28 @@ func TestAaload(t *testing.T) {
 	}
 }
 
+// AALOAD: Test with a nil
+func TestAaloadWithNil(t *testing.T) {
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+
+	f := newFrame(AALOAD)
+	push(&f, nil)       // push the reference to the array -- here nil
+	push(&f, int64(20)) // index to array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f)    // push the new frame
+	err := runFrame(fs) // execute the bytecode
+
+	if err == nil {
+		t.Errorf("AALOAD: Expecting error for nil refernce, but got none")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Invalid (null) reference") {
+		t.Errorf("AALOAD: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // AASTORE: store value in array of bytes
 // Create an array of 30 elements, store ptr value in array[20],
 // then go through all the elements in the array, and test for

@@ -470,20 +470,19 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 		case AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
-			// rAref := pop(f).(*object.Object) // the array object
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
-				exceptions.Throw(exceptions.NullPointerException,
-					"AALOAD: Invalid (null) reference to an array")
-				return errors.New("AALOAD error")
+				errMsg := "AALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"AALOAD: Invalid array subscript")
-				return errors.New("AALOAD error")
+				errMsg := "AALOAD: Invalid array subscript"
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			array := *(arrayPtr)
 			var value = array[index]
