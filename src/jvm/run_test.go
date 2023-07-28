@@ -2400,6 +2400,29 @@ func TestIfIcmpeq(t *testing.T) {
 	}
 }
 
+// IF_ICMPEQ: jump if val1 == val2; here test with unequal value
+func TestIfIcmpeqUnequal(t *testing.T) {
+	f := newFrame(IF_ICMPEQ)
+	push(&f, int64(9)) // pushed two unequal values, so no jump should be made.
+	push(&f, int64(-9))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err != nil {
+		t.Errorf("IF_ICMPEQ: Got unexpected error: %s", err.Error())
+	}
+
+	if f.PC != 3 { // 2 for the jump due to inequality above, +1 for fetch of next bytecode
+		t.Errorf("IF_ICMPEQ: Expected PC to be 2, got %d", f.PC)
+	}
+
+	if f.TOS != -1 { // stack should be empty
+		t.Errorf("IF_CIMPEQ: Expected an empty stack, got TOS of: %d", f.TOS)
+	}
+}
+
 // IF_CMPGE: if integer compare val 1 >= val 2. Here test for = (next test for >)
 func TestIfIcmpge1(t *testing.T) {
 	f := newFrame(IF_ICMPGE)
