@@ -2613,6 +2613,27 @@ func TestIfIcmpne(t *testing.T) {
 	}
 }
 
+// IF_ICMPNE: jump if val1 != val2 Here tests when they are equal
+func TestIfIcmpneAreEqual(t *testing.T) {
+	f := newFrame(IF_ICMPNE)
+	push(&f, int64(9)) // pushed two equal values, so jump should not be made.
+	push(&f, int64(9))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err != nil {
+		t.Errorf("IF_ICMPNE: Got unexpected error: %s", err.Error())
+	}
+	if f.PC != 3 { // PC+= 2 when test fails, +1 for the next bytecode
+		t.Errorf("IF_ICMPNE: PC to be 3, got: %d", f.PC)
+	}
+	if f.TOS != -1 {
+		t.Errorf("IF_ICMPNE: Expected stack to be empty, TOS was: %d", f.TOS)
+	}
+}
+
 // IFEQ: jump if int popped off TOS is = 0
 func TestIfeq(t *testing.T) {
 	f := newFrame(IFEQ)
