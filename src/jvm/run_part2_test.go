@@ -13,6 +13,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/thread"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -1577,7 +1578,36 @@ func TestPop(t *testing.T) {
 	}
 }
 
-// POP2: pop two items off stack and discard them
+// POP with tracing enabled
+func TestPopWithTracing(t *testing.T) {
+	f := newFrame(POP)
+	push(&f, int64(34)) // push three different values
+	push(&f, int64(21))
+	push(&f, int64(0))
+
+	MainThread = thread.CreateThread()
+	MainThread.Stack = frames.CreateFrameStack()
+	// fs := frames.CreateFrameStack()
+	MainThread.Stack.PushFront(&f) // push the new frame
+	MainThread.Trace = true        // turn on tracing
+	_ = runFrame(MainThread.Stack)
+
+	if f.TOS != 1 {
+		t.Errorf("POP: Expected stack with 2 items, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 21 {
+		t.Errorf("POP: expected top's value to be 21, but got: %d", top)
+	}
+
+	if MainThread.Trace != true {
+		t.Errorf("POP: MainThread.Trace was not re-enabled after the POP execution")
+	}
+}
+
+// POP2: pop two items
 func TestPop2(t *testing.T) {
 	f := newFrame(POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
@@ -1596,6 +1626,34 @@ func TestPop2(t *testing.T) {
 
 	if top != 34 {
 		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	}
+}
+
+// POP2: pop two items off stack -- make sure tracing doesn't affect the output
+func TestPop2WithTrace(t *testing.T) {
+	f := newFrame(POP2)
+	push(&f, int64(34)) // push three different values; 34 at bottom
+	push(&f, int64(21))
+	push(&f, int64(10))
+
+	MainThread = thread.CreateThread()
+	MainThread.Stack = frames.CreateFrameStack()
+	MainThread.Stack.PushFront(&f) // push the new frame
+	MainThread.Trace = true        // turn on tracing
+	_ = runFrame(MainThread.Stack)
+
+	if f.TOS != 0 {
+		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 34 {
+		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	}
+
+	if MainThread.Trace != true {
+		t.Errorf("POP2: MainThread.Trace was not re-enabled after the POP2 execution")
 	}
 }
 
@@ -1868,9 +1926,13 @@ func TestInvalidInstruction(t *testing.T) {
 	os.Stderr = w
 
 	f := newFrame(252)
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f)
-	ret := runFrame(fs)
+
+	MainThread = thread.CreateThread()
+	MainThread.Stack = frames.CreateFrameStack()
+	MainThread.Stack.PushFront(&f) // push the new frame
+	MainThread.Trace = false       // turn off tracing
+	ret := runFrame(MainThread.Stack)
+
 	if ret == nil {
 		t.Errorf("Invalid instruction: Expected an error returned, but got nil.")
 	}
