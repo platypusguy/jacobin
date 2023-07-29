@@ -362,6 +362,38 @@ func TestCheckcastOfString(t *testing.T) {
 	}
 }
 
+// CHECKCAST: Test for nil.
+func TestCheckcastOfNil(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	log.Init()
+
+	classloader.Init()
+	// classloader.LoadBaseClasses()
+	classloader.MethAreaInsert("java/lang/String",
+		&(classloader.Klass{
+			Status: 'X', // use a status that's not subsequently tested for.
+			Loader: "bootstrap",
+			Data:   nil,
+		}))
+
+	f := newFrame(CHECKCAST)
+	push(&f, nil) // this should cause the error
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
+	}
+
+	if f.PC != 3 { // skip two bytes are error is discovered, +1 to get to next bytecode
+		t.Errorf(" CHECKCAST: Expected PC to be at 3, got %d", f.PC)
+	}
+}
+
 // D2F: test convert double to float
 func TestD2f(t *testing.T) {
 	f := newFrame(D2F)
