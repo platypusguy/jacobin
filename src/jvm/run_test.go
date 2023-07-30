@@ -362,7 +362,7 @@ func TestCheckcastOfString(t *testing.T) {
 	}
 }
 
-// CHECKCAST: Test for nil.
+// CHECKCAST: Test for nil. This should simply move the PC forward by 3 bytes. Nothing else.
 func TestCheckcastOfNil(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
@@ -380,6 +380,29 @@ func TestCheckcastOfNil(t *testing.T) {
 
 	f := newFrame(CHECKCAST)
 	push(&f, nil) // this should cause the error
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
+	}
+
+	if f.PC != 3 { // skip two bytes are error is discovered, +1 to get to next bytecode
+		t.Errorf(" CHECKCAST: Expected PC to be at 3, got %d", f.PC)
+	}
+}
+
+// CHECKCAST: Test for null -- this should simply move the PC forward by 3 bytes. Nothing else.
+func TestCheckcastOfNull(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	log.Init()
+
+	f := newFrame(CHECKCAST)
+	push(&f, object.Null) // this should cause the error
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
