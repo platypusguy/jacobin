@@ -417,6 +417,42 @@ func TestCheckcastOfNull(t *testing.T) {
 	}
 }
 
+// CHECKCAST: Test for non-object pointer -- this should result in an exception
+func TestCheckcastOfInvalidReference(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	log.Init()
+	log.SetLogLevel(log.SEVERE)
+
+	// redirect stderr to avoid printing error message to console
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(CHECKCAST)
+	push(&f, float64(42.0)) // this should cause the error
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	os.Stderr = normalStderr // restore stderr
+
+	if err == nil {
+		t.Errorf("CHECKCAST: Expected an error, but did not get one")
+	}
+
+	if f.TOS != 0 {
+		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "CHECKCAST: Invalid class reference") {
+		t.Errorf("CHECKCAST: Expected different error message. Got: %s", errMsg)
+	}
+}
+
 // D2F: test convert double to float
 func TestD2f(t *testing.T) {
 	f := newFrame(D2F)
