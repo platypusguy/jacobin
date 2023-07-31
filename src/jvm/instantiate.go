@@ -167,14 +167,15 @@ func loadThisClass(className string) error {
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 	// Success in loaded by name
-	_ = log.Log("instantiateClass: Success in LoadClassFromNameOnly("+className+")", log.TRACE_INST)
+	_ = log.Log("loadThisClass: Success in LoadClassFromNameOnly("+className+")", log.TRACE_INST)
 
 	// at this point the class has been loaded into the method area (MethArea). Wait for it to be ready.
 	err = classloader.WaitForClassStatus(className)
 	if err != nil {
-		errMsg := fmt.Sprintf("instantiateClass: %s", err.Error())
+		errMsg := fmt.Sprintf("loadThisClass: %s", err.Error())
 		_ = log.Log(errMsg, log.SEVERE)
-		return errors.New(errMsg)
+		//return errors.New(errMsg)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 	return nil
 }
