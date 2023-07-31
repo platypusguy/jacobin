@@ -48,16 +48,21 @@ func instantiateClass(classname string) (*object.Object, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	for { // go up the chain of superclasses until we hit java/lang/Object
-		if k.Data.Superclass == "java/lang/Object" {
+	// go up the chain of superclasses until we hit java/lang/Object
+	superclass := k.Data.Superclass
+	for {
+		if superclass == "java/lang/Object" {
 			break
 		}
 
-		// if it's a superclass other than Object.class, it needs to be loaded for us to continue
-		err := loadThisClass(k.Data.Superclass)
-		if err != nil { // error message will have been displayed
+		err := loadThisClass(superclass) // load the superclass
+		if err != nil {                  // error message will have been displayed
 			return nil, err
 		}
+
+		loadedSuperclass := classloader.MethAreaFetch(superclass)
+		// now loop to see whether this superclass has a superclass
+		superclass = loadedSuperclass.Data.Superclass
 	}
 
 	// the object's mark field contains the lower 32-bits of the object's
