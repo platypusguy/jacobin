@@ -161,10 +161,11 @@ func loadThisClass(className string) error {
 	// Try to load class by name
 	err := classloader.LoadClassFromNameOnly(className)
 	if err != nil {
-		msg := "instantiateClass: Failed to load class " + className
-		_ = log.Log(msg, log.SEVERE)
+		errMsg := "instantiateClass: Failed to load class " + className
+		_ = log.Log(errMsg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
+		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	}
 	// Success in loaded by name
 	_ = log.Log("loadThisClass: Success in LoadClassFromNameOnly("+className+")", log.TRACE_INST)
@@ -174,8 +175,8 @@ func loadThisClass(className string) error {
 	if err != nil {
 		errMsg := fmt.Sprintf("loadThisClass: %s", err.Error())
 		_ = log.Log(errMsg, log.SEVERE)
-		//return errors.New(errMsg)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
+		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	}
 	return nil
 }
