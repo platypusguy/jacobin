@@ -48,7 +48,11 @@ func instantiateClass(classname string) (*object.Object, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if k.Data.Superclass != "java/lang/Object" {
+	for { // go up the chain of superclasses until we hit java/lang/Object
+		if k.Data.Superclass == "java/lang/Object" {
+			break
+		}
+
 		// if it's a superclass other than Object.class, it needs to be loaded for us to continue
 		err := loadThisClass(k.Data.Superclass)
 		if err != nil { // error message will have been displayed
