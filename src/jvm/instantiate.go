@@ -36,7 +36,19 @@ func instantiateClass(classname string) (*object.Object, error) {
 		Klass: &classname,
 	}
 
-	if k.Data.Superclass != "" && k.Data.Superclass != "java/lang/Object" {
+	if k == nil {
+		errMsg := "Class is nil after loading, class: " + classname
+		_ = log.Log(errMsg, log.SEVERE)
+		return nil, errors.New(errMsg)
+	}
+
+	if k.Data == nil {
+		errMsg := "class.Data is nil, class: " + classname
+		_ = log.Log(errMsg, log.SEVERE)
+		return nil, errors.New(errMsg)
+	}
+
+	if k.Data.Superclass != "java/lang/Object" {
 		// if it's a superclass other than Object.class, it needs to be loaded for us to continue
 		err := loadThisClass(k.Data.Superclass)
 		if err != nil { // error message will have been displayed
