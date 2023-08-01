@@ -173,9 +173,8 @@ func loadThisClass(className string) error {
 	// at this point the class has been loaded into the method area (MethArea). Wait for it to be ready.
 	err = classloader.WaitForClassStatus(className)
 	if err != nil {
-		errMsg := fmt.Sprintf("loadThisClass: %s", err.Error())
+		errMsg := fmt.Sprintf("Error occurred in loadThisClass(): %s", err.Error())
 		_ = log.Log(errMsg, log.SEVERE)
-		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	}
 	return nil

@@ -1443,7 +1443,9 @@ func runFrame(fs *list.List) error {
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
-					ok = false
+					errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 			}
 
@@ -1521,7 +1523,9 @@ func runFrame(fs *list.List) error {
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
-					ok = false
+					errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 			}
 
@@ -1887,8 +1891,9 @@ func runFrame(fs *list.List) error {
 
 			ref, err := instantiateClass(className)
 			if err != nil {
-				// error message(s) already shown to user
-				return errors.New("NEW: Error occurred instantiating class: " + className)
+				errMsg := fmt.Sprintf("NEW: could not load class %s", className)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 			push(f, ref)
 
