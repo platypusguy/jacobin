@@ -81,7 +81,9 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 
-	classloader.LoadReferencedClasses(mainClass)
+	// the following was commented out per JACOBIN-327.
+	// Likely to be reinstated at some later point
+	// classloader.LoadReferencedClasses(mainClass)
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)

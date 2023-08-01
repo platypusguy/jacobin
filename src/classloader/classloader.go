@@ -223,6 +223,9 @@ func walk(s string, d fs.DirEntry, err error) error {
 // Reference: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.4
 // Note that The class being loaded has records in the CP that indicate all the other classes it interacts with.
 // Thus, classes are preloaded prior to need.
+//
+// Note: per JACOBIN-327, this parallel processing has been temporarily
+// removed--it's not called by any function. It's likely to be reinstated later.
 func LoadReferencedClasses(clName string) {
 	err := WaitForClassStatus(clName)
 	if err != nil {
@@ -250,6 +253,9 @@ func LoadReferencedClasses(clName string) {
 
 // LoadFromLoaderChannel receives a name of a class to load in /java/lang/String format,
 // determines the classloader, checks if the class is already loaded, and loads it if not.
+//
+// Note: per JACOBIN-327, this parallel processing has been temporarily
+// removed--it's not called by any function. It's likely to be reinstated later.
 func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	for name := range LoaderChannel {
 		present := MethAreaFetch(name)
