@@ -1245,7 +1245,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, int64(0))
 			}
-		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
+		case IFEQ: // 0x99 pop int, if it's == 0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value == 0 {
@@ -1254,7 +1254,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
+		case IFNE: // 0x9A pop int, it it's !=0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value != 0 {
@@ -1263,7 +1263,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFLT: // 0x9B pop int, if it's < 0, go to the jump location
+		case IFLT: // 0x9B pop int, if it's < 0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value < 0 {
@@ -1272,7 +1272,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
+		case IFGE: // 0x9C pop int, if it's >= 0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value >= 0 {
@@ -1281,7 +1281,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFGT: // 0x9D pop int, if it's > 0, go to the jump location
+		case IFGT: // 0x9D pop int, if it's > 0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value > 0 {
@@ -1290,7 +1290,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
+		case IFLE: // 0x9E pop int, if it's <= 0, transfer control to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value <= 0 {
@@ -1960,7 +1960,7 @@ func runFrame(fs *list.List) error {
 			case *[]int8:
 				array := *ref.(*[]int8)
 				size = int64(len(array))
-			case *[]uint8: // = go byte
+			case *[]uint8: // = golang byte
 				array := *ref.(*[]uint8)
 				size = int64(len(array))
 			case *object.Object:

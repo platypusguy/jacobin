@@ -217,13 +217,14 @@ func walk(s string, d fs.DirEntry, err error) error {
 
 // LoadReferencedClasses loads the classes referenced in the class named clName.
 // It does this by reading the class entries (ClassRefs=7) in the CP and sending the class names it finds
-// there to a go channel that will load the class.
+// there to a golang channel that will load the class.
 // Note that CP refers to the class constant pool = the array of records that a method refers to
 // when accessing fields, methods, values, etc.
 // Reference: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.4
 // Note that The class being loaded has records in the CP that indicate all the other classes it interacts with.
 // Thus, classes are preloaded prior to need.
 func LoadReferencedClasses(clName string) {
+	//fmt.Printf("LoadReferencedClasses: DEBUG, class=(%s)\n", clName)
 	err := WaitForClassStatus(clName)
 	if err != nil {
 		msg := fmt.Sprintf("LoadReferencedClasses: %s", err.Error())
@@ -233,43 +234,56 @@ func LoadReferencedClasses(clName string) {
 	currClass := MethAreaFetch(clName)
 	cpClassCP := currClass.Data.CP
 	classRefs := cpClassCP.ClassRefs
+	//fmt.Printf("LoadReferencedClasses: DEBUG, class=(%s), num classrefs=(%d)\n", clName, len(classRefs))
 
-	loaderChannel := make(chan string, len(classRefs))
+	loaderChannel := make([]string, len(classRefs))
+	ix := 0
 	for _, v := range classRefs {
 		refClassName := FetchUTF8stringFromCPEntryNumber(&cpClassCP, v)
+		//fmt.Printf("LoadReferencedClasses: DEBUG, v = %v, class=%s\n", v, refClassName)
 		name := normalizeClassReference(refClassName)
+		//fmt.Printf("LoadReferencedClasses: DEBUG, v = %v, class(normalized)=%s\n", v, name)
 		if name == "" {
 			continue
 		}
-		loaderChannel <- name
+		loaderChannel[ix] = name
+		ix++
 	}
-	globals.LoaderWg.Add(1)
-	go LoadFromLoaderChannel(loaderChannel)
-	close(loaderChannel)
+	// globals.LoaderWg.Add(1) // MULTITHREADING
+	// go LoadFromLoaderChannel(loaderChannel) // MULTITHREADING
+	LoadFromLoaderChannel(loaderChannel)
+	//close(loaderChannel)
 }
 
 // LoadFromLoaderChannel receives a name of a class to load in /java/lang/String format,
 // determines the classloader, checks if the class is already loaded, and loads it if not.
-func LoadFromLoaderChannel(LoaderChannel <-chan string) {
-	for name := range LoaderChannel {
+func LoadFromLoaderChannel(LoaderChannel []string) {
+	for _, name := range LoaderChannel {
+		//fmt.Printf("LoadFromLoaderChannel: DEBUG, calling MethAreaFetch(%s) .....\n", name)
 		present := MethAreaFetch(name)
 		if present != nil { // if the class is already loaded, skip it
+			//fmt.Printf("LoadFromLoaderChannel: DEBUG, not-nil returned from MethAreaFetch(%s)\n", name)
 			continue
 		}
+		//fmt.Printf("LoadFromLoaderChannel: DEBUG, nil returned from MethAreaFetch(%s)\n", name)
 
 		// add entry to the method area, indicating initialization of the load of this class
 		eKI := Klass{
 			Status: 'I', // I = initializing the load
-			Loader: "",
+			Loader: "application",
 			Data:   nil,
 		}
 		MethAreaInsert(name, &eKI)
-		err := LoadClassFromNameOnly(util.ConvertToPlatformPathSeparators(name))
+		convertedName := util.ConvertToPlatformPathSeparators(name)
+		//fmt.Printf("LoadFromLoaderChannel: DEBUG, calling LoadClassFromNameOnly (%s)\n", convertedName)
+		err := LoadClassFromNameOnly(convertedName)
 		if err != nil {
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
+		//fmt.Printf("LoadFromLoaderChannel: DEBUG, returned from LoadClassFromNameOnly (%s)\n", convertedName)
 	}
-	globals.LoaderWg.Done()
+	//fmt.Printf("LoadFromLoaderChannel: DEBUG, end of LoaderChannel\n")
+	// globals.LoaderWg.Done() // MULTITHREADING
 }
 
 func LoadClassFromNameOnly(className string) error {
@@ -746,7 +760,7 @@ func Init() error {
 	AppCL.Archives = make(map[string]*Archive)
 
 	// Launch JmodMap initialisation
-	// commented out: go JmodMapInit()
+	// go JmodMapInit() // MULTITHREADING
 	JmodMapInit()
 
 	// Load the base jmod
