@@ -15,9 +15,10 @@ import (
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark   MarkWord
-	Klass  *string // the class name in the method area
-	Fields []Field // slice containing the fields
+	Mark       MarkWord
+	Klass      *string // the class name in the method area
+	Fields     []Field // slice containing the fields
+	FieldTable map[string]Field
 }
 
 // These mark word contains values for different purposes. Here,

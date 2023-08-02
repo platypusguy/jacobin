@@ -74,6 +74,12 @@ func instantiateClass(classname string) (*object.Object, error) {
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
 			desc := k.Data.CP.Utf8Refs[f.Desc]
+			name := k.Data.CP.Utf8Refs[f.Name]
+			if log.Level == log.FINE {
+				reciteField := fmt.Sprintf("Class: %s ield[%d] name: %s, type: %s", k.Data.Name, i,
+					name, desc)
+				_ = log.Log(reciteField, log.FINE)
+			}
 
 			fieldToAdd := new(object.Field)
 			fieldToAdd.Ftype = desc
