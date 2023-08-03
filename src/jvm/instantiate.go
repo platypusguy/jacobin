@@ -70,6 +70,12 @@ func instantiateClass(classname string) (*object.Object, error) {
 	uintp := uintptr(unsafe.Pointer(&obj))
 	obj.Mark.Hash = uint32(uintp)
 
+	// handle the fields. If the object has no superclass other than Object,
+	// the fields are in an array in the order they're declared in the CP.
+	// If the object has a non-Object superclass, then those field's and
+	// the present object's field are stored in a map--indexed by the field
+	// name. Eventually, we might coalesce on a single approach for both
+	// kinds of objects.
 	if len(k.Data.Fields) > 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
