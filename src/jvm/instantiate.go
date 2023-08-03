@@ -49,6 +49,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 	}
 
 	// go up the chain of superclasses until we hit java/lang/Object
+	superclasses := []string{}
 	superclass := k.Data.Superclass
 	for {
 		if superclass == "java/lang/Object" {
@@ -58,6 +59,8 @@ func instantiateClass(classname string) (*object.Object, error) {
 		err := loadThisClass(superclass) // load the superclass
 		if err != nil {                  // error message will have been displayed
 			return nil, err
+		} else {
+			superclasses = append(superclasses, superclass)
 		}
 
 		loadedSuperclass := classloader.MethAreaFetch(superclass)
@@ -72,36 +75,72 @@ func instantiateClass(classname string) (*object.Object, error) {
 
 	// handle the fields. If the object has no superclass other than Object,
 	// the fields are in an array in the order they're declared in the CP.
-	// If the object has a non-Object superclass, then the superclass fields
+	// If the object has a non-Object superclass, then the superclasses' fields
 	// and the present object's field are stored in a map--indexed by the
 	// field name. Eventually, we might coalesce on a single approach for
 	// both kinds of objects.
-	if len(k.Data.Fields) == 0 {
+	if len(superclasses) == 0 && len(k.Data.Fields) == 0 {
 		return &obj, nil
 	}
 
-	// if k.Data.Superclass != "java/lang/Object"{
-	for i := 0; i < len(k.Data.Fields); i++ {
-		f := k.Data.Fields[i]
-		desc := k.Data.CP.Utf8Refs[f.Desc]
-		name := k.Data.CP.Utf8Refs[f.Name]
-		if log.Level == log.FINE {
-			reciteField := fmt.Sprintf("Class: %s ield[%d] name: %s, type: %s", k.Data.Name, i,
-				name, desc)
-			_ = log.Log(reciteField, log.FINE)
-		}
+	if len(superclasses) == 0 {
+		for i := 0; i < len(k.Data.Fields); i++ {
+			f := k.Data.Fields[i]
+			desc := k.Data.CP.Utf8Refs[f.Desc]
+			name := k.Data.CP.Utf8Refs[f.Name]
+			if log.Level == log.FINE {
+				reciteField := fmt.Sprintf("Class: %s ield[%d] name: %s, type: %s", k.Data.Name, i,
+					name, desc)
+				_ = log.Log(reciteField, log.FINE)
+			}
 
-		fieldToAdd, err := createField(f, k, classname)
-		if err != nil {
-			return nil, err
-		}
-		obj.Fields = append(obj.Fields, *fieldToAdd)
-	} // loop through the fields if any
-	// } // test if there are any declared fields
+			fieldToAdd, err := createField(f, k, classname)
+			if err != nil {
+				return nil, err
+			}
+			obj.Fields = append(obj.Fields, *fieldToAdd)
+		} // loop through the fields if any
+		obj.FieldTable = nil
+		return &obj, nil
+	} // end of handling fields for objects w/ no superclasses
 
+	// in the case of superclasses, we start at the topmost superclass
+	// and work our way down to the present class, adding fields to FieldTable.
+	// so we add the present class into position[0] and then loop through
+	// the slice of class names
+	superclasses = append([]string{classname}, superclasses...)
+	for j := len(superclasses) - 1; j >= 0; j-- {
+		superclassName := superclasses[j]
+		c := classloader.MethAreaFetch(superclassName)
+		if c == nil {
+			errMsg := fmt.Sprintf("Error in class instantiation, cannot find superclass: %s",
+				superclassName)
+			_ = log.Log(errMsg, log.SEVERE)
+			return nil, errors.New(errMsg)
+		}
+		for i := 0; i < len(k.Data.Fields); i++ {
+			f := c.Data.Fields[i]
+			desc := c.Data.CP.Utf8Refs[f.Desc]
+			name := c.Data.CP.Utf8Refs[f.Name]
+			if log.Level == log.FINE {
+				reciteField := fmt.Sprintf("Class: %s field[%d] name: %s, type: %s", k.Data.Name, i,
+					name, desc)
+				_ = log.Log(reciteField, log.FINE)
+			}
+
+			fieldToAdd, err := createField(f, c, classname)
+			if err != nil {
+				return nil, err
+			}
+
+			// add the field to the field table for this
+			obj.FieldTable[name] = *fieldToAdd
+		} // end of handling fields for one  class or superclass
+	} // end of handling fields for classes with superclasses other than Object
 	return &obj, nil
 }
 
+// creates a field for insertion into the object representation
 func createField(f classloader.Field, k *classloader.Klass, classname string) (*object.Field, error) {
 	desc := k.Data.CP.Utf8Refs[f.Desc]
 	name := k.Data.CP.Utf8Refs[f.Name]
