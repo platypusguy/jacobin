@@ -17,10 +17,11 @@ import (
 	"unsafe"
 )
 
-// instantiating a class is a two-part process (except for arrays, where nothing happens)
+// instantiating an object is a two-part process (except for arrays, which are handled
+// by special bytecodes):
 //  1. the class needs to be loaded, so that its details and its methods are knowable
-//  2. the class fields (if static) and instance fields (if non-static) are allocated. Details
-//     for this second step appear at the initializeFields() method.
+//  2. the class fields (if static) and instance fields (if non-static) are allocated.
+//     Details for this second step appear in the loop that drives createField().
 func instantiateClass(classname string) (*object.Object, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
