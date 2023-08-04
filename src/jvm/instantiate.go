@@ -104,6 +104,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 		return &obj, nil
 	} // end of handling fields for objects w/ no superclasses
 
+	obj.FieldTable = make(map[string]object.Field)
 	// in the case of superclasses, we start at the topmost superclass
 	// and work our way down to the present class, adding fields to FieldTable.
 	// so we add the present class into position[0] and then loop through
@@ -118,7 +119,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 			_ = log.Log(errMsg, log.SEVERE)
 			return nil, errors.New(errMsg)
 		}
-		for i := 0; i < len(k.Data.Fields); i++ {
+		for i := 0; i < len(c.Data.Fields); i++ {
 			f := c.Data.Fields[i]
 			desc := c.Data.CP.Utf8Refs[f.Desc]
 			name := c.Data.CP.Utf8Refs[f.Name]
