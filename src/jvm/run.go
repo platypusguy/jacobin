@@ -1593,8 +1593,17 @@ func runFrame(fs *list.List) error {
 
 			ref := pop(f).(*object.Object)
 			obj := *ref
-			fieldType := obj.Fields[fieldEntry.Slot].Ftype
-			fieldValue := obj.Fields[fieldEntry.Slot].Fvalue
+
+			// var fieldName string
+			var fieldType string
+			var fieldValue interface{}
+
+			if obj.Fields != nil {
+				fieldType = obj.Fields[fieldEntry.Slot].Ftype
+				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
+			} else { // retrieve by name
+
+			}
 			push(f, fieldValue)
 
 			// doubles and longs consume two slots on the op stack
@@ -1646,18 +1655,35 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-			// the fields in the object are numbered in the same
-			// order they are declared in the constant pool. So,
-			// to get to the right field, we only need to know
-			// the slot number in CP.Fields. It will be the same
-			// index into the object's fields.
-			if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
-				errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
-					f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
-				return fmt.Errorf(errMsg)
+			if obj.Fields != nil {
+				// If it's a simple object w/out superclasses other than object,
+				// the fields in the object are numbered in the same
+				// order they are declared in the constant pool. So,
+				// to get to the right field, we only need to know
+				// the slot number in CP.Fields. It will be the same
+				// index into the object's fields.
+				if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
+					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
+						f.MethName, f.ClName)
+					_ = log.Log(errMsg, log.SEVERE)
+					return fmt.Errorf(errMsg)
+				} else {
+					obj.Fields[fieldEntry.Slot].Fvalue = value
+				}
 			} else {
-				obj.Fields[fieldEntry.Slot].Fvalue = value
+				// otherwise, it's an object that contains superclass fields and
+				// we need to access the field via the field table using the field name
+				fullFieldEntry := f.CP.FieldRefs[fieldEntry.Slot]
+				nameAndTypeCPIndex := fullFieldEntry.NameAndType
+				nameAndTypeIndex := f.CP.CpIndex[nameAndTypeCPIndex]
+				nameAndType := f.CP.NameAndTypes[nameAndTypeIndex.Slot]
+				nameCPIndex := nameAndType.NameIndex
+				nameCPentry := f.CP.CpIndex[nameCPIndex]
+				fieldName := f.CP.Utf8Refs[nameCPentry.Slot]
+
+				objField := obj.FieldTable[fieldName]
+				objField.Fvalue = value
+				obj.FieldTable[fieldName] = objField
 			}
 
 		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)

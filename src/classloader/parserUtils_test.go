@@ -590,7 +590,7 @@ func TestResolveCPnameAndType(t *testing.T) {
 	klass := ParsedClass{}
 	klass.cpCount = 2
 
-	_, _, err := resolveCPnameAndType(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	_, _, err := ResolveCPnameAndType(&klass, 3) // index (3) can't be bigger than CP entries (2)
 	if err == nil {
 		t.Error("Expected error testing resolution of CP MethodRef, but got none")
 	}

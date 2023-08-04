@@ -148,7 +148,7 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	}
 
 	// pointedToNandT := klass.cpIndex[methRef.nameAndTypeIndex]
-	methName, methType, err := resolveCPnameAndType(klass, methRef.nameAndTypeIndex)
+	methName, methType, err := ResolveCPnameAndType(klass, methRef.nameAndTypeIndex)
 	if err != nil {
 		return "", "", "", errors.New("error occurred") // the error msg is displayed in the called func.
 	}
@@ -156,7 +156,7 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	return className, methName, methType, nil
 }
 
-func resolveCPnameAndType(klass *ParsedClass, index int) (string, string, error) {
+func ResolveCPnameAndType(klass *ParsedClass, index int) (string, string, error) {
 	if index < 1 || index >= len(klass.cpIndex) {
 		return "", "", cfe("Invalid nameAndType index into CP: " +
 			strconv.Itoa(index))
