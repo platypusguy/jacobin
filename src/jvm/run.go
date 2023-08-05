@@ -148,16 +148,20 @@ func runFrame(fs *list.List) error {
 						stackTop = fmt.Sprintf("null")
 					} else {
 						obj := *(f.OpStack[f.TOS].(*object.Object))
-						if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
-							if obj.Fields[0].Fvalue == nil {
-								stackTop = fmt.Sprintf("[]byte: <nil>")
-							} else {
-								strVal := (obj.Fields[0].Fvalue).(*[]byte)
-								str := string(*strVal)
-								stackTop = fmt.Sprintf("String: %-10s", str)
+						if len(obj.Fields) > 0 {
+							if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+								if obj.Fields[0].Fvalue == nil {
+									stackTop = fmt.Sprintf("[]byte: <nil>")
+								} else {
+									strVal := (obj.Fields[0].Fvalue).(*[]byte)
+									str := string(*strVal)
+									stackTop = fmt.Sprintf("String: %-10s", str)
+								}
+							} else { // so not a byte array (and therefore, not a string)
+								stackTop = "Object: "
 							}
-						} else { // so not a byte array (and therefore, not a string)
-							stackTop = "Object: "
+						} else {
+							stackTop = "obj.Field[]"
 						}
 					}
 				case *[]uint8:
@@ -1649,8 +1653,10 @@ func runFrame(fs *list.List) error {
 			case *object.Object:
 				if value != object.Null {
 					v := *(value.(*object.Object))
-					if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
-						value = v.Fields[0].Fvalue
+					if obj.Fields != nil {
+						if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
+							value = v.Fields[0].Fvalue
+						}
 					}
 				}
 			}
@@ -2327,15 +2333,20 @@ func pop(f *frames.Frame) interface{} {
 						debug.PrintStack()
 						syscall.Exit(1)
 					}
-					if obj.Fields[0].Ftype == "[B" {
-						if obj.Fields[0].Fvalue == nil {
-							traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-								fmt.Sprintf("%3d []byte]: <nil>", f.TOS)
+					if len(obj.Fields) > 0 {
+						if obj.Fields[0].Ftype == "[B" {
+							if obj.Fields[0].Fvalue == nil {
+								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+									fmt.Sprintf("%3d []byte]: <nil>", f.TOS)
+							} else {
+								strVal := (obj.Fields[0].Fvalue).(*[]byte)
+								str := string(*strVal)
+								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+									fmt.Sprintf("%3d String: %-10s", f.TOS, str)
+							}
 						} else {
-							strVal := (obj.Fields[0].Fvalue).(*[]byte)
-							str := string(*strVal)
 							traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-								fmt.Sprintf("%3d String: %-10s", f.TOS, str)
+								fmt.Sprintf("%3d *Object: %v", f.TOS, value)
 						}
 					} else {
 						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
@@ -2371,19 +2382,24 @@ func peek(f *frames.Frame) interface{} {
 			switch value.(type) {
 			case *object.Object:
 				obj := value.(*object.Object)
-				if obj.Fields[0].Ftype == "[B" {
-					if obj.Fields[0].Fvalue == nil {
-						traceInfo = fmt.Sprintf("                                                  "+
-							"      PEEK          TOS:%3d []byte: <nil>", f.TOS)
+				if len(obj.Fields) > 0 {
+					if obj.Fields[0].Ftype == "[B" {
+						if obj.Fields[0].Fvalue == nil {
+							traceInfo = fmt.Sprintf("                                                  "+
+								"      PEEK          TOS:%3d []byte: <nil>", f.TOS)
+						} else {
+							strVal := (obj.Fields[0].Fvalue).(*[]byte)
+							str := string(*strVal)
+							traceInfo = fmt.Sprintf("                                                  "+
+								"      PEEK          TOS:%3d String: %-10s", f.TOS, str)
+						}
 					} else {
-						strVal := (obj.Fields[0].Fvalue).(*[]byte)
-						str := string(*strVal)
 						traceInfo = fmt.Sprintf("                                                  "+
-							"      PEEK          TOS:%3d String: %-10s", f.TOS, str)
+							"      PEEK          TOS:%3d *Object: %v", f.TOS, value)
 					}
 				} else {
 					traceInfo = fmt.Sprintf("                                                  "+
-						"      PEEK          TOS:%3d *Object: %v", f.TOS, value)
+						"PEEK          TOS:%3d %T %v", f.TOS, value, value)
 				}
 			default:
 				traceInfo = fmt.Sprintf("                                                  "+
@@ -2417,15 +2433,20 @@ func push(f *frames.Frame, x interface{}) {
 					switch x.(type) {
 					case *object.Object:
 						obj := x.(*object.Object)
-						if obj.Fields[0].Ftype == "[B" {
-							if obj.Fields[0].Fvalue == nil {
-								traceInfo = fmt.Sprintf("%56s", " ") +
-									fmt.Sprintf("PUSH          TOS:%3d []byte: <nil>", f.TOS)
+						if len(obj.Fields) > 0 {
+							if obj.Fields[0].Ftype == "[B" {
+								if obj.Fields[0].Fvalue == nil {
+									traceInfo = fmt.Sprintf("%56s", " ") +
+										fmt.Sprintf("PUSH          TOS:%3d []byte: <nil>", f.TOS)
+								} else {
+									strVal := (obj.Fields[0].Fvalue).(*[]byte)
+									str := string(*strVal)
+									traceInfo = fmt.Sprintf("%56s", " ") +
+										fmt.Sprintf("PUSH          TOS:%3d String: %-10s", f.TOS, str)
+								}
 							} else {
-								strVal := (obj.Fields[0].Fvalue).(*[]byte)
-								str := string(*strVal)
 								traceInfo = fmt.Sprintf("%56s", " ") +
-									fmt.Sprintf("PUSH          TOS:%3d String: %-10s", f.TOS, str)
+									fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
 							}
 						} else {
 							traceInfo = fmt.Sprintf("%56s", " ") +
