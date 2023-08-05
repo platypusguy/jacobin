@@ -1653,8 +1653,10 @@ func runFrame(fs *list.List) error {
 			case *object.Object:
 				if value != object.Null {
 					v := *(value.(*object.Object))
-					if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
-						value = v.Fields[0].Fvalue
+					if obj.Fields != nil {
+						if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
+							value = v.Fields[0].Fvalue
+						}
 					}
 				}
 			}
