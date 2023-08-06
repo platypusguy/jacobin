@@ -140,13 +140,17 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass
+	k.Data.Superclass = "java/lang/Object"
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
 
+	// we need a java/lang/Object instance, so just duplicate the entry
+	// in the MethArea. It's only a placeholder
+	MethAreaInsert("java/lang/Object", &k)
+
 	newLen := MethAreaSize()
-	if newLen != currLen+1 {
+	if newLen != currLen+2 {
 		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
