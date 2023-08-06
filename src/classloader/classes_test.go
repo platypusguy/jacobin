@@ -239,6 +239,15 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 }
 
 func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
 	cp := CPool{}
 
 	cp.CpIndex = append(cp.CpIndex, CpEntry{})
@@ -264,4 +273,10 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 	if s != "" {
 		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
 	}
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
 }
