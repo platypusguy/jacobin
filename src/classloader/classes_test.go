@@ -140,7 +140,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-
+	k.Data.Superclass
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -194,13 +194,17 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-
+	k.Data.Superclass = "java/lang/Object"
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
 
+	// we need a java/lang/Object instance, so just duplicate the entry
+	// in the MethArea. It's only a placeholder
+	MethAreaInsert("java/lang/Object", &k)
+
 	newLen := MethAreaSize()
-	if newLen != currLen+1 {
+	if newLen != currLen+2 {
 		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
@@ -209,6 +213,10 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	_, err := FetchMethodAndCP("TestEntry", "gherkin", "([L)V")
 	if err == nil {
 		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
+	}
+
+	if err.Error() != "method not found" {
+		t.Errorf("Expecting error of 'method not found', got %s", err.Error())
 	}
 
 	// restore stderr and stdout to what they were before
@@ -221,8 +229,8 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "it did not contain method: gherkin") {
-		t.Errorf("Expecting log message containing 'it did not contain method: gherkin', got: %s", msg)
+	if !strings.Contains(msg, "did not contain method: gherkin") {
+		t.Errorf("Expecting log message containing 'did not contain method: gherkin', got: %s", msg)
 	}
 }
 

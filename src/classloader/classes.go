@@ -196,36 +196,52 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // entry as the Method it's returning.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 
-	if MethAreaFetch(class) == nil {
-		err := LoadClassFromNameOnly(class)
-		if err != nil {
-			_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
-			_ = log.Log(err.Error(), log.SEVERE)
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
-		}
-	}
+	for {
+	startSearch:
 
-	methFQN := class + "." + meth + methType // FQN = fully qualified name
-	methEntry := MTable[methFQN]
-	if methEntry.Meth == nil { // method is not in the MTable, so find it and put it there
+		// has the class been loaded? If not, then load it now.
+		if MethAreaFetch(class) == nil {
+			err := LoadClassFromNameOnly(class)
+			if err != nil {
+				_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
+				_ = log.Log(err.Error(), log.SEVERE)
+				shutdown.Exit(shutdown.JVM_EXCEPTION)
+			}
+		}
+
+		methFQN := class + "." + meth + methType // FQN = fully qualified name
+		methEntry := MTable[methFQN]
+
+		if methEntry.Meth != nil { // we found the entry in the MTable
+			if methEntry.MType == 'J' {
+				return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
+			} else if methEntry.MType == 'G' {
+				return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
+			}
+		}
+
+		// method is not in the MTable, so find it and put it there
 		err := WaitForClassStatus(class)
 		if err != nil {
-			msg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
-			_ = log.Log(msg, log.SEVERE)
+			errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
+			_ = log.Log(errMsg, log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
+
 		k := MethAreaFetch(class)
 		if k == nil {
-			msg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class {%s}", class)
-			_ = log.Log(msg, log.SEVERE)
+			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class {%s}", class)
+			_ = log.Log(errMsg, log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
 		if k.Loader == "" { // if class is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			msg := "FetchMethodAndCP: Null Loader in class: " + class
-			_ = log.Log(msg, log.SEVERE)
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			errMsg := "FetchMethodAndCP: Null Loader in class: " + class
+			_ = log.Log(errMsg, log.SEVERE)
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
 		// the class has been found (k) so now go down the list of methods until
@@ -253,11 +269,13 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 				return MTentry{Meth: jme, MType: 'J'}, nil
 			}
 		}
-	} else { // we found the entry in the MTable
-		if methEntry.MType == 'J' {
-			return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
-		} else if methEntry.MType == 'G' {
-			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
+
+		// if we got this far, the method was not found, so check the superclass(es)
+		if class == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
+			break
+		} else {
+			class = k.Data.Superclass
+			goto startSearch
 		}
 	}
 
@@ -271,7 +289,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	}
 
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
-	return MTentry{}, errors.New("method not found") // dummy return
+	return MTentry{}, errors.New("method not found") // dummy return needed for tests
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number
