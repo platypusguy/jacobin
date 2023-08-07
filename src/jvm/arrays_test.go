@@ -347,7 +347,7 @@ func TestAnewrrayInvalidSize(t *testing.T) {
 	}
 
 	msg := err.Error()
-	if !(msg == "ANEWARRAY: invalid size for an array") {
+	if !(msg == "ANEWARRAY: Invalid size for array") {
 		t.Errorf("ANEWARRAY: Expecting different error msg, got %s", msg)
 	}
 }
