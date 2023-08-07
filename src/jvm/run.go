@@ -148,8 +148,8 @@ func runFrame(fs *list.List) error {
 						stackTop = fmt.Sprintf("null")
 					} else {
 						obj := *(f.OpStack[f.TOS].(*object.Object))
-						if len(obj.Fields) > 0 {
-							if obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+						if obj.Fields != nil && len(obj.Fields) > 0 {
+							if obj.Fields != nil && obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
 								if obj.Fields[0].Fvalue == nil {
 									stackTop = fmt.Sprintf("[]byte: <nil>")
 								} else {
@@ -1671,7 +1671,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			if obj.Fields != nil {
-				// If it's a simple object w/out superclasses other than object,
+				// If it's a simple object w/out superclasses other than Object,
 				// the fields in the object are numbered in the same
 				// order they are declared in the constant pool. So,
 				// to get to the right field, we only need to know
