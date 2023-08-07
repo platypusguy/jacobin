@@ -1964,10 +1964,9 @@ func runFrame(fs *list.List) error {
 		case ANEWARRAY: // 0xBD create array of references
 			size := pop(f).(int64)
 			if size < 0 {
-				exceptions.Throw(
-					exceptions.NegativeArraySizeException,
-					"ANEWARRAY: Invalid size for array")
-				return errors.New("ANEWARRAY: invalid size for an array")
+				errMsg := "ANEWARRAY: Invalid size for array"
+				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			arrayPtr := object.Make1DimArray(object.REF, size)
@@ -2045,9 +2044,9 @@ func runFrame(fs *list.List) error {
 					obj = (ref).(*object.Object)
 				}
 			default:
-				exceptions.Throw(exceptions.ClassCastException,
-					"CHECKCAST: Invalid class reference")
-				return errors.New("CHECKCAST: Invalid class reference")
+				errMsg := "CHECKCAST: Invalid class reference"
+				exceptions.Throw(exceptions.ClassCastException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			// at this point, we know we have a valid non-nil, non-null pointer to an object
@@ -2221,10 +2220,9 @@ func runFrame(fs *list.List) error {
 			f.PC += 1
 
 			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
-				_ = log.Log("MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions",
-					log.SEVERE)
-				return errors.New(
-					"MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions")
+				errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			dimSizes := make([]int64, dimensionCount)
