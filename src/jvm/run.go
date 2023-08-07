@@ -1606,7 +1606,16 @@ func runFrame(fs *list.List) error {
 				fieldType = obj.Fields[fieldEntry.Slot].Ftype
 				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
 			} else { // retrieve by name
+				fullFieldEntry := f.CP.FieldRefs[fieldEntry.Slot]
+				nameAndTypeCPIndex := fullFieldEntry.NameAndType
+				nameAndTypeIndex := f.CP.CpIndex[nameAndTypeCPIndex]
+				nameAndType := f.CP.NameAndTypes[nameAndTypeIndex.Slot]
+				nameCPIndex := nameAndType.NameIndex
+				nameCPentry := f.CP.CpIndex[nameCPIndex]
+				fieldName := f.CP.Utf8Refs[nameCPentry.Slot]
 
+				objField := obj.FieldTable[fieldName]
+				fieldValue = objField.Fvalue
 			}
 			push(f, fieldValue)
 
