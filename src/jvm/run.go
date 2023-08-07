@@ -21,10 +21,8 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
-	"runtime/debug"
 	"strconv"
 	"strings"
-	"syscall"
 	"unsafe"
 )
 
@@ -2335,10 +2333,13 @@ func pop(f *frames.Frame) interface{} {
 				case *object.Object:
 					obj := value.(*object.Object)
 					if obj == nil {
-						traceInfo = fmt.Sprintf("pop: TOS value is type *object.Object but obj is nil")
-						_ = log.Log(traceInfo, log.SEVERE)
-						debug.PrintStack()
-						syscall.Exit(1)
+						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+							fmt.Sprintf("%3d null", f.TOS)
+						break
+						// traceInfo = fmt.Sprintf("pop: TOS value is type *object.Object but obj is nil")
+						// _ = log.Log(traceInfo, log.SEVERE)
+						// debug.PrintStack()
+						// syscall.Exit(1)
 					}
 					if len(obj.Fields) > 0 {
 						if obj.Fields[0].Ftype == "[B" {
