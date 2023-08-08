@@ -70,6 +70,9 @@ func LoadOptionsTable(Global globals.Globals) {
 	Global.Options["--dry-run"] = dryRun
 	dryRun.Set = true
 
+	ea := globals.Option{false, false, 0, enableAssertions}
+	Global.Options["-ea"] = ea
+
 	help := globals.Option{true, false, 0, showHelpStderrAndExit}
 	Global.Options["-h"] = help
 	Global.Options["-help"] = help
@@ -183,6 +186,12 @@ func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, erro
 
 func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-trace", gl)
+	return pos, nil
+}
+
+func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
+	// at present, this option is accepted but does nothing. Its acceptance is needed
+	// in order to enable certain functionality in the Jacotest suite
 	return pos, nil
 }
 
