@@ -18,6 +18,8 @@ As we progress, we post short explanations of project decisions and explanations
 
 #### Project Posts
 
+[Jacobin at the 2-year mark](http://binstock.blogspot.com/2023/08/jacobin-at-2-year-mark.html)
+
 [Jacobin at 18 months](http://binstock.blogspot.com/2023/02/jacobin-jvm-at-18-months.html)
 
 [Jacobin status at the 1-year mark](http://binstock.blogspot.com/2022/08/jacobin-jvm-at-1-year-mark.html)
@@ -30,6 +32,8 @@ As we progress, we post short explanations of project decisions and explanations
 [How Jacobin searches for methods](http://binstock.blogspot.com/2021/12/how-jacobin-jvm-accesses-methods.html)
 
 [Inside Java class files: the constant pool](https://blogs.oracle.com/javamagazine/post/java-class-file-constant-pool)
+
+[Inside the JVM: Arrays](https://blogs.oracle.com/javamagazine/post/java-array-objects)
 
 ### The Team (and Thanks)
 Jacobin is presently being developed by Andrew Binstock ([platypusguy](https://github.com/platypusguy/)), [Spencer Uresk](https://twitter.com/suresk), and [Richard Elkins](https://twitter.com/texadactyl). Contributors are more than welcome. If you'd like to show your support the project but can't contribute code, we'd love a GitHub star or for you to follow the project. 
