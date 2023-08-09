@@ -147,7 +147,7 @@ func runFrame(fs *list.List) error {
 					} else {
 						obj := *(f.OpStack[f.TOS].(*object.Object))
 						if obj.Fields != nil && len(obj.Fields) > 0 {
-							if obj.Fields != nil && obj.Fields[0].Ftype == "[B" { // if it's a string, just show the string
+							if obj.Fields != nil && obj.Fields[0].Ftype == types.ByteArray { // if it's a string, just show the string
 								if obj.Fields[0].Fvalue == nil {
 									stackTop = fmt.Sprintf("[]byte: <nil>")
 								} else {

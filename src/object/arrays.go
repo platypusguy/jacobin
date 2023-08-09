@@ -135,7 +135,7 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		raw := rawArray.(*[]uint8)
 		o := MakeEmptyObject()
 		o.Klass = nil
-		of := Field{Ftype: "[B", Fvalue: raw}
+		of := Field{Ftype: types.ByteArray, Fvalue: raw}
 		o.Fields = append(o.Fields, of)
 		return o
 	}

@@ -15,6 +15,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/types"
 	"jacobin/util"
 	"os"
 	"path/filepath"
@@ -721,12 +722,12 @@ func (cl *Classloader) GetCountOfLoadedClasses() int {
 // and skips all array classes. For these latter cases or any errors, it returns ""
 func normalizeClassReference(ref string) string {
 	refClassName := ref
-	if strings.HasPrefix(refClassName, "[L") {
-		refClassName = strings.TrimPrefix(refClassName, "[L")
+	if strings.HasPrefix(refClassName, types.RefArray) {
+		refClassName = strings.TrimPrefix(refClassName, types.RefArray)
 		if strings.HasSuffix(refClassName, ";") {
 			refClassName = strings.TrimSuffix(refClassName, ";")
 		}
-	} else if strings.HasPrefix(refClassName, "[") {
+	} else if strings.HasPrefix(refClassName, types.Array) {
 		refClassName = ""
 	}
 	return refClassName

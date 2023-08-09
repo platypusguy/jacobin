@@ -11,6 +11,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"os"
 	"strings"
 	"sync"
@@ -120,7 +121,7 @@ func TestNormalizingClassReference(t *testing.T) {
 		t.Error("Unexpected normalized class reference: " + s)
 	}
 
-	s = normalizeClassReference("[B")
+	s = normalizeClassReference(types.ByteArray)
 	if s != "" {
 		t.Error("Unexpected normalized class reference: " + s)
 	}

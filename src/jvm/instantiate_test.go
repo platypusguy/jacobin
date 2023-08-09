@@ -10,6 +10,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"testing"
 )
 
@@ -21,7 +22,7 @@ func TestInstantiateArray(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	classloader.InitMethodArea()
 
-	obj, err := instantiateClass("[B")
+	obj, err := instantiateClass(types.ByteArray)
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
 	}

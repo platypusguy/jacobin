@@ -35,38 +35,38 @@ func NewString() *Object {
 	// equivalent in go: runes.
 	array := make([]byte, 10)
 	s.Fields = append(s.Fields,
-		Field{Ftype: "[B", Fvalue: &array})
+		Field{Ftype: types.ByteArray, Fvalue: &array})
 
 	// field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
-	s.Fields = append(s.Fields, Field{Ftype: "B", Fvalue: int64(1)})
+	s.Fields = append(s.Fields, Field{Ftype: types.Byte, Fvalue: int64(1)})
 
 	// field 02 -- string hash
-	s.Fields = append(s.Fields, Field{Ftype: "I", Fvalue: int64(0)})
+	s.Fields = append(s.Fields, Field{Ftype: types.Int, Fvalue: int64(0)})
 
 	// field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
 	s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: types.JavaBoolTrue})
 
 	// field 04 -- UTF_8.INSTANCE ptr to encoder
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 05 -- ISO_8859_1.INSTANCE ptr to encoder
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 06 -- sun/nio/cs/US_ASCII.INSTANCE
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 07 -- java/nio/charset/CodingErrorAction.REPLACE
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 08 -- java/lang/String.CASE_INSENSITIVE_ORDER
 	// points to a comparator. Will be useful to fill in later
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
-	// field 09 -- hashIsZero (only true in rare case where hash is 0
-	s.Fields = append(s.Fields, Field{Ftype: "Z", Fvalue: types.JavaBoolFalse})
+	// field 09 -- hashIsZero (only true in rare case where hash is 0)
+	s.Fields = append(s.Fields, Field{Ftype: types.Bool, Fvalue: types.JavaBoolFalse})
 
 	// field 10 -- serialPersistentFields
-	s.Fields = append(s.Fields, Field{Ftype: "L", Fvalue: nil})
+	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	return s
 }

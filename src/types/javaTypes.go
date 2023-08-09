@@ -15,6 +15,7 @@ const Double = "D"
 const Float = "F"
 const Int = "I" // can be either 32- or 64-bit int
 const Long = "J"
+const Ref = "L"
 const Short = "S"
 
 const Array = "["
@@ -23,7 +24,6 @@ const IntArray = "[I"
 const FloatArray = "[F"
 const RefArray = "[L"
 const RuneArray = "[R" // used only in strings that are not compact
-const Ref = "Z"
 
 // Jacobin-specific types
 const String = "T"
