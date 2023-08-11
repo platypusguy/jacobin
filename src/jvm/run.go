@@ -135,51 +135,7 @@ func runFrame(fs *list.List) error {
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
 		if MainThread.Trace {
-			var tos = " -"
-			var stackTop = ""
-			if f.TOS != -1 {
-				tos = fmt.Sprintf("%2d", f.TOS)
-				switch f.OpStack[f.TOS].(type) {
-				// if the value at TOS is a string, say so and print the first 10 chars of the string
-				case *object.Object:
-					if f.OpStack[f.TOS].(*object.Object) == object.Null {
-						stackTop = fmt.Sprintf("null")
-					} else {
-						obj := *(f.OpStack[f.TOS].(*object.Object))
-						if obj.Fields != nil && len(obj.Fields) > 0 {
-							if obj.Fields != nil && obj.Fields[0].Ftype == types.ByteArray { // if it's a string, just show the string
-								if obj.Fields[0].Fvalue == nil {
-									stackTop = fmt.Sprintf("[]byte: <nil>")
-								} else {
-									strVal := (obj.Fields[0].Fvalue).(*[]byte)
-									str := string(*strVal)
-									stackTop = fmt.Sprintf("String: %-10s", str)
-								}
-							} else { // so not a byte array (and therefore, not a string)
-								stackTop = "Object: "
-							}
-						} else {
-							stackTop = "obj.Field[]"
-						}
-					}
-				case *[]uint8:
-					value := f.OpStack[f.TOS]
-					strPtr := value.(*[]byte)
-					str := string(*strPtr)
-					stackTop = fmt.Sprintf("*[]byte: %-10s", str)
-				default:
-					stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
-				}
-			}
-
-			traceInfo :=
-				"class: " + fmt.Sprintf("%-22s", f.ClName) +
-					" meth: " + fmt.Sprintf("%-10s", f.MethName) +
-					" PC: " + fmt.Sprintf("% 3d", f.PC) +
-					", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
-					" TOS: " + tos +
-					" " + stackTop +
-					" "
+			traceInfo := emitTraceData(f)
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
 
@@ -2312,6 +2268,55 @@ func runFrame(fs *list.List) error {
 		f.PC += 1
 	}
 	return nil
+}
+
+func emitTraceData(f *frames.Frame) string {
+	var tos = " -"
+	var stackTop = ""
+	if f.TOS != -1 {
+		tos = fmt.Sprintf("%2d", f.TOS)
+		switch f.OpStack[f.TOS].(type) {
+		// if the value at TOS is a string, say so and print the first 10 chars of the string
+		case *object.Object:
+			if f.OpStack[f.TOS].(*object.Object) == object.Null {
+				stackTop = fmt.Sprintf("null")
+			} else {
+				obj := *(f.OpStack[f.TOS].(*object.Object))
+				if obj.Fields != nil && len(obj.Fields) > 0 {
+					if obj.Fields != nil && obj.Fields[0].Ftype == types.ByteArray { // if it's a string, just show the string
+						if obj.Fields[0].Fvalue == nil {
+							stackTop = fmt.Sprintf("[]byte: <nil>")
+						} else {
+							strVal := (obj.Fields[0].Fvalue).(*[]byte)
+							str := string(*strVal)
+							stackTop = fmt.Sprintf("String: %-10s", str)
+						}
+					} else { // so not a byte array (and therefore, not a string)
+						stackTop = "Object: "
+					}
+				} else {
+					stackTop = "obj.Field[]"
+				}
+			}
+		case *[]uint8:
+			value := f.OpStack[f.TOS]
+			strPtr := value.(*[]byte)
+			str := string(*strPtr)
+			stackTop = fmt.Sprintf("*[]byte: %-10s", str)
+		default:
+			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
+		}
+	}
+
+	traceInfo :=
+		"class: " + fmt.Sprintf("%-22s", f.ClName) +
+			" meth: " + fmt.Sprintf("%-10s", f.MethName) +
+			" PC: " + fmt.Sprintf("% 3d", f.PC) +
+			", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
+			" TOS: " + tos +
+			" " + stackTop +
+			" "
+	return traceInfo
 }
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
