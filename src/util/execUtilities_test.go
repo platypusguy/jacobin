@@ -39,9 +39,9 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
 	}
 }
 
-// test that pointer/refernce in the params is handled correctly
+// test that pointer/reference in the params is handled correctly
 // especially, that references (start with L and with ;) are correctly
-// parsed and represeneted in the output
+// parsed and represented in the output
 func TestParseIncomingReferenceParamsFromMethType(t *testing.T) {
 	res := ParseIncomingParamsFromMethTypeString("(LString;Ljava/lang/Integer;JJ)")
 	if len(res) != 4 { // short, byte and int all become 'I'
