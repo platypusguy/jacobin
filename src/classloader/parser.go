@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"os"
 	"strconv"
 )
@@ -474,9 +475,9 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 			if attrName == "ConstantValue" {
 				desc := klass.utf8Refs[f.description].content
 				switch desc {
-				case "L", "Z": // TODO: Find out how to process these
+				case types.Ref, types.Bool: // TODO: Find out how to process these
 					f.constValue = nil
-				case "B": // byte--same logic as for "I", only error message is different
+				case types.Byte: // byte--same logic as for "I", only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -485,7 +486,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.intConsts[entryInCp.slot]
-				case "C": // char--same logic as for "I", only error message is different
+				case types.Char: // char--same logic as for "I", only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -494,7 +495,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.intConsts[entryInCp.slot]
-				case "D": // double
+				case types.Double: // double
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -503,7 +504,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.doubles[entryInCp.slot]
-				case "F": // float
+				case types.Float: // float
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -512,7 +513,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.floats[entryInCp.slot]
-				case "I": // integer
+				case types.Int: // integer
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -521,7 +522,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.intConsts[entryInCp.slot]
-				case "J": // long
+				case types.Long: // long
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -530,7 +531,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.longConsts[entryInCp.slot]
-				case "S": // short--same logic as int, only message is different
+				case types.Short: // short--same logic as int, only message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
