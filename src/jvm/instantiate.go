@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/types"
 	"strings"
 	"unsafe"
 )
@@ -154,11 +155,11 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	fieldToAdd := new(object.Field)
 	fieldToAdd.Ftype = desc
 	switch string(fieldToAdd.Ftype[0]) {
-	case "L", "[": // it's a reference
+	case types.Ref, types.Array: // it's a reference
 		fieldToAdd.Fvalue = nil
-	case "B", "C", "I", "J", "S", "Z":
+	case types.Byte, types.Char, types.Int, types.Long, types.Short, types.Bool:
 		fieldToAdd.Fvalue = int64(0)
-	case "D", "F":
+	case types.Double, types.Float:
 		fieldToAdd.Fvalue = 0.0
 	default:
 		_ = log.Log("error creating field in: "+classname+
