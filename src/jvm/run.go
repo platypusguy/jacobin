@@ -262,9 +262,9 @@ func runFrame(fs *list.List) error {
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException,
-					"Invalid type for LDC_W instruction")
-				return errors.New("LDC_W: Invalid type for instruction")
+				errMsg := "LDC_W: Invalid type for instruction"
+				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				return errors.New(errMsg)
 			}
 		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -278,9 +278,9 @@ func runFrame(fs *list.List) error {
 				push(f, CPe.floatVal)
 				push(f, CPe.floatVal)
 			} else { // TODO: Determine what exception to throw
-				exceptions.Throw(exceptions.InaccessibleObjectException,
-					"Invalid type for LDC2_W instruction")
-				return errors.New("LDC2_W: Invalid type for LDC2_W instruction")
+				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
+				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				return errors.New(errMsg)
 			}
 		case ILOAD, // 0x15	(push int from local var, using next byte as index)
 			FLOAD, //  0x17 (push float from local var, using next byte as index)
@@ -355,17 +355,17 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
-				exceptions.Throw(exceptions.NullPointerException,
-					"IALOAD: Invalid (null) reference to an array")
-				return errors.New("IALOAD error")
+				errMsg := "I/C/SALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"IALOAD: Invalid array subscript")
-				return errors.New("IALOAD error")
+				errMsg := "IALOAD: Invalid array subscript"
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			var value = array[index]
 			push(f, value)
@@ -373,9 +373,9 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
-				exceptions.Throw(exceptions.NullPointerException,
-					"LALOAD: Invalid (null) reference to an array")
-				return errors.New("LALOAD error")
+				errMsg := "LALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
@@ -450,9 +450,9 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			ref := pop(f) // the array object
 			if ref == nil || ref == object.Null {
-				exceptions.Throw(exceptions.NullPointerException,
-					"BALOAD: Invalid (null) reference to an array")
-				return errors.New("BALOAD error")
+				errMsg := "BALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			bAref := ref.(*object.Object)
@@ -460,9 +460,9 @@ func runFrame(fs *list.List) error {
 			size := int64(len(*arrayPtr))
 
 			if index >= size {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"BALOAD: Invalid array subscript")
-				return errors.New("BALOAD error")
+				errMsg := "BALOAD: Invalid array subscript"
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			array := *(arrayPtr)
 			var value = array[index]
@@ -561,21 +561,19 @@ func runFrame(fs *list.List) error {
 			}
 
 			if arrObj.Fields[0].Ftype != "[I" {
-				msg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
-				_ = log.Log(msg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayStoreException,
-					"IA/CA/SASTORE: Attempt to access array of incorrect type")
-				return errors.New("IA/CA/SASTORE: Invalid array type")
+				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
+				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
-				msg := fmt.Sprintf("IA/CA/SASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"IA/CA/SATORE: Invalid array subscript")
-				return errors.New("IA/CA/SASTORE: Invalid array index")
+				errMsg := fmt.Sprintf("IA/CA/SASTORE: array size= %d but array index= %d (too large)", size, index)
+				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			array[index] = value
 

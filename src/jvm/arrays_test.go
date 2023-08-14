@@ -1773,7 +1773,7 @@ func TestIastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "IA/CA/SASTORE: field type expected=[I, observed=[F") {
 		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1811,7 +1811,7 @@ func TestIastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "IA/CA/SATORE: Invalid array subscript") {
+	if !strings.Contains(errMsg, "IA/CA/SASTORE: array size= 10 but array index= 30 (too large)") {
 		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
