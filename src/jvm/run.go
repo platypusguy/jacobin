@@ -393,17 +393,17 @@ func runFrame(fs *list.List) error {
 			ref := pop(f) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
 			if ref == nil || ref == object.Null {
-				exceptions.Throw(exceptions.NullPointerException,
-					"FALOAD: Invalid (null) reference to an array")
-				return errors.New("FALOAD error")
+				errMsg := "FALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			fAref := ref.(*object.Object)
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"FALOAD: Invalid array subscript")
-				return errors.New("FALOAD error")
+				errMsg := "FALOAD: Invalid array subscript"
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			var value = array[index]
 			push(f, value)
@@ -412,16 +412,16 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
-				exceptions.Throw(exceptions.NullPointerException,
-					"DALOAD: Invalid (null) reference to an array")
-				return errors.New("DALOAD error")
+				errMsg := "DALOAD: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
 			if index >= int64(len(array)) {
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"DALOAD: Invalid array subscript")
-				return errors.New("DALOAD error")
+				errMsg := "DALOAD: Invalid array subscript"
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 			var value = array[index]
 			push(f, value)
