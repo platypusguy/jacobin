@@ -2241,7 +2241,7 @@ func runFrame(fs *list.List) error {
 			value := pop(f)
 			if value != nil { // it's not nil, but is it a null pointer?
 				checkForPtr := value.(*object.Object)
-				if checkForPtr == nil { // it really is a null pointer, so just move on
+				if checkForPtr == nil || checkForPtr == object.Null { // it really is a null pointer, so just move on
 					f.PC += 2
 				} else { // no, it's not nil nor a null pointer--so do the jump
 					jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
