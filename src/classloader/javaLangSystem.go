@@ -106,6 +106,8 @@ func getProperty(params []interface{}) interface{} {
 	operSys := runtime.GOOS
 
 	switch prop {
+	case "file.encoding":
+		value = g.FileEncoding
 	case "file.separator":
 		value = string(os.PathSeparator)
 	case "java.class.path":
@@ -164,8 +166,9 @@ func getProperty(params []interface{}) interface{} {
 		currentUser, _ := user.Current()
 		value = currentUser.Name
 	default:
-		value = "null" // TODO: make it that a string of nil prints out "null"
+		return object.Null
 	}
+
 	obj := object.CreateCompactStringFromGoString(&value)
 	return obj
 }

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -65,6 +66,9 @@ type Globals struct {
 
 	// ----- Byte cache for java.base.jmod
 	JmodBaseBytes []byte
+
+	// ---- misc properties
+	FileEncoding string // what file encoding are we using?
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -103,6 +107,12 @@ func InitGlobals(progName string) Globals {
 		os.Exit(1)
 	}
 	InitArrayAddressList()
+
+	if runtime.GOOS == "windows" {
+		global.FileEncoding = "windows-1252"
+	} else {
+		global.FileEncoding = "UTF-8"
+	}
 	return global
 }
 
