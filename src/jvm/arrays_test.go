@@ -590,7 +590,7 @@ func TestNilArrayLength(t *testing.T) {
 	}
 
 	errMsg := err.Error()
-	if errMsg != "ARRAYLENGTHY: invalid (null) reference to an array" {
+	if errMsg != "ARRAYLENGTH: Invalid (null) reference to an array" {
 		t.Errorf("ARRAYLENGTH: Expecting different error msg, got: %s", errMsg)
 	}
 }

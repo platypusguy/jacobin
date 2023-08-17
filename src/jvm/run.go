@@ -1936,9 +1936,9 @@ func runFrame(fs *list.List) error {
 			// expects a pointer to an array
 			ref := pop(f)
 			if ref == nil {
-				exceptions.Throw(exceptions.NullPointerException,
-					"ARRAYLENGTH: Invalid (null) reference to an array")
-				return errors.New("ARRAYLENGTHY: invalid (null) reference to an array")
+				errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			var size int64
@@ -2034,8 +2034,7 @@ func runFrame(fs *list.List) error {
 							f.PC += 1 // move to next bytecode
 							continue  // and exit this bytecode processing
 						} else {
-							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-								className, *sptr)
+							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
 							return errors.New(errMsg)
 						}
@@ -2054,8 +2053,7 @@ func runFrame(fs *list.List) error {
 					}
 
 					if classPtr != classloader.MethAreaFetch(*obj.Klass) {
-						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-							className, classPtr.Data.Name)
+						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
 						return errors.New(errMsg)
 					}
@@ -2092,8 +2090,9 @@ func runFrame(fs *list.List) error {
 						var className string
 						classNamePtr := FetchCPentry(f.CP, CPslot)
 						if classNamePtr.retType != IS_STRING_ADDR {
-							_ = log.Log("INSTANCEOF: Invalid classRef found", log.SEVERE)
-							return errors.New(" INSTANCEOF: Invalid classRef found")
+							errMsg := "INSTANCEOF: Invalid classRef found"
+							_ = log.Log(errMsg, log.SEVERE)
+							return errors.New(errMsg)
 						} else {
 							className = *(classNamePtr.stringVal)
 							if MainThread.Trace {
@@ -2104,8 +2103,9 @@ func runFrame(fs *list.List) error {
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
-								return errors.New("INSTANCEOF: Could not load class: " +
-									className)
+								errMsg := "INSTANCEOF: Could not load class: " + className
+								_ = log.Log(errMsg, log.SEVERE)
+								return errors.New(errMsg)
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
@@ -2268,6 +2268,8 @@ func runFrame(fs *list.List) error {
 	return nil
 }
 
+// the generation and formatting of trace data for each executed bytecode.
+// Returns the formatted data for output to logging, console, or other uses.
 func emitTraceData(f *frames.Frame) string {
 	var tos = " -"
 	var stackTop = ""
