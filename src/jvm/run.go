@@ -955,9 +955,9 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException,
-					"LREM: Arithmetic Exception: divide by zero")
-				return errors.New("LREM: Arithmetic Exception: divide by zero")
+				errMsg := "LREM: Arithmetic Exception: divide by zero"
+				exceptions.Throw(exceptions.ArithmeticException, errMsg)
+				return errors.New(errMsg)
 			} else {
 				val1 := pop(f).(int64)
 				pop(f)
