@@ -943,9 +943,9 @@ func runFrame(fs *list.List) error {
 		case IREM: // 	0x70	(remainder after int division, modulo)
 			val2 := pop(f).(int64)
 			if val2 == 0 {
-				exceptions.Throw(exceptions.ArithmeticException,
-					"IREM: Arithmetic Exception: divide by zero")
-				return errors.New("IREM: Arithmetic Exception: divide by zero")
+				errMsg := "IREM: Arithmetic Exception: divide by zero"
+				exceptions.Throw(exceptions.ArithmeticException, errMsg)
+				return errors.New(errMsg)
 			} else {
 				val1 := pop(f).(int64)
 				res := val1 % val2
