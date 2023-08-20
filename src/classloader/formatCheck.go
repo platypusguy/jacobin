@@ -196,7 +196,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			nAndTentry := klass.nameAndTypes[nAndT.slot]
 			methodNameIndex := nAndTentry.nameIndex
-			name, err := fetchUTF8string(klass, methodNameIndex)
+			name, err := FetchUTF8string(klass, methodNameIndex)
 			if err != nil {
 				return cfe("Method Ref (at CP entry #" + strconv.Itoa(j) +
 					") has a Name and Type entry does not have a name that is a valid UTF8 entry")
@@ -274,14 +274,14 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 
 			nAndTentry := klass.nameAndTypes[whichNandT]
-			_, err := fetchUTF8string(klass, nAndTentry.nameIndex)
+			_, err := FetchUTF8string(klass, nAndTentry.nameIndex)
 			if err != nil {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
 					" has a name index that points to an invalid UTF8 entry: " +
 					strconv.Itoa(nAndTentry.nameIndex))
 			}
 
-			desc, err2 := fetchUTF8string(klass, nAndTentry.descriptorIndex)
+			desc, err2 := FetchUTF8string(klass, nAndTentry.descriptorIndex)
 			if err2 != nil {
 				return cfe("Name and Type at CP entry #" + strconv.Itoa(j) +
 					" has a description index that points to an invalid UTF8 entry: " +
@@ -438,7 +438,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			natSlot := klass.cpIndex[nAndT].slot
 			nat := klass.nameAndTypes[natSlot] // gets the actual nameAndType entry
-			desc, err := fetchUTF8string(klass, nat.descriptorIndex)
+			desc, err := FetchUTF8string(klass, nat.descriptorIndex)
 			if err != nil {
 				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
 					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nat.descriptorIndex))
@@ -489,7 +489,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			natSlot := klass.cpIndex[nAndTslot].slot
 			nat := klass.nameAndTypes[natSlot] // gets the actual nameAndType entry
-			desc, err := fetchUTF8string(klass, nat.descriptorIndex)
+			desc, err := FetchUTF8string(klass, nat.descriptorIndex)
 			if err != nil {
 				return cfe("Descriptor in nameAndType entry of dynamic CP entry #" +
 					strconv.Itoa(j) + " is invalid: " + strconv.Itoa(nat.descriptorIndex))

@@ -141,7 +141,23 @@ func instantiateClass(classname string) (*object.Object, error) {
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
 
+	// run intialization blocks
+	for i := 0; i < len(k.Data.Methods); i++ {
+		meth := k.Data.Methods[i]
+		nameIdx := meth.Name
+		methName, err := classloader.FetchUTF8stringInLoadedClass(k, int(nameIdx))
+		if err != nil {
+			continue // for the nonce skip the method if we can't find the name
+		} else if strings.HasPrefix(methName, "<clinit>") {
+			runInitializationBlock(k)
+		}
+	}
 	return &obj, nil
+}
+
+func runInitializationBlock(k *classloader.Klass) {
+	msg := fmt.Sprintf("***************** <clinit> found in %s **********", k.Data.Name)
+	fmt.Print(msg)
 }
 
 // creates a field for insertion into the object representation

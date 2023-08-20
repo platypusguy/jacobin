@@ -216,7 +216,7 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 				return pos, cfe("Java module record requires Java 9 or later version")
 			}
 			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
-			moduleName, err := fetchUTF8string(klass, nameIndex)
+			moduleName, err := FetchUTF8string(klass, nameIndex)
 			if err != nil {
 				break // error message will already have been shown
 			}
@@ -233,7 +233,7 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 				return pos, cfe("Java package entry requires Java 9 or later version")
 			}
 			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
-			packageName, err := fetchUTF8string(klass, nameIndex)
+			packageName, err := FetchUTF8string(klass, nameIndex)
 			if err != nil {
 				break // error message will already have been shown
 			}

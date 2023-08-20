@@ -47,7 +47,7 @@ func intFrom4Bytes(bytes []byte, pos int) (int, error) {
 
 // finds and returns a UTF8 string when handed an index into the CP that points
 // to a UTF8 entry. Does extensive checking of values.
-func fetchUTF8string(klass *ParsedClass, index int) (string, error) {
+func FetchUTF8string(klass *ParsedClass, index int) (string, error) {
 	if index < 1 || index > klass.cpCount-1 {
 		return "", cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
 	}
@@ -62,6 +62,27 @@ func fetchUTF8string(klass *ParsedClass, index int) (string, error) {
 	}
 
 	return klass.utf8Refs[i].content, nil
+}
+
+// finds and returns a UTF8 string when handed an index into the CP that points
+// to a UTF8 entry in a loaded class. Similar to previous method, except that it
+// works with a loaded class, rather than a parsed (i.e., pre-loaded) class.
+// Does extensive checking of values.
+func FetchUTF8stringInLoadedClass(klass *Klass, index int) (string, error) {
+	if index < 1 || index > len(klass.Data.CP.CpIndex)-1 {
+		return "", cfe("attempt to fetch invalid UTF8 at CP entry #" + strconv.Itoa(index))
+	}
+
+	if klass.Data.CP.CpIndex[index].Type != UTF8 {
+		return "", cfe("attempt to fetch UTF8 string from non-UTF8 CP entry #" + strconv.Itoa(index))
+	}
+
+	i := int(klass.Data.CP.CpIndex[index].Slot)
+	if i < 0 || i > len(klass.Data.CP.Utf8Refs)-1 {
+		return "", cfe("invalid index into UTF8 array of CP: " + strconv.Itoa(i))
+	}
+
+	return klass.Data.CP.Utf8Refs[i], nil
 }
 
 // like the preceding function, except this returns the slot number in the utf8Refs
@@ -141,7 +162,7 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	methRef := klass.methodRefs[cpEnt.slot]
 	pointedToClassRef := klass.cpIndex[methRef.classIndex]
 	nameIndex := klass.classRefs[pointedToClassRef.slot]
-	className, err := fetchUTF8string(klass, nameIndex)
+	className, err := FetchUTF8string(klass, nameIndex)
 	if err != nil {
 		return "", "", "", cfe("ClassRef entry in MethodRef CP entry #" + strconv.Itoa(index) +
 			" does not point to a valid string")

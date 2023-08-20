@@ -179,7 +179,7 @@ func TestFetchValidUTF8string_Test0(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 2
 
-	result, err := fetchUTF8string(&klass, 1)
+	result, err := FetchUTF8string(&klass, 1)
 	if err != nil {
 		t.Error("Unexpected error testing fetch of UTF8 entry")
 	}
@@ -215,7 +215,7 @@ func TestFetchInvalidUTF8string_Test1(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
 	klass.cpCount = 2
 
-	_, err := fetchUTF8string(&klass, 1)
+	_, err := FetchUTF8string(&klass, 1)
 	if err == nil {
 		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
 	}
@@ -252,7 +252,7 @@ func TestFetchInvalidUTF8string_Test2(t *testing.T) {
 	klass := ParsedClass{}
 	klass.cpCount = 2
 
-	_, err := fetchUTF8string(&klass, 3) // index (3) can't be bigger than CP entries (2)
+	_, err := FetchUTF8string(&klass, 3) // index (3) can't be bigger than CP entries (2)
 	if err == nil {
 		t.Error("Expected error testing fetch of invalid UTF8 entry, but got none")
 	}

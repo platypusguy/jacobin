@@ -16,13 +16,14 @@ import (
 // as raw bytes. The description of the method entries in the spec is at:
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.6
 // The layout of the entries is:
-// method_info {
-//    u2             access_flags;
-//    u2             name_index;
-//    u2             descriptor_index;
-//    u2             attributes_count;
-//    attribute_info attributes[attributes_count];
-// }
+//
+//	method_info {
+//	   u2             access_flags;
+//	   u2             name_index;
+//	   u2             descriptor_index;
+//	   u2             attributes_count;
+//	   attribute_info attributes[attributes_count];
+//	}
 func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	var meth method
@@ -224,12 +225,14 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
 // can throw. See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.5
-// The structure of the Exceptions attribute of a method is: {
-// 		u2 attribute_name_index;
-// 		u4 attribute_length;
-// 		u2 number_of_exceptions;
-// 		u2 exception_index_table[number_of_exceptions];
-//   }
+//
+//	The structure of the Exceptions attribute of a method is: {
+//			u2 attribute_name_index;
+//			u4 attribute_length;
+//			u2 number_of_exceptions;
+//			u2 exception_index_table[number_of_exceptions];
+//	  }
+//
 // The last two entries are in attrContent, which is a []byte. The last entry, per the spec,
 // is a ClassRef entry, which consists of a CP index that points to UTF8 entry containing the
 // name of the checked exception class, e.g., java/io/IOException
@@ -258,7 +261,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 		classRef := klass.classRefs[whichClassRef]
 
 		// the classRef should point to a UTF8 record with the name of the exception class
-		exceptionName, err2 := fetchUTF8string(klass, classRef)
+		exceptionName, err2 := FetchUTF8string(klass, classRef)
 		if err2 != nil {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
 				" in method " + klass.utf8Refs[meth.name].content +
@@ -278,13 +281,14 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 
 // Per the spec, 'A MethodParameters attribute records information about the formal parameters
 // of a method, such as their names.' See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.24
-//    u2 attribute_name_index;
-//    u4 attribute_length;
-//    u1 parameters_count;
-//    {   u2 name_index;
-//        u2 access_flags;
-//    } parameters[parameters_count];
-// }
+//
+//	   u2 attribute_name_index;
+//	   u4 attribute_length;
+//	   u1 parameters_count;
+//	   {   u2 name_index;
+//	       u2 access_flags;
+//	   } parameters[parameters_count];
+//	}
 func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) error {
 	var err error
 	pos := 0
@@ -306,7 +310,7 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 		if paramNameIndex == 0 {
 			mpAttrib.name = ""
 		} else {
-			mpAttrib.name, err = fetchUTF8string(klass, paramNameIndex)
+			mpAttrib.name, err = FetchUTF8string(klass, paramNameIndex)
 		}
 		if err != nil {
 			return cfe("Error getting name of MethodParameters attribute #" +

@@ -265,7 +265,7 @@ func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	// the entry pointed to by pointedToClassRef holds an index to
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot]
-	className, err := fetchUTF8string(klass, classNameIndex)
+	className, err := FetchUTF8string(klass, classNameIndex)
 	if err != nil {
 		return pos, errors.New("") // the error msg has already been show to user
 	}
@@ -315,7 +315,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 	// a UTF-8 string that holds the class name
 	classNameIndex = klass.classRefs[pointedToClassRef.slot]
 
-	superClassName, err := fetchUTF8string(klass, classNameIndex)
+	superClassName, err := FetchUTF8string(klass, classNameIndex)
 	if err != nil {
 		return pos, errors.New("") // error has already been reported to user
 	}
@@ -375,7 +375,7 @@ func parseInterfaces(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		classEntry := klass.classRefs[classref.slot]
 
 		// use the class entry's index field to look up the UTF-8 string
-		interfaceName, err := fetchUTF8string(klass, classEntry)
+		interfaceName, err := FetchUTF8string(klass, classEntry)
 		if err != nil {
 			return pos, errors.New("") // error msg has already been shown
 		}
