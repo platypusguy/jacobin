@@ -91,7 +91,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 			desc := k.Data.CP.Utf8Refs[f.Desc]
 			name := k.Data.CP.Utf8Refs[f.Name]
 			if log.Level == log.FINE {
-				reciteField := fmt.Sprintf("Class: %s ield[%d] name: %s, type: %s", k.Data.Name, i,
+				reciteField := fmt.Sprintf("Class: %s field[%d] name: %s, type: %s", k.Data.Name, i,
 					name, desc)
 				_ = log.Log(reciteField, log.FINE)
 			}
@@ -140,6 +140,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 			obj.FieldTable[name] = *fieldToAdd
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
+
 	return &obj, nil
 }
 
