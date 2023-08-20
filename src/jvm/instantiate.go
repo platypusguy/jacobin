@@ -144,19 +144,21 @@ func instantiateClass(classname string) (*object.Object, error) {
 	// run intialization blocks
 	for i := 0; i < len(k.Data.Methods); i++ {
 		meth := k.Data.Methods[i]
-		nameIdx := meth.Name
-		methName, err := classloader.FetchUTF8stringInLoadedClass(k, int(nameIdx))
-		if err != nil {
-			continue // for the nonce skip the method if we can't find the name
-		} else if strings.HasPrefix(methName, "<clinit>") {
-			runInitializationBlock(k)
+		methName := k.Data.CP.Utf8Refs[meth.Name]
+		if strings.HasPrefix(methName, "<clinit>") {
+			runInitializationBlock(k, i)
 		}
 	}
 	return &obj, nil
 }
 
-func runInitializationBlock(k *classloader.Klass) {
-	msg := fmt.Sprintf("***************** <clinit> found in %s **********", k.Data.Name)
+// Initialization blocks are code blocks that for all intents are methods. They're gathered up by the
+// Java compiler into a method called <clinit>, which must be run at class instantiation--that is,
+// before any constructor. Because that code might well call other methods, it will need to be run
+// just like a regular method with stack frames and depending on the interpreter in run.go
+// CURR: Implement the above logic here.
+func runInitializationBlock(k *classloader.Klass, idx int) {
+	msg := fmt.Sprintf("***************** <clinit> found in %s, method %d **********\n", k.Data.Name, idx)
 	fmt.Print(msg)
 }
 
