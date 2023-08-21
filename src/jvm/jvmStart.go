@@ -85,6 +85,10 @@ func JVMrun() int {
 	// Likely to be reinstated at some later point
 	// classloader.LoadReferencedClasses(mainClass)
 
+	// initialize the MTable (table caching methods)
+	classloader.MTable = make(map[string]classloader.MTentry)
+	classloader.MTableLoadNatives()
+
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
 	status := StartExec(mainClass, &Global)

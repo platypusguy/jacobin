@@ -34,9 +34,6 @@ var MainThread thread.ExecThread
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
-	// initialize the MTable
-	classloader.MTable = make(map[string]classloader.MTentry)
-	classloader.MTableLoadNatives()
 
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
