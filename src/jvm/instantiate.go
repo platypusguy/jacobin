@@ -156,6 +156,9 @@ func instantiateClass(classname string) (*object.Object, error) {
 // Java compiler into a method called <clinit>, which must be run at class instantiation--that is,
 // before any constructor. Because that code might well call other methods, it will need to be run
 // just like a regular method with stack frames and depending on the interpreter in run.go
+// In addition, we have to make sure that the initialization blocks of superclasses have been
+// executed as well.
+//
 // CURR: Implement the above logic here.
 func runInitializationBlock(k *classloader.Klass, idx int) {
 	msg := fmt.Sprintf("***************** <clinit> found in %s, method %d **********\n", k.Data.Name, idx)
