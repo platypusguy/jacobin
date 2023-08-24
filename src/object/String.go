@@ -96,3 +96,10 @@ func CreateCompactStringFromGoString(in *string) *Object {
 	s.Fields[1].Fvalue = int64(0)
 	return s
 }
+
+// convenience method to extract a Go string from a Java string
+func GetGoStringFromJavaStringPtr(strPtr *Object) string {
+	s := *strPtr
+	bytes := s.Fields[0].Fvalue.(*[]byte)
+	return string(*bytes)
+}
