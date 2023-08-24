@@ -8,7 +8,9 @@ package classloader
 
 import (
 	"errors"
+	"fmt"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/shutdown"
 )
 
@@ -29,16 +31,21 @@ func Load_Lang_Class() map[string]GMeth {
 // returns the native primitive class that corresponds to it. Not
 // quite sure how this class is used, but it needs to implemented.
 func getPrimitiveClass(params []interface{}) interface{} {
-	primitive := params[0].(string)
-	if primitive == "int" {
+	primitive := params[0].(*object.Object)
+	str := object.GetGoStringFromJavaStringPtr(primitive)
+	if str == "int" {
 		k, err := simpleClassLoadByName("java/lang/Integer")
 		if err != nil {
 			return errors.New("getPrimitiveClass() could not load java/lang/Integer")
 		} else {
 			return k
 		}
+	} else {
+		errMsg := fmt.Sprintf("getPrimitiveClass() does not handle: %s", str)
+		_ = log.Log(errMsg, log.SEVERE)
+		return errors.New(errMsg)
+
 	}
-	return errors.New("getPrimitiveClass() reached unreadhable code")
 }
 
 // simpleClassLoadByName() just checks the MethodArea cache for the loaded
