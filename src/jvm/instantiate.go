@@ -156,7 +156,7 @@ runInitializer:
 			if err != nil {
 				errMsg := fmt.Sprintf("error encountered running %s<clinit>", classname)
 				_ = log.Log(errMsg, log.SEVERE)
-				return nil, errors.New(errMsg)
+				return nil, err
 			}
 		}
 	}
@@ -180,11 +180,15 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 	className := k.Data.Name
 	me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 	if err != nil {
+		// in case of error, user will be notified in calling function
 		return errors.New("Method not found: " + className + "<clinit>()")
 	}
 
-	switch me.Meth.(type) {
-
+	switch me.MType {
+	case 'J': // it's a Java initializer (the most common case)
+		return runJavaInitializer(me.Meth, k)
+	case 'G': // it's a native (that is, golang) initializer
+		return runNativeInitializer(me.Meth, k)
 	}
 	// m := me.Meth.(classloader.JmEntry)
 	// f := frames.CreateFrame(m.MaxStack) // create a new frame
@@ -225,6 +229,51 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 	// if err != nil {
 	// 	return err
 	// }
+	return nil
+}
+
+func runJavaInitializer(meth classloader.MData, k *classloader.Klass) error {
+	// f := frames.CreateFrame(meth.MaxStack) // create a new frame
+	// f.MethName = "<clinit>"
+	// f.ClName = className
+	// f.CP = m.Cp                        // add its pointer to the class CP
+	// for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
+	// 	f.Meth = append(f.Meth, m.Code[i])
+	// }
+	//
+	// // allocate the local variables
+	// for j := 0; j < m.MaxLocals; j++ {
+	// 	f.Locals = append(f.Locals, 0)
+	// }
+	//
+	// // create the first thread and place its first frame on it
+	// glob := globals.GetGlobalRef()
+	// clInitThread := thread.CreateThread()
+	// clInitThread.Stack = frames.CreateFrameStack()
+	// clInitThread.ID = thread.AddThreadToTable(&clInitThread, &glob.Threads)
+	//
+	// clInitThread.Trace = MainThread.Trace
+	// f.Thread = clInitThread.ID
+	//
+	// if frames.PushFrame(clInitThread.Stack, f) != nil {
+	// 	_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(clInitThread.ID),
+	// 		log.SEVERE)
+	// 	return errors.New("outOfMemory Exception")
+	// }
+	//
+	// if clInitThread.Trace {
+	// 	traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d",
+	// 		f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
+	// 	_ = log.Log(traceInfo, log.TRACE_INST)
+	// }
+	//
+	// err = runThread(&clInitThread)
+	// if err != nil {
+	// 	return err
+	return nil
+}
+
+func runNativeInitializer(meth classloader.MData, k *classloader.Klass) error {
 	return nil
 }
 

@@ -32,12 +32,12 @@ type MT = map[string]MTentry
 
 // MTentry is described in detail in the comments to MTable
 type MTentry struct {
-	Meth  mData // the method data
+	Meth  MData // the method data
 	MType byte  // method type, G = Go method, J = Java method
 }
 
-// mData can be a GmEntry or a JmEntry (method in Go or Java, respectively)
-type mData interface{}
+// MData can be a GmEntry or a JmEntry (method in Go or Java, respectively)
+type MData interface{}
 
 // GmEntry is the entry in the MTable for Go functions. See MTable comments for details.
 // Fu is a go function. All go functions accept a possibly empty slice of interface{} and
