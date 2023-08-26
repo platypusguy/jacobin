@@ -107,7 +107,8 @@ func instantiateClass(classname string) (*object.Object, error) {
 			obj.Fields = append(obj.Fields, *fieldToAdd)
 		} // loop through the fields if any
 		obj.FieldTable = nil
-		return &obj, nil
+		goto runInitializer
+		// return &obj, nil
 	} // end of handling fields for objects w/ no superclasses
 
 	obj.FieldTable = make(map[string]object.Field)
@@ -145,14 +146,15 @@ func instantiateClass(classname string) (*object.Object, error) {
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
 
-	// run intialization blocks
-	for i := 0; i < len(k.Data.Methods); i++ {
-		meth := k.Data.Methods[i]
-		methName := k.Data.CP.Utf8Refs[meth.Name]
-		if strings.HasPrefix(methName, "<clinit>") {
-			runInitializationBlock(k, i)
-		}
-	}
+runInitializer:
+	// // run intialization blocks
+	// for i := 0; i < len(k.Data.Methods); i++ {
+	// 	meth := k.Data.Methods[i]
+	// 	methName := k.Data.CP.Utf8Refs[meth.Name]
+	// 	if strings.HasPrefix(methName, "<clinit>") {
+	// 		runInitializationBlock(k, i)
+	// 	}
+	// }
 	return &obj, nil
 }
 
@@ -166,9 +168,9 @@ func instantiateClass(classname string) (*object.Object, error) {
 // CURR: Implement the above logic here.
 func runInitializationBlock(k *classloader.Klass, idx int) error {
 
-	msg := fmt.Sprintf("<clinit> found in %s, method #%d\n", k.Data.Name, idx)
-	_ = log.Log(msg, log.FINE)
-	fmt.Print(msg)
+	// msg := fmt.Sprintf("<clinit> found in %s, method #%d\n", k.Data.Name, idx)
+	// _ = log.Log(msg, log.FINE)
+	// fmt.Print(msg)
 
 	className := k.Data.Name
 	me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
@@ -176,6 +178,7 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 		return errors.New("Class not found: " + className + "<clinit>()")
 	}
 
+	// CURR: Don't assume it's a Java rather than native routine
 	m := me.Meth.(classloader.JmEntry)
 	f := frames.CreateFrame(m.MaxStack) // create a new frame
 	f.MethName = "<clinit>"

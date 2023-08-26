@@ -66,6 +66,12 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  getProperty,
 		}
 
+	// MethodSignatures["java/lang/System.<clinit>()V"] = // TODO: need to replace eventually
+	// 	GMeth{
+	// 		ParamSlots: 0,
+	// 		GFunction:  justReturn,
+	// 	}
+
 	return MethodSignatures
 }
 
@@ -171,4 +177,9 @@ func getProperty(params []interface{}) interface{} {
 
 	obj := object.CreateCompactStringFromGoString(&value)
 	return obj
+}
+
+// do-nothing function
+func justReturn([]interface{}) interface{} {
+	return nil
 }
