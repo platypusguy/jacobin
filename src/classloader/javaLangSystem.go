@@ -66,11 +66,12 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  getProperty,
 		}
 
-	// MethodSignatures["java/lang/System.<clinit>()V"] = // TODO: need to replace eventually
-	// 	GMeth{
-	// 		ParamSlots: 0,
-	// 		GFunction:  justReturn,
-	// 	}
+	// need to replace eventually by enbling the Java intializer to run
+	MethodSignatures["java/lang/System.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
 
 	return MethodSignatures
 }

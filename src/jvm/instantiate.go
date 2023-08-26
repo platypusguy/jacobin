@@ -273,10 +273,10 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
-	// err := runThread(&clInitThread)
-	// if err != nil {
-	// 	return err
-	// }
+	err := runThread(&clInitThread)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
