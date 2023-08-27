@@ -76,5 +76,10 @@ GC is handled by the golang runtime, which has its own GC
 ## Understanding the Code
 A detailed roadmap to the code base can be found [in the wiki](https://github.com/platypusguy/jacobin/wiki/Roadmap-to-Jacobin-source-code).
 
+# If you want to test Jacobin
+At present, we're not looking for testers because we know the missing features and we're working on them. Testing, at this point, will likely result in frustration. However, if for your own enjoyment, you still want to try it out, see directions and cautions on our [Release Page](https://github.com/platypusguy/jacobin/releases). (If you want some fun, run your program on Jacobin with the `-trace:inst` option and watch the executing Java bytecodes whiz by along with the changing contents of the op stack.) 
+
+We expect/hope/trust that in 2024, we'll be ready to ask interested users to test Jacobin on real programs and share their feedback with us. 
+
 # Thanks
 The project's [home page](https://jacobin.org/) carries a lengthy note at the bottom that expresses our thanks to vendors and programmers who have made the Jacobin project possible. They are many and we are deeply grateful to them.
