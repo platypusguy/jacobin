@@ -195,7 +195,7 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
-
+	origClassName := class
 	for {
 	startSearch:
 
@@ -203,6 +203,12 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		if MethAreaFetch(class) == nil {
 			err := LoadClassFromNameOnly(class)
 			if err != nil {
+				if meth == "main" {
+					// the starting class is always loaded, so if main() isn't found
+					// right away, don't go up superclasses, just bail.
+					noMainError(origClassName)
+					shutdown.Exit(shutdown.JVM_EXCEPTION)
+				}
 				_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
 				_ = log.Log(err.Error(), log.SEVERE)
 				shutdown.Exit(shutdown.JVM_EXCEPTION)
@@ -282,14 +288,20 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	// if we got this far, something went wrong with locating the method
 
 	if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
-		_ = log.Log("FetchMethodAndCP: Main method not found in class "+class+", please define the main method as:\n"+
-			"   public static void main(String[] args)", log.SEVERE)
+		noMainError(origClassName)
 	} else {
 		_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 	}
 
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
 	return MTentry{}, errors.New("method not found") // dummy return needed for tests
+}
+
+// error message when main() can't be found
+func noMainError(className string) {
+	_ = log.Log("Error: main() method not found in class "+className+"\n"+
+		"Please define the main method as:\n"+
+		"   public static void main(String[] args)", log.SEVERE)
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number

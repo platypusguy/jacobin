@@ -170,7 +170,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Main method not found in class") {
+	if !strings.Contains(msg, "main() method not found in class") {
 		t.Errorf("Expecting log message containing 'Main method not found in class', got: %s", msg)
 	}
 }
