@@ -50,15 +50,15 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 	}
 
 	// now execute any encountered <clinit> code in this class
-	for i := len(superclasses) - 1; i >= 0; i++ {
+	for i := len(superclasses) - 1; i >= 0; i-- {
 		className := superclasses[i]
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
-				return runJavaInitializer(me.Meth, k)
+				runJavaInitializer(me.Meth, k)
 			case 'G': // it's a native (that is, golang) initializer
-				return runNativeInitializer(me.Meth, k)
+				runNativeInitializer(me.Meth, k)
 			}
 		}
 	}

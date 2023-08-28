@@ -32,6 +32,11 @@ func instantiateClass(classname string) (*object.Object, error) {
 		}
 	}
 
+	// strings are handled separately
+	if classname == "java/lang/String" {
+		return object.NewString(), nil
+	}
+
 	// At this point, classname is ready
 	k := classloader.MethAreaFetch(classname)
 	obj := object.Object{
@@ -153,6 +158,8 @@ runInitializer:
 				errMsg := fmt.Sprintf("error encountered running %s<clinit>", classname)
 				_ = log.Log(errMsg, log.SEVERE)
 				return nil, err
+			} else {
+				break
 			}
 		}
 	}
