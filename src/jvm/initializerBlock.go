@@ -22,14 +22,32 @@ import (
 // before any constructor. Because that code might well call other methods, it will need to be run
 // just like a regular method with stack frames and depending on the interpreter in run.go
 // In addition, we have to make sure that the initialization blocks of superclasses have been
-// executed as well.
+// previously executed.
 //
-// CURR: Implement the above logic here.
+// CURR: Implement the superclass requirement.
 func runInitializationBlock(k *classloader.Klass, idx int) error {
+	// get list of the superclasses up to but not including java.lang.Object
+	var superclasses []string
+	// put this class at the bottom of the list of superclasses
+	superclasses = append(superclasses, k.Data.Name)
 
-	// msg := fmt.Sprintf("<clinit> found in %s, method #%d\n", k.Data.Name, idx)
-	// _ = log.Log(msg, log.FINE)
-	// fmt.Print(msg)
+	superclass := k.Data.Superclass
+	for {
+		if superclass == "java/lang/Object" {
+			break
+		}
+
+		err := loadThisClass(superclass) // load the superclass
+		if err != nil {                  // error message will have been displayed
+			return err
+		} else {
+			superclasses = append(superclasses, superclass)
+		}
+
+		loadedSuperclass := classloader.MethAreaFetch(superclass)
+		// now loop to see whether this superclass has a superclass
+		superclass = loadedSuperclass.Data.Superclass
+	}
 
 	className := k.Data.Name
 	me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
@@ -44,45 +62,7 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 	case 'G': // it's a native (that is, golang) initializer
 		return runNativeInitializer(me.Meth, k)
 	}
-	// m := me.Meth.(classloader.JmEntry)
-	// f := frames.CreateFrame(m.MaxStack) // create a new frame
-	// f.MethName = "<clinit>"
-	// f.ClName = className
-	// f.CP = m.Cp                        // add its pointer to the class CP
-	// for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
-	// 	f.Meth = append(f.Meth, m.Code[i])
-	// }
-	//
-	// // allocate the local variables
-	// for j := 0; j < m.MaxLocals; j++ {
-	// 	f.Locals = append(f.Locals, 0)
-	// }
-	//
-	// // create the first thread and place its first frame on it
-	// glob := globals.GetGlobalRef()
-	// clInitThread := thread.CreateThread()
-	// clInitThread.Stack = frames.CreateFrameStack()
-	// clInitThread.ID = thread.AddThreadToTable(&clInitThread, &glob.Threads)
-	//
-	// clInitThread.Trace = MainThread.Trace
-	// f.Thread = clInitThread.ID
-	//
-	// if frames.PushFrame(clInitThread.Stack, f) != nil {
-	// 	_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(clInitThread.ID),
-	// 		log.SEVERE)
-	// 	return errors.New("outOfMemory Exception")
-	// }
-	//
-	// if clInitThread.Trace {
-	// 	traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d",
-	// 		f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
-	// 	_ = log.Log(traceInfo, log.TRACE_INST)
-	// }
-	//
-	// err = runThread(&clInitThread)
-	// if err != nil {
-	// 	return err
-	// }
+
 	return nil
 }
 
