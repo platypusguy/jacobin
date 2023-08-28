@@ -189,20 +189,15 @@ func PrintDouble(l []interface{}) interface{} {
 // Print string
 func PrintS(i []interface{}) interface{} {
 	strAddr := i[1].(*object.Object)
-	// t := (strAddr.Fields[0].Fvalue).(*[]types.JavaByte) // changed due to JACOBIN-282
+	// eventually will need to check wherther it's a compact string.
+	// Presently, we assume it is.
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
-	//
-	// goChars := make([]byte, len(*t), len(*t))
-	// for i, c := range *t {
-	// 	goChars[i] = byte(c)
-	// }
-
 	fmt.Print(string(*t))
 	return nil
 }
 
-// Crudely trying to approximate the exact formatting used in HotSpot JVM
-// TODO: look at the source code to map this formatting exactly.
+// Trying to approximate the exact formatting used in HotSpot JVM
+// TODO: look at the JDK source code to map this formatting exactly.
 func formatDouble(d float64) string {
 	if d < 0.0000001 || d > 10_000_000 {
 		return "%E"
