@@ -9,6 +9,7 @@ package classloader
 import (
 	"fmt"
 	"jacobin/object"
+	"math"
 )
 
 /*
@@ -98,7 +99,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
 		GMeth{
 			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
-			GFunction:  PrintDouble,
+			GFunction:  PrintFloat,
 		}
 
 	return MethodSignatures
@@ -147,10 +148,10 @@ func PrintlnLong(l []interface{}) interface{} {
 }
 
 // PrintlnDouble = java/io/Prinstream.println(double)
-// Doubles in Java are 64-bit FP
+// Doubles in Java are 64-bit FP. Like Hotspot, we print at least one decimal place of data.
 func PrintlnDouble(l []interface{}) interface{} {
 	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Println(doubleToPrint)
+	fmt.Printf(formatDouble(doubleToPrint)+"\n", doubleToPrint)
 	return nil
 }
 
@@ -169,17 +170,24 @@ func PrintLong(l []interface{}) interface{} {
 	return nil
 }
 
+// Printfloat = java/io/Prinstream.print(float)
+// Doubles in Java are 64-bit FP
+func PrintFloat(l []interface{}) interface{} {
+	floatToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Printf(formatDouble(floatToPrint), floatToPrint)
+	return nil
+}
+
 // PrintDouble = java/io/Prinstream.print(double)
 // Doubles in Java are 64-bit FP
 func PrintDouble(l []interface{}) interface{} {
 	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Print(doubleToPrint)
+	fmt.Printf(formatDouble(doubleToPrint), doubleToPrint)
 	return nil
 }
 
 // Print string
 func PrintS(i []interface{}) interface{} {
-
 	strAddr := i[1].(*object.Object)
 	// t := (strAddr.Fields[0].Fvalue).(*[]types.JavaByte) // changed due to JACOBIN-282
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
@@ -191,4 +199,18 @@ func PrintS(i []interface{}) interface{} {
 
 	fmt.Print(string(*t))
 	return nil
+}
+
+// Crudely trying to approximate the exact formatting used in HotSpot JVM
+// TODO: look at the source code to map this formatting exactly.
+func formatDouble(d float64) string {
+	if d < 0.0000001 || d > 10_000_000 {
+		return "%E"
+	} else {
+		if d == math.Floor(d) { // if the fractional part is 0, print a trailing .0
+			return "%.01f"
+		} else {
+			return "%f"
+		}
+	}
 }
