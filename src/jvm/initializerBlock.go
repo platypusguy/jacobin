@@ -28,7 +28,7 @@ import (
 func runInitializationBlock(k *classloader.Klass, idx int) error {
 	// get list of the superclasses up to but not including java.lang.Object
 	var superclasses []string
-	// put this class at the bottom of the list of superclasses
+	// put the present class at the bottom of the list of superclasses
 	superclasses = append(superclasses, k.Data.Name)
 
 	superclass := k.Data.Superclass
@@ -49,20 +49,19 @@ func runInitializationBlock(k *classloader.Klass, idx int) error {
 		superclass = loadedSuperclass.Data.Superclass
 	}
 
-	className := k.Data.Name
-	me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
-	if err != nil {
-		// in case of error, user will be notified in calling function
-		return errors.New("Method not found: " + className + "<clinit>()")
+	// now execute any encountered <clinit> code in this class
+	for i := len(superclasses) - 1; i >= 0; i++ {
+		className := superclasses[i]
+		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
+		if err == nil {
+			switch me.MType {
+			case 'J': // it's a Java initializer (the most common case)
+				return runJavaInitializer(me.Meth, k)
+			case 'G': // it's a native (that is, golang) initializer
+				return runNativeInitializer(me.Meth, k)
+			}
+		}
 	}
-
-	switch me.MType {
-	case 'J': // it's a Java initializer (the most common case)
-		return runJavaInitializer(me.Meth, k)
-	case 'G': // it's a native (that is, golang) initializer
-		return runNativeInitializer(me.Meth, k)
-	}
-
 	return nil
 }
 
