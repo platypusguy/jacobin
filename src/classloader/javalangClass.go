@@ -9,6 +9,7 @@ package classloader
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -24,6 +25,17 @@ func Load_Lang_Class() map[string]GMeth {
 			GFunction:  getPrimitiveClass,
 		}
 
+	MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getAssertionsEnabledStatus,
+		}
+
+	MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  getAssertionsEnabledStatus0,
+		}
 	return MethodSignatures
 }
 
@@ -68,4 +80,17 @@ func simpleClassLoadByName(className string) (*Klass, error) {
 	} else {
 		return MethAreaFetch(className), nil
 	}
+}
+
+// returns boolean indicating whether assertions are enabled or not.
+func getAssertionsEnabledStatus(params []interface{}) interface{} {
+	g := globals.GetGlobalRef()
+	return g.AssertionsEnabled
+}
+
+// returns boolean indicating whether assertions are enabled or not.
+// Effectively identical to getAsserionsEnabledStatus()
+func getAssertionsEnabledStatus0(params []interface{}) interface{} {
+	g := globals.GetGlobalRef()
+	return g.AssertionsEnabled
 }
