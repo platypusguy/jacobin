@@ -35,6 +35,12 @@ var MainThread thread.ExecThread
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
 
+	// must first instantiate the class, so that any static initializers are run
+	_, instantiateError := instantiateClass(className)
+	if instantiateError != nil {
+		return errors.New("Error instantiating: " + className + ".main()")
+	}
+
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
