@@ -191,11 +191,15 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // 	Package            = 20
 // )
 
-// FetchMethodAndCP gets the method and the CP for the class of the method.
-// It searches for the method first by checking the MTable (that is, the method table).
+// FetchMethodAndCP gets the method and the CP for the class of the method. It searches
+// for the method first by checking the global MTable (that is, the global method table).
 // If it doesn't find it there, then it looks for it in the class entry in MethArea.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
+//
+// Note that if the given method is not found, the hierarchy of superclasses is traversed,
+// in search for the method. The one exception is for main() which, if not found in the
+// first class, will never be in one of the superclasses.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	origClassName := class
 	for {
