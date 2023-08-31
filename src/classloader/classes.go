@@ -13,6 +13,7 @@ import (
 	"jacobin/shutdown"
 )
 
+// the definition of the class as it's stored in the method area
 type Klass struct {
 	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
 	Loader string
@@ -23,7 +24,7 @@ type ClData struct {
 	Name       string
 	Superclass string
 	Module     string
-	Pkg        string   // package name, if any. ('package' is a golang keyword)
+	Pkg        string   // package name, if any. (so named, b/c 'package' is a golang keyword)
 	Interfaces []uint16 // indices into UTF8Refs
 	Fields     []Field
 	Methods    []Method
@@ -32,6 +33,7 @@ type ClData struct {
 	Bootstraps []BootstrapMethod
 	CP         CPool
 	Access     AccessFlags
+	ClInit     byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
 }
 
 type CPool struct {
@@ -276,6 +278,14 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 			}
 		}
 
+		// if we're searching for main(), don't go up the list of superclasses
+		if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
+			noMainError(origClassName)
+			break
+			// } else {
+			// 	_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
+		}
+
 		// if we got this far, the method was not found, so check the superclass(es)
 		if class == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
 			break
@@ -286,13 +296,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 	}
 
 	// if we got this far, something went wrong with locating the method
-
-	if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
-		noMainError(origClassName)
-	} else {
-		_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
-	}
-
+	_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
 	return MTentry{}, errors.New("method not found") // dummy return needed for tests
 }
