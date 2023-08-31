@@ -179,7 +179,7 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
 	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	_ = log.SetLogLevel(log.FINE)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
