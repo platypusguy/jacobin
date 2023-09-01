@@ -192,13 +192,13 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // 	Package            = 20
 // )
 
-// FetchMethodAndCP gets the method and the CP for the class of the method. It searches
+// FetchMethodAndCP gets a method and the CP for the class of the method. It searches
 // for the method first by checking the global MTable (that is, the global method table).
-// If it doesn't find it there, then it looks for it in the class entry in MethArea.
+// If it doesn't find it there, then it looks for the method in the class entry in MethArea.
 // If it finds it there, then it loads that class into the MTable and returns that
 // entry as the Method it's returning.
 //
-// Note that if the given method is not found, the hierarchy of superclasses is traversed,
+// Note that if the given method is not found, the hierarchy of superclasses is ascended,
 // in search for the method. The one exception is for main() which, if not found in the
 // first class, will never be in one of the superclasses.
 func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
@@ -257,41 +257,43 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
-		// the class has been found (k) so now go down the list of methods until
-		// we find one that matches the name we're looking for. Then return that
+		// the class has been found (k) so check the method table. Then return the
 		// method along with a pointer to the CP
-		for i := 0; i < len(k.Data.Methods); i++ {
-			if k.Data.CP.Utf8Refs[k.Data.Methods[i].Name] == meth &&
-				k.Data.CP.Utf8Refs[k.Data.Methods[i].Desc] == methType {
-				m := k.Data.Methods[i]
-				jme := JmEntry{
-					accessFlags: m.AccessFlags,
-					MaxStack:    m.CodeAttr.MaxStack,
-					MaxLocals:   m.CodeAttr.MaxLocals,
-					Code:        m.CodeAttr.Code,
-					exceptions:  m.CodeAttr.Exceptions,
-					attribs:     m.CodeAttr.Attributes,
-					params:      m.Parameters,
-					deprecated:  m.Deprecated,
-					Cp:          &k.Data.CP,
-				}
-				MTable[methFQN] = MTentry{
-					Meth:  jme,
-					MType: 'J',
-				}
-				return MTentry{Meth: jme, MType: 'J'}, nil
+		var m Method
+		searchName := meth + methType
+		methRef, ok := k.Data.MethodTable[searchName]
+		if ok {
+			m = *methRef
+
+			// create a Java method struct for this method. We know it's a Java method
+			// because if it were a native method it would have been found in the initial
+			// lookup in the MTable (as all native methods are loaded there before
+			// program execution begins.
+			jme := JmEntry{
+				accessFlags: m.AccessFlags,
+				MaxStack:    m.CodeAttr.MaxStack,
+				MaxLocals:   m.CodeAttr.MaxLocals,
+				Code:        m.CodeAttr.Code,
+				exceptions:  m.CodeAttr.Exceptions,
+				attribs:     m.CodeAttr.Attributes,
+				params:      m.Parameters,
+				deprecated:  m.Deprecated,
+				Cp:          &k.Data.CP,
 			}
+			MTable[methFQN] = MTentry{
+				Meth:  jme,
+				MType: 'J',
+			}
+			return MTentry{Meth: jme, MType: 'J'}, nil
 		}
 
-		// if we're searching for main(), don't go up the list of superclasses
+		// if we're here, the class did not contain the searched-for method. So, go up the superclasses,
+		// except if we're searching for main(), in which case, we don't go up the list of superclasses
 		if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
 			noMainError(origClassName)
 			break
-			// } else {
-			// 	_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
 		}
 
-		// if we got this far, the method was not found, so check the superclass(es)
 		if class == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
 			break
 		} else {

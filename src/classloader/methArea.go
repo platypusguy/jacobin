@@ -98,8 +98,8 @@ func InitMethodArea() {
 	MethAreaPreload()
 }
 
-// MethAreaPreload preloads the synthetic entries for arrays into
-// the method areas.
+// MethAreaPreload preloads the synthetic entries for array types into
+// the method area.
 func MethAreaPreload() {
 	emptyKlass := Klass{
 		Status: 'N', // N = instantiated
