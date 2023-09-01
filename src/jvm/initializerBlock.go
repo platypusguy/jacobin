@@ -56,15 +56,21 @@ func runInitializationBlock(k *classloader.Klass) error {
 		if err == nil {
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
-				runJavaInitializer(me.Meth, k)
+				_ = runJavaInitializer(me.Meth, k)
 			case 'G': // it's a native (that is, golang) initializer
-				runNativeInitializer(me.Meth, k)
+				_ = runNativeInitializer(me.Meth, k)
 			}
 		}
 	}
 	return nil
 }
 
+// Run the <clinit>() initializer code as a Java method. This effectively duplicates
+// the code in run.go that creates a new frame and runs the method. Note that this
+// code creates its own frame stack, which is distinct from the applications frame
+// stack. The reason is that this is computing that's in most ways apart from the
+// bytecode of the app. (This design might be revised at a later point and the two
+// frame stacks combined into one.)
 func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	meth := m.(classloader.JmEntry)
 	f := frames.CreateFrame(meth.MaxStack) // create a new frame
@@ -102,12 +108,15 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	}
 
 	err := runThread(&clInitThread)
+	k.Data.ClInit = 0x02 // flag showing we've run this class's <clinit>
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// TODO: fill this in
 func runNativeInitializer(meth classloader.MData, k *classloader.Klass) error {
+	k.Data.ClInit = 0x02 // flag showing we've run this class's <clinit>
 	return nil
 }

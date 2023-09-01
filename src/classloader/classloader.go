@@ -540,6 +540,13 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	_, clInitPresent := kd.MethodTable["<clinit>()V"]
+	if clInitPresent {
+		kd.ClInit = 0x1 // there is a clinit, but it's not been run
+	} else {
+		kd.ClInit = 0x0 // there is no clinit
+	}
+
 	if len(fullyParsedClass.attributes) > 0 {
 		for i := 0; i < len(fullyParsedClass.attributes); i++ {
 			kda := Attr{
