@@ -25,7 +25,7 @@ import (
 // previously executed.
 //
 // CURR: Implement the superclass requirement.
-func runInitializationBlock(k *classloader.Klass, idx int) error {
+func runInitializationBlock(k *classloader.Klass) error {
 	// get list of the superclasses up to but not including java.lang.Object
 	var superclasses []string
 	// put the present class at the bottom of the list of superclasses

@@ -149,20 +149,29 @@ func instantiateClass(classname string) (*object.Object, error) {
 
 runInitializer:
 	// run intialization blocks
-	for i := 0; i < len(k.Data.Methods); i++ {
-		meth := k.Data.Methods[i]
-		methName := k.Data.CP.Utf8Refs[meth.Name]
-		if strings.HasPrefix(methName, "<clinit>") {
-			err := runInitializationBlock(k, i)
-			if err != nil {
-				errMsg := fmt.Sprintf("error encountered running %s<clinit>", classname)
-				_ = log.Log(errMsg, log.SEVERE)
-				return nil, err
-			} else {
-				break
-			}
+	_, ok := k.Data.MethodTable["<clinit>()V"]
+	if ok {
+		err := runInitializationBlock(k)
+		if err != nil {
+			errMsg := fmt.Sprintf("error encountered running %s.<clinit>()", classname)
+			_ = log.Log(errMsg, log.SEVERE)
+			return nil, err
 		}
 	}
+	// for i := 0; i < len(k.Data.Methods); i++ {
+	// 	meth := k.Data.Methods[i]
+	// 	methName := k.Data.CP.Utf8Refs[meth.Name]
+	// 	if strings.HasPrefix(methName, "<clinit>") {
+	// 		err := runInitializationBlock(k, i)
+	// 		if err != nil {
+	// 			errMsg := fmt.Sprintf("error encountered running %s<clinit>", classname)
+	// 			_ = log.Log(errMsg, log.SEVERE)
+	// 			return nil, err
+	// 		} else {
+	// 			break
+	// 		}
+	// 	}
+	// }
 	return &obj, nil
 }
 
