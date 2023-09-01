@@ -21,19 +21,20 @@ type Klass struct {
 }
 
 type ClData struct {
-	Name       string
-	Superclass string
-	Module     string
-	Pkg        string   // package name, if any. (so named, b/c 'package' is a golang keyword)
-	Interfaces []uint16 // indices into UTF8Refs
-	Fields     []Field
-	Methods    []Method
-	Attributes []Attr
-	SourceFile string
-	Bootstraps []BootstrapMethod
-	CP         CPool
-	Access     AccessFlags
-	ClInit     byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
+	Name        string
+	Superclass  string
+	Module      string
+	Pkg         string   // package name, if any. (so named, b/c 'package' is a golang keyword)
+	Interfaces  []uint16 // indices into UTF8Refs
+	Fields      []Field
+	MethodTable map[string]*Method
+	Methods     []Method
+	Attributes  []Attr
+	SourceFile  string
+	Bootstraps  []BootstrapMethod
+	CP          CPool
+	Access      AccessFlags
+	ClInit      byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
 }
 
 type CPool struct {

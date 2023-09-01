@@ -477,11 +477,14 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
 			kdm := Method{}
 			kdm.Name = uint16(fullyParsedClass.methods[i].name)
+			methName := fullyParsedClass.utf8Refs[int(kdm.Name)].content
 			kdm.Desc = uint16(fullyParsedClass.methods[i].description)
+			methDesc := fullyParsedClass.utf8Refs[int(kdm.Desc)].content
 			kdm.AccessFlags = fullyParsedClass.methods[i].accessFlags
 			kdm.CodeAttr.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
 			kdm.CodeAttr.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
@@ -531,8 +534,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
 			kd.Methods = append(kd.Methods, kdm)
+
+			methodTableKey := methName + methDesc
+			kd.MethodTable[methodTableKey] = &kdm
 		}
 	}
+
 	if len(fullyParsedClass.attributes) > 0 {
 		for i := 0; i < len(fullyParsedClass.attributes); i++ {
 			kda := Attr{
