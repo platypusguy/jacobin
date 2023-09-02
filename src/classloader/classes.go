@@ -201,28 +201,28 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // Note that if the given method is not found, the hierarchy of superclasses is ascended,
 // in search for the method. The one exception is for main() which, if not found in the
 // first class, will never be in one of the superclasses.
-func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
-	origClassName := class
+func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
+	origClassName := className
 	for {
 	startSearch:
 
-		// has the class been loaded? If not, then load it now.
-		if MethAreaFetch(class) == nil {
-			err := LoadClassFromNameOnly(class)
+		// has the className been loaded? If not, then load it now.
+		if MethAreaFetch(className) == nil {
+			err := LoadClassFromNameOnly(className)
 			if err != nil {
-				if meth == "main" {
-					// the starting class is always loaded, so if main() isn't found
+				if methName == "main" {
+					// the starting className is always loaded, so if main() isn't found
 					// right away, don't go up superclasses, just bail.
 					noMainError(origClassName)
 					shutdown.Exit(shutdown.JVM_EXCEPTION)
 				}
-				_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+class+" failed: "+err.Error(), log.WARNING)
+				_ = log.Log("FetchMethodAndCP: LoadClassFromNameOnly for "+className+" failed: "+err.Error(), log.WARNING)
 				_ = log.Log(err.Error(), log.SEVERE)
 				shutdown.Exit(shutdown.JVM_EXCEPTION)
 			}
 		}
 
-		methFQN := class + "." + meth + methType // FQN = fully qualified name
+		methFQN := className + "." + methName + methType // FQN = fully qualified name
 		methEntry := MTable[methFQN]
 
 		if methEntry.Meth != nil { // we found the entry in the MTable
@@ -234,7 +234,7 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 		}
 
 		// method is not in the MTable, so find it and put it there
-		err := WaitForClassStatus(class)
+		err := WaitForClassStatus(className)
 		if err != nil {
 			errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
 			_ = log.Log(errMsg, log.SEVERE)
@@ -242,25 +242,25 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
-		k := MethAreaFetch(class)
+		k := MethAreaFetch(className)
 		if k == nil {
-			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class {%s}", class)
+			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find className {%s}", className)
 			_ = log.Log(errMsg, log.SEVERE)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
-		if k.Loader == "" { // if class is not found, the zero value struct is returned
+		if k.Loader == "" { // if className is not found, the zero value struct is returned
 			// TODO: check superclasses if method not found
-			errMsg := "FetchMethodAndCP: Null Loader in class: " + class
+			errMsg := "FetchMethodAndCP: Null Loader in className: " + className
 			_ = log.Log(errMsg, log.SEVERE)
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 
-		// the class has been found (k) so check the method table. Then return the
+		// the className has been found (k) so check the method table. Then return the
 		// method along with a pointer to the CP
 		var m Method
-		searchName := meth + methType
+		searchName := methName + methType
 		methRef, ok := k.Data.MethodTable[searchName]
 		if ok {
 			m = *methRef
@@ -287,23 +287,23 @@ func FetchMethodAndCP(class, meth string, methType string) (MTentry, error) {
 			return MTentry{Meth: jme, MType: 'J'}, nil
 		}
 
-		// if we're here, the class did not contain the searched-for method. So, go up the superclasses,
+		// if we're here, the className did not contain the searched-for method. So, go up the superclasses,
 		// except if we're searching for main(), in which case, we don't go up the list of superclasses
-		if meth == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
+		if methName == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
 			noMainError(origClassName)
 			break
 		}
 
-		if class == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
+		if className == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
 			break
 		} else {
-			class = k.Data.Superclass
+			className = k.Data.Superclass
 			goto startSearch
 		}
 	}
 
 	// if we got this far, something went wrong with locating the method
-	_ = log.Log("FetchMethodAndCP: Found class "+class+", but it did not contain method: "+meth, log.SEVERE)
+	_ = log.Log("FetchMethodAndCP: Found class "+className+", but it did not contain method: "+methName, log.SEVERE)
 	shutdown.Exit(shutdown.JVM_EXCEPTION)
 	return MTentry{}, errors.New("method not found") // dummy return needed for tests
 }
