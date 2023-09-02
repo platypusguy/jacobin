@@ -1827,6 +1827,20 @@ func runFrame(fs *list.List) error {
 				return errors.New("INVOKESTATIC: Class not found: " + className + methodName)
 			}
 
+			// before we can run the method, we need to either instantiate the class and/or
+			// make sure that its static intializer block (if any) has been run. At this point,
+			// all we know the class exists and has been loaded.
+			k := classloader.MethAreaFetch(className)
+			if k.Data.ClInit == types.ClInitNotRun {
+				err = runInitializationBlock(k)
+				if err != nil {
+					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
+						className)
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
+				}
+			}
+
 			if mtEntry.MType == 'G' {
 				f, err = runGmethod(mtEntry, fs, className, methodName, methodType)
 
