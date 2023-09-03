@@ -9,8 +9,10 @@ package classloader
 import (
 	"fmt"
 	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/types"
 	"os"
 	"os/user"
 	"runtime"
@@ -66,14 +68,47 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  getProperty,
 		}
 
-	// need to replace eventually by enbling the Java intializer to run
-	MethodSignatures["java/lang/System.<clinit>()V"] =
+	MethodSignatures["java/lang/System.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/System.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinit,
+		}
+
 	return MethodSignatures
+}
+
+/*
+		 check whether this clinit() has been previously run. If not, have it duplicate the
+	   following bytecodes from JDK 17 java/lang/System:
+			static {};
+			0: invokestatic  #637                // Method registerNatives:()V
+			3: aconst_null
+			4: putstatic     #640                // Field in:Ljava/io/InputStream;
+			7: aconst_null
+			8: putstatic     #387                // Field out:Ljava/io/PrintStream;
+			11: aconst_null
+			12: putstatic     #384                // Field err:Ljava/io/PrintStream;
+			15: return
+*/
+func clinit([]interface{}) interface{} {
+	klass := MethAreaFetch("java/lang/System")
+	if klass == nil {
+		errMsg := "In <clinit>, expected java/lang/System to be in the MethodArea, but it was not"
+		_ = log.Log(errMsg, log.SEVERE)
+	}
+	if klass.Data.ClInit != types.ClInitRun {
+		_ = AddStatic("java/lang/System.in", Static{Type: "L", Value: object.Null})
+		_ = AddStatic("java/lang/System.err", Static{Type: "L", Value: object.Null})
+		_ = AddStatic("java/lang/System.out", Static{Type: "L", Value: object.Null})
+		klass.Data.ClInit = types.ClInitRun
+	}
+	return nil
 }
 
 // Return time in milliseconds, measured since midnight of Jan 1, 1970
