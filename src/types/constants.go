@@ -11,4 +11,5 @@ package types
 // ---- <clInit> status bytes ----
 const NoClinit byte = 0x00
 const ClInitNotRun byte = 0x01
-const ClInitRun byte = 0x02
+const ClInitInProgress byte = 0x02
+const ClInitRun byte = 0x03
