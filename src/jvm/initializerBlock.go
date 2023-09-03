@@ -14,6 +14,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/types"
 	"strconv"
 )
 
@@ -40,11 +41,14 @@ func runInitializationBlock(k *classloader.Klass) error {
 		err := loadThisClass(superclass) // load the superclass
 		if err != nil {                  // error message will have been displayed
 			return err
-		} else {
+		}
+
+		// load only superclasses that have a clInit block that has not been run
+		loadedSuperclass := classloader.MethAreaFetch(superclass)
+		if loadedSuperclass.Data.ClInit == types.ClInitNotRun {
 			superclasses = append(superclasses, superclass)
 		}
 
-		loadedSuperclass := classloader.MethAreaFetch(superclass)
 		// now loop to see whether this superclass has a superclass
 		superclass = loadedSuperclass.Data.Superclass
 	}
@@ -86,6 +90,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 		f.Locals = append(f.Locals, 0)
 	}
 
+	k.Data.ClInit = types.ClInitInProgress
 	// create the first thread and place its first frame on it
 	glob := globals.GetGlobalRef()
 	clInitThread := thread.CreateThread()
@@ -108,7 +113,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	}
 
 	err := runThread(&clInitThread)
-	k.Data.ClInit = 0x02 // flag showing we've run this class's <clinit>
+	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	if err != nil {
 		return err
 	}
@@ -117,6 +122,6 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 
 // TODO: fill this in
 func runNativeInitializer(meth classloader.MData, k *classloader.Klass) error {
-	k.Data.ClInit = 0x02 // flag showing we've run this class's <clinit>
+	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	return nil
 }
