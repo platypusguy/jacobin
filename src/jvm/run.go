@@ -1206,7 +1206,22 @@ func runFrame(fs *list.List) error {
 			}
 		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+
+			// bools are treated in the JVM as ints, so convert here if bool;
+			// otherwise, values should be int64's
+			var value int64
+			switch popValue.(type) {
+			case bool:
+				if popValue == true {
+					value = int64(1)
+				} else {
+					value = int64(0)
+				}
+			default:
+				value = popValue.(int64)
+			}
+
 			if value == 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1215,7 +1230,22 @@ func runFrame(fs *list.List) error {
 			}
 		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+
+			// bools are treated in the JVM as ints, so convert here if bool;
+			// otherwise, values should be int64's
+			var value int64
+			switch popValue.(type) {
+			case bool:
+				if popValue == true {
+					value = int64(1)
+				} else {
+					value = int64(0)
+				}
+			default:
+				value = popValue.(int64)
+			}
+
 			if value != 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
