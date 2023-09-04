@@ -150,7 +150,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 runInitializer:
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
-	if ok {
+	if ok && k.Data.ClInit == types.ClInitNotRun {
 		err := runInitializationBlock(k)
 		if err != nil {
 			errMsg := fmt.Sprintf("error encountered running %s.<clinit>()", classname)
