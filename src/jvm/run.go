@@ -1526,8 +1526,11 @@ func runFrame(fs *list.List) error {
 					Type:  prevLoaded.Type,
 					Value: value,
 				}
+
 			default:
-				value = pop(f).(float64)
+				// if it's not a primitive or a pointer to a class,
+				// then it should be a pointer to an object
+				value = pop(f).(*object.Object)
 				classloader.Statics[fieldName] = classloader.Static{
 					Type:  prevLoaded.Type,
 					Value: value,
