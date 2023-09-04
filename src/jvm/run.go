@@ -1529,11 +1529,35 @@ func runFrame(fs *list.List) error {
 
 			default:
 				// if it's not a primitive or a pointer to a class,
-				// then it should be a pointer to an object
-				value = pop(f).(*object.Object)
-				classloader.Statics[fieldName] = classloader.Static{
-					Type:  prevLoaded.Type,
-					Value: value,
+				// then it should be a pointer to an object or to
+				// a loaded class
+				value = pop(f)
+				switch value.(type) {
+				case *object.Object:
+					classloader.Statics[fieldName] = classloader.Static{
+						Type:  prevLoaded.Type,
+						Value: value,
+					}
+				case *classloader.Klass:
+					// convert to an *object.Object
+					kPtr := value.(*classloader.Klass)
+					obj := object.MakeEmptyObject()
+					obj.Klass = &kPtr.Data.Name
+					objField := object.Field{
+						Ftype:  "L" + kPtr.Data.Name + ";",
+						Fvalue: kPtr,
+					}
+					obj.Fields = append(obj.Fields, objField)
+					obj.FieldTable = nil
+
+					classloader.Statics[fieldName] = classloader.Static{
+						Type:  objField.Ftype,
+						Value: value,
+					}
+				default:
+					errMsg := fmt.Sprintf("PUTSTATIC type unrecognized: %v", value)
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 			}
 
