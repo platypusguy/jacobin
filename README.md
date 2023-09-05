@@ -53,8 +53,9 @@ A more-than-minimal JVM written in Go.
 * Robust preparation and initialization
 
 ### Execution
-* Execution of bytecode :pencil2: The primary focus of current coding work<br>
+* Execution of bytecodes :pencil2: The primary focus of current coding work<br>
   190 bytecodes fully operational, including one- and multi-dimensional arrays
+* Static initialization blocks
   
 **To do:**
 * invokedynamic
