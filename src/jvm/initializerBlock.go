@@ -77,7 +77,7 @@ func runInitializationBlock(k *classloader.Klass) error {
 // frame stacks combined into one.)
 func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	meth := m.(classloader.JmEntry)
-	f := frames.CreateFrame(meth.MaxStack) // create a new frame
+	f := frames.CreateFrame(meth.MaxStack + 2) // create a new frame (adding 2 b/c of unexplained bytecode needs)
 	f.MethName = "<clinit>"
 	f.ClName = k.Data.Name
 	f.CP = meth.Cp                        // add its pointer to the class CP
