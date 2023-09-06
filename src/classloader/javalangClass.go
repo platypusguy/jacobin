@@ -40,8 +40,8 @@ func Load_Lang_Class() map[string]GMeth {
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and
-// returns the native primitive class that corresponds to it. Not
-// quite sure how this class is used, but it needs to implemented.
+// returns  apointer to the native primitive class that corresponds to it.
+// This duplicates the behavior of OpenJDK JVMs.
 func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
 	str := object.GetGoStringFromJavaStringPtr(primitive)
@@ -75,14 +75,6 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	if err == nil {
 		return k
 	} else {
-		// if str == "int" {
-		// 	k, err := simpleClassLoadByName("java/lang/Integer")
-		// 	if err != nil {
-		// 		return errors.New("getPrimitiveClass() could not load java/lang/Integer")
-		// 	} else {
-		// 		return k
-		// 	}
-		// } else {
 		errMsg := fmt.Sprintf("getPrimitiveClass() does not handle: %s", str)
 		_ = log.Log(errMsg, log.SEVERE)
 		return errors.New(errMsg)
