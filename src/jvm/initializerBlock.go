@@ -105,8 +105,8 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	}
 
 	if clInitThread.Trace {
-		traceInfo := fmt.Sprintf("StartExec: f.MethName=%s, m.MaxStack=%d, m.MaxLocals=%d, len(m.Code)=%d",
-			f.MethName, meth.MaxStack, meth.MaxLocals, len(meth.Code))
+		traceInfo := fmt.Sprintf("Start init: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
+			f.ClName, f.MethName, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 

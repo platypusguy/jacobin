@@ -2615,7 +2615,7 @@ func createAndInitNewFrame(
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
 	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, method=%s, methodType=%s, includeObjectRef=%v, m.MaxStack=%d, m.MaxLocals=%d",
+		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
 			className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
