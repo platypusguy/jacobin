@@ -2629,10 +2629,8 @@ func createAndInitNewFrame(
 	fram := frames.CreateFrame(stackSize)
 	fram.ClName = className
 	fram.MethName = methodName
-	fram.CP = m.Cp                     // add its pointer to the class CP
-	for i := 0; i < len(m.Code); i++ { // copy the method's bytecodes over
-		fram.Meth = append(fram.Meth, m.Code[i])
-	}
+	fram.CP = m.Cp                           // add its pointer to the class CP
+	fram.Meth = append(fram.Meth, m.Code...) // copy the method's bytecodes over
 
 	// pop the parameters off the present stack and put them in
 	// the new frame's locals. This is done in reverse order so
