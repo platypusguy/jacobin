@@ -51,9 +51,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	f.MethName = "main"
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
-	for i := 0; i < len(m.Code); i++ { // copy the bytecodes over
-		f.Meth = append(f.Meth, m.Code[i])
-	}
+	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
 
 	// allocate the local variables
 	for k := 0; k < m.MaxLocals; k++ {

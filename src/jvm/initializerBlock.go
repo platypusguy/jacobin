@@ -81,9 +81,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 	f.MethName = "<clinit>"
 	f.ClName = k.Data.Name
 	f.CP = meth.Cp                        // add its pointer to the class CP
-	for i := 0; i < len(meth.Code); i++ { // copy the bytecodes over
-		f.Meth = append(f.Meth, meth.Code[i])
-	}
+	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
 
 	// allocate the local variables
 	for j := 0; j < meth.MaxLocals; j++ {
