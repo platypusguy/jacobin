@@ -45,18 +45,47 @@ func Load_Lang_Class() map[string]GMeth {
 func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
 	str := object.GetGoStringFromJavaStringPtr(primitive)
-	if str == "int" {
-		k, err := simpleClassLoadByName("java/lang/Integer")
-		if err != nil {
-			return errors.New("getPrimitiveClass() could not load java/lang/Integer")
-		} else {
-			return k
-		}
+
+	var k *Klass
+	var err error
+	switch str {
+	case "boolean":
+		k, err = simpleClassLoadByName("java/lang/Boolean")
+	case "byte":
+		k, err = simpleClassLoadByName("java/lang/Byte")
+	case "char":
+		k, err = simpleClassLoadByName("java/lang/Character")
+	case "double":
+		k, err = simpleClassLoadByName("java/lang/Double")
+	case "float":
+		k, err = simpleClassLoadByName("java/lang/Float")
+	case "int":
+		k, err = simpleClassLoadByName("java/lang/Integer")
+	case "long":
+		k, err = simpleClassLoadByName("java/lang/Long")
+	case "short":
+		k, err = simpleClassLoadByName("java/lang/Short")
+	case "void":
+		k, err = simpleClassLoadByName("java/lang/Void")
+	default:
+		k = nil
+		err = errors.New("urecognized primitive")
+	}
+
+	if err == nil {
+		return k
 	} else {
+		// if str == "int" {
+		// 	k, err := simpleClassLoadByName("java/lang/Integer")
+		// 	if err != nil {
+		// 		return errors.New("getPrimitiveClass() could not load java/lang/Integer")
+		// 	} else {
+		// 		return k
+		// 	}
+		// } else {
 		errMsg := fmt.Sprintf("getPrimitiveClass() does not handle: %s", str)
 		_ = log.Log(errMsg, log.SEVERE)
 		return errors.New(errMsg)
-
 	}
 }
 
