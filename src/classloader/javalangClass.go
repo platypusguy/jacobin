@@ -93,7 +93,11 @@ func simpleClassLoadByName(className string) (*Klass, error) {
 	// If not, try to load class by name
 	err := LoadClassFromNameOnly(className)
 	if err != nil {
-		errMsg := "instantiateClass()-getPrimitivelass(): Failed to load class " + className
+		var errClassName = className
+		if className == "" {
+			errClassName = "nil"
+		}
+		errMsg := "instantiateClass()-getPrimitivelass(): Failed to load class " + errClassName
 		_ = log.Log(errMsg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
