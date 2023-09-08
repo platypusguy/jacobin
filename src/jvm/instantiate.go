@@ -253,7 +253,11 @@ func loadThisClass(className string) error {
 	// Try to load class by name
 	err := classloader.LoadClassFromNameOnly(className)
 	if err != nil {
-		errMsg := "instantiateClass: Failed to load class " + className
+		var errClassName = className
+		if className == "" {
+			errClassName = "nil"
+		}
+		errMsg := "instantiateClass: Failed to load class " + errClassName
 		_ = log.Log(errMsg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
