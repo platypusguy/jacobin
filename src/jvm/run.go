@@ -737,25 +737,11 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 
 		case POP: // 0x57 	(pop an item off the stack and discard it)
-			if MainThread.Trace { // if tracing, don't show the pop in the trace b/c
-				// it's already present from this instruction being traced.
-				// Without this step, POP would appear twice in the trace listing,
-				// while only one actual pop action took place.
-				MainThread.Trace = false
-				pop(f)
-				MainThread.Trace = true
-			} else {
-				f.TOS -= 1
-			}
-		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
-			if MainThread.Trace { // see POP for why we turn of tracing
-				MainThread.Trace = false
-				pop(f)
-				pop(f)
-				MainThread.Trace = true
-			} else {
-				f.TOS -= 2
-			}
+			f.TOS -= 1
+
+		case POP2: // 0x58	(pop 2 items from stack and discard them)
+			f.TOS -= 2
+
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
 			tosItem := peek(f)
 			push(f, tosItem)
