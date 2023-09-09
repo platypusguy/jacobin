@@ -716,11 +716,11 @@ func runFrame(fs *list.List) error {
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
-				msg := fmt.Sprintf("BASTORE: field type expected=[B, observed=%s", ptrObj.Fields[0].Ftype)
-				_ = log.Log(msg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayStoreException,
-					"BASTORE: Attempt to access array of incorrect type")
-				return errors.New("BASTORE: Invalid array type")
+				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
+					ptrObj.Fields[0].Ftype)
+				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			// array := *(ptrObj.Fields[0].Fvalue.(*[]types.JavaByte)) // changed w/ JACOBIN-282
