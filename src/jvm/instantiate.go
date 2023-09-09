@@ -255,7 +255,7 @@ func loadThisClass(className string) error {
 	if err != nil {
 		var errClassName = className
 		if className == "" {
-			errClassName = "nil"
+			errClassName = "<empty string>"
 		}
 		errMsg := "instantiateClass: Failed to load class " + errClassName
 		_ = log.Log(errMsg, log.SEVERE)
