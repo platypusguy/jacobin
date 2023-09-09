@@ -745,7 +745,7 @@ func runFrame(fs *list.List) error {
 				pop(f)
 				MainThread.Trace = true
 			} else {
-				pop(f)
+				f.TOS -= 1
 			}
 		case POP2: // 0x58	(pop 2 itmes from stack and discard them)
 			if MainThread.Trace { // see POP for why we turn of tracing
@@ -754,8 +754,7 @@ func runFrame(fs *list.List) error {
 				pop(f)
 				MainThread.Trace = true
 			} else {
-				pop(f)
-				pop(f)
+				f.TOS -= 2
 			}
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
 			tosItem := peek(f)
