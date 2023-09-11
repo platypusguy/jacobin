@@ -1527,10 +1527,18 @@ func runFrame(fs *list.List) error {
 					Value: value,
 				}
 			case types.Byte:
-				value = pop(f).(byte)
+				var val byte
+				v := pop(f)
+				switch v.(type) { // could be passed a byte or an integral type for a value
+				case int64:
+					newVal := v.(int64)
+					val = byte(newVal)
+				case byte:
+					val = v.(byte)
+				}
 				classloader.Statics[fieldName] = classloader.Static{
 					Type:  prevLoaded.Type,
-					Value: value,
+					Value: val,
 				}
 			case types.Float, types.Double:
 				value = pop(f).(float64)
