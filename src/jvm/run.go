@@ -35,6 +35,14 @@ var MainThread thread.ExecThread
 // and begins execution.
 func StartExec(className string, globals *globals.Globals) error {
 
+	// set tracing, if any
+	tracing := false
+	trace, exists := globals.Options["-trace"]
+	if exists {
+		tracing = trace.Set
+	}
+	MainThread.Trace = tracing
+
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := instantiateClass(className)
 	if instantiateError != nil {
@@ -62,14 +70,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	MainThread = thread.CreateThread()
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
-
-	tracing := false
-	trace, exists := globals.Options["-trace"]
-	if exists {
-		tracing = trace.Set
-	}
 	MainThread.Trace = tracing
-	f.Thread = MainThread.ID
 
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID),
