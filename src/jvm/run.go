@@ -727,13 +727,11 @@ func runFrame(fs *list.List) error {
 			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
-				msg := fmt.Sprintf("BASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"BASTORE: Invalid array subscript")
-				return errors.New("BASTORE: Invalid array index")
+				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
+				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
-
 			array[index] = value
 
 		case POP: // 0x57 	(pop an item off the stack and discard it)
