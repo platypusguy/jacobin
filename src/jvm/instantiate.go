@@ -59,7 +59,10 @@ func instantiateClass(classname string) (*object.Object, error) {
 	superclasses := []string{}
 	superclass := k.Data.Superclass
 	for {
-		if superclass == "java/lang/Object" {
+		// if the present class is Object, it has no superclass. If the present
+		// class's superclass is Object, we've reached the top of the superclass
+		// hierarchy. Otherwise, keep looping up the superclasses.
+		if classname == "java/lang/Object" || superclass == "java/lang/Object" {
 			break
 		}
 
