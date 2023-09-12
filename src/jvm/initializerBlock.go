@@ -60,9 +60,17 @@ func runInitializationBlock(k *classloader.Klass) error {
 		if err == nil {
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
-				_ = runJavaInitializer(me.Meth, k)
+				// _ = runJavaInitializer(me.Meth, k)
+				err = runJavaInitializer(me.Meth, k)
+				if err != nil {
+					return err
+				}
 			case 'G': // it's a native (that is, golang) initializer
-				_ = runNativeInitializer(me.Meth, k)
+				// _ = runNativeInitializer(me.Meth, k)
+				err = runNativeInitializer(me.Meth, k)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
