@@ -25,7 +25,7 @@ import (
 // In addition, we have to make sure that the initialization blocks of superclasses have been
 // previously executed.
 func runInitializationBlock(k *classloader.Klass, superClasses []string) error {
-	if superClasses == nil {
+	if superClasses == nil { // if no superclasses were previously looked up
 		// get list of the superclasses up to but not including java.lang.Object
 		var superclasses []string
 		// put the present class at the bottom of the list of superclasses
