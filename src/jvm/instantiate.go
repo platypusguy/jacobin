@@ -154,7 +154,7 @@ runInitializer:
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
 	if ok && k.Data.ClInit == types.ClInitNotRun {
-		err := runInitializationBlock(k)
+		err := runInitializationBlock(k, superclasses)
 		if err != nil {
 			errMsg := fmt.Sprintf("error encountered running %s.<clinit>()", classname)
 			_ = log.Log(errMsg, log.SEVERE)

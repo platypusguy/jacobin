@@ -24,38 +24,39 @@ import (
 // just like a regular method with stack frames and depending on the interpreter in run.go
 // In addition, we have to make sure that the initialization blocks of superclasses have been
 // previously executed.
-//
-// CURR: Implement the superclass requirement.
-func runInitializationBlock(k *classloader.Klass) error {
-	// get list of the superclasses up to but not including java.lang.Object
-	var superclasses []string
-	// put the present class at the bottom of the list of superclasses
-	superclasses = append(superclasses, k.Data.Name)
+func runInitializationBlock(k *classloader.Klass, superClasses []string) error {
+	if superClasses == nil {
+		// get list of the superclasses up to but not including java.lang.Object
+		var superclasses []string
+		// put the present class at the bottom of the list of superclasses
+		superclasses = append(superclasses, k.Data.Name)
 
-	superclass := k.Data.Superclass
-	for {
-		if superclass == "java/lang/Object" {
-			break
+		superclass := k.Data.Superclass
+		for {
+			if superclass == "java/lang/Object" {
+				break
+			}
+
+			err := loadThisClass(superclass) // load the superclass
+			if err != nil {                  // error message will have been displayed
+				return err
+			}
+
+			// load only superclasses that have a clInit block that has not been run
+			loadedSuperclass := classloader.MethAreaFetch(superclass)
+			if loadedSuperclass.Data.ClInit == types.ClInitNotRun {
+				superclasses = append(superclasses, superclass)
+			}
+
+			// now loop to see whether this superclass has a superclass
+			superclass = loadedSuperclass.Data.Superclass
 		}
-
-		err := loadThisClass(superclass) // load the superclass
-		if err != nil {                  // error message will have been displayed
-			return err
-		}
-
-		// load only superclasses that have a clInit block that has not been run
-		loadedSuperclass := classloader.MethAreaFetch(superclass)
-		if loadedSuperclass.Data.ClInit == types.ClInitNotRun {
-			superclasses = append(superclasses, superclass)
-		}
-
-		// now loop to see whether this superclass has a superclass
-		superclass = loadedSuperclass.Data.Superclass
+		superClasses = superclasses
 	}
 
 	// now execute any encountered <clinit> code in this class
-	for i := len(superclasses) - 1; i >= 0; i-- {
-		className := superclasses[i]
+	for i := len(superClasses) - 1; i >= 0; i-- {
+		className := superClasses[i]
 		me, err := classloader.FetchMethodAndCP(className, "<clinit>", "()V")
 		if err == nil {
 			switch me.MType {
@@ -67,7 +68,7 @@ func runInitializationBlock(k *classloader.Klass) error {
 			if err != nil {
 				return err
 			}
-		}
+		} // if no <clinit> method, then skip that superclass
 	}
 	return nil
 }

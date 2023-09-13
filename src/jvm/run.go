@@ -1879,7 +1879,7 @@ func runFrame(fs *list.List) error {
 			// all we know the class exists and has been loaded.
 			k := classloader.MethAreaFetch(className)
 			if k.Data.ClInit == types.ClInitNotRun {
-				err = runInitializationBlock(k)
+				err = runInitializationBlock(k, nil)
 				if err != nil {
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
 						className)
