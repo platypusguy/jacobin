@@ -399,11 +399,11 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 		case Dynamic:
 			// Like InvokeDynamic, Dynamic is a unique kind of entry. The first field,
-			// boostrapIndex, must be a "valid index into the bootstrap_methods array
+			// bootstrapIndex, must be a "valid index into the bootstrap_methods array
 			// of the bootstrap method table of this this class file" (specified in §4.7.23).
 			// The document spec for InvokeDynamic entries is found at:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
-			// The second field is a nameAndType record describing the boostrap method.
+			// The second field is a nameAndType record describing the bootstrap method.
 			// Here we just make sure, the field points to the right kind of entry and that
 			// the descriptor in the nameAndType points to a field.
 			whichDyn := entry.slot
@@ -415,7 +415,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			bootstrap := dyn.bootstrapIndex
 			if bootstrap >= klass.bootstrapCount {
-				return cfe("The boostrap index in dynamic at CP[" + strconv.Itoa(j) +
+				return cfe("The bootstrap index in dynamic at CP[" + strconv.Itoa(j) +
 					"] is invalid: " + strconv.Itoa(bootstrap))
 			}
 
@@ -450,11 +450,11 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 
 		case InvokeDynamic:
-			// InvokeDynamic is a unique kind of entry. The first field, boostrapIndex, must be a
+			// InvokeDynamic is a unique kind of entry. The first field, bootstrapIndex, must be a
 			// "valid index into the bootstrap_methods array of the bootstrap method table of this
 			// this class file" (specified in §4.7.23). The document spec for InvokeDynamic entries is:
 			// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.10
-			// The second field is a nameAndType record describing the boostrap method.
+			// The second field is a nameAndType record describing the bootstrap method.
 			// Here we just make sure, the field points to the right kind of entry. That entry
 			// will be checked later/earlier in this format check.
 			whichInvDyn := entry.slot
@@ -466,7 +466,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			bootstrap := invDyn.bootstrapIndex
 			if bootstrap >= klass.bootstrapCount {
-				return cfe("The boostrap index in InvokeDynamic at CP[" + strconv.Itoa(j) +
+				return cfe("The bootstrap index in InvokeDynamic at CP[" + strconv.Itoa(j) +
 					"] is invalid: " + strconv.Itoa(bootstrap))
 			}
 
@@ -745,7 +745,7 @@ func formatCheckClassAttributes(klass *ParsedClass) error {
 			if len(bsm.args) > 0 {
 				for j := 0; j < len(bsm.args); j++ {
 					if !validateItemIsLodable(klass, bsm.args[j]) {
-						return cfe("Boostrap method argument[" + strconv.Itoa(j) + "] in class " +
+						return cfe("Bootstrap method argument[" + strconv.Itoa(j) + "] in class " +
 							klass.className + " bootstrap method #[" + strconv.Itoa(i) + "] " +
 							"should be but is not a loadable constant")
 					}
