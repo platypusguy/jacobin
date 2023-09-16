@@ -1281,7 +1281,7 @@ func TestValidBootstrapClassAttribute(t *testing.T) {
 		00, 00, 00, 0x08, // length of attribute (must be 0 for 'Deprecated')
 		00, 01, // bootstrap count
 		00, 03, // CP[3] -> MethodHandle
-		00, 01, // arg count for this first boostrap method
+		00, 01, // arg count for this first bootstrap method
 		00, 01, // CP[1] -> LongConst (which is loadable, so all is good.
 	}
 

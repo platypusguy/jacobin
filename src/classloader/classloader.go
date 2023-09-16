@@ -152,7 +152,7 @@ type exception struct {
 	catchType int // the type of exception, index to CP, which must point a ClassFref entry
 }
 
-// the boostrap methods, specified in the bootstrap class attribute
+// the bootstrap methods, specified in the bootstrap class attribute
 type bootstrapMethod struct {
 	methodRef int   // index pointing to a MethodHandle
 	args      []int // arguments: indexes to loadable arguments from the CP

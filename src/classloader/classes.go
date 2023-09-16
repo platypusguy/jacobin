@@ -122,7 +122,7 @@ type CodeException struct {
 	CatchType uint16 // the type of exception, index to CP, which must point a ClassFref entry
 }
 
-// the boostrap methods, specified in the bootstrap class attribute
+// the bootstrap methods, specified in the bootstrap class attribute
 type BootstrapMethod struct {
 	MethodRef uint16   // index pointing to a MethodHandle
 	Args      []uint16 // arguments: indexes to loadable arguments from the CP

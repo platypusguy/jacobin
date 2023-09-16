@@ -1197,7 +1197,7 @@ func TestDynamics(t *testing.T) {
 		attrContent: []byte{00, 01, 00, 03, 00, 01, 00, 01}, // these bytes represent:
 		// 00, 01, // bootstrap count
 		// 00, 03, // CP[3] -> MethodHandle
-		// 00, 01, // arg count for this first boostrap method
+		// 00, 01, // arg count for this first bootstrap method
 		// 00, 01, // CP[1] -> LongConst (which is loadable, so all is good.
 	}
 	klass.attributes = append(klass.attributes, bsmAttrib)
@@ -1302,7 +1302,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 		attrContent: []byte{00, 01, 00, 03, 00, 01, 00, 01}, // these bytes represent:
 		// 00, 01, // bootstrap count
 		// 00, 03, // CP[3] -> MethodHandle
-		// 00, 01, // arg count for this first boostrap method
+		// 00, 01, // arg count for this first bootstrap method
 		// 00, 01, // CP[1] -> LongConst (which is loadable, so all is good.
 	}
 	klass.attributes = append(klass.attributes, bsmAttrib)
@@ -1807,7 +1807,7 @@ func TestCheckStructure(t *testing.T) {
 	pClass.bootstrapCount = 5
 	pClass.bootstraps = nil
 	if formatCheckStructure(&pClass) == nil {
-		t.Error("Expecting error in mismatch of bootstrapCount and boostraps.len, but got none")
+		t.Error("Expecting error in mismatch of bootstrapCount and bootstraps.len, but got none")
 	}
 	pClass.bootstrapCount = 0
 

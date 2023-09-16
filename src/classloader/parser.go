@@ -615,12 +615,12 @@ func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error
 		case "BootstrapMethods":
 			// see: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.23
 			loc = 0
-			boostrapCount, err1 := u16From2bytes(attrib.attrContent, loc)
+			bootstrapCount, err1 := u16From2bytes(attrib.attrContent, loc)
 			loc += 2
 			if err1 != nil {
 				break // error msg will already have been shown
 			} else {
-				klass.bootstrapCount = int(boostrapCount)
+				klass.bootstrapCount = int(bootstrapCount)
 			}
 			for m := 0; m < klass.bootstrapCount; m++ {
 				bsm := bootstrapMethod{}
@@ -643,7 +643,7 @@ func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error
 				}
 				klass.bootstraps = append(klass.bootstraps, bsm)
 			}
-			_ = log.Log("    "+strconv.Itoa(klass.bootstrapCount)+" boostrap method(s)", log.FINEST)
+			_ = log.Log("    "+strconv.Itoa(klass.bootstrapCount)+" bootstrap method(s)", log.FINEST)
 
 		case "Deprecated":
 			klass.deprecated = true
