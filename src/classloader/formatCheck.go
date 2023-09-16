@@ -745,7 +745,7 @@ func formatCheckClassAttributes(klass *ParsedClass) error {
 			if len(bsm.args) > 0 {
 				for j := 0; j < len(bsm.args); j++ {
 					if !validateItemIsLodable(klass, bsm.args[j]) {
-						return cfe("Boostrap method argument[" + strconv.Itoa(j) + "] in class " +
+						return cfe("Bootstrap method argument[" + strconv.Itoa(j) + "] in class " +
 							klass.className + " bootstrap method #[" + strconv.Itoa(i) + "] " +
 							"should be but is not a loadable constant")
 					}
