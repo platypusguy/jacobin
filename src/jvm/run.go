@@ -711,9 +711,9 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			ptrObj := pop(f).(*object.Object) // ptr to array object
 			if ptrObj == nil {
-				exceptions.Throw(exceptions.NullPointerException,
-					"BASTORE: Invalid (null) reference to an array")
-				return errors.New("BASTORE: Invalid array address")
+				errMsg := "BASTORE: Invalid (null) reference to an array"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
