@@ -209,7 +209,7 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 
 	newLen := MethAreaSize()
 	if newLen != currLen+2 {
-		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
+		t.Errorf("TestInvalidLookupOfMethod_Test2: Expected post-insertion MethArea[] to have length of %d, got: %d",
 			currLen+1, newLen)
 	}
 
@@ -219,8 +219,9 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
 	}
 
-	if err.Error() != "method not found" {
-		t.Errorf("Expecting error of 'method not found', got %s", err.Error())
+	msg := err.Error()
+	if !strings.Contains(msg, "did not contain method") {
+		t.Errorf("TestInvalidLookupOfMethod_Test2: Expecting error of 'did not contain method: gherkin', got %s", err.Error())
 	}
 
 	// restore stderr and stdout to what they were before
@@ -228,14 +229,10 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	out, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
-	msg := string(out[:])
+	msg = string(out[:])
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
-
-	if !strings.Contains(msg, "did not contain method: gherkin") {
-		t.Errorf("Expecting log message containing 'did not contain method: gherkin', got: %s", msg)
-	}
 }
 
 func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {

@@ -122,7 +122,7 @@ type CodeException struct {
 	CatchType uint16 // the type of exception, index to CP, which must point a ClassFref entry
 }
 
-// the boostrap methods, specified in the bootstrap class attribute
+// the bootstrap methods, specified in the bootstrap class attribute
 type BootstrapMethod struct {
 	MethodRef uint16   // index pointing to a MethodHandle
 	Args      []uint16 // arguments: indexes to loadable arguments from the CP
@@ -303,9 +303,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	// }
 
 	// if we got this far, something went wrong with locating the method
-	_ = log.Log("FetchMethodAndCP: Found class "+className+", but it did not contain method: "+methName, log.SEVERE)
-	shutdown.Exit(shutdown.JVM_EXCEPTION)
-	return MTentry{}, errors.New("method not found") // dummy return needed for tests
+	msg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
+	return MTentry{}, errors.New(msg)
+	//shutdown.Exit(shutdown.JVM_EXCEPTION)
+	//return MTentry{}, errors.New("method not found") // dummy return needed for tests
 }
 
 // error message when main() can't be found

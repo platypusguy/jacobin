@@ -633,7 +633,7 @@ func TestCPvalidInvokeDynamic(t *testing.T) {
 
 	ide := pc.invokeDynamics[0]
 	if ide.bootstrapIndex != 8 {
-		t.Error("Was expecting an invokeDynamic boostrap index of 8. Got: " + strconv.Itoa(ide.bootstrapIndex))
+		t.Error("Was expecting an invokeDynamic bootstrap index of 8. Got: " + strconv.Itoa(ide.bootstrapIndex))
 	}
 
 	if ide.nameAndType != 1 {

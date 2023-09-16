@@ -46,7 +46,7 @@ func TestInitOfClassloaders(t *testing.T) {
 
 	// check that the classloaders have empty tables ready
 	if BootstrapCL.ClassCount != 0 {
-		t.Errorf("Expected size of boostrap CL's table to be 0, got: %d",
+		t.Errorf("Expected size of bootstrap CL's table to be 0, got: %d",
 			BootstrapCL.ClassCount)
 	}
 

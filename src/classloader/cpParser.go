@@ -325,12 +325,12 @@ func printCP(klass *ParsedClass) {
 		case Dynamic:
 			fmt.Fprintf(os.Stderr, "(dynamic)          ")
 			n := entry.slot
-			fmt.Fprintf(os.Stderr, "boostrap index: %02d, name and type: %02d\n",
+			fmt.Fprintf(os.Stderr, "bootstrap index: %02d, name and type: %02d\n",
 				klass.dynamics[n].bootstrapIndex, klass.dynamics[n].nameAndType)
 		case InvokeDynamic:
 			fmt.Fprintf(os.Stderr, "(invokedynamic)    ")
 			n := entry.slot
-			fmt.Fprintf(os.Stderr, "boostrap index: %02d, name and type: %02d\n",
+			fmt.Fprintf(os.Stderr, "bootstrap index: %02d, name and type: %02d\n",
 				klass.invokeDynamics[n].bootstrapIndex, klass.invokeDynamics[n].nameAndType)
 		case Module:
 			fmt.Fprintf(os.Stderr, "(module name)      ")
