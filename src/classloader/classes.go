@@ -305,8 +305,6 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	// if we got this far, something went wrong with locating the method
 	msg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
 	return MTentry{}, errors.New(msg)
-	//shutdown.Exit(shutdown.JVM_EXCEPTION)
-	//return MTentry{}, errors.New("method not found") // dummy return needed for tests
 }
 
 // error message when main() can't be found

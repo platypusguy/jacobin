@@ -1744,7 +1744,9 @@ func runFrame(fs *list.List) error {
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the classpath and retry
-					return errors.New("INVOKEVIRTUAL: Class not found: " + className + "." + methodName)
+					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 			}
 
