@@ -76,6 +76,7 @@ func MTableLoadNatives() {
 	loadlib(&MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
 	loadlib(&MTable, Load_Lang_Class())     // load the java.lang.Class golang functions
 	loadlib(&MTable, Load_Lang_Math())      // load the java.lang.Math golang functions
+	loadlib(&MTable, Load_Misc_Unsafe())    // load the jdk.internal/misc/Unsafe functions
 	loadlib(&MTable, Load_Lang_String())    // load the java.lang.String golang functions
 	loadlib(&MTable, Load_Lang_System())    // load the java.lang.System golang functions
 	loadlib(&MTable, Load_Lang_UTF16())     // load the java.lang.UTF16 golang functions
