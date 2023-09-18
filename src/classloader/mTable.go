@@ -78,6 +78,7 @@ func MTableLoadNatives() {
 	loadlib(&MTable, Load_Lang_Math())      // load the java.lang.Math golang functions
 	loadlib(&MTable, Load_Lang_String())    // load the java.lang.String golang functions
 	loadlib(&MTable, Load_Lang_System())    // load the java.lang.System golang functions
+	loadlib(&MTable, Load_Lang_UTF16())     // load the java.lang.UTF16 golang functions
 }
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
