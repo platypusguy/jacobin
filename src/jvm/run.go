@@ -1744,7 +1744,9 @@ func runFrame(fs *list.List) error {
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the classpath and retry
-					return errors.New("INVOKEVIRTUAL: Class not found: " + className + "." + methodName)
+					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 			}
 
@@ -1804,8 +1806,11 @@ func runFrame(fs *list.List) error {
 			}
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
-			if err != nil {
-				return errors.New("INVOKESPECIAL: Class not found: " + className + "." + methName)
+			if err != nil || mtEntry.Meth == nil {
+				// TODO: search the classpath and retry
+				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methName
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
@@ -1870,8 +1875,11 @@ func runFrame(fs *list.List) error {
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodSigIndex)
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
-			if err != nil {
-				return errors.New("INVOKESTATIC: Class not found: " + className + methodName)
+			if err != nil || mtEntry.Meth == nil {
+				// TODO: search the classpath and retry
+				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			// before we can run the method, we need to either instantiate the class and/or
