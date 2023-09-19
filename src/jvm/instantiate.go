@@ -145,7 +145,7 @@ func instantiateClass(classname string) (*object.Object, error) {
 				return nil, err
 			}
 
-			// add the field to the field table for this
+			// add the field to the field table for this object
 			obj.FieldTable[name] = *fieldToAdd
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
@@ -232,7 +232,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 
 	if f.IsStatic {
 		s := classloader.Static{
-			Type:  presentType, // we use the type without the 'X" prefix in the statics table.
+			Type:  presentType, // we use the type without the 'X' prefix in the statics table.
 			Value: fieldToAdd.Fvalue,
 		}
 		// add the field to the Statics table
