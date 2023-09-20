@@ -7,15 +7,13 @@
 package jvm
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/thread"
 	"jacobin/types"
-	"strconv"
 )
 
 // Initialization blocks are code blocks that for all intents are methods. They're gathered up by the
@@ -24,7 +22,7 @@ import (
 // just like a regular method with stack frames and depending on the interpreter in run.go
 // In addition, we have to make sure that the initialization blocks of superclasses have been
 // previously executed.
-func runInitializationBlock(k *classloader.Klass, superClasses []string) error {
+func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *list.List) error {
 	if superClasses == nil || len(superClasses) == 0 { // if no superclasses were previously
 		// looked up
 		// get list of the superclasses up to but not including java.lang.Object
@@ -64,7 +62,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string) error {
 		if err == nil {
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
-				err = runJavaInitializer(me.Meth, k)
+				err = runJavaInitializer(me.Meth, k, fs)
 			case 'G': // it's a native (that is, golang) initializer
 				err = runNativeInitializer(me.Meth, k)
 			}
@@ -82,7 +80,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string) error {
 // stack. The reason is that this is computing that's in most ways apart from the
 // bytecode of the app. (This design might be revised at a later point and the two
 // frame stacks combined into one.)
-func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
+func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List) error {
 	meth := m.(classloader.JmEntry)
 	f := frames.CreateFrame(meth.MaxStack + 2) // create a new frame (adding 2 b/c of unexplained bytecode needs)
 	f.MethName = "<clinit>"
@@ -97,27 +95,27 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass) error {
 
 	k.Data.ClInit = types.ClInitInProgress
 	// create the first thread and place its first frame on it
-	glob := globals.GetGlobalRef()
-	clInitThread := thread.CreateThread()
-	clInitThread.Stack = frames.CreateFrameStack()
-	clInitThread.ID = thread.AddThreadToTable(&clInitThread, &glob.Threads)
+	// glob := globals.GetGlobalRef()
+	// clInitThread := thread.CreateThread()
+	// clInitThread.Stack = frames.CreateFrameStack()
+	// clInitThread.ID = thread.AddThreadToTable(&clInitThread, &glob.Threads)
+	//
+	// clInitThread.Trace = MainThread.Trace
+	// f.Thread = clInitThread.ID
 
-	clInitThread.Trace = MainThread.Trace
-	f.Thread = clInitThread.ID
-
-	if frames.PushFrame(clInitThread.Stack, f) != nil {
-		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(clInitThread.ID),
-			log.SEVERE)
-		return errors.New("outOfMemory Exception")
+	if frames.PushFrame(fs, f) != nil {
+		errMsg := "memory exception allocating frame in runJavaInitializer()"
+		_ = log.Log(errMsg, log.SEVERE)
+		return errors.New(errMsg)
 	}
 
-	if clInitThread.Trace {
+	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("Start init: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
-	err := runThread(&clInitThread)
+	err := runFrame(fs)
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	if err != nil {
 		return err

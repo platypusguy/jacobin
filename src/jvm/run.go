@@ -43,12 +43,6 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 	MainThread.Trace = tracing
 
-	// must first instantiate the class, so that any static initializers are run
-	_, instantiateError := instantiateClass(className)
-	if instantiateError != nil {
-		return errors.New("Error instantiating: " + className + ".main()")
-	}
-
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
 		return errors.New("Class not found: " + className + ".main()")
@@ -71,6 +65,12 @@ func StartExec(className string, globals *globals.Globals) error {
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
+
+	// must first instantiate the class, so that any static initializers are run
+	_, instantiateError := instantiateClass(className, MainThread.Stack)
+	if instantiateError != nil {
+		return errors.New("Error instantiating: " + className + ".main()")
+	}
 
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID),
@@ -105,16 +105,11 @@ func runThread(t *thread.ExecThread) error {
 			if frameStack.Value == nil {
 				frameStack = frameStack.Next()
 			}
-			// where := *(frameStack.Next())
+
 			val := frameStack.Value.(*frames.Frame)
-			data := fmt.Sprintf("Method: %s.%s at PC %02d",
+			data := fmt.Sprintf("Method: %s.%s at PC: %03d",
 				val.ClName, val.MethName, val.PC)
 			_ = log.Log(data, log.SEVERE)
-			// if where == nil {
-			// 	log.Log("No further information available")
-			// } else {
-			// 	class := where
-			// }
 			return err
 		}
 
@@ -1429,7 +1424,7 @@ func runFrame(fs *list.List) error {
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
-				_, err := instantiateClass(className)
+				_, err := instantiateClass(className, fs)
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
@@ -1509,7 +1504,7 @@ func runFrame(fs *list.List) error {
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
-				_, err := instantiateClass(className)
+				_, err := instantiateClass(className, fs)
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
@@ -1906,7 +1901,7 @@ func runFrame(fs *list.List) error {
 			// all we know the class exists and has been loaded.
 			k := classloader.MethAreaFetch(className)
 			if k.Data.ClInit == types.ClInitNotRun {
-				err = runInitializationBlock(k, nil)
+				err = runInitializationBlock(k, nil, fs)
 				if err != nil {
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
 						className)
@@ -1973,7 +1968,7 @@ func runFrame(fs *list.List) error {
 				className = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
 			}
 
-			ref, err := instantiateClass(className)
+			ref, err := instantiateClass(className, fs)
 			if err != nil {
 				errMsg := fmt.Sprintf("NEW: could not load class %s", className)
 				_ = log.Log(errMsg, log.SEVERE)

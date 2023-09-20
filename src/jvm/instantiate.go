@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"jacobin/classloader"
@@ -23,7 +24,7 @@ import (
 //  1. the class needs to be loaded, so that its details and its methods are knowable
 //  2. the class fields (if static) and instance fields (if non-static) are allocated.
 //     Details for this second step appear in the loop that drives createField().
-func instantiateClass(classname string) (*object.Object, error) {
+func instantiateClass(classname string, frameStack *list.List) (*object.Object, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
 		err := loadThisClass(classname)
@@ -154,7 +155,7 @@ runInitializer:
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
 	if ok && k.Data.ClInit == types.ClInitNotRun {
-		err := runInitializationBlock(k, superclasses)
+		err := runInitializationBlock(k, superclasses, frameStack)
 		if err != nil {
 			errMsg := fmt.Sprintf("error encountered running %s.<clinit>()", classname)
 			_ = log.Log(errMsg, log.SEVERE)
