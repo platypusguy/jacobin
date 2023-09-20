@@ -96,6 +96,25 @@ func runThread(t *thread.ExecThread) error {
 	for t.Stack.Len() > 0 {
 		err := runFrame(t.Stack)
 		if err != nil {
+			frameStack := t.Stack.Front()
+			if frameStack == nil {
+				_ = log.Log("No further data available", log.SEVERE)
+				return err
+			}
+
+			if frameStack.Value == nil {
+				frameStack = frameStack.Next()
+			}
+			// where := *(frameStack.Next())
+			val := frameStack.Value.(*frames.Frame)
+			data := fmt.Sprintf("Method: %s.%s at PC %02d",
+				val.ClName, val.MethName, val.PC)
+			_ = log.Log(data, log.SEVERE)
+			// if where == nil {
+			// 	log.Log("No further information available")
+			// } else {
+			// 	class := where
+			// }
 			return err
 		}
 
@@ -1575,7 +1594,7 @@ func runFrame(fs *list.List) error {
 						Value: value,
 					}
 				default:
-					errMsg := fmt.Sprintf("PUTSTATIC type unrecognized: %v", value)
+					errMsg := fmt.Sprintf("PUTSTATIC: type unrecognized: %v", value)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
