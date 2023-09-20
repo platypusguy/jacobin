@@ -22,7 +22,7 @@ func TestInstantiateArray(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	classloader.InitMethodArea()
 
-	obj, err := instantiateClass(types.ByteArray)
+	obj, err := instantiateClass(types.ByteArray, nil)
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
 	}
