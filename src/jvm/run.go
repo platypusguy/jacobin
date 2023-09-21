@@ -755,9 +755,17 @@ func runFrame(fs *list.List) error {
 			array[index] = value
 
 		case POP: // 0x57 	(pop an item off the stack and discard it)
+			if f.TOS < 0 {
+				formatStackUnderflowError(f)
+				continue // the error will be picked up on the next instruction
+			}
 			f.TOS -= 1
 
 		case POP2: // 0x58	(pop 2 items from stack and discard them)
+			if f.TOS < 1 {
+				formatStackUnderflowError(f)
+				continue // the error will be picked up on the next instruction
+			}
 			f.TOS -= 2
 
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
@@ -2454,26 +2462,7 @@ func pop(f *frames.Frame) interface{} {
 	var value interface{}
 
 	if f.TOS == -1 {
-		// Stack underflow error. Change the bytecode to be IMPDEP2 and give info
-		// in four bytes:
-		// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
-		// the present PC written as an int16 value. First check that there
-		// are enough bytes in the method that we can overwrite the first four bytes.
-		currPC := int16(f.PC)
-		if len(f.Meth) < 5 { // the present bytecode + 4 bytes for error info
-			f.Meth = make([]byte, 5)
-		}
-
-		f.Meth[0] = 0x00 // dummy for the current bytecode
-		f.Meth[1] = IMPDEP2
-		f.Meth[2] = 0x02
-
-		// now convert the PC at time of error into a two-byte value
-		bytes := make([]byte, 2)
-		binary.BigEndian.PutUint16(bytes, uint16(currPC))
-		f.Meth[3] = bytes[0]
-		f.Meth[4] = bytes[1]
-		f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
+		formatStackUnderflowError(f)
 		value = nil
 	} else {
 		value = f.OpStack[f.TOS]
@@ -2538,26 +2527,7 @@ func pop(f *frames.Frame) interface{} {
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
-		// Stack underflow error. Change the bytecode to be IMPDEP2 and give info
-		// in four bytes:
-		// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
-		// the present PC written as an int16 value. First check that there
-		// are enough bytes in the method that we can overwrite the first four bytes.
-		currPC := int16(f.PC)
-		if len(f.Meth) < 5 { // the present bytecode + 4 bytes for error info
-			f.Meth = make([]byte, 5)
-		}
-
-		f.Meth[0] = 0x00 // dummy for the current bytecode
-		f.Meth[1] = IMPDEP2
-		f.Meth[2] = 0x02
-
-		// now convert the PC at time of error into a two-byte value
-		bytes := make([]byte, 2)
-		binary.BigEndian.PutUint16(bytes, uint16(currPC))
-		f.Meth[3] = bytes[0]
-		f.Meth[4] = bytes[1]
-		f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
+		formatStackUnderflowError(f)
 		return nil
 	}
 
