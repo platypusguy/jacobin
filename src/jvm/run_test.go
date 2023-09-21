@@ -168,15 +168,22 @@ func TestAload3(t *testing.T) {
 func TestAreturn(t *testing.T) {
 	f0 := newFrame(0)
 	push(&f0, unsafe.Pointer(&f0))
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
+
+	// create a new frame which does an ARETURN of pointer to f1
 	f1 := newFrame(ARETURN)
 	push(&f1, unsafe.Pointer(&f1))
 	fs.PushFront(&f1)
 	_ = runFrame(fs)
+
+	// now that the ARETURN has completed, pop that frame (the one that did the ARETURN)
 	_ = frames.PopFrame(fs)
-	f3 := fs.Front().Value.(*frames.Frame)
-	newVal := pop(f3).(unsafe.Pointer)
+
+	// and see whether the pointer at the frame's top of stack points to f1
+	f2 := fs.Front().Value.(*frames.Frame)
+	newVal := pop(f2).(unsafe.Pointer)
 	if newVal != unsafe.Pointer(&f1) {
 		t.Error("ARETURN: did not get expected value of reference")
 	}

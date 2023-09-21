@@ -115,6 +115,8 @@ func runThread(t *thread.ExecThread) error {
 
 		if t.Stack.Len() == 1 { // true when the last executed frame was main()
 			return nil
+		} else {
+			t.Stack.Remove(t.Stack.Front()) // pop the frame off
 		}
 	}
 	return nil
@@ -1385,8 +1387,10 @@ func runFrame(fs *list.List) error {
 			return nil
 		case ARETURN: // 0xB0	(return a reference)
 			valToReturn := pop(f)
+			// prevFrame := f
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
+			// fs.PushFront(prevFrame) //
 			return nil
 		case RETURN: // 0xB1    (return from void function)
 			f.TOS = -1 // empty the stack
@@ -1782,30 +1786,34 @@ func runFrame(fs *list.List) error {
 					return errors.New("INVOKEVIRTUAL: Error creating frame in: " +
 						className + "." + methodName)
 				}
-
+				f.PC += 1
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				err = runFrame(fs)                   // 2nd on stack from new crash site
-				if err != nil {
-					return err
-				}
+				return runFrame(fs)
+				/*
+					err = runFrame(fs)                   // 2nd on stack from new crash site
+					if err != nil {
+						return err
+					}
 
-				// if the method is main(), then when we get here the
-				// frame stack will be empty to exit from here, otherwise
-				// there's still a frame on the stack, pop it off and continue.
-				if fs.Len() == 0 {
-					return nil
-				}
-				fs.Remove(fs.Front()) // pop the frame off
+					// if the method is main(), then when we get here the
+					// frame stack will be empty to exit from here, otherwise
+					// there's still a frame on the stack, pop it off and continue.
+					if fs.Len() == 0 {
+						return nil
+					}
+					fs.Remove(fs.Front()) // pop the frame off
 
-				// the previous frame pop might have been main()
-				// if so, then we can't reset f to a non-existent frame
-				// so we test for this before resetting f.
-				if fs.Len() != 0 {
-					f = fs.Front().Value.(*frames.Frame)
-				} else {
-					return nil
-				}
+					// the previous frame pop might have been main()
+					// if so, then we can't reset f to a non-existent frame
+					// so we test for this before resetting f.
+					if fs.Len() != 0 {
+						f = fs.Front().Value.(*frames.Frame)
+					} else {
+						return nil
+					}
+
+				*/
 			}
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -1844,23 +1852,28 @@ func runFrame(fs *list.List) error {
 						className + "." + methName)
 				}
 
+				f.PC += 1
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				err = runFrame(fs)                   // 2nd on stack from new crash site
-				if err != nil {
-					return err
-				}
+				return runFrame(fs)
+				/*
+					err = runFrame(fs)                   // 2nd on stack from new crash site
+					if err != nil {
+						return err
+					}
 
-				fs.Remove(fs.Front()) // pop the frame off
+					fs.Remove(fs.Front()) // pop the frame off
 
-				// the previous frame pop might have been main()
-				// if so, then we can't reset f to a non-existent frame
-				// so we test for this before resetting f.
-				if fs.Len() != 0 {
-					f = fs.Front().Value.(*frames.Frame)
-				} else {
-					return nil
-				}
+					// the previous frame pop might have been main()
+					// if so, then we can't reset f to a non-existent frame
+					// so we test for this before resetting f.
+					if fs.Len() != 0 {
+						f = fs.Front().Value.(*frames.Frame)
+					} else {
+						return nil
+					}
+
+				*/
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -1927,29 +1940,34 @@ func runFrame(fs *list.List) error {
 						className + "." + methodName)
 				}
 
+				f.PC += 1                            // point to the next bytecode
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				err = runFrame(fs)                   // 2nd on stack from new crash site
-				if err != nil {
-					return err
-				}
+				return runFrame(fs)
+				// err = runFrame(fs)                   // 2nd on stack from new crash site
+				// if err != nil {
+				// 	return err
+				// }
 
-				// if the static method is main(), when we get here the
-				// frame stack will be empty to exit from here, otherwise
-				// there's still a frame on the stack, pop it off and continue.
-				if fs.Len() == 0 {
-					return nil
-				}
-				fs.Remove(fs.Front()) // pop the frame off
+				/*
+					// if the static method is main(), when we get here the
+					// frame stack will be empty to exit from here, otherwise
+					// there's still a frame on the stack, pop it off and continue.
+					if fs.Len() == 0 {
+						return nil
+					}
+					fs.Remove(fs.Front()) // pop the frame off
 
-				// the previous frame pop might have been main()
-				// if so, then we can't reset f to a non-existent frame
-				// so we test for this before resetting f.
-				if fs.Len() != 0 {
-					f = fs.Front().Value.(*frames.Frame)
-				} else {
-					return nil
-				}
+					// the previous frame pop might have been main()
+					// if so, then we can't reset f to a non-existent frame
+					// so we test for this before resetting f.
+					if fs.Len() != 0 {
+						f = fs.Front().Value.(*frames.Frame)
+					} else {
+						return nil
+					}
+
+				*/
 			}
 		case NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
