@@ -155,7 +155,7 @@ func runFrame(fs *list.List) error {
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
-		if MainThread.Trace {
+		if MainThread.Trace && f.Meth[f.PC] != IMPDEP2 {
 			traceInfo := emitTraceData(f)
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
@@ -762,6 +762,9 @@ func runFrame(fs *list.List) error {
 
 		case DUP: // 0x59 			(push an item equal to the current top of the stack
 			tosItem := peek(f)
+			if len(f.Meth) > 1 && f.Meth[f.PC+1] == IMPDEP2 {
+				break
+			} // if invalid peek break now
 			push(f, tosItem)
 		case DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
 			top := pop(f)
@@ -2367,7 +2370,12 @@ func runFrame(fs *list.List) error {
 				bytes[0] = f.Meth[3]
 				bytes[1] = f.Meth[4]
 				location := int16(binary.BigEndian.Uint16(bytes))
-				errMsg := fmt.Sprintf("error: stack underflow at PC: %03d", location)
+				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
+				_ = log.Log("\nError: stack underflow", log.SEVERE)
+				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
+				_ = log.Log(errMsg, log.SEVERE)
+
+				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
 				return errors.New(errMsg)
 			default:
 				return errors.New("unknown error encountered")
@@ -2489,10 +2497,6 @@ func pop(f *frames.Frame) interface{} {
 						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 							fmt.Sprintf("%3d null", f.TOS)
 						break
-						// traceInfo = fmt.Sprintf("pop: TOS value is type *object.Object but obj is nil")
-						// _ = log.Log(traceInfo, log.SEVERE)
-						// debug.PrintStack()
-						// syscall.Exit(1)
 					}
 					if len(obj.Fields) > 0 {
 						if obj.Fields[0].Ftype == "[B" {
@@ -2533,6 +2537,30 @@ func pop(f *frames.Frame) interface{} {
 
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
+	if f.TOS == -1 {
+		// Stack underflow error. Change the bytecode to be IMPDEP2 and give info
+		// in four bytes:
+		// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
+		// the present PC written as an int16 value. First check that there
+		// are enough bytes in the method that we can overwrite the first four bytes.
+		currPC := int16(f.PC)
+		if len(f.Meth) < 5 { // the present bytecode + 4 bytes for error info
+			f.Meth = make([]byte, 5)
+		}
+
+		f.Meth[0] = 0x00 // dummy for the current bytecode
+		f.Meth[1] = IMPDEP2
+		f.Meth[2] = 0x02
+
+		// now convert the PC at time of error into a two-byte value
+		bytes := make([]byte, 2)
+		binary.BigEndian.PutUint16(bytes, uint16(currPC))
+		f.Meth[3] = bytes[0]
+		f.Meth[4] = bytes[1]
+		f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
+		return nil
+	}
+
 	if MainThread.Trace {
 		var traceInfo string
 		value := f.OpStack[f.TOS]
