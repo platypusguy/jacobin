@@ -757,14 +757,14 @@ func runFrame(fs *list.List) error {
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {
 				formatStackUnderflowError(f)
-				continue // the error will be picked up on the next instruction
+				break // the error will be picked up on the next instruction
 			}
 			f.TOS -= 1
 
 		case POP2: // 0x58	(pop 2 items from stack and discard them)
 			if f.TOS < 1 {
 				formatStackUnderflowError(f)
-				continue // the error will be picked up on the next instruction
+				break // the error will be picked up on the next instruction
 			}
 			f.TOS -= 2
 
@@ -1837,8 +1837,7 @@ func runFrame(fs *list.List) error {
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
 			if className+"."+methName+methSig == "java/lang/Object.\"<init>\"()V" {
-				f.PC += 1 // move to next bytecode
-				continue
+				break
 			}
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
@@ -2099,7 +2098,7 @@ func runFrame(fs *list.List) error {
 			ref := peek(f)
 			if ref == nil { // if ref is nil, just carry on
 				f.PC += 2 // move past two bytes pointing to comp object
-				f.PC += 1 // move to next bytecode instruction
+				f.PC += 1
 				continue
 			}
 
@@ -2108,7 +2107,7 @@ func runFrame(fs *list.List) error {
 			case *object.Object:
 				if ref == object.Null { // if ref is null, just carry on
 					f.PC += 2 // move past two bytes pointing to comp object
-					f.PC += 1 // move to next bytecode instruction
+					f.PC += 1
 					continue
 				} else {
 					obj = (ref).(*object.Object)
@@ -2149,8 +2148,7 @@ func runFrame(fs *list.List) error {
 						// for the nonce if they're both the same type of arrays, we're good
 						// TODO: if both are arrays of reference, check the leaf types
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
-							f.PC += 1 // move to next bytecode
-							continue  // and exit this bytecode processing
+							break // exit this bytecode processing
 						} else {
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2187,8 +2185,7 @@ func runFrame(fs *list.List) error {
 			if ref == nil || ref == object.Null {
 				push(f, int64(0))
 				f.PC += 2 // move past index bytes to comp object
-				f.PC += 1 // move to next bytecode
-				continue
+				break
 			}
 
 			switch ref.(type) {
@@ -2196,8 +2193,7 @@ func runFrame(fs *list.List) error {
 				if ref == object.Null {
 					push(f, int64(0))
 					f.PC += 2 // move past two bytes pointing to comp object
-					f.PC += 1 // move to next bytecode instruction
-					continue
+					break
 				} else {
 					obj := *ref.(*object.Object)
 					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -2329,20 +2325,17 @@ func runFrame(fs *list.List) error {
 						dimSizes[2], arrayType)
 				}
 				push(f, multiArr)
-				f.PC += 1
-				continue
+				break
 			} else if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
 				multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
 				push(f, multiArr)
-				f.PC += 1
-				continue
+				break
 				// It's possible due to a zero-length dimension, that we
 				// need to create a single-dimension array.
 			} else if len(dimSizes) == 1 {
 				oneDimArr := object.Make1DimArray(arrayType, dimSizes[0])
 				push(f, oneDimArr)
-				f.PC += 1
-				continue
+				break
 			}
 
 		case IFNULL: // 0xC6 jump if TOS holds a null address
