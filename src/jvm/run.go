@@ -106,10 +106,13 @@ func runThread(t *thread.ExecThread) error {
 				frameStack = frameStack.Next()
 			}
 
-			val := frameStack.Value.(*frames.Frame)
-			data := fmt.Sprintf("Method: %s.%s at PC: %03d",
-				val.ClName, val.MethName, val.PC)
-			_ = log.Log(data, log.SEVERE)
+			for frameStack.Next() != nil {
+				val := frameStack.Value.(*frames.Frame)
+				methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+				data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+				_ = log.Log(data, log.SEVERE)
+				frameStack = frameStack.Next()
+			}
 			return err
 		}
 
@@ -1786,7 +1789,7 @@ func runFrame(fs *list.List) error {
 					return errors.New("INVOKEVIRTUAL: Error creating frame in: " +
 						className + "." + methodName)
 				}
-				f.PC += 1
+				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
@@ -1940,7 +1943,7 @@ func runFrame(fs *list.List) error {
 						className + "." + methodName)
 				}
 
-				f.PC += 1                            // point to the next bytecode
+				f.PC += 1                            // point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
@@ -2355,6 +2358,21 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 
+		case IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
+			errCode := f.Meth[2]
+			switch errCode {
+			// case 0x01: // stack overflow
+			case 0x02: // stack underflow
+				bytes := make([]byte, 2)
+				bytes[0] = f.Meth[3]
+				bytes[1] = f.Meth[4]
+				location := int16(binary.BigEndian.Uint16(bytes))
+				errMsg := fmt.Sprintf("error: stack underflow at PC: %03d", location)
+				return errors.New(errMsg)
+			default:
+				return errors.New("unknown error encountered")
+			}
+
 		default:
 			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
@@ -2425,7 +2443,33 @@ func emitTraceData(f *frames.Frame) string {
 
 // pop from the operand stack. TODO: need to put in checks for invalid pops
 func pop(f *frames.Frame) interface{} {
-	value := f.OpStack[f.TOS]
+	var value interface{}
+
+	if f.TOS == -1 {
+		// Stack underflow error. Change the bytecode to be IMPDEP2 and give info
+		// in four bytes:
+		// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
+		// the present PC written as an int16 value. First check that there
+		// are enough bytes in the method that we can overwrite the first four bytes.
+		currPC := int16(f.PC)
+		if len(f.Meth) < 5 { // the present bytecode + 4 bytes for error info
+			f.Meth = make([]byte, 5)
+		}
+
+		f.Meth[0] = 0x00 // dummy for the current bytecode
+		f.Meth[1] = IMPDEP2
+		f.Meth[2] = 0x02
+
+		// now convert the PC at time of error into a two-byte value
+		bytes := make([]byte, 2)
+		binary.BigEndian.PutUint16(bytes, uint16(currPC))
+		f.Meth[3] = bytes[0]
+		f.Meth[4] = bytes[1]
+		f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
+		value = nil
+	} else {
+		value = f.OpStack[f.TOS]
+	}
 
 	// we show trace info of the TOS *before* we change its value--
 	// all traces show TOS before the instruction is executed.
