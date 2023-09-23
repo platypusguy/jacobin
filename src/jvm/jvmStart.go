@@ -102,32 +102,7 @@ func JVMrun() int {
 	// capture any panics and print diagnostic data
 	defer func() int {
 		if r := recover(); r != nil {
-
-			switch r.(type) {
-			case *runtime.TypeAssertionError:
-				_ = log.Log("error: go panic occurred due to type assertion error", log.SEVERE)
-			default:
-				_ = log.Log("error: go panic occurred", log.SEVERE)
-			}
-			showFrameStack(&MainThread)
-			_ = log.Log("\n", log.SEVERE)
-			stack := string(debug.Stack())
-			entries := strings.Split(stack, "\n")
-			var i int
-			for i = 0; i < len(entries); i++ {
-				if strings.HasPrefix(entries[i], "panic") {
-					i += 2 // skip over this entry and the next, which just gives the golang panic code line
-					break
-				}
-			}
-			for {
-				if i < len(entries) {
-					_ = log.Log(entries[i], log.SEVERE)
-					i += 1
-				} else {
-					break
-				}
-			}
+			showGoStackTrace(r)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
@@ -141,4 +116,44 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 	return shutdown.Exit(shutdown.OK)
+}
+
+// in the event of a panic, this routine explains that a panic occurred and
+// (to a limited extent why) and then prints the Jacobin frame stack and then
+// the golang stack trace. r is the error returned when the panic occurs
+func showGoStackTrace(r any) {
+	switch r.(type) {
+	case *runtime.TypeAssertionError:
+		_ = log.Log("error: go panic occurred due to type assertion error", log.SEVERE)
+	default:
+		_ = log.Log("error: go panic occurred", log.SEVERE)
+	}
+
+	// show the Jaocbin frame stack
+	showFrameStack(&MainThread)
+	_ = log.Log("\n", log.SEVERE)
+
+	// capture the golang function stack and convert it to
+	// a slice of strings
+	stack := string(debug.Stack())
+	entries := strings.Split(stack, "\n")
+
+	// remove the strings showing the internals of golang's panic logic
+	var i int
+	for i = 0; i < len(entries); i++ {
+		if strings.HasPrefix(entries[i], "panic") {
+			i += 2 //
+			break
+		}
+	}
+
+	// print the remaining strings in the golang stack trace
+	for {
+		if i < len(entries) {
+			_ = log.Log(entries[i], log.SEVERE)
+			i += 1
+		} else {
+			break
+		}
+	}
 }
