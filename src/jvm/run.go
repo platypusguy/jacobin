@@ -33,7 +33,7 @@ var MainThread thread.ExecThread
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
-func StartExec(className string, globals *globals.Globals) error {
+func StartExec(className string, mainThread *thread.ExecThread, globals *globals.Globals) error {
 
 	// set tracing, if any
 	tracing := false
@@ -61,7 +61,7 @@ func StartExec(className string, globals *globals.Globals) error {
 	}
 
 	// create the first thread and place its first frame on it
-	MainThread = thread.CreateThread()
+	MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
@@ -96,23 +96,7 @@ func runThread(t *thread.ExecThread) error {
 	for t.Stack.Len() > 0 {
 		err := runFrame(t.Stack)
 		if err != nil {
-			frameStack := t.Stack.Front()
-			if frameStack == nil {
-				_ = log.Log("No further data available", log.SEVERE)
-				return err
-			}
-
-			if frameStack.Value == nil {
-				frameStack = frameStack.Next()
-			}
-
-			for frameStack.Next() != nil {
-				val := frameStack.Value.(*frames.Frame)
-				methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
-				data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
-				_ = log.Log(data, log.SEVERE)
-				frameStack = frameStack.Next()
-			}
+			showFrameStack(t)
 			return err
 		}
 
@@ -123,6 +107,28 @@ func runThread(t *thread.ExecThread) error {
 		}
 	}
 	return nil
+}
+
+// Prints out the frame stack
+func showFrameStack(t *thread.ExecThread) {
+	frameStack := t.Stack.Front()
+	if frameStack == nil {
+		_ = log.Log("No further data available", log.SEVERE)
+		return
+	}
+
+	if frameStack.Value == nil {
+		frameStack = frameStack.Next()
+	}
+
+	for frameStack.Next() != nil {
+		val := frameStack.Value.(*frames.Frame)
+		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+		_ = log.Log(data, log.SEVERE)
+		frameStack = frameStack.Next()
+	}
+	return
 }
 
 // runFrame() is the principal execution function in Jacobin. It first tests for a

@@ -11,6 +11,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/thread"
 	"os"
 	"strconv"
 	"strings"
@@ -138,7 +139,8 @@ func TestHexHello2ValidClass(t *testing.T) {
 	// Run class Hello2
 	classloader.MTable = make(map[string]classloader.MTentry)
 	classloader.MTableLoadNatives()
-	err = StartExec("Hello2", globals.GetGlobalRef())
+	mainThread := thread.CreateThread()
+	err = StartExec("Hello2", &mainThread, globals.GetGlobalRef())
 	if err != nil {
 		t.Errorf("Got error from StartExec(): %s", error.Error(err))
 		return

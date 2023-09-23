@@ -12,7 +12,11 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/thread"
 	"os"
+	"runtime"
+	"runtime/debug"
+	"strings"
 )
 
 var Global globals.Globals
@@ -22,6 +26,7 @@ var Global globals.Globals
 // it is here returned is because in testing mode, the actual exit() call is side-stepped and
 // instead an int is returned (because calling exit() during testing exits the testing run as well).
 func JVMrun() int {
+
 	// if globals.JacobinName == "test", then we're in test mode and globals and log have been set
 	// in the testing function. So, don't reset them here.
 	if globals.GetGlobalRef().JacobinName != "test" {
@@ -32,6 +37,8 @@ func JVMrun() int {
 	}
 
 	_ = log.Log("running program: "+Global.JacobinName, log.FINE)
+
+	var status error
 
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(Global)
@@ -89,9 +96,46 @@ func JVMrun() int {
 	classloader.MTable = make(map[string]classloader.MTentry)
 	classloader.MTableLoadNatives()
 
+	// create the main thread
+	MainThread = thread.CreateThread()
+
+	// capture any panics and print diagnostic data
+	defer func() int {
+		if r := recover(); r != nil {
+
+			switch r.(type) {
+			case *runtime.TypeAssertionError:
+				_ = log.Log("error: go panic occurred due to type assertion error", log.SEVERE)
+			default:
+				_ = log.Log("error: go panic occurred", log.SEVERE)
+			}
+			showFrameStack(&MainThread)
+			_ = log.Log("\n", log.SEVERE)
+			stack := string(debug.Stack())
+			entries := strings.Split(stack, "\n")
+			var i int
+			for i = 0; i < len(entries); i++ {
+				if strings.HasPrefix(entries[i], "panic") {
+					i += 2 // skip over this entry and the next, which just gives the golang panic code line
+					break
+				}
+			}
+			for {
+				if i < len(entries) {
+					_ = log.Log(entries[i], log.SEVERE)
+					i += 1
+				} else {
+					break
+				}
+			}
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		return shutdown.OK
+	}()
+
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
-	status := StartExec(mainClass, &Global)
+	status = StartExec(mainClass, &MainThread, &Global)
 
 	if status != nil {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
