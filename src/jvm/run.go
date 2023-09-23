@@ -2365,7 +2365,18 @@ func runFrame(fs *list.List) error {
 		case IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
 			errCode := f.Meth[2]
 			switch errCode {
-			// case 0x01: // stack overflow
+			case 0x01: // stack overflow
+				bytes := make([]byte, 2)
+				bytes[0] = f.Meth[3]
+				bytes[1] = f.Meth[4]
+				location := int16(binary.BigEndian.Uint16(bytes))
+				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
+				_ = log.Log("\nError: stack overflow", log.SEVERE)
+				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
+				_ = log.Log(errMsg, log.SEVERE)
+
+				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
+				return errors.New(errMsg)
 			case 0x02: // stack underflow
 				bytes := make([]byte, 2)
 				bytes[0] = f.Meth[3]
@@ -2565,7 +2576,11 @@ func peek(f *frames.Frame) interface{} {
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
-
+	if f.TOS == len(f.OpStack)-1 {
+		// next step will set up error reporting and dump of frame stack
+		formatStackOverflowError(f)
+		return
+	}
 	// we show trace info of the TOS *before* we change its value--
 	// all traces show TOS before the instruction is executed.
 	if MainThread.Trace {
