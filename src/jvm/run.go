@@ -109,25 +109,6 @@ func runThread(t *thread.ExecThread) error {
 	return nil
 }
 
-// Prints out the frame stack
-func showFrameStack(t *thread.ExecThread) {
-	frameStack := t.Stack.Front()
-	if frameStack == nil {
-		_ = log.Log("No further data available", log.SEVERE)
-		return
-	}
-
-	// step through the list-based stack of called methods and print contents
-	for e := frameStack; e != nil; e = e.Next() {
-		val := e.Value.(*frames.Frame)
-		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
-		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
-		_ = log.Log(data, log.SEVERE)
-	}
-
-	return
-}
-
 // runFrame() is the principal execution function in Jacobin. It first tests for a
 // golang function in the present frame. If it is a golang function, it's sent to
 // a different function for execution. Otherwise, bytecode interpretation takes

@@ -8,7 +8,10 @@ package jvm
 
 import (
 	"encoding/binary"
+	"fmt"
 	"jacobin/frames"
+	"jacobin/log"
+	"jacobin/thread"
 )
 
 // routines for formatting error data when an error occurs inside the JVM
@@ -57,4 +60,22 @@ func formatStackUnderflowError(f *frames.Frame) {
 	f.Meth[3] = bytes[0]
 	f.Meth[4] = bytes[1]
 	f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
+}
+
+// Prints out the frame stack
+func showFrameStack(t *thread.ExecThread) {
+	frameStack := t.Stack.Front()
+	if frameStack == nil {
+		_ = log.Log("No further data available", log.SEVERE)
+		return
+	}
+
+	// step through the list-based stack of called methods and print contents
+	for e := frameStack; e != nil; e = e.Next() {
+		val := e.Value.(*frames.Frame)
+		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+		_ = log.Log(data, log.SEVERE)
+	}
+	return
 }
