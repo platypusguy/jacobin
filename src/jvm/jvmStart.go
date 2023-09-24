@@ -14,7 +14,6 @@ import (
 	"jacobin/shutdown"
 	"jacobin/thread"
 	"os"
-	"runtime"
 	"runtime/debug"
 	"strings"
 )
@@ -122,12 +121,9 @@ func JVMrun() int {
 // (to a limited extent why) and then prints the Jacobin frame stack and then
 // the golang stack trace. r is the error returned when the panic occurs
 func showGoStackTrace(r any) {
-	switch r.(type) {
-	case *runtime.TypeAssertionError:
-		_ = log.Log("error: go panic occurred due to type assertion error", log.SEVERE)
-	default:
-		_ = log.Log("error: go panic occurred", log.SEVERE)
-	}
+	// show the event that caused the panic
+	cause := fmt.Sprintf("%v", r)
+	_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
 
 	// show the Jaocbin frame stack
 	showFrameStack(&MainThread)
@@ -138,7 +134,7 @@ func showGoStackTrace(r any) {
 	stack := string(debug.Stack())
 	entries := strings.Split(stack, "\n")
 
-	// remove the strings showing the internals of golang's panic logic
+	// remove the strings showing the internals of golang's panic stack trace
 	var i int
 	for i = 0; i < len(entries); i++ {
 		if strings.HasPrefix(entries[i], "panic") {
