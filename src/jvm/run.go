@@ -117,17 +117,14 @@ func showFrameStack(t *thread.ExecThread) {
 		return
 	}
 
-	if frameStack.Value == nil {
-		frameStack = frameStack.Next()
-	}
-
-	for frameStack.Value != nil {
-		val := frameStack.Value.(*frames.Frame)
+	// step through the list-based stack of called methods and print contents
+	for e := frameStack; e != nil; e = e.Next() {
+		val := e.Value.(*frames.Frame)
 		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
 		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
 		_ = log.Log(data, log.SEVERE)
-		frameStack = frameStack.Next()
 	}
+
 	return
 }
 
