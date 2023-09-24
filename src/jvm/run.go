@@ -121,7 +121,7 @@ func showFrameStack(t *thread.ExecThread) {
 		frameStack = frameStack.Next()
 	}
 
-	for frameStack.Next() != nil {
+	for frameStack.Value != nil {
 		val := frameStack.Value.(*frames.Frame)
 		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
 		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
