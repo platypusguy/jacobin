@@ -12,6 +12,8 @@ import (
 	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/thread"
+	"runtime/debug"
+	"strings"
 )
 
 // routines for formatting error data when an error occurs inside the JVM
@@ -78,4 +80,41 @@ func showFrameStack(t *thread.ExecThread) {
 		_ = log.Log(data, log.SEVERE)
 	}
 	return
+}
+
+// in the event of a panic, this routine explains that a panic occurred and
+// (to a limited extent why) and then prints the Jacobin frame stack and then
+// the golang stack trace. r is the error returned when the panic occurs
+func showGoStackTrace(r any) {
+	// show the event that caused the panic
+	cause := fmt.Sprintf("%v", r)
+	_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
+
+	// show the Jaocbin frame stack
+	showFrameStack(&MainThread)
+	_ = log.Log("\n", log.SEVERE)
+
+	// capture the golang function stack and convert it to
+	// a slice of strings
+	stack := string(debug.Stack())
+	entries := strings.Split(stack, "\n")
+
+	// remove the strings showing the internals of golang's panic stack trace
+	var i int
+	for i = 0; i < len(entries); i++ {
+		if strings.HasPrefix(entries[i], "panic") {
+			i += 2 //
+			break
+		}
+	}
+
+	// print the remaining strings in the golang stack trace
+	for {
+		if i < len(entries) {
+			_ = log.Log(entries[i], log.SEVERE)
+			i += 1
+		} else {
+			break
+		}
+	}
 }
