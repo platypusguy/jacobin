@@ -18,9 +18,10 @@ import (
 
 // routines for formatting error data when an error occurs inside the JVM
 
+// Stack overflow error (e.g., pushing a value when the stack is full, etc.)
 func formatStackOverflowError(f *frames.Frame) {
-	// Stack overflow error. Change the bytecode to be IMPDEP2 and give info
-	// in four bytes:
+	showGoStackTrace(nil)
+	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x01 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
 	// are enough bytes in the method that we can overwrite the first four bytes.
@@ -41,9 +42,13 @@ func formatStackOverflowError(f *frames.Frame) {
 	f.PC = 0 // reset the current PC to point to the zeroth byte of our error data
 }
 
+// Stack underflow error (e.g., trying to pop when the stack is empty, etc.)
 func formatStackUnderflowError(f *frames.Frame) {
-	// Stack underflow error. Change the bytecode to be IMPDEP2 and give info
-	// in four bytes:
+
+	// show the go stack
+	showGoStackTrace(nil)
+
+	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
 	// are enough bytes in the method that we can overwrite the first four bytes.
@@ -85,10 +90,12 @@ func showFrameStack(t *thread.ExecThread) {
 // in the event of a panic, this routine explains that a panic occurred and
 // (to a limited extent why) and then prints the Jacobin frame stack and then
 // the golang stack trace. r is the error returned when the panic occurs
-func showGoStackTrace(r any) {
+func showGoStackTrace(reason any) {
 	// show the event that caused the panic
-	cause := fmt.Sprintf("%v", r)
-	_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
+	if reason != nil {
+		cause := fmt.Sprintf("%v", reason)
+		_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
+	}
 
 	// show the Jaocbin frame stack
 	showFrameStack(&MainThread)
