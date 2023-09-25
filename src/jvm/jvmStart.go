@@ -99,7 +99,16 @@ func JVMrun() int {
 	// capture any panics and print diagnostic data
 	defer func() int {
 		if r := recover(); r != nil {
-			showGoStackTrace(r)
+			// we get here only on errors that are not intercepted at
+			// the thread level. Essentially, very unexpected JVM errors
+			if Global.ErrorGoStack != "" {
+				// if the ErrorGoStack is not empty, we earlier intercepted
+				// the error, so print the stack captured at that point
+				showGoStackTrace(nil)
+			} else {
+				// otherwise show the stack as it is now
+				showGoStackTrace(r)
+			}
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK

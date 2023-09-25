@@ -17,10 +17,12 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -93,14 +95,34 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 // Point the thread to the top of the frame stack and tell it to run from there.
 func runThread(t *thread.ExecThread) error {
+
+	defer func() int {
+		// only an untrapped panic gets us here
+		if r := recover(); r != nil {
+			showPanicCause(r)
+			showFrameStack(t)
+			showGoStackTrace(nil)
+			// if Global.ErrorGoStack != "" {
+			// 	// if the ErrorGoStack is not empty, we earlier intercepted
+			// 	// the error, so print the stack captured at that point
+			// 	showGoStackTrace(nil)
+			// } else {
+			// 	// otherwise show the stack as it is now
+			// 	showGoStackTrace(r)
+			// }
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		return shutdown.OK
+	}()
+
 	for t.Stack.Len() > 0 {
 		err := runFrame(t.Stack)
 		if err != nil {
 			showFrameStack(t)
 			// if it's one of the errors we've trapped, then
 			// also show the golang stack trace
-			if strings.HasPrefix(err.Error(), "stack") {
-				showGoStackTrace(nil)
+			if globals.GetGlobalRef().ErrorGoStack != "" {
+				showGoStackTrace(globals.GetGlobalRef().ErrorGoStack)
 			}
 			return err
 		}
@@ -745,6 +767,8 @@ func runFrame(fs *list.List) error {
 
 		case POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				formatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
 			}
@@ -752,6 +776,8 @@ func runFrame(fs *list.List) error {
 
 		case POP2: // 0x58	(pop 2 items from stack and discard them)
 			if f.TOS < 1 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				formatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
 			}
@@ -2368,6 +2394,7 @@ func runFrame(fs *list.List) error {
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
 				return errors.New(rootCause)
+
 			case 0x02: // stack underflow
 				bytes := make([]byte, 2)
 				bytes[0] = f.Meth[3]
@@ -2380,7 +2407,7 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(errMsg, log.SEVERE)
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
-				return errors.New(rootCause)
+				return errors.New(string(debug.Stack()))
 			default:
 				return errors.New("unknown error encountered")
 			}
@@ -2453,11 +2480,13 @@ func emitTraceData(f *frames.Frame) string {
 	return traceInfo
 }
 
-// pop from the operand stack. TODO: need to put in checks for invalid pops
+// pop from the operand stack.
 func pop(f *frames.Frame) interface{} {
 	var value interface{}
 
 	if f.TOS == -1 {
+		glob := globals.GetGlobalRef()
+		glob.ErrorGoStack = string(debug.Stack())
 		formatStackUnderflowError(f)
 		value = nil
 	} else {
@@ -2523,6 +2552,8 @@ func pop(f *frames.Frame) interface{} {
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
+		glob := globals.GetGlobalRef()
+		glob.ErrorGoStack = string(debug.Stack())
 		formatStackUnderflowError(f)
 		return nil
 	}

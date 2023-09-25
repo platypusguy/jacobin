@@ -68,6 +68,11 @@ type Globals struct {
 	// ----- Byte cache for java.base.jmod
 	JmodBaseBytes []byte
 
+	// ----- Error handling
+	ErrorGoStack       string
+	PanicCauseShown    bool
+	JvmFrameStackShown bool
+
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
 }
@@ -80,24 +85,27 @@ var global Globals
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
-		Version:           "0.4.0",
-		VmModel:           "server",
-		ExitNow:           false,
-		JacobinName:       progName,
-		JacobinHome:       "",
-		JavaHome:          "",
-		JavaVersion:       "",
-		Options:           make(map[string]Option),
-		StartingClass:     "",
-		StartingJar:       "",
-		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
-		Threads:           ThreadList{list.New(), sync.Mutex{}},
-		JacobinBuildData:  nil,
-		StrictJDK:         false,
-		AssertionsEnabled: false,
-		ArrayAddressList:  InitArrayAddressList(),
-		JmodBaseBytes:     nil,
+		Version:            "0.4.0",
+		VmModel:            "server",
+		ExitNow:            false,
+		JacobinName:        progName,
+		JacobinHome:        "",
+		JavaHome:           "",
+		JavaVersion:        "",
+		Options:            make(map[string]Option),
+		StartingClass:      "",
+		StartingJar:        "",
+		MaxJavaVersion:     17, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw:  61, // this value and MaxJavaVersion must *always* be in sync
+		Threads:            ThreadList{list.New(), sync.Mutex{}},
+		JacobinBuildData:   nil,
+		StrictJDK:          false,
+		AssertionsEnabled:  false,
+		ArrayAddressList:   InitArrayAddressList(),
+		JmodBaseBytes:      nil,
+		ErrorGoStack:       "",
+		PanicCauseShown:    false,
+		JvmFrameStackShown: false,
 	}
 
 	InitJavaHome()

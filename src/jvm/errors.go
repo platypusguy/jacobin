@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
 	"runtime/debug"
@@ -66,20 +67,22 @@ func formatStackUnderflowError(f *frames.Frame) {
 
 // Prints out the frame stack
 func showFrameStack(t *thread.ExecThread) {
-	frameStack := t.Stack.Front()
-	if frameStack == nil {
-		_ = log.Log("No further data available", log.SEVERE)
-		return
-	}
+	if globals.GetGlobalRef().JvmFrameStackShown == false {
+		frameStack := t.Stack.Front()
+		if frameStack == nil {
+			_ = log.Log("No further data available", log.SEVERE)
+			return
+		}
 
-	// step through the list-based stack of called methods and print contents
-	for e := frameStack; e != nil; e = e.Next() {
-		val := e.Value.(*frames.Frame)
-		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
-		data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
-		_ = log.Log(data, log.SEVERE)
+		// step through the list-based stack of called methods and print contents
+		for e := frameStack; e != nil; e = e.Next() {
+			val := e.Value.(*frames.Frame)
+			methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+			data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+			_ = log.Log(data, log.SEVERE)
+		}
+		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
-	return
 }
 
 func showPanicCause(reason any) {
@@ -87,35 +90,39 @@ func showPanicCause(reason any) {
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
 		_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
+		globals.GetGlobalRef().PanicCauseShown = true
 	}
 }
 
 // in the event of a panic, this routine explains that a panic occurred and
 // (to a limited extent why) and then prints the Jacobin frame stack and then
 // the golang stack trace. r is the error returned when the panic occurs
-func showGoStackTrace(reason any) {
-	//
-	// // show the Jaocbin frame stack
-	// showFrameStack(&MainThread)
-	// _ = log.Log("\n", log.SEVERE)
+func showGoStackTrace(stackInfo any) {
+	var stack string
 
-	// capture the golang function stack and convert it to
-	// a slice of strings
-	stack := string(debug.Stack())
-	entries := strings.Split(stack, "\n")
+	global := globals.GetGlobalRef()
 
-	// remove the strings showing the internals of golang's panic stack trace
-	var i int
-	for i = 0; i < len(entries); i++ {
-		if strings.HasPrefix(entries[i], "panic") {
-			i += 2 //
-			break
-		}
+	if stackInfo != nil && global.PanicCauseShown == false {
+		showPanicCause(stackInfo)
 	}
 
+	// get the golang stack either b/c it was saved or fetch it new here
+	if global.ErrorGoStack != "" {
+		stack = global.ErrorGoStack
+	} else {
+		stack = string(debug.Stack())
+	}
+	entries := strings.Split(stack, "\n")
+
+	_ = log.Log(" ", log.SEVERE) // print a blank line
+
 	// print the remaining strings in the golang stack trace
+	var i = 0
 	for {
 		if i < len(entries) {
+			if strings.HasPrefix(entries[i], "runtime") {
+				i += 2 // skip over runtime traces, we just want app data
+			}
 			_ = log.Log(entries[i], log.SEVERE)
 			i += 1
 		} else {
