@@ -20,7 +20,6 @@ import (
 
 // Stack overflow error (e.g., pushing a value when the stack is full, etc.)
 func formatStackOverflowError(f *frames.Frame) {
-	showGoStackTrace(nil)
 	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x01 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
@@ -44,10 +43,6 @@ func formatStackOverflowError(f *frames.Frame) {
 
 // Stack underflow error (e.g., trying to pop when the stack is empty, etc.)
 func formatStackUnderflowError(f *frames.Frame) {
-
-	// show the go stack
-	showGoStackTrace(nil)
-
 	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
@@ -87,19 +82,22 @@ func showFrameStack(t *thread.ExecThread) {
 	return
 }
 
-// in the event of a panic, this routine explains that a panic occurred and
-// (to a limited extent why) and then prints the Jacobin frame stack and then
-// the golang stack trace. r is the error returned when the panic occurs
-func showGoStackTrace(reason any) {
+func showPanicCause(reason any) {
 	// show the event that caused the panic
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
 		_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
 	}
+}
 
-	// show the Jaocbin frame stack
-	showFrameStack(&MainThread)
-	_ = log.Log("\n", log.SEVERE)
+// in the event of a panic, this routine explains that a panic occurred and
+// (to a limited extent why) and then prints the Jacobin frame stack and then
+// the golang stack trace. r is the error returned when the panic occurs
+func showGoStackTrace(reason any) {
+	//
+	// // show the Jaocbin frame stack
+	// showFrameStack(&MainThread)
+	// _ = log.Log("\n", log.SEVERE)
 
 	// capture the golang function stack and convert it to
 	// a slice of strings

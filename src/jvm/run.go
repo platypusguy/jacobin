@@ -97,6 +97,11 @@ func runThread(t *thread.ExecThread) error {
 		err := runFrame(t.Stack)
 		if err != nil {
 			showFrameStack(t)
+			// if it's one of the errors we've trapped, then
+			// also show the golang stack trace
+			if strings.HasPrefix(err.Error(), "stack") {
+				showGoStackTrace(nil)
+			}
 			return err
 		}
 
@@ -2354,25 +2359,28 @@ func runFrame(fs *list.List) error {
 				bytes[0] = f.Meth[3]
 				bytes[1] = f.Meth[4]
 				location := int16(binary.BigEndian.Uint16(bytes))
+
 				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
-				_ = log.Log("\nError: stack overflow", log.SEVERE)
+				rootCause := "stack overflow"
+				showPanicCause(rootCause)
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
-				return errors.New(errMsg)
+				return errors.New(rootCause)
 			case 0x02: // stack underflow
 				bytes := make([]byte, 2)
 				bytes[0] = f.Meth[3]
 				bytes[1] = f.Meth[4]
 				location := int16(binary.BigEndian.Uint16(bytes))
 				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
-				_ = log.Log("\nError: stack underflow", log.SEVERE)
+				rootCause := "stack underflow"
+				showPanicCause(rootCause)
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
-				return errors.New(errMsg)
+				return errors.New(rootCause)
 			default:
 				return errors.New("unknown error encountered")
 			}
