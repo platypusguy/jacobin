@@ -120,6 +120,8 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	if err != nil {
 		return err
 	}
+
+	frames.PopFrame(fs)
 	return nil
 }
 
