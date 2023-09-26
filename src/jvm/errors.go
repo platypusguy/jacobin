@@ -85,13 +85,18 @@ func showFrameStack(t *thread.ExecThread) {
 	}
 }
 
+// takes the panic cause (as returned by the golang runtime) and prints the
+// cause as determined by the runtime. Not sure it could ever be nil, but
+// covering our bases nonetheless.
 func showPanicCause(reason any) {
 	// show the event that caused the panic
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
 		_ = log.Log("\nerror: go panic because of "+cause+"\n", log.SEVERE)
-		globals.GetGlobalRef().PanicCauseShown = true
+	} else {
+		_ = log.Log("\nerror: go panic -- cause unknown\n", log.SEVERE)
 	}
+	globals.GetGlobalRef().PanicCauseShown = true
 }
 
 // in the event of a panic, this routine explains that a panic occurred and
