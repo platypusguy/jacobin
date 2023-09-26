@@ -1772,7 +1772,6 @@ func runFrame(fs *list.List) error {
 			nAndT := f.CP.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodNameIndex)
-			// methodName = className + "." + methodName
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
@@ -1921,7 +1920,6 @@ func runFrame(fs *list.List) error {
 			nAndT := f.CP.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
 			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodNameIndex)
-			// println("Method name for invokestatic: " + className + "." + methodName)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
