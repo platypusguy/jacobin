@@ -1799,8 +1799,14 @@ func runFrame(fs *list.List) error {
 				break
 			}
 
-			if mtEntry.MType == 'J' { // it's a Java function (that is, non-native)
+			if mtEntry.MType == 'J' { // it's a Java or Native function
 				m := mtEntry.Meth.(classloader.JmEntry)
+				if m.AccessFlags&0x0100 > 0 {
+					// Native code
+					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
+				}
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
