@@ -94,14 +94,6 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	}
 
 	k.Data.ClInit = types.ClInitInProgress
-	// create the first thread and place its first frame on it
-	// glob := globals.GetGlobalRef()
-	// clInitThread := thread.CreateThread()
-	// clInitThread.Stack = frames.CreateFrameStack()
-	// clInitThread.ID = thread.AddThreadToTable(&clInitThread, &glob.Threads)
-	//
-	// clInitThread.Trace = MainThread.Trace
-	// f.Thread = clInitThread.ID
 
 	if frames.PushFrame(fs, f) != nil {
 		errMsg := "memory exception allocating frame in runJavaInitializer()"
