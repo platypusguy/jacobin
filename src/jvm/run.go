@@ -102,14 +102,6 @@ func runThread(t *thread.ExecThread) error {
 			showPanicCause(r)
 			showFrameStack(t)
 			showGoStackTrace(nil)
-			// if Global.ErrorGoStack != "" {
-			// 	// if the ErrorGoStack is not empty, we earlier intercepted
-			// 	// the error, so print the stack captured at that point
-			// 	showGoStackTrace(nil)
-			// } else {
-			// 	// otherwise show the stack as it is now
-			// 	showGoStackTrace(r)
-			// }
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
