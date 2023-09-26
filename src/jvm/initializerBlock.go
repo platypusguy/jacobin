@@ -23,8 +23,11 @@ import (
 // In addition, we have to make sure that the initialization blocks of superclasses have been
 // previously executed.
 func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *list.List) error {
-	if superClasses == nil || len(superClasses) == 0 { // if no superclasses were previously
-		// looked up
+	if superClasses == nil || len(superClasses) == 0 {
+		// show we're running <clinit>. This prevents circularity errors.
+		k.Data.ClInit = types.ClInitInProgress
+
+		// if no superclasses were previously looked up
 		// get list of the superclasses up to but not including java.lang.Object
 		var superclasses []string
 
@@ -63,8 +66,8 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 			switch me.MType {
 			case 'J': // it's a Java initializer (the most common case)
 				err = runJavaInitializer(me.Meth, k, fs)
-			case 'G': // it's a native (that is, golang) initializer
-				err = runNativeInitializer(me.Meth, k)
+			case 'G': // it's a golang implementation of the initializer
+				err = runNativeInitializer(me, k, fs)
 			}
 			if err != nil {
 				return err
@@ -117,8 +120,8 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	return nil
 }
 
-// TODO: fill this in
-func runNativeInitializer(meth classloader.MData, k *classloader.Klass) error {
+func runNativeInitializer(mt classloader.MTentry, k *classloader.Klass, fs *list.List) error {
+	runGmethod(mt, fs, k.Data.Name, "<clinit>", "()V")
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	return nil
 }
