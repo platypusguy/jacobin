@@ -49,7 +49,7 @@ type GmEntry struct {
 
 // JmEntry is the entry in the Mtable for Java methods.
 type JmEntry struct {
-	accessFlags int
+	AccessFlags int
 	MaxStack    int
 	MaxLocals   int
 	Code        []byte
