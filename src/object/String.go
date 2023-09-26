@@ -103,3 +103,24 @@ func GetGoStringFromJavaStringPtr(strPtr *Object) string {
 	bytes := s.Fields[0].Fvalue.(*[]byte)
 	return string(*bytes)
 }
+
+// determine whether an object is a Java string
+// assumes that any object whose Klass pointer points to java/lang/String
+// is an instance of a Java string
+func IsJavaString(unknown any) bool {
+	var objPtr *Object
+
+	if unknown == nil {
+		return false
+	}
+
+	switch unknown.(type) {
+	case *Object:
+		objPtr = unknown.(*Object)
+		break
+	default:
+		return false
+	}
+
+	return *objPtr.Klass == "java/lang/String"
+}
