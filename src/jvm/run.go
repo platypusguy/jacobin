@@ -1719,7 +1719,7 @@ func runFrame(fs *list.List) error {
 				// index into the object's fields.
 				if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
-						f.MethName, f.ClName)
+						f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
 					return fmt.Errorf(errMsg)
 				} else {
