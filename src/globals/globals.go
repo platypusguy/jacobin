@@ -72,6 +72,7 @@ type Globals struct {
 	ErrorGoStack       string
 	PanicCauseShown    bool
 	JvmFrameStackShown bool
+	GoStackShown       bool
 
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
@@ -106,6 +107,7 @@ func InitGlobals(progName string) Globals {
 		ErrorGoStack:       "",
 		PanicCauseShown:    false,
 		JvmFrameStackShown: false,
+		GoStackShown:       false,
 	}
 
 	InitJavaHome()

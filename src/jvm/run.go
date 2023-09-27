@@ -111,10 +111,9 @@ func runThread(t *thread.ExecThread) error {
 		err := runFrame(t.Stack)
 		if err != nil {
 			showFrameStack(t)
-			// if it's one of the errors we've trapped, then
-			// also show the golang stack trace
-			if globals.GetGlobalRef().ErrorGoStack != "" {
-				showGoStackTrace(globals.GetGlobalRef().ErrorGoStack)
+			if globals.GetGlobalRef().GoStackShown == false {
+				showGoStackTrace(nil)
+				globals.GetGlobalRef().GoStackShown = true
 			}
 			return err
 		}
@@ -2389,7 +2388,8 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(errMsg, log.SEVERE)
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
-				return errors.New(rootCause)
+				// return errors.New(rootCause)
+				return errors.New(string(debug.Stack()))
 
 			case 0x02: // stack underflow
 				bytes := make([]byte, 2)
@@ -2404,6 +2404,7 @@ func runFrame(fs *list.List) error {
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
 				return errors.New(string(debug.Stack()))
+
 			default:
 				return errors.New("unknown error encountered")
 			}
