@@ -36,6 +36,12 @@ func Load_Lang_Class() map[string]GMeth {
 			ParamSlots: 1,
 			GFunction:  getAssertionsEnabledStatus0,
 		}
+
+	MethodSignatures["java/lang/Class.registerNatives()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
 	return MethodSignatures
 }
 

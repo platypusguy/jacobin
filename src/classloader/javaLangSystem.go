@@ -74,11 +74,6 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/Class.registerNatives()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
