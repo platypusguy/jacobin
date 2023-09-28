@@ -89,6 +89,11 @@ func showFrameStack(t *thread.ExecThread) {
 // cause as determined by the runtime. Not sure it could ever be nil, but
 // covering our bases nonetheless.
 func showPanicCause(reason any) {
+	// don't show the cause a second time
+	if globals.GetGlobalRef().PanicCauseShown {
+		return
+	}
+
 	// show the event that caused the panic
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
