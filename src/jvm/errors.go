@@ -70,7 +70,7 @@ func showFrameStack(t *thread.ExecThread) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
 		frameStack := t.Stack.Front()
 		if frameStack == nil {
-			_ = log.Log("No further data available", log.SEVERE)
+			_ = log.Log("no further data available", log.SEVERE)
 			return
 		}
 
