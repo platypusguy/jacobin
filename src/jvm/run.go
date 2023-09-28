@@ -99,6 +99,9 @@ func runThread(t *thread.ExecThread) error {
 	defer func() int {
 		// only an untrapped panic gets us here
 		if r := recover(); r != nil {
+			stack := string(debug.Stack())
+			glob := globals.GetGlobalRef()
+			glob.ErrorGoStack = stack
 			showPanicCause(r)
 			showFrameStack(t)
 			showGoStackTrace(nil)
