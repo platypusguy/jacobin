@@ -8,12 +8,14 @@ package jvm
 
 import (
 	"container/list"
+	"errors"
 	"io"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -135,5 +137,115 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	if errMsg != "Method: testClass.main                           PC: 042\n" {
 		t.Errorf("Got this when expecting 'Method: testClass.main                           PC: 042': %s",
 			errMsg)
+	}
+}
+
+// showPanicCause() should correctly report an error's content
+func TestShowPanicCause(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+	g.StrictJDK = false
+
+	log.Init()
+	_ = log.SetLogLevel(log.INFO)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.GetGlobalRef().PanicCauseShown = false
+	cause := errors.New("error causing panic")
+	showPanicCause(cause)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+	msg, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "error causing panic") {
+		t.Errorf("Got unexpected message re panic cause: %s", errMsg)
+	}
+}
+
+// showPanicCause() should show nothing if it's already been called
+func TestShowPanicCauseAfterAlreadyShown(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+	g.StrictJDK = false
+
+	log.Init()
+	_ = log.SetLogLevel(log.INFO)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.GetGlobalRef().PanicCauseShown = true // should prevent showing
+	cause := errors.New("error causing panic")
+	showPanicCause(cause)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+	msg, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(msg)
+	if errMsg != "" {
+		t.Errorf("Expected empty string, got: %s", errMsg)
+	}
+}
+
+// if showPanicCause() is passed nil, it should state causal data is not available
+func TestShowPanicCauseNil(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+	g.StrictJDK = false
+
+	log.Init()
+	_ = log.SetLogLevel(log.INFO)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.GetGlobalRef().PanicCauseShown = false
+	showPanicCause(nil)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+	msg, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "error: go panic -- cause unknown") {
+		t.Errorf("Got unexpected message for nil panic cause: %s", errMsg)
 	}
 }
