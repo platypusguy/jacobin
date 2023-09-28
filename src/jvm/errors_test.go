@@ -17,6 +17,8 @@ import (
 	"testing"
 )
 
+// if the JVM frame stack has already been displayed, then
+// don't display it again.
 func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
@@ -35,9 +37,9 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	thread := thread.ExecThread{}
+	th := thread.ExecThread{}
 	globals.GetGlobalRef().JvmFrameStackShown = true // should prevent any output
-	showFrameStack(&thread)
+	showFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -52,6 +54,8 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 	}
 }
 
+// if the JVM stack is empty, then notify the user that
+// no additional data is available
 func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
@@ -72,7 +76,7 @@ func TestShowFrameStackWithEmptyStack(t *testing.T) {
 
 	th := thread.CreateThread()
 	th.Stack = list.New()
-	globals.GetGlobalRef().JvmFrameStackShown = false // should prevent any output
+	globals.GetGlobalRef().JvmFrameStackShown = false
 	showFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
@@ -114,9 +118,9 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 
 	th := thread.CreateThread()
 	th.Stack = frames.CreateFrameStack()
-	frames.PushFrame(th.Stack, f)
+	_ = frames.PushFrame(th.Stack, f)
 
-	globals.GetGlobalRef().JvmFrameStackShown = false // should prevent any output
+	globals.GetGlobalRef().JvmFrameStackShown = false
 	showFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
@@ -129,6 +133,7 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 
 	errMsg := string(msg)
 	if errMsg != "Method: testClass.main                           PC: 042\n" {
-		t.Errorf("Got this when expecting 'Method: testClass.main                           PC: 042': %s", errMsg)
+		t.Errorf("Got this when expecting 'Method: testClass.main                           PC: 042': %s",
+			errMsg)
 	}
 }
