@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"jacobin/exceptions"
+	"jacobin/log"
 	"math"
 	"math/big"
 	"math/rand"
@@ -206,7 +207,22 @@ func Load_Lang_Math() map[string]GMeth {
 	MethodSignatures["java/lang/StrictMath.ulp(D)D"] = GMeth{ParamSlots: 2, GFunction: ulpFloat64}
 	MethodSignatures["java/lang/StrictMath.ulp(F)F"] = GMeth{ParamSlots: 1, GFunction: ulpFloat64}
 
+	MethodSignatures["java/lang/Math.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  mathClinit,
+		}
+
 	return MethodSignatures
+}
+
+func mathClinit([]interface{}) interface{} {
+	klass := MethAreaFetch("java/lang/Math")
+	if klass == nil {
+		errMsg := "In <clinit>, expected java/lang/Math to be in the MethodArea, but it was not"
+		_ = log.Log(errMsg, log.SEVERE)
+	}
+	return nil
 }
 
 // Absolute value function for Java float and double
