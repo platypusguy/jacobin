@@ -105,12 +105,15 @@ func showPanicCause(reason any) {
 }
 
 // in the event of a panic, this routine explains that a panic occurred and
-// (to a limited extent why) and then prints the Jacobin frame stack and then
-// the golang stack trace. stackInfo is the error returned when the panic occurs
+// (to a limited extent why) and then prints the golang stack trace.
+// stackInfo is the error returned when the panic occurred
 func showGoStackTrace(stackInfo any) {
 	var stack string
 
 	global := globals.GetGlobalRef()
+	if global.GoStackShown {
+		return
+	}
 
 	if stackInfo != nil && global.PanicCauseShown == false {
 		showPanicCause(stackInfo)
