@@ -55,6 +55,11 @@ func Load_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 2,
 			GFunction:  PrintlnI,
 		}
+	MethodSignatures["java/io/PrintStream.println(Z)V"] = // println boolean
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  PrintlnBoolean,
+		}
 	MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
 		GMeth{
 			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
@@ -83,6 +88,11 @@ func Load_Io_PrintStream() map[string]GMeth {
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  PrintI,
+		}
+	MethodSignatures["java/io/PrintStream.print(Z)V"] = // print boolean
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  PrintBoolean,
 		}
 	MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
 		GMeth{
@@ -139,6 +149,19 @@ func PrintlnI(i []interface{}) interface{} {
 	return nil
 }
 
+// PrintlnBoolean = java/io/Prinstream.println(boolean) TODO: equivalent (verify that this grabs the right param to print)
+func PrintlnBoolean(i []interface{}) interface{} {
+	var boolToPrint bool
+	boolAsInt64 := i[1].(int64) // contains an int64
+	if boolAsInt64 > 0 {
+		boolToPrint = true
+	} else {
+		boolToPrint = false
+	}
+	fmt.Println(boolToPrint)
+	return nil
+}
+
 // PrintlnLong = java/io/Prinstream.println(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintlnLong(l []interface{}) interface{} {
@@ -159,6 +182,19 @@ func PrintlnDouble(l []interface{}) interface{} {
 func PrintI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
 	fmt.Print(intToPrint)
+	return nil
+}
+
+// PrintBoolean = java/io/Prinstream.print(boolean) TODO: equivalent (verify that this grabs the right param to print)
+func PrintBoolean(i []interface{}) interface{} {
+	var boolToPrint bool
+	boolAsInt64 := i[1].(int64) // contains an int64
+	if boolAsInt64 > 0 {
+		boolToPrint = true
+	} else {
+		boolToPrint = false
+	}
+	fmt.Print(boolToPrint)
 	return nil
 }
 
