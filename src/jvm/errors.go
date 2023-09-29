@@ -111,6 +111,9 @@ func showGoStackTrace(stackInfo any) {
 	var stack string
 
 	global := globals.GetGlobalRef()
+	if global.GoStackShown {
+		return
+	}
 
 	if stackInfo != nil && global.PanicCauseShown == false {
 		showPanicCause(stackInfo)
