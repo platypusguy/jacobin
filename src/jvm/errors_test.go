@@ -141,6 +141,46 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	}
 }
 
+// check that when a Go stack if it has not been previously been captured
+func TestShowGoStackWhenNotPreviouslyCaptured(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+	g.StrictJDK = false
+
+	log.Init()
+	_ = log.SetLogLevel(log.INFO)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.GetGlobalRef().GoStackShown = false
+
+	showGoStackTrace(nil)
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+	msg, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	contents := string(msg)
+	if !strings.Contains(contents, "goroutine") {
+		t.Errorf("Go stack did not contain expected entries: %s", contents)
+	}
+
+	if globals.GetGlobalRef().GoStackShown != true {
+		t.Errorf("after showing golang stack, globals.GoStackShown was still false")
+	}
+}
+
 // check that when a Go stack is captured, it is shown when we call showGoStackTrace()
 func TestShowGoStackWhenPreviouslyCaptured(t *testing.T) {
 	g := globals.GetGlobalRef()
