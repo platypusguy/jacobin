@@ -182,6 +182,45 @@ func TestShowGoStackWhenPreviouslyCaptured(t *testing.T) {
 	}
 }
 
+// check that when a Go stack is not shown a second time when we call showGoStackTrace()
+func TestShowGoStackWhenPreviouslyShown(t *testing.T) {
+	g := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	g.JacobinName = "test"
+	g.StrictJDK = false
+
+	log.Init()
+	_ = log.SetLogLevel(log.INFO)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.GetGlobalRef().GoStackShown = true
+	capturedGoStack := debug.Stack()
+	stackAsString := string(capturedGoStack)
+	globals.GetGlobalRef().ErrorGoStack = stackAsString
+
+	showGoStackTrace(nil)
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+	msg, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	contents := string(msg)
+	if len(contents) != 0 {
+		t.Errorf("Expected empty string, got: %s", contents)
+	}
+}
+
 // showPanicCause() should correctly report an error's content
 func TestShowPanicCause(t *testing.T) {
 	g := globals.GetGlobalRef()
