@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"errors"
+	"jacobin/globals"
 	"jacobin/types"
 	"sync"
 )
@@ -74,6 +75,8 @@ func StaticsPreload() {
 // Statics table as part of the setup operations of Jacobin. This
 // is done primarily for speed.
 func LoadStringStatics() {
+	_ = AddStatic("main.$assertionsDisabled",
+		Static{Type: types.Int, Value: 1 - globals.GetGlobalRef().AssertionsEnabled})
 	_ = AddStatic("java/lang/String.COMPACT_STRINGS",
 		Static{Type: types.Bool, Value: true})
 	_ = AddStatic("java/lang/String.UTF16",
