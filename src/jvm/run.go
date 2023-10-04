@@ -2140,8 +2140,9 @@ func runFrame(fs *list.List) error {
 				var className string
 				classNamePtr := FetchCPentry(f.CP, CPslot)
 				if classNamePtr.retType != IS_STRING_ADDR {
-					_ = log.Log("CHECKCAST: Invalid classRef found", log.SEVERE)
-					return errors.New(" CHECKCAST: Invalid classRef found")
+					errMsg := "CHECKCAST: Invalid classRef found"
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 
 				className = *(classNamePtr.stringVal)
