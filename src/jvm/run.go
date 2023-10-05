@@ -1724,7 +1724,7 @@ func runFrame(fs *list.List) error {
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
-					return fmt.Errorf(errMsg)
+					return errors.New(errMsg)
 				} else {
 					obj.Fields[fieldEntry.Slot].Fvalue = value
 				}
@@ -1791,11 +1791,12 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' { // so we have a golang function
-				_, err := runGmethod(mtEntry, fs, className, methodName, methodType)
+				_, err = runGmethod(mtEntry, fs, className, methodName, methodType)
 				if err != nil {
 					// any exception message will already have been displayed to the user
-					return errors.New("INVOKEVIRTUAL: Error encountered in: " +
-						className + "." + methodName)
+					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
+						className, methodName)
+					return errors.New(errMsg)
 				}
 				break
 			}
