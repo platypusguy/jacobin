@@ -248,13 +248,17 @@ func runFrame(fs *list.List) error {
 						object.CreateCompactStringFromGoString(CPe.stringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
-						msg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
-						_ = log.Log(msg, log.SEVERE)
+						glob := globals.GetGlobalRef()
+						glob.ErrorGoStack = string(debug.Stack())
+						errMsg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
+						_ = log.Log(errMsg, log.SEVERE)
 						return errors.New("LDC: MethAreaFetch could not find class java/lang/String")
 					}
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.InaccessibleObjectException,
 					"Invalid type for LDC instruction")
 				return errors.New("LDC: invalid type")
@@ -271,9 +275,6 @@ func runFrame(fs *list.List) error {
 					push(f, CPe.intVal)
 				} else if CPe.retType == IS_FLOAT64 {
 					push(f, CPe.floatVal)
-					// } else {
-					// 	push(f, unsafe.Pointer(CPe.addrVal))
-					// } (*T)(unsafe.Pointer(u))
 				} else if CPe.retType == IS_STRUCT_ADDR {
 					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
 				} else if CPe.retType == IS_STRING_ADDR {
@@ -281,13 +282,17 @@ func runFrame(fs *list.List) error {
 						object.CreateCompactStringFromGoString(CPe.stringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
-						msg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
-						_ = log.Log(msg, log.SEVERE)
+						glob := globals.GetGlobalRef()
+						glob.ErrorGoStack = string(debug.Stack())
+						errMsg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
+						_ = log.Log(errMsg, log.SEVERE)
 						return errors.New("LDC_W: MethAreaFetch could not find class java/lang/String")
 					}
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC_W: Invalid type for instruction"
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
 				return errors.New(errMsg)
@@ -304,6 +309,8 @@ func runFrame(fs *list.List) error {
 				push(f, CPe.floatVal)
 				push(f, CPe.floatVal)
 			} else { // TODO: Determine what exception to throw
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
 				return errors.New(errMsg)
@@ -381,6 +388,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "I/C/SALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -389,6 +398,8 @@ func runFrame(fs *list.List) error {
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 
 			if index >= int64(len(array)) {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "IALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
@@ -399,6 +410,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -406,6 +419,8 @@ func runFrame(fs *list.List) error {
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 			if index >= int64(len(array)) {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LALOAD: Invalid array subscript")
 				return errors.New("LALOAD error")
@@ -419,6 +434,8 @@ func runFrame(fs *list.List) error {
 			ref := pop(f) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
 			if ref == nil || ref == object.Null {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -427,6 +444,8 @@ func runFrame(fs *list.List) error {
 			fAref := ref.(*object.Object)
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
@@ -438,6 +457,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "DALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -445,6 +466,8 @@ func runFrame(fs *list.List) error {
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
 			if index >= int64(len(array)) {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "DALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
@@ -456,6 +479,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -464,6 +489,8 @@ func runFrame(fs *list.List) error {
 			arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
@@ -476,6 +503,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			ref := pop(f) // the array object
 			if ref == nil || ref == object.Null {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -486,6 +515,8 @@ func runFrame(fs *list.List) error {
 			size := int64(len(*arrayPtr))
 
 			if index >= size {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
@@ -581,12 +612,16 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			arrObj := pop(f).(*object.Object) // the array object
 			if arrObj == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"IA/CA/SASTORE: Invalid (null) reference to an array")
 				return errors.New("IA/CA/SASTORE: Invalid array address")
 			}
 
 			if arrObj.Fields[0].Ftype != "[I" {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
@@ -596,6 +631,8 @@ func runFrame(fs *list.List) error {
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("IA/CA/SASTORE: array size= %d but array index= %d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -609,6 +646,8 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			lAref := pop(f).(*object.Object) // ptr to array object
 			if lAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("LASTORE: Invalid (null) reference to an array")
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -617,8 +656,10 @@ func runFrame(fs *list.List) error {
 			arrType := lAref.Fields[0].Ftype
 
 			if arrType != "[I" {
-				msg := fmt.Sprintf("LASTORE: field type expected=[I, observed=%s", arrType)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("LASTORE: field type expected=[I, observed=%s", arrType)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"LASTORE: Attempt to access array of incorrect type")
 				return errors.New("LASTORE: Invalid array type")
@@ -627,8 +668,10 @@ func runFrame(fs *list.List) error {
 			array := *(lAref.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
-				msg := fmt.Sprintf("LASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("LASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LASTORE: Invalid array subscript")
 				return errors.New("LASTORE: Invalid array index")
@@ -640,14 +683,18 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
 				return errors.New("FASTORE: Invalid array address")
 			}
 
 			if fAref.Fields[0].Ftype != "[F" {
-				msg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", fAref.Fields[0].Ftype)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", fAref.Fields[0].Ftype)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				return errors.New("FASTORE: Invalid array type")
@@ -656,8 +703,10 @@ func runFrame(fs *list.List) error {
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
-				msg := fmt.Sprintf("FASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("FASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"FASTORE: Invalid array subscript")
 				return errors.New("FASTORE: Invalid array index")
@@ -670,14 +719,18 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			dAref := pop(f).(*object.Object)
 			if dAref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
 				return errors.New("DASTORE: Invalid array reference")
 			}
 
 			if dAref.Fields[0].Ftype != "[F" {
-				msg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", dAref.Fields[0].Ftype)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", dAref.Fields[0].Ftype)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				return errors.New("DASTORE: Invalid array type")
@@ -686,8 +739,10 @@ func runFrame(fs *list.List) error {
 			array := *(dAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
-				msg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"DASTORE: Invalid array subscript")
 				return errors.New("DASTORE: Invalid array index")
@@ -701,14 +756,18 @@ func runFrame(fs *list.List) error {
 			ptrObj := pop(f).(*object.Object) // ptr to the array object
 
 			if ptrObj == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
 				return errors.New("AASTORE: Invalid array address")
 			}
 
 			if ptrObj.Fields[0].Ftype != "[L" {
-				msg := fmt.Sprintf("AASTORE: field type expected=[L, observed=%s", ptrObj.Fields[0].Ftype)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("AASTORE: field type expected=[L, observed=%s", ptrObj.Fields[0].Ftype)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type")
 				return errors.New("AASTORE: Invalid array type")
@@ -718,8 +777,10 @@ func runFrame(fs *list.List) error {
 			arrayPtr := ptrObj.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
-				msg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(msg, log.SEVERE)
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
+				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"AASTORE: Invalid array subscript")
 				return errors.New("AASTORE: Invalid array index")
@@ -735,12 +796,16 @@ func runFrame(fs *list.List) error {
 			index := pop(f).(int64)
 			ptrObj := pop(f).(*object.Object) // ptr to array object
 			if ptrObj == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BASTORE: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
 					ptrObj.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -752,6 +817,8 @@ func runFrame(fs *list.List) error {
 			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -883,7 +950,6 @@ func runFrame(fs *list.List) error {
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
 			product := multiply(i1, i2)
-
 			push(f, product)
 		case LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
 			l2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
@@ -891,7 +957,6 @@ func runFrame(fs *list.List) error {
 			l1 := pop(f).(int64)
 			pop(f)
 			product := multiply(l1, l2)
-
 			push(f, product)
 			push(f, product)
 		case FMUL: // 0x6A
@@ -909,6 +974,8 @@ func runFrame(fs *list.List) error {
 		case IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArithmeticException, ""+
 					"IDIV: Arithmetic Exception: divide by zero")
 				return errors.New("IDIV: Arithmetic Exception: divide by zero")
@@ -920,6 +987,8 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArithmeticException, ""+
 					"LDIV: Arithmetic Exception: divide by zero")
 				return errors.New("LDIV: Divide by zero")
@@ -967,6 +1036,8 @@ func runFrame(fs *list.List) error {
 		case IREM: // 	0x70	(remainder after int division, modulo)
 			val2 := pop(f).(int64)
 			if val2 == 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "IREM: Arithmetic Exception: divide by zero"
 				exceptions.Throw(exceptions.ArithmeticException, errMsg)
 				return errors.New(errMsg)
@@ -979,6 +1050,8 @@ func runFrame(fs *list.List) error {
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LREM: Arithmetic Exception: divide by zero"
 				exceptions.Throw(exceptions.ArithmeticException, errMsg)
 				return errors.New(errMsg)
@@ -1013,7 +1086,6 @@ func runFrame(fs *list.List) error {
 		case FNEG: //	0x76	(negate a float)
 			val := pop(f).(float64)
 			push(f, -val)
-
 		case DNEG: // 0x77
 			pop(f)
 			val := pop(f).(float64)
@@ -1029,7 +1101,6 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, val1<<(shiftBy&0x1F))
 			}
-
 		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
@@ -1155,7 +1226,6 @@ func runFrame(fs *list.List) error {
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
-
 		case D2F: // 	0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
@@ -1192,7 +1262,6 @@ func runFrame(fs *list.List) error {
 		case FCMPL, FCMPG: // Ox95, 0x96 - float comparison - they differ only in NaN treatment
 			value2 := pop(f).(float64)
 			value1 := pop(f).(float64)
-
 			if math.IsNaN(value1) || math.IsNaN(value2) {
 				if f.Meth[f.PC] == FCMPG {
 					push(f, int64(1))
@@ -1228,7 +1297,6 @@ func runFrame(fs *list.List) error {
 		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
 			var value int64
@@ -1242,7 +1310,6 @@ func runFrame(fs *list.List) error {
 			default:
 				value = popValue.(int64)
 			}
-
 			if value == 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1252,7 +1319,6 @@ func runFrame(fs *list.List) error {
 		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
 			var value int64
@@ -1266,7 +1332,6 @@ func runFrame(fs *list.List) error {
 			default:
 				value = popValue.(int64)
 			}
-
 			if value != 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1423,6 +1488,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				return fmt.Errorf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
@@ -1455,6 +1522,8 @@ func runFrame(fs *list.List) error {
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -1464,6 +1533,8 @@ func runFrame(fs *list.List) error {
 			// if the field can't be found even after instantiating the
 			// containing class, something is wrong so get out of here.
 			if !ok {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -1501,6 +1572,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
@@ -1535,6 +1608,8 @@ func runFrame(fs *list.List) error {
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -1544,6 +1619,8 @@ func runFrame(fs *list.List) error {
 			// if the field can't be found even after instantiating the
 			// containing class, something is wrong so get out of here.
 			if !ok {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -1616,6 +1693,8 @@ func runFrame(fs *list.List) error {
 						Value: value,
 					}
 				default:
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: type unrecognized: %v", value)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -1633,6 +1712,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			fieldEntry := f.CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				return fmt.Errorf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
@@ -1673,6 +1754,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			fieldEntry := f.CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				return fmt.Errorf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
@@ -1721,6 +1804,8 @@ func runFrame(fs *list.List) error {
 				// the slot number in CP.Fields. It will be the same
 				// index into the object's fields.
 				if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1751,6 +1836,8 @@ func runFrame(fs *list.List) error {
 
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
@@ -1784,6 +1871,8 @@ func runFrame(fs *list.List) error {
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the classpath and retry
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -1794,6 +1883,8 @@ func runFrame(fs *list.List) error {
 				_, err = runGmethod(mtEntry, fs, className, methodName, methodType)
 				if err != nil {
 					// any exception message will already have been displayed to the user
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
 						className, methodName)
 					return errors.New(errMsg)
@@ -1805,6 +1896,8 @@ func runFrame(fs *list.List) error {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -1812,6 +1905,8 @@ func runFrame(fs *list.List) error {
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKEVIRTUAL: Error creating frame in: " +
 						className + "." + methodName)
 				}
@@ -1858,6 +1953,8 @@ func runFrame(fs *list.List) error {
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methName
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -1866,6 +1963,8 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' { // it's a golang method
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
 				if err != nil {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error encountered in: " + className + "." + methName
 					// any exceptions message will already have been displayed to the user
 					return errors.New(errMsg)
@@ -1875,6 +1974,8 @@ func runFrame(fs *list.List) error {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(className, methName, methSig, &m, true, f)
 				if err != nil {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methName
 					return errors.New(errMsg)
 				}
@@ -1912,6 +2013,8 @@ func runFrame(fs *list.List) error {
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -1924,6 +2027,8 @@ func runFrame(fs *list.List) error {
 			if k.Data.ClInit == types.ClInitNotRun {
 				err = runInitializationBlock(k, nil, fs)
 				if err != nil {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
 						className)
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1936,6 +2041,8 @@ func runFrame(fs *list.List) error {
 
 				if err != nil {
 					// any exceptions message will already have been displayed to the user
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKESTATIC: Error encountered in: " +
 						className + "." + methodName)
 				}
@@ -1944,6 +2051,8 @@ func runFrame(fs *list.List) error {
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, false, f)
 				if err != nil {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKESTATIC: Error creating frame in: " +
 						className + "." + methodName)
 				}
@@ -1982,6 +2091,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: Invalid type for new object")
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -1996,6 +2107,8 @@ func runFrame(fs *list.List) error {
 
 			ref, err := instantiateClass(className, fs)
 			if err != nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: could not load class %s", className)
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -2005,6 +2118,8 @@ func runFrame(fs *list.List) error {
 		case NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
 			if size < 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid size for array"
 				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
 				return errors.New(errMsg)
@@ -2015,6 +2130,8 @@ func runFrame(fs *list.List) error {
 
 			actualType := object.JdkArrayTypeToJacobinType(arrayType)
 			if actualType == object.ERROR {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid array type specified"
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -2028,6 +2145,8 @@ func runFrame(fs *list.List) error {
 		case ANEWARRAY: // 0xBD create array of references
 			size := pop(f).(int64)
 			if size < 0 {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ANEWARRAY: Invalid size for array"
 				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
 				return errors.New(errMsg)
@@ -2048,6 +2167,8 @@ func runFrame(fs *list.List) error {
 			// expects a pointer to an array
 			ref := pop(f)
 			if ref == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
@@ -2108,6 +2229,8 @@ func runFrame(fs *list.List) error {
 					obj = (ref).(*object.Object)
 				}
 			default:
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "CHECKCAST: Invalid class reference"
 				exceptions.Throw(exceptions.ClassCastException, errMsg)
 				return errors.New(errMsg)
@@ -2122,6 +2245,8 @@ func runFrame(fs *list.List) error {
 				var className string
 				classNamePtr := FetchCPentry(f.CP, CPslot)
 				if classNamePtr.retType != IS_STRING_ADDR {
+					glob := globals.GetGlobalRef()
+					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "CHECKCAST: Invalid classRef found"
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
@@ -2129,13 +2254,13 @@ func runFrame(fs *list.List) error {
 
 				className = *(classNamePtr.stringVal)
 				if MainThread.Trace {
-					var msg string
+					var traceInfo string
 					if strings.HasPrefix(className, "[") {
-						msg = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
+						traceInfo = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
 					} else {
-						msg = fmt.Sprintf("CHECKCAST: className = %s", className)
+						traceInfo = fmt.Sprintf("CHECKCAST: className = %s", className)
 					}
-					_ = log.Log(msg, log.TRACE_INST)
+					_ = log.Log(traceInfo, log.TRACE_INST)
 				}
 
 				if strings.HasPrefix(className, "[") { // the object being checked is an array
@@ -2146,11 +2271,15 @@ func runFrame(fs *list.List) error {
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
 							break // exit this bytecode processing
 						} else {
+							glob := globals.GetGlobalRef()
+							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
 							return errors.New(errMsg)
 						}
 					} else {
+						glob := globals.GetGlobalRef()
+						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
 						return errors.New(errMsg)
@@ -2159,12 +2288,16 @@ func runFrame(fs *list.List) error {
 					classPtr := classloader.MethAreaFetch(className)
 					if classPtr == nil { // class wasn't loaded, so load it now
 						if classloader.LoadClassFromNameOnly(className) != nil {
+							glob := globals.GetGlobalRef()
+							glob.ErrorGoStack = string(debug.Stack())
 							return errors.New("CHECKCAST: Could not load class: " + className)
 						}
 						classPtr = classloader.MethAreaFetch(className)
 					}
 
 					if classPtr != classloader.MethAreaFetch(*obj.Klass) {
+						glob := globals.GetGlobalRef()
+						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
 						return errors.New(errMsg)
@@ -2200,19 +2333,23 @@ func runFrame(fs *list.List) error {
 						var className string
 						classNamePtr := FetchCPentry(f.CP, CPslot)
 						if classNamePtr.retType != IS_STRING_ADDR {
+							glob := globals.GetGlobalRef()
+							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := "INSTANCEOF: Invalid classRef found"
 							_ = log.Log(errMsg, log.SEVERE)
 							return errors.New(errMsg)
 						} else {
 							className = *(classNamePtr.stringVal)
 							if MainThread.Trace {
-								msg := fmt.Sprintf("INSTANCEOF: className = %s", className)
-								_ = log.Log(msg, log.TRACE_INST)
+								traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
+								_ = log.Log(traceInfo, log.TRACE_INST)
 							}
 						}
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
+								glob := globals.GetGlobalRef()
+								glob.ErrorGoStack = string(debug.Stack())
 								errMsg := "INSTANCEOF: Could not load class: " + className
 								_ = log.Log(errMsg, log.SEVERE)
 								return errors.New(errMsg)
@@ -2247,6 +2384,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CPentry := f.CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				return errors.New("MULTIANEWARRAY: multi-dimensional array presently supports classes only")
 			} else {
 				utf8Index := f.CP.ClassRefs[CPentry.Slot]
@@ -2282,6 +2421,8 @@ func runFrame(fs *list.List) error {
 			f.PC += 1
 
 			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
@@ -2359,6 +2500,8 @@ func runFrame(fs *list.List) error {
 			}
 
 		case IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
+			glob := globals.GetGlobalRef()
+			glob.ErrorGoStack = string(debug.Stack())
 			errCode := f.Meth[2]
 			switch errCode {
 			case 0x01: // stack overflow
@@ -2402,9 +2545,11 @@ func runFrame(fs *list.List) error {
 				missingOpCode += fmt.Sprintf("(%s)", BytecodeNames[f.Meth[f.PC]])
 			}
 
-			msg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
+			glob := globals.GetGlobalRef()
+			glob.ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
 				missingOpCode, f.PC, f.MethName, f.ClName)
-			_ = log.Log(msg, log.SEVERE)
+			_ = log.Log(errMsg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}
 		f.PC += 1
