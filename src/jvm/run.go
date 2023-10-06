@@ -1866,42 +1866,23 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' { // it's a golang method
 				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
 				if err != nil {
+					errMsg := "INVOKESPECIAL: Error encountered in: " + className + "." + methName
 					// any exceptions message will already have been displayed to the user
-					return errors.New("INVOKESPECIAL: Error encountered in: " +
-						className + "." + methName)
+					return errors.New(errMsg)
 				}
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
-				fram, err := createAndInitNewFrame(
-					className, methName, methSig, &m, true, f)
+				fram, err := createAndInitNewFrame(className, methName, methSig, &m, true, f)
 				if err != nil {
-					return errors.New("INVOKESPECIAL: Error creating frame in: " +
-						className + "." + methName)
+					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methName
+					return errors.New(errMsg)
 				}
 
 				f.PC += 1
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
-				/*
-					err = runFrame(fs)                   // 2nd on stack from new crash site
-					if err != nil {
-						return err
-					}
-
-					fs.Remove(fs.Front()) // pop the frame off
-
-					// the previous frame pop might have been main()
-					// if so, then we can't reset f to a non-existent frame
-					// so we test for this before resetting f.
-					if fs.Len() != 0 {
-						f = fs.Front().Value.(*frames.Frame)
-					} else {
-						return nil
-					}
-
-				*/
 			}
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
