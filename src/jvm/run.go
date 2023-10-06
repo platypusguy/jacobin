@@ -1756,9 +1756,12 @@ func runFrame(fs *list.List) error {
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				return fmt.Errorf("PUTFIELD: Expected a field ref, but got %d in"+
+				errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				logTraceStack(f)
+				return errors.New(errMsg)
 			}
 
 			var ref interface{} // pointer to object we're updating
@@ -1809,6 +1812,7 @@ func runFrame(fs *list.List) error {
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
+					logTraceStack(f)
 					return errors.New(errMsg)
 				} else {
 					obj.Fields[fieldEntry.Slot].Fvalue = value
@@ -2557,6 +2561,15 @@ func runFrame(fs *list.List) error {
 	return nil
 }
 
+// Log the existing stack
+func logTraceStack(f *frames.Frame) {
+	var traceInfo string
+	for ii := 0; ii < len(f.OpStack); ii++ {
+		traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+		_ = log.Log(traceInfo, log.WARNING) // could be called for tracing -or- supply info for an error section
+	}
+}
+
 // the generation and formatting of trace data for each executed bytecode.
 // Returns the formatted data for output to logging, console, or other uses.
 func emitTraceData(f *frames.Frame) string {
@@ -2674,6 +2687,9 @@ func pop(f *frames.Frame) interface{} {
 	}
 
 	f.TOS -= 1 // adjust TOS
+	if MainThread.Trace {
+		logTraceStack(f)
+	} // trace the resultant stack
 	return value
 }
 
@@ -2722,6 +2738,9 @@ func peek(f *frames.Frame) interface{} {
 		}
 		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
+	if MainThread.Trace {
+		logTraceStack(f)
+	} // trace the stack
 	return f.OpStack[f.TOS]
 }
 
@@ -2788,6 +2807,10 @@ func push(f *frames.Frame, x interface{}) {
 	// the actual push
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
+	if MainThread.Trace {
+		logTraceStack(f)
+	} // trace the resultant stack
+
 }
 
 func add[N frames.Number](num1, num2 N) N {
