@@ -2570,7 +2570,7 @@ func runFrame(fs *list.List) error {
 func logTraceStack(f *frames.Frame) {
 	var traceInfo string
 	if f.TOS == -1 {
-		traceInfo = fmt.Sprintf("%64s", "TOS = -1")
+		traceInfo = fmt.Sprintf("%67s", "stack empty")
 		_ = log.Log(traceInfo, log.WARNING)
 		return
 	}
