@@ -2562,15 +2562,20 @@ func runFrame(fs *list.List) error {
 }
 
 // Log the existing stack
+// Could be called for tracing -or- supply info for an error section
 func logTraceStack(f *frames.Frame) {
 	var traceInfo string
+	if f.TOS == -1 {
+		traceInfo = fmt.Sprintf("%64s", "TOS = -1")
+		_ = log.Log(traceInfo, log.WARNING)
+	}
 	for ii := 0; ii < len(f.OpStack); ii++ {
 		if f.TOS == ii {
 			traceInfo = fmt.Sprintf("%55s TOS   [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
 		} else {
 			traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
 		}
-		_ = log.Log(traceInfo, log.WARNING) // could be called for tracing -or- supply info for an error section
+		_ = log.Log(traceInfo, log.WARNING)
 	}
 }
 
@@ -2633,7 +2638,7 @@ func pop(f *frames.Frame) interface{} {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		formatStackUnderflowError(f)
-		value = nil
+		return nil
 	} else {
 		value = f.OpStack[f.TOS]
 	}
