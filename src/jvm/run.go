@@ -2565,7 +2565,11 @@ func runFrame(fs *list.List) error {
 func logTraceStack(f *frames.Frame) {
 	var traceInfo string
 	for ii := 0; ii < len(f.OpStack); ii++ {
-		traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+		if f.TOS == ii {
+			traceInfo = fmt.Sprintf("%55s TOS [%d]   %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+		} else {
+			traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+		}
 		_ = log.Log(traceInfo, log.WARNING) // could be called for tracing -or- supply info for an error section
 	}
 }
