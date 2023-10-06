@@ -2639,7 +2639,7 @@ func pop(f *frames.Frame) interface{} {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		formatStackUnderflowError(f)
-		return nil
+		value = nil
 	} else {
 		value = f.OpStack[f.TOS]
 	}
