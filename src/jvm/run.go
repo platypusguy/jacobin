@@ -1475,6 +1475,13 @@ func runFrame(fs *list.List) error {
 			return nil
 		case ARETURN: // 0xB0	(return a reference)
 			valToReturn := pop(f)
+			if valToReturn == nil {
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("ARETURN: Expected a reference, pop returned nil")
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
+			}
 			// prevFrame := f
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
@@ -1490,9 +1497,11 @@ func runFrame(fs *list.List) error {
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				return fmt.Errorf("GETSTATIC: Expected a field ref, but got %d in"+
+				errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			// get the field entry
@@ -1578,7 +1587,7 @@ func runFrame(fs *list.List) error {
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
-				return fmt.Errorf(errMsg)
+				return errors.New(errMsg)
 			}
 
 			// get the field entry
@@ -1714,9 +1723,11 @@ func runFrame(fs *list.List) error {
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				return fmt.Errorf("GETFIELD: Expected a field ref, but got %d in"+
+				errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
 			}
 
 			ref := pop(f).(*object.Object)
@@ -1846,7 +1857,7 @@ func runFrame(fs *list.List) error {
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
-				return fmt.Errorf(errMsg)
+				return errors.New(errMsg)
 			}
 
 			// get the methodRef entry
