@@ -2566,7 +2566,7 @@ func logTraceStack(f *frames.Frame) {
 	var traceInfo string
 	for ii := 0; ii < len(f.OpStack); ii++ {
 		if f.TOS == ii {
-			traceInfo = fmt.Sprintf("%55s TOS [%d]   %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+			traceInfo = fmt.Sprintf("%55s TOS   [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
 		} else {
 			traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
 		}
