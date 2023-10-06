@@ -1475,13 +1475,6 @@ func runFrame(fs *list.List) error {
 			return nil
 		case ARETURN: // 0xB0	(return a reference)
 			valToReturn := pop(f)
-			if valToReturn == nil {
-				glob := globals.GetGlobalRef()
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("ARETURN: Expected a reference, pop returned nil")
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
-			}
 			// prevFrame := f
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
