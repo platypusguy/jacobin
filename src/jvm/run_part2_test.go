@@ -1076,8 +1076,8 @@ func TestLdivDivideByZero(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	res := runFrame(fs)
 
-	if !strings.Contains(res.Error(), "Divide by zero") {
-		t.Errorf("LDIV: Expected err msg re divide by zero, got %s", res.Error())
+	if !strings.Contains(res.Error(), "divide by zero") {
+		t.Errorf("LDIV: Expected err msg re divide by zero, got: %s", res.Error())
 	}
 }
 

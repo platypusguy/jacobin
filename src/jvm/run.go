@@ -989,9 +989,9 @@ func runFrame(fs *list.List) error {
 			if val2 == 0 {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.ArithmeticException, ""+
-					"LDIV: Arithmetic Exception: divide by zero")
-				return errors.New("LDIV: Divide by zero")
+				errMsg := "LDIV: Arithmetic Exception: divide by zero"
+				exceptions.Throw(exceptions.ArithmeticException, errMsg)
+				return errors.New(errMsg)
 			} else {
 				val1 := pop(f).(int64)
 				pop(f)
