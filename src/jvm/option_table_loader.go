@@ -12,6 +12,7 @@ import (
 	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"os"
 )
 
@@ -190,8 +191,8 @@ func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int
 }
 
 func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
-	// at present, this option is accepted but does nothing. Its acceptance is needed
-	// in order to enable certain functionality in the Jacotest suite
+	setOptionToSeen("-ea", gl)
+	gl.AssertionsEnabled = types.JavaBoolTrue
 	return pos, nil
 }
 
