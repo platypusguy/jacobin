@@ -37,6 +37,9 @@ func JVMrun() int {
 
 	var status error
 
+	// load static variables. Needs to be here b/c CLI might modify their values
+	classloader.StaticsPreload()
+
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(Global)
 	err := HandleCli(os.Args, &Global)
@@ -54,7 +57,6 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	classloader.LoadBaseClasses() // must follow classloader.Init
-	classloader.StaticsPreload()
 
 	var mainClass string
 
