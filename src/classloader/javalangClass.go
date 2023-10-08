@@ -9,7 +9,6 @@ package classloader
 import (
 	"errors"
 	"fmt"
-	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -34,7 +33,7 @@ func Load_Lang_Class() map[string]GMeth {
 	MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  getAssertionsEnabledStatus0,
+			GFunction:  getAssertionsEnabledStatus,
 		}
 
 	MethodSignatures["java/lang/Class.registerNatives()V"] =
@@ -115,13 +114,9 @@ func simpleClassLoadByName(className string) (*Klass, error) {
 
 // returns boolean indicating whether assertions are enabled or not.
 func getAssertionsEnabledStatus(params []interface{}) interface{} {
-	g := globals.GetGlobalRef()
-	return g.AssertionsEnabled
-}
-
-// returns boolean indicating whether assertions are enabled or not.
-// Effectively identical to getAsserionsEnabledStatus()
-func getAssertionsEnabledStatus0(params []interface{}) interface{} {
-	g := globals.GetGlobalRef()
-	return g.AssertionsEnabled
+	// note that statics have been preloaded before this function
+	// can be called, and CLI processing has also occurred. So, we
+	// know we have the latest assertion-enabled status.
+	x := Statics["main.$assertionsDisabled"].Value.(int)
+	return 1 - x // return the 0 if disabled, 1 if not.
 }

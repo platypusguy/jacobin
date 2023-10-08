@@ -9,6 +9,7 @@ package jvm
 import (
 	"errors"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
@@ -192,7 +193,8 @@ func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int
 
 func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-ea", gl)
-	gl.AssertionsEnabled = types.JavaBoolTrue
+	classloader.AddStatic("main.$assertionsDisabled",
+		classloader.Static{Type: types.Int, Value: types.JavaBoolFalse})
 	return pos, nil
 }
 

@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
-	"jacobin/types"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -45,7 +44,6 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
-	AssertionsEnabled int64 // are assertions enabled? It's boolean, represented as an int64 (0,1)
 
 	// ---- Java Home and Version ----
 	JavaHome    string
@@ -102,7 +100,6 @@ func InitGlobals(progName string) Globals {
 		Threads:            ThreadList{list.New(), sync.Mutex{}},
 		JacobinBuildData:   nil,
 		StrictJDK:          false,
-		AssertionsEnabled:  types.JavaBoolFalse,
 		ArrayAddressList:   InitArrayAddressList(),
 		JmodBaseBytes:      nil,
 		ErrorGoStack:       "",
