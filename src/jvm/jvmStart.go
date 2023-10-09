@@ -109,7 +109,7 @@ func JVMrun() int {
 	// if assertions were enable on the command line for the program, then make sure
 	// that it's set in the Statics table w/ an entry corresponding to the main class
 	if Global.Options["-ea"].Set {
-		classloader.AddStatic(mainClass+"."+"$assertionsDisabled",
+		_ = classloader.AddStatic(mainClass+"."+"$assertionsDisabled",
 			classloader.Static{Type: types.Int, Value: types.JavaBoolFalse})
 	}
 

@@ -74,8 +74,6 @@ func StaticsPreload() {
 // Statics table as part of the setup operations of Jacobin. This
 // is done primarily for speed.
 func LoadStringStatics() {
-	_ = AddStatic("main.$assertionsDisabled",
-		Static{Type: types.Int, Value: types.JavaBoolTrue})
 	_ = AddStatic("java/lang/String.COMPACT_STRINGS",
 		Static{Type: types.Bool, Value: true})
 	_ = AddStatic("java/lang/String.UTF16",
