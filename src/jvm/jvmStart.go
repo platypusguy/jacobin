@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/thread"
+	"jacobin/types"
 	"os"
 )
 
@@ -24,8 +25,26 @@ var Global globals.Globals
 // instead an int is returned (because calling exit() during testing exits the testing run as well).
 func JVMrun() int {
 
-	// if globals.JacobinName == "test", then we're in test mode and globals and log have been set
-	// in the testing function. So, don't reset them here.
+	// capture any panics and print diagnostic data
+	defer func() int {
+		if r := recover(); r != nil {
+			// we get here only on errors that are not intercepted at
+			// the thread level. Essentially, very unexpected JVM errors
+			if Global.ErrorGoStack != "" {
+				// if the ErrorGoStack is not empty, we earlier intercepted
+				// the error, so print the stack captured at that point
+				showGoStackTrace(nil)
+			} else {
+				// otherwise show the stack as it is now
+				showGoStackTrace(r)
+			}
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		return shutdown.OK
+	}()
+
+	// if globals.JacobinName == "test", then we're in test mode, which means
+	// globals and log have been set in the testing function. So, don't reset them here.
 	if globals.GetGlobalRef().JacobinName != "test" {
 		Global = globals.InitGlobals(os.Args[0])
 		log.Init()
@@ -87,6 +106,13 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
 
+	// if assertions were enable on the command line for the program, then make sure
+	// that it's set in the Statics table w/ an entry corresponding to the main class
+	if Global.Options["-ea"].Set {
+		classloader.AddStatic(mainClass+"."+"$assertionsDisabled",
+			classloader.Static{Type: types.Int, Value: types.JavaBoolFalse})
+	}
+
 	// the following was commented out per JACOBIN-327.
 	// Likely to be reinstated at some later point
 	// classloader.LoadReferencedClasses(mainClass)
@@ -97,24 +123,6 @@ func JVMrun() int {
 
 	// create the main thread
 	MainThread = thread.CreateThread()
-
-	// capture any panics and print diagnostic data
-	defer func() int {
-		if r := recover(); r != nil {
-			// we get here only on errors that are not intercepted at
-			// the thread level. Essentially, very unexpected JVM errors
-			if Global.ErrorGoStack != "" {
-				// if the ErrorGoStack is not empty, we earlier intercepted
-				// the error, so print the stack captured at that point
-				showGoStackTrace(nil)
-			} else {
-				// otherwise show the stack as it is now
-				showGoStackTrace(r)
-			}
-			return shutdown.Exit(shutdown.APP_EXCEPTION)
-		}
-		return shutdown.OK
-	}()
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
