@@ -29,16 +29,17 @@ type Number interface {
 // without manipulation at this width. (However, there will still be need for the dummy
 // second stack entry for these data items.
 type Frame struct {
-	Thread   int
-	MethName string             // method name
-	ClName   string             // class name
-	Meth     []byte             // bytecode of method
-	CP       *classloader.CPool // constant pool of class
-	Locals   []interface{}      // local variables
-	OpStack  []interface{}      // operand stack
-	TOS      int                // top of the operand stack
-	PC       int                // program counter (index into the bytecode of the method)
-	Ftype    byte               // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	Thread         int
+	MethName       string                       // method name
+	ClName         string                       // class name
+	Meth           []byte                       // bytecode of method
+	ExceptionTable *[]classloader.CodeException // list of code exceptions
+	CP             *classloader.CPool           // constant pool of class
+	Locals         []interface{}                // local variables
+	OpStack        []interface{}                // operand stack
+	TOS            int                          // top of the operand stack
+	PC             int                          // program counter (index into the bytecode of the method)
+	Ftype          byte                         // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
 // CreateFrameStack creates a stack of frames. Implemented as a list in which

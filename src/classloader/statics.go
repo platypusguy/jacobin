@@ -67,9 +67,6 @@ func StaticsPreload() {
 	LoadStringStatics()
 }
 
-// normally the following function would be in String.go, but this
-// creates a circularity error, so here we are.
-
 // This loads the statics from java/lang/String diredtly into the
 // Statics table as part of the setup operations of Jacobin. This
 // is done primarily for speed.

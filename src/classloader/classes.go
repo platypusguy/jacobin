@@ -274,7 +274,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			MaxStack:    m.CodeAttr.MaxStack,
 			MaxLocals:   m.CodeAttr.MaxLocals,
 			Code:        m.CodeAttr.Code,
-			exceptions:  m.CodeAttr.Exceptions,
+			Exceptions:  m.CodeAttr.Exceptions,
 			attribs:     m.CodeAttr.Attributes,
 			params:      m.Parameters,
 			deprecated:  m.Deprecated,

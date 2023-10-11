@@ -56,9 +56,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
-
-	// >>>>>>>>>>>>>>
-	// CURR: need to bring over exception info me.Meth.exceptions[]
+	f.ExceptionTable = &m.Exceptions
 
 	// allocate the local variables
 	for k := 0; k < m.MaxLocals; k++ {
