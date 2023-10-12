@@ -2231,6 +2231,9 @@ func runFrame(fs *list.List) error {
 			glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = stack
 
+			// capture the JVM frame stack
+			glob.JVMframeStack = grabFrameStack(fs)
+
 		case CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF

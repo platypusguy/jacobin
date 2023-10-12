@@ -69,6 +69,7 @@ type Globals struct {
 
 	// ----- Error handling
 	ErrorGoStack       string
+	JVMframeStack      []string
 	PanicCauseShown    bool
 	JvmFrameStackShown bool
 	GoStackShown       bool

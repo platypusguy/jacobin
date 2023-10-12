@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"container/list"
 	"encoding/binary"
 	"fmt"
 	"jacobin/frames"
@@ -68,21 +69,38 @@ func formatStackUnderflowError(f *frames.Frame) {
 // Prints out the frame stack
 func showFrameStack(t *thread.ExecThread) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
-		frameStack := t.Stack.Front()
-		if frameStack == nil {
+		entries := grabFrameStack(t.Stack)
+		if len(entries) == 0 {
 			_ = log.Log("no further data available", log.SEVERE)
 			return
 		}
 
 		// step through the list-based stack of called methods and print contents
-		for e := frameStack; e != nil; e = e.Next() {
-			val := e.Value.(*frames.Frame)
-			methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
-			data := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
-			_ = log.Log(data, log.SEVERE)
+		for i := 0; i < len(entries); i++ {
+			_ = log.Log(entries[i], log.SEVERE)
 		}
 		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
+}
+
+// gets the JVM frame stack data and returns it as a slice of strings
+func grabFrameStack(fs *list.List) []string {
+	var stackListing []string
+
+	frameStack := fs.Front()
+	if frameStack == nil {
+		// return an empty stack listing
+		return stackListing
+	}
+
+	// step through the list-based stack of called methods and print contents
+	for e := frameStack; e != nil; e = e.Next() {
+		val := e.Value.(*frames.Frame)
+		methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+		entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+		stackListing = append(stackListing, entry)
+	}
+	return stackListing
 }
 
 // takes the panic cause (as returned by the golang runtime) and prints the
