@@ -50,3 +50,8 @@ func MakeEmptyObject() *Object {
 	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
 	return &o
 }
+
+// determines whether a value is null or not
+func IsNull(value any) bool {
+	return value == nil || value == Null
+}
