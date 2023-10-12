@@ -2216,6 +2216,14 @@ func runFrame(fs *list.List) error {
 				}
 			}
 			push(f, size)
+		case ATHROW: // 0xBF throw an exception
+			objectRef := pop(f) // points to an instance of the error/exception class
+			// that's being thrown
+			if object.IsNull(objectRef) {
+				errMsg := "ATHROW: Invalid (null) reference to a exception/error class to throw"
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
+			}
 
 		case CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should
