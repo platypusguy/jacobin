@@ -282,14 +282,16 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 func LoadClassFromNameOnly(className string) error {
 	var err error
 
-	jmodFileName := JmodMapFetch(className)
-
 	if className == "" {
-		msg := "LoadClassFromNameOnly: null class name is invalid"
-		_ = log.Log(msg, log.SEVERE)
+		errMsg := "LoadClassFromNameOnly(): null class name is invalid"
+		_ = log.Log(errMsg, log.SEVERE)
 		debug.PrintStack()
-		return errors.New(msg)
+		return errors.New(errMsg)
 	}
+
+	// get the jmod file name for this class. We'll use the jmod file to
+	// get the .class file for this class.
+	jmodFileName := JmodMapFetch(className)
 
 	if strings.HasSuffix(className, ";") {
 		msg := fmt.Sprintf("LoadClassFromNameOnly: invalid class name: %s", className)
@@ -297,6 +299,7 @@ func LoadClassFromNameOnly(className string) error {
 		debug.PrintStack()
 		return errors.New(msg)
 	}
+
 	// Load class from a jmod?
 	if jmodFileName != "" {
 		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.CLASS)
@@ -324,7 +327,7 @@ func LoadClassFromNameOnly(className string) error {
 	// Loading from a local file system class
 	// TODO: classpath
 	validName := util.ConvertToPlatformPathSeparators(className)
-	_ = log.Log("LoadClassFromNameOnly: Load class from file "+validName, log.CLASS)
+	_ = log.Log("LoadClassFromNameOnly: Loaded class from file "+validName, log.CLASS)
 	_, err = LoadClassFromFile(AppCL, validName)
 	if err != nil {
 		_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
