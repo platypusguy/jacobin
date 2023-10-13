@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"fmt"
+	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
@@ -74,7 +75,6 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -108,6 +108,7 @@ func clinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "In <clinit>, expected java/lang/System to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
+		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
 		_ = AddStatic("java/lang/System.in", Static{Type: "L", Value: object.Null})
