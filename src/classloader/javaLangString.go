@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"jacobin/exceptions"
 	"jacobin/log"
 	"jacobin/types"
 )
@@ -32,6 +33,7 @@ func stringClinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "In <clinit>, expected java/lang/String to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
+		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
