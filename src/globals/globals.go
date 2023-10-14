@@ -105,6 +105,7 @@ func InitGlobals(progName string) Globals {
 		JmodBaseBytes:      nil,
 		ErrorGoStack:       "",
 		PanicCauseShown:    false,
+		JVMframeStack:      nil,
 		JvmFrameStackShown: false,
 		GoStackShown:       false,
 	}
