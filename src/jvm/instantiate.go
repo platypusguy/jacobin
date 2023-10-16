@@ -94,6 +94,9 @@ func instantiateClass(classname string, frameStack *list.List) (*object.Object, 
 		goto runInitializer // check to see if any static initializers
 	}
 
+	// initialize the map of this object's fields
+	obj.FieldTable = make(map[string]*object.Field)
+
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
@@ -110,13 +113,15 @@ func instantiateClass(classname string, frameStack *list.List) (*object.Object, 
 				return nil, err
 			}
 			obj.Fields = append(obj.Fields, *fieldToAdd)
+			obj.FieldTable[name] = fieldToAdd
 		} // loop through the fields if any
-		obj.FieldTable = nil
+		// add the field to the field table for this object
+
+		// obj.FieldTable = nil  // removed via JACOBIN-378
 		goto runInitializer
 		// return &obj, nil
 	} // end of handling fields for objects w/ no superclasses
 
-	obj.FieldTable = make(map[string]object.Field)
 	// in the case of superclasses, we start at the topmost superclass
 	// and work our way down to the present class, adding fields to FieldTable.
 	// so we add the present class into position[0] and then loop through
@@ -147,7 +152,7 @@ func instantiateClass(classname string, frameStack *list.List) (*object.Object, 
 			}
 
 			// add the field to the field table for this object
-			obj.FieldTable[name] = *fieldToAdd
+			obj.FieldTable[name] = fieldToAdd
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
 

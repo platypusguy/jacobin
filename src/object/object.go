@@ -18,7 +18,7 @@ type Object struct {
 	Mark       MarkWord
 	Klass      *string // the class name in the method area
 	Fields     []Field // slice containing the fields
-	FieldTable map[string]Field
+	FieldTable map[string]*Field
 }
 
 // These mark word contains values for different purposes. Here,
