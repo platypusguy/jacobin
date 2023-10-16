@@ -95,6 +95,11 @@ func getStackTraces(fs *list.List) *object.Object {
 		return nil
 	}
 
+	// ...will eventually go into java/lang/Throwabe.stackTrace
+	// ...Type will be: [Ljava/lang/StackTraceElement;
+	// ...other fields to be sure to capture: cause, detailMessage,
+	// ....not sure about backtrace
+
 	// // step through the list-based stack of called methods and print contents
 	// for e := frameStack; e != nil; e = e.Next() {
 	// 	stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
