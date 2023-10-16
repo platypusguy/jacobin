@@ -13,6 +13,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/thread"
 	"runtime/debug"
 	"strings"
@@ -81,6 +82,35 @@ func showFrameStack(t *thread.ExecThread) {
 		}
 		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
+}
+
+// gets the full JVM stack trace using java.lang.StackTraceElement slice to hold the data
+// in case of error, nil is returned
+func getStackTraces(fs *list.List) *object.Object {
+	// var stackListing []*object.Object
+
+	frameStack := fs.Front()
+	if frameStack == nil {
+		// return an empty stack listing
+		return nil
+	}
+
+	// // step through the list-based stack of called methods and print contents
+	// for e := frameStack; e != nil; e = e.Next() {
+	// 	stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
+	// 	if err != nil {
+	// 		return nil
+	// 	}
+	//
+	// 	val := e.Value.(*frames.Frame)
+	// 	methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
+	// 	stackTrace.FieldTable[]
+	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
+	// 	stackListing = append(stackListing, entry)
+	// }
+	// return *stackListing
+
+	return nil // to allow compilation until the code is filled out.
 }
 
 // gets the JVM frame stack data and returns it as a slice of strings

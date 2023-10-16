@@ -27,5 +27,11 @@ func fillInStackTrace([]interface{}) interface{} {
 		_ = log.Log("No stack data available for this error. Incomplete data will be shown.", log.SEVERE)
 		return nil
 	}
+	// CURR: next steps
+	// instantiate an []StackTraceElements
+	// fill it in with 1 item per frame.
+	// This should probably be done at the time the error/exception is detected.
+	// This might require that we add the logic to the class parse showing the Java code source line number.
+	// JACOBIN-224 refers to this.
 	return nil
 }
