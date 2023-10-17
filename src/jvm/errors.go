@@ -87,7 +87,7 @@ func showFrameStack(t *thread.ExecThread) {
 // gets the full JVM stack trace using java.lang.StackTraceElement slice to hold the data
 // in case of error, nil is returned
 func getStackTraces(fs *list.List) *object.Object {
-	// var stackListing []*object.Object
+	var stackListing []*object.Object
 
 	frameStack := fs.Front()
 	if frameStack == nil {
@@ -95,19 +95,36 @@ func getStackTraces(fs *list.List) *object.Object {
 		return nil
 	}
 
-	// ...will eventually go into java/lang/Throwabe.stackTrace
+	// ...will eventually go into java/lang/Throwable.stackTrace
 	// ...Type will be: [Ljava/lang/StackTraceElement;
 	// ...other fields to be sure to capture: cause, detailMessage,
 	// ....not sure about backtrace
 
 	// // step through the list-based stack of called methods and print contents
-	// for e := frameStack; e != nil; e = e.Next() {
-	// 	stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
-	// 	if err != nil {
-	// 		return nil
-	// 	}
+	for e := frameStack; e != nil; e = e.Next() {
+		stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
+		if err != nil {
+			return nil
+		}
+		val := e.Value.(*frames.Frame)
+		f := stackTrace.FieldTable["declaringClass"]
+		f.Fvalue = val.ClName
+		stackListing = append(stackListing, stackTrace)
+	}
+
+	obj := object.MakeEmptyObject()
+	klassName := "java/lang/StackTraceElement"
+	obj.Klass = &klassName
+
+	// add array to the object we're returning
+	fieldToAdd := new(object.Field)
+	fieldToAdd.Ftype = "[Ljava/lang/StackTraceElement;"
+	fieldToAdd.Fvalue = stackListing
+
+	// add the field to the field table for this object
+	obj.FieldTable["stackTrace"] = fieldToAdd
 	//
-	// 	val := e.Value.(*frames.Frame)
+
 	// 	methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
 	// 	stackTrace.FieldTable[]
 	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
@@ -115,7 +132,7 @@ func getStackTraces(fs *list.List) *object.Object {
 	// }
 	// return *stackListing
 
-	return nil // to allow compilation until the code is filled out.
+	return obj
 }
 
 // gets the JVM frame stack data and returns it as a slice of strings
