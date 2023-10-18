@@ -106,9 +106,14 @@ func getStackTraces(fs *list.List) *object.Object {
 		if err != nil {
 			return nil
 		}
-		val := e.Value.(*frames.Frame)
+
+		frame := e.Value.(*frames.Frame)
 		f := stackTrace.FieldTable["declaringClass"]
-		f.Fvalue = val.ClName
+		f.Fvalue = frame.ClName
+
+		f = stackTrace.FieldTable["methodName"]
+		f.Fvalue = frame.MethName
+
 		stackListing = append(stackListing, stackTrace)
 	}
 
