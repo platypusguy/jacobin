@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -88,6 +89,7 @@ func showFrameStack(t *thread.ExecThread) {
 // in case of error, nil is returned
 func getStackTraces(fs *list.List) *object.Object {
 	var stackListing []*object.Object
+	// stackListing =
 
 	frameStack := fs.Front()
 	if frameStack == nil {
@@ -101,22 +103,39 @@ func getStackTraces(fs *list.List) *object.Object {
 	// ....not sure about backtrace
 
 	// // step through the list-based stack of called methods and print contents
+	var frame *frames.Frame
 	for e := frameStack; e != nil; e = e.Next() {
 		stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
 		if err != nil {
 			return nil
 		}
 
-		frame := e.Value.(*frames.Frame)
+		frame = e.Value.(*frames.Frame)
 		f := stackTrace.FieldTable["declaringClass"]
 		f.Fvalue = frame.ClName
 
 		f = stackTrace.FieldTable["methodName"]
 		f.Fvalue = frame.MethName
 
+		methClass := classloader.MethAreaFetch(frame.ClName)
+		if methClass == nil {
+			return nil
+		}
+
+		f = stackTrace.FieldTable["classLoaderName"]
+		f.Fvalue = methClass.Loader
+
+		f = stackTrace.FieldTable["fileName"]
+		f.Fvalue = methClass.Data.SourceFile
+
+		f = stackTrace.FieldTable["moduleName"]
+		f.Fvalue = methClass.Data.Module
+
 		stackListing = append(stackListing, stackTrace)
 	}
 
+	// now that we have our data items loaded into the StackTraceElement
+	// put the elments into an array, which is converted into an object
 	obj := object.MakeEmptyObject()
 	klassName := "java/lang/StackTraceElement"
 	obj.Klass = &klassName
@@ -128,14 +147,14 @@ func getStackTraces(fs *list.List) *object.Object {
 
 	// add the field to the field table for this object
 	obj.FieldTable["stackTrace"] = fieldToAdd
-	//
 
-	// 	methName := fmt.Sprintf("%s.%s", val.ClName, val.MethName)
-	// 	stackTrace.FieldTable[]
-	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
-	// 	stackListing = append(stackListing, entry)
+	// 	methName := fmt.Sprintf("%s.%s", frame.ClName, frame.MethName)
+	// 	// stackTrace.FieldTable[]
+	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, frame.PC)
+	// 	stackListing = append(stackListing, object.NewStringFromGoString(entry))
+	// 	return stackListing
 	// }
-	// return *stackListing
+	// // return *stackListing
 
 	return obj
 }
