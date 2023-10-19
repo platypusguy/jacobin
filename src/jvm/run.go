@@ -2557,11 +2557,11 @@ func runFrame(fs *list.List) error {
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
-				stack := getStackTraces(fs)
-				rawStackTraces := *(stack.FieldTable["stackTrace"])
-				traces := rawStackTraces.Fvalue.([]*object.Object)
-				msg := fmt.Sprintf("Size of Java stack trace : %d entries", len(traces))
-				_ = log.Log(msg, log.SEVERE)
+				// stack := getStackTraces(fs)
+				// rawStackTraces := *(stack.FieldTable["stackTrace"])
+				// traces := rawStackTraces.Fvalue.([]*object.Object)
+				// msg := fmt.Sprintf("Size of Java stack trace : %d entries", len(traces))
+				// _ = log.Log(msg, log.SEVERE)
 
 				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
 				return errors.New(string(debug.Stack()))
