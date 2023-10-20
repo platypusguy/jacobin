@@ -1916,8 +1916,8 @@ func runFrame(fs *list.List) error {
 				if err != nil {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
-					return errors.New("INVOKEVIRTUAL: Error creating frame in: " +
-						className + "." + methodName)
+					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName
+					return errors.New(errMsg)
 				}
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
