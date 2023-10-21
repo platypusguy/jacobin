@@ -2278,9 +2278,9 @@ func TestIdivDivideByZero(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 
 	// need to create a thread to catch the exception
-	hread := thread.CreateThread()
-	hread.Stack = fs
-	hread.ID = thread.AddThreadToTable(&hread, &g.Threads)
+	thread := thread.CreateThread()
+	thread.Stack = fs
+	thread.AddThreadToTable()
 	_ = runFrame(fs)
 
 	// restore stderr and stdout to what they were before
