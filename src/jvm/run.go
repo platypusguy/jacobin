@@ -66,8 +66,9 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// create the first thread and place its first frame on it
 	MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
-	MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
+	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
+	MainThread.AddThreadToTable()
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := instantiateClass(className, MainThread.Stack)
