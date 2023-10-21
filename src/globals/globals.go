@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
+	"jacobin/thread"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -53,7 +54,10 @@ type Globals struct {
 	JacobinHome string
 
 	// ---- thread management ----
-	Threads ThreadList // list of all app execution threads
+	// Threads ThreadList // list of all app execution threads
+	ThreadLock   sync.Mutex
+	Threads      map[int]*thread.ExecThread
+	ThreadNumber int
 
 	// ---- execution context ----
 	JacobinBuildData map[string]string
@@ -86,19 +90,21 @@ var global Globals
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
-		Version:            "0.4.0",
-		VmModel:            "server",
-		ExitNow:            false,
-		JacobinName:        progName,
-		JacobinHome:        "",
-		JavaHome:           "",
-		JavaVersion:        "",
-		Options:            make(map[string]Option),
-		StartingClass:      "",
-		StartingJar:        "",
-		MaxJavaVersion:     17, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw:  61, // this value and MaxJavaVersion must *always* be in sync
-		Threads:            ThreadList{list.New(), sync.Mutex{}},
+		Version:           "0.4.0",
+		VmModel:           "server",
+		ExitNow:           false,
+		JacobinName:       progName,
+		JacobinHome:       "",
+		JavaHome:          "",
+		JavaVersion:       "",
+		Options:           make(map[string]Option),
+		StartingClass:     "",
+		StartingJar:       "",
+		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
+		Threads:           map[int]*thread.ExecThread{},
+		// Threads:            ThreadList{list.New(), sync.Mutex{}},
+		ThreadNumber:       1,
 		JacobinBuildData:   nil,
 		StrictJDK:          false,
 		ArrayAddressList:   InitArrayAddressList(),
@@ -129,10 +135,10 @@ func InitGlobals(progName string) Globals {
 }
 
 // ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
-type ThreadList struct {
-	ThreadsList  *list.List
-	ThreadsMutex sync.Mutex
-}
+// type ThreadList struct {
+// 	ThreadsList  *list.List
+// 	ThreadsMutex sync.Mutex
+// }
 
 // GetGlobalRef returns a pointer to the singleton instance of Globals
 func GetGlobalRef() *Globals {

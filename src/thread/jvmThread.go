@@ -23,21 +23,43 @@ type ExecThread struct {
 	Trace bool       // do we Trace instructions?
 }
 
+// CreateThread creates an execution thread and initializes it with default values
+// All Jacobin execution threads *must* use this function to create a thread
 func CreateThread() ExecThread {
 	t := ExecThread{}
-	t.ID = 0
-	t.PC = 0
+	t.ID = incrementThreadNumber()
 	t.Stack = nil
+	t.PC = 0
 	t.Trace = false
 	return t
 }
 
-func AddThreadToTable(t *ExecThread, tbl *globals.ThreadList) int {
-	tbl.ThreadsMutex.Lock()
+// Adds a thread to the global thread table using the ID as the key,
+// and a pointer to the ExecThread as the value
+func (t *ExecThread) AddThreadToTable() {
+	glob := globals.GetGlobalRef()
 
-	tbl.ThreadsList.PushBack(t)
-	t.ID = tbl.ThreadsList.Len() - 1
-	tbl.ThreadsMutex.Unlock()
+	glob.ThreadLock.Lock()
+	glob.Threads[t.ID] = t
+	glob.ThreadLock.Unlock()
+}
 
-	return t.ID
+// func AddThreadToTable(t *ExecThread, tbl *globals.ThreadList) int {
+// 	tbl.ThreadsMutex.Lock()
+//
+// 	tbl.ThreadsList.PushBack(t)
+// 	t.ID = tbl.ThreadsList.Len() - 1
+// 	tbl.ThreadsMutex.Unlock()
+//
+// 	return t.ID
+// }
+
+// threads are assigned a monotonically incrementing integer ID. This function
+// increments the counter and returns its value as the integer ID to use
+func incrementThreadNumber() int {
+	glob := globals.GetGlobalRef()
+	glob.ThreadLock.Lock()
+	glob.ThreadNumber += 1
+	glob.ThreadLock.Unlock()
+	return glob.ThreadNumber
 }
