@@ -10,7 +10,7 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
-	"jacobin/thread"
+	// "jacobin/thread"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -55,8 +55,9 @@ type Globals struct {
 
 	// ---- thread management ----
 	// Threads ThreadList // list of all app execution threads
-	ThreadLock   sync.Mutex
-	Threads      map[int]*thread.ExecThread
+	ThreadLock sync.Mutex
+	Threads    map[int]interface{} // in reality the interface is a threads.ExecThread, but
+	// due to circularity has to be described this way here.
 	ThreadNumber int
 
 	// ---- execution context ----
@@ -102,7 +103,6 @@ func InitGlobals(progName string) Globals {
 		StartingJar:       "",
 		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
-		Threads:           map[int]*thread.ExecThread{},
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
 		ThreadNumber:       1,
 		JacobinBuildData:   nil,
@@ -131,6 +131,8 @@ func InitGlobals(progName string) Globals {
 	} else {
 		global.FileEncoding = "UTF-8"
 	}
+
+	global.Threads = make(map[int]interface{})
 	return global
 }
 

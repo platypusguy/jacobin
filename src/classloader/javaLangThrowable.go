@@ -21,12 +21,17 @@ func Load_Lang_Throwable() map[string]GMeth {
 	return MethodSignatures
 }
 
-func fillInStackTrace([]interface{}) interface{} {
+func fillInStackTrace(params []interface{}) interface{} {
 	glob := globals.GetGlobalRef()
 	if glob.JVMframeStack == nil { // if we haven't captured the JVM stack before now, we're hosed.
 		_ = log.Log("No stack data available for this error. Incomplete data will be shown.", log.SEVERE)
 		return nil
 	}
+
+	// thisFrame := params[0].(*frames.Frame)
+	// thisThread := thisFrame.Thread
+	// thisStack := globals.ThreadList
+	// stackTraces := jvm.GetStackTraces()
 	// CURR: next steps
 	// instantiate an []StackTraceElements
 	// fill it in with 1 item per frame.
