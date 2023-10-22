@@ -36,9 +36,7 @@ func CreateThread() ExecThread {
 
 // Adds a thread to the global thread table using the ID as the key,
 // and a pointer to the ExecThread as the value
-func (t *ExecThread) AddThreadToTable() {
-	glob := globals.GetGlobalRef()
-
+func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 	glob.ThreadLock.Lock()
 	glob.Threads[t.ID] = t
 	glob.ThreadLock.Unlock()

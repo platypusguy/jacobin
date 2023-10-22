@@ -7,9 +7,11 @@
 package thread
 
 import (
+	"fmt"
 	"jacobin/globals"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestCreateThread(t *testing.T) {
@@ -31,7 +33,7 @@ func TestAddThreadToTable(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		th := CreateThread()
 		// retVal = AddThreadToTable(&th, &tbl)
-		th.AddThreadToTable()
+		th.AddThreadToTable(gl)
 	}
 
 	// tblLen := tbl.ThreadsList.Len()
@@ -59,33 +61,36 @@ func TestAddingMultipleSimultaneousThreads(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
-	go add100threads(&wg)
+	go add100threads(&wg, gl)
 
 	wg.Add(1)
-	go add100threads(&wg)
+	go add100threads(&wg, gl)
 
 	wg.Add(1)
-	go add100threads(&wg)
+	go add100threads(&wg, gl)
 
 	wg.Add(1)
-	go add100threads(&wg)
+	go add100threads(&wg, gl)
 
 	wg.Wait() // wait for the goroutines to all finish
 	size := len(tbl)
 	if size != 400 {
 		t.Errorf("Expecting thread table size of 400, got %d", size)
+		fmt.Printf("Thread counter: %d\n", gl.ThreadNumber)
 	}
+
 }
 
 // Called by the goroutines in TestAddingMultipleSimultaneousThreads()
 // to add 100 threads to the thread table and decrements the wait
 // group by 1 when it's done. Note that the wait group is initialized
 // prior to the goroutine being called, as prescribed by the go docs.
-func add100threads(wgrp *sync.WaitGroup) {
+func add100threads(wgrp *sync.WaitGroup, glob *globals.Globals) {
 	// create and add 100 threads
 	for i := 0; i < 100; i++ {
 		th := CreateThread()
-		th.AddThreadToTable()
+		th.AddThreadToTable(glob)
 	}
-	wgrp.Done() // decrements the wait group by 1.
+	time.Sleep(1 * time.Millisecond) // make sure all is complete
+	wgrp.Done()                      // decrements the wait group by 1.
 }
