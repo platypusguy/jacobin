@@ -1983,6 +1983,9 @@ func TestSipushNegative(t *testing.T) {
 
 // SWAP: Swap top two items on stack
 func TestSwap(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	_ = log.SetLogLevel(log.WARNING)
+
 	f := newFrame(SWAP)
 	push(&f, int64(34)) // push two different values
 	push(&f, int64(21)) // TOS now = 21
