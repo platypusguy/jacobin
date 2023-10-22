@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-3 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 package classloader
@@ -19,7 +19,7 @@ func checkClass(t *testing.T, className string, expectedJmod string) bool {
 		return false
 	}
 	if jmod != expectedJmod {
-		t.Errorf("checkClass: Expected jmod={%s} but observed jmod={%s}\n", expectedJmod, jmod)
+		t.Errorf("checkClass: Expected jmod = %s, but observed jmod = %s\n", expectedJmod, jmod)
 		return false
 	}
 
@@ -49,7 +49,8 @@ func TestJmodToClass(t *testing.T) {
 
 	// Initialise global and logging
 	globals.InitGlobals("test")
-	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
 	t.Logf("globals.InitGlobals(test) ok\n")
 
 	// Initialise JMODMAP

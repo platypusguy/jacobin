@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-3 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -26,6 +26,9 @@ import (
 // This files tests remaining routines.
 
 func TestInitOfClassloaders(t *testing.T) {
+	// set the logger to low granularity, so that logging messages are not also captured in this test
+	_ = log.SetLogLevel(log.WARNING)
+
 	_ = Init()
 
 	// check that the classloader hierarchy is set up correctly
