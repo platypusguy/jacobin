@@ -1707,6 +1707,8 @@ func TestPopWithTracing(t *testing.T) {
 
 // POP2: pop two items
 func TestPop2(t *testing.T) {
+	_ = log.SetLogLevel(log.WARNING)
+
 	f := newFrame(POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
 	push(&f, int64(21))
@@ -1729,6 +1731,7 @@ func TestPop2(t *testing.T) {
 
 // POP2: pop two items off stack -- make sure tracing doesn't affect the output
 func TestPop2WithTrace(t *testing.T) {
+	_ = log.SetLogLevel(log.WARNING)
 	f := newFrame(POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
 	push(&f, int64(21))
