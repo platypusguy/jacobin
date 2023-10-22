@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2023 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -95,6 +95,8 @@ func TestAaload(t *testing.T) {
 // AALOAD: Test with a nil
 func TestAaloadWithNil(t *testing.T) {
 	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
 	fs := frames.CreateFrameStack()
 
 	f := newFrame(AALOAD)
