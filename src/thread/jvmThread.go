@@ -19,8 +19,8 @@ import (
 type ExecThread struct {
 	ID    int        // the thread ID
 	Stack *list.List // the JVM Stack (frame stack, that is) for this thread
-	PC    int        // the program counter (the index to the instruction being executed)
-	Trace bool       // do we Trace instructions?
+	// PC    int        // the program counter (the index to the instruction being executed)
+	Trace bool // do we Trace instructions?
 }
 
 // CreateThread creates an execution thread and initializes it with default values
@@ -29,7 +29,6 @@ func CreateThread() ExecThread {
 	t := ExecThread{}
 	t.ID = incrementThreadNumber()
 	t.Stack = nil
-	t.PC = 0
 	t.Trace = false
 	return t
 }
