@@ -11,7 +11,9 @@ import (
 	"errors"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/log"
+	jvmThread "jacobin/thread"
 	"strings"
 )
 
@@ -34,6 +36,14 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	var params = new([]interface{})
 	for _, v := range fr.OpStack {
 		*params = append(*params, v)
+	}
+
+	// pass a pointer to the thread as the last parameter to the function;
+	// from the thread, the frame stack (and the individual frame) become accessible
+	thread := globals.GetGlobalRef().Threads[fr.Thread]
+	if thread != nil { // will be nil only in unit tests
+		threadPtr := thread.(*jvmThread.ExecThread)
+		*params = append(*params, threadPtr)
 	}
 
 	// call the function passing a pointer to the slice of arguments
