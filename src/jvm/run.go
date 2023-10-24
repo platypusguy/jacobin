@@ -51,7 +51,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	}
 
 	m := me.Meth.(classloader.JmEntry)
-	f := frames.CreateFrame(m.MaxStack) // create a new frame
+	f := frames.CreateFrame(m.MaxStack + 2) // create a new frame (the +2 is arbitrary, but needed)
 	f.Thread = mainThread.ID
 	f.MethName = "main"
 	f.ClName = className
