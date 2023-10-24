@@ -52,6 +52,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	m := me.Meth.(classloader.JmEntry)
 	f := frames.CreateFrame(m.MaxStack) // create a new frame
+	f.Thread = mainThread.ID
 	f.MethName = "main"
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
@@ -68,7 +69,6 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	MainThread.Stack = frames.CreateFrameStack()
 	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
-	MainThread.AddThreadToTable(globals) // add thread to the global thread table
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := instantiateClass(className, MainThread.Stack)

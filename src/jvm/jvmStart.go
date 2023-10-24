@@ -123,6 +123,7 @@ func JVMrun() int {
 
 	// create the main thread
 	MainThread = thread.CreateThread()
+	MainThread.AddThreadToTable(&Global)
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
