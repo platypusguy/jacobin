@@ -56,7 +56,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
-	f.ExceptionTable = &m.Exceptions
+	// f.ExceptionTable = &m.Exceptions
 
 	// allocate the local variables
 	for k := 0; k < m.MaxLocals; k++ {
@@ -232,7 +232,7 @@ func runFrame(fs *list.List) error {
 			idx := f.Meth[f.PC+1]
 			f.PC += 1
 
-			CPe := FetchCPentry(f.CP, int(idx))
+			CPe := FetchCPentry(f.CP.(*classloader.CPool), int(idx))
 			if CPe.entryType != 0 && // 0 = error
 				// Note: an invalid CP entry causes a java.lang.Verify error and
 				//       is caught before execution of the program begins.
@@ -269,7 +269,7 @@ func runFrame(fs *list.List) error {
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
-			CPe := FetchCPentry(f.CP, idx)
+			CPe := FetchCPentry(f.CP.(*classloader.CPool), idx)
 			if CPe.entryType != 0 && // this instruction does not load longs or doubles
 				CPe.entryType != classloader.DoubleConst &&
 				CPe.entryType != classloader.LongConst { // if no error
@@ -303,7 +303,7 @@ func runFrame(fs *list.List) error {
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
-			CPe := FetchCPentry(f.CP, idx)
+			CPe := FetchCPentry(f.CP.(*classloader.CPool), idx)
 			if CPe.retType == IS_INT64 { // push value twice (due to 64-bit width)
 				push(f, CPe.intVal)
 				push(f, CPe.intVal)
@@ -1488,7 +1488,8 @@ func runFrame(fs *list.List) error {
 		case GETSTATIC: // 0xB2		(get static field)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1500,21 +1501,21 @@ func runFrame(fs *list.List) error {
 			}
 
 			// get the field entry
-			field := f.CP.FieldRefs[CPentry.Slot]
+			field := CP.FieldRefs[CPentry.Slot]
 
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
-			classNameIndex := f.CP.ClassRefs[f.CP.CpIndex[classRef].Slot]
-			classNameEntry := f.CP.CpIndex[classNameIndex]
-			className := f.CP.Utf8Refs[classNameEntry.Slot]
+			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+			classNameEntry := CP.CpIndex[classNameIndex]
+			className := CP.Utf8Refs[classNameEntry.Slot]
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
-			nAndTentry := f.CP.CpIndex[nAndTindex]
+			nAndTentry := CP.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
-			nAndT := f.CP.NameAndTypes[nAndTslot]
+			nAndT := CP.NameAndTypes[nAndTslot]
 			fieldNameIndex := nAndT.NameIndex
-			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldNameIndex)
+			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
 
 			// was this static field previously loaded? Is so, get its location and move on.
@@ -1574,7 +1575,8 @@ func runFrame(fs *list.List) error {
 		case PUTSTATIC: // 0xB2		(get static field)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1586,21 +1588,21 @@ func runFrame(fs *list.List) error {
 			}
 
 			// get the field entry
-			field := f.CP.FieldRefs[CPentry.Slot]
+			field := CP.FieldRefs[CPentry.Slot]
 
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
-			classNameIndex := f.CP.ClassRefs[f.CP.CpIndex[classRef].Slot]
-			classNameEntry := f.CP.CpIndex[classNameIndex]
-			className := f.CP.Utf8Refs[classNameEntry.Slot]
+			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+			classNameEntry := CP.CpIndex[classNameIndex]
+			className := CP.Utf8Refs[classNameEntry.Slot]
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
-			nAndTentry := f.CP.CpIndex[nAndTindex]
+			nAndTentry := CP.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
-			nAndT := f.CP.NameAndTypes[nAndTslot]
+			nAndT := CP.NameAndTypes[nAndTslot]
 			fieldNameIndex := nAndT.NameIndex
-			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, fieldNameIndex)
+			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
 
 			// was this static field previously loaded? Is so, get its location and move on.
@@ -1714,7 +1716,8 @@ func runFrame(fs *list.List) error {
 		case GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			fieldEntry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			fieldEntry := CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1736,13 +1739,13 @@ func runFrame(fs *list.List) error {
 				fieldType = obj.Fields[fieldEntry.Slot].Ftype
 				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
 			} else { // retrieve by name
-				fullFieldEntry := f.CP.FieldRefs[fieldEntry.Slot]
+				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 				nameAndTypeCPIndex := fullFieldEntry.NameAndType
-				nameAndTypeIndex := f.CP.CpIndex[nameAndTypeCPIndex]
-				nameAndType := f.CP.NameAndTypes[nameAndTypeIndex.Slot]
+				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+				nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
 				nameCPIndex := nameAndType.NameIndex
-				nameCPentry := f.CP.CpIndex[nameCPIndex]
-				fieldName := f.CP.Utf8Refs[nameCPentry.Slot]
+				nameCPentry := CP.CpIndex[nameCPIndex]
+				fieldName := CP.Utf8Refs[nameCPentry.Slot]
 
 				objField := obj.FieldTable[fieldName]
 				fieldValue = objField.Fvalue
@@ -1758,7 +1761,8 @@ func runFrame(fs *list.List) error {
 		case PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			fieldEntry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			fieldEntry := CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1826,13 +1830,13 @@ func runFrame(fs *list.List) error {
 			} else {
 				// otherwise, it's an object that contains superclass fields and
 				// we need to access the field via the field table using the field name
-				fullFieldEntry := f.CP.FieldRefs[fieldEntry.Slot]
+				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 				nameAndTypeCPIndex := fullFieldEntry.NameAndType
-				nameAndTypeIndex := f.CP.CpIndex[nameAndTypeCPIndex]
-				nameAndType := f.CP.NameAndTypes[nameAndTypeIndex.Slot]
+				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+				nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
 				nameCPIndex := nameAndType.NameIndex
-				nameCPentry := f.CP.CpIndex[nameCPIndex]
-				fieldName := f.CP.Utf8Refs[nameCPentry.Slot]
+				nameCPentry := CP.CpIndex[nameCPIndex]
+				fieldName := CP.Utf8Refs[nameCPentry.Slot]
 
 				objField := obj.FieldTable[fieldName]
 				objField.Fvalue = value
@@ -1843,8 +1847,8 @@ func runFrame(fs *list.List) error {
 			var err error
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1856,25 +1860,25 @@ func runFrame(fs *list.List) error {
 			}
 
 			// get the methodRef entry
-			method := f.CP.MethodRefs[CPentry.Slot]
+			method := CP.MethodRefs[CPentry.Slot]
 
 			// get the class entry from this method
 			classRef := method.ClassIndex
-			classNameIndex := f.CP.ClassRefs[f.CP.CpIndex[classRef].Slot]
-			classNameEntry := f.CP.CpIndex[classNameIndex]
-			className := f.CP.Utf8Refs[classNameEntry.Slot]
+			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+			classNameEntry := CP.CpIndex[classNameIndex]
+			className := CP.Utf8Refs[classNameEntry.Slot]
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType
-			nAndTentry := f.CP.CpIndex[nAndTindex]
+			nAndTentry := CP.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
-			nAndT := f.CP.NameAndTypes[nAndTslot]
+			nAndT := CP.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
-			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodNameIndex)
+			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
-			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodSigIndex)
+			methodType := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodSigIndex)
 
 			mtEntry := classloader.MTable[className+"."+methodName+methodType]
 			if mtEntry.Meth == nil { // if the method is not in the method table, find it
@@ -1952,7 +1956,8 @@ func runFrame(fs *list.List) error {
 		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			className, methName, methSig := getMethInfoFromCPmethref(f.CP, CPslot)
+			CP := f.CP.(*classloader.CPool)
+			className, methName, methSig := getMethInfoFromCPmethref(CP, CPslot)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
@@ -1998,27 +2003,29 @@ func runFrame(fs *list.List) error {
 		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			// get the methodRef entry
-			method := f.CP.MethodRefs[CPentry.Slot]
+			method := CP.MethodRefs[CPentry.Slot]
 
 			// get the class entry from this method
 			classRef := method.ClassIndex
-			classNameIndex := f.CP.ClassRefs[f.CP.CpIndex[classRef].Slot]
-			classNameEntry := f.CP.CpIndex[classNameIndex]
-			className := f.CP.Utf8Refs[classNameEntry.Slot]
+			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+			classNameEntry := CP.CpIndex[classNameIndex]
+			className := CP.Utf8Refs[classNameEntry.Slot]
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType
-			nAndTentry := f.CP.CpIndex[nAndTindex]
+			nAndTentry := CP.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
-			nAndT := f.CP.NameAndTypes[nAndTslot]
+			nAndT := CP.NameAndTypes[nAndTslot]
 			methodNameIndex := nAndT.NameIndex
-			methodName := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodNameIndex)
+			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
 
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
-			methodType := classloader.FetchUTF8stringFromCPEntryNumber(f.CP, methodSigIndex)
+			methodType := classloader.FetchUTF8stringFromCPEntryNumber(
+				CP, methodSigIndex)
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {
@@ -2099,7 +2106,8 @@ func runFrame(fs *list.List) error {
 		case NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -2111,8 +2119,8 @@ func runFrame(fs *list.List) error {
 			// the classref points to a UTF8 record with the name of the class to instantiate
 			var className string
 			if CPentry.Type == classloader.ClassRef {
-				utf8Index := f.CP.ClassRefs[CPentry.Slot]
-				className = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+				utf8Index := CP.ClassRefs[CPentry.Slot]
+				className = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
 			}
 
 			ref, err := instantiateClass(className, fs)
@@ -2266,11 +2274,12 @@ func runFrame(fs *list.List) error {
 			// at this point, we know we have a valid non-nil, non-null pointer to an object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 				// a CP entry for a UTF8 record w/ name of class
 				var className string
-				classNamePtr := FetchCPentry(f.CP, CPslot)
+				classNamePtr := FetchCPentry(CP, CPslot)
 				if classNamePtr.retType != IS_STRING_ADDR {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
@@ -2354,11 +2363,12 @@ func runFrame(fs *list.List) error {
 					obj := *ref.(*object.Object)
 					CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 					f.PC += 2
-					CPentry := f.CP.CpIndex[CPslot]
+					CP := f.CP.(*classloader.CPool)
+					CPentry := CP.CpIndex[CPslot]
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 						// a CP entry for a UTF8 record w/ name of class
 						var className string
-						classNamePtr := FetchCPentry(f.CP, CPslot)
+						classNamePtr := FetchCPentry(CP, CPslot)
 						if classNamePtr.retType != IS_STRING_ADDR {
 							glob := globals.GetGlobalRef()
 							glob.ErrorGoStack = string(debug.Stack())
@@ -2409,14 +2419,15 @@ func runFrame(fs *list.List) error {
 			// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
-			CPentry := f.CP.CpIndex[CPslot]
+			CP := f.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				return errors.New("MULTIANEWARRAY: multi-dimensional array presently supports classes only")
 			} else {
-				utf8Index := f.CP.ClassRefs[CPentry.Slot]
-				arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(f.CP, utf8Index)
+				utf8Index := CP.ClassRefs[CPentry.Slot]
+				arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
 			}
 
 			var rawArrayType uint8

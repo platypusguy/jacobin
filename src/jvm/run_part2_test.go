@@ -915,18 +915,19 @@ func TestLdc(t *testing.T) {
 
 	cp := classloader.CPool{}
 	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
 	// now create a skeletal, two-entry CP
 	var ints = make([]int32, 1)
-	f.CP.IntConsts = ints
-	f.CP.IntConsts[0] = 25
+	CP.IntConsts = ints
+	CP.IntConsts[0] = 25
 
-	f.CP.CpIndex = []classloader.CpEntry{}
+	CP.CpIndex = []classloader.CpEntry{}
 	dummyEntry := classloader.CpEntry{}
 	doubleEntry := classloader.CpEntry{
 		Type: classloader.IntConst, Slot: 0,
 	}
-	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
-	f.CP.CpIndex = append(f.CP.CpIndex, doubleEntry)
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, doubleEntry)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -948,18 +949,19 @@ func TestLdcw(t *testing.T) {
 
 	cp := classloader.CPool{}
 	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
 	// now create a skeletal, two-entry CP
 	var ints = make([]int32, 1)
-	f.CP.IntConsts = ints
-	f.CP.IntConsts[0] = 25
+	CP.IntConsts = ints
+	CP.IntConsts[0] = 25
 
-	f.CP.CpIndex = []classloader.CpEntry{}
+	CP.CpIndex = []classloader.CpEntry{}
 	dummyEntry := classloader.CpEntry{}
 	doubleEntry := classloader.CpEntry{
 		Type: classloader.IntConst, Slot: 0,
 	}
-	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
-	f.CP.CpIndex = append(f.CP.CpIndex, doubleEntry)
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, doubleEntry)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -981,18 +983,19 @@ func TestLdcwFloat(t *testing.T) {
 
 	cp := classloader.CPool{}
 	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
 	// now create a skeletal, two-entry CP
 	var floats = make([]float32, 1)
-	f.CP.Floats = floats
-	f.CP.Floats[0] = 25.0
+	CP.Floats = floats
+	CP.Floats[0] = 25.0
 
-	f.CP.CpIndex = []classloader.CpEntry{}
+	CP.CpIndex = []classloader.CpEntry{}
 	dummyEntry := classloader.CpEntry{}
 	floatEntry := classloader.CpEntry{
 		Type: classloader.FloatConst, Slot: 0,
 	}
-	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
-	f.CP.CpIndex = append(f.CP.CpIndex, floatEntry)
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, floatEntry)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -1014,18 +1017,19 @@ func TestLdc2w(t *testing.T) {
 
 	cp := classloader.CPool{}
 	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
 	// now create a skeletal, two-entry CP
 	var doubles = make([]float64, 1)
-	f.CP.Doubles = doubles
-	f.CP.Doubles[0] = 25.0
+	CP.Doubles = doubles
+	CP.Doubles[0] = 25.0
 
-	f.CP.CpIndex = []classloader.CpEntry{}
+	CP.CpIndex = []classloader.CpEntry{}
 	dummyEntry := classloader.CpEntry{}
 	doubleEntry := classloader.CpEntry{
 		Type: classloader.DoubleConst, Slot: 0,
 	}
-	f.CP.CpIndex = append(f.CP.CpIndex, dummyEntry)
-	f.CP.CpIndex = append(f.CP.CpIndex, doubleEntry)
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, doubleEntry)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
