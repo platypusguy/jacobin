@@ -193,6 +193,13 @@ const (
 	ThreadDeath
 	TransformerFactoryConfigurationError
 	VirtualMachineError
+
+	// Character set exceptions
+	ChangedCharSetException
+	CharacterCodingException
+	CharConversionException
+	UnsupportedEncodingException
+	UTFDataFormatException
 )
 
 // JacobinRuntimeErrLiterals are the displayed strings for the given exception.
