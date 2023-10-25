@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-3 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -13,14 +13,12 @@ import (
 
 // Creates a JVM program execution thread. These threads are extremely limited.
 // They basically hold a Stack of frames. They push and popFrame frames as required.
-// They begin execution; they exit when execution ends; and they emit diagnostic
-// and performance data.
+// They begin execution; they exit when execution ends.
 
 type ExecThread struct {
 	ID    int        // the thread ID
 	Stack *list.List // the JVM Stack (frame stack, that is) for this thread
-	// PC    int        // the program counter (the index to the instruction being executed)
-	Trace bool // do we Trace instructions?
+	Trace bool       // do we trace instructions?
 }
 
 // CreateThread creates an execution thread and initializes it with default values
@@ -40,16 +38,6 @@ func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 	glob.Threads[t.ID] = t
 	glob.ThreadLock.Unlock()
 }
-
-// func AddThreadToTable(t *ExecThread, tbl *globals.ThreadList) int {
-// 	tbl.ThreadsMutex.Lock()
-//
-// 	tbl.ThreadsList.PushBack(t)
-// 	t.ID = tbl.ThreadsList.Len() - 1
-// 	tbl.ThreadsMutex.Unlock()
-//
-// 	return t.ID
-// }
 
 // threads are assigned a monotonically incrementing integer ID. This function
 // increments the counter and returns its value as the integer ID to use
