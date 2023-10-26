@@ -44,7 +44,8 @@ func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 func incrementThreadNumber() int {
 	glob := globals.GetGlobalRef()
 	glob.ThreadLock.Lock()
-	glob.ThreadNumber += 1
-	glob.ThreadLock.Unlock()
-	return glob.ThreadNumber
+	forCaller := glob.ThreadNumber + 1 // ensure that caller sees this one
+	glob.ThreadNumber = forCaller
+	glob.ThreadLock.Unlock() // I don't care if glob.ThreadNumber races ahead
+	return forCaller
 }
