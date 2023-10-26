@@ -56,37 +56,29 @@ func TestAddingMultipleSimultaneousThreads(t *testing.T) {
 	// t.Parallel()
 
 	// Define test parameters
-	numThreads := 4
+	numThreadGroups := 8
 	threadsToAdd := 100
-	expectedSize := numThreads * threadsToAdd
+	expectedSize := numThreadGroups * threadsToAdd
 
 	// initialize globals
 	globals.InitGlobals("test")
 
-	// Initialize WaitGroup and a channel for signaling completion
+	// Initialize WaitGroup for signaling completion
 	wg := sync.WaitGroup{}
-	channel := make(chan struct{})
+	wg.Add(numThreadGroups)
 
-	for i := 0; i < numThreads; i++ {
-		wg.Add(1)
+	// Start the thread groups
+	for i := 0; i < numThreadGroups; i++ {
 		go func() {
 			defer wg.Done()
 			addThreadsToTable(threadsToAdd)
 		}()
 	}
 
-	go func() {
-		wg.Wait()
-		close(channel)
-	}()
-
-	// Wait for completion using a channel
-	select {
-	case <-channel:
-		size := len(globals.GetGlobalRef().Threads)
-		if size != expectedSize {
-			t.Errorf("Expecting thread table size of %d, got %d", expectedSize, size)
-		}
+	wg.Wait()
+	size := len(globals.GetGlobalRef().Threads)
+	if size != expectedSize {
+		t.Errorf("Expecting thread table size of %d, got %d", expectedSize, size)
 	}
 }
 
