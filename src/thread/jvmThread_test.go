@@ -76,7 +76,8 @@ func TestAddingMultipleSimultaneousThreads(t *testing.T) {
 	}
 
 	wg.Wait()
-	size := len(globals.GetGlobalRef().Threads)
+	//size := len(globals.GetGlobalRef().Threads)
+	size := globals.GetGlobalRef().ThreadNumber
 	if size != expectedSize {
 		t.Errorf("Expecting thread table size of %d, got %d", expectedSize, size)
 	}
