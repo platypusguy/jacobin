@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package jvm
+package exceptions
 
 import (
 	"container/list"
@@ -14,6 +14,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/opcodes"
 	"jacobin/thread"
 	"os"
 	"runtime/debug"
@@ -31,14 +32,14 @@ func TestFormatOverflowError(t *testing.T) {
 	fr.Meth = make([]byte, 6)
 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
 
-	formatStackOverflowError(fr)
+	FormatStackOverflowError(fr)
 
 	if fr.PC != 0 {
 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
 	}
 
-	if fr.Meth[1] != IMPDEP2 {
-		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", IMPDEP2, fr.Meth[1])
+	if fr.Meth[1] != opcodes.IMPDEP2 {
+		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
 	}
 
 	if fr.Meth[2] != 0x01 {
@@ -66,14 +67,14 @@ func TestFormatOverflowErrorOnVeryShortMethod(t *testing.T) {
 	fr.Meth = make([]byte, 2)    // make sure the replacement error code works correctly
 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
 
-	formatStackOverflowError(fr)
+	FormatStackOverflowError(fr)
 
 	if fr.PC != 0 {
 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
 	}
 
-	if fr.Meth[1] != IMPDEP2 {
-		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", IMPDEP2, fr.Meth[1])
+	if fr.Meth[1] != opcodes.IMPDEP2 {
+		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
 	}
 
 	if fr.Meth[2] != 0x01 {
@@ -100,14 +101,14 @@ func TestFormatUnderflowError(t *testing.T) {
 	fr.Meth = make([]byte, 6)
 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
 
-	formatStackUnderflowError(fr)
+	FormatStackUnderflowError(fr)
 
 	if fr.PC != 0 {
 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
 	}
 
-	if fr.Meth[1] != IMPDEP2 {
-		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", IMPDEP2, fr.Meth[1])
+	if fr.Meth[1] != opcodes.IMPDEP2 {
+		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
 	}
 
 	if fr.Meth[2] != 0x02 {
@@ -145,7 +146,7 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 
 	th := thread.ExecThread{}
 	globals.GetGlobalRef().JvmFrameStackShown = true // should prevent any output
-	showFrameStack(&th)
+	ShowFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -183,7 +184,7 @@ func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	th := thread.CreateThread()
 	th.Stack = list.New()
 	globals.GetGlobalRef().JvmFrameStackShown = false
-	showFrameStack(&th)
+	ShowFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -227,7 +228,7 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	_ = frames.PushFrame(th.Stack, f)
 
 	globals.GetGlobalRef().JvmFrameStackShown = false
-	showFrameStack(&th)
+	ShowFrameStack(&th)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -265,7 +266,7 @@ func TestShowGoStackWhenNotPreviouslyCaptured(t *testing.T) {
 
 	globals.GetGlobalRef().GoStackShown = false
 
-	showGoStackTrace(nil)
+	ShowGoStackTrace(nil)
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr
@@ -310,7 +311,7 @@ func TestShowGoStackWhenPreviouslyCaptured(t *testing.T) {
 	entries := strings.Split(stackAsString, "\n")
 	firstEntry := entries[0]
 
-	showGoStackTrace(nil)
+	ShowGoStackTrace(nil)
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr
@@ -349,7 +350,7 @@ func TestShowGoStackWhenPreviouslyShown(t *testing.T) {
 	stackAsString := string(capturedGoStack)
 	globals.GetGlobalRef().ErrorGoStack = stackAsString
 
-	showGoStackTrace(nil)
+	ShowGoStackTrace(nil)
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr
@@ -385,7 +386,7 @@ func TestShowPanicCause(t *testing.T) {
 
 	globals.GetGlobalRef().PanicCauseShown = false
 	cause := errors.New("error causing panic")
-	showPanicCause(cause)
+	ShowPanicCause(cause)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -422,7 +423,7 @@ func TestShowPanicCauseAfterAlreadyShown(t *testing.T) {
 
 	globals.GetGlobalRef().PanicCauseShown = true // should prevent showing
 	cause := errors.New("error causing panic")
-	showPanicCause(cause)
+	ShowPanicCause(cause)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -458,7 +459,7 @@ func TestShowPanicCauseNil(t *testing.T) {
 	os.Stdout = wout
 
 	globals.GetGlobalRef().PanicCauseShown = false
-	showPanicCause(nil)
+	ShowPanicCause(nil)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

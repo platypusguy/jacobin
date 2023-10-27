@@ -17,6 +17,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/thread"
 	"jacobin/types"
@@ -71,7 +72,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	MainThread.Trace = tracing
 
 	// must first instantiate the class, so that any static initializers are run
-	_, instantiateError := instantiateClass(className, MainThread.Stack)
+	_, instantiateError := InstantiateClass(className, MainThread.Stack)
 	if instantiateError != nil {
 		return errors.New("Error instantiating: " + className + ".main()")
 	}
@@ -104,9 +105,9 @@ func runThread(t *thread.ExecThread) error {
 			stack := string(debug.Stack())
 			glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = stack
-			showPanicCause(r)
-			showFrameStack(t)
-			showGoStackTrace(nil)
+			exceptions.ShowPanicCause(r)
+			exceptions.ShowFrameStack(t)
+			exceptions.ShowGoStackTrace(nil)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
@@ -115,9 +116,9 @@ func runThread(t *thread.ExecThread) error {
 	for t.Stack.Len() > 0 {
 		err := runFrame(t.Stack)
 		if err != nil {
-			showFrameStack(t)
+			exceptions.ShowFrameStack(t)
 			if globals.GetGlobalRef().GoStackShown == false {
-				showGoStackTrace(nil)
+				exceptions.ShowGoStackTrace(nil)
 				globals.GetGlobalRef().GoStackShown = true
 			}
 			return err
@@ -162,55 +163,55 @@ func runFrame(fs *list.List) error {
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
-		if MainThread.Trace && f.Meth[f.PC] != IMPDEP2 {
+		if MainThread.Trace && f.Meth[f.PC] != opcodes.IMPDEP2 {
 			traceInfo := emitTraceData(f)
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
 
 		switch f.Meth[f.PC] { // cases listed in numerical value of opcode
-		case NOP:
+		case opcodes.NOP:
 			break
-		case ACONST_NULL: // 0x01   (push null onto opStack)
+		case opcodes.ACONST_NULL: // 0x01   (push null onto opStack)
 			// push(f, int64(0)) // replaced in JACOBIN-286
 			push(f, object.Null)
-		case ICONST_M1: //	x02	(push -1 onto opStack)
+		case opcodes.ICONST_M1: //	x02	(push -1 onto opStack)
 			push(f, int64(-1))
-		case ICONST_0: // 	0x03	(push int 0 onto opStack)
+		case opcodes.ICONST_0: // 	0x03	(push int 0 onto opStack)
 			push(f, int64(0))
-		case ICONST_1: //  	0x04	(push int 1 onto opStack)
+		case opcodes.ICONST_1: //  	0x04	(push int 1 onto opStack)
 			push(f, int64(1))
-		case ICONST_2: //   0x05	(push 2 onto opStack)
+		case opcodes.ICONST_2: //   0x05	(push 2 onto opStack)
 			push(f, int64(2))
-		case ICONST_3: //   0x06	(push 3 onto opStack)
+		case opcodes.ICONST_3: //   0x06	(push 3 onto opStack)
 			push(f, int64(3))
-		case ICONST_4: //   0x07	(push 4 onto opStack)
+		case opcodes.ICONST_4: //   0x07	(push 4 onto opStack)
 			push(f, int64(4))
-		case ICONST_5: //   0x08	(push 5 onto opStack)
+		case opcodes.ICONST_5: //   0x08	(push 5 onto opStack)
 			push(f, int64(5))
-		case LCONST_0: //   0x09    (push long 0 onto opStack)
+		case opcodes.LCONST_0: //   0x09    (push long 0 onto opStack)
 			push(f, int64(0)) // b/c longs take two slots on the stack, it's pushed twice
 			push(f, int64(0))
-		case LCONST_1: //   0x0A    (push long 1 on to opStack)
+		case opcodes.LCONST_1: //   0x0A    (push long 1 on to opStack)
 			push(f, int64(1)) // b/c longs take two slots on the stack, it's pushed twice
 			push(f, int64(1))
-		case FCONST_0: // 0x0B
+		case opcodes.FCONST_0: // 0x0B
 			push(f, 0.0)
-		case FCONST_1: // 0x0C
+		case opcodes.FCONST_1: // 0x0C
 			push(f, 1.0)
-		case FCONST_2: // 0x0D
+		case opcodes.FCONST_2: // 0x0D
 			push(f, 2.0)
-		case DCONST_0: // 0x0E
+		case opcodes.DCONST_0: // 0x0E
 			push(f, 0.0)
 			push(f, 0.0)
-		case DCONST_1: // 0xoF
+		case opcodes.DCONST_1: // 0xoF
 			push(f, 1.0)
 			push(f, 1.0)
-		case BIPUSH: //	0x10	(push the following byte as an int onto the stack)
+		case opcodes.BIPUSH: //	0x10	(push the following byte as an int onto the stack)
 			wbyte := f.Meth[f.PC+1]
 			wint64 := byteToInt64(wbyte)
 			f.PC += 1
 			push(f, wint64)
-		case SIPUSH: //	0x11	(create int from next two bytes and push the int)
+		case opcodes.SIPUSH: //	0x11	(create int from next two bytes and push the int)
 			wbyte1 := f.Meth[f.PC+1]
 			wbyte2 := f.Meth[f.PC+2]
 			var wint64 int64
@@ -228,7 +229,7 @@ func runFrame(fs *list.List) error {
 			}
 			f.PC += 2
 			push(f, wint64)
-		case LDC: // 	0x12   	(push constant from CP indexed by next byte)
+		case opcodes.LDC: // 	0x12   	(push constant from CP indexed by next byte)
 			idx := f.Meth[f.PC+1]
 			f.PC += 1
 
@@ -265,7 +266,7 @@ func runFrame(fs *list.List) error {
 					"Invalid type for LDC instruction")
 				return errors.New("LDC: invalid type")
 			}
-		case LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
+		case opcodes.LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
@@ -299,7 +300,7 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
 				return errors.New(errMsg)
 			}
-		case LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
+		case opcodes.LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
@@ -317,76 +318,76 @@ func runFrame(fs *list.List) error {
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
 				return errors.New(errMsg)
 			}
-		case ILOAD, // 0x15	(push int from local var, using next byte as index)
-			FLOAD, //  0x17 (push float from local var, using next byte as index)
-			ALOAD: //  0x19 (push ref from local var, using next byte as index)
+		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
+			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
+			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			push(f, f.Locals[index])
-		case LLOAD: // 0x16 (push long from local var, using next byte as index)
+		case opcodes.LLOAD: // 0x16 (push long from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			val := f.Locals[index].(int64)
 			push(f, val)
 			push(f, val) // push twice due to item being 64 bits wide
-		case DLOAD: // 0x18 (push double from local var, using next byte as index)
+		case opcodes.DLOAD: // 0x18 (push double from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			val := f.Locals[index].(float64)
 			push(f, val)
 			push(f, val) // push twice due to item being 64 bits wide
-		case ILOAD_0: // 	0x1A    (push local variable 0)
+		case opcodes.ILOAD_0: // 	0x1A    (push local variable 0)
 			push(f, f.Locals[0].(int64))
-		case ILOAD_1: //    OX1B    (push local variable 1)
+		case opcodes.ILOAD_1: //    OX1B    (push local variable 1)
 			push(f, f.Locals[1].(int64))
-		case ILOAD_2: //    0X1C    (push local variable 2)
+		case opcodes.ILOAD_2: //    0X1C    (push local variable 2)
 			push(f, f.Locals[2].(int64))
-		case ILOAD_3: //  	0x1D   	(push local variable 3)
+		case opcodes.ILOAD_3: //  	0x1D   	(push local variable 3)
 			push(f, f.Locals[3].(int64))
 		// LLOAD use two slots, so the same value is pushed twice
-		case LLOAD_0: //	0x1E	(push local variable 0, as long)
+		case opcodes.LLOAD_0: //	0x1E	(push local variable 0, as long)
 			push(f, f.Locals[0].(int64))
 			push(f, f.Locals[0].(int64))
-		case LLOAD_1: //	0x1F	(push local variable 1, as long)
+		case opcodes.LLOAD_1: //	0x1F	(push local variable 1, as long)
 			push(f, f.Locals[1].(int64))
 			push(f, f.Locals[1].(int64))
-		case LLOAD_2: //	0x20	(push local variable 2, as long)
+		case opcodes.LLOAD_2: //	0x20	(push local variable 2, as long)
 			push(f, f.Locals[2].(int64))
 			push(f, f.Locals[2].(int64))
-		case LLOAD_3: //	0x21	(push local variable 3, as long)
+		case opcodes.LLOAD_3: //	0x21	(push local variable 3, as long)
 			push(f, f.Locals[3].(int64))
 			push(f, f.Locals[3].(int64))
-		case FLOAD_0: // 0x22
+		case opcodes.FLOAD_0: // 0x22
 			push(f, f.Locals[0])
-		case FLOAD_1: // 0x23
+		case opcodes.FLOAD_1: // 0x23
 			push(f, f.Locals[1])
-		case FLOAD_2: // 0x24
+		case opcodes.FLOAD_2: // 0x24
 			push(f, f.Locals[2])
-		case FLOAD_3: // 0x25
+		case opcodes.FLOAD_3: // 0x25
 			push(f, f.Locals[3])
-		case DLOAD_0: //	0x26	(push local variable 0, as double)
+		case opcodes.DLOAD_0: //	0x26	(push local variable 0, as double)
 			push(f, f.Locals[0])
 			push(f, f.Locals[0])
-		case DLOAD_1: //	0x27	(push local variable 1, as double)
+		case opcodes.DLOAD_1: //	0x27	(push local variable 1, as double)
 			push(f, f.Locals[1])
 			push(f, f.Locals[1])
-		case DLOAD_2: //	0x28	(push local variable 2, as double)
+		case opcodes.DLOAD_2: //	0x28	(push local variable 2, as double)
 			push(f, f.Locals[2])
 			push(f, f.Locals[2])
-		case DLOAD_3: //	0x29	(push local variable 3, as double)
+		case opcodes.DLOAD_3: //	0x29	(push local variable 3, as double)
 			push(f, f.Locals[3])
 			push(f, f.Locals[3])
-		case ALOAD_0: //	0x2A	(push reference stored in local variable 0)
+		case opcodes.ALOAD_0: //	0x2A	(push reference stored in local variable 0)
 			push(f, f.Locals[0])
-		case ALOAD_1: //	0x2B	(push reference stored in local variable 1)
+		case opcodes.ALOAD_1: //	0x2B	(push reference stored in local variable 1)
 			push(f, f.Locals[1])
-		case ALOAD_2: //	0x2C    (push reference stored in local variable 2)
+		case opcodes.ALOAD_2: //	0x2C    (push reference stored in local variable 2)
 			push(f, f.Locals[2])
-		case ALOAD_3: //	0x2D	(push reference stored in local variable 3)
+		case opcodes.ALOAD_3: //	0x2D	(push reference stored in local variable 3)
 			push(f, f.Locals[3])
-		case IALOAD, //		0x2E	(push contents of an int array element)
-			CALOAD, //		0x34	(push contents of a (two-byte) char array element)
-			SALOAD: //		0x35    (push contents of a short array element)
+		case opcodes.IALOAD, //		0x2E	(push contents of an int array element)
+			opcodes.CALOAD, //		0x34	(push contents of a (two-byte) char array element)
+			opcodes.SALOAD: //		0x35    (push contents of a short array element)
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
@@ -408,7 +409,7 @@ func runFrame(fs *list.List) error {
 			}
 			var value = array[index]
 			push(f, value)
-		case LALOAD: //		0x2F	(push contents of a long array element)
+		case opcodes.LALOAD: //		0x2F	(push contents of a long array element)
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
@@ -431,7 +432,7 @@ func runFrame(fs *list.List) error {
 			push(f, value)
 			push(f, value) // pushed twice due to JDK longs being 64 bits wide
 
-		case FALOAD: //		0x30	(push contents of an float array element)
+		case opcodes.FALOAD: //		0x30	(push contents of an float array element)
 			index := pop(f).(int64)
 			ref := pop(f) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
@@ -455,7 +456,7 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, value)
 
-		case DALOAD: //		0x31	(push contents of a double array element)
+		case opcodes.DALOAD: //		0x31	(push contents of a double array element)
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
@@ -477,7 +478,7 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, value)
 			push(f, value)
-		case AALOAD: // 0x32    (push contents of a reference array element)
+		case opcodes.AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
@@ -501,7 +502,7 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, value)
 
-		case BALOAD: // 0x33	(push contents of a byte/boolean array element)
+		case opcodes.BALOAD: // 0x33	(push contents of a byte/boolean array element)
 			index := pop(f).(int64)
 			ref := pop(f) // the array object
 			if ref == nil || ref == object.Null {
@@ -527,89 +528,89 @@ func runFrame(fs *list.List) error {
 			var value = array[index]
 			push(f, int64(value))
 
-		case ISTORE, //  0x36 	(store popped top of stack int into local[index])
-			LSTORE: //  0x37 (store popped top of stack long into local[index])
+		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
+			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
 			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f).(int64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
-			if bytecode == LSTORE {
+			if bytecode == opcodes.LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
-		case FSTORE: //  0x38 (store popped top of stack float into local[index])
+		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f).(float64)
-		case DSTORE: //  0x39 (store popped top of stack double into local[index])
+		case opcodes.DSTORE: //  0x39 (store popped top of stack double into local[index])
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f).(float64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			f.Locals[index+1] = pop(f).(float64)
-		case ASTORE: //  0x3A (store popped top of stack ref into localc[index])
+		case opcodes.ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f)
-		case ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
+		case opcodes.ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.Locals[0] = pop(f).(int64)
-		case ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
+		case opcodes.ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
 			f.Locals[1] = pop(f).(int64)
-		case ISTORE_2: //   0x3D   	(store popped top of stack int into local 2)
+		case opcodes.ISTORE_2: //   0x3D   	(store popped top of stack int into local 2)
 			f.Locals[2] = pop(f).(int64)
-		case ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
+		case opcodes.ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			f.Locals[3] = pop(f).(int64)
-		case LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
+		case opcodes.LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
 			var v = pop(f).(int64)
 			f.Locals[0] = v
 			f.Locals[1] = v
 			pop(f)
-		case LSTORE_1: //   0x40    (store long from top of stack into locals 1 and 2)
+		case opcodes.LSTORE_1: //   0x40    (store long from top of stack into locals 1 and 2)
 			var v = pop(f).(int64)
 			f.Locals[1] = v
 			f.Locals[2] = v
 			pop(f)
-		case LSTORE_2: //   0x41    (store long from top of stack into locals 2 and 3)
+		case opcodes.LSTORE_2: //   0x41    (store long from top of stack into locals 2 and 3)
 			var v = pop(f).(int64)
 			f.Locals[2] = v
 			f.Locals[3] = v
 			pop(f)
-		case LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
+		case opcodes.LSTORE_3: //   0x42    (store long from top of stack into locals 3 and 4)
 			var v = pop(f).(int64)
 			f.Locals[3] = v
 			f.Locals[4] = v
 			pop(f)
-		case FSTORE_0: // 0x43
+		case opcodes.FSTORE_0: // 0x43
 			f.Locals[0] = pop(f).(float64)
-		case FSTORE_1: // 0x44
+		case opcodes.FSTORE_1: // 0x44
 			f.Locals[1] = pop(f).(float64)
-		case FSTORE_2: // 0x45
+		case opcodes.FSTORE_2: // 0x45
 			f.Locals[2] = pop(f).(float64)
-		case FSTORE_3: // 0x46
+		case opcodes.FSTORE_3: // 0x46
 			f.Locals[3] = pop(f).(float64)
-		case DSTORE_0: // 0x47
+		case opcodes.DSTORE_0: // 0x47
 			f.Locals[0] = pop(f).(float64)
 			f.Locals[1] = pop(f).(float64)
-		case DSTORE_1: // 0x48
+		case opcodes.DSTORE_1: // 0x48
 			f.Locals[1] = pop(f).(float64)
 			f.Locals[2] = pop(f).(float64)
-		case DSTORE_2: // 0x49
+		case opcodes.DSTORE_2: // 0x49
 			f.Locals[2] = pop(f).(float64)
 			f.Locals[3] = pop(f).(float64)
-		case DSTORE_3: // 0x4A
+		case opcodes.DSTORE_3: // 0x4A
 			f.Locals[3] = pop(f).(float64)
 			f.Locals[4] = pop(f).(float64)
-		case ASTORE_0: //	0x4B	(pop reference into local variable 0)
+		case opcodes.ASTORE_0: //	0x4B	(pop reference into local variable 0)
 			f.Locals[0] = pop(f)
-		case ASTORE_1: //   0x4C	(pop reference into local variable 1)
+		case opcodes.ASTORE_1: //   0x4C	(pop reference into local variable 1)
 			f.Locals[1] = pop(f)
-		case ASTORE_2: // 	0x4D	(pop reference into local variable 2)
+		case opcodes.ASTORE_2: // 	0x4D	(pop reference into local variable 2)
 			f.Locals[2] = pop(f)
-		case ASTORE_3: //	0x4E	(pop reference into local variable 3)
+		case opcodes.ASTORE_3: //	0x4E	(pop reference into local variable 3)
 			f.Locals[3] = pop(f)
-		case IASTORE, //	0x4F	(store int in an array)
-			CASTORE, //		0x55 	(store char (2 bytes) in an array)
-			SASTORE: //    	0x56	(store a short in an array)
+		case opcodes.IASTORE, //	0x4F	(store int in an array)
+			opcodes.CASTORE, //		0x55 	(store char (2 bytes) in an array)
+			opcodes.SASTORE: //    	0x56	(store a short in an array)
 			value := pop(f).(int64)
 			index := pop(f).(int64)
 			arrObj := pop(f).(*object.Object) // the array object
@@ -642,7 +643,7 @@ func runFrame(fs *list.List) error {
 			}
 			array[index] = value
 
-		case LASTORE: // 0x50	(store a long in a long array)
+		case opcodes.LASTORE: // 0x50	(store a long in a long array)
 			value := pop(f).(int64)
 			pop(f) // second pop b/c longs use two slots
 			index := pop(f).(int64)
@@ -680,7 +681,7 @@ func runFrame(fs *list.List) error {
 			}
 			array[index] = value
 
-		case FASTORE: // 0x51	(store a float in a float array)
+		case opcodes.FASTORE: // 0x51	(store a float in a float array)
 			value := pop(f).(float64)
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
@@ -715,7 +716,7 @@ func runFrame(fs *list.List) error {
 			}
 			array[index] = value
 
-		case DASTORE: // 0x52	(store a double in a doubles array)
+		case opcodes.DASTORE: // 0x52	(store a double in a doubles array)
 			value := pop(f).(float64)
 			pop(f) // second pop b/c doubles take two slots on the operand stack
 			index := pop(f).(int64)
@@ -752,7 +753,7 @@ func runFrame(fs *list.List) error {
 
 			array[index] = value
 
-		case AASTORE: // 0x53   (store a reference in a reference array)
+		case opcodes.AASTORE: // 0x53   (store a reference in a reference array)
 			value := pop(f).(*object.Object)  // reference we're inserting
 			index := pop(f).(int64)           // index into the array
 			ptrObj := pop(f).(*object.Object) // ptr to the array object
@@ -791,7 +792,7 @@ func runFrame(fs *list.List) error {
 			array := *arrayPtr
 			array[index] = value
 
-		case BASTORE: // 0x54 	(store a boolean or byte in byte array)
+		case opcodes.BASTORE: // 0x54 	(store a boolean or byte in byte array)
 			var value byte = 0
 			rawValue := pop(f)
 			value = convertInterfaceToByte(rawValue)
@@ -828,37 +829,37 @@ func runFrame(fs *list.List) error {
 			}
 			array[index] = value
 
-		case POP: // 0x57 	(pop an item off the stack and discard it)
+		case opcodes.POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				formatStackUnderflowError(f)
+				exceptions.FormatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
 			}
 			f.TOS -= 1
 
-		case POP2: // 0x58	(pop 2 items from stack and discard them)
+		case opcodes.POP2: // 0x58	(pop 2 items from stack and discard them)
 			if f.TOS < 1 {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				formatStackUnderflowError(f)
+				exceptions.FormatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
 			}
 			f.TOS -= 2
 
-		case DUP: // 0x59 			(push an item equal to the current top of the stack
+		case opcodes.DUP: // 0x59 			(push an item equal to the current top of the stack
 			tosItem := peek(f)
-			if len(f.Meth) > 1 && f.Meth[f.PC+1] == IMPDEP2 {
+			if len(f.Meth) > 1 && f.Meth[f.PC+1] == opcodes.IMPDEP2 {
 				break
 			} // if invalid peek break now
 			push(f, tosItem)
-		case DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
+		case opcodes.DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
 			top := pop(f)
 			next := pop(f)
 			push(f, top)
 			push(f, next)
 			push(f, top)
-		case DUP_X2: // 0x5B		(Duplicate top stack value and insert it three slots earlier)
+		case opcodes.DUP_X2: // 0x5B		(Duplicate top stack value and insert it three slots earlier)
 			top := pop(f)
 			next := pop(f)
 			third := pop(f)
@@ -866,13 +867,13 @@ func runFrame(fs *list.List) error {
 			push(f, third)
 			push(f, next)
 			push(f, top)
-		case DUP2: // 0x5C			(Duplicate the top two stack values)
+		case opcodes.DUP2: // 0x5C			(Duplicate the top two stack values)
 			top := pop(f)
 			next := peek(f)
 			push(f, top)
 			push(f, next)
 			push(f, top)
-		case DUP2_X1: // 0x5D		(Duplicate the top two values, three slots down)
+		case opcodes.DUP2_X1: // 0x5D		(Duplicate the top two values, three slots down)
 			top := pop(f)
 			next := pop(f)
 			third := pop(f)
@@ -881,7 +882,7 @@ func runFrame(fs *list.List) error {
 			push(f, third)
 			push(f, next)
 			push(f, top)
-		case DUP2_X2: // 0x5E		(Duplicate the top two values, four slots down)
+		case opcodes.DUP2_X2: // 0x5E		(Duplicate the top two values, four slots down)
 			top := pop(f)
 			next := pop(f)
 			third := pop(f)
@@ -892,17 +893,17 @@ func runFrame(fs *list.List) error {
 			push(f, third)
 			push(f, next)
 			push(f, top)
-		case SWAP: // 0x5F 	(swap top two items on stack)
+		case opcodes.SWAP: // 0x5F 	(swap top two items on stack)
 			top := pop(f)
 			next := pop(f)
 			push(f, top)
 			push(f, next)
-		case IADD: //  0x60		(add top 2 integers on operand stack, push result)
+		case opcodes.IADD: //  0x60		(add top 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
 			sum := add(i1, i2)
 			push(f, sum)
-		case LADD: //  0x61     (add top 2 longs on operand stack, push result)
+		case opcodes.LADD: //  0x61     (add top 2 longs on operand stack, push result)
 			l2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
 			l1 := pop(f).(int64)
@@ -910,11 +911,11 @@ func runFrame(fs *list.List) error {
 			sum := add(l1, l2)
 			push(f, sum)
 			push(f, sum)
-		case FADD: // 0x62
+		case opcodes.FADD: // 0x62
 			lhs := float32(pop(f).(float64))
 			rhs := float32(pop(f).(float64))
 			push(f, float64(lhs+rhs))
-		case DADD: // 0x63
+		case opcodes.DADD: // 0x63
 			lhs := pop(f).(float64)
 			pop(f)
 			rhs := pop(f).(float64)
@@ -922,12 +923,12 @@ func runFrame(fs *list.List) error {
 			res := add(lhs, rhs)
 			push(f, res)
 			push(f, res)
-		case ISUB: //  0x64	(subtract top 2 integers on operand stack, push result)
+		case opcodes.ISUB: //  0x64	(subtract top 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
 			diff := subtract(i1, i2)
 			push(f, diff)
-		case LSUB: //  0x65 (subtract top 2 longs on operand stack, push result)
+		case opcodes.LSUB: //  0x65 (subtract top 2 longs on operand stack, push result)
 			i2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
 			i1 := pop(f).(int64)
@@ -936,11 +937,11 @@ func runFrame(fs *list.List) error {
 
 			push(f, diff)
 			push(f, diff)
-		case FSUB: // 0x66
+		case opcodes.FSUB: // 0x66
 			i2 := float32(pop(f).(float64))
 			i1 := float32(pop(f).(float64))
 			push(f, float64(i1-i2))
-		case DSUB: // 0x67
+		case opcodes.DSUB: // 0x67
 			val2 := pop(f).(float64)
 			pop(f)
 			val1 := pop(f).(float64)
@@ -948,12 +949,12 @@ func runFrame(fs *list.List) error {
 			res := val1 - val2
 			push(f, res)
 			push(f, res)
-		case IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
+		case opcodes.IMUL: //  0x68  	(multiply 2 integers on operand stack, push result)
 			i2 := pop(f).(int64)
 			i1 := pop(f).(int64)
 			product := multiply(i1, i2)
 			push(f, product)
-		case LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
+		case opcodes.LMUL: //  0x69     (multiply 2 longs on operand stack, push result)
 			l2 := pop(f).(int64) //    longs occupy two slots, hence double pushes and pops
 			pop(f)
 			l1 := pop(f).(int64)
@@ -961,11 +962,11 @@ func runFrame(fs *list.List) error {
 			product := multiply(l1, l2)
 			push(f, product)
 			push(f, product)
-		case FMUL: // 0x6A
+		case opcodes.FMUL: // 0x6A
 			val1 := float32(pop(f).(float64))
 			val2 := float32(pop(f).(float64))
 			push(f, float64(val1*val2))
-		case DMUL: // 0x6B
+		case opcodes.DMUL: // 0x6B
 			val1 := pop(f).(float64)
 			pop(f)
 			val2 := pop(f).(float64)
@@ -973,7 +974,7 @@ func runFrame(fs *list.List) error {
 			res := multiply(val1, val2)
 			push(f, res)
 			push(f, res)
-		case IDIV: //  0x6C (integer divide tos-1 by tos)
+		case opcodes.IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
 				glob := globals.GetGlobalRef()
@@ -985,7 +986,7 @@ func runFrame(fs *list.List) error {
 				val2 := pop(f).(int64)
 				push(f, val2/val1)
 			}
-		case LDIV: //  0x6D   (long divide tos-2 by tos)
+		case opcodes.LDIV: //  0x6D   (long divide tos-2 by tos)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
@@ -1002,7 +1003,7 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 			}
 
-		case FDIV: // 0x6E
+		case opcodes.FDIV: // 0x6E
 			val1 := pop(f).(float64)
 			val2 := pop(f).(float64)
 			if val1 == 0.0 {
@@ -1017,7 +1018,7 @@ func runFrame(fs *list.List) error {
 				push(f, float64(float32(val2)/float32(val1)))
 			}
 
-		case DDIV: // 0x6F
+		case opcodes.DDIV: // 0x6F
 			val1 := pop(f).(float64)
 			pop(f)
 			val2 := pop(f).(float64)
@@ -1035,7 +1036,7 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
-		case IREM: // 	0x70	(remainder after int division, modulo)
+		case opcodes.IREM: // 	0x70	(remainder after int division, modulo)
 			val2 := pop(f).(int64)
 			if val2 == 0 {
 				glob := globals.GetGlobalRef()
@@ -1048,7 +1049,7 @@ func runFrame(fs *list.List) error {
 				res := val1 % val2
 				push(f, res)
 			}
-		case LREM: // 	0x71	(remainder after long division)
+		case opcodes.LREM: // 	0x71	(remainder after long division)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
@@ -1064,11 +1065,11 @@ func runFrame(fs *list.List) error {
 				push(f, res)
 				push(f, res)
 			}
-		case FREM: // 0x72
+		case opcodes.FREM: // 0x72
 			val2 := pop(f).(float64)
 			val1 := pop(f).(float64)
 			push(f, float64(float32(math.Remainder(val1, val2))))
-		case DREM: // 0x73
+		case opcodes.DREM: // 0x73
 			val2 := pop(f).(float64)
 			pop(f)
 			val1 := pop(f).(float64)
@@ -1076,24 +1077,24 @@ func runFrame(fs *list.List) error {
 			drem := math.Remainder(val1, val2)
 			push(f, drem)
 			push(f, drem)
-		case INEG: //	0x74 	(negate an int)
+		case opcodes.INEG: //	0x74 	(negate an int)
 			val := pop(f).(int64)
 			push(f, -val)
-		case LNEG: //   0x75	(negate a long)
+		case opcodes.LNEG: //   0x75	(negate a long)
 			val := pop(f).(int64)
 			pop(f) // pop a second time because it's a long, which occupies 2 slots
 			val = val * (-1)
 			push(f, val)
 			push(f, val)
-		case FNEG: //	0x76	(negate a float)
+		case opcodes.FNEG: //	0x76	(negate a float)
 			val := pop(f).(float64)
 			push(f, -val)
-		case DNEG: // 0x77
+		case opcodes.DNEG: // 0x77
 			pop(f)
 			val := pop(f).(float64)
 			push(f, -val)
 			push(f, -val)
-		case ISHL: //	0x78 	(shift int left)
+		case opcodes.ISHL: //	0x78 	(shift int left)
 			shiftBy := pop(f).(int64)
 			val1 := pop(f).(int64)
 			var val2 int64
@@ -1103,7 +1104,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, val1<<(shiftBy&0x1F))
 			}
-		case LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
+		case opcodes.LSHL: // 	0x79	(shift value1 (long) left by value2 (int) bits)
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)
@@ -1111,7 +1112,7 @@ func runFrame(fs *list.List) error {
 			val3 := val1 << ushiftBy
 			push(f, val3)
 			push(f, val3)
-		case ISHR: //  0x7A	(shift int value right)
+		case opcodes.ISHR: //  0x7A	(shift int value right)
 			shiftBy := pop(f).(int64)
 			val1 := pop(f).(int64)
 			var val2 int64
@@ -1121,8 +1122,8 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, val1>>(shiftBy&0x1F))
 			}
-		case LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
-			LUSHR: // 	0x70
+		case opcodes.LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
+			opcodes.LUSHR: // 	0x70
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)
@@ -1130,18 +1131,18 @@ func runFrame(fs *list.List) error {
 			val3 := val1 >> ushiftBy
 			push(f, val3)
 			push(f, val3)
-		case IUSHR: // 0x7C (unsigned shift right of int)
+		case opcodes.IUSHR: // 0x7C (unsigned shift right of int)
 			shiftBy := pop(f).(int64) // TODO: verify the result against JDK
 			val1 := pop(f).(int64)
 			if val1 < 0 {
 				val1 = -val1
 			}
 			push(f, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
-		case IAND: //	0x7E	(logical and of two ints, push result)
+		case opcodes.IAND: //	0x7E	(logical and of two ints, push result)
 			val1 := pop(f).(int64)
 			val2 := pop(f).(int64)
 			push(f, val1&val2)
-		case LAND: //   0x7F    (logical and of two longs, push result)
+		case opcodes.LAND: //   0x7F    (logical and of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)
@@ -1149,11 +1150,11 @@ func runFrame(fs *list.List) error {
 			val3 := val1 & val2
 			push(f, val3)
 			push(f, val3)
-		case IOR: // 0x 80 (logical OR of two ints, push result)
+		case opcodes.IOR: // 0x 80 (logical OR of two ints, push result)
 			val1 := pop(f).(int64)
 			val2 := pop(f).(int64)
 			push(f, val1|val2)
-		case LOR: // 0x81  (logical OR of two longs, push result)
+		case opcodes.LOR: // 0x81  (logical OR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)
@@ -1161,11 +1162,11 @@ func runFrame(fs *list.List) error {
 			val3 := val1 | val2
 			push(f, val3)
 			push(f, val3)
-		case IXOR: // 	0x82	(logical XOR of two ints, push result)
+		case opcodes.IXOR: // 	0x82	(logical XOR of two ints, push result)
 			val1 := pop(f).(int64)
 			val2 := pop(f).(int64)
 			push(f, val1^val2)
-		case LXOR: // 	0x83  	(logical XOR of two longs, push result)
+		case opcodes.LXOR: // 	0x83  	(logical XOR of two longs, push result)
 			val1 := pop(f).(int64)
 			pop(f)
 			val2 := pop(f).(int64)
@@ -1173,66 +1174,66 @@ func runFrame(fs *list.List) error {
 			val3 := val1 ^ val2
 			push(f, val3)
 			push(f, val3)
-		case IINC: // 	0x84    (increment local variable by a signed byte constant)
+		case opcodes.IINC: // 	0x84    (increment local variable by a signed byte constant)
 			localVarIndex := int64(f.Meth[f.PC+1])
 			wbyte := f.Meth[f.PC+2]
 			increment := byteToInt64(wbyte)
 			orig := f.Locals[localVarIndex].(int64)
 			f.Locals[localVarIndex] = orig + increment
 			f.PC += 2
-		case I2F: //	0x86 	( convert int to float)
+		case opcodes.I2F: //	0x86 	( convert int to float)
 			intVal := pop(f).(int64)
 			push(f, float64(intVal))
-		case I2L: // 	0x85     (convert int to long)
+		case opcodes.I2L: // 	0x85     (convert int to long)
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
 			push(f, val)           // push the int a second time
-		case I2D: // 	0x87	(convert int to double)
+		case opcodes.I2D: // 	0x87	(convert int to double)
 			intVal := pop(f).(int64)
 			dval := float64(intVal)
 			push(f, dval) // doubles use two slots, hence two pushes
 			push(f, dval)
-		case L2I: // 	0x88 	(convert long to int)
+		case opcodes.L2I: // 	0x88 	(convert long to int)
 			longVal := pop(f).(int64)
 			pop(f)
 			intVal := longVal << 32 // remove high-end 4 bytes. this maintains the sign
 			intVal >>= 32
 			push(f, intVal)
-		case L2F: // 	0x89 	(convert long to float)
+		case opcodes.L2F: // 	0x89 	(convert long to float)
 			longVal := pop(f).(int64)
 			pop(f)
 			float32Val := float32(longVal) //
 			float64Val := float64(float32Val)
 			push(f, float64Val) // floats tke up only 1 slot in the JVM
-		case L2D: // 	0x8A (convert long to double)
+		case opcodes.L2D: // 	0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
 			dblVal := float64(longVal)
 			push(f, dblVal)
 			push(f, dblVal)
-		case D2I: // 0xBE
+		case opcodes.D2I: // 0xBE
 			pop(f)
 			fallthrough
-		case F2I: // 0x8B
+		case opcodes.F2I: // 0x8B
 			floatVal := pop(f).(float64)
 			push(f, int64(math.Trunc(floatVal)))
-		case F2D: // 0x8D
+		case opcodes.F2D: // 0x8D
 			floatVal := pop(f).(float64)
 			push(f, floatVal)
 			push(f, floatVal)
-		case D2L: // 	0x8F convert double to long
+		case opcodes.D2L: // 	0x8F convert double to long
 			pop(f)
 			fallthrough
-		case F2L: // 	0x8C convert float to long
+		case opcodes.F2L: // 	0x8C convert float to long
 			floatVal := pop(f).(float64)
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
-		case D2F: // 	0x90 Double to float
+		case opcodes.D2F: // 	0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
 			push(f, float64(floatVal))
-		case I2B: //	0x91 convert into to byte preserving sign
+		case opcodes.I2B: //	0x91 convert into to byte preserving sign
 			intVal := pop(f).(int64)
 			byteVal := intVal & 0xFF
 			if !(intVal > 0 && byteVal > 0) &&
@@ -1240,16 +1241,16 @@ func runFrame(fs *list.List) error {
 				byteVal = -byteVal
 			}
 			push(f, byteVal)
-		case I2C: //	0x92 convert to 16-bit char
+		case opcodes.I2C: //	0x92 convert to 16-bit char
 			// determine what happens in Java if the int is negative
 			intVal := pop(f).(int64)
 			charVal := uint16(intVal) // Java chars are 16-bit unsigned value
 			push(f, int64(charVal))
-		case I2S: //	0x93 convert int to short
+		case opcodes.I2S: //	0x93 convert int to short
 			intVal := pop(f).(int64)
 			shortVal := int32(intVal)
 			push(f, int64(shortVal))
-		case LCMP: // 	0x94 (compare two longs, push int -1, 0, or 1, depending on result)
+		case opcodes.LCMP: // 	0x94 (compare two longs, push int -1, 0, or 1, depending on result)
 			value2 := pop(f).(int64)
 			pop(f)
 			value1 := pop(f).(int64)
@@ -1261,11 +1262,11 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, int64(-1))
 			}
-		case FCMPL, FCMPG: // Ox95, 0x96 - float comparison - they differ only in NaN treatment
+		case opcodes.FCMPL, opcodes.FCMPG: // Ox95, 0x96 - float comparison - they differ only in NaN treatment
 			value2 := pop(f).(float64)
 			value1 := pop(f).(float64)
 			if math.IsNaN(value1) || math.IsNaN(value2) {
-				if f.Meth[f.PC] == FCMPG {
+				if f.Meth[f.PC] == opcodes.FCMPG {
 					push(f, int64(1))
 				} else {
 					push(f, int64(-1))
@@ -1277,14 +1278,14 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, int64(0))
 			}
-		case DCMPL, DCMPG: // 0x98, 0x97 - double comparison - they only differ in NaN treatment
+		case opcodes.DCMPL, opcodes.DCMPG: // 0x98, 0x97 - double comparison - they only differ in NaN treatment
 			value2 := pop(f).(float64)
 			pop(f)
 			value1 := pop(f).(float64)
 			pop(f)
 
 			if math.IsNaN(value1) || math.IsNaN(value2) {
-				if f.Meth[f.PC] == DCMPG {
+				if f.Meth[f.PC] == opcodes.DCMPG {
 					push(f, int64(1))
 				} else {
 					push(f, int64(-1))
@@ -1296,7 +1297,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				push(f, int64(0))
 			}
-		case IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
+		case opcodes.IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
 			// bools are treated in the JVM as ints, so convert here if bool;
@@ -1318,7 +1319,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFNE: // 0x9A pop int, it it's !=0, go to the jump location
+		case opcodes.IFNE: // 0x9A pop int, it it's !=0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
 			// bools are treated in the JVM as ints, so convert here if bool;
@@ -1340,7 +1341,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFLT: // 0x9B pop int, if it's < 0, go to the jump location
+		case opcodes.IFLT: // 0x9B pop int, if it's < 0, go to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value < 0 {
@@ -1349,7 +1350,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
+		case opcodes.IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value >= 0 {
@@ -1358,7 +1359,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFGT: // 0x9D pop int, if it's > 0, go to the jump location
+		case opcodes.IFGT: // 0x9D pop int, if it's > 0, go to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value > 0 {
@@ -1367,7 +1368,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
+		case opcodes.IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
 			// specified in the next two bytes
 			value := pop(f).(int64)
 			if value <= 0 {
@@ -1376,7 +1377,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
+		case opcodes.IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
@@ -1385,7 +1386,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
+		case opcodes.IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if int32(val1) != int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
@@ -1394,7 +1395,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
+		case opcodes.IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			val1a := val1
@@ -1405,7 +1406,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
+		case opcodes.IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
@@ -1414,7 +1415,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPGT: //  0xA3    (jump if popped val1 > popped val2)
+		case opcodes.IF_ICMPGT: //  0xA3    (jump if popped val1 > popped val2)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if int32(val1) > int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
@@ -1423,7 +1424,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ICMPLE: //	0xA4	(jump if popped val1 <= popped val2)
+		case opcodes.IF_ICMPLE: //	0xA4	(jump if popped val1 <= popped val2)
 			val2 := pop(f).(int64)
 			val1 := pop(f).(int64)
 			if val1 <= val2 { // if comp succeeds, next 2 bytes hold instruction index
@@ -1432,7 +1433,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ACMPEQ: // 0xA5		(jump if two addresses are equal)
+		case opcodes.IF_ACMPEQ: // 0xA5		(jump if two addresses are equal)
 			val2 := pop(f)
 			val1 := pop(f)
 			if val1 == val2 { // if comp succeeds, next 2 bytes hold instruction index
@@ -1441,7 +1442,7 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case IF_ACMPNE: // 0xA6		(jump if two addresses are note equal)
+		case opcodes.IF_ACMPNE: // 0xA6		(jump if two addresses are note equal)
 			val2 := pop(f)
 			val1 := pop(f)
 			if val1 != val2 { // if comp succeeds, next 2 bytes hold instruction index
@@ -1450,42 +1451,42 @@ func runFrame(fs *list.List) error {
 			} else {
 				f.PC += 2
 			}
-		case GOTO: // 0xA7     (goto an instruction)
+		case opcodes.GOTO: // 0xA7     (goto an instruction)
 			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
-		case IRETURN: // 0xAC (return an int and exit current frame)
+		case opcodes.IRETURN: // 0xAC (return an int and exit current frame)
 			valToReturn := pop(f)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
 			return nil
-		case LRETURN: // 0xAD (return a long and exit current frame)
+		case opcodes.LRETURN: // 0xAD (return a long and exit current frame)
 			valToReturn := pop(f).(int64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // pushed twice b/c a long uses two slots
 			push(f, valToReturn)
 			return nil
-		case FRETURN: // 0xAE
+		case opcodes.FRETURN: // 0xAE
 			valToReturn := pop(f).(float64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
 			return nil
-		case DRETURN: // 0xAF (return a double and exit current frame)
+		case opcodes.DRETURN: // 0xAF (return a double and exit current frame)
 			valToReturn := pop(f).(float64)
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // pushed twice b/c a float uses two slots
 			push(f, valToReturn)
 			return nil
-		case ARETURN: // 0xB0	(return a reference)
+		case opcodes.ARETURN: // 0xB0	(return a reference)
 			valToReturn := pop(f)
 			// prevFrame := f
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn)
 			// fs.PushFront(prevFrame) //
 			return nil
-		case RETURN: // 0xB1    (return from void function)
+		case opcodes.RETURN: // 0xB1    (return from void function)
 			f.TOS = -1 // empty the stack
 			return nil
-		case GETSTATIC: // 0xB2		(get static field)
+		case opcodes.GETSTATIC: // 0xB2		(get static field)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -1523,7 +1524,7 @@ func runFrame(fs *list.List) error {
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
-				_, err := instantiateClass(className, fs)
+				_, err := InstantiateClass(className, fs)
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
@@ -1572,7 +1573,7 @@ func runFrame(fs *list.List) error {
 				push(f, prevLoaded.Value)
 			}
 
-		case PUTSTATIC: // 0xB2		(get static field)
+		case opcodes.PUTSTATIC: // 0xB2		(get static field)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -1610,7 +1611,7 @@ func runFrame(fs *list.List) error {
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
-				_, err := instantiateClass(className, fs)
+				_, err := InstantiateClass(className, fs)
 				if err == nil {
 					prevLoaded, ok = classloader.Statics[fieldName]
 				} else {
@@ -1713,7 +1714,7 @@ func runFrame(fs *list.List) error {
 				pop(f)
 			}
 
-		case GETFIELD: // 0xB4 get field in pointed-to-object
+		case opcodes.GETFIELD: // 0xB4 get field in pointed-to-object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -1758,7 +1759,7 @@ func runFrame(fs *list.List) error {
 				push(f, fieldValue)
 			}
 
-		case PUTFIELD: // 0xB5 place value into an object's field
+		case opcodes.PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -1843,7 +1844,7 @@ func runFrame(fs *list.List) error {
 				obj.FieldTable[fieldName] = objField
 			}
 
-		case INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
+		case opcodes.INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			var err error
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
@@ -1953,7 +1954,7 @@ func runFrame(fs *list.List) error {
 
 				*/
 			}
-		case INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
+		case opcodes.INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -2000,7 +2001,7 @@ func runFrame(fs *list.List) error {
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
 			}
-		case INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
+		case opcodes.INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -2103,7 +2104,7 @@ func runFrame(fs *list.List) error {
 
 				*/
 			}
-		case NEW: // 0xBB 	new: create and instantiate a new object
+		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -2123,7 +2124,7 @@ func runFrame(fs *list.List) error {
 				className = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
 			}
 
-			ref, err := instantiateClass(className, fs)
+			ref, err := InstantiateClass(className, fs)
 			if err != nil {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -2133,7 +2134,7 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, ref)
 
-		case NEWARRAY: // 0xBC create a new array of primitives
+		case opcodes.NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
 			if size < 0 {
 				glob := globals.GetGlobalRef()
@@ -2160,7 +2161,7 @@ func runFrame(fs *list.List) error {
 			g.ArrayAddressList.PushFront(arrayPtr)
 			push(f, arrayPtr)
 
-		case ANEWARRAY: // 0xBD create array of references
+		case opcodes.ANEWARRAY: // 0xBD create array of references
 			size := pop(f).(int64)
 			if size < 0 {
 				glob := globals.GetGlobalRef()
@@ -2181,7 +2182,7 @@ func runFrame(fs *list.List) error {
 			// two bytes.
 			f.PC += 2
 
-		case ARRAYLENGTH: // OxBE get size of array
+		case opcodes.ARRAYLENGTH: // OxBE get size of array
 			// expects a pointer to an array
 			ref := pop(f)
 			if ref == nil {
@@ -2225,7 +2226,7 @@ func runFrame(fs *list.List) error {
 				}
 			}
 			push(f, size)
-		case ATHROW: // 0xBF throw an exception
+		case opcodes.ATHROW: // 0xBF throw an exception
 			// points to an instance of the error/exception class
 			// that's being thrown
 			objectRef := pop(f)
@@ -2241,9 +2242,9 @@ func runFrame(fs *list.List) error {
 			glob.ErrorGoStack = stack
 
 			// capture the JVM frame stack
-			glob.JVMframeStack = grabFrameStack(fs)
+			glob.JVMframeStack = exceptions.GrabFrameStack(fs)
 
-		case CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
+		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
 			ref := peek(f)
@@ -2343,7 +2344,7 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-		case INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
+		case opcodes.INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
 			// because this uses similar logic to CHECKCAST, any change here should
 			// likely be made to CHECKCAST as well
 			ref := pop(f)
@@ -2402,10 +2403,10 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-		case MONITORENTER, MONITOREXIT: // OxC2 and OxC3. These  are not implemented in the JDK JVM
+		case opcodes.MONITORENTER, opcodes.MONITOREXIT: // OxC2 and OxC3. These  are not implemented in the JDK JVM
 			_ = pop(f) // so just pop off the reference on the stack
 
-		case MULTIANEWARRAY: // 0xC5 create multi-dimensional array
+		case opcodes.MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
 			var arrayType uint8
 
@@ -2513,7 +2514,7 @@ func runFrame(fs *list.List) error {
 				break
 			}
 
-		case IFNULL: // 0xC6 jump if TOS holds a null address
+		case opcodes.IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = 0, so we duplicate logic of IFEQ instruction
 			value := pop(f)
 			if value == nil || value == object.Null {
@@ -2523,7 +2524,7 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 
-		case IFNONNULL: // 0xC7 jump if TOS does not hold a null address, where null = nil or object.Null
+		case opcodes.IFNONNULL: // 0xC7 jump if TOS does not hold a null address, where null = nil or object.Null
 			value := pop(f)
 			if value != nil { // it's not nil, but is it a null pointer?
 				checkForPtr := value.(*object.Object)
@@ -2537,7 +2538,7 @@ func runFrame(fs *list.List) error {
 				f.PC += 2
 			}
 
-		case IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
+		case opcodes.IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
 			glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = string(debug.Stack())
 			errCode := f.Meth[2]
@@ -2550,7 +2551,7 @@ func runFrame(fs *list.List) error {
 
 				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
 				rootCause := "stack overflow"
-				showPanicCause(rootCause)
+				exceptions.ShowPanicCause(rootCause)
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
@@ -2565,7 +2566,7 @@ func runFrame(fs *list.List) error {
 				location := int16(binary.BigEndian.Uint16(bytes))
 				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
 				rootCause := "stack underflow"
-				showPanicCause(rootCause)
+				exceptions.ShowPanicCause(rootCause)
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
@@ -2585,8 +2586,8 @@ func runFrame(fs *list.List) error {
 		default:
 			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
 
-			if int(f.Meth[f.PC]) < len(BytecodeNames) && int(f.Meth[f.PC]) > 0 {
-				missingOpCode += fmt.Sprintf("(%s)", BytecodeNames[f.Meth[f.PC]])
+			if int(f.Meth[f.PC]) < len(opcodes.BytecodeNames) && int(f.Meth[f.PC]) > 0 {
+				missingOpCode += fmt.Sprintf("(%s)", opcodes.BytecodeNames[f.Meth[f.PC]])
 			}
 
 			glob := globals.GetGlobalRef()
@@ -2664,7 +2665,7 @@ func emitTraceData(f *frames.Frame) string {
 		"class: " + fmt.Sprintf("%-22s", f.ClName) +
 			" meth: " + fmt.Sprintf("%-10s", f.MethName) +
 			" PC: " + fmt.Sprintf("% 3d", f.PC) +
-			", " + fmt.Sprintf("%-13s", BytecodeNames[int(f.Meth[f.PC])]) +
+			", " + fmt.Sprintf("%-13s", opcodes.BytecodeNames[int(f.Meth[f.PC])]) +
 			" TOS: " + tos +
 			" " + stackTop +
 			" "
@@ -2678,7 +2679,7 @@ func pop(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
-		formatStackUnderflowError(f)
+		exceptions.FormatStackUnderflowError(f)
 		value = nil
 	} else {
 		value = f.OpStack[f.TOS]
@@ -2748,7 +2749,7 @@ func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
-		formatStackUnderflowError(f)
+		exceptions.FormatStackUnderflowError(f)
 		return nil
 	}
 
@@ -2798,7 +2799,7 @@ func peek(f *frames.Frame) interface{} {
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
 		// next step will set up error reporting and dump of frame stack
-		formatStackOverflowError(f)
+		exceptions.FormatStackOverflowError(f)
 		return
 	}
 	// we show trace info of the TOS *before* we change its value--

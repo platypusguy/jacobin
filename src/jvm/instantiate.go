@@ -24,7 +24,7 @@ import (
 //  1. the class needs to be loaded, so that its details and its methods are knowable
 //  2. the class fields (if static) and instance fields (if non-static) are allocated.
 //     Details for this second step appear in the loop that drives createField().
-func instantiateClass(classname string, frameStack *list.List) (*object.Object, error) {
+func InstantiateClass(classname string, frameStack *list.List) (*object.Object, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
 		err := loadThisClass(classname)
@@ -190,9 +190,10 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	case types.Double, types.Float:
 		fieldToAdd.Fvalue = 0.0
 	default:
-		_ = log.Log("error creating field in: "+classname+
-			" Invalid type: "+fieldToAdd.Ftype, log.SEVERE)
-		return nil, classloader.CFE("invalid field type")
+		errMsg := fmt.Sprintf("error creating field in: %s,  Invalid type: %s",
+			classname, fieldToAdd.Ftype)
+		_ = log.Log(errMsg, log.SEVERE)
+		return nil, classloader.CFE(errMsg)
 	}
 
 	presentType := fieldToAdd.Ftype

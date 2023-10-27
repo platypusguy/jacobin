@@ -4,17 +4,17 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package jvm
+package exceptions
 
 import (
 	"container/list"
 	"encoding/binary"
 	"fmt"
-	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/opcodes"
 	"jacobin/thread"
 	"runtime/debug"
 	"strings"
@@ -23,7 +23,7 @@ import (
 // routines for formatting error data when an error occurs inside the JVM
 
 // Stack overflow error (e.g., pushing a value when the stack is full, etc.)
-func formatStackOverflowError(f *frames.Frame) {
+func FormatStackOverflowError(f *frames.Frame) {
 	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x01 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
@@ -34,7 +34,7 @@ func formatStackOverflowError(f *frames.Frame) {
 	}
 
 	f.Meth[0] = 0x00 // dummy for the current bytecode
-	f.Meth[1] = IMPDEP2
+	f.Meth[1] = opcodes.IMPDEP2
 	f.Meth[2] = 0x01
 
 	// now convert the PC at time of error into a two-byte value
@@ -46,7 +46,7 @@ func formatStackOverflowError(f *frames.Frame) {
 }
 
 // Stack underflow error (e.g., trying to pop when the stack is empty, etc.)
-func formatStackUnderflowError(f *frames.Frame) {
+func FormatStackUnderflowError(f *frames.Frame) {
 	// Change the bytecode to be IMPDEP2 and give info in four bytes:
 	// IMDEP2 (0xFF), 0x02 code for stack underflow, bytes 2 and 3:
 	// the present PC written as an int16 value. First check that there
@@ -57,7 +57,7 @@ func formatStackUnderflowError(f *frames.Frame) {
 	}
 
 	f.Meth[0] = 0x00 // dummy for the current bytecode
-	f.Meth[1] = IMPDEP2
+	f.Meth[1] = opcodes.IMPDEP2
 	f.Meth[2] = 0x02
 
 	// now convert the PC at time of error into a two-byte value
@@ -69,9 +69,9 @@ func formatStackUnderflowError(f *frames.Frame) {
 }
 
 // Prints out the frame stack
-func showFrameStack(t *thread.ExecThread) {
+func ShowFrameStack(t *thread.ExecThread) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
-		entries := grabFrameStack(t.Stack)
+		entries := GrabFrameStack(t.Stack)
 		if len(entries) == 0 {
 			_ = log.Log("no further data available", log.SEVERE)
 			return
@@ -87,7 +87,7 @@ func showFrameStack(t *thread.ExecThread) {
 
 // gets the full JVM stack trace using java.lang.StackTraceElement slice to hold the data
 // in case of error, nil is returned
-func getStackTraces(fs *list.List) *object.Object {
+func GetStackTraces(fs *list.List) *object.Object {
 	var stackListing []*object.Object
 	// stackListing =
 
@@ -102,21 +102,25 @@ func getStackTraces(fs *list.List) *object.Object {
 	// ...other fields to be sure to capture: cause, detailMessage,
 	// ....not sure about backtrace
 
-	// // step through the list-based stack of called methods and print contents
+	// step through the list-based stack of called methods and print contents
+
+	/* FIXME: Circularity jvm->classloader->exceptions->jvm
 	var frame *frames.Frame
+
 	for e := frameStack; e != nil; e = e.Next() {
-		stackTrace, err := instantiateClass("java/lang/StackTraceElement", nil)
-		if err != nil {
-			return nil
-		}
+	stackTrace, err := jvm.InstantiateClass("java/lang/StackTraceElement", nil)
+	if err != nil {
+		return nil
+	}
 
-		frame = e.Value.(*frames.Frame)
-		f := stackTrace.FieldTable["declaringClass"]
-		f.Fvalue = frame.ClName
+	frame = e.Value.(*frames.Frame)
+	f := stackTrace.FieldTable["declaringClass"]
+	f.Fvalue = frame.ClName
 
-		f = stackTrace.FieldTable["methodName"]
-		f.Fvalue = frame.MethName
-
+	f = stackTrace.FieldTable["methodName"]
+	f.Fvalue = frame.MethName
+	*/
+	/* FIXME : circularity: jvm->classloader-exceptions->classloader
 		methClass := classloader.MethAreaFetch(frame.ClName)
 		if methClass == nil {
 			return nil
@@ -133,6 +137,7 @@ func getStackTraces(fs *list.List) *object.Object {
 
 		stackListing = append(stackListing, stackTrace)
 	}
+	*/
 
 	// now that we have our data items loaded into the StackTraceElement
 	// put the elments into an array, which is converted into an object
@@ -160,7 +165,7 @@ func getStackTraces(fs *list.List) *object.Object {
 }
 
 // gets the JVM frame stack data and returns it as a slice of strings
-func grabFrameStack(fs *list.List) []string {
+func GrabFrameStack(fs *list.List) []string {
 	var stackListing []string
 
 	frameStack := fs.Front()
@@ -182,7 +187,7 @@ func grabFrameStack(fs *list.List) []string {
 // takes the panic cause (as returned by the golang runtime) and prints the
 // cause as determined by the runtime. Not sure it could ever be nil, but
 // covering our bases nonetheless.
-func showPanicCause(reason any) {
+func ShowPanicCause(reason any) {
 	// don't show the cause a second time
 	if globals.GetGlobalRef().PanicCauseShown {
 		return
@@ -201,7 +206,7 @@ func showPanicCause(reason any) {
 // in the event of a panic, this routine explains that a panic occurred and
 // (to a limited extent why) and then prints the golang stack trace.
 // stackInfo is the error returned when the panic occurred
-func showGoStackTrace(stackInfo any) {
+func ShowGoStackTrace(stackInfo any) {
 	var stack string
 
 	global := globals.GetGlobalRef()
@@ -210,7 +215,7 @@ func showGoStackTrace(stackInfo any) {
 	}
 
 	if stackInfo != nil && global.PanicCauseShown == false {
-		showPanicCause(stackInfo)
+		ShowPanicCause(stackInfo)
 	}
 
 	// get the golang stack either b/c it was saved or fetch it new here

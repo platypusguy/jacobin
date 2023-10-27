@@ -13,6 +13,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/opcodes"
 	"jacobin/thread"
 	"jacobin/types"
 	"os"
@@ -27,7 +28,7 @@ import (
 
 // IINC: increment local variable
 func TestIinc(t *testing.T) {
-	f := newFrame(IINC)
+	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
 	f.Meth = append(f.Meth, 1)             // increment local variable[1]
@@ -46,7 +47,7 @@ func TestIinc(t *testing.T) {
 
 // IINC: increment local variable by negative value
 func TestIincNeg(t *testing.T) {
-	f := newFrame(IINC)
+	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
 	f.Meth = append(f.Meth, 1)             // increment local variable[1]
@@ -66,7 +67,7 @@ func TestIincNeg(t *testing.T) {
 
 // ILOAD: test load of int in locals[index] on to stack
 func TestIload(t *testing.T) {
-	f := newFrame(ILOAD)
+	f := newFrame(opcodes.ILOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -91,7 +92,7 @@ func TestIload(t *testing.T) {
 
 // ILOAD_0: load of int in locals[0] onto stack
 func TestIload0(t *testing.T) {
-	f := newFrame(ILOAD_0)
+	f := newFrame(opcodes.ILOAD_0)
 	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -107,7 +108,7 @@ func TestIload0(t *testing.T) {
 
 // ILOAD_1: load of int in locals[1] onto stack
 func TestIload1(t *testing.T) {
-	f := newFrame(ILOAD_1)
+	f := newFrame(opcodes.ILOAD_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(27))
 	fs := frames.CreateFrameStack()
@@ -124,7 +125,7 @@ func TestIload1(t *testing.T) {
 
 // ILOAD_2: load of int in locals[2] onto stack
 func TestIload2(t *testing.T) {
-	f := newFrame(ILOAD_2)
+	f := newFrame(opcodes.ILOAD_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(1))
 	f.Locals = append(f.Locals, int64(27))
@@ -142,7 +143,7 @@ func TestIload2(t *testing.T) {
 
 // ILOAD_3: load of int in locals[3] onto stack
 func TestIload3(t *testing.T) {
-	f := newFrame(ILOAD_3)
+	f := newFrame(opcodes.ILOAD_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(1))
 	f.Locals = append(f.Locals, int64(2))
@@ -180,10 +181,10 @@ func TestImpdep2StackOverflow(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	f := newFrame(NOP)               // see errors.go for why this is necessary
-	f.Meth = append(f.Meth, IMPDEP2) //
-	f.Meth = append(f.Meth, 0x01)    // stack overflow error
-	f.Meth = append(f.Meth, 0x00)    // store current PC to be 04
+	f := newFrame(opcodes.NOP)               // see errors.go for why this is necessary
+	f.Meth = append(f.Meth, opcodes.IMPDEP2) //
+	f.Meth = append(f.Meth, 0x01)            // stack overflow error
+	f.Meth = append(f.Meth, 0x00)            // store current PC to be 04
 	f.Meth = append(f.Meth, 0x04)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -229,10 +230,10 @@ func TestImpdep2StackUnderflow(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	f := newFrame(NOP)               // see errors.go for why this is necessary
-	f.Meth = append(f.Meth, IMPDEP2) //
-	f.Meth = append(f.Meth, 0x02)    // stack underflow error
-	f.Meth = append(f.Meth, 0x00)    // store current PC to be 04
+	f := newFrame(opcodes.NOP)               // see errors.go for why this is necessary
+	f.Meth = append(f.Meth, opcodes.IMPDEP2) //
+	f.Meth = append(f.Meth, 0x02)            // stack underflow error
+	f.Meth = append(f.Meth, 0x00)            // store current PC to be 04
 	f.Meth = append(f.Meth, 0x05)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -259,7 +260,7 @@ func TestImpdep2StackUnderflow(t *testing.T) {
 
 // Test IMUL (pop 2 values, multiply them, push result)
 func TestImul(t *testing.T) {
-	f := newFrame(IMUL)
+	f := newFrame(opcodes.IMUL)
 	push(&f, int64(10))
 	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
@@ -276,7 +277,7 @@ func TestImul(t *testing.T) {
 
 // INEG: negate an int
 func TestIneg(t *testing.T) {
-	f := newFrame(INEG)
+	f := newFrame(opcodes.INEG)
 	push(&f, int64(10))
 
 	fs := frames.CreateFrameStack()
@@ -295,7 +296,7 @@ func TestIneg(t *testing.T) {
 
 // INSTANCEOF: Is the TOS item an instance of a particular class?
 func TestInstanceofNilAndNull(t *testing.T) {
-	f := newFrame(INSTANCEOF)
+	f := newFrame(opcodes.INSTANCEOF)
 	push(&f, nil)
 
 	fs := frames.CreateFrameStack()
@@ -307,7 +308,7 @@ func TestInstanceofNilAndNull(t *testing.T) {
 		t.Errorf("INSTANCEOF: Expected nil to return a 0, got %d", value)
 	}
 
-	f = newFrame(INSTANCEOF)
+	f = newFrame(opcodes.INSTANCEOF)
 	push(&f, object.Null)
 
 	fs = frames.CreateFrameStack()
@@ -337,7 +338,7 @@ func TestInstanceofString(t *testing.T) {
 		}))
 	s := object.NewStringFromGoString("hello world")
 
-	f := newFrame(INSTANCEOF)
+	f := newFrame(opcodes.INSTANCEOF)
 	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
 	f.Meth = append(f.Meth, 2) // " "
 
@@ -367,7 +368,7 @@ func TestInstanceofString(t *testing.T) {
 
 // INVOKEVIRTUAL : invoke method -- here testing for error
 func TestInvokevirtualInvalid(t *testing.T) {
-	f := newFrame(INVOKEVIRTUAL)
+	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -396,7 +397,7 @@ func TestInvokevirtualInvalid(t *testing.T) {
 
 // IOR: Logical OR of two ints
 func TestIor(t *testing.T) {
-	f := newFrame(IOR)
+	f := newFrame(opcodes.IOR)
 	push(&f, int64(21))
 	push(&f, int64(22))
 
@@ -416,7 +417,7 @@ func TestIor(t *testing.T) {
 
 // IREM: int modulo
 func TestIrem(t *testing.T) {
-	f := newFrame(IREM)
+	f := newFrame(opcodes.IREM)
 	push(&f, int64(74))
 	push(&f, int64(6))
 
@@ -436,7 +437,7 @@ func TestIrem(t *testing.T) {
 
 // IREM: int modulo -- divide by zero
 func TestIremDivideByZero(t *testing.T) {
-	f := newFrame(IREM)
+	f := newFrame(opcodes.IREM)
 	push(&f, int64(6))
 	push(&f, int64(0))
 
@@ -455,7 +456,7 @@ func TestIreturn(t *testing.T) {
 	push(&f0, int64(20))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
-	f1 := newFrame(IRETURN)
+	f1 := newFrame(opcodes.IRETURN)
 	push(&f1, int64(21))
 	fs.PushFront(&f1)
 	_ = runFrame(fs)
@@ -473,7 +474,7 @@ func TestIreturn(t *testing.T) {
 
 // ISHL: Left shift of long
 func TestIshl(t *testing.T) {
-	f := newFrame(ISHL)
+	f := newFrame(opcodes.ISHL)
 	push(&f, int64(22)) // longs require two slots, so pushed twice
 	push(&f, int64(3))  // shift left 3 bits
 
@@ -493,7 +494,7 @@ func TestIshl(t *testing.T) {
 
 // ISHR: Right shift of int
 func TestIshr(t *testing.T) {
-	f := newFrame(ISHR)
+	f := newFrame(opcodes.ISHR)
 	push(&f, int64(200))
 	push(&f, int64(3)) // shift right 3 bits
 
@@ -513,7 +514,7 @@ func TestIshr(t *testing.T) {
 
 // ISHR: Right shift of negative int
 func TestIshrNeg(t *testing.T) {
-	f := newFrame(ISHR)
+	f := newFrame(opcodes.ISHR)
 	push(&f, int64(-200))
 	push(&f, int64(3)) // shift right 3 bits
 
@@ -542,7 +543,7 @@ func TestIshrNeg(t *testing.T) {
 
 // ISTORE: Store integer from stack into local specified by following byte.
 func TestIstore(t *testing.T) {
-	f := newFrame(ISTORE)
+	f := newFrame(opcodes.ISTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -565,7 +566,7 @@ func TestIstore(t *testing.T) {
 
 // ISTORE_0: Store integer from stack into localVar[0]
 func TestIstore0(t *testing.T) {
-	f := newFrame(ISTORE_0)
+	f := newFrame(opcodes.ISTORE_0)
 	f.Locals = append(f.Locals, zero)
 	push(&f, int64(220))
 	fs := frames.CreateFrameStack()
@@ -581,7 +582,7 @@ func TestIstore0(t *testing.T) {
 
 // ISTORE1
 func TestIstore1(t *testing.T) {
-	f := newFrame(ISTORE_1)
+	f := newFrame(opcodes.ISTORE_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	push(&f, int64(221))
@@ -598,7 +599,7 @@ func TestIstore1(t *testing.T) {
 
 // ISTORE2
 func TestIstore2(t *testing.T) {
-	f := newFrame(ISTORE_2)
+	f := newFrame(opcodes.ISTORE_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -615,7 +616,7 @@ func TestIstore2(t *testing.T) {
 }
 
 func TestIstore3(t *testing.T) {
-	f := newFrame(ISTORE_3)
+	f := newFrame(opcodes.ISTORE_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -634,7 +635,7 @@ func TestIstore3(t *testing.T) {
 
 // ISUB: integer subtraction
 func TestIsub(t *testing.T) {
-	f := newFrame(ISUB)
+	f := newFrame(opcodes.ISUB)
 	push(&f, int64(10))
 	push(&f, int64(7))
 	fs := frames.CreateFrameStack()
@@ -651,7 +652,7 @@ func TestIsub(t *testing.T) {
 
 // IUSHR: unsigned right shift of int
 func TestIushr(t *testing.T) {
-	f := newFrame(IUSHR)
+	f := newFrame(opcodes.IUSHR)
 	push(&f, int64(-200))
 	push(&f, int64(3)) // shift right 3 bits
 
@@ -671,7 +672,7 @@ func TestIushr(t *testing.T) {
 
 // IXOR: Logical XOR of two ints
 func TestIxor(t *testing.T) {
-	f := newFrame(IXOR)
+	f := newFrame(opcodes.IXOR)
 	push(&f, int64(21))
 	push(&f, int64(22))
 
@@ -690,7 +691,7 @@ func TestIxor(t *testing.T) {
 
 // L2D: Convert long to double
 func TestL2d(t *testing.T) {
-	f := newFrame(L2D)
+	f := newFrame(opcodes.L2D)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -709,7 +710,7 @@ func TestL2d(t *testing.T) {
 
 // L2F: Convert long to float
 func TestL2f(t *testing.T) {
-	f := newFrame(L2F)
+	f := newFrame(opcodes.L2F)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -728,7 +729,7 @@ func TestL2f(t *testing.T) {
 
 // L2I: Convert long to int
 func TestL2i(t *testing.T) {
-	f := newFrame(L2I)
+	f := newFrame(opcodes.L2I)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -747,7 +748,7 @@ func TestL2i(t *testing.T) {
 
 // L2I: Convert long to int (test with negative value)
 func TestL2ineg(t *testing.T) {
-	f := newFrame(L2I)
+	f := newFrame(opcodes.L2I)
 	push(&f, int64(-21)) // longs require two slots, so pushed twice
 	push(&f, int64(-21))
 
@@ -766,7 +767,7 @@ func TestL2ineg(t *testing.T) {
 
 // LADD: Add two longs
 func TestLadd(t *testing.T) {
-	f := newFrame(LADD)
+	f := newFrame(opcodes.LADD)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -790,7 +791,7 @@ func TestLadd(t *testing.T) {
 
 // LAND: Logical and of two longs, push result
 func TestLand(t *testing.T) {
-	f := newFrame(LAND)
+	f := newFrame(opcodes.LAND)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -814,7 +815,7 @@ func TestLand(t *testing.T) {
 
 // LCMP: compare two longs (using two equal values)
 func TestLcmpEQ(t *testing.T) {
-	f := newFrame(LCMP)
+	f := newFrame(opcodes.LCMP)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -836,7 +837,7 @@ func TestLcmpEQ(t *testing.T) {
 
 // LCMP: compare two longs (with val1 > val2)
 func TestLcmpGT(t *testing.T) {
-	f := newFrame(LCMP)
+	f := newFrame(opcodes.LCMP)
 	push(&f, int64(22)) // longs require two slots, so pushed twice
 	push(&f, int64(22))
 
@@ -858,7 +859,7 @@ func TestLcmpGT(t *testing.T) {
 
 // LCMP: compare two longs (using val1 < val2)
 func TestLcmpLT(t *testing.T) {
-	f := newFrame(LCMP)
+	f := newFrame(opcodes.LCMP)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -880,7 +881,7 @@ func TestLcmpLT(t *testing.T) {
 
 // LCONST_0: push a long 0 onto opStack
 func TestLconst0(t *testing.T) {
-	f := newFrame(LCONST_0)
+	f := newFrame(opcodes.LCONST_0)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -895,7 +896,7 @@ func TestLconst0(t *testing.T) {
 
 // LCONST_1: push a long 1 onto opStack
 func TestLconst1(t *testing.T) {
-	f := newFrame(LCONST_1)
+	f := newFrame(opcodes.LCONST_1)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -910,7 +911,7 @@ func TestLconst1(t *testing.T) {
 
 // LDC_W: get CP entry indexed by following byte
 func TestLdc(t *testing.T) {
-	f := newFrame(LDC)
+	f := newFrame(opcodes.LDC)
 	f.Meth = append(f.Meth, 0x01)
 
 	cp := classloader.CPool{}
@@ -943,7 +944,7 @@ func TestLdc(t *testing.T) {
 
 // Test LDC_W: get int64 CP entry indexed by two bytes
 func TestLdcw(t *testing.T) {
-	f := newFrame(LDC_W)
+	f := newFrame(opcodes.LDC_W)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01)
 
@@ -977,7 +978,7 @@ func TestLdcw(t *testing.T) {
 
 // LDC_W: get float64 CP entry indexed by two bytes
 func TestLdcwFloat(t *testing.T) {
-	f := newFrame(LDC_W)
+	f := newFrame(opcodes.LDC_W)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01)
 
@@ -1011,7 +1012,7 @@ func TestLdcwFloat(t *testing.T) {
 
 // LDC2_W: get CP entry for long or double indexed by following 2 bytes
 func TestLdc2w(t *testing.T) {
-	f := newFrame(LDC2_W)
+	f := newFrame(opcodes.LDC2_W)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01)
 
@@ -1045,7 +1046,7 @@ func TestLdc2w(t *testing.T) {
 
 // LDIV: (pop 2 longs, divide second term by top of stack, push result)
 func TestLdiv(t *testing.T) {
-	f := newFrame(LDIV)
+	f := newFrame(opcodes.LDIV)
 	push(&f, int64(70))
 	push(&f, int64(70))
 
@@ -1069,7 +1070,7 @@ func TestLdiv(t *testing.T) {
 
 // LDIV: with divide by zero error
 func TestLdivDivideByZero(t *testing.T) {
-	f := newFrame(LDIV)
+	f := newFrame(opcodes.LDIV)
 	push(&f, int64(10))
 	push(&f, int64(10))
 
@@ -1087,7 +1088,7 @@ func TestLdivDivideByZero(t *testing.T) {
 
 // LLOAD: test load of long in locals[index] on to stack
 func TestLload(t *testing.T) {
-	f := newFrame(LLOAD)
+	f := newFrame(opcodes.LLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1113,7 +1114,7 @@ func TestLload(t *testing.T) {
 
 // LLOAD_0: Load long from locals[0]
 func TestLload0(t *testing.T) {
-	f := newFrame(LLOAD_0)
+	f := newFrame(opcodes.LLOAD_0)
 
 	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[0]
 	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[1] // lload uses two local consecutive
@@ -1138,7 +1139,7 @@ func TestLload0(t *testing.T) {
 
 // LLOAD_1: Load long from locals[1]
 func TestLload1(t *testing.T) {
-	f := newFrame(LLOAD_1)
+	f := newFrame(opcodes.LLOAD_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[1]
 	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[2] // lload uses two local consecutive
@@ -1163,7 +1164,7 @@ func TestLload1(t *testing.T) {
 
 // LLOAD_2: Load long from locals[2]
 func TestLload2(t *testing.T) {
-	f := newFrame(LLOAD_2)
+	f := newFrame(opcodes.LLOAD_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(0x12345678)) // put value in locals[2]
@@ -1189,7 +1190,7 @@ func TestLload2(t *testing.T) {
 
 // LLOAD_3: Load long from locals[3]
 func TestLload3(t *testing.T) {
-	f := newFrame(LLOAD_3)
+	f := newFrame(opcodes.LLOAD_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1216,7 +1217,7 @@ func TestLload3(t *testing.T) {
 
 // LMUL: pop 2 longs, multiply them, push result
 func TestLmul(t *testing.T) {
-	f := newFrame(LMUL)
+	f := newFrame(opcodes.LMUL)
 	push(&f, int64(10))
 	push(&f, int64(10))
 
@@ -1240,7 +1241,7 @@ func TestLmul(t *testing.T) {
 
 // LNEG: negate a long
 func TestLneg(t *testing.T) {
-	f := newFrame(LNEG)
+	f := newFrame(opcodes.LNEG)
 	push(&f, int64(10))
 	push(&f, int64(10))
 
@@ -1261,7 +1262,7 @@ func TestLneg(t *testing.T) {
 
 // LOR: Logical OR of two longs
 func TestLor(t *testing.T) {
-	f := newFrame(LOR)
+	f := newFrame(opcodes.LOR)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -1285,7 +1286,7 @@ func TestLor(t *testing.T) {
 
 // LREM: remainder of long division (the % operator)
 func TestLrem(t *testing.T) {
-	f := newFrame(LREM)
+	f := newFrame(opcodes.LREM)
 	push(&f, int64(74))
 	push(&f, int64(74))
 
@@ -1309,7 +1310,7 @@ func TestLrem(t *testing.T) {
 
 // LREM: long modulo -- divide by zero
 func TestLremDivideByZero(t *testing.T) {
-	f := newFrame(LREM)
+	f := newFrame(opcodes.LREM)
 	push(&f, int64(6))
 	push(&f, int64(6))
 	push(&f, int64(0))
@@ -1330,7 +1331,7 @@ func TestLreturn(t *testing.T) {
 	push(&f0, int64(20))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
-	f1 := newFrame(LRETURN)
+	f1 := newFrame(opcodes.LRETURN)
 	push(&f1, int64(21))
 	push(&f1, int64(21))
 	fs.PushFront(&f1)
@@ -1351,7 +1352,7 @@ func TestLreturn(t *testing.T) {
 
 // LSHL: Left shift of long
 func TestLshl(t *testing.T) {
-	f := newFrame(LSHL)
+	f := newFrame(opcodes.LSHL)
 	push(&f, int64(22)) // longs require two slots, so pushed twice
 	push(&f, int64(22))
 
@@ -1374,7 +1375,7 @@ func TestLshl(t *testing.T) {
 
 // LSHR: Right shift of long
 func TestLshr(t *testing.T) {
-	f := newFrame(LSHR)
+	f := newFrame(opcodes.LSHR)
 	push(&f, int64(200)) // longs require two slots, so pushed twice
 	push(&f, int64(200))
 
@@ -1397,7 +1398,7 @@ func TestLshr(t *testing.T) {
 
 // LSTORE: Store long from stack into local specified by following byte, and the local var after it.
 func TestLstore(t *testing.T) {
-	f := newFrame(LSTORE)
+	f := newFrame(opcodes.LSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1425,7 +1426,7 @@ func TestLstore(t *testing.T) {
 
 // LSTORE_0: Store long from stack in localVar[0] and again in localVar[1]
 func TestLstore0(t *testing.T) {
-	f := newFrame(LSTORE_0)
+	f := newFrame(opcodes.LSTORE_0)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
 	push(&f, int64(0x12345678))
@@ -1450,7 +1451,7 @@ func TestLstore0(t *testing.T) {
 
 // LSTORE_1: Store long from stack in localVar[1] and again in localVar[2]
 func TestLstore1(t *testing.T) {
-	f := newFrame(LSTORE_1)
+	f := newFrame(opcodes.LSTORE_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero) // LSTORE instructions fill two local variables (with the same value)
@@ -1476,7 +1477,7 @@ func TestLstore1(t *testing.T) {
 
 // LSTORE_2: Store long from stack in localVar[2] and again in localVar[3]
 func TestLstore2(t *testing.T) {
-	f := newFrame(LSTORE_2)
+	f := newFrame(opcodes.LSTORE_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1503,7 +1504,7 @@ func TestLstore2(t *testing.T) {
 
 // LSTORE_3: Store long from stack in localVar[3] and again in localVar[]
 func TestLstore3(t *testing.T) {
-	f := newFrame(LSTORE_3)
+	f := newFrame(opcodes.LSTORE_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -1531,7 +1532,7 @@ func TestLstore3(t *testing.T) {
 
 // LSUB: Subtract two longs
 func TestLsub(t *testing.T) {
-	f := newFrame(LSUB)
+	f := newFrame(opcodes.LSUB)
 	push(&f, int64(10)) // longs occupy two slots, hence the double pops and pushes
 	push(&f, int64(10))
 
@@ -1556,7 +1557,7 @@ func TestLsub(t *testing.T) {
 
 // LUSHR: Right unsigned shift of long
 func TestLushr(t *testing.T) {
-	f := newFrame(LUSHR)
+	f := newFrame(opcodes.LUSHR)
 	push(&f, int64(200)) // longs require two slots, so pushed twice
 	push(&f, int64(200))
 
@@ -1579,7 +1580,7 @@ func TestLushr(t *testing.T) {
 
 // LXOR: Logical XOR of two longs
 func TestLxor(t *testing.T) {
-	f := newFrame(LXOR)
+	f := newFrame(opcodes.LXOR)
 	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
@@ -1603,7 +1604,7 @@ func TestLxor(t *testing.T) {
 
 // MONITORENTER: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorEnter(t *testing.T) {
-	f := newFrame(MONITORENTER)
+	f := newFrame(opcodes.MONITORENTER)
 	push(&f, &f) // push any value and make sure it gets popped off
 
 	fs := frames.CreateFrameStack()
@@ -1617,7 +1618,7 @@ func TestMonitorEnter(t *testing.T) {
 
 // MONITOREXIT: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorExit(t *testing.T) {
-	f := newFrame(MONITOREXIT)
+	f := newFrame(opcodes.MONITOREXIT)
 	push(&f, &f) // push any value and make sure it gets popped off
 
 	fs := frames.CreateFrameStack()
@@ -1631,7 +1632,7 @@ func TestMonitorExit(t *testing.T) {
 
 // NEW: Instantiate object -- here with an error
 func TestNewWithError(t *testing.T) {
-	f := newFrame(NEW)
+	f := newFrame(opcodes.NEW)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1660,7 +1661,7 @@ func TestNewWithError(t *testing.T) {
 
 // POP: pop item off stack and discard it
 func TestPop(t *testing.T) {
-	f := newFrame(POP)
+	f := newFrame(opcodes.POP)
 	push(&f, int64(34)) // push three different values
 	push(&f, int64(21))
 	push(&f, int64(0))
@@ -1682,7 +1683,7 @@ func TestPop(t *testing.T) {
 
 // POP with tracing enabled
 func TestPopWithTracing(t *testing.T) {
-	f := newFrame(POP)
+	f := newFrame(opcodes.POP)
 	push(&f, int64(34)) // push three different values
 	push(&f, int64(21))
 	push(&f, int64(0))
@@ -1713,7 +1714,7 @@ func TestPopWithTracing(t *testing.T) {
 func TestPop2(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 
-	f := newFrame(POP2)
+	f := newFrame(opcodes.POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
 	push(&f, int64(21))
 	push(&f, int64(10))
@@ -1736,7 +1737,7 @@ func TestPop2(t *testing.T) {
 // POP2: pop two items off stack -- make sure tracing doesn't affect the output
 func TestPop2WithTrace(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
-	f := newFrame(POP2)
+	f := newFrame(opcodes.POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
 	push(&f, int64(21))
 	push(&f, int64(10))
@@ -1764,7 +1765,7 @@ func TestPop2WithTrace(t *testing.T) {
 
 // PUTFIELD: Update a non-static field
 func TestPutFieldSimpleInt(t *testing.T) {
-	f := newFrame(PUTFIELD)
+	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1802,7 +1803,7 @@ func TestPutFieldSimpleInt(t *testing.T) {
 
 // PUTFIELD
 func TestPutFieldDouble(t *testing.T) {
-	f := newFrame(PUTFIELD)
+	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1841,7 +1842,7 @@ func TestPutFieldDouble(t *testing.T) {
 
 // PUTFIELD: Update a field in an object -- error doesn't point to a field
 func TestPutFieldNonFieldCPentry(t *testing.T) {
-	f := newFrame(PUTFIELD)
+	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1865,7 +1866,7 @@ func TestPutFieldNonFieldCPentry(t *testing.T) {
 
 // PUTFIELD: Error: attempt to update a non-static field
 func TestPutFieldErrorUpdatingStatic(t *testing.T) {
-	f := newFrame(PUTFIELD)
+	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1903,7 +1904,7 @@ func TestPutFieldErrorUpdatingStatic(t *testing.T) {
 
 // PUTSTATIC: Update a static field -- invalid b/c does not point to a field ref in the CP
 func TestPutStaticInvalid(t *testing.T) {
-	f := newFrame(PUTSTATIC)
+	f := newFrame(opcodes.PUTSTATIC)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
@@ -1932,7 +1933,7 @@ func TestPutStaticInvalid(t *testing.T) {
 
 // RETURN: Does a function return correctly?
 func TestReturn(t *testing.T) {
-	f := newFrame(RETURN)
+	f := newFrame(opcodes.RETURN)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	ret := runFrame(fs)
@@ -1947,7 +1948,7 @@ func TestReturn(t *testing.T) {
 
 // SIPUSH: create int from next two bytes and push the int
 func TestSipush(t *testing.T) {
-	f := newFrame(SIPUSH)
+	f := newFrame(opcodes.SIPUSH)
 	f.Meth = append(f.Meth, 0x01)
 	f.Meth = append(f.Meth, 0x02)
 	fs := frames.CreateFrameStack()
@@ -1968,7 +1969,7 @@ func TestSipush(t *testing.T) {
 
 // SIPUSH: create a negative int from next two bytes and push the int
 func TestSipushNegative(t *testing.T) {
-	f := newFrame(SIPUSH)
+	f := newFrame(opcodes.SIPUSH)
 	val := -1
 	f.Meth = append(f.Meth, byte(val))
 	f.Meth = append(f.Meth, 0x02)
@@ -1993,7 +1994,7 @@ func TestSwap(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	_ = log.SetLogLevel(log.WARNING)
 
-	f := newFrame(SWAP)
+	f := newFrame(opcodes.SWAP)
 	push(&f, int64(34)) // push two different values
 	push(&f, int64(21)) // TOS now = 21
 

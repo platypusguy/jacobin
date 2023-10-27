@@ -7,8 +7,12 @@
 package classloader
 
 import (
+	"fmt"
+	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
+	thread2 "jacobin/thread"
 )
 
 func Load_Lang_Throwable() map[string]GMeth {
@@ -28,14 +32,15 @@ func fillInStackTrace(params []interface{}) interface{} {
 		return nil
 	}
 
-	// thisFrame := params[0].(*frames.Frame)
-	// thisThread := thisFrame.Thread
-	// thisStack := globals.ThreadList
-	// stackTraces := jvm.GetStackTraces()
+	thisThread := params[0].(*thread2.ExecThread)
+	thisFrameStack := thisThread.Stack
+	stackListing := exceptions.GetStackTraces(thisFrameStack)
+	listing := stackListing.FieldTable["stackTrace"].Fvalue.([]*object.Object)
+	fmt.Printf("Stack trace contains %d elements", len(listing))
+
+	// thisFrame := thisFrameStack.Front().Next()
+
 	// CURR: next steps
-	// instantiate an []StackTraceElements
-	// fill it in with 1 item per frame.
-	// This should probably be done at the time the error/exception is detected.
 	// This might require that we add the logic to the class parse showing the Java code source line number.
 	// JACOBIN-224 refers to this.
 	return nil
