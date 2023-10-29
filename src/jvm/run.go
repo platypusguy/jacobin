@@ -1959,6 +1959,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			className, methName, methSig := getMethInfoFromCPmethref(CP, CPslot)
+			//fmt.Printf("===========DEBUG INVOKESPECIAL className=%s, methName=%s, methSig=%s\n", className, methName, methSig)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
@@ -1977,7 +1978,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
-				f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
+				//f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
+				f, err = runGmethod(mtEntry, fs, className, methName, methSig)
 				if err != nil {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())

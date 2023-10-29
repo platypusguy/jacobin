@@ -39,14 +39,26 @@ func Load_Lang_String() map[string]GMeth {
 	// get the bytes from a string, given the Charset string name
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
-			ParamSlots: 0,
+			ParamSlots: 1,
 			GFunction:  noSupportForUserCharsets,
 		}
 
 	// get the bytes from a string, given the specified Charset object
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
-			ParamSlots: 0,
+			ParamSlots: 1,
+			GFunction:  noSupportForUserCharsets,
+		}
+
+	MethodSignatures["java/lang/String.<init>([BLjava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  noSupportForUserCharsets,
+		}
+
+	MethodSignatures["java/lang/String.<init>([BLjava/nio/charset/Charset;)V"] =
+		GMeth{
+			ParamSlots: 2,
 			GFunction:  noSupportForUserCharsets,
 		}
 
@@ -66,7 +78,7 @@ func stringClinit([]interface{}) interface{} {
 }
 
 func noSupportForUserCharsets([]interface{}) interface{} {
-	errMsg := "No support yet for user-specified character sets"
+	errMsg := "No support yet for user-specified character sets and Unicode code point arrays"
 	exceptions.Throw(exceptions.UnsupportedEncodingException, errMsg)
 	return nil
 }
