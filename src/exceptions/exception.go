@@ -163,6 +163,7 @@ const (
 	ServerNotActiveException
 	SQLException
 	StringConcatException
+	StringIndexOutOfBoundsException
 	TimeoutException
 	TooManyListenersException
 	TransformerException
