@@ -26,6 +26,12 @@ import (
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s",
+			fr.ClName, fr.MethName)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+
 	// get the go method from the MTable
 	me := classloader.MTable[fr.ClName+"."+fr.MethName]
 	if me.Meth == nil {
