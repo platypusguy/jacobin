@@ -9,6 +9,7 @@ package jvm
 import (
 	"container/list"
 	"errors"
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
@@ -25,6 +26,12 @@ import (
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s",
+			fr.ClName, fr.MethName)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+
 	// get the go method from the MTable
 	me := classloader.MTable[fr.ClName+"."+fr.MethName]
 	if me.Meth == nil {
@@ -73,6 +80,13 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 // execute it. This eventually calls runGFrame(), which handles any return value. After
 // the function is run, this method pops the frame off the frame stack and returns.
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) (*frames.Frame, error) {
+
+	if MainThread.Trace {
+		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, methodType: %s",
+			className, methodName, methodType)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+	}
+
 	f := fs.Front().Value.(*frames.Frame)
 
 	// create a frame (gf for 'go frame') for this function
