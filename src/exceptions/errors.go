@@ -13,7 +13,6 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/thread"
 	"runtime/debug"
@@ -83,85 +82,6 @@ func ShowFrameStack(t *thread.ExecThread) {
 		}
 		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
-}
-
-// gets the full JVM stack trace using java.lang.StackTraceElement slice to hold the data
-// in case of error, nil is returned
-func GetStackTraces(fs *list.List) *object.Object {
-	var stackListing []*object.Object
-	// stackListing =
-
-	frameStack := fs.Front()
-	if frameStack == nil {
-		// return an empty stack listing
-		return nil
-	}
-
-	// ...will eventually go into java/lang/Throwable.stackTrace
-	// ...Type will be: [Ljava/lang/StackTraceElement;
-	// ...other fields to be sure to capture: cause, detailMessage,
-	// ....not sure about backtrace
-
-	// step through the list-based stack of called methods and print contents
-
-	/* FIXME: Circularity jvm->classloader->exceptions->jvm
-	var frame *frames.Frame
-
-	for e := frameStack; e != nil; e = e.Next() {
-	stackTrace, err := jvm.InstantiateClass("java/lang/StackTraceElement", nil)
-	if err != nil {
-		return nil
-	}
-
-	frame = e.Value.(*frames.Frame)
-	f := stackTrace.FieldTable["declaringClass"]
-	f.Fvalue = frame.ClName
-
-	f = stackTrace.FieldTable["methodName"]
-	f.Fvalue = frame.MethName
-	*/
-	/* FIXME : circularity: jvm->classloader-exceptions->classloader
-		methClass := classloader.MethAreaFetch(frame.ClName)
-		if methClass == nil {
-			return nil
-		}
-
-		f = stackTrace.FieldTable["classLoaderName"]
-		f.Fvalue = methClass.Loader
-
-		f = stackTrace.FieldTable["fileName"]
-		f.Fvalue = methClass.Data.SourceFile
-
-		f = stackTrace.FieldTable["moduleName"]
-		f.Fvalue = methClass.Data.Module
-
-		stackListing = append(stackListing, stackTrace)
-	}
-	*/
-
-	// now that we have our data items loaded into the StackTraceElement
-	// put the elments into an array, which is converted into an object
-	obj := object.MakeEmptyObject()
-	klassName := "java/lang/StackTraceElement"
-	obj.Klass = &klassName
-
-	// add array to the object we're returning
-	fieldToAdd := new(object.Field)
-	fieldToAdd.Ftype = "[Ljava/lang/StackTraceElement;"
-	fieldToAdd.Fvalue = stackListing
-
-	// add the field to the field table for this object
-	obj.FieldTable["stackTrace"] = fieldToAdd
-
-	// 	methName := fmt.Sprintf("%s.%s", frame.ClName, frame.MethName)
-	// 	// stackTrace.FieldTable[]
-	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, frame.PC)
-	// 	stackListing = append(stackListing, object.NewStringFromGoString(entry))
-	// 	return stackListing
-	// }
-	// // return *stackListing
-
-	return obj
 }
 
 // gets the JVM frame stack data and returns it as a slice of strings
