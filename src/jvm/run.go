@@ -2937,7 +2937,7 @@ func createAndInitNewFrame(
 		stackSize = 2
 	}
 	// we increase the stack size by 2 because in many methods, the stack size must needs be
-	// larger than what the class promises. As an example, see the code in subbie() in main.class
+	// larger than what the class file specifies. For example, see the code in subbie() in main.class
 	// of Jacobin test 389 (among many other examples). The value of 2 is chosen arbitrarily. It
 	// might well be revised in future releases.
 	stackSize += 2
