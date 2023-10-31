@@ -54,7 +54,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	m := me.Meth.(classloader.JmEntry)
 	f := frames.CreateFrame(m.MaxStack + 2) // create a new frame (the +2 is arbitrary, but needed)
-	f.Thread = mainThread.ID
+	f.Thread = MainThread.ID
 	f.MethName = "main"
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
@@ -2937,6 +2937,7 @@ func createAndInitNewFrame(
 		stackSize = 2
 	}
 	fram := frames.CreateFrame(stackSize)
+	fram.Thread = currFrame.Thread
 	fram.ClName = className
 	fram.MethName = methodName
 	fram.CP = m.Cp                           // add its pointer to the class CP
