@@ -17,7 +17,7 @@ import (
 )
 
 // Similar to global tracing but just for this source file.
-var localDebugging bool = true
+var localDebugging bool = false
 
 // This function is called from run(). It executes a frame whose
 // method is a golang method. It copies the parameters from the
