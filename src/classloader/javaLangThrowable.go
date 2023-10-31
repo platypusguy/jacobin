@@ -41,17 +41,15 @@ func fillInStackTrace(params []interface{}) interface{} {
 
 	// thisFrame := thisFrameStack.Front().Next()
 
-	// CURR: next steps
 	// This might require that we add the logic to the class parse showing the Java code source line number.
 	// JACOBIN-224 refers to this.
 	return nil
 }
 
-// gets the full JVM stack trace using java.lang.StackTraceElement slice to hold the data
-// in case of error, nil is returned
+// GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
+// slice to hold the data. In case of error, nil is returned.
 func GetStackTraces(fs *list.List) *object.Object {
 	var stackListing []*object.Object
-	// stackListing =
 
 	frameStack := fs.Front()
 	if frameStack == nil {
@@ -116,7 +114,7 @@ func GetStackTraces(fs *list.List) *object.Object {
 	}
 
 	// now that we have our data items loaded into the StackTraceElement
-	// put the elments into an array, which is converted into an object
+	// put the elements into an array, which is converted into an object
 	obj := object.MakeEmptyObject()
 	klassName := "java/lang/StackTraceElement"
 	obj.Klass = &klassName
