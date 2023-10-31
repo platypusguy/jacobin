@@ -39,12 +39,16 @@ type MTentry struct {
 // MData can be a GmEntry or a JmEntry (method in Go or Java, respectively)
 type MData interface{}
 
-// GmEntry is the entry in the MTable for Go functions. See MTable comments for details.
-// Fu is a go function. All go functions accept a possibly empty slice of interface{} and
-// return a possibly nil interface{}
-type GmEntry struct {
+// GMeth is the entry in the MTable for Go functions. See MTable comments for more details.
+// GFunction is a go function. All go functions accept a possibly empty slice of interface{} and
+// return a possibly nil interface{}.
+// If ParamExtra is true, there is an extra parameter on the stack at entry to runGmethod.
+// By default, ParamExtra is false.
+// deleted: type gfunction func([]interface{}) interface{}
+type GMeth struct {
 	ParamSlots int
-	Fu         func([]interface{}) interface{}
+	ParamExtra bool
+	GFunction  func([]interface{}) interface{}
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
@@ -87,9 +91,10 @@ func MTableLoadNatives() {
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
-		gme := GmEntry{}
+		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
-		gme.Fu = val.GFunction
+		gme.ParamExtra = val.ParamExtra
+		gme.GFunction = val.GFunction
 
 		tableEntry := MTentry{
 			MType: 'G',

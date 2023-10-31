@@ -7,9 +7,9 @@
 package libs
 
 import (
-	"jacobin/frames"
+	"fmt"
+	"jacobin/exceptions"
 	"jacobin/object"
-	"jacobin/thread"
 )
 
 // These are java/lang/String native functions that need to be segregated in libs
@@ -20,11 +20,18 @@ import (
 // get the bytes of a string. To find the string involved, we go to the TOS of the calling
 // stack which has pushed a pointer to the string prior to this call. Returns a pointer to
 // a raw slice of bytes.
+
+// NOTE:
+// * params[0] = extra parameter, the String object
 func GetBytesVoid(params []interface{}) interface{} {
-	threadPtr := params[0].(*thread.ExecThread)
-	frameStack := threadPtr.Stack
-	prevFrame := frameStack.Front().Next().Value.(*frames.Frame)
-	str := prevFrame.OpStack[prevFrame.TOS].(*object.Object)
-	bytes := str.Fields[0].Fvalue.(*[]byte)
-	return bytes
+	switch params[0].(type) {
+	case *object.Object:
+		parmObj := params[0].(*object.Object)
+		bytes := parmObj.Fields[0].Fvalue.(*[]byte)
+		return bytes
+	default:
+		errMsg := fmt.Sprintf("In libs.GetBytesVoid, unexpected params[0] type=%T, value=%v", params[0], params[0])
+		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		return nil
+	}
 }

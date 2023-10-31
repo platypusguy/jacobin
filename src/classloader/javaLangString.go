@@ -73,6 +73,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.<init>([BIILjava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 4,
+			ParamExtra: true,
 			GFunction:  noSupportYetInString,
 		}
 
@@ -123,6 +124,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
+			ParamExtra: true,
 			GFunction:  libs.GetBytesVoid,
 		}
 
@@ -130,6 +132,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
+			ParamExtra: true,
 			GFunction:  noSupportYetInString,
 		}
 
@@ -137,6 +140,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,
+			ParamExtra: true,
 			GFunction:  noSupportYetInString,
 		}
 
@@ -162,20 +166,26 @@ func noSupportYetInString([]interface{}) interface{} {
 }
 
 // Given a Go interface parameter from caller, compute the associated Go string.
-func getGoString(param0 interface{}) string {
+func getGoString(myParm interface{}) string {
 	var bptr *[]uint8
-	switch param0.(type) {
+	var str string
+	//fmt.Printf("::::::::::::::::::::::::::: javaLangString/getGoString: myParm is %T\n", myParm)
+	switch myParm.(type) {
 	case *[]uint8:
-		bptr = param0.(*[]uint8)
+		bptr = myParm.(*[]uint8)
+		str = string(*bptr)
+		//fmt.Printf("::::::::::::::::::::::::::: javaLangString/getGoString: extra is *[]uint8, str: %s\n", str)
 	case *object.Object:
-		parmObj := param0.(*object.Object)
+		parmObj := myParm.(*object.Object)
 		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
+		str = string(*bptr)
+		//fmt.Printf("::::::::::::::::::::::::::: javaLangString/getGoString: extra is *object.Object, str:[%s]\n", str)
 	default:
-		errMsg := fmt.Sprintf("In getGoString, unexpected param[0] type = %T", param0)
+		errMsg := fmt.Sprintf("In getGoString, unexpected myParm type=%T, value=%v", myParm, myParm)
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
-		bptr = nil
+		str = "RUBBISH!"
 	}
-	return string(*bptr)
+	return str
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
