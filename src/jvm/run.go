@@ -38,6 +38,7 @@ var MainThread thread.ExecThread
 // and begins execution.
 func StartExec(className string, mainThread *thread.ExecThread, globals *globals.Globals) error {
 
+	MainThread = *mainThread
 	// set tracing, if any
 	tracing := false
 	trace, exists := globals.Options["-trace"]
@@ -66,7 +67,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	}
 
 	// create the first thread and place its first frame on it
-	MainThread = *mainThread
+	// MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
 	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
@@ -1959,11 +1960,11 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			className, methName, methSig := getMethInfoFromCPmethref(CP, CPslot)
-			//fmt.Printf("===========DEBUG INVOKESPECIAL className=%s, methName=%s, methSig=%s\n", className, methName, methSig)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
-			if className+"."+methName+methSig == "java/lang/Object.\"<init>\"()V" {
+			fullConstructorName := className + "." + methName + methSig
+			if fullConstructorName == "java/lang/Object.<init>()V" {
 				break
 			}
 
@@ -1978,7 +1979,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
-				//f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
+				// f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
 				f, err = runGmethod(mtEntry, fs, className, methName, methSig)
 				if err != nil {
 					glob := globals.GetGlobalRef()
