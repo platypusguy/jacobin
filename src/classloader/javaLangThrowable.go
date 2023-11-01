@@ -85,30 +85,25 @@ func GetStackTraces(fs *list.List) *object.Object {
 		}
 
 		frame = e.Value.(*frames.Frame)
-		fld := object.Field{}
-		fld.Fvalue = frame.ClName
-		stackTrace.FieldTable["declaringClass"] = &fld
 
-		fld = object.Field{}
-		fld.Fvalue = frame.MethName
-		stackTrace.FieldTable["methodName"] = &fld
+		// helper function to facilitate subsequent field updates
+		// thanks to JetBrains' AI Assistant for this suggestion
+		addField := func(name, value string) {
+			fld := object.Field{}
+			fld.Fvalue = value
+			stackTrace.FieldTable[name] = &fld
+		}
+
+		addField("declaringClass", frame.ClName)
+		addField("methodName", frame.MethName)
 
 		methClass := MethAreaFetch(frame.ClName)
 		if methClass == nil {
 			return nil
 		}
-
-		fld = object.Field{}
-		fld.Fvalue = methClass.Loader
-		stackTrace.FieldTable["classLoaderName"] = &fld
-
-		fld = object.Field{}
-		fld.Fvalue = methClass.Data.SourceFile
-		stackTrace.FieldTable["fileName"] = &fld
-
-		fld = object.Field{}
-		fld.Fvalue = methClass.Data.Module
-		stackTrace.FieldTable["moduleName"] = &fld
+		addField("classLoaderName", methClass.Loader)
+		addField("fileName", methClass.Data.SourceFile)
+		addField("moduleName", methClass.Data.Module)
 
 		stackListing = append(stackListing, stackTrace)
 	}
@@ -126,14 +121,6 @@ func GetStackTraces(fs *list.List) *object.Object {
 
 	// add the field to the field table for this object
 	obj.FieldTable["stackTrace"] = fieldToAdd
-
-	// 	methName := fmt.Sprintf("%s.%s", frame.ClName, frame.MethName)
-	// 	// stackTrace.FieldTable[]
-	// 	entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, frame.PC)
-	// 	stackListing = append(stackListing, object.NewStringFromGoString(entry))
-	// 	return stackListing
-	// }
-	// // return *stackListing
 
 	return obj
 }
