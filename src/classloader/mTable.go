@@ -44,6 +44,7 @@ type MData interface{}
 // return a possibly nil interface{}
 type GMeth struct {
 	ParamSlots int
+	ObjectRef  bool
 	GFunction  func([]interface{}) interface{}
 }
 
@@ -89,6 +90,7 @@ func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
+		gme.ObjectRef = val.ObjectRef
 		gme.GFunction = val.GFunction
 
 		tableEntry := MTentry{
