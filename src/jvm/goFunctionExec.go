@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
-	jvmThread "jacobin/thread"
 	"strings"
 )
 
@@ -29,7 +27,6 @@ var localDebugging bool = false
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
-
 	if localDebugging || MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s", fr.ClName, fr.MethName)
 		_ = log.Log(traceInfo, log.WARNING)
@@ -49,15 +46,17 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	for _, v := range fr.OpStack {
 		*params = append(*params, v)
 	}
+	//fmt.Printf("runGframe class: %s, methodName: %s, params: %v\n", fr.ClName, fr.MethName, params)
 
+	// TODO Validate that a thread pointer is not needed.
 	// pass a pointer to the thread as the last parameter to the function;
 	// from the thread, the frame stack (and the individual frame) become accessible
-	glob := globals.GetGlobalRef()
-	thread := glob.Threads[fr.Thread]
-	if thread != nil { // will be nil only in unit tests
-		threadPtr := thread.(*jvmThread.ExecThread)
-		*params = append(*params, threadPtr)
-	}
+	//glob := globals.GetGlobalRef()
+	//thread := glob.Threads[fr.Thread]
+	//if thread != nil { // will be nil only in unit tests
+	//	threadPtr := thread.(*jvmThread.ExecThread)
+	//	*params = append(*params, threadPtr)
+	//}
 
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(classloader.GMeth).GFunction(*params)
@@ -86,20 +85,30 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 // the function is run, this method pops the frame off the frame stack and returns.
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) (*frames.Frame, error) {
 
-	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	f := fs.Front().Value.(*frames.Frame)
 
+	// Extra parameter?
+	ObjectRef := mt.Meth.(classloader.GMeth).ObjectRef
+
+	// Get the GMeth paramSlots value.
+	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
-			className, methodName, methodType, paramSlots, len(f.OpStack), f.TOS)
+		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, paramExtra: %v, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
+			className, methodName, ObjectRef, methodType, paramSlots, len(f.OpStack), f.TOS)
 		_ = log.Log(traceInfo, log.WARNING)
 		logTraceStack(f)
 	}
 
 	// create a frame (gf for 'go frame') for this function
-	gf := frames.CreateFrame(paramSlots)
+	var gf *frames.Frame
+	var npops int
+	if ObjectRef {
+		npops = paramSlots + 1
+	} else {
+		npops = paramSlots
+	}
+	gf = frames.CreateFrame(npops)
 	gf.Thread = f.Thread
-
 	gf.MethName = methodName + methodType
 	gf.ClName = className
 	gf.Meth = nil
@@ -109,9 +118,15 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 
 	// get the args (if any) from the operand stack of the current frame(f)
 	// then push them onto the stack of the go function
+
 	var argList []interface{}
 
-	for i := 0; i < paramSlots; i++ {
+	// Current frame stack is one of 2 forms:
+	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: vast majority of cases
+	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: out of the ordinary, like getBytes()
+
+	// For each paramSlot, pop from the current frame and append it to argList.
+	for i := 0; i < npops; i++ {
 		arg := pop(f)
 		if localDebugging || MainThread.Trace {
 			traceInfo := fmt.Sprintf("runGmethod popped arg type=%T, value=%v", arg, arg)
@@ -119,14 +134,26 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 		}
 		argList = append(argList, arg)
 	}
+
+	// argList now has 2 possible forms:
+	// (1) p1 | p2 | ... | pn
+	// (2) extra | p1 | p2 | ... | pn
+
+	// Push the arguments in reverse order onto the Go frame stack.
+	// If there was an extra parameter, it's at the Go frame stack index 0.
 	for j := len(argList) - 1; j >= 0; j-- {
 		push(gf, argList[j])
 	}
+
+	// Set the Go frame TOS = parent frame TOS.
 	gf.TOS = len(gf.OpStack) - 1
 	if localDebugging || MainThread.Trace {
 		_ = log.Log("runGmethod go frame stack:", log.WARNING)
 		logTraceStack(gf)
 	}
+
+	//**** At this point, the Go frame stack is identical to
+	//*** the parent stack frame at entry to runGmethod (before popping f).
 
 	// push this new frame onto the frame stack for this thread
 	fs.PushFront(gf)                     // push the new frame

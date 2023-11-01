@@ -9,7 +9,6 @@ package classloader
 import (
 	"fmt"
 	"jacobin/exceptions"
-	"jacobin/libs"
 	"jacobin/object"
 	"jacobin/types"
 )
@@ -123,13 +122,15 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  libs.GetBytesVoid,
+			ObjectRef:  true,
+			GFunction:  GetBytesVoid,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
+			ObjectRef:  true,
 			GFunction:  noSupportYetInString,
 		}
 
@@ -137,6 +138,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,
+			ObjectRef:  true,
 			GFunction:  noSupportYetInString,
 		}
 
@@ -228,4 +230,17 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 	obj := object.CreateCompactStringFromGoString(&ss)
 	return obj
 
+}
+
+func GetBytesVoid(params []interface{}) interface{} {
+	switch params[0].(type) {
+	case *object.Object:
+		parmObj := params[0].(*object.Object)
+		bytes := parmObj.Fields[0].Fvalue.(*[]byte)
+		return bytes
+	default:
+		errMsg := fmt.Sprintf("In libs.GetBytesVoid, unexpected params[0] type=%T, value=%v", params[0], params[0])
+		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		return nil
+	}
 }
