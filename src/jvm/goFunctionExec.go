@@ -55,7 +55,7 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	}
 
 	// call the function passing a pointer to the slice of arguments
-	ret := me.Meth.(classloader.GmEntry).Fu(*params)
+	ret := me.Meth.(classloader.GMeth).GFunction(*params)
 
 	// how many slots does the return value consume on the op stack?
 	// the last char in the method name indicates the data type of the return
@@ -90,7 +90,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	f := fs.Front().Value.(*frames.Frame)
 
 	// create a frame (gf for 'go frame') for this function
-	paramSlots := mt.Meth.(classloader.GmEntry).ParamSlots
+	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	gf := frames.CreateFrame(paramSlots)
 	gf.Thread = f.Thread
 
