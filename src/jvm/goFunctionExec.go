@@ -18,6 +18,9 @@ import (
 	"strings"
 )
 
+// Similar to global tracing but just for this source file.
+var localDebugging bool = false
+
 // This function is called from run(). It executes a frame whose
 // method is a golang method. It copies the parameters from the
 // operand stack and passes them to the go function, here called Fu,
@@ -26,10 +29,12 @@ import (
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s",
-			fr.ClName, fr.MethName)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+
+	if localDebugging || MainThread.Trace {
+		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s", fr.ClName, fr.MethName)
+		_ = log.Log(traceInfo, log.WARNING)
+		_ = log.Log("runGframe go frame stack:", log.WARNING)
+		logTraceStack(fr)
 	}
 
 	// get the go method from the MTable
@@ -55,7 +60,7 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	}
 
 	// call the function passing a pointer to the slice of arguments
-	ret := me.Meth.(classloader.GmEntry).Fu(*params)
+	ret := me.Meth.(classloader.GMeth).GFunction(*params)
 
 	// how many slots does the return value consume on the op stack?
 	// the last char in the method name indicates the data type of the return
@@ -81,16 +86,17 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 // the function is run, this method pops the frame off the frame stack and returns.
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) (*frames.Frame, error) {
 
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, methodType: %s",
-			className, methodName, methodType)
-		_ = log.Log(traceInfo, log.TRACE_INST)
-	}
-
+	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	f := fs.Front().Value.(*frames.Frame)
 
+	if localDebugging || MainThread.Trace {
+		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
+			className, methodName, methodType, paramSlots, len(f.OpStack), f.TOS)
+		_ = log.Log(traceInfo, log.WARNING)
+		logTraceStack(f)
+	}
+
 	// create a frame (gf for 'go frame') for this function
-	paramSlots := mt.Meth.(classloader.GmEntry).ParamSlots
 	gf := frames.CreateFrame(paramSlots)
 	gf.Thread = f.Thread
 
@@ -107,12 +113,20 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 
 	for i := 0; i < paramSlots; i++ {
 		arg := pop(f)
+		if localDebugging || MainThread.Trace {
+			traceInfo := fmt.Sprintf("runGmethod popped arg type=%T, value=%v", arg, arg)
+			_ = log.Log(traceInfo, log.WARNING)
+		}
 		argList = append(argList, arg)
 	}
 	for j := len(argList) - 1; j >= 0; j-- {
 		push(gf, argList[j])
 	}
 	gf.TOS = len(gf.OpStack) - 1
+	if localDebugging || MainThread.Trace {
+		_ = log.Log("runGmethod go frame stack:", log.WARNING)
+		logTraceStack(gf)
+	}
 
 	// push this new frame onto the frame stack for this thread
 	fs.PushFront(gf)                     // push the new frame

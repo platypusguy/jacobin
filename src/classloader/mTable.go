@@ -36,15 +36,15 @@ type MTentry struct {
 	MType byte  // method type, G = Go method, J = Java method
 }
 
-// MData can be a GmEntry or a JmEntry (method in Go or Java, respectively)
+// MData can be a GMeth or a JmEntry (method in Go or Java, respectively)
 type MData interface{}
 
-// GmEntry is the entry in the MTable for Go functions. See MTable comments for details.
+// GMeth is the entry in the MTable for Go functions. See MTable comments for details.
 // Fu is a go function. All go functions accept a possibly empty slice of interface{} and
 // return a possibly nil interface{}
-type GmEntry struct {
+type GMeth struct {
 	ParamSlots int
-	Fu         func([]interface{}) interface{}
+	GFunction  func([]interface{}) interface{}
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
@@ -87,9 +87,9 @@ func MTableLoadNatives() {
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
-		gme := GmEntry{}
+		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
-		gme.Fu = val.GFunction
+		gme.GFunction = val.GFunction
 
 		tableEntry := MTentry{
 			MType: 'G',

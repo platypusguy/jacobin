@@ -31,13 +31,6 @@ import (
 
 var MethodSignatures = make(map[string]GMeth)
 
-type GMeth struct {
-	ParamSlots int
-	GFunction  function
-}
-
-type function func([]interface{}) interface{}
-
 func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println()V"] = // println string
 		GMeth{
