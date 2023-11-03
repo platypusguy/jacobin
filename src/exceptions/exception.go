@@ -204,7 +204,7 @@ const (
 )
 
 // JacobinRuntimeErrLiterals are the displayed strings for the given exception.
-// They are in the order
+// They are in the order of the listed exceptions and errors above
 var JacobinRuntimeErrLiterals = []string{
 	"",
 	"",
