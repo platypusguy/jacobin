@@ -19,9 +19,9 @@ import (
 // Similar to global tracing but just for this source file.
 var localDebugging bool = false
 
-// This function is called from run(). It executes a frame whose
-// method is a golang method. It copies the parameters from the
-// operand stack and passes them to the go function, here called Fu,
+// This function is called from run(). It executes a frame whose method is
+// a native method implemented in golang. It copies the parameters from the
+// operand stack and passes them to the golang function, called GFunction,
 // as an array of interface{}, which can be nil if there are no arguments.
 // Any return value from the method is returned to run() as an interface{}
 // (which is nil in the case of a void function), where it is placed
@@ -46,17 +46,17 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	for _, v := range fr.OpStack {
 		*params = append(*params, v)
 	}
-	//fmt.Printf("runGframe class: %s, methodName: %s, params: %v\n", fr.ClName, fr.MethName, params)
+	// fmt.Printf("runGframe class: %s, methodName: %s, params: %v\n", fr.ClName, fr.MethName, params)
 
 	// TODO Validate that a thread pointer is not needed.
 	// pass a pointer to the thread as the last parameter to the function;
 	// from the thread, the frame stack (and the individual frame) become accessible
-	//glob := globals.GetGlobalRef()
-	//thread := glob.Threads[fr.Thread]
-	//if thread != nil { // will be nil only in unit tests
+	// glob := globals.GetGlobalRef()
+	// thread := glob.Threads[fr.Thread]
+	// if thread != nil { // will be nil only in unit tests
 	//	threadPtr := thread.(*jvmThread.ExecThread)
 	//	*params = append(*params, threadPtr)
-	//}
+	// }
 
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(classloader.GMeth).GFunction(*params)
@@ -93,7 +93,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	// Get the GMeth paramSlots value.
 	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGmethod class: %s, methodName: %s, paramExtra: %v, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
+		traceInfo := fmt.Sprintf("runGmethod %s.%s, paramExtra: %v, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
 			className, methodName, ObjectRef, methodType, paramSlots, len(f.OpStack), f.TOS)
 		_ = log.Log(traceInfo, log.WARNING)
 		logTraceStack(f)
@@ -122,8 +122,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	var argList []interface{}
 
 	// Current frame stack is one of 2 forms:
-	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: vast majority of cases
-	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: out of the ordinary, like getBytes()
+	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: calls from INVOKESTATIC
+	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
 
 	// For each paramSlot, pop from the current frame and append it to argList.
 	for i := 0; i < npops; i++ {
@@ -139,8 +139,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	// (1) p1 | p2 | ... | pn
 	// (2) extra | p1 | p2 | ... | pn
 
-	// Push the arguments in reverse order onto the Go frame stack.
-	// If there was an extra parameter, it's at the Go frame stack index 0.
+	// Push the arguments in reverse order onto the Go op stack.
+	// If there was an extra parameter, it's at the Go op stack[0].
 	for j := len(argList) - 1; j >= 0; j-- {
 		push(gf, argList[j])
 	}
@@ -151,9 +151,6 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 		_ = log.Log("runGmethod go frame stack:", log.WARNING)
 		logTraceStack(gf)
 	}
-
-	//**** At this point, the Go frame stack is identical to
-	//*** the parent stack frame at entry to runGmethod (before popping f).
 
 	// push this new frame onto the frame stack for this thread
 	fs.PushFront(gf)                     // push the new frame
@@ -167,7 +164,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	}
 
 	// now that the go function is done, pop the frame off the stack and
-	// point the previous frame as the current frame
+	// make the previous frame the current frame
 	fs.Remove(fs.Front())                // pop the frame off
 	f = fs.Front().Value.(*frames.Frame) // point f the head again
 	return f, nil
