@@ -123,7 +123,7 @@ func Load_Lang_String() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			ObjectRef:  true,
-			GFunction:  GetBytesVoid,
+			GFunction:  getBytesVoid,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -140,6 +140,30 @@ func Load_Lang_String() map[string]GMeth {
 			ParamSlots: 1,
 			ObjectRef:  true,
 			GFunction:  noSupportYetInString,
+		}
+
+	// Return a formatted string using the specified format string and arguments.
+	// E.g. String string = String.format("%s %i", "ABC", 42);
+	MethodSignatures["java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  sprintf,
+		}
+
+	// Return a formatted string using the specified locale, format string, and arguments.
+	MethodSignatures["java/lang/String.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  noSupportYetInString,
+		}
+
+	// Return a formatted string using this string as the format string, and the supplied arguments.
+	// This method is equivalent to String.format(this, args).
+	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
+			GFunction:  sprintf,
 		}
 
 	return MethodSignatures
@@ -232,7 +256,7 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 
 }
 
-func GetBytesVoid(params []interface{}) interface{} {
+func getBytesVoid(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		parmObj := params[0].(*object.Object)
@@ -243,4 +267,55 @@ func GetBytesVoid(params []interface{}) interface{} {
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
 		return nil
 	}
+}
+
+func sprintf(params []interface{}) interface{} {
+	// params[0]: format string
+	// params[1]: object slice
+	return StringFormatter(params)
+}
+
+func StringFormatter(params []interface{}) string {
+	lenParams := len(params)
+	if lenParams < 1 || lenParams > 2 {
+		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
+		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+	}
+	if lenParams == 1 { // No parameters beyond the format string
+		formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
+		formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
+		return formatString
+	}
+	formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
+	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
+	valuesIn := *(params[1].(*object.Object).Fields[0].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
+	valuesOut := []any{}
+
+	for i := 0; i < len(valuesIn); i++ {
+		//fmt.Printf("DEBUG i: %d of %d\n", i+1, len(valuesIn))
+		//fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
+		if object.IsJavaString(valuesIn[i]) {
+			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+			//fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+		} else {
+			switch valuesIn[i].Fields[0].Ftype {
+			case types.Byte:
+			case types.Bool:
+			case types.Char:
+			case types.Double:
+			case types.Float:
+			case types.Int:
+			case types.Long:
+			case types.Short:
+			default:
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, valuesIn[i].Fields[0].Ftype)
+				exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+			}
+			valuesOut = append(valuesOut, valuesIn[i].Fields[0].Fvalue.(int64))
+		}
+
+	}
+
+	return fmt.Sprintf(formatString, valuesOut...)
+
 }

@@ -8,7 +8,6 @@ package classloader
 
 import (
 	"fmt"
-	"jacobin/exceptions"
 	"jacobin/object"
 	"math"
 )
@@ -234,48 +233,12 @@ func PrintS(i []interface{}) interface{} {
 
 // Printf -- handle the variable args and then call golang's own printf function
 func Printf(params []interface{}) interface{} {
-	ps := params[0]
-	formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
-	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
-
-	// now peel off the parameters beyond the format string and pass them to golang's printf function
-	switch len(params) {
-	case 0, 1:
-		errMsg := "printf(): Invalid parameter count"
-		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
-	case 2: // 0 parameters beyond the format string
-		fmt.Printf(formatString)
-	case 3: // 1 parameter beyond the format string, which will be an array of pointers to objects
-		valuesIn := *(params[2].(*object.Object).Fields[0].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
-		valuesOut := []any{}
-		for i := 0; i < len(valuesIn); i++ {
-			value := getRawParameter(valuesIn[i])
-			valuesOut = append(valuesOut, value)
-		}
-
-		switch len(valuesOut) {
-		case 1:
-			fmt.Printf(formatString, valuesOut[0])
-		case 2:
-			fmt.Printf(formatString, valuesOut[0], valuesOut[1])
-		case 3:
-			fmt.Printf(formatString, valuesOut[0], valuesOut[1], valuesOut[2])
-		case 4:
-			fmt.Printf(formatString, valuesOut[0], valuesOut[1], valuesOut[2], valuesOut[3])
-		}
-	}
-
-	return ps // return the printStream (even though we don't use it here)
-}
-
-// checks to see whether a value is a ptr to a Java string. If it is, it returns a golang string,
-// if not, it returns the value.
-func getRawParameter(param any) any {
-	if object.IsJavaString(param) {
-		return object.GetGoStringFromJavaStringPtr(param.(*object.Object))
-	} else {
-		return param
-	}
+	var intfSprintf = new([]interface{})
+	*intfSprintf = append(*intfSprintf, params[1])
+	*intfSprintf = append(*intfSprintf, params[2])
+	str := StringFormatter(*intfSprintf)
+	fmt.Print(str)
+	return params[0] // Return the PrintStream object
 }
 
 // Trying to approximate the exact formatting used in HotSpot JVM
