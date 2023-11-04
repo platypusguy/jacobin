@@ -141,14 +141,14 @@ func PrintlnV(i []interface{}) interface{} {
 	return nil
 }
 
-// PrintlnI = java/io/Prinstream.println(int) TODO: equivalent (verify that this grabs the right param to print)
+// PrintlnI = java/io/Prinstream.println(int)
 func PrintlnI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
 	fmt.Println(intToPrint)
 	return nil
 }
 
-// PrintlnBoolean = java/io/Prinstream.println(boolean) TODO: equivalent (verify that this grabs the right param to print)
+// PrintlnBoolean = java/io/Prinstream.println(boolean)
 func PrintlnBoolean(i []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := i[1].(int64) // contains an int64
@@ -177,14 +177,14 @@ func PrintlnDouble(l []interface{}) interface{} {
 	return nil
 }
 
-// PrintI = java/io/Prinstream.print(int) TODO: equivalent (verify that this grabs the right param to print)
+// PrintI = java/io/Prinstream.print(int)
 func PrintI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
 	fmt.Print(intToPrint)
 	return nil
 }
 
-// PrintBoolean = java/io/Prinstream.print(boolean) TODO: equivalent (verify that this grabs the right param to print)
+// PrintBoolean = java/io/Prinstream.print(boolean)
 func PrintBoolean(i []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := i[1].(int64) // contains an int64
@@ -239,6 +239,7 @@ func Printf(params []interface{}) interface{} {
 	str := StringFormatter(*intfSprintf)
 	fmt.Print(str)
 	return params[0] // Return the PrintStream object
+
 }
 
 // Trying to approximate the exact formatting used in HotSpot JVM
