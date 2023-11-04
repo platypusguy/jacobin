@@ -142,14 +142,14 @@ func PrintlnV(i []interface{}) interface{} {
 	return nil
 }
 
-// PrintlnI = java/io/Prinstream.println(int) TODO: equivalent (verify that this grabs the right param to print)
+// PrintlnI = java/io/Prinstream.println(int)
 func PrintlnI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
 	fmt.Println(intToPrint)
 	return nil
 }
 
-// PrintlnBoolean = java/io/Prinstream.println(boolean) TODO: equivalent (verify that this grabs the right param to print)
+// PrintlnBoolean = java/io/Prinstream.println(boolean)
 func PrintlnBoolean(i []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := i[1].(int64) // contains an int64
@@ -178,14 +178,14 @@ func PrintlnDouble(l []interface{}) interface{} {
 	return nil
 }
 
-// PrintI = java/io/Prinstream.print(int) TODO: equivalent (verify that this grabs the right param to print)
+// PrintI = java/io/Prinstream.print(int)
 func PrintI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
 	fmt.Print(intToPrint)
 	return nil
 }
 
-// PrintBoolean = java/io/Prinstream.print(boolean) TODO: equivalent (verify that this grabs the right param to print)
+// PrintBoolean = java/io/Prinstream.print(boolean)
 func PrintBoolean(i []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := i[1].(int64) // contains an int64
@@ -243,8 +243,10 @@ func Printf(params []interface{}) interface{} {
 	case 0, 1:
 		errMsg := "printf(): Invalid parameter count"
 		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+
 	case 2: // 0 parameters beyond the format string
 		fmt.Printf(formatString)
+
 	case 3: // 1 parameter beyond the format string, which will be an array of pointers to objects
 		valuesIn := *(params[2].(*object.Object).Fields[0].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
 		valuesOut := []any{}
