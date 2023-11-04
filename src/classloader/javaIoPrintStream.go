@@ -245,48 +245,76 @@ func Printf(params []interface{}) interface{} {
 		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
 	case 2: // 0 parameters beyond the format string
 		fmt.Printf(formatString)
-	case 3: // 1 parameter beyond the format string
-		var param1 any
-		if object.IsJavaString(params[2]) {
-			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
-		} else {
-			param1 = params[2]
+	case 3: // 1 parameter beyond the format string, which will be an array of pointers to objects
+		valuesIn := (params[2].(*object.Object).Fields[0].Fvalue).([]*object.Object) // array of pointers to 1 or more objects
+		valuesOut := []any{}
+		for i := 0; i < len(valuesIn); i++ {
+			value := getRawParameter(valuesIn[i])
+			valuesOut = append(valuesOut, value)
 		}
-		fmt.Printf(formatString, param1)
-	case 4: // 2 parameters beyond the format string
-		var param1, param2 any
-		if object.IsJavaString(params[2]) {
-			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
-		} else {
-			param1 = params[2]
+
+		switch len(valuesOut) {
+		case 1:
+			fmt.Printf(formatString, valuesOut[0])
+		case 2:
+			fmt.Printf(formatString, valuesOut[0], valuesOut[1])
+		case 3:
+			fmt.Printf(formatString, valuesOut[0], valuesOut[1], valuesOut[2])
+		case 4:
+			fmt.Printf(formatString, valuesOut[0], valuesOut[1], valuesOut[2], valuesOut[3])
 		}
-		if object.IsJavaString(params[3]) {
-			param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
-		} else {
-			param2 = params[3]
-		}
-		fmt.Printf(formatString, param1, param2)
-	case 5: // 3 parameters beyond the format string
-		var param1, param2, param3 any
-		if object.IsJavaString(params[2]) {
-			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
-		} else {
-			param1 = params[2]
-		}
-		if object.IsJavaString(params[3]) {
-			param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
-		} else {
-			param2 = params[3]
-		}
-		if object.IsJavaString(params[4]) {
-			param3 = object.GetGoStringFromJavaStringPtr(params[4].(*object.Object))
-		} else {
-			param3 = params[4]
-		}
-		fmt.Printf(formatString, param1, param2, param3)
 	}
+	//
+	//
+	// 	var param1 any
+	// 	if object.IsJavaString(params[2]) {
+	// 		param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+	// 	} else {
+	// 		param1 = params[2]
+	// 	}
+	// 	fmt.Printf(formatString, param1)
+	// case 4: // 2 parameters beyond the format string
+	// 	var param1, param2 any
+	// 	if object.IsJavaString(params[2]) {
+	// 		param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+	// 	} else {
+	// 		param1 = params[2]
+	// 	}
+	// 	if object.IsJavaString(params[3]) {
+	// 		param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
+	// 	} else {
+	// 		param2 = params[3]
+	// 	}
+	// 	fmt.Printf(formatString, param1, param2)
+	// case 5: // 3 parameters beyond the format string
+	// 	var param1, param2, param3 any
+	// 	if object.IsJavaString(params[2]) {
+	// 		param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+	// 	} else {
+	// 		param1 = params[2]
+	// 	}
+	// 	if object.IsJavaString(params[3]) {
+	// 		param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
+	// 	} else {
+	// 		param2 = params[3]
+	// 	}
+	// 	if object.IsJavaString(params[4]) {
+	// 		param3 = object.GetGoStringFromJavaStringPtr(params[4].(*object.Object))
+	// 	} else {
+	// 		param3 = params[4]
+	// 	}
+	// 	fmt.Printf(formatString, param1, param2, param3)
+	// }
 
 	return ps // return the printStream (even though we don't use it here)
+}
+
+func getRawParameter(param any) any {
+	if object.IsJavaString(param) {
+		return object.GetGoStringFromJavaStringPtr(param.(*object.Object))
+	} else {
+		return param
+	}
 }
 
 // Trying to approximate the exact formatting used in HotSpot JVM
