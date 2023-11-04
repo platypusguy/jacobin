@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"fmt"
+	"jacobin/exceptions"
 	"jacobin/object"
 	"math"
 )
@@ -103,6 +104,12 @@ func Load_Io_PrintStream() map[string]GMeth {
 		GMeth{
 			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
 			GFunction:  PrintFloat,
+		}
+
+	MethodSignatures["java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
+		GMeth{
+			ParamSlots: 3, // the Printstream object, the format string, the parameters (if any)
+			GFunction:  Printf,
 		}
 
 	return MethodSignatures
@@ -223,6 +230,63 @@ func PrintS(i []interface{}) interface{} {
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
 	fmt.Print(string(*t))
 	return nil
+}
+
+// Printf -- handle the variable args and then call golang's own printf function
+func Printf(params []interface{}) interface{} {
+	ps := params[0]
+	formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
+	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
+
+	// now peel off the parameters beyond the format string and pass them to golang's printf function
+	switch len(params) {
+	case 0, 1:
+		errMsg := "printf(): Invalid parameter count"
+		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+	case 2: // 0 parameters beyond the format string
+		fmt.Printf(formatString)
+	case 3: // 1 parameter beyond the format string
+		var param1 any
+		if object.IsJavaString(params[2]) {
+			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+		} else {
+			param1 = params[2]
+		}
+		fmt.Printf(formatString, param1)
+	case 4: // 2 parameters beyond the format string
+		var param1, param2 any
+		if object.IsJavaString(params[2]) {
+			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+		} else {
+			param1 = params[2]
+		}
+		if object.IsJavaString(params[3]) {
+			param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
+		} else {
+			param2 = params[3]
+		}
+		fmt.Printf(formatString, param1, param2)
+	case 5: // 3 parameters beyond the format string
+		var param1, param2, param3 any
+		if object.IsJavaString(params[2]) {
+			param1 = object.GetGoStringFromJavaStringPtr(params[2].(*object.Object))
+		} else {
+			param1 = params[2]
+		}
+		if object.IsJavaString(params[3]) {
+			param2 = object.GetGoStringFromJavaStringPtr(params[3].(*object.Object))
+		} else {
+			param2 = params[3]
+		}
+		if object.IsJavaString(params[4]) {
+			param3 = object.GetGoStringFromJavaStringPtr(params[4].(*object.Object))
+		} else {
+			param3 = params[4]
+		}
+		fmt.Printf(formatString, param1, param2, param3)
+	}
+
+	return ps // return the printStream (even though we don't use it here)
 }
 
 // Trying to approximate the exact formatting used in HotSpot JVM
