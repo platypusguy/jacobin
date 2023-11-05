@@ -8,6 +8,8 @@ package object
 
 import (
 	"fmt"
+	"jacobin/types"
+	"path/filepath"
 	"unsafe"
 )
 
@@ -60,24 +62,50 @@ func IsNull(value any) bool {
 	return value == nil || value == Null
 }
 
+func toStringHelper(klassString string, field Field) string {
+	if klassString == filepath.FromSlash("java/lang/String") {
+		return fmt.Sprintf("%s", *field.Fvalue.(*[]byte))
+	}
+	switch field.Ftype {
+	case types.Double, types.Float:
+		return fmt.Sprintf("%f", field.Fvalue)
+	case types.Int, types.Long, types.Short:
+		return fmt.Sprintf("%d", field.Fvalue)
+	case types.Byte:
+		return fmt.Sprintf("%02x", field.Fvalue)
+	case types.Bool:
+		return fmt.Sprintf("%t", field.Fvalue)
+	case types.Char:
+		return fmt.Sprintf("%q", field.Fvalue)
+	case "Ljava/lang/String;":
+		return field.Fvalue.(string)
+	case types.ByteArray:
+		return fmt.Sprintf("% x", *field.Fvalue.(*[]byte))
+	}
+
+	return fmt.Sprintf("%v", field.Fvalue)
+}
+
 // ToString dumps the contents of an object to a formatted multi-line string
 func (objPtr *Object) ToString() string {
 	var str string
 	obj := *objPtr
+	klassString := *obj.Klass
 	if obj.Klass != nil {
-		str = *obj.Klass + "\n"
+		str = klassString + "\n"
 	} else {
 		str = "class type: n/a \n"
 	}
 
 	if len(obj.FieldTable) > 0 {
 		for key := range obj.FieldTable {
-			str += fmt.Sprintf("\tFld: %s: (%s) %v\n", key, obj.FieldTable[key].Ftype, obj.FieldTable[key].Fvalue)
+			str += fmt.Sprintf("\tFld: %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, *obj.FieldTable[key]))
 		}
 	} else {
-		for i, f := range obj.Fields {
-			str += fmt.Sprintf("\tFld: %02d: (%s) %v\n", i, f.Ftype, f.Fvalue)
-		}
+		//for i, field := range obj.Fields {
+		//	str += fmt.Sprintf("\tFld: %02d: (%s) %s\n", i, field.Ftype, toStringHelper(field))
+		//}
+		str += fmt.Sprintf("\tFld:(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
 	}
 
 	return str
