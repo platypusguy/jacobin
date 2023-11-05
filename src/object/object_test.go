@@ -12,6 +12,7 @@ import (
 )
 
 func TestObjectToString1(t *testing.T) {
+	t.Log("Test field table toString processing")
 	obj := MakeEmptyObject()
 	klassType := filepath.FromSlash("java/lang/madeUpClass")
 	obj.Klass = &klassType
@@ -84,7 +85,9 @@ func TestObjectToString1(t *testing.T) {
 	}
 }
 
+// Test field slice toString processing
 func TestObjectToString2(t *testing.T) {
+	t.Log("Test field slice toString processing")
 	literal := "This is a compact string from a Go string"
 	csObj := CreateCompactStringFromGoString(&literal)
 	retStr := csObj.ToString()
