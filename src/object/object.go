@@ -60,15 +60,25 @@ func IsNull(value any) bool {
 	return value == nil || value == Null
 }
 
-// dumps the contents of an object to a string
-func (objPtr *Object) toString() string {
+// ToString dumps the contents of an object to a formatted multi-line string
+func (objPtr *Object) ToString() string {
 	var str string
 	obj := *objPtr
-	str = *obj.Klass + "\n "
+	if obj.Klass != nil {
+		str = *obj.Klass + "\n"
+	} else {
+		str = "class type: n/a \n"
+	}
+
 	if len(obj.FieldTable) > 0 {
 		for key := range obj.FieldTable {
 			str += fmt.Sprintf("\tFld: %s: (%s) %v\n", key, obj.FieldTable[key].Ftype, obj.FieldTable[key].Fvalue)
 		}
+	} else {
+		for i, f := range obj.Fields {
+			str += fmt.Sprintf("\tFld: %02d: (%s) %v\n", i, f.Ftype, f.Fvalue)
+		}
 	}
+
 	return str
 }

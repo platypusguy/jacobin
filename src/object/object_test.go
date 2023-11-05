@@ -33,10 +33,22 @@ func TestObjectToString1(t *testing.T) {
 	}
 	obj.FieldTable["myString"] = &myStringField
 
-	str := obj.toString()
+	str := obj.ToString()
 	if len(str) == 0 {
 		t.Errorf("empty string for object.ToString()")
 	} else {
 		fmt.Println(str)
+	}
+}
+
+func TestObjectToString2(t *testing.T) {
+	literal := "Hello, Jacobin!"
+	str := CreateCompactStringFromGoString(&literal)
+
+	retStr := str.ToString()
+	if len(retStr) == 0 {
+		t.Errorf("empty string for object.ToString()")
+	} else {
+		fmt.Println(retStr)
 	}
 }
