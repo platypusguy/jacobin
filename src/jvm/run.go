@@ -2637,6 +2637,9 @@ func emitTraceData(f *frames.Frame) string {
 			if f.OpStack[f.TOS].(*object.Object) == object.Null {
 				stackTop = fmt.Sprintf("null")
 			} else {
+				objPtr := f.OpStack[f.TOS].(*object.Object)
+				stackTop = objPtr.ToString(50)
+				/***
 				obj := *(f.OpStack[f.TOS].(*object.Object))
 				if obj.Fields != nil && len(obj.Fields) > 0 {
 					if obj.Fields != nil && obj.Fields[0].Ftype == types.ByteArray { // if it's a string, just show the string
@@ -2653,6 +2656,7 @@ func emitTraceData(f *frames.Frame) string {
 				} else {
 					stackTop = "obj.Field[]"
 				}
+				***/
 			}
 		case *[]uint8:
 			value := f.OpStack[f.TOS]
