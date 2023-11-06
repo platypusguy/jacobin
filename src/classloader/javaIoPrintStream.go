@@ -223,11 +223,17 @@ func PrintDouble(l []interface{}) interface{} {
 
 // Print string
 func PrintS(i []interface{}) interface{} {
-	strAddr := i[1].(*object.Object)
-	// eventually will need to check wherther it's a compact string.
-	// Presently, we assume it is.
-	t := (strAddr.Fields[0].Fvalue).(*[]byte)
-	fmt.Print(string(*t))
+	// TODO: Eventually will need to check whether or not i[1] is a compact string.
+	//       Presently, we assume it is.
+	switch i[1].(type) {
+	case *object.Object:
+		strAddr := i[1].(*object.Object)
+		t := (strAddr.Fields[0].Fvalue).(*[]byte)
+		fmt.Print(string(*t))
+	case string:
+		str := i[1].(string)
+		fmt.Print(str)
+	}
 	return nil
 }
 
