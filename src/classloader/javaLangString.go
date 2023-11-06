@@ -275,7 +275,7 @@ func sprintf(params []interface{}) interface{} {
 	return StringFormatter(params)
 }
 
-func StringFormatter(params []interface{}) string {
+func StringFormatter(params []interface{}) *object.Object {
 	lenParams := len(params)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
@@ -283,8 +283,7 @@ func StringFormatter(params []interface{}) string {
 	}
 	if lenParams == 1 { // No parameters beyond the format string
 		formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
-		formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
-		return formatString
+		return formatStringObj
 	}
 	formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
 	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
@@ -316,6 +315,9 @@ func StringFormatter(params []interface{}) string {
 
 	}
 
-	return fmt.Sprintf(formatString, valuesOut...)
+	// Use golang fmt.Sprintf to do the heavy lifting.
+	str := fmt.Sprintf(formatString, valuesOut...)
 
+	// Return a pointer to an object.Object that wraps the string byte array.
+	return object.CreateCompactStringFromGoString(&str)
 }

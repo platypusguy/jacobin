@@ -225,15 +225,10 @@ func PrintDouble(l []interface{}) interface{} {
 func PrintS(i []interface{}) interface{} {
 	// TODO: Eventually will need to check whether or not i[1] is a compact string.
 	//       Presently, we assume it is.
-	switch i[1].(type) {
-	case *object.Object:
-		strAddr := i[1].(*object.Object)
-		t := (strAddr.Fields[0].Fvalue).(*[]byte)
-		fmt.Print(string(*t))
-	case string:
-		str := i[1].(string)
-		fmt.Print(str)
-	}
+	// fmt.Printf("DEBUG PrintS got an Object\n")
+	strAddr := i[1].(*object.Object)
+	t := (strAddr.Fields[0].Fvalue).(*[]byte)
+	fmt.Print(string(*t))
 	return nil
 }
 
@@ -242,7 +237,8 @@ func Printf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
 	*intfSprintf = append(*intfSprintf, params[1])
 	*intfSprintf = append(*intfSprintf, params[2])
-	str := StringFormatter(*intfSprintf)
+	objPtr := StringFormatter(*intfSprintf)
+	str := object.GetGoStringFromJavaStringPtr(objPtr)
 	fmt.Print(str)
 	return params[0] // Return the PrintStream object
 
