@@ -297,20 +297,48 @@ func StringFormatter(params []interface{}) *object.Object {
 			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 			//fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 		} else {
-			switch valuesIn[i].Fields[0].Ftype {
+			//str := valuesIn[i].ToString(10)
+			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] ToString:\n%s", i, str)
+
+			// Establish a pointer to the field.
+			var fldPtr *object.Field
+			if len(valuesIn[i].FieldTable) > 0 { // using FieldTable
+				fldPtr = valuesIn[i].FieldTable["value"]
+			} else { // using Fields slice
+				fldPtr = &valuesIn[i].Fields[0]
+			}
+
+			// Get the field value.
+			fvalue := (*fldPtr).Fvalue
+
+			// Process depending on field type
+			switch (*fldPtr).Ftype {
 			case types.Byte:
+				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Bool:
+				fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
+				if fvalue.(int64) == 0 {
+					valuesOut = append(valuesOut, false)
+				} else {
+					valuesOut = append(valuesOut, true)
+				}
 			case types.Char:
+				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Double:
+				valuesOut = append(valuesOut, fvalue.(float64))
 			case types.Float:
+				valuesOut = append(valuesOut, fvalue.(float64))
 			case types.Int:
+				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Long:
+				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Short:
+				valuesOut = append(valuesOut, fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, valuesIn[i].Fields[0].Ftype)
 				exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
 			}
-			valuesOut = append(valuesOut, valuesIn[i].Fields[0].Fvalue.(int64))
+
 		}
 
 	}

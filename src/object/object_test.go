@@ -77,7 +77,7 @@ func TestObjectToString1(t *testing.T) {
 	}
 	obj.FieldTable["myString"] = &myStringField
 
-	str := obj.ToString()
+	str := obj.ToString(42)
 	if len(str) == 0 {
 		t.Errorf("empty string for object.ToString()")
 	} else {
@@ -90,7 +90,7 @@ func TestObjectToString2(t *testing.T) {
 	t.Log("Test field slice toString processing")
 	literal := "This is a compact string from a Go string"
 	csObj := CreateCompactStringFromGoString(&literal)
-	retStr := csObj.ToString()
+	retStr := csObj.ToString(0)
 	if len(retStr) == 0 {
 		t.Errorf("empty string for object.ToString()")
 	} else {
@@ -104,7 +104,7 @@ func TestObjectToString2(t *testing.T) {
 
 	// Now, dump the same string as a byte array.
 	csObj.Klass = &klassType
-	retStr = csObj.ToString()
+	retStr = csObj.ToString(0)
 	if len(retStr) == 0 {
 		t.Errorf("empty string for object.ToString()")
 	} else {
@@ -116,62 +116,62 @@ func TestObjectToString2(t *testing.T) {
 		Fvalue: 1.0,
 	}
 	obj.Fields = append(obj.Fields, myFloatField)
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myDoubleField := Field{
 		Ftype:  "D",
 		Fvalue: 2.0,
 	}
 	obj.Fields[0] = myDoubleField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myIntField := Field{
 		Ftype:  "I",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myIntField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myLongField := Field{
 		Ftype:  "J",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myLongField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myShortField := Field{
 		Ftype:  "S",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myShortField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myByteField := Field{
 		Ftype:  "B",
 		Fvalue: 0x61,
 	}
 	obj.Fields[0] = myByteField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myStaticTrueField := Field{
 		Ftype:  "XZ",
 		Fvalue: true,
 	}
 	obj.Fields[0] = myStaticTrueField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myFalseField := Field{
 		Ftype:  "Z",
 		Fvalue: false,
 	}
 	obj.Fields[0] = myFalseField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 	myCharField := Field{
 		Ftype:  "C",
 		Fvalue: 'C',
 	}
 	obj.Fields[0] = myCharField
-	t.Log(obj.ToString())
+	t.Log(obj.ToString(0))
 
 }

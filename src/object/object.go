@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/types"
 	"path/filepath"
+	"strings"
 	"unsafe"
 )
 
@@ -87,7 +88,7 @@ func toStringHelper(klassString string, field Field) string {
 }
 
 // ToString dumps the contents of an object to a formatted multi-line string
-func (objPtr *Object) ToString() string {
+func (objPtr *Object) ToString(indent int) string {
 	var str string
 	obj := *objPtr
 	klassString := *obj.Klass
@@ -99,12 +100,18 @@ func (objPtr *Object) ToString() string {
 
 	if len(obj.FieldTable) > 0 {
 		for key := range obj.FieldTable {
+			if indent > 0 {
+				str += strings.Repeat(" ", indent)
+			}
 			str += fmt.Sprintf("\tFld: %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, *obj.FieldTable[key]))
 		}
 	} else {
 		//for i, field := range obj.Fields {
 		//	str += fmt.Sprintf("\tFld: %02d: (%s) %s\n", i, field.Ftype, toStringHelper(field))
 		//}
+		if indent > 0 {
+			str += strings.Repeat(" ", indent)
+		}
 		str += fmt.Sprintf("\tFld:(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
 	}
 
