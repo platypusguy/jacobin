@@ -2634,7 +2634,7 @@ func emitTraceData(f *frames.Frame) string {
 		switch f.OpStack[f.TOS].(type) {
 		// if the value at TOS is a string, say so and print the first 10 chars of the string
 		case *object.Object:
-			if f.OpStack[f.TOS].(*object.Object) == object.Null {
+			if object.IsNull(f.OpStack[f.TOS].(*object.Object)) {
 				stackTop = fmt.Sprintf("null")
 			} else {
 				objPtr := f.OpStack[f.TOS].(*object.Object)

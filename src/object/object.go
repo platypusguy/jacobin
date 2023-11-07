@@ -90,11 +90,13 @@ func toStringHelper(klassString string, field Field) string {
 // ToString dumps the contents of an object to a formatted multi-line string
 func (objPtr *Object) ToString(indent int) string {
 	var str string
+	var klassString string
 	obj := *objPtr
-	klassString := *obj.Klass
 	if obj.Klass != nil {
+		klassString = *obj.Klass
 		str = klassString + "\n"
 	} else {
+		klassString = "n/a"
 		str = "class type: n/a \n"
 	}
 
@@ -112,7 +114,12 @@ func (objPtr *Object) ToString(indent int) string {
 		if indent > 0 {
 			str += strings.Repeat(" ", indent)
 		}
-		str += fmt.Sprintf("\tFld:(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
+		if len(obj.Fields) > 0 {
+			str += fmt.Sprintf("\tFld:(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
+		} else {
+			str += "\tFld:EMPTY!!!"
+		}
+
 	}
 
 	return str
