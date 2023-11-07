@@ -316,7 +316,12 @@ func StringFormatter(params []interface{}) *object.Object {
 			case types.Byte:
 				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Bool:
-				valuesOut = append(valuesOut, fvalue.(bool))
+				fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
+				if fvalue.(int64) == 0 {
+					valuesOut = append(valuesOut, false)
+				} else {
+					valuesOut = append(valuesOut, true)
+				}
 			case types.Char:
 				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Double:
