@@ -166,6 +166,14 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  sprintf,
 		}
 
+	// Return the length of a String..
+	MethodSignatures["java/lang/String.length()I"] =
+		GMeth{
+			ParamSlots: 0,
+			ObjectRef:  true,
+			GFunction:  stringLength,
+		}
+
 	return MethodSignatures
 
 }
@@ -297,8 +305,8 @@ func StringFormatter(params []interface{}) *object.Object {
 			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 			//fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 		} else {
-			//str := valuesIn[i].ToString(10)
-			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] ToString:\n%s", i, str)
+			//str := valuesIn[i].FormatField(10)
+			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
 
 			// Establish a pointer to the field.
 			var fldPtr *object.Field
@@ -350,4 +358,15 @@ func StringFormatter(params []interface{}) *object.Object {
 
 	// Return a pointer to an object.Object that wraps the string byte array.
 	return object.CreateCompactStringFromGoString(&str)
+}
+
+func stringLength(params []interface{}) interface{} {
+	var bytesPtr *[]byte
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		bytesPtr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
+	} else {
+		bytesPtr = parmObj.Fields[0].Fvalue.(*[]byte)
+	}
+	return int64(len(*bytesPtr))
 }

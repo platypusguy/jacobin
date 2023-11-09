@@ -2608,17 +2608,33 @@ func runFrame(fs *list.List) error {
 // Log the existing stack
 // Could be called for tracing -or- supply info for an error section
 func logTraceStack(f *frames.Frame) {
-	var traceInfo string
+	var traceInfo, output string
 	if f.TOS == -1 {
-		traceInfo = fmt.Sprintf("%67s", "stack empty")
+		traceInfo = fmt.Sprintf("%55s stack <empty>", "")
 		_ = log.Log(traceInfo, log.WARNING)
 		return
 	}
 	for ii := 0; ii <= f.TOS; ii++ {
+		switch f.OpStack[ii].(type) {
+		case *object.Object:
+			if object.IsNull(f.OpStack[ii].(*object.Object)) {
+				output = fmt.Sprintf("<null>")
+			} else {
+				objPtr := f.OpStack[ii].(*object.Object)
+				output = objPtr.FormatField()
+			}
+		case *[]uint8:
+			value := f.OpStack[ii]
+			strPtr := value.(*[]byte)
+			str := string(*strPtr)
+			output = fmt.Sprintf("*[]byte: %-10s", str)
+		default:
+			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
+		}
 		if f.TOS == ii {
-			traceInfo = fmt.Sprintf("%55s TOS   [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+			traceInfo = fmt.Sprintf("%55s TOS   [%d] %s", "", ii, output)
 		} else {
-			traceInfo = fmt.Sprintf("%55s stack [%d] %T %v", "", ii, f.OpStack[ii], f.OpStack[ii])
+			traceInfo = fmt.Sprintf("%55s stack [%d] %s", "", ii, output)
 		}
 		_ = log.Log(traceInfo, log.WARNING)
 	}
@@ -2635,28 +2651,10 @@ func emitTraceData(f *frames.Frame) string {
 		// if the value at TOS is a string, say so and print the first 10 chars of the string
 		case *object.Object:
 			if object.IsNull(f.OpStack[f.TOS].(*object.Object)) {
-				stackTop = fmt.Sprintf("null")
+				stackTop = fmt.Sprintf("<null>")
 			} else {
 				objPtr := f.OpStack[f.TOS].(*object.Object)
-				stackTop = objPtr.ToString(50)
-				/***
-				obj := *(f.OpStack[f.TOS].(*object.Object))
-				if obj.Fields != nil && len(obj.Fields) > 0 {
-					if obj.Fields != nil && obj.Fields[0].Ftype == types.ByteArray { // if it's a string, just show the string
-						if obj.Fields[0].Fvalue == nil {
-							stackTop = fmt.Sprintf("[]byte: <nil>")
-						} else {
-							strVal := (obj.Fields[0].Fvalue).(*[]byte)
-							str := string(*strVal)
-							stackTop = fmt.Sprintf("String: %-10s", str)
-						}
-					} else { // so not a byte array (and therefore, not a string)
-						stackTop = "Object: "
-					}
-				} else {
-					stackTop = "obj.Field[]"
-				}
-				***/
+				stackTop = objPtr.FormatField()
 			}
 		case *[]uint8:
 			value := f.OpStack[f.TOS]
