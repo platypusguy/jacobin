@@ -28,9 +28,8 @@ var localDebugging bool = false
 // by run() on the operand stack of the calling function.
 func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGframe class: %s, methodName: %s", fr.ClName, fr.MethName)
+		traceInfo := fmt.Sprintf("runGframe %s.%s, f.OpStack:", fr.ClName, fr.MethName)
 		_ = log.Log(traceInfo, log.WARNING)
-		_ = log.Log("runGframe go frame stack:", log.WARNING)
 		logTraceStack(fr)
 	}
 
@@ -46,7 +45,6 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	for _, v := range fr.OpStack {
 		*params = append(*params, v)
 	}
-	// fmt.Printf("runGframe class: %s, methodName: %s, params: %v\n", fr.ClName, fr.MethName, params)
 
 	// TODO Validate that a thread pointer is not needed.
 	// pass a pointer to the thread as the last parameter to the function;
@@ -93,8 +91,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	// Get the GMeth paramSlots value.
 	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGmethod %s.%s, paramExtra: %v, methodType: %s, paramSlots: %d, len(f.OpStack): %d, f.TOS: %d",
-			className, methodName, ObjectRef, methodType, paramSlots, len(f.OpStack), f.TOS)
+		traceInfo := fmt.Sprintf("runGmethod %s.%s%s, objectRef: %v, paramSlots: %d, f.OpStack:",
+			className, methodName, methodType, ObjectRef, paramSlots)
 		_ = log.Log(traceInfo, log.WARNING)
 		logTraceStack(f)
 	}
@@ -148,7 +146,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	// Set the Go frame TOS = parent frame TOS.
 	gf.TOS = len(gf.OpStack) - 1
 	if localDebugging || MainThread.Trace {
-		_ = log.Log("runGmethod go frame stack:", log.WARNING)
+		_ = log.Log("runGmethod G method OpStack:", log.WARNING)
 		logTraceStack(gf)
 	}
 

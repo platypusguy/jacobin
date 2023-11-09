@@ -39,7 +39,7 @@ type MarkWord struct {
 // putfield bytecodes are executed.
 type Field struct {
 	Ftype  string // what type of value is stored in the field
-	Fvalue any    // the actual value
+	Fvalue any    // the actual value or a pointer to the value (ftype="[something)
 }
 
 // Null is the Jacobin implementation of Java's null
@@ -64,7 +64,7 @@ func IsNull(value any) bool {
 }
 
 func toStringHelper(klassString string, field Field) string {
-	if klassString == filepath.FromSlash("java/lang/String") {
+	if klassString == filepath.FromSlash(StringClassName) {
 		return fmt.Sprintf("%s", *field.Fvalue.(*[]byte))
 	}
 	switch field.Ftype {
@@ -78,16 +78,51 @@ func toStringHelper(klassString string, field Field) string {
 		return fmt.Sprintf("%t", field.Fvalue)
 	case types.Char:
 		return fmt.Sprintf("%q", field.Fvalue)
-	case "Ljava/lang/String;":
-		return field.Fvalue.(string)
 	case types.ByteArray:
-		return fmt.Sprintf("% x", *field.Fvalue.(*[]byte))
+		bytesPtr := field.Fvalue.(*[]byte)
+		if bytesPtr == nil {
+			return "<NIL BYTE ARRAY PTR!>"
+		}
+		if len(*bytesPtr) < 1 {
+			return "<nil>"
+		}
+		return fmt.Sprintf("% x", *bytesPtr)
 	}
 
 	return fmt.Sprintf("%v", field.Fvalue)
 }
 
-// ToString dumps the contents of an object to a formatted multi-line string
+// FormatField creates a string that represents a single field of an Object.
+func (objPtr *Object) FormatField() string {
+	var output string
+	var klassString string // string class name
+	obj := *objPtr         // whole object
+	key := "value"         // key to the FieldTable map
+
+	if obj.Klass != nil {
+		klassString = *obj.Klass
+	} else {
+		klassString = "<class MISSING!>" // Why is there no class name pointer for this object?
+	}
+
+	if len(obj.FieldTable) > 0 {
+		// Using key="value" in the FieldTable
+		field := *obj.FieldTable[key]
+		output = fmt.Sprintf("%s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, field))
+	} else {
+		// Using [0] in the Fields slice
+		if len(obj.Fields) > 0 {
+			field := obj.Fields[0]
+			output += fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, field))
+		} else {
+			output = "<field MISSING!>"
+		}
+	}
+
+	return output
+}
+
+// FormatField dumps the contents of an object to a formatted multi-line string
 func (objPtr *Object) ToString(indent int) string {
 	var str string
 	var klassString string
@@ -105,21 +140,17 @@ func (objPtr *Object) ToString(indent int) string {
 			if indent > 0 {
 				str += strings.Repeat(" ", indent)
 			}
-			str += fmt.Sprintf("\tFld: %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, *obj.FieldTable[key]))
+			str += fmt.Sprintf("Fld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, *obj.FieldTable[key]))
 		}
 	} else {
-		//for i, field := range obj.Fields {
-		//	str += fmt.Sprintf("\tFld: %02d: (%s) %s\n", i, field.Ftype, toStringHelper(field))
-		//}
 		if indent > 0 {
 			str += strings.Repeat(" ", indent)
 		}
 		if len(obj.Fields) > 0 {
-			str += fmt.Sprintf("\tFld:(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
+			str += fmt.Sprintf("Fld (%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
 		} else {
-			str += "\tFld:EMPTY!!!"
+			str += "Fld <empty>"
 		}
-
 	}
 
 	return str
