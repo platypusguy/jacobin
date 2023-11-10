@@ -11,7 +11,7 @@ import (
 	"jacobin/types"
 )
 
-// Implementation of some of the functions in in Java/lang/Class.
+// Implementation some of the functions in Byte, Character, Integer, Long, Short, and Boolean.
 
 func Load_Primitives() map[string]GMeth {
 
