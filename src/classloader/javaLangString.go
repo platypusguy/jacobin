@@ -11,6 +11,7 @@ import (
 	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
+	"strconv"
 	"strings"
 )
 
@@ -189,6 +190,62 @@ func Load_Lang_String() map[string]GMeth {
 			ParamSlots: 0,
 			ObjectRef:  true,
 			GFunction:  toUpperCase,
+		}
+
+	// Return a string representing a boolean value.
+	MethodSignatures["java/lang/String.valueOf(Z)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfBoolean,
+		}
+
+	// Return a string representing a char value.
+	MethodSignatures["java/lang/String.valueOf(C)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfChar,
+		}
+
+	// Return a string representing a char array.
+	MethodSignatures["java/lang/String.valueOf([C)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfCharArray,
+		}
+
+	// Return a string representing a char subarray.
+	MethodSignatures["java/lang/String.valueOf([CII)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  valueOfCharSubarray,
+		}
+
+	// Return a string representing a double value.
+	MethodSignatures["java/lang/String.valueOf(D)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  valueOfDouble,
+		}
+
+	// Return a string representing a float value.
+	MethodSignatures["java/lang/String.valueOf(F)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfFloat,
+		}
+
+	// Return a string representing an int value.
+	MethodSignatures["java/lang/String.valueOf(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfInt,
+		}
+
+	// Return a string representing an int value.
+	MethodSignatures["java/lang/String.valueOf(J)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  valueOfLong,
 		}
 
 	return MethodSignatures
@@ -391,7 +448,7 @@ func stringLength(params []interface{}) interface{} {
 
 func toLowerCase(params []interface{}) interface{} {
 	// params[0]: input string
-	propObj := params[0].(*object.Object) // string
+	propObj := params[0].(*object.Object)
 	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
 	str := strings.ToLower(string(*strPtr))
 	obj := object.CreateCompactStringFromGoString(&str)
@@ -400,9 +457,109 @@ func toLowerCase(params []interface{}) interface{} {
 
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
-	propObj := params[0].(*object.Object) // string
+	propObj := params[0].(*object.Object)
 	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
 	str := strings.ToUpper(string(*strPtr))
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfBoolean(params []interface{}) interface{} {
+	// params[0]: input boolean
+	value := params[0].(int64)
+	var str string
+	if value != 0 {
+		str = "true"
+	} else {
+		str = "false"
+	}
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfChar(params []interface{}) interface{} {
+	// params[0]: input char
+	value := params[0].(int64)
+	str := fmt.Sprintf("%c", value)
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfCharArray(params []interface{}) interface{} {
+	// params[0]: input char array
+	propObj := params[0].(*object.Object)
+	caPtr := propObj.Fields[0].Fvalue.(*[]int64)
+	var str string
+	for _, ch := range *caPtr {
+		str += fmt.Sprintf("%c", ch)
+	}
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfCharSubarray(params []interface{}) interface{} {
+	// params[0]: input char array
+	// params[1]: input offset
+	// params[2]: input count
+	propObj := params[0].(*object.Object)
+	caPtr := propObj.Fields[0].Fvalue.(*[]int64)
+	var wholeString string
+	for _, ch := range *caPtr {
+		wholeString += fmt.Sprintf("%c", ch)
+	}
+	// Get substring offset and count
+	ssOffset := params[1].(int64)
+	ssCount := params[2].(int64)
+
+	// Validate boundaries.
+	wholeLength := int64(len(wholeString))
+	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
+		errMsg := "In valueOfCharSubarray, either: nil input byte array, invalid substring offset, or invalid substring length"
+		exceptions.Throw(exceptions.StringIndexOutOfBoundsException, errMsg)
+	}
+
+	// Compute substring.
+	str := wholeString[ssOffset : ssOffset+ssCount]
+
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfDouble(params []interface{}) interface{} {
+	// params[0]: input double
+	value := params[0].(float64)
+	str := strconv.FormatFloat(value, 'f', -1, 64)
+	if !strings.Contains(str, ".") {
+		str += ".0"
+	}
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfFloat(params []interface{}) interface{} {
+	// params[0]: input double
+	value := params[0].(float64)
+	//str := fmt.Sprintf("%.0g", value)
+	str := strconv.FormatFloat(value, 'f', -1, 64)
+	if !strings.Contains(str, ".") {
+		str += ".0"
+	}
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfInt(params []interface{}) interface{} {
+	// params[0]: input int
+	value := params[0].(int64)
+	str := fmt.Sprintf("%d", value)
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func valueOfLong(params []interface{}) interface{} {
+	// params[0]: input long
+	value := params[0].(int64)
+	str := fmt.Sprintf("%d", value)
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
 }

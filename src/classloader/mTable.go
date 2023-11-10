@@ -84,6 +84,7 @@ func MTableLoadNatives() {
 	loadlib(&MTable, Load_Lang_Throwable()) // load the java.lang.Throwable golang functions (errors & exceptions)
 	loadlib(&MTable, Load_Lang_UTF16())     // load the java.lang.UTF16 golang functions
 	loadlib(&MTable, Load_Util_HashMap())   // load the java.util.HashMap golang functions
+	loadlib(&MTable, Load_Util_Locale())    // load the java.util.Locale golang functions
 	loadlib(&MTable, Load_Primitives())     // load the Java primitives golang functions
 }
 

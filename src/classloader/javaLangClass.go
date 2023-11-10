@@ -14,7 +14,7 @@ import (
 	"jacobin/shutdown"
 )
 
-// Implementation of some of the functions in in Java/lang/Class.
+// Implementation of some of the functions in Java/lang/Class.
 
 func Load_Lang_Class() map[string]GMeth {
 
