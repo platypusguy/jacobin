@@ -88,6 +88,10 @@ func ShowFrameStack(t *thread.ExecThread) {
 func GrabFrameStack(fs *list.List) []string {
 	var stackListing []string
 
+	if fs == nil {
+		// return an empty stack listing
+		return stackListing
+	}
 	frameStack := fs.Front()
 	if frameStack == nil {
 		// return an empty stack listing

@@ -240,7 +240,13 @@ func Throw(exceptionType int, msg string) {
 	if glob.JacobinName == "test" {
 		return
 	}
-	stack := string(debug.Stack())
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
 	glob.ErrorGoStack = stack
 	ShowPanicCause(msg)
 	ShowFrameStack(&thread.ExecThread{})
