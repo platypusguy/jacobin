@@ -63,9 +63,9 @@ func IsNull(value any) bool {
 	return value == nil || value == Null
 }
 
-func toStringHelper(klassString string, field Field) string {
+func fmtHelper(klassString string, field Field) string {
 	if klassString == filepath.FromSlash(StringClassName) {
-		return fmt.Sprintf("%s", *field.Fvalue.(*[]byte))
+		return fmt.Sprintf("\"%s\"", *field.Fvalue.(*[]byte))
 	}
 	switch field.Ftype {
 	case types.Double, types.Float:
@@ -79,7 +79,11 @@ func toStringHelper(klassString string, field Field) string {
 	case types.Char:
 		return fmt.Sprintf("%q", field.Fvalue)
 	case types.ByteArray:
-		bytesPtr := field.Fvalue.(*[]byte)
+		fvalue := field.Fvalue
+		if fvalue == nil {
+			return "<NIL FVALUE (PTR)!>"
+		}
+		bytesPtr := fvalue.(*[]byte)
 		if bytesPtr == nil {
 			return "<NIL BYTE ARRAY PTR!>"
 		}
@@ -107,13 +111,17 @@ func (objPtr *Object) FormatField() string {
 
 	if len(obj.FieldTable) > 0 {
 		// Using key="value" in the FieldTable
-		field := *obj.FieldTable[key]
-		output = fmt.Sprintf("%s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, field))
+		ptr := obj.FieldTable[key]
+		if ptr == nil {
+			return fmt.Sprintf("<FieldTable[%s] PTR IS NIL!>", key)
+		}
+		field := *ptr
+		output = fmt.Sprintf("%s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, field))
 	} else {
 		// Using [0] in the Fields slice
 		if len(obj.Fields) > 0 {
 			field := obj.Fields[0]
-			output += fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, field))
+			output += fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, fmtHelper(klassString, field))
 		} else {
 			output = "<field MISSING!>"
 		}
@@ -140,14 +148,14 @@ func (objPtr *Object) ToString(indent int) string {
 			if indent > 0 {
 				str += strings.Repeat(" ", indent)
 			}
-			str += fmt.Sprintf("Fld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, toStringHelper(klassString, *obj.FieldTable[key]))
+			str += fmt.Sprintf("Fld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, *obj.FieldTable[key]))
 		}
 	} else {
 		if indent > 0 {
 			str += strings.Repeat(" ", indent)
 		}
 		if len(obj.Fields) > 0 {
-			str += fmt.Sprintf("Fld (%s) %s", obj.Fields[0].Ftype, toStringHelper(klassString, obj.Fields[0]))
+			str += fmt.Sprintf("Fld (%s) %s", obj.Fields[0].Ftype, fmtHelper(klassString, obj.Fields[0]))
 		} else {
 			str += "Fld <empty>"
 		}

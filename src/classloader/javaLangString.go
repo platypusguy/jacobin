@@ -11,6 +11,7 @@ import (
 	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
+	"strings"
 )
 
 // IMPORTANT NOTE: Some String functions are placed in libs\javaLangStringMethods.go
@@ -142,11 +143,20 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// Return a formatted string using the specified format string and arguments.
+	// Return a formatted string using the reference object string as the format string
+	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
 	MethodSignatures["java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
+			GFunction:  sprintf,
+		}
+
+	// This method is equivalent to String.format(this, args).
+	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
 			GFunction:  sprintf,
 		}
 
@@ -157,21 +167,28 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// Return a formatted string using this string as the format string, and the supplied arguments.
-	// This method is equivalent to String.format(this, args).
-	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 1,
-			ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
-			GFunction:  sprintf,
-		}
-
 	// Return the length of a String..
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
 			ObjectRef:  true,
 			GFunction:  stringLength,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.toLowerCase()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			ObjectRef:  true,
+			GFunction:  toLowerCase,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.toUpperCase()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			ObjectRef:  true,
+			GFunction:  toUpperCase,
 		}
 
 	return MethodSignatures
@@ -369,4 +386,23 @@ func stringLength(params []interface{}) interface{} {
 		bytesPtr = parmObj.Fields[0].Fvalue.(*[]byte)
 	}
 	return int64(len(*bytesPtr))
+
+}
+
+func toLowerCase(params []interface{}) interface{} {
+	// params[0]: input string
+	propObj := params[0].(*object.Object) // string
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	str := strings.ToLower(string(*strPtr))
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func toUpperCase(params []interface{}) interface{} {
+	// params[0]: input string
+	propObj := params[0].(*object.Object) // string
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	str := strings.ToUpper(string(*strPtr))
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
 }
