@@ -7,8 +7,11 @@
 package exceptions
 
 import (
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/thread"
+	"runtime/debug"
 )
 
 // List of Java exceptions (as of Java 17)
@@ -231,6 +234,15 @@ func Throw(exceptionType int, msg string) {
 	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
 	*/
 	_ = log.Log(msg, log.SEVERE)
+
+	// TODO: Temporary until error/exception processing is complete.
+	stack := string(debug.Stack())
+	glob := globals.GetGlobalRef()
+	glob.ErrorGoStack = stack
+	ShowPanicCause(msg)
+	ShowFrameStack(&thread.ExecThread{})
+	ShowGoStackTrace(nil)
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
 
 // JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
