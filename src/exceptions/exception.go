@@ -236,8 +236,11 @@ func Throw(exceptionType int, msg string) {
 	_ = log.Log(msg, log.SEVERE)
 
 	// TODO: Temporary until error/exception processing is complete.
-	stack := string(debug.Stack())
 	glob := globals.GetGlobalRef()
+	if glob.JacobinName == "test" {
+		return
+	}
+	stack := string(debug.Stack())
 	glob.ErrorGoStack = stack
 	ShowPanicCause(msg)
 	ShowFrameStack(&thread.ExecThread{})
