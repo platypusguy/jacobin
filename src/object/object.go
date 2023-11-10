@@ -65,7 +65,16 @@ func IsNull(value any) bool {
 
 func fmtHelper(klassString string, field Field) string {
 	if klassString == filepath.FromSlash(StringClassName) {
-		return fmt.Sprintf("\"%s\"", *field.Fvalue.(*[]byte))
+		bytes := *field.Fvalue.(*[]byte)
+		//fmt.Printf("DEBUG fmtHelper bytes: %d % x\n", len(bytes), bytes)
+		last := len(bytes) - 1
+		if last < 0 {
+			return "\"\""
+		}
+		if bytes[last] == '\n' {
+			bytes = bytes[0:last]
+		}
+		return fmt.Sprintf("\"%s\"", string(bytes))
 	}
 	switch field.Ftype {
 	case types.Double, types.Float:
