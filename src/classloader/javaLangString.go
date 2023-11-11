@@ -277,6 +277,13 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  compareToIgnoreCase,
 		}
 
+	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			ObjectRef:  true,
+			GFunction:  stringConcat,
+		}
+
 	return MethodSignatures
 
 }
@@ -631,4 +638,16 @@ func compareToIgnoreCase(params []interface{}) interface{} {
 		return int64(-1)
 	}
 	return int64(1)
+}
+
+func stringConcat(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object)
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	strRef := strings.ToLower(string(*strPtr))
+	propObj = params[1].(*object.Object)
+	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
+	strArg := strings.ToLower(string(*strPtr))
+	str := strRef + strArg
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
 }
