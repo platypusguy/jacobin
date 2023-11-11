@@ -248,6 +248,35 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  valueOfLong,
 		}
 
+	// Return a string representing the value of an Object.
+	MethodSignatures["java/lang/String.valueOf(Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfObject,
+		}
+
+	// Compare 2 strings lexicographically, case-sensitive (upper/lower).
+	// The return value is a negative integer, zero, or a positive integer
+	// as the String argument is greater than, equal to, or less than this String,
+	// case-sensitive.
+	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			ObjectRef:  true,
+			GFunction:  compareToCaseSensitive,
+		}
+
+	// Compare 2 strings lexicographically, ignoring case (upper/lower).
+	// The return value is a negative integer, zero, or a positive integer
+	// as the String argument is greater than, equal to, or less than this String,
+	// ignoring case considerations.
+	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			ObjectRef:  true,
+			GFunction:  compareToIgnoreCase,
+		}
+
 	return MethodSignatures
 
 }
@@ -562,4 +591,44 @@ func valueOfLong(params []interface{}) interface{} {
 	str := fmt.Sprintf("%d", value)
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
+}
+
+func valueOfObject(params []interface{}) interface{} {
+	// params[0]: input Object
+	ptrObj := params[0].(*object.Object)
+	str := ptrObj.FormatField()
+	obj := object.CreateCompactStringFromGoString(&str)
+	return obj
+}
+
+func compareToCaseSensitive(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object)
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	str1 := string(*strPtr)
+	propObj = params[1].(*object.Object)
+	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
+	str2 := string(*strPtr)
+	if str2 == str1 {
+		return int64(0)
+	}
+	if str1 < str2 {
+		return int64(-1)
+	}
+	return int64(1)
+}
+
+func compareToIgnoreCase(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object)
+	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
+	str1 := strings.ToLower(string(*strPtr))
+	propObj = params[1].(*object.Object)
+	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
+	str2 := strings.ToLower(string(*strPtr))
+	if str2 == str1 {
+		return int64(0)
+	}
+	if str1 < str2 {
+		return int64(-1)
+	}
+	return int64(1)
 }
