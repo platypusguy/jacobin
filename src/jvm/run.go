@@ -1629,8 +1629,7 @@ func runFrame(fs *list.List) error {
 			if !ok {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s in class %s"+
-					"\n", fieldName, className)
+				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -1703,7 +1702,7 @@ func runFrame(fs *list.List) error {
 				default:
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("PUTSTATIC: type unrecognized: %v", value)
+					errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}

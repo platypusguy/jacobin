@@ -71,6 +71,12 @@ func Load_Io_PrintStream() map[string]GMeth {
 			GFunction:  PrintlnDouble,
 		}
 
+	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println float
+		GMeth{
+			ParamSlots: 2, // PrintStream.out object + 1 slot for the Object
+			GFunction:  PrintlnObject,
+		}
+
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
 		GMeth{
 			ParamSlots: 2, // [0] = PrintStream.out object,
@@ -103,6 +109,12 @@ func Load_Io_PrintStream() map[string]GMeth {
 		GMeth{
 			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
 			GFunction:  PrintFloat,
+		}
+
+	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // println float
+		GMeth{
+			ParamSlots: 2, // PrintStream.out object + 1 slot for the Object
+			GFunction:  PrintObject,
 		}
 
 	MethodSignatures["java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
@@ -177,6 +189,14 @@ func PrintlnDouble(l []interface{}) interface{} {
 	return nil
 }
 
+// Println an Object's contents
+func PrintlnObject(params []interface{}) interface{} {
+	objPtr := params[1].(*object.Object)
+	str := objPtr.FormatField()
+	fmt.Println(str)
+	return nil
+}
+
 // PrintI = java/io/Prinstream.print(int)
 func PrintI(i []interface{}) interface{} {
 	intToPrint := i[1].(int64) // contains an int
@@ -229,6 +249,14 @@ func PrintS(i []interface{}) interface{} {
 	strAddr := i[1].(*object.Object)
 	t := (strAddr.Fields[0].Fvalue).(*[]byte)
 	fmt.Print(string(*t))
+	return nil
+}
+
+// Print an Object's contents
+func PrintObject(params []interface{}) interface{} {
+	objPtr := params[1].(*object.Object)
+	str := objPtr.FormatField()
+	fmt.Print(str)
 	return nil
 }
 
