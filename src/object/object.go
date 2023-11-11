@@ -125,7 +125,7 @@ func (objPtr *Object) FormatField() string {
 			return fmt.Sprintf("<FieldTable[%s] PTR IS NIL!>", key)
 		}
 		field := *ptr
-		output = fmt.Sprintf("%s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, field))
+		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, field))
 	} else {
 		// Using [0] in the Fields slice
 		if len(obj.Fields) > 0 {
