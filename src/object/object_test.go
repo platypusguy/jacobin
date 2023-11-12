@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-func TestObjectToString1(t *testing.T) {
-	t.Log("Test field table toString processing")
+func TestDumpObject1(t *testing.T) {
+	t.Log("Test Object.FieldTable DumpObject processing")
 	obj := MakeEmptyObject()
 	klassType := filepath.FromSlash("java/lang/madeUpClass")
 	obj.Klass = &klassType
@@ -77,25 +77,15 @@ func TestObjectToString1(t *testing.T) {
 	}
 	obj.FieldTable["myString"] = &myStringField
 
-	str := obj.ToString(42)
-	if len(str) == 0 {
-		t.Errorf("empty string for object.ToString()")
-	} else {
-		t.Log(str)
-	}
+	obj.DumpObject(klassType, 3)
 }
 
 // Test field slice toString processing
-func TestObjectToString2(t *testing.T) {
-	t.Log("Test field slice toString processing")
+func TestDumpObject2(t *testing.T) {
+	t.Log("Test Object.Fields slice DumpObject processing")
 	literal := "This is a compact string from a Go string"
 	csObj := CreateCompactStringFromGoString(&literal)
-	retStr := csObj.ToString(0)
-	if len(retStr) == 0 {
-		t.Errorf("empty string for object.ToString()")
-	} else {
-		t.Log(retStr)
-	}
+	csObj.DumpObject(literal, 0)
 
 	// Create a custom object.
 	obj := MakeEmptyObject()
@@ -104,74 +94,151 @@ func TestObjectToString2(t *testing.T) {
 
 	// Now, dump the same string as a byte array.
 	csObj.Klass = &klassType
-	retStr = csObj.ToString(0)
-	if len(retStr) == 0 {
-		t.Errorf("empty string for object.ToString()")
-	} else {
-		t.Log(retStr)
-	}
+	csObj.DumpObject("[B string]", 0)
 
 	myFloatField := Field{
 		Ftype:  "F",
 		Fvalue: 1.0,
 	}
 	obj.Fields = append(obj.Fields, myFloatField)
-	t.Log(obj.ToString(0))
+	obj.DumpObject("F", 0)
 
 	myDoubleField := Field{
 		Ftype:  "D",
 		Fvalue: 2.0,
 	}
 	obj.Fields[0] = myDoubleField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("D", 0)
 
 	myIntField := Field{
 		Ftype:  "I",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myIntField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("I", 0)
 
 	myLongField := Field{
 		Ftype:  "J",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myLongField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("J", 0)
 
 	myShortField := Field{
 		Ftype:  "S",
 		Fvalue: 42,
 	}
 	obj.Fields[0] = myShortField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("S", 0)
 
 	myByteField := Field{
 		Ftype:  "B",
 		Fvalue: 0x61,
 	}
 	obj.Fields[0] = myByteField
-	t.Log(obj.ToString(0))
-
-	myStaticTrueField := Field{
-		Ftype:  "XZ",
-		Fvalue: true,
-	}
-	obj.Fields[0] = myStaticTrueField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("B", 0)
 
 	myFalseField := Field{
 		Ftype:  "Z",
 		Fvalue: false,
 	}
 	obj.Fields[0] = myFalseField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("false Z", 0)
+
+	myStaticTrueField := Field{
+		Ftype:  "XZ",
+		Fvalue: true,
+	}
+	obj.Fields[0] = myStaticTrueField
+	obj.DumpObject("true XZ", 0)
 
 	myCharField := Field{
 		Ftype:  "C",
 		Fvalue: 'C',
 	}
 	obj.Fields[0] = myCharField
-	t.Log(obj.ToString(0))
+	obj.DumpObject("C", 0)
+
+}
+
+func TestFormatField(t *testing.T) {
+	t.Log("Test field slice DumpObject processing")
+
+	obj := MakeEmptyObject()
+	klassType := filepath.FromSlash("java/lang/madeUpClass")
+	obj.Klass = &klassType
+
+	myFloatField := Field{
+		Ftype:  "F",
+		Fvalue: 1.0,
+	}
+	obj.FieldTable["myFloat"] = &myFloatField
+
+	myDoubleField := Field{
+		Ftype:  "D",
+		Fvalue: 2.0,
+	}
+	obj.FieldTable["myDouble"] = &myDoubleField
+
+	myIntField := Field{
+		Ftype:  "I",
+		Fvalue: 42,
+	}
+	obj.FieldTable["myInt"] = &myIntField
+
+	myLongField := Field{
+		Ftype:  "J",
+		Fvalue: 42,
+	}
+	obj.FieldTable["myLong"] = &myLongField
+
+	myShortField := Field{
+		Ftype:  "S",
+		Fvalue: 42,
+	}
+	obj.FieldTable["myShort"] = &myShortField
+
+	myByteField := Field{
+		Ftype:  "B",
+		Fvalue: 0x61,
+	}
+	obj.FieldTable["myByte"] = &myByteField
+
+	myStaticTrueField := Field{
+		Ftype:  "XZ",
+		Fvalue: true,
+	}
+	obj.FieldTable["myStaticTrue"] = &myStaticTrueField
+
+	myFalseField := Field{
+		Ftype:  "Z",
+		Fvalue: false,
+	}
+	obj.FieldTable["myFalse"] = &myFalseField
+
+	myCharField := Field{
+		Ftype:  "C",
+		Fvalue: 'C',
+	}
+	obj.FieldTable["myChar"] = &myCharField
+
+	myStringField1 := Field{
+		Ftype:  "Ljava/lang/String;",
+		Fvalue: "Hello, Unka Andoo !",
+	}
+	obj.FieldTable["myString"] = &myStringField1
+
+	str := obj.FormatField()
+	t.Log("Key \"value\" is missing:")
+	t.Log(str)
+
+	myStringField2 := Field{
+		Ftype:  "Ljava/lang/String;",
+		Fvalue: "Hello, Unka Andoo !",
+	}
+	obj.FieldTable["value"] = &myStringField2
+	str = obj.FormatField()
+	t.Log("Key \"value\" is present:")
+	t.Log(str)
 
 }
