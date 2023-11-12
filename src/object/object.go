@@ -106,7 +106,7 @@ func fmtHelper(klassString string, field Field) string {
 	case types.ByteArray, types.Static + types.ByteArray:
 		fvalue := field.Fvalue
 		if fvalue == nil {
-			return "<ERROR nil Fvalue ptr!>"
+			return "<ERROR nil Fvalue!>"
 		}
 		bytesPtr := fvalue.(*[]byte)
 		if bytesPtr == nil {
