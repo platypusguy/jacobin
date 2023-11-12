@@ -141,7 +141,7 @@ func (objPtr *Object) FormatField() string {
 		// Using key="value" in the FieldTable
 		ptr := obj.FieldTable[key]
 		if ptr == nil {
-			str := fmt.Sprintf("<ERROR nil FieldTable[%s] ptr!>", key)
+			str := fmt.Sprintf("<ERROR FieldTable[\"%s\"] not found!>", key)
 			obj.DumpObject(str, 0)
 			return str
 		}
