@@ -201,8 +201,9 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
 	}
-	if len(obj.FieldTable) > 0 {
-		output += "\tField Table:\n"
+	nflds := len(obj.FieldTable)
+	if nflds > 0 {
+		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
 		for key := range obj.FieldTable {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
@@ -222,7 +223,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
 	}
-	nflds := len(obj.Fields)
+	nflds = len(obj.Fields)
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
 		for _, fld := range obj.Fields {
