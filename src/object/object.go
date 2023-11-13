@@ -137,6 +137,19 @@ func (objPtr *Object) FormatField() string {
 		return klassString
 	}
 
+	// Check use of the Fields slice
+	if len(obj.Fields) > 0 {
+		// Using [0] in the Fields slice
+		field := obj.Fields[0]
+		str := fmtHelper(klassString, field)
+		if strings.HasPrefix(str, "<ERROR") {
+			obj.DumpObject(str, 0)
+		}
+		output = fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, str)
+		return output
+	}
+
+	// Check use of the FieldTable map
 	if len(obj.FieldTable) > 0 {
 		// Using key="value" in the FieldTable
 		ptr := obj.FieldTable[key]
@@ -147,26 +160,16 @@ func (objPtr *Object) FormatField() string {
 		}
 		field := *ptr
 		str := fmtHelper(klassString, field)
-		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, str)
 		if strings.HasPrefix(str, "<ERROR") {
 			obj.DumpObject(str, 0)
 		}
-	} else {
-		// Using [0] in the Fields slice
-		if len(obj.Fields) > 0 {
-			field := obj.Fields[0]
-			str := fmtHelper(klassString, field)
-			output = fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, str)
-			if strings.HasPrefix(str, "<ERROR") {
-				obj.DumpObject(str, 0)
-			}
-		} else {
-			// Field table and field slice are both empty.
-			output = "<ERROR field empty!>"
-			obj.DumpObject(output, 0)
-		}
+		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, str)
+		return output
 	}
 
+	// Field table and field slice are both empty.
+	output = "<ERROR field empty!>"
+	obj.DumpObject(output, 0)
 	return output
 }
 
@@ -201,8 +204,9 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
 	}
-	if len(obj.FieldTable) > 0 {
-		output += "\tField Table:\n"
+	nflds := len(obj.FieldTable)
+	if nflds > 0 {
+		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
 		for key := range obj.FieldTable {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
@@ -222,7 +226,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
 	}
-	nflds := len(obj.Fields)
+	nflds = len(obj.Fields)
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
 		for _, fld := range obj.Fields {
