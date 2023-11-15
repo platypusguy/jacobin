@@ -77,31 +77,48 @@ func fmtHelper(klassString string, field Field) string {
 		return fmt.Sprintf("\"%s\"", string(bytes))
 	}
 	switch field.Ftype {
-	case types.Double, types.Float:
+	case types.Double, types.Float, types.Static + types.Double, types.Static + types.Float:
 		return fmt.Sprintf("%f", field.Fvalue)
-	case types.Int, types.Long, types.Short:
+	case types.Int, types.Long, types.Short, types.Static + types.Int, types.Static + types.Long, types.Static + types.Short:
 		return fmt.Sprintf("%d", field.Fvalue)
-	case types.Byte:
+	case types.Byte, types.Static + types.Byte:
 		return fmt.Sprintf("%02x", field.Fvalue)
-	case types.Bool:
-		return fmt.Sprintf("%t", field.Fvalue)
-	case types.Char:
+	case types.Bool, types.Static + types.Bool:
+		// TODO: Why does FieldTable[key] pass an int64 YET Fields[index] passes a bool???
+		switch field.Fvalue.(type) {
+		case bool:
+			if field.Fvalue.(bool) {
+				return "true"
+			} else {
+				return "false"
+			}
+		case int64:
+			if field.Fvalue.(int64) != 0 {
+				return "true"
+			} else {
+				return "false"
+			}
+		default:
+			return fmt.Sprintf("<ERROR Ftype=bool but unexpected Fvalue variable type: %T !>", field.Fvalue)
+		}
+	case types.Char, types.Static + types.Char:
 		return fmt.Sprintf("%q", field.Fvalue)
-	case types.ByteArray:
+	case types.ByteArray, types.Static + types.ByteArray:
 		fvalue := field.Fvalue
 		if fvalue == nil {
-			return "<NIL FVALUE (PTR)!>"
+			return "<ERROR nil Fvalue!>"
 		}
 		bytesPtr := fvalue.(*[]byte)
 		if bytesPtr == nil {
-			return "<NIL BYTE ARRAY PTR!>"
+			return "<ERROR nil byte array ptr!>"
 		}
 		if len(*bytesPtr) < 1 {
-			return "<nil>"
+			return "<nil byte array>"
 		}
 		return fmt.Sprintf("% x", *bytesPtr)
 	}
 
+	// Default action:
 	return fmt.Sprintf("%v", field.Fvalue)
 }
 
@@ -115,60 +132,116 @@ func (objPtr *Object) FormatField() string {
 	if obj.Klass != nil {
 		klassString = *obj.Klass
 	} else {
-		klassString = "<class MISSING!>" // Why is there no class name pointer for this object?
+		klassString = "<ERROR nil class pointer!>" // Why is there no class name pointer for this object?
+		obj.DumpObject(klassString, 0)
+		return klassString
 	}
 
+	// Check use of the Fields slice
+	if len(obj.Fields) > 0 {
+		// Using [0] in the Fields slice
+		field := obj.Fields[0]
+		str := fmtHelper(klassString, field)
+		if strings.HasPrefix(str, "<ERROR") {
+			obj.DumpObject(str, 0)
+		}
+		output = fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, str)
+		return output
+	}
+
+	// Check use of the FieldTable map
 	if len(obj.FieldTable) > 0 {
 		// Using key="value" in the FieldTable
 		ptr := obj.FieldTable[key]
 		if ptr == nil {
-			return fmt.Sprintf("<FieldTable[%s] PTR IS NIL!>", key)
+			str := fmt.Sprintf("<ERROR FieldTable[\"%s\"] not found!>", key)
+			obj.DumpObject(str, 0)
+			return str
 		}
 		field := *ptr
-		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, field))
-	} else {
-		// Using [0] in the Fields slice
-		if len(obj.Fields) > 0 {
-			field := obj.Fields[0]
-			output += fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, fmtHelper(klassString, field))
-		} else {
-			output = "<field MISSING!>"
+		str := fmtHelper(klassString, field)
+		if strings.HasPrefix(str, "<ERROR") {
+			obj.DumpObject(str, 0)
 		}
+		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, str)
+		return output
 	}
 
+	// Field table and field slice are both empty.
+	output = "<ERROR field empty!>"
+	obj.DumpObject(output, 0)
 	return output
 }
 
-// FormatField dumps the contents of an object to a formatted multi-line string
-func (objPtr *Object) ToString(indent int) string {
-	var str string
-	var klassString string
+// DumpObject displays every attribute of an Object, formatted as multi-line printed output.
+// 3 sections:
+// * Class name
+// * Field table
+// * Field slice
+func (objPtr *Object) DumpObject(title string, indent int) {
 	obj := *objPtr
-	if obj.Klass != nil {
-		klassString = *obj.Klass
-		str = klassString + "\n"
-	} else {
-		klassString = "n/a"
-		str = "class type: n/a \n"
-	}
+	output := ""
+	var klassString string
 
-	if len(obj.FieldTable) > 0 {
+	// Emit BEGIN
+	if indent > 0 {
+		output += strings.Repeat(" ", indent)
+	}
+	output += "DumpObject " + title + " {\n"
+
+	// Emit klass line
+	if indent > 0 {
+		output += strings.Repeat(" ", indent)
+	}
+	if obj.Klass != nil {
+		klassString = "\tClass: " + *obj.Klass
+	} else {
+		klassString = "\t<class MISSING!>"
+	}
+	output += klassString + "\n"
+
+	// Emit FieldTable.
+	if indent > 0 {
+		output += strings.Repeat(" ", indent)
+	}
+	nflds := len(obj.FieldTable)
+	if nflds > 0 {
+		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
 		for key := range obj.FieldTable {
 			if indent > 0 {
-				str += strings.Repeat(" ", indent)
+				output += strings.Repeat(" ", indent)
 			}
-			str += fmt.Sprintf("Fld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, *obj.FieldTable[key]))
+			ptr := obj.FieldTable[key]
+			if ptr == nil {
+				output += fmt.Sprintf("\t\t<ERROR nil FieldTable[%s] ptr!>\n", key)
+			} else {
+				output += fmt.Sprintf("\t\tFld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, *obj.FieldTable[key]))
+			}
 		}
 	} else {
-		if indent > 0 {
-			str += strings.Repeat(" ", indent)
-		}
-		if len(obj.Fields) > 0 {
-			str += fmt.Sprintf("Fld (%s) %s", obj.Fields[0].Ftype, fmtHelper(klassString, obj.Fields[0]))
-		} else {
-			str += "Fld <empty>"
-		}
+		output += fmt.Sprintf("\tField Table is <empty>\n")
 	}
 
-	return str
+	// Emit Fields slice.
+	if indent > 0 {
+		output += strings.Repeat(" ", indent)
+	}
+	nflds = len(obj.Fields)
+	if nflds > 0 {
+		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
+		for _, fld := range obj.Fields {
+			output += fmt.Sprintf("\t\tFld (%s) %s\n", fld.Ftype, fmtHelper(klassString, fld))
+		}
+	} else {
+		output += "\tField Slice is <empty>\n"
+	}
+
+	// Emit END
+	if indent > 0 {
+		output += strings.Repeat(" ", indent)
+	}
+	output += "}\n"
+
+	// Print output all at once.
+	fmt.Print(output)
 }
