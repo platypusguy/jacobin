@@ -379,6 +379,7 @@ func doubleDoubleValue(params []interface{}) interface{} {
 }
 
 func integerValueOf(params []interface{}) interface{} {
+	//fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
 	ii := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, ii)
 	return objPtr
@@ -394,38 +395,35 @@ func integerParseInt(params []interface{}) interface{} {
 		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
 	}
 	if bptr == nil {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.parseInt: Nil byte array pointer")
+		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: Nil byte array pointer")
 	}
 	strArg := string(*bptr)
 	if len(strArg) < 1 {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.parseInt: string length < 1")
+		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
 	}
 
 	// Extract and validate the radix.
 	switch params[1].(type) {
 	case int64:
 	default:
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.parseInt: radix is not an integer")
+		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: radix is not an integer")
 	}
 	rdx := params[1].(int64)
 	if rdx < minRadix || rdx > maxRadix {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.parseInt: invalid radix")
+		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: invalid radix")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseInt(strArg, int(rdx), 64)
 	if err != nil {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.parseInt Error(): "+err.Error())
+		errMsg := fmt.Sprintf("javaPrimitives.integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
+		exceptions.Throw(exceptions.NumberFormatException, errMsg)
 	}
 	return output
 }
 
 func integerDoubleValue(params []interface{}) interface{} {
 	var ii int64
-
-	// TODO: Why is the object itself being passed? Other functions expect a pointer.
-	// parmObj := params[0].(*object.Object)
-
 	parmObj := params[0].(*object.Object)
 	if len(parmObj.FieldTable) > 0 {
 		ii = parmObj.FieldTable["value"].Fvalue.(int64)
@@ -444,10 +442,6 @@ func longValueOf(params []interface{}) interface{} {
 
 func longDoubleValue(params []interface{}) interface{} {
 	var jj int64
-
-	// TODO: Why is the object itself being passed? Other functions expect a pointer.
-	// parmObj := params[0].(*object.Object)
-
 	parmObj := params[0].(*object.Object)
 	if len(parmObj.FieldTable) > 0 {
 		jj = parmObj.FieldTable["value"].Fvalue.(int64)
@@ -465,10 +459,6 @@ func shortValueOf(params []interface{}) interface{} {
 
 func shortDoubleValue(params []interface{}) interface{} {
 	var ii int64
-
-	// TODO: Why is the object itself being passed? Other functions expect a pointer.
-	// parmObj := params[0].(*object.Object)
-
 	parmObj := params[0].(*object.Object)
 	if len(parmObj.FieldTable) > 0 {
 		ii = parmObj.FieldTable["value"].Fvalue.(int64)
