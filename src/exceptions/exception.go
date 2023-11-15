@@ -75,6 +75,7 @@ const (
 	NoSuchElementException
 	NoSuchMechanismException
 	NullPointerException
+	NumberFormatException
 	ObjectCollectedException
 	ProfileDataException
 	ProviderException
