@@ -39,13 +39,6 @@ type Static struct {
 		T	string (ptr to an object, but facilitates processing knowing it's a string)
 	*/
 	Value any
-	// Type      string         // Type data used for reference variables (i.e., objects, etc.)
-	// ValueRef  *object.Object // pointer--might need to change this
-	// ValueInt  int64          // holds longs, ints, shorts, chars, booleans, byte
-	// ValueFP   float64        // holds doubles and floats
-	// ValueStr  string         // string
-	// ValueFunc func()         // function pointer
-	// CP        *CPool         // the constant pool for the class
 }
 
 var staticsMutex = sync.RWMutex{}
@@ -64,12 +57,20 @@ func AddStatic(name string, s Static) error {
 // StaticsPreload preloads static fields from java.lang.String and other
 // immediately necessary statics. It's called in jvmStart.go
 func StaticsPreload() {
+	LoadProgramStatics()
 	LoadStringStatics()
 }
 
-// This loads the statics from java/lang/String diredtly into the
-// Statics table as part of the setup operations of Jacobin. This
-// is done primarily for speed.
+// LoadProgramStatics loads static fields that the JVM expects to have
+// loaded as execution begins.
+func LoadProgramStatics() {
+	_ = AddStatic("main.$assertionsDisabled",
+		Static{Type: types.Int, Value: types.JavaBoolTrue})
+}
+
+// LoadStringStatics loads the statics from java/lang/String directly
+// into the Statics table as part of the setup operations of Jacobin.
+// This is done primarily for speed.
 func LoadStringStatics() {
 	_ = AddStatic("java/lang/String.COMPACT_STRINGS",
 		Static{Type: types.Bool, Value: true})
