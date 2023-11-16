@@ -767,10 +767,10 @@ func runFrame(fs *list.List) error {
 				return errors.New("AASTORE: Invalid array address")
 			}
 
-			if ptrObj.Fields[0].Ftype != "[L" {
+			if !strings.HasPrefix(ptrObj.Fields[0].Ftype, types.RefArray) {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("AASTORE: field type expected=[L, observed=%s", ptrObj.Fields[0].Ftype)
+				errMsg := fmt.Sprintf("AASTORE: field type must start with '[L', got %s", ptrObj.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type")
