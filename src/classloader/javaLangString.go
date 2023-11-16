@@ -413,9 +413,9 @@ func StringFormatter(params []interface{}) *object.Object {
 		//fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
 		if object.IsJavaString(valuesIn[i]) {
 			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
-			//fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+			fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 		} else {
-			//str := valuesIn[i].FormatField(10)
+			//str := valuesIn[i].FormatField()
 			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
 
 			// Establish a pointer to the field.
