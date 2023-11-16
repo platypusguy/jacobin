@@ -58,6 +58,17 @@ func MakeEmptyObject() *Object {
 	return &o
 }
 
+// Make an object for a Java primitive field (byte, int, etc.), given the class and field type.
+func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
+	objPtr := MakeEmptyObject()
+	(*objPtr).Klass = &classString
+	var field Field
+	field.Ftype = ftype
+	field.Fvalue = arg
+	(*objPtr).Fields = append((*objPtr).Fields, field)
+	return objPtr
+}
+
 // determines whether a value is null or not
 func IsNull(value any) bool {
 	return value == nil || value == Null
