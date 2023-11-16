@@ -2183,18 +2183,13 @@ func runFrame(fs *list.List) error {
 				return errors.New(errMsg)
 			}
 
-			var refTypeName string
+			var refTypeName = ""
 			if refType.Type == classloader.ClassRef {
 				utf8Index := CP.ClassRefs[refType.Slot]
 				refTypeName = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
 			}
 
-			// just to avoid golang err msg about unused variable
-			if refTypeName == "unlikely name" {
-				println(refTypeName)
-			}
-
-			arrayPtr := object.Make1DimArray(object.REF, size)
+			arrayPtr := object.Make1DimRefArray(&refTypeName, size)
 			g := globals.GetGlobalRef()
 			g.ArrayAddressList.PushFront(arrayPtr)
 			push(f, arrayPtr)

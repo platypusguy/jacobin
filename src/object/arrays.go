@@ -6,7 +6,10 @@
 
 package object
 
-import "jacobin/types"
+import (
+	"jacobin/log"
+	"jacobin/types"
+)
 
 /*  This file contains some data structures and some functions
  	for array handling in Jacobin
@@ -109,18 +112,32 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	// case 'F', 'D': // float arrays
 	case FLOAT:
 		farArr := make([]float64, size)
-		of := Field{Ftype: types.FloatArray, Fvalue: &farArr}
+		of = Field{Ftype: types.FloatArray, Fvalue: &farArr}
 		o.Fields = append(o.Fields, of)
 	case REF: // reference/pointer arrays
+		_ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
 		rarArr := make([]*Object, size)
-		of := Field{Ftype: types.RefArray, Fvalue: &rarArr}
+		of = Field{Ftype: types.RefArray, Fvalue: &rarArr}
 		o.Fields = append(o.Fields, of)
 	default: // all the integer types
 		iarArr := make([]int64, size)
-		of := Field{Ftype: types.IntArray, Fvalue: &iarArr}
+		of = Field{Ftype: types.IntArray, Fvalue: &iarArr}
 		o.Fields = append(o.Fields, of)
 	}
 	o.Klass = &o.Fields[0].Ftype // in arrays, Klass field is a pointer to the array type string
+	return o
+}
+
+// Make1DimRefArray makes a 1-dimensional reference array. Its logic is nearly identical to
+// Make1DimArray, except that it is passed a pointer to the object whose references are in
+// the array and it inserts that value into the field and object type fields.
+func Make1DimRefArray(objType *string, size int64) *Object {
+	o := MakeEmptyObject()
+	rarArr := make([]*Object, size)
+	arrayType := types.RefArray + *objType
+	of := Field{Ftype: arrayType, Fvalue: &rarArr}
+	o.Fields = append(o.Fields, of)
+	o.Klass = &o.Fields[0].Ftype
 	return o
 }
 
