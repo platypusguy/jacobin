@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/types"
 	"os"
 	"strings"
 	"testing"
@@ -122,6 +123,7 @@ func TestAaloadWithNil(t *testing.T) {
 // Create an array of 30 elements, store ptr value in array[20],
 // then go through all the elements in the array, and test for
 // a non-nil value. Should result in a single non-nil value.
+// TODO: Needs to be fixed, the array should be an array of references created with ANEWARRAY
 func TestAastore(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(30))                   // make the array 30 elements big
@@ -241,7 +243,8 @@ func TestAastoreInvalid2(t *testing.T) {
 
 // AASTORE: Test error conditions: index out of range
 func TestAastoreInvalid3(t *testing.T) {
-	o := object.Make1DimArray(object.REF, 10)
+	objType := "java/lang/Object"
+	o := object.Make1DimRefArray(&objType, 10)
 	f := newFrame(opcodes.AASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
@@ -277,12 +280,23 @@ func TestAastoreInvalid3(t *testing.T) {
 }
 
 // ANEWARRAY: creation of array for references
-// TODO: can't create ANEWARRAY b/c the two bytes after the bytecode, which point to the
-//       class type are missing. Ugh! Fix at leisure
-/*
 func TestAnewrray(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
-	push(&f, int64(13)) // make the array 13 elements big
+	push(&f, int64(13)) // make an array of 13 elements
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+
+	// now create the CP. First entry is perforce 0
+	// [1] entry points to a UTF8 entry with the class name
+	// [2] is a ClassRef that points to the UTF8 string in [1]
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	f.CP = &CP
 
 	globals.InitGlobals("test")
 
@@ -338,7 +352,6 @@ func TestAnewrrayKlassField(t *testing.T) {
 		t.Errorf("ANEWARRAY: Expecting class to start with '[L', got %s", *klassString)
 	}
 }
-*/
 
 // ANEWARRAY: creation of array for references; test invalid array size
 func TestAnewrrayInvalidSize(t *testing.T) {
