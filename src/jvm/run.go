@@ -2173,6 +2173,27 @@ func runFrame(fs *list.List) error {
 				return errors.New(errMsg)
 			}
 
+			refTypeSlot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			f.PC += 2
+			CP := f.CP.(*classloader.CPool)
+			refType := CP.CpIndex[refTypeSlot]
+			if refType.Type != classloader.ClassRef && refType.Type != classloader.Interface {
+				errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
+			}
+
+			var refTypeName string
+			if refType.Type == classloader.ClassRef {
+				utf8Index := CP.ClassRefs[refType.Slot]
+				refTypeName = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+			}
+
+			// just to avoid golang err msg about unused variable
+			if refTypeName == "unlikely name" {
+				println(refTypeName)
+			}
+
 			arrayPtr := object.Make1DimArray(object.REF, size)
 			g := globals.GetGlobalRef()
 			g.ArrayAddressList.PushFront(arrayPtr)
@@ -2182,7 +2203,7 @@ func runFrame(fs *list.List) error {
 			// which indicates what type the reference points to. We
 			// don't presently check the type, so we skip over these
 			// two bytes.
-			f.PC += 2
+			// f.PC += 2
 
 		case opcodes.ARRAYLENGTH: // OxBE get size of array
 			// expects a pointer to an array
