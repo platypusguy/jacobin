@@ -1719,7 +1719,7 @@ func runFrame(fs *list.List) error {
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			fieldEntry := CP.CpIndex[CPslot]
-			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
@@ -1749,7 +1749,7 @@ func runFrame(fs *list.List) error {
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
 
 				objField := obj.FieldTable[fieldName]
-				fieldValue = objField.Fvalue
+				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
 			}
 			push(f, fieldValue)
 
