@@ -1778,16 +1778,6 @@ func runFrame(fs *list.List) error {
 				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
 			}
 
-			// If the field type is a string,
-			// wrap it in an object and push address onto the stack.
-			if fieldType == object.StringClassFdesc {
-				objPtr := object.NewString()
-				field := object.Field{fieldType, fieldValue}
-				(*objPtr).Fields[0] = field
-				push(f, objPtr)
-				//objPtr.DumpObject("DEBUG GETFIELD pushed string object", 0)
-				break
-			}
 			push(f, fieldValue)
 			//fmt.Printf("DEBUG GETFIELD pushed type %s, value %v\n", fieldType, fieldValue)
 
