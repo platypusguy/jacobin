@@ -510,7 +510,7 @@ func runFrame(fs *list.List) error {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid (null) reference to an array"
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -526,7 +526,7 @@ func runFrame(fs *list.List) error {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 			size := int64(len(*arrayPtr))
