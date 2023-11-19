@@ -15,7 +15,7 @@ import (
 // them from scratch each time by walking through the constant pool.
 
 var StringClassName = "java/lang/String"
-var StringClassFdesc = "Ljava/lang/String;"
+var StringClassRef = "Ljava/lang/String;"
 var EmptyString = ""
 
 // NewString creates an empty string. However, it lacks an updated
