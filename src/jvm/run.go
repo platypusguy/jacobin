@@ -510,12 +510,25 @@ func runFrame(fs *list.List) error {
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid (null) reference to an array"
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			bAref := ref.(*object.Object)
-			arrayPtr := bAref.Fields[0].Fvalue.(*[]byte)
+			var bAref *object.Object
+			var arrayPtr *[]byte
+			switch ref.(type) {
+			case *object.Object:
+				bAref = ref.(*object.Object)
+				arrayPtr = bAref.Fields[0].Fvalue.(*[]byte)
+			case *[]uint8:
+				arrayPtr = ref.(*[]uint8)
+			default:
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+				return errors.New(errMsg)
+			}
 			size := int64(len(*arrayPtr))
 
 			if index >= size {
@@ -1729,17 +1742,30 @@ func runFrame(fs *list.List) error {
 				return errors.New(errMsg)
 			}
 
-			ref := pop(f).(*object.Object)
-			obj := *ref
+			// Get object reference from stack.
+			ref := pop(f)
+			switch ref.(type) {
+			case *object.Object:
+				break
+			default:
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T", ref)
+				_ = log.Log(errMsg, log.SEVERE)
+				return errors.New(errMsg)
+			}
 
-			// var fieldName string
+			// Extract field.
+			obj := *ref.(*object.Object)
 			var fieldType string
 			var fieldValue interface{}
 
-			if obj.Fields != nil {
+			if len(obj.FieldTable) < 1 {
+				// Extract field from FieldTable map.
 				fieldType = obj.Fields[fieldEntry.Slot].Ftype
 				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
-			} else { // retrieve by name
+			} else {
+				// Extract field from Fields slice.
 				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 				nameAndTypeCPIndex := fullFieldEntry.NameAndType
 				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
@@ -1747,11 +1773,13 @@ func runFrame(fs *list.List) error {
 				nameCPIndex := nameAndType.NameIndex
 				nameCPentry := CP.CpIndex[nameCPIndex]
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
-
 				objField := obj.FieldTable[fieldName]
+				fieldType = objField.Ftype
 				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
 			}
+
 			push(f, fieldValue)
+			//fmt.Printf("DEBUG GETFIELD pushed type %s, value %v\n", fieldType, fieldValue)
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
@@ -2238,8 +2266,11 @@ func runFrame(fs *list.List) error {
 				case types.FloatArray:
 					arrayPtr := r.Fields[0].Fvalue.(*[]float64)
 					size = int64(len(*arrayPtr))
-				default:
+				case types.IntArray:
 					arrayPtr := r.Fields[0].Fvalue.(*[]int64)
+					size = int64(len(*arrayPtr))
+				default:
+					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
 					size = int64(len(*arrayPtr))
 				}
 			}

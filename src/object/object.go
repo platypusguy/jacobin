@@ -115,11 +115,14 @@ func fmtHelper(klassString string, field Field) string {
 	case types.Char, types.Static + types.Char:
 		return fmt.Sprintf("%q", field.Fvalue)
 	case types.ByteArray, types.Static + types.ByteArray:
-		fvalue := field.Fvalue
-		if fvalue == nil {
+		if field.Fvalue == nil {
 			return "<ERROR nil Fvalue!>"
 		}
-		bytesPtr := fvalue.(*[]byte)
+		switch field.Fvalue.(type) {
+		case *Object:
+			return "*** embedded object ***"
+		}
+		bytesPtr := field.Fvalue.(*[]byte)
 		if bytesPtr == nil {
 			return "<ERROR nil byte array ptr!>"
 		}

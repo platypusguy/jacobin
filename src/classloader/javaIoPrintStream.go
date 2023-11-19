@@ -133,17 +133,21 @@ func Load_Io_PrintStream() map[string]GMeth {
 // for this class. The first arg then gets the StringConst ref, which is an index
 // into the UTF8 entries of the CP. This string is then printed to stdout. There
 // is no return value.
-func Println(i []interface{}) interface{} {
-	strAddr := i[1].(*object.Object)
-	// t := (strAddr.Fields[0].Fvalue).(*[]types.JavaByte) // changed due to JAcOBIN-282
-	t := (strAddr.Fields[0].Fvalue).(*[]byte)
-
-	// goChars := make([]byte, len(*t), len(*t))
-	// for i, c := range *t {
-	// 	goChars[i] = byte(c)
-	// }
-
-	fmt.Println(string(*t))
+func Println(params []interface{}) interface{} {
+	strAddr := params[1].(*object.Object)
+	switch strAddr.Fields[0].Fvalue.(type) {
+	case *[]byte:
+		baPtr := (strAddr.Fields[0].Fvalue).(*[]byte)
+		fmt.Println(string(*baPtr))
+	case *object.Object:
+		objPtr := (strAddr.Fields[0].Fvalue).(*object.Object)
+		if len((*objPtr).Fields) > 0 {
+			baPtr := (*objPtr).Fields[0].Fvalue.(*[]byte)
+			fmt.Println(string(*baPtr))
+		}
+	default:
+		fmt.Printf("Println: Oops, cannot process type %T\n", strAddr.Fields[0].Fvalue)
+	}
 	return nil
 }
 
@@ -242,13 +246,23 @@ func PrintDouble(l []interface{}) interface{} {
 }
 
 // Print string
-func PrintS(i []interface{}) interface{} {
+func PrintS(params []interface{}) interface{} {
 	// TODO: Eventually will need to check whether or not i[1] is a compact string.
 	//       Presently, we assume it is.
-	// fmt.Printf("DEBUG PrintS got an Object\n")
-	strAddr := i[1].(*object.Object)
-	t := (strAddr.Fields[0].Fvalue).(*[]byte)
-	fmt.Print(string(*t))
+	strAddr := params[1].(*object.Object)
+	switch strAddr.Fields[0].Fvalue.(type) {
+	case *[]byte:
+		baPtr := (strAddr.Fields[0].Fvalue).(*[]byte)
+		fmt.Print(string(*baPtr))
+	case *object.Object:
+		objPtr := (strAddr.Fields[0].Fvalue).(*object.Object)
+		if len((*objPtr).Fields) > 0 {
+			baPtr := (*objPtr).Fields[0].Fvalue.(*[]byte)
+			fmt.Print(string(*baPtr))
+		}
+	default:
+		fmt.Printf("*** PrintS: Oops, cannot process type %T\n", strAddr.Fields[0].Fvalue)
+	}
 	return nil
 }
 
