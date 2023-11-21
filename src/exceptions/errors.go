@@ -71,31 +71,32 @@ func FormatStackUnderflowError(f *frames.Frame) {
 func ShowFrameStack(t *thread.ExecThread) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
 		entries := GrabFrameStack(t.Stack)
-		if len(entries) == 0 {
+		if len(*entries) == 0 {
 			_ = log.Log("no further data available", log.SEVERE)
 			return
 		}
 
 		// step through the list-based stack of called methods and print contents
-		for i := 0; i < len(entries); i++ {
-			_ = log.Log(entries[i], log.SEVERE)
+		literals := *entries
+		for i := 0; i < len(literals); i++ {
+			_ = log.Log(literals[i], log.SEVERE)
 		}
 		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
 }
 
 // gets the JVM frame stack data and returns it as a slice of strings
-func GrabFrameStack(fs *list.List) []string {
+func GrabFrameStack(fs *list.List) *[]string {
 	var stackListing []string
 
 	if fs == nil {
 		// return an empty stack listing
-		return stackListing
+		return &stackListing
 	}
 	frameStack := fs.Front()
 	if frameStack == nil {
 		// return an empty stack listing
-		return stackListing
+		return &stackListing
 	}
 
 	// step through the list-based stack of called methods and print contents
@@ -105,7 +106,7 @@ func GrabFrameStack(fs *list.List) []string {
 		entry := fmt.Sprintf("Method: %-40s PC: %03d", methName, val.PC)
 		stackListing = append(stackListing, entry)
 	}
-	return stackListing
+	return &stackListing
 }
 
 // takes the panic cause (as returned by the golang runtime) and prints the

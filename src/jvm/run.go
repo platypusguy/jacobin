@@ -1779,7 +1779,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			push(f, fieldValue)
-			//fmt.Printf("DEBUG GETFIELD pushed type %s, value %v\n", fieldType, fieldValue)
+			// fmt.Printf("DEBUG GETFIELD pushed type %s, value %v\n", fieldType, fieldValue)
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
