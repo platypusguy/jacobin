@@ -2298,7 +2298,8 @@ func runFrame(fs *list.List) error {
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// print out the data, as we have it presently
-			_ = log.Log("Exception in thread "+exceptionName+":", log.SEVERE)
+			msg := fmt.Sprintf("Exception in thread %d %s:", f.Thread, exceptionName)
+			_ = log.Log(msg, log.SEVERE)
 			for _, frameData := range *glob.JVMframeStack {
 				colon := strings.Index(frameData, ":")
 				shortenedFrameData := frameData[colon+1:]
