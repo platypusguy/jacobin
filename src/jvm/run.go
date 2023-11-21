@@ -2278,7 +2278,7 @@ func runFrame(fs *list.List) error {
 		case opcodes.ATHROW: // 0xBF throw an exception
 			// points to an instance of the error/exception class
 			// that's being thrown
-			objectRef := pop(f)
+			objectRef := pop(f).(*object.Object)
 			if object.IsNull(objectRef) {
 				errMsg := "ATHROW: Invalid (null) reference to a exception/error class to throw"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -2292,6 +2292,21 @@ func runFrame(fs *list.List) error {
 
 			// capture the JVM frame stack
 			glob.JVMframeStack = exceptions.GrabFrameStack(fs)
+
+			// get the name of the exception in the format used by HotSpot
+			exceptionClass := *objectRef.Klass
+			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
+
+			// print out the data, as we have it presently
+			_ = log.Log("Exception in thread "+exceptionName+":", log.SEVERE)
+			for _, frameData := range *glob.JVMframeStack {
+				colon := strings.Index(frameData, ":")
+				shortenedFrameData := frameData[colon+1:]
+				_ = log.Log("\t at"+shortenedFrameData, log.SEVERE)
+			}
+
+			// all exceptions that got this far are untrapped, so shutdown with an error code
+			shutdown.Exit(shutdown.APP_EXCEPTION)
 
 		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should

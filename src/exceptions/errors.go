@@ -168,3 +168,18 @@ func ShowGoStackTrace(stackInfo any) {
 	}
 	global.GoStackShown = true
 }
+
+// GetExceptionNameFromClassName extracts the name of the exception from the name of the exception class
+func GetExceptionNameFromClassName(className string) string {
+	var excName = ""
+
+	// if it's not an excepted exception or error class name, return an empty string
+	if !strings.HasSuffix(className, "xception") && !strings.HasSuffix(className, "rror") {
+		return ""
+	}
+
+	lastSlash := strings.LastIndex(className, "/")
+	excName = className[lastSlash+1:]
+
+	return excName
+}
