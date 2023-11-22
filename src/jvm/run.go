@@ -2297,13 +2297,20 @@ func runFrame(fs *list.List) error {
 			exceptionClass := *objectRef.Klass
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
-			// print out the data, as we have it presently
-			msg := fmt.Sprintf("Exception in thread %d %s:", f.Thread, exceptionName)
+			// print out the data, as we have it presently, starting with the exception type
+			msg := ""
+			if f.Thread == 1 { // if it's thread #1, use its name, "main"
+				msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
+			} else {
+				msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
+			}
 			_ = log.Log(msg, log.SEVERE)
+
+			// followed by the stack
 			for _, frameData := range *glob.JVMframeStack {
 				colon := strings.Index(frameData, ":")
 				shortenedFrameData := frameData[colon+1:]
-				_ = log.Log("\t at"+shortenedFrameData, log.SEVERE)
+				_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
 			}
 
 			// all exceptions that got this far are untrapped, so shutdown with an error code
