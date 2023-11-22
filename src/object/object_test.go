@@ -228,8 +228,8 @@ func TestFormatField(t *testing.T) {
 	}
 	obj.FieldTable["myString"] = &myStringField1
 
-	t.Log("NOTE: Key \"value\" will be diagnosed as missing:")
-	str := obj.FormatField()
+	t.Log("NOTE: Key \"Fred\" will be diagnosed as missing:")
+	str := obj.FormatField("Fred")
 	t.Log(str)
 
 	t.Log("NOTE: Will add a key \"value\" field.")
@@ -237,10 +237,10 @@ func TestFormatField(t *testing.T) {
 		Ftype:  "Ljava/lang/String;",
 		Fvalue: "Hello, Unka Andoo !",
 	}
-	obj.FieldTable["value"] = &myStringField2
+	obj.FieldTable["Fred"] = &myStringField2
 
 	t.Log("Will try FormatField again.")
-	str = obj.FormatField()
+	str = obj.FormatField("Fred")
 	t.Log(str)
 
 }

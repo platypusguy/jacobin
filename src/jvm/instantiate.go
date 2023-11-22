@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/types"
 	"strings"
 	"unsafe"
@@ -238,7 +239,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	} // end of search through attributes
 
 	if f.IsStatic {
-		s := classloader.Static{
+		s := statics.Static{
 			Type:  presentType, // we use the type without the 'X' prefix in the statics table.
 			Value: fieldToAdd.Fvalue,
 		}
@@ -246,9 +247,9 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		fieldName := k.Data.CP.Utf8Refs[f.Name]
 		fullFieldName := classname + "." + fieldName
 
-		_, alreadyPresent := classloader.Statics[fullFieldName]
+		_, alreadyPresent := statics.Statics[fullFieldName]
 		if !alreadyPresent { // add only if field has not been pre-loaded
-			_ = classloader.AddStatic(fullFieldName, s)
+			_ = statics.AddStatic(fullFieldName, s)
 		}
 	}
 	return fieldToAdd, nil

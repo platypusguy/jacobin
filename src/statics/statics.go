@@ -4,11 +4,15 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-package classloader
+package statics
 
 import (
 	"errors"
+	"fmt"
+	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/types"
+	"runtime/debug"
 	"sync"
 )
 
@@ -78,4 +82,49 @@ func LoadStringStatics() {
 		Static{Type: types.Byte, Value: int64(1)})
 	_ = AddStatic("java/lang/String.LATIN1",
 		Static{Type: types.Byte, Value: int64(0)})
+}
+
+// GetStaticValue: Given the frame, frame stack, and field name,
+// return the field contents.
+// If successful, return the field value and a nil error;
+// Else (error), return a nil field value and the non-nil error.
+func GetStaticValue(className string, fieldName string) any {
+
+	var retValue any
+
+	keyStatics := className + "." + fieldName
+
+	// was this static field previously loaded? Is so, get its location and move on.
+	prevLoaded, ok := Statics[keyStatics]
+	if !ok {
+		glob := globals.GetGlobalRef()
+		glob.ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GetStaticValue: could not load statics key %s", keyStatics)
+		_ = log.Log(errMsg, log.SEVERE)
+		return errMsg
+	}
+
+	// Field types bool, byte, and int need conversion to int64.
+	// The other types are ok as is.
+	switch prevLoaded.Value.(type) {
+	case bool:
+		value := prevLoaded.Value.(bool)
+		retValue = types.ConvertGoBoolToJavaBool(value)
+	case byte:
+		retValue = int64(prevLoaded.Value.(byte))
+	case int:
+		retValue = int64(prevLoaded.Value.(int))
+	default:
+		retValue = prevLoaded.Value
+	}
+
+	return retValue
+}
+
+func DumpStatics() {
+	fmt.Println("\n===== DumpStatics BEGIN")
+	for key, value := range Statics {
+		fmt.Printf("%s     %v\n", key, value)
+	}
+	fmt.Println("===== DumpStatics END")
 }
