@@ -10,7 +10,6 @@ import (
 	"container/list"
 	"fmt"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/thread"
@@ -20,18 +19,18 @@ func Load_Lang_Throwable() map[string]GMeth {
 
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 0,
 			GFunction:  fillInStackTrace,
 		}
 	return MethodSignatures
 }
 
 func fillInStackTrace(params []interface{}) interface{} {
-	glob := globals.GetGlobalRef()
-	if glob.JVMframeStack == nil { // if we haven't captured the JVM stack before now, we're hosed.
-		_ = log.Log("No stack data available for this error. Incomplete data will be shown.", log.SEVERE)
-		return nil
-	}
+	// glob := globals.GetGlobalRef()
+	// if glob.JVMframeStack == nil { // if we haven't captured the JVM stack before now, we're hosed.
+	// 	_ = log.Log("No stack data available for this error. Incomplete data will be shown.", log.SEVERE)
+	// 	return nil
+	// }
 
 	thisThread := params[0].(*thread.ExecThread)
 	thisFrameStack := thisThread.Stack
