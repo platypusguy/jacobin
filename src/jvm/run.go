@@ -1998,17 +1998,8 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
-				// objRef := pop(f).(*object.Object)
-				// f, err = runGmethod(mtEntry, fs, className, methName, methSig, objRef)
-				// if err != nil {
-				// 	glob := globals.GetGlobalRef()
-				// 	glob.ErrorGoStack = string(debug.Stack())
-				// 	errMsg := "INVOKESPECIAL: Error encountered in: " + className + "." + methName
-				// 	// any exceptions message will already have been displayed to the user
-				// 	return errors.New(errMsg)
-				// }
-				// so we have a native golang function
-				// get the parameters/args off the stack
+
+				// get the parameters/args, if any, off the stack
 				gmethData := mtEntry.Meth.(classloader.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
@@ -2099,7 +2090,14 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' {
-				f, err = runGmethod(mtEntry, fs, className, methodName, methodType, nil, false)
+				gmethData := mtEntry.Meth.(classloader.GMeth)
+				paramCount := gmethData.ParamSlots
+				var params []interface{}
+				for i := 0; i < paramCount; i++ {
+					params = append(params, pop(f))
+				}
+
+				f, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, false)
 
 				if err != nil {
 					// any exceptions message will already have been displayed to the user
