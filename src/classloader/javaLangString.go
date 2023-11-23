@@ -15,13 +15,8 @@ import (
 	"strings"
 )
 
-// IMPORTANT NOTE: Some String functions are placed in libs\javaLangStringMethods.go
-// due to golang circularity concerns, alas.
-
-/*
-   We don't run String's static initializer block because the initialization
-   is already handled in String creation
-*/
+// We don't run String's static initializer block because the initialization
+// is already handled in String creation
 
 func Load_Lang_String() map[string]GMeth {
 
@@ -124,24 +119,21 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: getBytesVoid,
+			GFunction:  getBytesVoid,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: noSupportYetInString,
+			GFunction:  noSupportYetInString,
 		}
 
 	// get the bytes from a string, given the specified Charset object *****************- CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: noSupportYetInString,
+			GFunction:  noSupportYetInString,
 		}
 
 	// Return a formatted string using the reference object string as the format string
@@ -157,8 +149,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
-			GFunction: sprintf,
+			GFunction:  sprintf,
 		}
 
 	// Return a formatted string using the specified locale, format string, and arguments.
@@ -172,24 +163,21 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: stringLength,
+			GFunction:  stringLength,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toLowerCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: toLowerCase,
+			GFunction:  toLowerCase,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toUpperCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: toUpperCase,
+			GFunction:  toUpperCase,
 		}
 
 	// Return a string representing a boolean value.
@@ -262,8 +250,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: compareToCaseSensitive,
+			GFunction:  compareToCaseSensitive,
 		}
 
 	// Compare 2 strings lexicographically, ignoring case (upper/lower).
@@ -273,15 +260,13 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: compareToIgnoreCase,
+			GFunction:  compareToIgnoreCase,
 		}
 
 	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: stringConcat,
+			GFunction:  stringConcat,
 		}
 
 	return MethodSignatures
@@ -458,9 +443,7 @@ func StringFormatter(params []interface{}) *object.Object {
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, valuesIn[i].Fields[0].Ftype)
 				exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
 			}
-
 		}
-
 	}
 
 	// Use golang fmt.Sprintf to do the heavy lifting.

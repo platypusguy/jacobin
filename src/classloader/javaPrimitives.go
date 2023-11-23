@@ -32,8 +32,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Byte.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: byteDoubleValue,
+			GFunction:  byteDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Character.valueOf(C)Ljava/lang/Character;"] =
@@ -45,8 +44,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Character.charValue()C"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: charValue,
+			GFunction:  charValue,
 		}
 
 	MethodSignatures["java/lang/Character.isLetter(C)Z"] =
@@ -76,8 +74,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.byteValue()B"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: doubleByteValue,
+			GFunction:  doubleByteValue,
 		}
 
 	MethodSignatures["java/lang/Double.compare(DD)I"] =
@@ -89,22 +86,19 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.compareTo(Ljava/lang/Double;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: doubleCompareTo,
+			GFunction:  doubleCompareTo,
 		}
 
 	MethodSignatures["java/lang/Double.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			// ObjectRef:  true,
-			GFunction: doubleEquals,
+			GFunction:  doubleEquals,
 		}
 
 	MethodSignatures["java/lang/Double.toString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: doubleToString,
+			GFunction:  doubleToString,
 		}
 
 	MethodSignatures["java/lang/Double.parseDouble(Ljava/lang/String;)D"] =
@@ -116,8 +110,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: doubleDoubleValue,
+			GFunction:  doubleDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Integer.valueOf(I)Ljava/lang/Integer;"] =
@@ -135,8 +128,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Integer.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: integerDoubleValue,
+			GFunction:  integerDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
@@ -148,8 +140,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Long.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: longDoubleValue,
+			GFunction:  longDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Short.valueOf(S)Ljava/lang/Short;"] =
@@ -161,8 +152,7 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Short.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			// ObjectRef:  true,
-			GFunction: shortDoubleValue,
+			GFunction:  shortDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Boolean.valueOf(Z)Ljava/lang/Boolean;"] =

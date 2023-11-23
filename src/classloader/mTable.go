@@ -44,8 +44,7 @@ type MData interface{}
 // return a possibly nil interface{}
 type GMeth struct {
 	ParamSlots int
-	// ObjectRef  bool
-	GFunction func([]interface{}) interface{}
+	GFunction  func([]interface{}) interface{}
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
@@ -92,7 +91,6 @@ func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
-		// gme.ObjectRef = val.ObjectRef
 		gme.GFunction = val.GFunction
 
 		tableEntry := MTentry{
