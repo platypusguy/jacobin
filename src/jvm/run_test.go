@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/statics"
 	"jacobin/thread"
 	"jacobin/types"
 	"math"
@@ -2003,7 +2004,7 @@ func TestGetStaticBoolean(t *testing.T) {
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
-	classloader.StaticsPreload() // load the statics table with the String class
+	statics.StaticsPreload() // load the statics table with the String class
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)

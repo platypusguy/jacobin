@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/types"
 	"os"
 	"os/user"
@@ -111,9 +112,9 @@ func clinit([]interface{}) interface{} {
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
-		_ = AddStatic("java/lang/System.in", Static{Type: "L", Value: object.Null})
-		_ = AddStatic("java/lang/System.err", Static{Type: "L", Value: object.Null})
-		_ = AddStatic("java/lang/System.out", Static{Type: "L", Value: object.Null})
+		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "L", Value: object.Null})
+		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "L", Value: object.Null})
+		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "L", Value: object.Null})
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil

@@ -8,11 +8,13 @@ package object
 
 import (
 	"fmt"
+	"jacobin/statics"
 	"jacobin/types"
-	"path/filepath"
 	"strings"
 	"unsafe"
 )
+
+var tracing = false
 
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
@@ -74,88 +76,163 @@ func IsNull(value any) bool {
 	return value == nil || value == Null
 }
 
-func fmtHelper(klassString string, field Field) string {
-	if klassString == filepath.FromSlash(StringClassName) {
-		bytes := *field.Fvalue.(*[]byte)
-		//fmt.Printf("DEBUG fmtHelper bytes: %d % x\n", len(bytes), bytes)
-		last := len(bytes) - 1
-		if last < 0 {
-			return "\"\""
-		}
-		if bytes[last] == '\n' {
-			bytes = bytes[0:last]
-		}
-		return fmt.Sprintf("\"%s\"", string(bytes))
+// Return a string representing the field type and value.
+// Input for all fields:
+//
+//	field: structure of field type and field value if not static.
+//
+// Input for static fields:
+//
+//	fieldName: Key to the jacobin statics table.
+//	frameStack: Required for getStaticValue() if the field is static.
+func fmtHelper(field Field, className string, fieldName string) string {
+	ftype := field.Ftype
+	fvalue := field.Fvalue
+	if tracing {
+		fmt.Printf("DEBUG fmtHelper ftype=[%s], fvalue=[%v], className=[%s], fieldName=[%s]\n", ftype, fvalue, className, fieldName)
 	}
-	switch field.Ftype {
-	case types.Double, types.Float, types.Static + types.Double, types.Static + types.Float:
-		return fmt.Sprintf("%f", field.Fvalue)
-	case types.Int, types.Long, types.Short, types.Static + types.Int, types.Static + types.Long, types.Static + types.Short:
-		return fmt.Sprintf("%d", field.Fvalue)
-	case types.Byte, types.Static + types.Byte:
-		return fmt.Sprintf("%02x", field.Fvalue)
-	case types.Bool, types.Static + types.Bool:
-		// TODO: Why does FieldTable[key] pass an int64 YET Fields[index] passes a bool???
-		switch field.Fvalue.(type) {
-		case bool:
-			if field.Fvalue.(bool) {
-				return "true"
-			} else {
-				return "false"
-			}
-		case int64:
-			if field.Fvalue.(int64) != 0 {
-				return "true"
-			} else {
-				return "false"
-			}
-		default:
-			return fmt.Sprintf("<ERROR Ftype=bool but unexpected Fvalue variable type: %T !>", field.Fvalue)
-		}
-	case types.Char, types.Static + types.Char:
-		return fmt.Sprintf("%q", field.Fvalue)
-	case types.ByteArray, types.Static + types.ByteArray:
-		if field.Fvalue == nil {
-			return "<ERROR nil Fvalue!>"
-		}
-		switch field.Fvalue.(type) {
-		case *Object:
-			return "*** embedded object ***"
-		}
-		bytesPtr := field.Fvalue.(*[]byte)
-		if bytesPtr == nil {
-			return "<ERROR nil byte array ptr!>"
-		}
-		if len(*bytesPtr) < 1 {
-			return "<nil byte array>"
-		}
-		return fmt.Sprintf("% x", *bytesPtr)
+	flagStatic := false
+	if strings.HasPrefix(ftype, types.Static) {
+		flagStatic = true
+		ftype = ftype[1:] // get rid of leading 'X'
+	}
+	if len(fieldName) < 1 && flagStatic {
+		return "<ERROR field name nil but field is static>"
 	}
 
-	// Default action:
-	return fmt.Sprintf("%v", field.Fvalue)
+	if ftype == StringClassRef {
+		// Special handling for String.
+		if flagStatic {
+			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+		} else {
+			if fvalue != nil {
+				switch fvalue.(type) {
+				case *[]byte:
+					bytes := *fvalue.(*[]byte)
+					last := len(bytes) - 1
+					if last < 0 {
+						return "\"\""
+					}
+					if bytes[last] == '\n' {
+						bytes = bytes[0:last]
+					}
+					return fmt.Sprintf("\"%s\"", string(bytes))
+				case string:
+					return fvalue.(string)
+				}
+			} else {
+				return "<nil>"
+			}
+		}
+	}
+
+	switch ftype {
+
+	case types.Bool:
+		// Special handling for boolean.
+		if flagStatic {
+			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+		} else {
+			// TODO: Why does FieldTable[key] pass an int64 YET Fields[index] passes a bool???
+			switch field.Fvalue.(type) {
+			case bool:
+				if field.Fvalue.(bool) {
+					return "true"
+				} else {
+					return "false"
+				}
+			case int64:
+				if field.Fvalue.(int64) != 0 {
+					return "true"
+				} else {
+					return "false"
+				}
+			default:
+				return fmt.Sprintf("<ERROR Ftype=bool but unexpected Fvalue variable type: %T >", field.Fvalue)
+			}
+		}
+
+	case types.ByteArray:
+		// Special handling for non-String byte array.
+		if flagStatic {
+			return fmt.Sprintf("% x", statics.GetStaticValue(className, fieldName))
+		} else {
+			if field.Fvalue == nil {
+				return "<ERROR nil Fvalue>"
+			}
+			switch field.Fvalue.(type) {
+			case *Object:
+				return "*** embedded object ***"
+			}
+			bytesPtr := field.Fvalue.(*[]byte)
+			if bytesPtr == nil {
+				return "<ERROR nil byte array ptr>"
+			}
+			if len(*bytesPtr) < 1 {
+				return "<byte array of zero length>"
+			}
+			return fmt.Sprintf("% x", *bytesPtr)
+		}
+	}
+
+	// Default action for anything else.
+	if flagStatic {
+		return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+	} else {
+		return fmt.Sprintf("%v", field.Fvalue)
+	}
 }
 
 // FormatField creates a string that represents a single field of an Object.
-func (objPtr *Object) FormatField() string {
+func (objPtr *Object) FormatField(fieldName string) string {
 	var output string
 	var klassString string // string class name
 	obj := *objPtr         // whole object
-	key := "value"         // key to the FieldTable map
 
 	if obj.Klass != nil {
 		klassString = *obj.Klass
 	} else {
-		klassString = "<ERROR nil class pointer!>" // Why is there no class name pointer for this object?
+		klassString = "<ERROR nil class pointer>" // Why is there no class name pointer for this object?
 		obj.DumpObject(klassString, 0)
 		return klassString
 	}
 
-	// Check use of the Fields slice
+	// Use the FieldTable map with key fieldName?
+	if len(fieldName) > 0 && len(obj.FieldTable) > 0 {
+		// Using key="value" in the FieldTable
+		ptr := obj.FieldTable[fieldName]
+		if ptr == nil {
+			str := fmt.Sprintf("<ERROR FieldTable[\"%s\"] not found>", fieldName)
+			obj.DumpObject(str, 0)
+			return str
+		}
+		field := *ptr
+		str := fmtHelper(field, klassString, fieldName)
+		if strings.HasPrefix(str, "<ERROR") {
+			obj.DumpObject(str, 0)
+		}
+		output = fmt.Sprintf("%s: (%s) %s", fieldName, field.Ftype, str)
+		return output
+	}
+
+	// Empty FieldTable. fieldName supplied?
+	if len(fieldName) > 0 && tracing {
+		// fieldName supplied but FieldTable is empty.
+		title := fmt.Sprintf("DEBUG FormatField: fieldName=%s but FieldTable is empty", fieldName)
+		obj.DumpObject(title, 0)
+	}
+
+	// fieldName was not supplied. FieldTable populated?
+	if len(obj.FieldTable) > 0 && tracing {
+		title := "DEBUG FormatField: FieldTable nonempty but fieldName is a nil string"
+		obj.DumpObject(title, 0)
+	}
+
+	// Check use of the Fields slice.
 	if len(obj.Fields) > 0 {
 		// Using [0] in the Fields slice
 		field := obj.Fields[0]
-		str := fmtHelper(klassString, field)
+		str := fmtHelper(field, klassString, "")
 		if strings.HasPrefix(str, "<ERROR") {
 			obj.DumpObject(str, 0)
 		}
@@ -163,28 +240,12 @@ func (objPtr *Object) FormatField() string {
 		return output
 	}
 
-	// Check use of the FieldTable map
-	if len(obj.FieldTable) > 0 {
-		// Using key="value" in the FieldTable
-		ptr := obj.FieldTable[key]
-		if ptr == nil {
-			str := fmt.Sprintf("<ERROR FieldTable[\"%s\"] not found!>", key)
-			obj.DumpObject(str, 0)
-			return str
-		}
-		field := *ptr
-		str := fmtHelper(klassString, field)
-		if strings.HasPrefix(str, "<ERROR") {
-			obj.DumpObject(str, 0)
-		}
-		output = fmt.Sprintf("%s: (%s) %s", key, obj.FieldTable[key].Ftype, str)
-		return output
-	}
-
 	// Field table and field slice are both empty.
-	output = "<ERROR field empty!>"
-	obj.DumpObject(output, 0)
-	return output
+	if tracing {
+		output = "<Field table and field slice are both empty>"
+		obj.DumpObject(output, 0)
+	}
+	return klassString
 }
 
 // DumpObject displays every attribute of an Object, formatted as multi-line printed output.
@@ -210,7 +271,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if obj.Klass != nil {
 		klassString = "\tClass: " + *obj.Klass
 	} else {
-		klassString = "\t<class MISSING!>"
+		klassString = "\t<class MISSING>"
 	}
 	output += klassString + "\n"
 
@@ -221,15 +282,16 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	nflds := len(obj.FieldTable)
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
-		for key := range obj.FieldTable {
+		for fieldName := range obj.FieldTable {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
 			}
-			ptr := obj.FieldTable[key]
+			ptr := obj.FieldTable[fieldName]
 			if ptr == nil {
-				output += fmt.Sprintf("\t\t<ERROR nil FieldTable[%s] ptr!>\n", key)
+				output += fmt.Sprintf("\t\t<ERROR nil FieldTable[%s] ptr>\n", fieldName)
 			} else {
-				output += fmt.Sprintf("\t\tFld %s: (%s) %s\n", key, obj.FieldTable[key].Ftype, fmtHelper(klassString, *obj.FieldTable[key]))
+				str := fmtHelper(*obj.FieldTable[fieldName], klassString, fieldName)
+				output += fmt.Sprintf("\t\tFld %s: (%s) %s\n", fieldName, obj.FieldTable[fieldName].Ftype, str)
 			}
 		}
 	} else {
@@ -244,7 +306,8 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
 		for _, fld := range obj.Fields {
-			output += fmt.Sprintf("\t\tFld (%s) %s\n", fld.Ftype, fmtHelper(klassString, fld))
+			str := fmtHelper(fld, klassString, "")
+			output += fmt.Sprintf("\t\tFld (%s) %s\n", fld.Ftype, str)
 		}
 	} else {
 		output += "\tField Slice is <empty>\n"
