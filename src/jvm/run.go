@@ -19,6 +19,7 @@ import (
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/thread"
 	"jacobin/types"
 	"jacobin/util"
@@ -94,6 +95,11 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	if err != nil {
 		return err
 	}
+
+	if MainThread.Trace {
+		statics.DumpStatics()
+	}
+	
 	return nil
 }
 
@@ -1534,13 +1540,13 @@ func runFrame(fs *list.List) error {
 			fieldName = className + "." + fieldName
 
 			// was this static field previously loaded? Is so, get its location and move on.
-			prevLoaded, ok := classloader.Statics[fieldName]
+			prevLoaded, ok := statics.Statics[fieldName]
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
 				_, err := InstantiateClass(className, fs)
 				if err == nil {
-					prevLoaded, ok = classloader.Statics[fieldName]
+					prevLoaded, ok = statics.Statics[fieldName]
 				} else {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
@@ -1621,13 +1627,13 @@ func runFrame(fs *list.List) error {
 			fieldName = className + "." + fieldName
 
 			// was this static field previously loaded? Is so, get its location and move on.
-			prevLoaded, ok := classloader.Statics[fieldName]
+			prevLoaded, ok := statics.Statics[fieldName]
 			if !ok { // if field is not already loaded, then
 				// the class has not been instantiated, so
 				// instantiate the class
 				_, err := InstantiateClass(className, fs)
 				if err == nil {
-					prevLoaded, ok = classloader.Statics[fieldName]
+					prevLoaded, ok = statics.Statics[fieldName]
 				} else {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
@@ -1654,13 +1660,13 @@ func runFrame(fs *list.List) error {
 				// be stored as a boolean, a byte (in an array), or int64
 				// We want all forms normalized to int64
 				value = pop(f).(int64) & 0x01
-				classloader.Statics[fieldName] = classloader.Static{
+				statics.Statics[fieldName] = statics.Static{
 					Type:  prevLoaded.Type,
 					Value: value,
 				}
 			case types.Char, types.Short, types.Int, types.Long:
 				value = pop(f).(int64)
-				classloader.Statics[fieldName] = classloader.Static{
+				statics.Statics[fieldName] = statics.Static{
 					Type:  prevLoaded.Type,
 					Value: value,
 				}
@@ -1674,13 +1680,13 @@ func runFrame(fs *list.List) error {
 				case byte:
 					val = v.(byte)
 				}
-				classloader.Statics[fieldName] = classloader.Static{
+				statics.Statics[fieldName] = statics.Static{
 					Type:  prevLoaded.Type,
 					Value: val,
 				}
 			case types.Float, types.Double:
 				value = pop(f).(float64)
-				classloader.Statics[fieldName] = classloader.Static{
+				statics.Statics[fieldName] = statics.Static{
 					Type:  prevLoaded.Type,
 					Value: value,
 				}
@@ -1692,7 +1698,7 @@ func runFrame(fs *list.List) error {
 				value = pop(f)
 				switch value.(type) {
 				case *object.Object:
-					classloader.Statics[fieldName] = classloader.Static{
+					statics.Statics[fieldName] = statics.Static{
 						Type:  prevLoaded.Type,
 						Value: value,
 					}
@@ -1708,7 +1714,7 @@ func runFrame(fs *list.List) error {
 					obj.Fields = append(obj.Fields, objField)
 					obj.FieldTable = nil
 
-					classloader.Statics[fieldName] = classloader.Static{
+					statics.Statics[fieldName] = statics.Static{
 						Type:  objField.Ftype,
 						Value: value,
 					}
@@ -2679,7 +2685,7 @@ func logTraceStack(f *frames.Frame) {
 				output = fmt.Sprintf("<null>")
 			} else {
 				objPtr := f.OpStack[ii].(*object.Object)
-				output = objPtr.FormatField()
+				output = objPtr.FormatField("")
 			}
 		case *[]uint8:
 			value := f.OpStack[ii]
@@ -2712,7 +2718,7 @@ func emitTraceData(f *frames.Frame) string {
 				stackTop = fmt.Sprintf("<null>")
 			} else {
 				objPtr := f.OpStack[f.TOS].(*object.Object)
-				stackTop = objPtr.FormatField()
+				stackTop = objPtr.FormatField("")
 			}
 		case *[]uint8:
 			value := f.OpStack[f.TOS]

@@ -13,6 +13,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/thread"
 	"jacobin/types"
 	"os"
@@ -58,7 +59,7 @@ func JVMrun() int {
 	var status error
 
 	// load static variables. Needs to be here b/c CLI might modify their values
-	classloader.StaticsPreload()
+	statics.StaticsPreload()
 
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(Global)
@@ -111,8 +112,8 @@ func JVMrun() int {
 	// that it's set in the Statics table w/ an entry corresponding to the main class
 	// Otherwise, it was previously set to disabled
 	if Global.Options["-ea"].Set {
-		_ = classloader.AddStatic("main.$assertionsDisabled",
-			classloader.Static{Type: types.Int, Value: types.JavaBoolFalse})
+		_ = statics.AddStatic("main.$assertionsDisabled",
+			statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
 	}
 
 	// the following was commented out per JACOBIN-327.

@@ -603,7 +603,7 @@ func valueOfLong(params []interface{}) interface{} {
 func valueOfObject(params []interface{}) interface{} {
 	// params[0]: input Object
 	ptrObj := params[0].(*object.Object)
-	str := ptrObj.FormatField()
+	str := ptrObj.FormatField("")
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
 }

@@ -194,7 +194,7 @@ func PrintlnDouble(l []interface{}) interface{} {
 // Println an Object's contents
 func PrintlnObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField()
+	str := objPtr.FormatField("")
 	fmt.Println(str)
 	return nil
 }
@@ -267,7 +267,7 @@ func PrintS(params []interface{}) interface{} {
 // Print an Object's contents
 func PrintObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField()
+	str := objPtr.FormatField("")
 	fmt.Print(str)
 	return nil
 }
