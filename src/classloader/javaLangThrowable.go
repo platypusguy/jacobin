@@ -12,7 +12,6 @@ import (
 	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/object"
-	"jacobin/thread"
 )
 
 func Load_Lang_Throwable() map[string]GMeth {
@@ -26,17 +25,9 @@ func Load_Lang_Throwable() map[string]GMeth {
 }
 
 func fillInStackTrace(params []interface{}) interface{} {
-	// glob := globals.GetGlobalRef()
-	// if glob.JVMframeStack == nil { // if we haven't captured the JVM stack before now, we're hosed.
-	// 	_ = log.Log("No stack data available for this error. Incomplete data will be shown.", log.SEVERE)
-	// 	return nil
-	// }
 
-	thisThread := params[0].(*thread.ExecThread)
-	thisFrameStack := thisThread.Stack
-	stackListing := GetStackTraces(thisFrameStack)
-	listing := stackListing.FieldTable["stackTrace"].Fvalue.([]*object.Object)
-	fmt.Printf("Stack trace contains %d elements", len(listing))
+	objRef := params[0].(*object.Object)
+	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
 	// thisFrame := thisFrameStack.Front().Next()
 
