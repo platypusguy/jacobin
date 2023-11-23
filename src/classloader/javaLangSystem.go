@@ -132,7 +132,7 @@ func nanoTime([]interface{}) interface{} {
 
 // Exits the program directly, returning the passed in value
 func exitI(params []interface{}) interface{} {
-	exitCode := params[0].(int64) // int64
+	exitCode := params[1].(int64) // int64
 	var exitStatus = int(exitCode)
 	shutdown.Exit(exitStatus)
 	return 0 // this code is not executed as previous line ends Jacobin
@@ -146,7 +146,7 @@ func forceGC([]interface{}) interface{} {
 
 // Get a property
 func getProperty(params []interface{}) interface{} {
-	propObj := params[0].(*object.Object) // string
+	propObj := params[1].(*object.Object) // string
 	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
 	str := *strPtr
 	prop := string(str)

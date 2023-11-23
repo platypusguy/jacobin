@@ -81,31 +81,36 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 // its stack, pushes the frame onto the head of the frame stack and then calls run() to
 // execute it. This eventually calls runGFrame(), which handles any return value. After
 // the function is run, this method pops the frame off the frame stack and returns.
-func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, methodType string) (*frames.Frame, error) {
+// The parameter, objRef, points to the object whose method is being called. It's used
+// principally (exclusively?) by INVOKEVIRTUAL and INVOKESPECIAL (See JVM spec).
+func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
+	methodType string, params *[]interface{}, objRef bool) (*frames.Frame, error) {
+
+	var paramCount int
+	if params == nil {
+		paramCount = 0
+	} else {
+		paramCount = len(*params)
+	}
 
 	f := fs.Front().Value.(*frames.Frame)
 
 	// Extra parameter?
-	ObjectRef := mt.Meth.(classloader.GMeth).ObjectRef
+	// ObjectRef := mt.Meth.(classloader.GMeth).ObjectRef
 
 	// Get the GMeth paramSlots value.
-	paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
+	// paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGmethod %s.%s%s, objectRef: %v, paramSlots: %d, f.OpStack:",
-			className, methodName, methodType, ObjectRef, paramSlots)
+		traceInfo := fmt.Sprintf("runGmethod %s.%s%s, objectRef: %v, paramSlots: %d",
+			className, methodName, methodType, objRef, paramCount)
 		_ = log.Log(traceInfo, log.WARNING)
 		logTraceStack(f)
 	}
 
 	// create a frame (gf for 'go frame') for this function
 	var gf *frames.Frame
-	var npops int
-	if ObjectRef {
-		npops = paramSlots + 1
-	} else {
-		npops = paramSlots
-	}
-	gf = frames.CreateFrame(npops)
+
+	gf = frames.CreateFrame(paramCount)
 	gf.Thread = f.Thread
 	gf.MethName = methodName + methodType
 	gf.ClName = className
@@ -114,33 +119,41 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName, me
 	gf.Locals = nil
 	gf.Ftype = 'G' // a golang function
 
-	// get the args (if any) from the operand stack of the current frame(f)
-	// then push them onto the stack of the go function
-
-	var argList []interface{}
+	// // get the args (if any) from the operand stack of the current frame(f)
+	// // then push them onto the stack of the go function
+	//
+	// var argList []interface{}
 
 	// Current frame stack is one of 2 forms:
 	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: calls from INVOKESTATIC
 	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
 
-	// For each paramSlot, pop from the current frame and append it to argList.
-	for i := 0; i < npops; i++ {
-		arg := pop(f)
-		if localDebugging || MainThread.Trace {
-			traceInfo := fmt.Sprintf("runGmethod popped arg type=%T, value=%v", arg, arg)
-			_ = log.Log(traceInfo, log.WARNING)
-		}
-		argList = append(argList, arg)
-	}
-
-	// argList now has 2 possible forms:
-	// (1) p1 | p2 | ... | pn
-	// (2) extra | p1 | p2 | ... | pn
+	// // For each paramSlot, pop from the current frame and append it to argList.
+	// for i := 0; i < npops; i++ {
+	// 	arg := pop(f)
+	// 	if localDebugging || MainThread.Trace {
+	// 		traceInfo := fmt.Sprintf("runGmethod popped arg type=%T, value=%v", arg, arg)
+	// 		_ = log.Log(traceInfo, log.WARNING)
+	// 	}
+	// 	argList = append(argList, arg)
+	// }
+	//
+	// // if this was called from INVOKEDYNAMIC or INVOKESTATIC
+	// // then the arg[0] will be a reference to the object whose
+	// // method is being called. That object is pointe to by
+	// // objRef
+	// if objRef != nil {
+	// 	argList = append(argList, objRef)
+	// }
+	//
+	// // argList now has 2 possible forms:
+	// // (1) p1 | p2 | ... | pn
+	// // (2) extra | p1 | p2 | ... | pn
 
 	// Push the arguments in reverse order onto the Go op stack.
 	// If there was an extra parameter, it's at the Go op stack[0].
-	for j := len(argList) - 1; j >= 0; j-- {
-		push(gf, argList[j])
+	for j := paramCount - 1; j >= 0; j-- {
+		push(gf, (*params)[j])
 	}
 
 	// Set the Go frame TOS = parent frame TOS.

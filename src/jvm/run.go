@@ -1922,8 +1922,24 @@ func runFrame(fs *list.List) error {
 				}
 			}
 
-			if mtEntry.MType == 'G' { // so we have a golang function
-				_, err = runGmethod(mtEntry, fs, className, methodName, methodType)
+			// if we have a native function (here, one implemented in golang, rather than Java),
+			// then follow the JVM spec and push the objectRef and the parameters to the function
+			// as parameters. Consult:
+			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
+			if mtEntry.MType == 'G' { // so we have a native golang function
+				// get the parameters/args off the stack
+				gmethData := mtEntry.Meth.(classloader.GMeth)
+				paramCount := gmethData.ParamSlots
+				var params []interface{}
+				for i := 0; i < paramCount; i++ {
+					params = append(params, pop(f))
+				}
+
+				// now get the objectRef (the object whose method we're invoking)
+				objRef := pop(f).(*object.Object)
+				params = append(params, objRef)
+
+				_, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
 				if err != nil {
 					// any exception message will already have been displayed to the user
 					glob := globals.GetGlobalRef()
@@ -1957,30 +1973,6 @@ func runFrame(fs *list.List) error {
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
-				/*
-					err = runFrame(fs)                   // 2nd on stack from new crash site
-					if err != nil {
-						return err
-					}
-
-					// if the method is main(), then when we get here the
-					// frame stack will be empty to exit from here, otherwise
-					// there's still a frame on the stack, pop it off and continue.
-					if fs.Len() == 0 {
-						return nil
-					}
-					fs.Remove(fs.Front()) // pop the frame off
-
-					// the previous frame pop might have been main()
-					// if so, then we can't reset f to a non-existent frame
-					// so we test for this before resetting f.
-					if fs.Len() != 0 {
-						f = fs.Front().Value.(*frames.Frame)
-					} else {
-						return nil
-					}
-
-				*/
 			}
 		case opcodes.INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -2006,15 +1998,37 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
-				// f, err = runGmethod(mtEntry, fs, className, className+"."+methName, methSig)
-				f, err = runGmethod(mtEntry, fs, className, methName, methSig)
+				// objRef := pop(f).(*object.Object)
+				// f, err = runGmethod(mtEntry, fs, className, methName, methSig, objRef)
+				// if err != nil {
+				// 	glob := globals.GetGlobalRef()
+				// 	glob.ErrorGoStack = string(debug.Stack())
+				// 	errMsg := "INVOKESPECIAL: Error encountered in: " + className + "." + methName
+				// 	// any exceptions message will already have been displayed to the user
+				// 	return errors.New(errMsg)
+				// }
+				// so we have a native golang function
+				// get the parameters/args off the stack
+				gmethData := mtEntry.Meth.(classloader.GMeth)
+				paramCount := gmethData.ParamSlots
+				var params []interface{}
+				for i := 0; i < paramCount; i++ {
+					params = append(params, pop(f))
+				}
+
+				// now get the objectRef (the object whose method we're invoking)
+				objRef := pop(f).(*object.Object)
+				params = append(params, objRef)
+
+				_, err = runGmethod(mtEntry, fs, className, methName, methSig, &params, true)
 				if err != nil {
+					// any exception message will already have been displayed to the user
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Error encountered in: " + className + "." + methName
-					// any exceptions message will already have been displayed to the user
+					errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methName)
 					return errors.New(errMsg)
 				}
+				break
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
@@ -2085,7 +2099,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' {
-				f, err = runGmethod(mtEntry, fs, className, methodName, methodType)
+				f, err = runGmethod(mtEntry, fs, className, methodName, methodType, nil, false)
 
 				if err != nil {
 					// any exceptions message will already have been displayed to the user
@@ -2109,31 +2123,8 @@ func runFrame(fs *list.List) error {
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
-				// err = runFrame(fs)                   // 2nd on stack from new crash site
-				// if err != nil {
-				// 	return err
-				// }
-
-				/*
-					// if the static method is main(), when we get here the
-					// frame stack will be empty to exit from here, otherwise
-					// there's still a frame on the stack, pop it off and continue.
-					if fs.Len() == 0 {
-						return nil
-					}
-					fs.Remove(fs.Front()) // pop the frame off
-
-					// the previous frame pop might have been main()
-					// if so, then we can't reset f to a non-existent frame
-					// so we test for this before resetting f.
-					if fs.Len() != 0 {
-						f = fs.Front().Value.(*frames.Frame)
-					} else {
-						return nil
-					}
-
-				*/
 			}
+
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2

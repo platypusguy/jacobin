@@ -34,92 +34,90 @@ var MethodSignatures = make(map[string]GMeth)
 func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println()V"] = // println string
 		GMeth{
-			ParamSlots: 1, // [0] = PrintStream.out object,
+			ParamSlots: 0,
 			GFunction:  PrintlnV,
 		}
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
 		GMeth{
-			ParamSlots: 2, // [0] = PrintStream.out object,
-			// [1] = index to StringConst to print
-			GFunction: Println,
+			ParamSlots: 1, // [0] =  StringConst to print
+			GFunction:  Println,
 		}
 	MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  PrintlnI,
 		}
 	MethodSignatures["java/io/PrintStream.println(Z)V"] = // println boolean
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  PrintlnBoolean,
 		}
 	MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
 		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
+			ParamSlots: 2, // 2 slots for the long
 			GFunction:  PrintlnLong,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
 		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
+			ParamSlots: 2, // 2 slots for the double
 			GFunction:  PrintlnDouble,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
 		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+			ParamSlots: 1, // 1 slot for the float
 			GFunction:  PrintlnDouble,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println float
 		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the Object
+			ParamSlots: 1, // 1 slot for the Object
 			GFunction:  PrintlnObject,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
 		GMeth{
-			ParamSlots: 2, // [0] = PrintStream.out object,
-			// [1] = index to StringConst to print
-			GFunction: PrintS,
+			ParamSlots: 1, // [0] =  StringConst to print
+			GFunction:  PrintS,
 		}
 	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  PrintI,
 		}
 	MethodSignatures["java/io/PrintStream.print(Z)V"] = // print boolean
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  PrintBoolean,
 		}
 	MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
 		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the long
+			ParamSlots: 2, // 2 slots for the long
 			GFunction:  PrintLong,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
 		GMeth{
-			ParamSlots: 3, // PrintStream.out object + 2 slots for the double
+			ParamSlots: 2, // 2 slots for the double
 			GFunction:  PrintDouble,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
 		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the float
+			ParamSlots: 1, // 1 slot for the float
 			GFunction:  PrintFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // println float
 		GMeth{
-			ParamSlots: 2, // PrintStream.out object + 1 slot for the Object
+			ParamSlots: 1, // 1 slot for the Object
 			GFunction:  PrintObject,
 		}
 
 	MethodSignatures["java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
 		GMeth{
-			ParamSlots: 3, // the Printstream object, the format string, the parameters (if any)
+			ParamSlots: 2, // the format string, the parameters (if any)
 			GFunction:  Printf,
 		}
 
