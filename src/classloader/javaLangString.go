@@ -37,7 +37,7 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  newStringFromBytes,
 		}
 
-	// String(byte[] ascii, int hibyte) ***************************************** DEPRECATED
+	// String(byte[] ascii, int hibyte) *** DEPRECATED
 	MethodSignatures["java/lang/String.<init>([BI)V"] =
 		GMeth{
 			ParamSlots: 2,
@@ -51,7 +51,7 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  newSubstringFromBytes,
 		}
 
-	// String(byte[] ascii, int hibyte, int offset, int count) *****************- DEPRECATED
+	// String(byte[] ascii, int hibyte, int offset, int count) *** DEPRECATED
 	MethodSignatures["java/lang/String.<init>([BIII)V"] =
 		GMeth{
 			ParamSlots: 4,
@@ -72,14 +72,14 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// String(byte[] bytes, String charsetName) ******************************** CHARSET
+	// String(byte[] bytes, String charsetName) *********************************** CHARSET
 	MethodSignatures["java/lang/String.<init>([BLjava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  noSupportYetInString,
 		}
 
-	// String(byte[] bytes, Charset charset) ********************************** CHARSET
+	// String(byte[] bytes, Charset charset) ************************************** CHARSET
 	MethodSignatures["java/lang/String.<init>([BLjava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 2,
@@ -129,7 +129,7 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// get the bytes from a string, given the specified Charset object *****************- CHARSET
+	// get the bytes from a string, given the specified Charset object ******************* CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,

@@ -46,16 +46,6 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 		*params = append(*params, v)
 	}
 
-	// TODO Validate that a thread pointer is not needed.
-	// pass a pointer to the thread as the last parameter to the function;
-	// from the thread, the frame stack (and the individual frame) become accessible
-	// glob := globals.GetGlobalRef()
-	// thread := glob.Threads[fr.Thread]
-	// if thread != nil { // will be nil only in unit tests
-	//	threadPtr := thread.(*jvmThread.ExecThread)
-	//	*params = append(*params, threadPtr)
-	// }
-
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(classloader.GMeth).GFunction(*params)
 
