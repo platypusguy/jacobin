@@ -32,8 +32,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Byte.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  byteDoubleValue,
+			// ObjectRef:  true,
+			GFunction: byteDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Character.valueOf(C)Ljava/lang/Character;"] =
@@ -45,8 +45,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Character.charValue()C"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  charValue,
+			// ObjectRef:  true,
+			GFunction: charValue,
 		}
 
 	MethodSignatures["java/lang/Character.isLetter(C)Z"] =
@@ -76,8 +76,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.byteValue()B"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  doubleByteValue,
+			// ObjectRef:  true,
+			GFunction: doubleByteValue,
 		}
 
 	MethodSignatures["java/lang/Double.compare(DD)I"] =
@@ -89,22 +89,22 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.compareTo(Ljava/lang/Double;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  doubleCompareTo,
+			// ObjectRef:  true,
+			GFunction: doubleCompareTo,
 		}
 
 	MethodSignatures["java/lang/Double.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  doubleEquals,
+			// ObjectRef:  true,
+			GFunction: doubleEquals,
 		}
 
 	MethodSignatures["java/lang/Double.toString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  doubleToString,
+			// ObjectRef:  true,
+			GFunction: doubleToString,
 		}
 
 	MethodSignatures["java/lang/Double.parseDouble(Ljava/lang/String;)D"] =
@@ -116,8 +116,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Double.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  doubleDoubleValue,
+			// ObjectRef:  true,
+			GFunction: doubleDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Integer.valueOf(I)Ljava/lang/Integer;"] =
@@ -135,8 +135,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Integer.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  integerDoubleValue,
+			// ObjectRef:  true,
+			GFunction: integerDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
@@ -148,8 +148,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Long.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  longDoubleValue,
+			// ObjectRef:  true,
+			GFunction: longDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Short.valueOf(S)Ljava/lang/Short;"] =
@@ -161,8 +161,8 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Short.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  shortDoubleValue,
+			// ObjectRef:  true,
+			GFunction: shortDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Boolean.valueOf(Z)Ljava/lang/Boolean;"] =
@@ -347,7 +347,7 @@ func doubleEquals(params []interface{}) interface{} {
 	if parmObj.Klass == nil {
 		return int64(0)
 	}
-	//fmt.Printf("DEBUG doubleEquals Klass --> %s\n", *parmObj.Klass)
+	// fmt.Printf("DEBUG doubleEquals Klass --> %s\n", *parmObj.Klass)
 	if *parmObj.Klass != "java/lang/Double" {
 		return int64(0)
 	}
@@ -358,7 +358,7 @@ func doubleEquals(params []interface{}) interface{} {
 	}
 
 	// If equal, return true; else return false.
-	//fmt.Printf("DEBUG doubleEquals dd1=%f, dd2=%f\n", dd1, dd2)
+	// fmt.Printf("DEBUG doubleEquals dd1=%f, dd2=%f\n", dd1, dd2)
 	if dd1 == dd2 {
 		return int64(1)
 	}
@@ -415,7 +415,7 @@ func doubleDoubleValue(params []interface{}) interface{} {
 }
 
 func integerValueOf(params []interface{}) interface{} {
-	//fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
+	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
 	ii := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, ii)
 	return objPtr

@@ -11,8 +11,8 @@ import (
 )
 
 // MTable value consists of a byte identifying whether the method is a Java method
-// ('J'), that is, a method that is executed by executing bytecodes, or a go-style
-// method ('G'), which is a Go funciton that is being used as a stand-in for
+// ('J'), that is, a method that is executed by executing bytecodes, or a golan-style
+// native method ('G'), i.e., a golang funciton that is being used as a stand-in for
 // the named Java method. In most contexts, this would be called a native method,
 // but that term is used in a different context in Java (see JNI), so avoided here.
 //
@@ -23,7 +23,7 @@ import (
 // When a function is invoked, the lookup mechanism first checks the MTable, and
 // if an entry is found, that entry is what is executed. If no entry is found,
 // the search goes to the class and faiing that to the superclass, etc. Once the
-// method is located it's added to the MTable so that all future invocations will
+// method is located, it's added to the MTable so that all future invocations will
 // result in fast look-ups in the MTable.
 var MTable = make(MT)
 
@@ -44,8 +44,8 @@ type MData interface{}
 // return a possibly nil interface{}
 type GMeth struct {
 	ParamSlots int
-	ObjectRef  bool
-	GFunction  func([]interface{}) interface{}
+	// ObjectRef  bool
+	GFunction func([]interface{}) interface{}
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
@@ -92,7 +92,7 @@ func loadlib(tbl *MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
-		gme.ObjectRef = val.ObjectRef
+		// gme.ObjectRef = val.ObjectRef
 		gme.GFunction = val.GFunction
 
 		tableEntry := MTentry{

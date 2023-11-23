@@ -124,24 +124,24 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  getBytesVoid,
+			// ObjectRef:  true,
+			GFunction: getBytesVoid,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  noSupportYetInString,
+			// ObjectRef:  true,
+			GFunction: noSupportYetInString,
 		}
 
 	// get the bytes from a string, given the specified Charset object *****************- CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  noSupportYetInString,
+			// ObjectRef:  true,
+			GFunction: noSupportYetInString,
 		}
 
 	// Return a formatted string using the reference object string as the format string
@@ -157,8 +157,8 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
-			GFunction:  sprintf,
+			// ObjectRef:  true, // The format string object reference will be in params[0] and parameter object slice in params[1]
+			GFunction: sprintf,
 		}
 
 	// Return a formatted string using the specified locale, format string, and arguments.
@@ -172,24 +172,24 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  stringLength,
+			// ObjectRef:  true,
+			GFunction: stringLength,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toLowerCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  toLowerCase,
+			// ObjectRef:  true,
+			GFunction: toLowerCase,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toUpperCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			ObjectRef:  true,
-			GFunction:  toUpperCase,
+			// ObjectRef:  true,
+			GFunction: toUpperCase,
 		}
 
 	// Return a string representing a boolean value.
@@ -262,8 +262,8 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  compareToCaseSensitive,
+			// ObjectRef:  true,
+			GFunction: compareToCaseSensitive,
 		}
 
 	// Compare 2 strings lexicographically, ignoring case (upper/lower).
@@ -273,15 +273,15 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  compareToIgnoreCase,
+			// ObjectRef:  true,
+			GFunction: compareToIgnoreCase,
 		}
 
 	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			ObjectRef:  true,
-			GFunction:  stringConcat,
+			// ObjectRef:  true,
+			GFunction: stringConcat,
 		}
 
 	return MethodSignatures
@@ -409,14 +409,14 @@ func StringFormatter(params []interface{}) *object.Object {
 	valuesOut := []any{}
 
 	for i := 0; i < len(valuesIn); i++ {
-		//fmt.Printf("DEBUG i: %d of %d\n", i+1, len(valuesIn))
-		//fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
+		// fmt.Printf("DEBUG i: %d of %d\n", i+1, len(valuesIn))
+		// fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
 		if object.IsJavaString(valuesIn[i]) {
 			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
-			//fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+			// fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 		} else {
-			//str := valuesIn[i].FormatField()
-			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
+			// str := valuesIn[i].FormatField()
+			// fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
 
 			// Establish a pointer to the field.
 			var fldPtr *object.Field
@@ -434,7 +434,7 @@ func StringFormatter(params []interface{}) *object.Object {
 			case types.Byte:
 				valuesOut = append(valuesOut, fvalue.(int64))
 			case types.Bool:
-				//fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
+				// fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
 				var zz bool
 				if fvalue.(int64) == 0 {
 					zz = false
@@ -575,7 +575,7 @@ func valueOfDouble(params []interface{}) interface{} {
 func valueOfFloat(params []interface{}) interface{} {
 	// params[0]: input double
 	value := params[0].(float64)
-	//str := fmt.Sprintf("%.0g", value)
+	// str := fmt.Sprintf("%.0g", value)
 	str := strconv.FormatFloat(value, 'f', -1, 64)
 	if !strings.Contains(str, ".") {
 		str += ".0"
