@@ -203,8 +203,6 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // first class, will never be in one of the superclasses.
 func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	origClassName := className
-	// for {
-	// startSearch:
 
 	// has the className been loaded? If not, then load it now.
 	if MethAreaFetch(className) == nil {
@@ -318,15 +316,15 @@ func noMainError(className string) {
 // for that string in the designated ClData.CP. Returns "" on error.
 func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
-		msg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)", entry, uint16(len(cp.CpIndex)))
-		_ = log.Log(msg, log.SEVERE)
+		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)", entry, uint16(len(cp.CpIndex)))
+		_ = log.Log(errMsg, log.SEVERE)
 		return ""
 	}
 
 	u := cp.CpIndex[entry]
 	if u.Type != UTF8 {
-		msg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: cp.CpIndex[%d].Type=%d, expected UTF8", entry, u.Type)
-		_ = log.Log(msg, log.SEVERE)
+		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: cp.CpIndex[%d].Type=%d, expected UTF8", entry, u.Type)
+		_ = log.Log(errMsg, log.SEVERE)
 		return ""
 	}
 
