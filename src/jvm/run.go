@@ -80,9 +80,9 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	}
 
 	if frames.PushFrame(MainThread.Stack, f) != nil {
-		_ = log.Log("Memory exceptions allocating frame on thread: "+strconv.Itoa(MainThread.ID),
-			log.SEVERE)
-		return errors.New("outOfMemory Exception")
+		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
+		_ = log.Log(errMsg, log.SEVERE)
+		return errors.New(errMsg)
 	}
 
 	if MainThread.Trace {
@@ -99,7 +99,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	if MainThread.Trace {
 		statics.DumpStatics()
 	}
-	
+
 	return nil
 }
 
