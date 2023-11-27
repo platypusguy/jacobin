@@ -43,8 +43,9 @@ type MData interface{}
 // Fu is a go function. All go functions accept a possibly empty slice of interface{} and
 // return a possibly nil interface{}
 type GMeth struct {
-	ParamSlots int
-	GFunction  func([]interface{}) interface{}
+	ParamSlots   int
+	GFunction    func([]interface{}) interface{}
+	NeedsContext bool
 }
 
 // JmEntry is the entry in the Mtable for Java methods.

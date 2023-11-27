@@ -25,6 +25,7 @@ func TestMTableAdd(t *testing.T) {
 		t.Errorf("Expecting fetch of a 'G' MTable rec, but got type: %c",
 			mtbl["test1"].MType)
 	}
+
 }
 
 func TestMTableLoadLib(t *testing.T) {
@@ -41,5 +42,9 @@ func TestMTableLoadLib(t *testing.T) {
 	if mte.ParamSlots != 2 {
 		t.Errorf("Expecting MTable entry to have 2 param slots, got: %d",
 			mte.ParamSlots)
+	}
+
+	if mte.NeedsContext != false {
+		t.Errorf("Expecting MTable entry's NeedContext to be false")
 	}
 }

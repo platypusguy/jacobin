@@ -18,8 +18,9 @@ func Load_Lang_Throwable() map[string]GMeth {
 
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  fillInStackTrace,
+			ParamSlots:   0,
+			GFunction:    fillInStackTrace,
+			NeedsContext: true,
 		}
 	return MethodSignatures
 }
