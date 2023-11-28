@@ -11,13 +11,13 @@ import (
 )
 
 // MTable value consists of a byte identifying whether the method is a Java method
-// ('J'), that is, a method that is executed by executing bytecodes, or a golan-style
-// native method ('G'), i.e., a golang funciton that is being used as a stand-in for
+// ('J'), that is, a method that is executed by executing bytecodes, or a golang-style
+// native method ('G'), i.e., a golang function that is being used as a stand-in for
 // the named Java method. In most contexts, this would be called a native method,
 // but that term is used in a different context in Java (see JNI), so avoided here.
 //
 // The second field in the value is an empty interface, which is Go's way of
-// implementing generics. Ultimately, this mechanism supports two types of entries--
+// implementing generics. Ultimately, this mechanism supports two types of entries:
 // one for each kind of method.
 //
 // When a function is invoked, the lookup mechanism first checks the MTable, and
@@ -74,7 +74,7 @@ var MTmutex sync.Mutex
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
 func MTableLoadNatives() {
-	loadlib(&MTable, Load_Lang_Throwable()) // load the java.lang.Throwable golang functions (errors & exceptions)
+
 	loadlib(&MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
 	loadlib(&MTable, Load_Lang_Class())     // load the java.lang.Class golang functions
 	loadlib(&MTable, Load_Lang_Math())      // load the java.lang.Math golang functions
@@ -82,11 +82,11 @@ func MTableLoadNatives() {
 	loadlib(&MTable, Load_Lang_String())    // load the java.lang.String golang functions
 	loadlib(&MTable, Load_Lang_System())    // load the java.lang.System golang functions
 	loadlib(&MTable, Load_Lang_Thread())    // load the java.lang.Thread golang functions
-
-	loadlib(&MTable, Load_Lang_UTF16())   // load the java.lang.UTF16 golang functions
-	loadlib(&MTable, Load_Util_HashMap()) // load the java.util.HashMap golang functions
-	loadlib(&MTable, Load_Util_Locale())  // load the java.util.Locale golang functions
-	loadlib(&MTable, Load_Primitives())   // load the Java primitives golang functions
+	loadlib(&MTable, Load_Lang_Throwable()) // load the java.lang.Throwable golang functions (errors & exceptions)
+	loadlib(&MTable, Load_Lang_UTF16())     // load the java.lang.UTF16 golang functions
+	loadlib(&MTable, Load_Util_HashMap())   // load the java.util.HashMap golang functions
+	loadlib(&MTable, Load_Util_Locale())    // load the java.util.Locale golang functions
+	loadlib(&MTable, Load_Primitives())     // load the Java primitives golang functions
 }
 
 func loadlib(tbl *MT, libMeths map[string]GMeth) {
