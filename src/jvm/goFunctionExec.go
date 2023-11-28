@@ -76,6 +76,15 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	methodType string, params *[]interface{}, objRef bool) (*frames.Frame, error) {
 
+	f := fs.Front().Value.(*frames.Frame)
+
+	// if the method needs context (mt.Meth.NeedsContext = true),
+	// then add it to the parameter list here.
+	entry := mt.Meth.(classloader.GMeth)
+	if entry.NeedsContext {
+		*params = append(*params, fs)
+	}
+
 	var paramCount int
 	if params == nil {
 		paramCount = 0
@@ -83,13 +92,6 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 		paramCount = len(*params)
 	}
 
-	f := fs.Front().Value.(*frames.Frame)
-
-	// Extra parameter?
-	// ObjectRef := mt.Meth.(classloader.GMeth).ObjectRef
-
-	// Get the GMeth paramSlots value.
-	// paramSlots := mt.Meth.(classloader.GMeth).ParamSlots
 	if localDebugging || MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGmethod %s.%s%s, objectRef: %v, paramSlots: %d",
 			className, methodName, methodType, objRef, paramCount)
@@ -109,36 +111,14 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	gf.Locals = nil
 	gf.Ftype = 'G' // a golang function
 
-	// // get the args (if any) from the operand stack of the current frame(f)
-	// // then push them onto the stack of the go function
-	//
-	// var argList []interface{}
-
 	// Current frame stack is one of 2 forms:
 	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: calls from INVOKESTATIC
 	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
-
-	// // For each paramSlot, pop from the current frame and append it to argList.
-	// for i := 0; i < npops; i++ {
-	// 	arg := pop(f)
-	// 	if localDebugging || MainThread.Trace {
-	// 		traceInfo := fmt.Sprintf("runGmethod popped arg type=%T, value=%v", arg, arg)
-	// 		_ = log.Log(traceInfo, log.WARNING)
-	// 	}
-	// 	argList = append(argList, arg)
-	// }
 	//
-	// // if this was called from INVOKEDYNAMIC or INVOKESTATIC
-	// // then the arg[0] will be a reference to the object whose
-	// // method is being called. That object is pointe to by
-	// // objRef
-	// if objRef != nil {
-	// 	argList = append(argList, objRef)
-	// }
-	//
-	// // argList now has 2 possible forms:
-	// // (1) p1 | p2 | ... | pn
-	// // (2) extra | p1 | p2 | ... | pn
+	// There is one exception to the above. If the method has NeedsContext set to true,
+	// then a pointer to JVM frame stack for the present thread is pushed. It will
+	// always appear as parameter[0]. There are not many functions in which this is
+	// the case.
 
 	// Push the arguments in reverse order onto the Go op stack.
 	// If there was an extra parameter, it's at the Go op stack[0].

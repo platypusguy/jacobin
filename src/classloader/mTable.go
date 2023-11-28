@@ -45,7 +45,7 @@ type MData interface{}
 type GMeth struct {
 	ParamSlots   int
 	GFunction    func([]interface{}) interface{}
-	NeedsContext bool
+	NeedsContext bool // does this method need a pointer to the frame stack? Defaults to false.
 }
 
 // JmEntry is the entry in the Mtable for Java methods.
