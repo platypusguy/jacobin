@@ -27,6 +27,28 @@ func Load_Lang_Throwable() map[string]GMeth {
 	return MethodSignatures
 }
 
+// clinit needs to be implmented:
+// Code:
+// stack=1, locals=0, args_size=0
+// 0: ldc           #8                  // class java/lang/Throwable
+// 2: invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
+// 5: ifne          12
+// 8: iconst_1
+// 9: goto          13
+// 12: iconst_0
+// 13: putstatic     #153                // Field $assertionsDisabled:Z
+// 16: iconst_0
+// 17: anewarray     #173                // class java/lang/StackTraceElement
+// 20: putstatic     #13                 // Field UNASSIGNED_STACK:[Ljava/lang/StackTraceElement;
+// 23: invokestatic  #305                // Method java/util/Collections.emptyList:()Ljava/util/List;
+// 26: putstatic     #20                 // Field SUPPRESSED_SENTINEL:Ljava/util/List;
+// 29: iconst_0
+// 30: anewarray     #8                  // class java/lang/Throwable
+// 33: putstatic     #293                // Field EMPTY_THROWABLE_ARRAY:[Ljava/lang/Throwable;
+// java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
+// 36: return
+
+// this function is called by Throwable.<init>()
 func fillInStackTrace(params []interface{}) interface{} {
 	if len(params) != 2 {
 		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
