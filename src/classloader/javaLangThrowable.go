@@ -12,6 +12,7 @@ import (
 	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/shutdown"
 )
 
 func Load_Lang_Throwable() map[string]GMeth {
@@ -22,19 +23,27 @@ func Load_Lang_Throwable() map[string]GMeth {
 			GFunction:    fillInStackTrace,
 			NeedsContext: true,
 		}
+
 	return MethodSignatures
 }
 
 func fillInStackTrace(params []interface{}) interface{} {
-
-	objRef := params[0].(*object.Object)
+	if len(params) != 2 {
+		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+	}
+	frameStack := params[0].(*list.List)
+	objRef := params[1].(*object.Object)
 	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
-	// thisFrame := thisFrameStack.Front().Next()
+	thisFrame := frameStack.Front().Next()
+	for e := thisFrame; e != nil; e = e.Next() {
+		fmt.Println(e.Value)
+	}
 
 	// This might require that we add the logic to the class parse showing the Java code source line number.
 	// JACOBIN-224 refers to this.
-	return nil
+	return objRef
 }
 
 // GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
