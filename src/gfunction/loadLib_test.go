@@ -1,18 +1,19 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package classloader
+package gfunction
 
 import (
+	"jacobin/classloader"
 	"testing"
 )
 
 func TestMTableAdd(t *testing.T) {
-	mtbl := make(MT)
-	AddEntry(&mtbl, "test1", MTentry{
+	mtbl := make(classloader.MT)
+	classloader.AddEntry(&mtbl, "test1", classloader.MTentry{
 		Meth:  nil,
 		MType: 'G',
 	})
@@ -33,7 +34,7 @@ func TestMTableLoadLib(t *testing.T) {
 	libMeths["testG1"] = GMeth{ParamSlots: 1, GFunction: nil}
 	libMeths["testG2"] = GMeth{ParamSlots: 2, GFunction: nil}
 	libMeths["testG3"] = GMeth{ParamSlots: 3, GFunction: nil}
-	mtbl := make(MT)
+	mtbl := make(classloader.MT)
 	loadlib(&mtbl, libMeths)
 	if len(mtbl) != 3 {
 		t.Errorf("Expecting MTable with 3 entries, got: %d", len(mtbl))

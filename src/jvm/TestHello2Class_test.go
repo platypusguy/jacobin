@@ -9,6 +9,7 @@ package jvm
 import (
 	"io"
 	"jacobin/classloader"
+	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
@@ -138,7 +139,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 
 	// Run class Hello2
 	classloader.MTable = make(map[string]classloader.MTentry)
-	classloader.MTableLoadNatives()
+	gfunction.MTableLoadNatives(&classloader.MTable)
 	mainThread := thread.CreateThread()
 	err = StartExec("Hello2", &mainThread, globals.GetGlobalRef())
 	if err != nil {
