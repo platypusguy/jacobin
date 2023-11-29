@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/exceptions"
+	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
@@ -122,7 +123,7 @@ func JVMrun() int {
 
 	// initialize the MTable (table caching methods)
 	classloader.MTable = make(map[string]classloader.MTentry)
-	classloader.MTableLoadNatives()
+	gfunction.MTableLoadNatives(&classloader.MTable)
 
 	// create the main thread
 	MainThread = thread.CreateThread()

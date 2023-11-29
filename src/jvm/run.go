@@ -14,6 +14,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/frames"
+	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
@@ -1934,7 +1935,7 @@ func runFrame(fs *list.List) error {
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
 			if mtEntry.MType == 'G' { // so we have a native golang function
 				// get the parameters/args off the stack
-				gmethData := mtEntry.Meth.(classloader.GMeth)
+				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
 				for i := 0; i < paramCount; i++ {
@@ -2006,7 +2007,7 @@ func runFrame(fs *list.List) error {
 			if mtEntry.MType == 'G' { // it's a golang method
 
 				// get the parameters/args, if any, off the stack
-				gmethData := mtEntry.Meth.(classloader.GMeth)
+				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
 				for i := 0; i < paramCount; i++ {
@@ -2096,7 +2097,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			if mtEntry.MType == 'G' {
-				gmethData := mtEntry.Meth.(classloader.GMeth)
+				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
 				for i := 0; i < paramCount; i++ {

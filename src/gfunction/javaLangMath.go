@@ -1,12 +1,13 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package classloader
+package gfunction
 
 import (
+	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/log"
 	"math"
@@ -217,7 +218,7 @@ func Load_Lang_Math() map[string]GMeth {
 }
 
 func mathClinit([]interface{}) interface{} {
-	klass := MethAreaFetch("java/lang/Math")
+	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
 		errMsg := "In <clinit>, expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)

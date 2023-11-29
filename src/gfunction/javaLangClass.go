@@ -1,14 +1,15 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by the Jacobin authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package classloader
+package gfunction
 
 import (
 	"errors"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -52,7 +53,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
 	str := object.GetGoStringFromJavaStringPtr(primitive)
 
-	var k *Klass
+	var k *classloader.Klass
 	var err error
 	switch str {
 	case "boolean":
@@ -90,14 +91,14 @@ func getPrimitiveClass(params []interface{}) interface{} {
 // simpleClassLoadByName() just checks the MethodArea cache for the loaded
 // class, and if it's not there, it loads it and returns a pointer to it.
 // Logic basically duplicates similar functionality in instantiate.go
-func simpleClassLoadByName(className string) (*Klass, error) {
-	alreadyLoaded := MethAreaFetch(className)
+func simpleClassLoadByName(className string) (*classloader.Klass, error) {
+	alreadyLoaded := classloader.MethAreaFetch(className)
 	if alreadyLoaded != nil { // if the class is already loaded, skip the rest of this
 		return alreadyLoaded, nil
 	}
 
 	// If not, try to load class by name
-	err := LoadClassFromNameOnly(className)
+	err := classloader.LoadClassFromNameOnly(className)
 	if err != nil {
 		var errClassName = className
 		if className == "" {
@@ -109,7 +110,7 @@ func simpleClassLoadByName(className string) (*Klass, error) {
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return nil, errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	} else {
-		return MethAreaFetch(className), nil
+		return classloader.MethAreaFetch(className), nil
 	}
 }
 

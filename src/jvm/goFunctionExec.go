@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/gfunction"
 	"jacobin/log"
 	"strings"
 )
@@ -47,7 +48,7 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 	}
 
 	// call the function passing a pointer to the slice of arguments
-	ret := me.Meth.(classloader.GMeth).GFunction(*params)
+	ret := me.Meth.(gfunction.GMeth).GFunction(*params)
 
 	// how many slots does the return value consume on the op stack?
 	// the last char in the method name indicates the data type of the return
@@ -80,7 +81,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 
 	// if the method needs context (mt.Meth.NeedsContext = true),
 	// then add it to the parameter list here.
-	entry := mt.Meth.(classloader.GMeth)
+	entry := mt.Meth.(gfunction.GMeth)
 	if entry.NeedsContext {
 		*params = append(*params, fs)
 	}

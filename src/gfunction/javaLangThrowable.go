@@ -1,14 +1,15 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package classloader
+package gfunction
 
 import (
 	"container/list"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/object"
@@ -91,7 +92,7 @@ func GetStackTraces(fs *list.List) *object.Object {
 	for e := frameStack; e != nil; e = e.Next() {
 		classname := "java/lang/StackTraceElement"
 		stackTrace := object.MakeEmptyObject()
-		k := MethAreaFetch(classname)
+		k := classloader.MethAreaFetch(classname)
 		stackTrace.Klass = &classname
 
 		if k == nil {
@@ -119,7 +120,7 @@ func GetStackTraces(fs *list.List) *object.Object {
 		addField("declaringClass", frame.ClName)
 		addField("methodName", frame.MethName)
 
-		methClass := MethAreaFetch(frame.ClName)
+		methClass := classloader.MethAreaFetch(frame.ClName)
 		if methClass == nil {
 			return nil
 		}

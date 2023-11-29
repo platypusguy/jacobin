@@ -4,10 +4,11 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
-package classloader
+package gfunction
 
 import (
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
@@ -274,7 +275,7 @@ func Load_Lang_String() map[string]GMeth {
 }
 
 func stringClinit([]interface{}) interface{} {
-	klass := MethAreaFetch("java/lang/String")
+	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
 		errMsg := "In stringClinit, expected java/lang/String to be in the MethodArea, but it was not"
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
@@ -309,7 +310,7 @@ func getGoString(param0 interface{}) string {
 
 // Construct a compact string object (usable by Java) from a Go byte array.
 func newStringFromBytes(params []interface{}) interface{} {
-	klass := MethAreaFetch("java/lang/String")
+	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
 		errMsg := "In newStringFromBytes, expected java/lang/String to be in the MethodArea, but it was not"
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
@@ -328,7 +329,7 @@ func newStringFromBytes(params []interface{}) interface{} {
 
 // Construct a compact string object (usable by Java) from a Go byte array.
 func newSubstringFromBytes(params []interface{}) interface{} {
-	klass := MethAreaFetch("java/lang/String")
+	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
 		errMsg := "In newStringFromBytes, expected java/lang/String to be in the MethodArea, but it was not"
 		exceptions.Throw(exceptions.VirtualMachineError, errMsg)

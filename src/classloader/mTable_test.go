@@ -12,7 +12,7 @@ import (
 
 func TestMTableAdd(t *testing.T) {
 	mtbl := make(MT)
-	addEntry(&mtbl, "test1", MTentry{
+	AddEntry(&mtbl, "test1", MTentry{
 		Meth:  nil,
 		MType: 'G',
 	})
