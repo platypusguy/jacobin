@@ -76,19 +76,21 @@ func TestHexHello2ValidClass(t *testing.T) {
 	}
 
 	redirecting := true
-	var normalStderr, rrr, www *os.File
+	var normalStderr, rerr, werr *os.File
 	var normalStdout, rout, wout *os.File
 	var err error
 
 	// redirect stderr & stdout to capture results from stderr
 	if redirecting {
+		// stderr
 		normalStderr = os.Stderr
-		rrr, www, err = os.Pipe()
+		rerr, werr, err = os.Pipe()
 		if err != nil {
 			t.Errorf("os.Pipe returned an error: %s", err.Error())
 			return
 		}
-		os.Stderr = www
+		os.Stderr = werr
+		// stdout
 		normalStdout = os.Stdout
 		rout, wout, _ = os.Pipe()
 		os.Stdout = wout
@@ -150,14 +152,15 @@ func TestHexHello2ValidClass(t *testing.T) {
 	t.Logf("StartExec(Hello2) succeeded\n")
 
 	if redirecting {
-		_ = www.Close()
-		_, _ = io.ReadAll(rrr)
-		os.Stderr = normalStderr
+		_ = werr.Close()
 		_ = wout.Close()
-		msgOut, _ := io.ReadAll(rout)
+		msgStderr, _ := io.ReadAll(rerr)
+		msgStdout, _ := io.ReadAll(rout)
+		os.Stderr = normalStderr
 		os.Stdout = normalStdout
-		if !strings.Contains(string(msgOut), "-1") {
-			t.Errorf("Error in output: expected to contain in part 'Hello. , got: %s", string(msgOut))
+		if !strings.Contains(string(msgStderr), "-1") {
+			t.Errorf("Error in output: expected to contain in part '-1', but saw stdout & stderr as follows:\nstdout: %s\nstderr: %s\n",
+				string(msgStdout), string(msgStderr))
 		}
 	}
 }
