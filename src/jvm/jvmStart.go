@@ -55,6 +55,10 @@ func JVMrun() int {
 		Global = *globals.GetGlobalRef()
 	}
 
+	// Defeat the golang cycle.
+	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
+	Global.FuncInstantiateClass = InstantiateClass
+
 	_ = log.Log("running program: "+Global.JacobinName, log.FINE)
 
 	var status error

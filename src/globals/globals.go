@@ -81,6 +81,11 @@ type Globals struct {
 
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
+
+	// Defeat the golang cycle.
+	// To be set up in jvmStart.
+	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
+	FuncInstantiateClass func(string, *list.List) (any, error)
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -104,16 +109,17 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
-		ThreadNumber:       0, // first thread will be numbered 1, as increment occurs prior
-		JacobinBuildData:   nil,
-		StrictJDK:          false,
-		ArrayAddressList:   InitArrayAddressList(),
-		JmodBaseBytes:      nil,
-		ErrorGoStack:       "",
-		PanicCauseShown:    false,
-		JVMframeStack:      nil,
-		JvmFrameStackShown: false,
-		GoStackShown:       false,
+		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
+		JacobinBuildData:     nil,
+		StrictJDK:            false,
+		ArrayAddressList:     InitArrayAddressList(),
+		JmodBaseBytes:        nil,
+		ErrorGoStack:         "",
+		PanicCauseShown:      false,
+		JVMframeStack:        nil,
+		JvmFrameStackShown:   false,
+		GoStackShown:         false,
+		FuncInstantiateClass: nil,
 	}
 
 	InitJavaHome()

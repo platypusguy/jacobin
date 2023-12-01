@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/jvm"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -62,12 +62,11 @@ func fillInStackTrace(params []interface{}) interface{} {
 
 	thisFrame := frameStack.Front().Next()
 	for e := thisFrame; e != nil; e = e.Next() {
-		// getting circularity error -- cannot call jvm.Instantiate
-		// TODO: consider moving instantiate to object package.
-		ste, err := jvm.InstantiateClass("java/lang/StackTraceElement", nil)
+		global := *globals.GetGlobalRef()
+		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
 		if err != nil {
 			_ = log.Log("Error creating 'java/lang/StackTraceElement", log.SEVERE)
-			return ste
+			return ste.(*object.Object)
 		}
 		fmt.Println(e.Value)
 	}

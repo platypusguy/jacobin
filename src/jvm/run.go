@@ -2158,7 +2158,7 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
-			push(f, ref)
+			push(f, ref.(*object.Object))
 
 		case opcodes.NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
