@@ -10,6 +10,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/types"
 	"testing"
 )
@@ -22,11 +23,11 @@ func TestInstantiateArray(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	classloader.InitMethodArea()
 
-	obj, err := InstantiateClass(types.ByteArray, nil)
+	anything, err := InstantiateClass(types.ByteArray, nil)
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
 	}
-
+	obj := anything.(*object.Object)
 	if len(obj.Fields) != 0 {
 		t.Errorf("Expected 0 fields in array class, got %d fields", len(obj.Fields))
 	}
