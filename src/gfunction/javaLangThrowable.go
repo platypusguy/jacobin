@@ -26,6 +26,12 @@ func Load_Lang_Throwable() map[string]GMeth {
 			NeedsContext: true,
 		}
 
+	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  throwableClinit,
+		}
+
 	return MethodSignatures
 }
 
@@ -50,6 +56,16 @@ func Load_Lang_Throwable() map[string]GMeth {
 // java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
 // 36: return
 
+func throwableClinit(params []interface{}) interface{} {
+	if len(params) != 1 {
+		_ = log.Log(fmt.Sprintf("Throwable.clinit() expected one params, got: %d", len(params)), log.SEVERE)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+	}
+	// get the throwable object we're doing the clinit on
+	// throwable := params[0]
+	return nil
+}
+
 // this function is called by Throwable.<init>()
 func fillInStackTrace(params []interface{}) interface{} {
 	if len(params) != 2 {
@@ -60,15 +76,15 @@ func fillInStackTrace(params []interface{}) interface{} {
 	objRef := params[1].(*object.Object)
 	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
-	thisFrame := frameStack.Front().Next()
-	for e := thisFrame; e != nil; e = e.Next() {
+	// thisFrame := frameStack.Front().Next()
+	for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
 		global := *globals.GetGlobalRef()
 		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
 		if err != nil {
-			_ = log.Log("Error creating 'java/lang/StackTraceElement", log.SEVERE)
+			_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
 			return ste.(*object.Object)
 		}
-		fmt.Println(e.Value)
+		fmt.Println(thisFrame.Value)
 	}
 
 	// This might require that we add the logic to the class parse showing the Java code source line number.
