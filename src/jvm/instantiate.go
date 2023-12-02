@@ -1,7 +1,7 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-23 by the Jacobin authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2022-3 by the Jacobin authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
  */
 
 package jvm
