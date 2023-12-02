@@ -15,6 +15,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/statics"
 )
 
 func Load_Lang_Throwable() map[string]GMeth {
@@ -35,9 +36,13 @@ func Load_Lang_Throwable() map[string]GMeth {
 	return MethodSignatures
 }
 
-// clinit needs to be implmented:
-// Code:
-// stack=1, locals=0, args_size=0
+// This method duplicates the following bytecode, with these exceptions:
+//  1. we don't check for assertion status, which is determined already at start-up
+//  2. for the nonce, Throwable.SUPPRESSED_SENTINEL is set to nil. It's unlikely we'll
+//     ever need it, but if we do, we'll implement it then.
+//
+// So, essentially, we're just initializing several static fields (as expected in clinit())
+//
 // 0: ldc           #8                  // class java/lang/Throwable
 // 2: invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
 // 5: ifne          12
@@ -55,14 +60,25 @@ func Load_Lang_Throwable() map[string]GMeth {
 // 33: putstatic     #293                // Field EMPTY_THROWABLE_ARRAY:[Ljava/lang/Throwable;
 // java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
 // 36: return
-
 func throwableClinit(params []interface{}) interface{} {
-	if len(params) != 1 {
-		_ = log.Log(fmt.Sprintf("Throwable.clinit() expected one params, got: %d", len(params)), log.SEVERE)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
-	}
-	// get the throwable object we're doing the clinit on
-	// throwable := params[0]
+	stackTraceElementClassName := "java/lang/StackTraceElement"
+	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
+	statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
+		Type:  "[Ljava/lang/StackTraceElement",
+		Value: emptyStackTraceElementArray,
+	})
+
+	// for the time being, SUPPRESSED SENTINEL is set to nil.
+	// We might later need to set it to an empty List.
+	statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
+		Type: "Ljava/util/List", Value: nil})
+
+	emptyThrowableClassName := "java/lang/Throwable"
+	emptyThrowableArray := object.Make1DimRefArray(&emptyThrowableClassName, 0)
+	statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
+		Type:  "[Ljava/lang/Throwable",
+		Value: emptyThrowableArray,
+	})
 	return nil
 }
 
