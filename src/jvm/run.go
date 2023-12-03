@@ -270,9 +270,9 @@ func runFrame(fs *list.List) error {
 			} else { // TODO: Determine what exception to throw
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.InaccessibleObjectException,
-					"Invalid type for LDC instruction")
-				return errors.New("LDC: invalid type")
+				errMsg := "LDC: Invalid type for instruction"
+				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				return errors.New(errMsg)
 			}
 		case opcodes.LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
