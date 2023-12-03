@@ -17,7 +17,7 @@ import (
 	"os"
 )
 
-// This set of routines loads the Global.Options table with the various
+// This set of routines loads the globPtr.Options table with the various
 // JVM command-line options for use later by the CLI processing logic.
 //
 // The table is initially created in globals.go and its declaration contains a
@@ -120,7 +120,7 @@ func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 }
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
-// are app args, which are duly added to Global.appArgs
+// are app args, which are duly added to globPtr.appArgs
 func getJarFilename(pos int, name string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-jar", gl)
 	if len(gl.Args) > pos+1 {

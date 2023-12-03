@@ -9,6 +9,7 @@ package globals
 import (
 	"bufio"
 	"container/list"
+	"errors"
 	"fmt"
 	// "jacobin/thread"
 	"os"
@@ -119,7 +120,7 @@ func InitGlobals(progName string) Globals {
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
 		GoStackShown:         false,
-		FuncInstantiateClass: nil,
+		FuncInstantiateClass: fakeInstantiateClass,
 	}
 
 	InitJavaHome()
@@ -248,4 +249,10 @@ func cleanupPath(path string) string {
 // This creates that list.
 func InitArrayAddressList() *list.List {
 	return list.New()
+}
+
+// Fake InstantiateClass
+func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
+	fmt.Printf("\n***** fakeInstantiateClass: classname=%s\n", classname)
+	return nil, errors.New("fakeInstantiateClass: By definition, my execution is an error!")
 }

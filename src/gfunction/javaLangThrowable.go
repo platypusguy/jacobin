@@ -98,7 +98,9 @@ func fillInStackTrace(params []interface{}) interface{} {
 		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
 		if err != nil {
 			_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
-			return ste.(*object.Object)
+			//return ste.(*object.Object)
+			ste = nil
+			return ste
 		}
 		fmt.Println(thisFrame.Value)
 	}

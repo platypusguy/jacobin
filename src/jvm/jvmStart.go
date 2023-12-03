@@ -20,7 +20,7 @@ import (
 	"os"
 )
 
-var Global globals.Globals
+var globPtr *globals.Globals
 
 // JVMrun is where everything begins
 // The call to shutdown.Exit() exits the program (after some clean-up and logging); the reason
@@ -33,7 +33,8 @@ func JVMrun() int {
 		if r := recover(); r != nil {
 			// we get here only on errors that are not intercepted at
 			// the thread level. Essentially, very unexpected JVM errors
-			if Global.ErrorGoStack != "" {
+			rglobPtr := globals.GetGlobalRef()
+			if rglobPtr.ErrorGoStack != "" {
 				// if the ErrorGoStack is not empty, we earlier intercepted
 				// the error, so print the stack captured at that point
 				exceptions.ShowGoStackTrace(nil)
@@ -49,17 +50,18 @@ func JVMrun() int {
 	// if globals.JacobinName == "test", then we're in test mode, which means
 	// globals and log have been set in the testing function. So, don't reset them here.
 	if globals.GetGlobalRef().JacobinName != "test" {
-		Global = globals.InitGlobals(os.Args[0])
+		// Not a test!
+		_ = globals.InitGlobals(os.Args[0])
 		log.Init()
-	} else {
-		Global = *globals.GetGlobalRef()
 	}
+	globPtr = globals.GetGlobalRef()
 
 	// Defeat the golang cycle.
 	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
-	Global.FuncInstantiateClass = InstantiateClass
+	globPtr.FuncInstantiateClass = InstantiateClass
+	//fmt.Printf("DEBUG JVMrun: just set globPtr.FuncInstantiateClass = InstantiateClass\n")
 
-	_ = log.Log("running program: "+Global.JacobinName, log.FINE)
+	_ = log.Log("running program: "+globPtr.JacobinName, log.FINE)
 
 	var status error
 
@@ -67,13 +69,13 @@ func JVMrun() int {
 	statics.StaticsPreload()
 
 	// handle the command-line interface (cli) -- i.e., process the args
-	LoadOptionsTable(Global)
-	err := HandleCli(os.Args, &Global)
+	LoadOptionsTable(*globPtr)
+	err := HandleCli(os.Args, globPtr)
 	if err != nil {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	// some CLI options, like -version, show data and immediately exit. This tests for that.
-	if Global.ExitNow == true {
+	if globPtr.ExitNow == true {
 		return shutdown.Exit(shutdown.OK)
 	}
 
@@ -86,8 +88,8 @@ func JVMrun() int {
 
 	var mainClass string
 
-	if Global.StartingJar != "" {
-		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, Global.StartingJar)
+	if globPtr.StartingJar != "" {
+		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, globPtr.StartingJar)
 
 		if err != nil {
 			_ = log.Log(err.Error(), log.INFO)
@@ -95,15 +97,15 @@ func JVMrun() int {
 		}
 
 		if manifestClass == "" {
-			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", Global.StartingJar), log.INFO)
+			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", globPtr.StartingJar), log.INFO)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
-		mainClass, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, Global.StartingJar)
+		mainClass, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
-	} else if Global.StartingClass != "" {
-		mainClass, err = classloader.LoadClassFromFile(classloader.BootstrapCL, Global.StartingClass)
+	} else if globPtr.StartingClass != "" {
+		mainClass, err = classloader.LoadClassFromFile(classloader.BootstrapCL, globPtr.StartingClass)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
@@ -116,7 +118,7 @@ func JVMrun() int {
 	// if assertions were enable on the command line for the program, then make sure
 	// that it's set in the Statics table w/ an entry corresponding to the main class
 	// Otherwise, it was previously set to disabled
-	if Global.Options["-ea"].Set {
+	if globPtr.Options["-ea"].Set {
 		_ = statics.AddStatic("main.$assertionsDisabled",
 			statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
 	}
@@ -131,11 +133,11 @@ func JVMrun() int {
 
 	// create the main thread
 	MainThread = thread.CreateThread()
-	MainThread.AddThreadToTable(&Global)
+	MainThread.AddThreadToTable(globPtr)
 
 	// begin execution
 	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
-	status = StartExec(mainClass, &MainThread, &Global)
+	status = StartExec(mainClass, &MainThread, globPtr)
 
 	if status != nil {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
