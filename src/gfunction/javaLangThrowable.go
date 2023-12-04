@@ -92,16 +92,17 @@ func fillInStackTrace(params []interface{}) interface{} {
 	objRef := params[1].(*object.Object)
 	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
-	// thisFrame := frameStack.Front().Next()
+	global := *globals.GetGlobalRef()
+	// step through the JVM stack frame and fill in a StackTraceElement for each frame
 	for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
-		global := *globals.GetGlobalRef()
 		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
 		if err != nil {
 			_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
-			//return ste.(*object.Object)
+			// return ste.(*object.Object)
 			ste = nil
 			return ste
 		}
+
 		fmt.Println(thisFrame.Value)
 	}
 
