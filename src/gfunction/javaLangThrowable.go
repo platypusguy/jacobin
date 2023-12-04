@@ -82,7 +82,35 @@ func throwableClinit(params []interface{}) interface{} {
 	return nil
 }
 
-// this function is called by Throwable.<init>()
+// This function is called by Throwable.<init>(). In Throwable.java, it consists of one line:
+//      getOurStackTrace().clone();
+// In turn, getOurStackTrace() calls
+//      StackTraceElement.of(this, depth);
+// In turn, this method calls
+//      StackTraceElement.initStackTraceElements:([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V
+// which actually fills in the fields of the StackTraceElement (done as a native function)
+//
+// Despite this simple function chaining, there is value in reading the
+// Javadoc for this function from Throwable.java (copyright Oracle Corp.):
+/*
+ * Provides programmatic access to the stack trace information printed by
+ * {@link #printStackTrace()}. Returns an array of stack trace elements,
+ * each representing one stack frame. The zeroth element of the array
+ * (assuming the array's length is non-zero) represents the top of the
+ * stack, which is the last method invocation in the sequence.  Typically,
+ * this is the point at which this throwable was created and thrown.
+ * The last element of the array (assuming the array's length is non-zero)
+ * represents the bottom of the stack, which is the first method invocation
+ * in the sequence.
+ *
+ * <p> [...] Generally speaking, the array returned by this method will
+ * contain one element for every frame that would be printed by
+ * {@code printStackTrace}.  Writes to the returned array do not
+ * affect future calls to this method.
+ *
+ * @return an array of stack trace elements representing the stack trace
+ *         pertaining to this throwable.
+ */
 func fillInStackTrace(params []interface{}) interface{} {
 	if len(params) != 2 {
 		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
