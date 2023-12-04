@@ -19,7 +19,7 @@ import (
 
 // HandleCli handles all args from the command line, including those from environment
 // variables that the JVM recognizes and prepends to the list of command-line options
-// func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
+// func HandleCli(osArgs []string, globPtr *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
 	_ = log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
@@ -59,7 +59,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		}
 
 		// if the option is the name of the class to execute, note that then get
-		// all successive arguments and store them as app args in Global
+		// all successive arguments and store them as app args in globPtr
 		if strings.HasSuffix(option, ".class") {
 			Global.StartingClass = option
 			for i = i + 1; i < len(args); i++ {
@@ -77,7 +77,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
-		// recognize the JAR file and insert it into Global, and copy all succeeding args
+		// recognize the JAR file and insert it into globPtr, and copy all succeeding args
 		// to app args. However, it does not recognize the JAR file as an executable.
 
 	}

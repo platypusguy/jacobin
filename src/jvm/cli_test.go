@@ -81,7 +81,7 @@ func TestHandleUsageMessage(t *testing.T) {
 	}
 
 	if global.ExitNow != true {
-		t.Error("'jacobin -help' should have set Global.exitNow to true to signal end of processing")
+		t.Error("'jacobin -help' should have set globPtr.exitNow to true to signal end of processing")
 	}
 }
 
@@ -107,7 +107,7 @@ func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	os.Stderr = normalStderr
 
 	if global.ExitNow != true {
-		t.Error("'jacobin --help' should set Global.exitNow to true but did not")
+		t.Error("'jacobin --help' should set globPtr.exitNow to true but did not")
 	}
 }
 
@@ -306,7 +306,7 @@ func TestSpecifyClientVM(t *testing.T) {
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
 	if global.VmModel != "server" {
-		t.Error("Initialization of Global.vmModel was not set to 'server' Got: " +
+		t.Error("Initialization of globPtr.vmModel was not set to 'server' Got: " +
 			global.VmModel)
 	}
 
