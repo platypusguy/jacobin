@@ -56,10 +56,8 @@ func JVMrun() int {
 	}
 	globPtr = globals.GetGlobalRef()
 
-	// Defeat the golang cycle.
-	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
+	// Enable functions call InstantiateClass through a global function variable. (This avoids circularity issues.)
 	globPtr.FuncInstantiateClass = InstantiateClass
-	//fmt.Printf("DEBUG JVMrun: just set globPtr.FuncInstantiateClass = InstantiateClass\n")
 
 	_ = log.Log("running program: "+globPtr.JacobinName, log.FINE)
 
