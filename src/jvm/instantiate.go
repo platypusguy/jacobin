@@ -28,8 +28,8 @@ import (
 //
 // NOTE: The "any" type returned is always *object.Object.
 //
-//	This is being done to avoid a cycle compilation error when the caller
-//	is one of the gfunctions.
+//	This is being done to avoid a golang circularity error when the caller
+//	is one of the native 'G' functions.
 func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
