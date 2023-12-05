@@ -18,49 +18,30 @@ import (
 	"jacobin/statics"
 )
 
-func Load_Lang_Throwable() map[string]GMeth {
+// StackTraceElement is a class that is primarily used by Throwable to gather data about the
+// entries in the JVM stack. Because this data is so tightly bound to the specific implementation
+// of the JVM, the methods of this class are fairly faithfully reproduced in the golang-native
+// methods in this file.
 
-	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
+func Load_Lang_StackTraceELement() map[string]GMeth {
+
+	MethodSignatures["java/lang/StackTraceElement.of(Ljava/lang/Throwable;I)[Ljava/lang/StackTraceElement;"] =
 		GMeth{
-			ParamSlots:   0,
-			GFunction:    fillInStackTrace,
+			ParamSlots:   2,
+			GFunction:    of,
 			NeedsContext: true,
 		}
 
-	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
+	MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  throwableClinit,
+			ParamSlots: 2,
+			GFunction:  initStackTraceElements,
 		}
 
 	return MethodSignatures
 }
 
-// This method duplicates the following bytecode, with these exceptions:
-//  1. we don't check for assertion status, which is determined already at start-up
-//  2. for the nonce, Throwable.SUPPRESSED_SENTINEL is set to nil. It's unlikely we'll
-//     ever need it, but if we do, we'll implement it then.
-//
-// So, essentially, we're just initializing several static fields (as expected in clinit())
-//
-// 0:  ldc           #8                  // class java/lang/Throwable
-// 2:  invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
-// 5:  ifne          12
-// 8:  iconst_1
-// 9:  goto          13
-// 12: iconst_0
-// 13: putstatic     #153                // Field $assertionsDisabled:Z
-// 16: iconst_0
-// 17: anewarray     #173                // class java/lang/StackTraceElement
-// 20: putstatic     #13                 // Field UNASSIGNED_STACK:[Ljava/lang/StackTraceElement;
-// 23: invokestatic  #305                // Method java/util/Collections.emptyList:()Ljava/util/List;
-// 26: putstatic     #20                 // Field SUPPRESSED_SENTINEL:Ljava/util/List;
-// 29: iconst_0
-// 30: anewarray     #8                  // class java/lang/Throwable
-// 33: putstatic     #293                // Field EMPTY_THROWABLE_ARRAY:[Ljava/lang/Throwable;
-// java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
-// 36: return
-func throwableClinit(params []interface{}) interface{} {
+func of(params []interface{}) interface{} {
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
 	statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
@@ -111,7 +92,7 @@ func throwableClinit(params []interface{}) interface{} {
  * @return an array of stack trace elements representing the stack trace
  *         pertaining to this throwable.
  */
-func fillInStackTrace(params []interface{}) interface{} {
+func initStackTraceElements(params []interface{}) interface{} {
 	if len(params) != 2 {
 		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
@@ -141,7 +122,7 @@ func fillInStackTrace(params []interface{}) interface{} {
 
 // GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
 // slice to hold the data. In case of error, nil is returned.
-func GetStackTraces(fs *list.List) *object.Object {
+func initStackTraceElement(fs *list.List) *object.Object {
 	var stackListing []*object.Object
 
 	frameStack := fs.Front()
