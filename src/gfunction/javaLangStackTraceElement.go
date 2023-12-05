@@ -21,7 +21,8 @@ import (
 // StackTraceElement is a class that is primarily used by Throwable to gather data about the
 // entries in the JVM stack. Because this data is so tightly bound to the specific implementation
 // of the JVM, the methods of this class are fairly faithfully reproduced in the golang-native
-// methods in this file.
+// methods in this file. Consult:
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackTraceElement.html
 
 func Load_Lang_StackTraceELement() map[string]GMeth {
 
