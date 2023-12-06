@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -31,6 +30,13 @@ func Load_Lang_Throwable() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  throwableClinit,
+		}
+
+	MethodSignatures["java/lang/Throwable.getOurStackTrace:()[Ljava/lang/StackTraceElement;"] =
+		GMeth{
+			ParamSlots:   0,
+			GFunction:    getOurStackTrace,
+			NeedsContext: true,
 		}
 
 	return MethodSignatures
@@ -112,6 +118,7 @@ func throwableClinit(params []interface{}) interface{} {
  *         pertaining to this throwable.
  */
 func fillInStackTrace(params []interface{}) interface{} {
+
 	if len(params) != 2 {
 		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
@@ -120,23 +127,32 @@ func fillInStackTrace(params []interface{}) interface{} {
 	objRef := params[1].(*object.Object)
 	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
-	global := *globals.GetGlobalRef()
-	// step through the JVM stack frame and fill in a StackTraceElement for each frame
-	for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
-		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
-		if err != nil {
-			_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
-			// return ste.(*object.Object)
-			ste = nil
-			return ste
+	args := []interface{}{frameStack}
+	return getOurStackTrace(args)
+	/*
+		global := *globals.GetGlobalRef()
+		// step through the JVM stack frame and fill in a StackTraceElement for each frame
+		for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
+			ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
+			if err != nil {
+				_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
+				// return ste.(*object.Object)
+				ste = nil
+				return ste
+			}
+
+			fmt.Println(thisFrame.Value)
 		}
 
-		fmt.Println(thisFrame.Value)
-	}
+		// This might require that we add the logic to the class parse showing the Java code source line number.
+		// JACOBIN-224 refers to this.
+		return objRef
 
-	// This might require that we add the logic to the class parse showing the Java code source line number.
-	// JACOBIN-224 refers to this.
-	return objRef
+	*/
+}
+
+func getOurStackTrace(params []interface{}) interface{} {
+	return GetStackTraces(params[0].(*list.List))
 }
 
 // GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
