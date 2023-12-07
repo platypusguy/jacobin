@@ -30,11 +30,11 @@ func Load_Lang_StackTraceELement() map[string]GMeth {
 			NeedsContext: true,
 		}
 
-	// MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
-	// 	GMeth{
-	// 		ParamSlots: 2,
-	// 		GFunction:  initStackTraceElements,
-	// 	}
+	MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  initStackTraceElements,
+		}
 
 	return MethodSignatures
 }
@@ -75,12 +75,26 @@ func of(params []interface{}) interface{} {
 	}
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
+	argsToPass := []interface{}{stackTrace, throwable}
+
+	initStackTraceElements(argsToPass)
 
 	return stackTrace
 }
 
-// GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
-// slice to hold the data. In case of error, nil is returned.
+// This is a native function in HotSpot that accepts an array of empty
+// stackTraceElements and a Throwable and fills in the values in the array.
+// Returns nothing.
+func initStackTraceElements([]interface{}) interface{} {
+	// CURR: fill this in
+	return nil
+}
+
+// initStackTraceElement accepts a single stackTraceElement and JVM stack
+// info and fills in the former with the latter. It's a private method and
+// called only from initStackTraceElements, so we don't need it to strictly
+// follow the HotSpot way of implementing it.
+// TODO: make the function comply with this description
 func initStackTraceElement(fs *list.List) *object.Object {
 	var stackListing []*object.Object
 
