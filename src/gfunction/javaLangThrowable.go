@@ -15,6 +15,7 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/types"
 )
 
 func Load_Lang_Throwable() map[string]GMeth {
@@ -125,6 +126,17 @@ func fillInStackTrace(params []interface{}) interface{} {
 	}
 	frameStack := params[0].(*list.List)
 	objRef := params[1].(*object.Object)
+
+	// we're adding the frame stack reference to Throwable. This is unique
+	// to Jacobin. (HotSpot accesses the frame stack through a completely
+	// different mechanism that has no direct counterpart in Jacobin. This
+	// step allows any Throwable to access the JVM frame stack, which is
+	// necessary in stackTraceElement methods.
+	jacobinSpecificField := object.Field{
+		Ftype:  types.Ref,
+		Fvalue: frameStack,
+	}
+	objRef.FieldTable["frameStackRef"] = &jacobinSpecificField
 	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
 
 	args := []interface{}{frameStack}

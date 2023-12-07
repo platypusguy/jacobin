@@ -8,14 +8,11 @@ package gfunction
 
 import (
 	"container/list"
-	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
-	"jacobin/statics"
 )
 
 // StackTraceElement is a class that is primarily used by Throwable to gather data about the
@@ -33,92 +30,53 @@ func Load_Lang_StackTraceELement() map[string]GMeth {
 			NeedsContext: true,
 		}
 
-	MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  initStackTraceElements,
-		}
+	// MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
+	// 	GMeth{
+	// 		ParamSlots: 2,
+	// 		GFunction:  initStackTraceElements,
+	// 	}
 
 	return MethodSignatures
 }
 
-func of(params []interface{}) interface{} {
-	stackTraceElementClassName := "java/lang/StackTraceElement"
-	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
-	statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
-		Type:  "[Ljava/lang/StackTraceElement",
-		Value: emptyStackTraceElementArray,
-	})
-
-	// for the time being, SUPPRESSED SENTINEL is set to nil.
-	// We might later need to set it to an empty List.
-	statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
-		Type: "Ljava/util/List", Value: nil})
-
-	emptyThrowableClassName := "java/lang/Throwable"
-	emptyThrowableArray := object.Make1DimRefArray(&emptyThrowableClassName, 0)
-	statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
-		Type:  "[Ljava/lang/Throwable",
-		Value: emptyThrowableArray,
-	})
-	return nil
-}
-
-// This function is called by Throwable.<init>(). In Throwable.java, it consists of one line:
-//      getOurStackTrace().clone();
-// In turn, getOurStackTrace() calls
-//      StackTraceElement.of(this, depth);
-// In turn, this method calls
-//      StackTraceElement.initStackTraceElements:([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V
-// which actually fills in the fields of the StackTraceElement (done as a native function)
-//
-// Despite this simple function chaining, there is value in reading the
-// Javadoc for this function from Throwable.java (copyright Oracle Corp.):
 /*
- * Provides programmatic access to the stack trace information printed by
- * {@link #printStackTrace()}. Returns an array of stack trace elements,
- * each representing one stack frame. The zeroth element of the array
- * (assuming the array's length is non-zero) represents the top of the
- * stack, which is the last method invocation in the sequence.  Typically,
- * this is the point at which this throwable was created and thrown.
- * The last element of the array (assuming the array's length is non-zero)
- * represents the bottom of the stack, which is the first method invocation
- * in the sequence.
- *
- * <p> [...] Generally speaking, the array returned by this method will
- * contain one element for every frame that would be printed by
- * {@code printStackTrace}.  Writes to the returned array do not
- * affect future calls to this method.
- *
- * @return an array of stack trace elements representing the stack trace
- *         pertaining to this throwable.
- */
-func initStackTraceElements(params []interface{}) interface{} {
-	if len(params) != 2 {
-		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
+	 From the Java code for this method:
+
+	 Returns an array of StackTraceElements of the given depth
+	 filled from the backtrace of a given Throwable.
+
+	    static StackTraceElement[] of(Throwable x, int depth) {
+			StackTraceElement[] stackTrace = new StackTraceElement[depth];
+			for (int i = 0; i < depth; i++) {
+				stackTrace[i] = new StackTraceElement();
+		  }
+
+		// VM to fill in StackTraceElement
+		initStackTraceElements(stackTrace, x);
+
+		// ensure the proper StackTraceElement initialization
+		for (StackTraceElement ste : stackTrace) {
+			ste.computeFormat();
+		}
+		return stackTrace;
+	}
+*/
+func of(params []interface{}) interface{} {
+
+	throwable := params[0].(*object.Object)
+	depth := params[1].(int64)
+
+	// get a pointer to the JVM stack
+	jvmStackRef := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
+	if jvmStackRef == nil {
+		errMsg := "nil parameter for 'frameStackRef' in Throwable, found in StackTraceElement.of()"
+		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
-	frameStack := params[0].(*list.List)
-	objRef := params[1].(*object.Object)
-	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
+	stackTraceElementClassName := "java/lang/StackTraceElement"
+	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
 
-	global := *globals.GetGlobalRef()
-	// step through the JVM stack frame and fill in a StackTraceElement for each frame
-	for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
-		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
-		if err != nil {
-			_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
-			// return ste.(*object.Object)
-			ste = nil
-			return ste
-		}
-
-		fmt.Println(thisFrame.Value)
-	}
-
-	// This might require that we add the logic to the class parse showing the Java code source line number.
-	// JACOBIN-224 refers to this.
-	return objRef
+	return stackTrace
 }
 
 // GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
