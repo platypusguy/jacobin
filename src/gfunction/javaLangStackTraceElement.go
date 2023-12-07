@@ -119,6 +119,9 @@ func initStackTraceElements(params []interface{}) interface{} {
 	// jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
 
 	return nil
+
+	// Note: an improvement is to add the logic to the class parse showing
+	// the Java code source line number. JACOBIN-224 refers to this.
 }
 
 // initStackTraceElement accepts a single stackTraceElement and JVM stack

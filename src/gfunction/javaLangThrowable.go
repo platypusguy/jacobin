@@ -121,15 +121,16 @@ func throwableClinit(params []interface{}) interface{} {
 func fillInStackTrace(params []interface{}) interface{} {
 
 	if len(params) != 2 {
-		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two params, got: %d", len(params)), log.SEVERE)
+		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two parameterss, got: %d",
+			len(params)), log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	frameStack := params[0].(*list.List)
 	objRef := params[1].(*object.Object)
 
-	// we're adding the frame stack reference to Throwable. This is unique
-	// to Jacobin. (HotSpot accesses the frame stack through a completely
-	// different mechanism that has no direct counterpart in Jacobin. This
+	// we're adding the frame stack reference as a field to Throwable. This is
+	// unique to Jacobin. (HotSpot accesses the frame stack through a completely
+	// different mechanism that has no direct counterpart in Jacobin). This
 	// step allows any Throwable to access the JVM frame stack, which is
 	// necessary in stackTraceElement methods.
 	jacobinSpecificField := object.Field{
@@ -141,26 +142,6 @@ func fillInStackTrace(params []interface{}) interface{} {
 
 	args := []interface{}{frameStack}
 	return getOurStackTrace(args) // <<<<<<<<<<< we get here currently <<<<<<<<<<
-	/*
-		global := *globals.GetGlobalRef()
-		// step through the JVM stack frame and fill in a StackTraceElement for each frame
-		for thisFrame := frameStack.Front().Next(); thisFrame != nil; thisFrame = thisFrame.Next() {
-			ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
-			if err != nil {
-				_ = log.Log("Throwable.fillInStackTrace: error creating 'java/lang/StackTraceElement", log.SEVERE)
-				// return ste.(*object.Object)
-				ste = nil
-				return ste
-			}
-
-			fmt.Println(thisFrame.Value)
-		}
-
-		// This might require that we add the logic to the class parse showing the Java code source line number.
-		// JACOBIN-224 refers to this.
-		return objRef
-
-	*/
 }
 
 func getOurStackTrace(params []interface{}) interface{} {
