@@ -96,7 +96,7 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 	return ptrArr, nil
 }
 
-// Make1DimArray creates and 1-diminensional Jacobin-style array
+// Make1DimArray creates and 1-dimensional Jacobin-style array
 // of the specified type (passed as a byte) and size.
 func Make1DimArray(arrType uint8, size int64) *Object {
 	o := MakeEmptyObject()
