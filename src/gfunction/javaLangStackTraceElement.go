@@ -73,9 +73,36 @@ func of(params []interface{}) interface{} {
 		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
+
+	// create the 1-dimensional array of stackTraceElements
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
 	argsToPass := []interface{}{stackTrace, throwable}
+
+	// insert empty stackTraceElements into the array.
+	classname := "java/lang/StackTraceElement"
+	k := classloader.MethAreaFetch(classname)
+	ste := object.MakeEmptyObject()
+	ste.Klass = &classname
+
+	if k == nil {
+		errMsg := "Class is nil after loading, class: " + classname
+		_ = log.Log(errMsg, log.SEVERE)
+		return nil
+	}
+
+	if k.Data == nil {
+		errMsg := "class.Data is nil, class: " + classname
+		_ = log.Log(errMsg, log.SEVERE)
+		return nil
+	}
+
+	rawArray := stackTrace.Fields[0].Fvalue.([]*object.Object)
+	if len(rawArray) != int(depth) {
+		_ = log.Log("Whoa! Depth != array size in stackTraceElement.of()", log.SEVERE)
+	} else {
+		_ = log.Log("Made it safely to stackTraceElements() call", log.SEVERE)
+	}
 
 	initStackTraceElements(argsToPass)
 
@@ -83,10 +110,14 @@ func of(params []interface{}) interface{} {
 }
 
 // This is a native function in HotSpot that accepts an array of empty
-// stackTraceElements and a Throwable and fills in the values in the array.
+// stackTraceElements and a Throwable and fills in the values in the array
+// by repeated calls to initStackTraceElement() below.
 // Returns nothing.
-func initStackTraceElements([]interface{}) interface{} {
-	// CURR: fill this in
+func initStackTraceElements(params []interface{}) interface{} {
+	// array := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
+	// throwable := params[1].(*object.Object) // pointer to the Throwable object
+	// jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
+
 	return nil
 }
 

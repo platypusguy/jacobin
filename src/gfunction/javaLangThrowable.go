@@ -137,10 +137,10 @@ func fillInStackTrace(params []interface{}) interface{} {
 		Fvalue: frameStack,
 	}
 	objRef.FieldTable["frameStackRef"] = &jacobinSpecificField
-	fmt.Printf("Throwable object contains: %v", objRef.FieldTable)
+	fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
 	args := []interface{}{frameStack}
-	return getOurStackTrace(args)
+	return getOurStackTrace(args) // <<<<<<<<<<< we get here currently <<<<<<<<<<
 	/*
 		global := *globals.GetGlobalRef()
 		// step through the JVM stack frame and fill in a StackTraceElement for each frame
