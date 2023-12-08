@@ -156,7 +156,7 @@ func GetStackTraces(params []interface{}) *object.Object {
 	throwable := params[0].(*object.Object)
 	stack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
 	depth := stack.Len()
-	args := []interface{}{throwable, depth}
+	args := []interface{}{throwable, int64(depth)}
 	retVal := of(args) // this is javaLangStackTraceElement.of()
 	return retVal.(*object.Object)
 }

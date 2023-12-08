@@ -97,8 +97,8 @@ func of(params []interface{}) interface{} {
 		return nil
 	}
 
-	rawArray := stackTrace.Fields[0].Fvalue.([]*object.Object)
-	if len(rawArray) != int(depth) {
+	rawArrayPtr := stackTrace.Fields[0].Fvalue.(*[]*object.Object)
+	if len(*rawArrayPtr) != int(depth) {
 		_ = log.Log("Whoa! Depth != array size in stackTraceElement.of()", log.SEVERE)
 	} else {
 		_ = log.Log("Made it safely to stackTraceElements() call", log.SEVERE)
