@@ -9,8 +9,6 @@ package gfunction
 import (
 	"container/list"
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -70,19 +68,19 @@ func Load_Lang_Throwable() map[string]GMeth {
 func throwableClinit(params []interface{}) interface{} {
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
-	statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
+	_ = statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
 		Type:  "[Ljava/lang/StackTraceElement",
 		Value: emptyStackTraceElementArray,
 	})
 
 	// for the time being, SUPPRESSED SENTINEL is set to nil.
 	// We might later need to set it to an empty List.
-	statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
+	_ = statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
 		Type: "Ljava/util/List", Value: nil})
 
 	emptyThrowableClassName := "java/lang/Throwable"
 	emptyThrowableArray := object.Make1DimRefArray(&emptyThrowableClassName, 0)
-	statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
+	_ = statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
 		Type:  "[Ljava/lang/Throwable",
 		Value: emptyThrowableArray,
 	})
@@ -159,83 +157,4 @@ func GetStackTraces(params []interface{}) *object.Object {
 	args := []interface{}{throwable, int64(depth)}
 	retVal := of(args) // this is javaLangStackTraceElement.of()
 	return retVal.(*object.Object)
-}
-
-// GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
-// slice to hold the data. In case of error, nil is returned.
-func GetStackTracesXXX(fs *list.List) *object.Object {
-	var stackListing []*object.Object
-
-	frameStack := fs.Front()
-	if frameStack == nil {
-		// return an empty stack listing
-		return nil
-	}
-
-	// ...will eventually go into java/lang/Throwable.stackTrace
-	// ...Type will be: [Ljava/lang/StackTraceElement;
-	// ...other fields to be sure to capture: cause, detailMessage,
-	// ....not sure about backtrace
-
-	// step through the list-based stack of called methods and print contents
-
-	var frame *frames.Frame
-
-	for e := frameStack; e != nil; e = e.Next() {
-		classname := "java/lang/StackTraceElement"
-		stackTrace := object.MakeEmptyObject()
-		k := classloader.MethAreaFetch(classname)
-		stackTrace.Klass = &classname
-
-		if k == nil {
-			errMsg := "Class is nil after loading, class: " + classname
-			_ = log.Log(errMsg, log.SEVERE)
-			return nil
-		}
-
-		if k.Data == nil {
-			errMsg := "class.Data is nil, class: " + classname
-			_ = log.Log(errMsg, log.SEVERE)
-			return nil
-		}
-
-		frame = e.Value.(*frames.Frame)
-
-		// helper function to facilitate subsequent field updates
-		// thanks to JetBrains' AI Assistant for this suggestion
-		addField := func(name, value string) {
-			fld := object.Field{}
-			fld.Fvalue = value
-			stackTrace.FieldTable[name] = &fld
-		}
-
-		addField("declaringClass", frame.ClName)
-		addField("methodName", frame.MethName)
-
-		methClass := classloader.MethAreaFetch(frame.ClName)
-		if methClass == nil {
-			return nil
-		}
-		addField("classLoaderName", methClass.Loader)
-		addField("fileName", methClass.Data.SourceFile)
-		addField("moduleName", methClass.Data.Module)
-
-		stackListing = append(stackListing, stackTrace)
-	}
-
-	// now that we have our data items loaded into the StackTraceElement
-	// put the elements into an array, which is converted into an object
-	obj := object.MakeEmptyObject()
-	klassName := "java/lang/StackTraceElement"
-	obj.Klass = &klassName
-
-	// add array to the object we're returning
-	fieldToAdd := new(object.Field)
-	fieldToAdd.Ftype = "[Ljava/lang/StackTraceElement;"
-	fieldToAdd.Fvalue = stackListing
-
-	// add the field to the field table for this object
-	obj.FieldTable["stackTrace"] = fieldToAdd
-
-	return obj
 }
