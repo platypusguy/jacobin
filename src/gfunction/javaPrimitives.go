@@ -164,43 +164,43 @@ func Load_Primitives() map[string]GMeth {
 	MethodSignatures["java/lang/Byte.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Boolean.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Integer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Long.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Float.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Double.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Short.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  primitivesJustReturn,
+			GFunction:  justReturn,
 		}
 
 	return MethodSignatures
@@ -499,8 +499,4 @@ func booleanValueOf(params []interface{}) interface{} {
 	zz := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, zz)
 	return objPtr
-}
-
-func primitivesJustReturn(params []interface{}) interface{} {
-	return nil
 }

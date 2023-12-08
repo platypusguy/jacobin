@@ -225,8 +225,3 @@ func getProperty(params []interface{}) interface{} {
 	obj := object.CreateCompactStringFromGoString(&value)
 	return obj
 }
-
-// do-nothing function
-func justReturn([]interface{}) interface{} {
-	return nil
-}

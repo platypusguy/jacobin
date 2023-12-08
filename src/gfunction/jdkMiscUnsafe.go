@@ -39,7 +39,7 @@ func Load_Misc_Unsafe() map[string]GMeth {
 	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] = // offset to start of first item in an array
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  unsafeClinit,
+			GFunction:  justReturn, // Unsafe <clinit>
 		}
 
 	return MethodSignatures
@@ -55,8 +55,4 @@ func arrayBaseOffset(param []interface{}) interface{} {
 		return errors.New(errMsg)
 	}
 	return int64(0) // this should work...
-}
-
-func unsafeClinit([]interface{}) interface{} {
-	return nil
 }
