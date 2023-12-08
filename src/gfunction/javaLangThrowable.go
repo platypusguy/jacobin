@@ -89,10 +89,11 @@ func throwableClinit(params []interface{}) interface{} {
 	return nil
 }
 
-// This function is called by Throwable.<init>(). In Throwable.java, it consists of one line:
-//      getOurStackTrace().clone();
+// This function is called by Throwable.<init>().
+// In Throwable.java, it consists of one line:
+//      return getOurStackTrace().clone(); // public, returns a StackTraceElement[]
 // In turn, getOurStackTrace() calls
-//      StackTraceElement.of(this, depth);
+//      StackTraceElement.of(this, depth); // private, returns StackTraceElement[]
 // In turn, this method calls
 //      StackTraceElement.initStackTraceElements:([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V
 // which actually fills in the fields of the StackTraceElement (done as a native function)
@@ -101,7 +102,7 @@ func throwableClinit(params []interface{}) interface{} {
 // Javadoc for this function from Throwable.java (copyright Oracle Corp.):
 /*
  * Provides programmatic access to the stack trace information printed by
- * {@link #printStackTrace()}. Returns an array of stack trace elements,
+ * printStackTrace(). Returns an array of stack trace elements,
  * each representing one stack frame. The zeroth element of the array
  * (assuming the array's length is non-zero) represents the top of the
  * stack, which is the last method invocation in the sequence.  Typically,
@@ -110,7 +111,7 @@ func throwableClinit(params []interface{}) interface{} {
  * represents the bottom of the stack, which is the first method invocation
  * in the sequence.
  *
- * <p> [...] Generally speaking, the array returned by this method will
+ * [...] Generally speaking, the array returned by this method will
  * contain one element for every frame that would be printed by
  * {@code printStackTrace}.  Writes to the returned array do not
  * affect future calls to this method.
@@ -119,7 +120,8 @@ func throwableClinit(params []interface{}) interface{} {
  *         pertaining to this throwable.
  */
 func fillInStackTrace(params []interface{}) interface{} {
-
+	// get our parameters vetted and ready for use, then call
+	// getOurStackTrace()
 	if len(params) != 2 {
 		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two parameterss, got: %d",
 			len(params)), log.SEVERE)
@@ -140,17 +142,28 @@ func fillInStackTrace(params []interface{}) interface{} {
 	objRef.FieldTable["frameStackRef"] = &jacobinSpecificField
 	fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
-	args := []interface{}{frameStack}
+	args := []interface{}{objRef}
 	return getOurStackTrace(args) // <<<<<<<<<<< we get here currently <<<<<<<<<<
 }
 
+// as described above, this function simply chains to GetStackTraces
 func getOurStackTrace(params []interface{}) interface{} {
-	return GetStackTraces(params[0].(*list.List))
+	args := []interface{}{params[0].(*object.Object)}
+	return GetStackTraces(args)
+}
+
+func GetStackTraces(params []interface{}) *object.Object {
+	throwable := params[0].(*object.Object)
+	stack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
+	depth := stack.Len()
+	args := []interface{}{throwable, depth}
+	retVal := of(args) // this is javaLangStackTraceElement.of()
+	return retVal.(*object.Object)
 }
 
 // GetStackTraces gets the full JVM stack trace using java.lang.StackTraceElement
 // slice to hold the data. In case of error, nil is returned.
-func GetStackTraces(fs *list.List) *object.Object {
+func GetStackTracesXXX(fs *list.List) *object.Object {
 	var stackListing []*object.Object
 
 	frameStack := fs.Front()
