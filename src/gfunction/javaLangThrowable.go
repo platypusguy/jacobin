@@ -65,7 +65,7 @@ func Load_Lang_Throwable() map[string]GMeth {
 // 33: putstatic     #293                // Field EMPTY_THROWABLE_ARRAY:[Ljava/lang/Throwable;
 // java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
 // 36: return
-func throwableClinit(params []interface{}) interface{} {
+func throwableClinit([]interface{}) interface{} {
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
 	_ = statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
@@ -150,6 +150,8 @@ func getOurStackTrace(params []interface{}) interface{} {
 	return GetStackTraces(args)
 }
 
+// Calls stackTraceElement.of() which populates the entries in a
+// slice of entries representing each frame in the JVM stack
 func GetStackTraces(params []interface{}) *object.Object {
 	throwable := params[0].(*object.Object)
 	stack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
