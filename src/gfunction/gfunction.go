@@ -28,6 +28,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Lang_Object())            // load the java.lang.Class golang functions
 	loadlib(MTable, Load_Misc_Unsafe())            // load the jdk.internal/misc/Unsafe functions
 	loadlib(MTable, Load_Lang_String())            // load the java.lang.String golang functions
+	loadlib(MTable, Load_Lang_StringBuilder())     // load the java.lang.StringBuilder golang functions
 	loadlib(MTable, Load_Lang_System())            // load the java.lang.System golang functions
 	loadlib(MTable, Load_Lang_StackTraceELement()) //  java.lang.StackTraceElement golang functions
 	loadlib(MTable, Load_Lang_Thread())            // load the java.lang.Thread golang functions

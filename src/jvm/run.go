@@ -1874,7 +1874,14 @@ func runFrame(fs *list.List) error {
 				nameCPentry := CP.CpIndex[nameCPIndex]
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
 
-				objField := obj.FieldTable[fieldName]
+				objField, ok := obj.FieldTable[fieldName]
+				if !ok {
+					errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
+						fieldName, f.ClName, f.MethName)
+					_ = log.Log(errMsg, log.SEVERE)
+					logTraceStack(f)
+					return errors.New(errMsg)
+				}
 				objField.Fvalue = value
 				obj.FieldTable[fieldName] = objField
 			}
