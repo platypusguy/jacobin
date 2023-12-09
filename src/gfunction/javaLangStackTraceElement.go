@@ -10,7 +10,7 @@ import (
 	"container/list"
 	"jacobin/classloader"
 	"jacobin/frames"
-	"jacobin/jvm"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -82,8 +82,9 @@ func of(params []interface{}) interface{} {
 	// insert empty stackTraceElements into the array.
 	rawArrayPtr := stackTrace.Fields[0].Fvalue.(*[]*object.Object)
 	rawArray := *rawArrayPtr
+	global := globals.GetGlobalRef()
 	for i := int64(0); i < depth; i++ {
-		ste, err := jvm.InstantiateClass("java/lang/StackTraceElement", nil)
+		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
 		if err == nil {
 			rawArray[i] = ste.(*object.Object)
 		}
