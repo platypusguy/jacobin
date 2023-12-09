@@ -2376,11 +2376,15 @@ func runFrame(fs *list.List) error {
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
 							break // exit this bytecode processing
 						} else {
+							/*** TODO: bypass this Throw action. Right thing to do?
 							glob := globals.GetGlobalRef()
 							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
 							return errors.New(errMsg)
+							***/
+							warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
+							_ = log.Log(warnMsg, log.WARNING)
 						}
 					} else {
 						glob := globals.GetGlobalRef()
