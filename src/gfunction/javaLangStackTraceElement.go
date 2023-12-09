@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/jvm"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -77,33 +78,18 @@ func of(params []interface{}) interface{} {
 	// create the 1-dimensional array of stackTraceElements
 	stackTraceElementClassName := "java/lang/StackTraceElement"
 	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
-	argsToPass := []interface{}{stackTrace, throwable}
 
 	// insert empty stackTraceElements into the array.
-	classname := "java/lang/StackTraceElement"
-	k := classloader.MethAreaFetch(classname)
-	ste := object.MakeEmptyObject()
-	ste.Klass = &classname
-
-	if k == nil {
-		errMsg := "Class is nil after loading, class: " + classname
-		_ = log.Log(errMsg, log.SEVERE)
-		return nil
-	}
-
-	if k.Data == nil {
-		errMsg := "class.Data is nil, class: " + classname
-		_ = log.Log(errMsg, log.SEVERE)
-		return nil
-	}
-
 	rawArrayPtr := stackTrace.Fields[0].Fvalue.(*[]*object.Object)
-	if len(*rawArrayPtr) != int(depth) {
-		_ = log.Log("Whoa! Depth != array size in stackTraceElement.of()", log.SEVERE)
-	} else {
-		_ = log.Log("Made it safely to stackTraceElements() call", log.SEVERE)
+	rawArray := *rawArrayPtr
+	for i := int64(0); i < depth; i++ {
+		ste, err := jvm.InstantiateClass("java/lang/StackTraceElement", nil)
+		if err == nil {
+			rawArray[i] = ste.(*object.Object)
+		}
 	}
 
+	argsToPass := []interface{}{stackTrace, throwable}
 	initStackTraceElements(argsToPass)
 
 	return stackTrace
@@ -117,6 +103,8 @@ func initStackTraceElements(params []interface{}) interface{} {
 	// array := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
 	// throwable := params[1].(*object.Object) // pointer to the Throwable object
 	// jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
+	//
+	// if len(*array)
 
 	return nil
 
