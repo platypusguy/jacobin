@@ -97,7 +97,7 @@ func throwableClinit([]interface{}) interface{} {
 // which actually fills in the fields of the StackTraceElement (done as a native function)
 //
 // Despite this simple function chaining, there is value in reading the
-// Javadoc for this function from Throwable.java (copyright Oracle Corp.):
+// Javadoc for this function from Throwable.java (Copyright Oracle Corp.):
 /*
  * Provides programmatic access to the stack trace information printed by
  * printStackTrace(). Returns an array of stack trace elements,
@@ -141,7 +141,7 @@ func fillInStackTrace(params []interface{}) interface{} {
 	fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
 	args := []interface{}{objRef}
-	return getOurStackTrace(args) // <<<<<<<<<<< we get here currently <<<<<<<<<<
+	return getOurStackTrace(args)
 }
 
 // as described above, this function simply chains to GetStackTraces
