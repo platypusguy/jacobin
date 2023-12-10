@@ -141,7 +141,15 @@ func fillInStackTrace(params []interface{}) interface{} {
 	fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
 	args := []interface{}{objRef}
-	return getOurStackTrace(args)
+	stackData := getOurStackTrace(args)
+	throwable := *objRef
+
+	stackTraceField := object.Field{
+		Ftype:  types.Ref,
+		Fvalue: stackData,
+	}
+	throwable.FieldTable["stackTrace"] = &stackTraceField
+	return &stackTraceField
 }
 
 // as described above, this function simply chains to GetStackTraces
