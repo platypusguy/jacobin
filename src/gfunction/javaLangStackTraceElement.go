@@ -102,7 +102,8 @@ func of(params []interface{}) interface{} {
 func initStackTraceElements(params []interface{}) interface{} {
 	arrayObjPtr := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
 	arrayObj := *arrayObjPtr
-	rawSteArray := arrayObj.Fields[0].Fvalue.([]object.Object)
+	rawSteArrayPtr := arrayObj.Fields[0].Fvalue.(*[]*object.Object)
+	rawSteArray := *rawSteArrayPtr
 
 	throwable := params[1].(*object.Object) // pointer to the Throwable object
 	jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
@@ -112,7 +113,7 @@ func initStackTraceElements(params []interface{}) interface{} {
 		frame := e.Value.(*frames.Frame)
 		ste := rawSteArray[i]
 		i += 1
-		_ = initStackTraceElement(&ste, frame)
+		_ = initStackTraceElement(ste, frame)
 	}
 
 	return nil
