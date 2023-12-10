@@ -8,7 +8,6 @@ package gfunction
 
 import (
 	"container/list"
-	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -101,11 +100,20 @@ func of(params []interface{}) interface{} {
 // by repeated calls to initStackTraceElement() below.
 // Returns nothing.
 func initStackTraceElements(params []interface{}) interface{} {
-	// array := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
-	// throwable := params[1].(*object.Object) // pointer to the Throwable object
-	// jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
-	//
-	// if len(*array)
+	arrayObjPtr := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
+	arrayObj := *arrayObjPtr
+	rawSteArray := arrayObj.Fields[0].Fvalue.([]object.Object)
+
+	throwable := params[1].(*object.Object) // pointer to the Throwable object
+	jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
+
+	var i = 0
+	for e := jvmStack.Front(); e != nil; e = e.Next() {
+		frame := e.Value.(*frames.Frame)
+		ste := rawSteArray[i]
+		i += 1
+		_ = initStackTraceElement(&ste, frame)
+	}
 
 	return nil
 
@@ -115,82 +123,87 @@ func initStackTraceElements(params []interface{}) interface{} {
 
 // initStackTraceElement accepts a single stackTraceElement and JVM stack
 // info and fills in the former with the latter. It's a private method and
-// called only from initStackTraceElements, so we don't need it to strictly
+// called only from initStackTraceElements(), so we don't need it to strictly
 // follow the HotSpot way of implementing it.
+// initStackTraceElement:(Ljava/lang/StackTraceElement;Ljava/lang/StackFrameInfo;)V
 // TODO: make the function comply with this description
-func initStackTraceElement(fs *list.List) *object.Object {
-	var stackListing []*object.Object
+func initStackTraceElement(ste *object.Object, frm *frames.Frame) *object.Object {
+	/*
+		var stackListing []*object.Object
 
-	frameStack := fs.Front()
-	if frameStack == nil {
-		// return an empty stack listing
-		return nil
-	}
-
-	// ...will eventually go into java/lang/Throwable.stackTrace
-	// ...Type will be: [Ljava/lang/StackTraceElement;
-	// ...other fields to be sure to capture: cause, detailMessage,
-	// ....not sure about backtrace
-
-	// step through the list-based stack of called methods and print contents
-
-	var frame *frames.Frame
-
-	for e := frameStack; e != nil; e = e.Next() {
-		classname := "java/lang/StackTraceElement"
-		stackTrace := object.MakeEmptyObject()
-		k := classloader.MethAreaFetch(classname)
-		stackTrace.Klass = &classname
-
-		if k == nil {
-			errMsg := "Class is nil after loading, class: " + classname
-			_ = log.Log(errMsg, log.SEVERE)
+		frameStack := fs.Front()
+		if frameStack == nil {
+			// return an empty stack listing
 			return nil
 		}
 
-		if k.Data == nil {
-			errMsg := "class.Data is nil, class: " + classname
-			_ = log.Log(errMsg, log.SEVERE)
-			return nil
+		// ...will eventually go into java/lang/Throwable.stackTrace
+		// ...Type will be: [Ljava/lang/StackTraceElement;
+		// ...other fields to be sure to capture: cause, detailMessage,
+		// ....not sure about backtrace
+
+		// step through the list-based stack of called methods and print contents
+
+		var frame *frames.Frame
+
+		for e := frameStack; e != nil; e = e.Next() {
+			classname := "java/lang/StackTraceElement"
+			stackTrace := object.MakeEmptyObject()
+			k := classloader.MethAreaFetch(classname)
+			stackTrace.Klass = &classname
+
+			if k == nil {
+				errMsg := "Class is nil after loading, class: " + classname
+				_ = log.Log(errMsg, log.SEVERE)
+				return nil
+			}
+
+			if k.Data == nil {
+				errMsg := "class.Data is nil, class: " + classname
+				_ = log.Log(errMsg, log.SEVERE)
+				return nil
+			}
+
+			frame = e.Value.(*frames.Frame)
+
+			// helper function to facilitate subsequent field updates
+			// thanks to JetBrains' AI Assistant for this suggestion
+			addField := func(name, value string) {
+				fld := object.Field{}
+				fld.Fvalue = value
+				stackTrace.FieldTable[name] = &fld
+			}
+
+			addField("declaringClass", frame.ClName)
+			addField("methodName", frame.MethName)
+
+			methClass := classloader.MethAreaFetch(frame.ClName)
+			if methClass == nil {
+				return nil
+			}
+			addField("classLoaderName", methClass.Loader)
+			addField("fileName", methClass.Data.SourceFile)
+			addField("moduleName", methClass.Data.Module)
+
+			stackListing = append(stackListing, stackTrace)
 		}
 
-		frame = e.Value.(*frames.Frame)
+		// now that we have our data items loaded into the StackTraceElement
+		// put the elements into an array, which is converted into an object
+		obj := object.MakeEmptyObject()
+		klassName := "java/lang/StackTraceElement"
+		obj.Klass = &klassName
 
-		// helper function to facilitate subsequent field updates
-		// thanks to JetBrains' AI Assistant for this suggestion
-		addField := func(name, value string) {
-			fld := object.Field{}
-			fld.Fvalue = value
-			stackTrace.FieldTable[name] = &fld
-		}
+		// add array to the object we're returning
+		fieldToAdd := new(object.Field)
+		fieldToAdd.Ftype = "[Ljava/lang/StackTraceElement;"
+		fieldToAdd.Fvalue = stackListing
 
-		addField("declaringClass", frame.ClName)
-		addField("methodName", frame.MethName)
+		// add the field to the field table for this object
+		obj.FieldTable["stackTrace"] = fieldToAdd
 
-		methClass := classloader.MethAreaFetch(frame.ClName)
-		if methClass == nil {
-			return nil
-		}
-		addField("classLoaderName", methClass.Loader)
-		addField("fileName", methClass.Data.SourceFile)
-		addField("moduleName", methClass.Data.Module)
+		return obj
 
-		stackListing = append(stackListing, stackTrace)
-	}
-
-	// now that we have our data items loaded into the StackTraceElement
-	// put the elements into an array, which is converted into an object
-	obj := object.MakeEmptyObject()
-	klassName := "java/lang/StackTraceElement"
-	obj.Klass = &klassName
-
-	// add array to the object we're returning
-	fieldToAdd := new(object.Field)
-	fieldToAdd.Ftype = "[Ljava/lang/StackTraceElement;"
-	fieldToAdd.Fvalue = stackListing
-
-	// add the field to the field table for this object
-	obj.FieldTable["stackTrace"] = fieldToAdd
-
-	return obj
+	*/
+	return nil // delete this later
 }
