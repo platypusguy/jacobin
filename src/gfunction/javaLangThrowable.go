@@ -138,7 +138,7 @@ func fillInStackTrace(params []interface{}) interface{} {
 		Fvalue: frameStack,
 	}
 	objRef.FieldTable["frameStackRef"] = &jacobinSpecificField
-	fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
+	// fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
 	args := []interface{}{objRef}
 	stackData := getOurStackTrace(args)

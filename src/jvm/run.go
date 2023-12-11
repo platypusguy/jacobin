@@ -2300,7 +2300,7 @@ func runFrame(fs *list.List) error {
 			exceptionClass := *objectRef.Klass
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
-			// print out the data, as we have it presently, starting with the exception type
+			// print out the name of the exception/error and the thread it occurred on
 			msg := ""
 			if f.Thread == 1 { // if it's thread #1, use its name, "main"
 				msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
@@ -2308,6 +2308,16 @@ func runFrame(fs *list.List) error {
 				msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
 			}
 			_ = log.Log(msg, log.SEVERE)
+
+			steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
+			rawSteArrayPtr := steArrayPtr.Fields[0].Fvalue.(*[]*object.Object) // *[]*object.Object (each of which is an STE)
+			rawSteArray := *rawSteArrayPtr
+			for i := 0; i < len(rawSteArray); i++ {
+				ste := rawSteArray[i]
+				s := fmt.Sprintf("\t%s (%s)",
+					ste.FieldTable["methodName"].Fvalue, ste.FieldTable["fileName"].Fvalue)
+				_ = log.Log(s, log.SEVERE)
+			}
 
 			// followed by the stack
 			for _, frameData := range *glob.JVMframeStack {
