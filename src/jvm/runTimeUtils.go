@@ -93,7 +93,7 @@ func FetchCPentry(cpp *classloader.CPool, index int) cpType {
 
 	// addresses of structures or other elements
 	case classloader.Dynamic:
-		v := unsafe.Pointer(&(cp.Dynamics[entry.Slot]))
+		v := unsafe.Pointer(&(cp.Dynamics[entry.Slot])) // Syntax error fixed but probably borked in terms of function
 		return cpType{entryType: int(entry.Type), retType: IS_STRUCT_ADDR, addrVal: uintptr(v)}
 
 	case classloader.Interface:
