@@ -2329,11 +2329,14 @@ func runFrame(fs *list.List) error {
 				_ = log.Log(s, log.SEVERE)
 			}
 
-			// followed by the stack
-			for _, frameData := range *glob.JVMframeStack {
-				colon := strings.Index(frameData, ":")
-				shortenedFrameData := frameData[colon+1:]
-				_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+			// show Jacobin's JVM stack info if -strickJDK is not set
+			if globals.GetGlobalRef().StrictJDK == false {
+				_ = log.Log(" ", log.SEVERE)
+				for _, frameData := range *glob.JVMframeStack {
+					colon := strings.Index(frameData, ":")
+					shortenedFrameData := frameData[colon+1:]
+					_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+				}
 			}
 
 			// all exceptions that got this far are untrapped, so shutdown with an error code
