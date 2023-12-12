@@ -2314,11 +2314,18 @@ func runFrame(fs *list.List) error {
 			rawSteArray := *rawSteArrayPtr
 			for i := 0; i < len(rawSteArray); i++ {
 				ste := rawSteArray[i]
+				methodName := ste.FieldTable["methodName"].Fvalue.(string)
+				if methodName == "<init>" { // don't show constructors
+					continue
+				}
 				rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
-				className := strings.Replace(rawClassName, "\\", ".", -1)
+				if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
+					continue
+				}
+				className := strings.Replace(rawClassName, "/", ".", -1)
 
-				s := fmt.Sprintf("\t%s.%s (%s)", className,
-					ste.FieldTable["methodName"].Fvalue, ste.FieldTable["fileName"].Fvalue)
+				s := fmt.Sprintf("\tat %s.%s(%s)", className,
+					methodName, ste.FieldTable["fileName"].Fvalue)
 				_ = log.Log(s, log.SEVERE)
 			}
 
