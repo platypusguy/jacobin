@@ -2314,7 +2314,10 @@ func runFrame(fs *list.List) error {
 			rawSteArray := *rawSteArrayPtr
 			for i := 0; i < len(rawSteArray); i++ {
 				ste := rawSteArray[i]
-				s := fmt.Sprintf("\t%s (%s)",
+				rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
+				className := strings.Replace(rawClassName, "\\", ".", -1)
+
+				s := fmt.Sprintf("\t%s.%s (%s)", className,
 					ste.FieldTable["methodName"].Fvalue, ste.FieldTable["fileName"].Fvalue)
 				_ = log.Log(s, log.SEVERE)
 			}
