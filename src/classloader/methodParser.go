@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-3 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -14,7 +14,7 @@ import (
 // Get the methods for this class. This can involve complex logic, but here
 // we're just grabbing the info about the class and the actual method bytecodes
 // as raw bytes. The description of the method entries in the spec is at:
-// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.6
+// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.6
 // The layout of the entries is:
 //
 //	method_info {
@@ -124,7 +124,7 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 }
 
 // parse the Code attribute and its sub-attributes. Details of the contents here:
-// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.3
+// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.3
 func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	methodName := klass.utf8Refs[meth.name].content
 	ca := codeAttrib{}
@@ -224,7 +224,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 }
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
-// can throw. See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.5
+// can throw. See: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.5
 //
 //	The structure of the Exceptions attribute of a method is: {
 //			u2 attribute_name_index;
@@ -280,7 +280,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 }
 
 // Per the spec, 'A MethodParameters attribute records information about the formal parameters
-// of a method, such as their names.' See: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.24
+// of a method, such as their names.' See: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.24
 //
 //	   u2 attribute_name_index;
 //	   u4 attribute_length;
