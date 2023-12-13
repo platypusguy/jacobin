@@ -211,6 +211,9 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 			}
 			pos = loc
 			log.Log("        "+klass.utf8Refs[cat.attrName].content, log.FINEST)
+			if klass.utf8Refs[cat.attrName].content == "LineNumberTable" {
+				buildLineNumberTable(cat, klass, methodName)
+			}
 			ca.attributes = append(ca.attributes, cat)
 		}
 	}
@@ -221,6 +224,16 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	meth.codeAttr = ca
 
 	return nil
+}
+
+// build the table of line numbers (that map bytecode location to source line #)
+// consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
+func buildLineNumberTable(cat attr, klass *ParsedClass, methodName string) {
+	entryCount := int(cat.attrContent[0])*256 + int(cat.attrContent[1])
+	if entryCount > 0 { // delete later.
+	}
+	// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
+	// 	klass.className, methodName, entryCount, cat.attrContent)
 }
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
