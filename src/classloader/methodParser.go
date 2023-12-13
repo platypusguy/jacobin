@@ -230,10 +230,22 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 // consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
 func buildLineNumberTable(cat attr, klass *ParsedClass, methodName string) {
 	entryCount := int(cat.attrContent[0])*256 + int(cat.attrContent[1])
-	if entryCount > 0 { // delete later.
+	loc := 2 // we're two bytes into the attr.Content byte array
+	for i := 0; i < entryCount; i++ {
+		// CURR: Resume here by uncommenting. Need to add a structure to the method
+		// in the parsed class, containing the pairs of numbers found below. Ideally,
+		// this would be a slice of pairs, ultimately sorted on the first entry of each
+		// pair (that is, the bytecode number) to facilitate quick lookup
+
+		// bytecodeNumber := int(cat.attrContent[loc])*256 + int(cat.attrContent[loc+1])
+		// sourceLineNumber := int(cat.attrContent[loc+2])*256 + int(cat.attrContent[loc+3])
+		loc += 4
 	}
-	// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
-	// 	klass.className, methodName, entryCount, cat.attrContent)
+
+	if methodName == "main" {
+		// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
+		// 	klass.className, methodName, entryCount, cat.attrContent)
+	}
 }
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
