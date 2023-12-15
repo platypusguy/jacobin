@@ -99,6 +99,7 @@ type ParsedClass struct {
 	classIsModule     bool
 
 	// ---- field attributes ----
+	sourceLineTable []BytecodeToSourceLine
 }
 
 // the fields defined in the class

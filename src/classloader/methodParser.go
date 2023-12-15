@@ -229,23 +229,40 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 // build the table of line numbers (that map bytecode location to source line #)
 // consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
 func buildLineNumberTable(cat attr, klass *ParsedClass, methodName string) {
-	entryCount := int(cat.attrContent[0])*256 + int(cat.attrContent[1])
+	entryCount := uint(cat.attrContent[0])*256 + uint(cat.attrContent[1])
 	loc := 2 // we're two bytes into the attr.Content byte array
-	for i := 0; i < entryCount; i++ {
-		// CURR: Resume here by uncommenting. Need to add a structure to the method
-		// in the parsed class, containing the pairs of numbers found below. Ideally,
-		// this would be a slice of pairs, ultimately sorted on the first entry of each
-		// pair (that is, the bytecode number) to facilitate quick lookup
+	if entryCount < 1 {
+		klass.sourceLineTable = nil
+		return
+	}
 
-		// bytecodeNumber := int(cat.attrContent[loc])*256 + int(cat.attrContent[loc+1])
-		// sourceLineNumber := int(cat.attrContent[loc+2])*256 + int(cat.attrContent[loc+3])
+	if klass.sourceLineTable != nil { // we could be adding to the table
+		klass.sourceLineTable = []BytecodeToSourceLine{}
+	}
+	var i uint
+	for i = 0; i < entryCount; i++ {
+		// CURR: Resume here by sorting the table
+
+		bytecodeNumber := uint16(cat.attrContent[loc])*256 + uint16(cat.attrContent[loc+1])
+		sourceLineNumber := uint16(cat.attrContent[loc+2])*256 + uint16(cat.attrContent[loc+3])
 		loc += 4
+
+		tableEntry := BytecodeToSourceLine{bytecodeNumber, sourceLineNumber}
+		klass.sourceLineTable = append(klass.sourceLineTable, tableEntry)
 	}
 
 	if methodName == "main" {
 		// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
 		// 	klass.className, methodName, entryCount, cat.attrContent)
 	}
+}
+
+// BytecodeToSourceLine maps the PC in a method to the
+// corresponding source line in the original source file.
+// This data is captured in the method's attributes
+type BytecodeToSourceLine struct {
+	bytecodePos uint16
+	sourceLine  uint16
 }
 
 // The Exceptions attribute of a method indicates which checked exceptions a method
@@ -363,12 +380,4 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 		meth.parameters = append(meth.parameters, mpAttrib)
 	}
 	return nil
-}
-
-// BytecodeToSourceLine maps the PC in a method to the
-// corresponding source line in the original source file.
-// This data is captured in the method's attributes
-type BytecodeToSourceLine struct {
-	bytecodePos uint16
-	sourceLine  uint16
 }
