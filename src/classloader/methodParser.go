@@ -364,3 +364,11 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 	}
 	return nil
 }
+
+// BytecodeToSourceLine maps the PC in a method to the
+// corresponding source line in the original source file.
+// This data is captured in the method's attributes
+type BytecodeToSourceLine struct {
+	bytecodePos uint16
+	sourceLine  uint16
+}
