@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"jacobin/log"
+	"sort"
 	"strconv"
 )
 
@@ -251,11 +252,50 @@ func buildLineNumberTable(cat attr, klass *ParsedClass, methodName string) {
 		klass.sourceLineTable = append(klass.sourceLineTable, tableEntry)
 	}
 
-	if methodName == "main" {
-		// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
-		// 	klass.className, methodName, entryCount, cat.attrContent)
+	// now sort the table
+	/*
+		type Person struct {
+		    Name string
+		    Age  int
+		}
+
+		type ByAge []Person
+
+		func (p ByAge) Len() int           { return len(p) }
+		func (p ByAge) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+		func (p ByAge) Less(i, j int) bool { return p[i].Age < p[j].Age }
+
+		func main() {
+		    people := []Person{
+		        {"Alice", 25},
+		        {"Bob", 30},
+		        {"Charlie", 20},
+		    }
+
+		    // Use sort.Sort to sort the slice of structs
+		    sort.Sort(ByAge(people))
+
+		    // Print the sorted slice
+		    fmt.Println(people)
+		}
+	*/
+
+	if len(klass.sourceLineTable) > 1 {
+		sort.Sort(b2sTable(klass.sourceLineTable))
 	}
+	// fmt.Fprintf(os.Stderr, "%v\n", klass.sourceLineTable)
+
+	// if methodName == "main" {
+	// 	// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
+	// 	// 	klass.className, methodName, entryCount, cat.attrContent)
+	// }
 }
+
+type b2sTable []BytecodeToSourceLine
+
+func (t b2sTable) Len() int           { return len(t) }
+func (t b2sTable) Swap(k, j int)      { t[k], t[j] = t[j], t[k] }
+func (t b2sTable) Less(k, j int) bool { return t[k].bytecodePos < t[k].bytecodePos }
 
 // BytecodeToSourceLine maps the PC in a method to the
 // corresponding source line in the original source file.
