@@ -11,7 +11,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	// "jacobin/thread"
 	"os"
 	"path/filepath"
 	"runtime"

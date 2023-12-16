@@ -98,7 +98,7 @@ type ParsedClass struct {
 	classIsEnum       bool
 	classIsModule     bool
 
-	// ---- field attributes ----
+	// ---- other attributes ----
 	sourceLineTable []BytecodeToSourceLine
 }
 
