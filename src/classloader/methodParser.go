@@ -267,14 +267,14 @@ type b2sTable []BytecodeToSourceLine
 
 func (t b2sTable) Len() int           { return len(t) }
 func (t b2sTable) Swap(k, j int)      { t[k], t[j] = t[j], t[k] }
-func (t b2sTable) Less(k, j int) bool { return t[k].bytecodePos < t[k].bytecodePos }
+func (t b2sTable) Less(k, j int) bool { return t[k].BytecodePos < t[k].BytecodePos }
 
 // BytecodeToSourceLine maps the PC in a method to the
 // corresponding source line in the original source file.
 // This data is captured in the method's attributes
 type BytecodeToSourceLine struct {
-	bytecodePos uint16
-	sourceLine  uint16
+	BytecodePos uint16
+	SourceLine  uint16
 }
 
 // The Exceptions attribute of a method indicates which checked exceptions a method

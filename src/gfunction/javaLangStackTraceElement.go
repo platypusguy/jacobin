@@ -8,12 +8,14 @@ package gfunction
 
 import (
 	"container/list"
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"strings"
 )
 
 // StackTraceElement is a class that is primarily used by Throwable to gather data about the
@@ -148,4 +150,25 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	addField("classLoaderName", methClass.Loader)
 	addField("fileName", methClass.Data.SourceFile)
 	addField("moduleName", methClass.Data.Module)
+
+	sourceLineNumber := ""
+	// now get the source line number for any non-JDK files
+	if strings.HasPrefix(frame.ClName, "java") || strings.HasPrefix(frame.ClName, "jdk") ||
+		strings.HasPrefix(frame.ClName, "sun.") {
+		addField("sourceLine", "")
+	} else {
+		class := classloader.MethAreaFetch(frame.ClName)
+		sourceMap := class.Data.Methods[0].CodeAttr.BytecodeSourceMap
+		prev := uint16(0)
+		for i := 0; i < len(sourceMap); i++ {
+			entry := sourceMap[i]
+			if entry.BytecodePos > uint16(frame.PC) {
+				break
+			} else {
+				prev = entry.BytecodePos
+			}
+		}
+		sourceLineNumber = fmt.Sprintf("%d", prev)
+		addField("sourceLine", sourceLineNumber)
+	}
 }
