@@ -2279,8 +2279,7 @@ func runFrame(fs *list.List) error {
 			}
 			push(f, size)
 		case opcodes.ATHROW: // 0xBF throw an exception
-			// points to an instance of the error/exception class
-			// that's being thrown
+			// objRef points to an instance of the error/exception class that's being thrown
 			objectRef := pop(f).(*object.Object)
 			if object.IsNull(objectRef) {
 				errMsg := "ATHROW: Invalid (null) reference to a exception/error class to throw"
@@ -2324,8 +2323,16 @@ func runFrame(fs *list.List) error {
 				}
 				className := strings.Replace(rawClassName, "/", ".", -1)
 
-				s := fmt.Sprintf("\tat %s.%s(%s)", className,
-					methodName, ste.FieldTable["fileName"].Fvalue)
+				sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
+
+				var s string
+				if sourceLine != "" {
+					s = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
+						methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
+				} else {
+					s = fmt.Sprintf("\tat %s.%s(%s)", className,
+						methodName, ste.FieldTable["fileName"].Fvalue)
+				}
 				_ = log.Log(s, log.SEVERE)
 
 				// methClass := classloader.MethAreaFetch(f.ClName)
