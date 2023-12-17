@@ -154,7 +154,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	sourceLineNumber := ""
 	// now get the source line number for any non-JDK files
 	if strings.HasPrefix(frame.ClName, "java") || strings.HasPrefix(frame.ClName, "jdk") ||
-		strings.HasPrefix(frame.ClName, "sun.") {
+		strings.HasPrefix(frame.ClName, "sun.") || strings.HasPrefix(frame.MethName, "<init>") {
 		addField("sourceLine", "")
 	} else {
 		class := classloader.MethAreaFetch(frame.ClName)
