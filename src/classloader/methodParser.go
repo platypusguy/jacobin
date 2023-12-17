@@ -213,7 +213,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 			pos = loc
 			log.Log("        "+klass.utf8Refs[cat.attrName].content, log.FINEST)
 			if klass.utf8Refs[cat.attrName].content == "LineNumberTable" {
-				buildLineNumberTable(cat, klass, methodName)
+				buildLineNumberTable(cat, &ca, methodName)
 			}
 			ca.attributes = append(ca.attributes, cat)
 		}
@@ -229,68 +229,40 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 
 // build the table of line numbers (that map bytecode location to source line #)
 // consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
-func buildLineNumberTable(cat attr, klass *ParsedClass, methodName string) {
+func buildLineNumberTable(cat attr, codeAttr *codeAttrib, methodName string) {
+	codeAttribute := *codeAttr
 	entryCount := uint(cat.attrContent[0])*256 + uint(cat.attrContent[1])
 	loc := 2 // we're two bytes into the attr.Content byte array
 	if entryCount < 1 {
-		klass.sourceLineTable = nil
+		codeAttribute.sourceLineTable = nil
 		return
 	}
 
-	if klass.sourceLineTable != nil { // we could be adding to the table
-		klass.sourceLineTable = []BytecodeToSourceLine{}
+	if codeAttribute.sourceLineTable != nil { // we could be adding to the table
+		codeAttribute.sourceLineTable = []BytecodeToSourceLine{}
 	}
 	var i uint
 	for i = 0; i < entryCount; i++ {
-		// CURR: Resume here by sorting the table
 
 		bytecodeNumber := uint16(cat.attrContent[loc])*256 + uint16(cat.attrContent[loc+1])
 		sourceLineNumber := uint16(cat.attrContent[loc+2])*256 + uint16(cat.attrContent[loc+3])
 		loc += 4
 
 		tableEntry := BytecodeToSourceLine{bytecodeNumber, sourceLineNumber}
-		klass.sourceLineTable = append(klass.sourceLineTable, tableEntry)
+		codeAttribute.sourceLineTable = append(codeAttribute.sourceLineTable, tableEntry)
 	}
 
 	// now sort the table
-	/*
-		type Person struct {
-		    Name string
-		    Age  int
-		}
-
-		type ByAge []Person
-
-		func (p ByAge) Len() int           { return len(p) }
-		func (p ByAge) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-		func (p ByAge) Less(i, j int) bool { return p[i].Age < p[j].Age }
-
-		func main() {
-		    people := []Person{
-		        {"Alice", 25},
-		        {"Bob", 30},
-		        {"Charlie", 20},
-		    }
-
-		    // Use sort.Sort to sort the slice of structs
-		    sort.Sort(ByAge(people))
-
-		    // Print the sorted slice
-		    fmt.Println(people)
-		}
-	*/
-
-	if len(klass.sourceLineTable) > 1 {
-		sort.Sort(b2sTable(klass.sourceLineTable))
+	if len(codeAttribute.sourceLineTable) > 1 {
+		sort.Sort(b2sTable(codeAttribute.sourceLineTable))
 	}
-	// fmt.Fprintf(os.Stderr, "%v\n", klass.sourceLineTable)
 
 	// if methodName == "main" {
-	// 	// fmt.Fprintf(os.Stderr, "%s.%s lineNumberTable: %d entries, cat.content: %v\n",
-	// 	// 	klass.className, methodName, entryCount, cat.attrContent)
+	// 	fmt.Fprintf(os.Stderr, "%v\n", klass.sourceLineTable)
 	// }
 }
 
+// the following four lines are all needed for the call to Sort()
 type b2sTable []BytecodeToSourceLine
 
 func (t b2sTable) Len() int           { return len(t) }
