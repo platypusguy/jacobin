@@ -50,15 +50,16 @@ type MData interface{}
 
 // JmEntry is the entry in the Mtable for Java methods.
 type JmEntry struct {
-	AccessFlags int
-	MaxStack    int
-	MaxLocals   int
-	Code        []byte
-	Exceptions  []CodeException
-	attribs     []Attr
-	params      []ParamAttrib
-	deprecated  bool
-	Cp          *CPool
+	AccessFlags       int
+	MaxStack          int
+	MaxLocals         int
+	Code              []byte
+	Exceptions        []CodeException
+	attribs           []Attr
+	params            []ParamAttrib
+	deprecated        bool
+	Cp                *CPool
+	BytecodeSourceMap []BytecodeToSourceLine
 }
 
 // Function is the generic-style function used for Go entries: a function that accepts a
@@ -69,41 +70,6 @@ type Function func([]interface{}) interface{}
 // MTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
 var MTmutex sync.Mutex
-
-// // MTableLoadNatives loads the Go methods from files that contain them. It does this
-// // by calling the Load_* function in each of those files to load whatever Go functions
-// // they make available.
-// func MTableLoadNatives() {
-//
-// 	loadlib(&MTable, gfunction.Load_Io_PrintStream()) // load the java.io.prinstream golang functions
-// 	loadlib(&MTable, gfunction.Load_Lang_Class())     // load the java.lang.Class golang functions
-// 	loadlib(&MTable, gfunction.Load_Lang_Math())      // load the java.lang.Math golang functions
-// 	loadlib(&MTable, gfunction.Load_Misc_Unsafe())    // load the jdk.internal/misc/Unsafe functions
-// 	loadlib(&MTable, gfunction.Load_Lang_String())    // load the java.lang.String golang functions
-// 	loadlib(&MTable, gfunction.Load_Lang_System())    // load the java.lang.System golang functions
-// 	loadlib(&MTable, gfunction.Load_Lang_Thread())    // load the java.lang.Thread golang functions
-// 	loadlib(&MTable, gfunction.Load_Lang_Throwable()) // load the java.lang.Throwable golang functions (errors & exceptions)
-// 	loadlib(&MTable, gfunction.Load_Lang_UTF16())     // load the java.lang.UTF16 golang functions
-// 	loadlib(&MTable, gfunction.Load_Util_HashMap())   // load the java.util.HashMap golang functions
-// 	loadlib(&MTable, gfunction.Load_Util_Locale())    // load the java.util.Locale golang functions
-// 	loadlib(&MTable, gfunction.Load_Primitives())     // load the Java primitives golang functions
-// }
-//
-// func loadlib(tbl *MT, libMeths map[string]GMeth) {
-// 	for key, val := range libMeths {
-// 		gme := GMeth{}
-// 		gme.ParamSlots = val.ParamSlots
-// 		gme.GFunction = val.GFunction
-// 		gme.NeedsContext = val.NeedsContext
-//
-// 		tableEntry := MTentry{
-// 			MType: 'G',
-// 			Meth:  gme,
-// 		}
-//
-// 		AddEntry(tbl, key, tableEntry)
-// 	}
-// }
 
 // adds an entry to the MTable, using a mutex
 func AddEntry(tbl *MT, key string, mte MTentry) {
