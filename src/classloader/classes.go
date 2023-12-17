@@ -94,11 +94,12 @@ type Method struct {
 }
 
 type CodeAttrib struct {
-	MaxStack   int
-	MaxLocals  int
-	Code       []byte
-	Exceptions []CodeException // exception entries for this method
-	Attributes []Attr          // the code attributes has its own sub-attributes(!)
+	MaxStack          int
+	MaxLocals         int
+	Code              []byte
+	Exceptions        []CodeException // exception entries for this method
+	Attributes        []Attr          // the code attributes has its own sub-attributes(!)
+	BytecodeSourceMap []BytecodeToSourceLine
 }
 
 // ParamAttrib is the MethodParameters method attribute
@@ -268,15 +269,16 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// lookup in the MTable (as all native methods are loaded there before
 		// program execution begins.
 		jme := JmEntry{
-			AccessFlags: m.AccessFlags,
-			MaxStack:    m.CodeAttr.MaxStack,
-			MaxLocals:   m.CodeAttr.MaxLocals,
-			Code:        m.CodeAttr.Code,
-			Exceptions:  m.CodeAttr.Exceptions,
-			attribs:     m.CodeAttr.Attributes,
-			params:      m.Parameters,
-			deprecated:  m.Deprecated,
-			Cp:          &k.Data.CP,
+			AccessFlags:       m.AccessFlags,
+			MaxStack:          m.CodeAttr.MaxStack,
+			MaxLocals:         m.CodeAttr.MaxLocals,
+			Code:              m.CodeAttr.Code,
+			Exceptions:        m.CodeAttr.Exceptions,
+			attribs:           m.CodeAttr.Attributes,
+			params:            m.Parameters,
+			deprecated:        m.Deprecated,
+			Cp:                &k.Data.CP,
+			BytecodeSourceMap: m.CodeAttr.BytecodeSourceMap,
 		}
 		MTable[methFQN] = MTentry{
 			Meth:  jme,
@@ -291,14 +293,6 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		noMainError(origClassName)
 		// break
 	}
-
-	// if className == "java/lang/Object" { // if we're already at the topmost superclass, then stop the loop
-	// 	break
-	// } else {
-	// 	className = k.Data.Superclass
-	// 	goto startSearch
-	// }
-	// }
 
 	// if we got this far, something went wrong with locating the method
 	msg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName

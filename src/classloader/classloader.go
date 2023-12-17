@@ -99,7 +99,7 @@ type ParsedClass struct {
 	classIsModule     bool
 
 	// ---- other attributes ----
-	sourceLineTable []BytecodeToSourceLine
+
 }
 
 // the fields defined in the class
@@ -125,11 +125,12 @@ type method struct {
 }
 
 type codeAttrib struct {
-	maxStack   int
-	maxLocals  int
-	code       []byte
-	exceptions []exception // exception entries for this method
-	attributes []attr      // the code attributes has its own sub-attributes(!)
+	maxStack        int
+	maxLocals       int
+	code            []byte
+	exceptions      []exception // exception entries for this method
+	attributes      []attr      // the code attributes has its own sub-attributes(!)
+	sourceLineTable []BytecodeToSourceLine
 }
 
 // the MethodParameters method attribute
