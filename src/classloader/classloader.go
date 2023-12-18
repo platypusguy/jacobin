@@ -130,7 +130,7 @@ type codeAttrib struct {
 	code            []byte
 	exceptions      []exception // exception entries for this method
 	attributes      []attr      // the code attributes has its own sub-attributes(!)
-	sourceLineTable []BytecodeToSourceLine
+	sourceLineTable *[]BytecodeToSourceLine
 }
 
 // the MethodParameters method attribute
@@ -513,6 +513,9 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdm.CodeAttr.Attributes = append(kdm.CodeAttr.Attributes, kdmca)
 				}
 			}
+			fullyParsedClass.methods[i].codeAttr.sourceLineTable =
+				fullyParsedClass.methods[i].codeAttr.sourceLineTable
+
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
 				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
 					kdma := Attr{
