@@ -39,15 +39,6 @@ type MTentry struct {
 // MData can be a GMeth or a JmEntry (method in Go or Java, respectively)
 type MData interface{}
 
-// // GMeth is the entry in the MTable for Go functions. See MTable comments for details.
-// // Fu is a go function. All go functions accept a possibly empty slice of interface{} and
-// // return a possibly nil interface{}
-// type GMeth struct {
-// 	ParamSlots   int
-// 	GFunction    func([]interface{}) interface{}
-// 	NeedsContext bool // does this method need a pointer to the frame stack? Defaults to false.
-// }
-
 // JmEntry is the entry in the Mtable for Java methods.
 type JmEntry struct {
 	AccessFlags       int
@@ -55,7 +46,7 @@ type JmEntry struct {
 	MaxLocals         int
 	Code              []byte
 	Exceptions        []CodeException
-	attribs           []Attr
+	Attribs           []Attr
 	params            []ParamAttrib
 	deprecated        bool
 	Cp                *CPool
