@@ -7,7 +7,10 @@
 package classloader
 
 import (
+	"fmt"
 	"jacobin/log"
+	"jacobin/util"
+	"os"
 	"sort"
 	"strconv"
 )
@@ -72,7 +75,7 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		// The following code goes through those sub-attributes and processes them.
 
 		if attrCount > 1 {
-			log.Log(
+			_ = log.Log(
 				"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
 					klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
 				log.FINEST)
@@ -87,9 +90,9 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 				switch klass.utf8Refs[attrib.attrName].content {
 				case "Code":
 					if attrCount > 1 {
-						log.Log("    Attribute: Code", log.FINEST)
+						_ = log.Log("    Attribute: Code", log.FINEST)
 					} else {
-						log.Log("Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
+						_ = log.Log("Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
 							klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+
 							" attribute: Code", log.FINEST)
 					}
@@ -98,19 +101,19 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 					}
 				case "Deprecated":
 					meth.deprecated = true
-					log.Log("    Attribute: Deprecated", log.FINEST)
+					_ = log.Log("    Attribute: Deprecated", log.FINEST)
 				case "Exceptions":
-					log.Log("    Attribute: Exceptions", log.FINEST)
+					_ = log.Log("    Attribute: Exceptions", log.FINEST)
 					if parseExceptionsMethodAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "MethodParameters":
-					log.Log("    Attribute: MethodParameters", log.FINEST)
+					_ = log.Log("    Attribute: MethodParameters", log.FINEST)
 					if parseMethodParametersAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				default:
-					log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
+					_ = log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
 
 			} else {
@@ -162,7 +165,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	}
 
 	if exceptionCount > 0 {
-		log.Log("        Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
+		_ = log.Log("        Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
 			log.FINEST)
 		for k := 0; k < exceptionCount; k++ {
 			ex := exception{}
@@ -184,7 +187,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 					return cfe("Invalid catchType in method " + methodName +
 						" in " + klass.className)
 				} else {
-					log.Log("        Method: "+methodName+
+					_ = log.Log("        Method: "+methodName+
 						" throws exception: "+klass.utf8Refs[catchType.slot].content,
 						log.FINEST)
 				}
@@ -202,20 +205,21 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	}
 
 	if attrCount > 0 {
-		log.Log("        Code attribute has "+strconv.Itoa(attrCount)+
+		_ = log.Log("        Code attribute has "+strconv.Itoa(attrCount)+
 			" attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
-			cat, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
+			subAttr, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
 			if err2 != nil {
 				return cfe("Error retrieving attributes in Code attribute of " + methodName +
 					"() of " + klass.className)
 			}
 			pos = loc
-			log.Log("        "+klass.utf8Refs[cat.attrName].content, log.FINEST)
-			if klass.utf8Refs[cat.attrName].content == "LineNumberTable" {
-				buildLineNumberTable(cat, &ca, methodName)
+			_ = log.Log("        "+klass.utf8Refs[subAttr.attrName].content, log.FINEST)
+			if klass.utf8Refs[subAttr.attrName].content == "LineNumberTable" &&
+				!util.IsFilePartOfJDK(&klass.className) {
+				buildLineNumberTable(&ca, &subAttr, methodName)
 			}
-			ca.attributes = append(ca.attributes, cat)
+			ca.attributes = append(ca.attributes, subAttr)
 		}
 	}
 
@@ -229,45 +233,47 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 
 // build the table of line numbers (that map bytecode location to source line #)
 // consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
-func buildLineNumberTable(cat attr, codeAttr *codeAttrib, methodName string) {
-	codeAttribute := *codeAttr
-	entryCount := uint(cat.attrContent[0])*256 + uint(cat.attrContent[1])
+func buildLineNumberTable(codeAttr *codeAttrib, thisAttr *attr, methodName string) {
+	entryCount := uint(thisAttr.attrContent[0])*256 + uint(thisAttr.attrContent[1])
 	loc := 2 // we're two bytes into the attr.Content byte array
 	if entryCount < 1 {
-		codeAttribute.sourceLineTable = nil
+		(*codeAttr).sourceLineTable = nil
 		return
 	}
 
-	if codeAttribute.sourceLineTable != nil { // we could be adding to the table
-		codeAttribute.sourceLineTable = []BytecodeToSourceLine{}
+	var table []BytecodeToSourceLine
+	if (*codeAttr).sourceLineTable != nil { // we could be adding to the table
+		table = []BytecodeToSourceLine{}
+		(*codeAttr).sourceLineTable = &table
 	}
 	var i uint
 	for i = 0; i < entryCount; i++ {
-
-		bytecodeNumber := uint16(cat.attrContent[loc])*256 + uint16(cat.attrContent[loc+1])
-		sourceLineNumber := uint16(cat.attrContent[loc+2])*256 + uint16(cat.attrContent[loc+3])
+		bytecodeNumber := uint16(thisAttr.attrContent[loc])*256 + uint16(thisAttr.attrContent[loc+1])
+		sourceLineNumber := uint16(thisAttr.attrContent[loc+2])*256 + uint16(thisAttr.attrContent[loc+3])
 		loc += 4
 
 		tableEntry := BytecodeToSourceLine{bytecodeNumber, sourceLineNumber}
-		codeAttribute.sourceLineTable = append(codeAttribute.sourceLineTable, tableEntry)
+		table = append(table, tableEntry)
 	}
 
 	// now sort the table
-	if len(codeAttribute.sourceLineTable) > 1 {
-		sort.Sort(b2sTable(codeAttribute.sourceLineTable))
+	if len(table) > 1 {
+		sort.Sort(b2sTable(table))
 	}
 
-	// if methodName == "main" {
-	// 	fmt.Fprintf(os.Stderr, "%v\n", klass.sourceLineTable)
-	// }
+	(*codeAttr).sourceLineTable = &table
+
+	if methodName == "main" {
+		fmt.Fprintf(os.Stderr, "%v\n", table)
+	}
 }
 
 // the following four lines are all needed for the call to Sort()
 type b2sTable []BytecodeToSourceLine
 
 func (t b2sTable) Len() int           { return len(t) }
-func (t b2sTable) Swap(k, j int)      { t[k], t[j] = t[j], t[k] }
-func (t b2sTable) Less(k, j int) bool { return t[k].BytecodePos < t[k].BytecodePos }
+func (t b2sTable) Swap(k, j int)      { (t)[k], (t)[j] = (t)[j], (t)[k] }
+func (t b2sTable) Less(k, j int) bool { return (t)[k].BytecodePos < (t)[j].BytecodePos }
 
 // BytecodeToSourceLine maps the PC in a method to the
 // corresponding source line in the original source file.
@@ -328,7 +334,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 
 		// store the slot # of the utf8 entries into the method exceptions slice
 		meth.exceptions = append(meth.exceptions, whichUtf8Rec)
-		log.Log("        "+exceptionName, log.FINEST)
+		_ = log.Log("        "+exceptionName, log.FINEST)
 	}
 	return nil
 }
@@ -375,7 +381,7 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 		if mpAttrib.name != "" {
 			logName = mpAttrib.name
 		}
-		log.Log("        "+logName, log.FINEST)
+		_ = log.Log("        "+logName, log.FINEST)
 
 		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
 		if err != nil {
