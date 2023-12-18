@@ -7,10 +7,8 @@
 package classloader
 
 import (
-	"fmt"
 	"jacobin/log"
 	"jacobin/util"
-	"os"
 	"sort"
 	"strconv"
 )
@@ -263,9 +261,9 @@ func buildLineNumberTable(codeAttr *codeAttrib, thisAttr *attr, methodName strin
 
 	(*codeAttr).sourceLineTable = &table
 
-	if methodName == "main" {
-		fmt.Fprintf(os.Stderr, "%v\n", table)
-	}
+	// if methodName == "main" {
+	// 	fmt.Fprintf(os.Stderr, "%v\n", table)
+	// }
 }
 
 // the following four lines are all needed for the call to Sort()

@@ -2334,23 +2334,6 @@ func runFrame(fs *list.List) error {
 						methodName, ste.FieldTable["fileName"].Fvalue)
 				}
 				_ = log.Log(s, log.SEVERE)
-
-				// methClass := classloader.MethAreaFetch(f.ClName)
-				// if methodName == "<init>" { // don't show constructors
-				// 	continue
-				// }
-				// rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
-				// if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
-				// 	continue
-				// }
-				// className := strings.Replace(rawClassName, "/", ".", -1)
-				//
-				// class := classloader.FetchMethodAndCP(className, methodName, methType string) (MTentry, error)
-				// class := classloader.MethAreaFetch(rawClassName)
-				// sourceMap := class.Data.Methods[0].CodeAttr.BytecodeSourceMap
-				// s := fmt.Sprintf("\tat %s.%s(%s)", className,
-				// 	methodName, ste.FieldTable["fileName"].Fvalue)
-				// _ = log.Log(s, log.SEVERE)
 			}
 
 			// show Jacobin's JVM stack info if -strictJDK is not set
