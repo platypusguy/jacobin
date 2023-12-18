@@ -29,7 +29,8 @@ type Number interface {
 // second stack entry for these data items.
 type Frame struct {
 	Thread   int
-	MethName string // method name
+	MethName string // method nam
+	MethType string // method type (signature)
 	ClName   string // class name
 	Meth     []byte // bytecode of method
 	// ExceptionTable *[]classloader.CodeException // list of code exceptions

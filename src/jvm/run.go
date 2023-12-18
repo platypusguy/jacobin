@@ -58,6 +58,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	f := frames.CreateFrame(m.MaxStack + 2) // create a new frame (the +2 is arbitrary, but needed)
 	f.Thread = MainThread.ID
 	f.MethName = "main"
+	f.MethType = "([Ljava/lang/String;)V"
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
@@ -2337,7 +2338,7 @@ func runFrame(fs *list.List) error {
 			}
 
 			// show Jacobin's JVM stack info if -strictJDK is not set
-			if globals.GetGlobalRef().StrictJDK == false {
+			if glob.StrictJDK == false {
 				_ = log.Log(" ", log.SEVERE)
 				for _, frameData := range *glob.JVMframeStack {
 					colon := strings.Index(frameData, ":")
@@ -3053,6 +3054,7 @@ func createAndInitNewFrame(
 	fram.Thread = currFrame.Thread
 	fram.ClName = className
 	fram.MethName = methodName
+	fram.MethType = methodType
 	fram.CP = m.Cp                           // add its pointer to the class CP
 	fram.Meth = append(fram.Meth, m.Code...) // copy the method's bytecodes over
 
