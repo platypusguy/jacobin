@@ -43,3 +43,11 @@ func ConvertToPlatformPathSeparators(pathIn string) string {
 	}
 	return pathIn
 }
+
+// IsFilePartOfJDK accepts a filename and returns true if the filename
+// is part of the JDK distribution
+func IsFilePartOfJDK(filename *string) bool {
+	return strings.HasPrefix(*filename, "java") ||
+		strings.HasPrefix(*filename, "jdk") ||
+		strings.HasPrefix(*filename, "sun")
+}
