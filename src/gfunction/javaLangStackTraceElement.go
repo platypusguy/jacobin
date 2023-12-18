@@ -15,6 +15,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/util"
 	"strings"
 )
 
@@ -153,8 +154,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 
 	sourceLineNumber := ""
 	// now get the source line number for any non-JDK files
-	if strings.HasPrefix(frame.ClName, "java") || strings.HasPrefix(frame.ClName, "jdk") ||
-		strings.HasPrefix(frame.ClName, "sun.") || strings.HasPrefix(frame.MethName, "<init>") {
+	if util.IsFilePartOfJDK(&frame.MethName) || strings.HasPrefix(frame.MethName, "<init>") {
 		addField("sourceLine", "")
 	} else {
 		class := classloader.MethAreaFetch(frame.ClName)
@@ -164,8 +164,11 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 			entry := sourceMap[i]
 			if entry.BytecodePos > uint16(frame.PC) {
 				break
+			} else if entry.BytecodePos == uint16(frame.PC) {
+				prev = entry.SourceLine
+				break
 			} else {
-				prev = entry.BytecodePos
+				prev = entry.SourceLine
 			}
 		}
 		sourceLineNumber = fmt.Sprintf("%d", prev)
