@@ -152,10 +152,10 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	addField("fileName", methClass.Data.SourceFile)
 	addField("moduleName", methClass.Data.Module)
 
-	// now get the source line number for any non-JDK files
-	if util.IsFilePartOfJDK(&frame.MethName) || strings.HasPrefix(frame.MethName, "<init>") {
-		addField("sourceLine", "")
-	} else {
+	// now get the source line number for any non-JDK classes and non-constructors
+
+	addField("sourceLine", "") // the default if no source line data is available
+	if !util.IsFilePartOfJDK(&frame.MethName) && !strings.HasPrefix(frame.MethName, "<init>") {
 		rawMethod, _ := classloader.FetchMethodAndCP(frame.ClName, frame.MethName, frame.MethType)
 		if rawMethod.MType == 'G' { // nothing more to do if it's a native method
 			return
@@ -168,18 +168,18 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 				if line != -1 { // -1 means not found
 					addField("sourceLine", fmt.Sprintf("%d", line))
 				}
-				// fmt.Fprintf(os.Stderr, "line: %d\n", line)
 			}
 		}
 	}
 }
 
 // get the source line number from the location of the bytecode where exception occurred
+//
 // We first create a table of entries consisting of bytecode number and source line number
 // then we sort the table, then we traverse the table to find the matching line number
 func searchLineNumberTable(attrContent []byte, PC int) int {
 	entryCount := uint(attrContent[0])*256 + uint(attrContent[1])
-	loc := 2 // we're two bytes into the attr.Content byte array
+	loc := 2 // 2 bytes into attrContent for entry count uint16 entryCount
 	if entryCount < 1 {
 		return -1
 	}
