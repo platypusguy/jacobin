@@ -16,6 +16,8 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/util"
+	"sort"
+
 	// "sort"
 	"strings"
 )
@@ -122,9 +124,6 @@ func initStackTraceElements(params []interface{}) interface{} {
 	}
 
 	return nil
-
-	// Note: an improvement is to add the logic to the class parse showing
-	// the Java code source line number. JACOBIN-224 refers to this.
 }
 
 // initStackTraceElement accepts a single stackTraceElement and JVM stack
@@ -176,6 +175,8 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 }
 
 // get the source line number from the location of the bytecode where exception occurred
+// We first create a table of entries consisting of bytecode number and source line number
+// then we sort the table, then we traverse the table to find the matching line number
 func searchLineNumberTable(attrContent []byte, PC int) int {
 	entryCount := uint(attrContent[0])*256 + uint(attrContent[1])
 	loc := 2 // we're two bytes into the attr.Content byte array
@@ -183,13 +184,29 @@ func searchLineNumberTable(attrContent []byte, PC int) int {
 		return -1
 	}
 
+	var table b2sTable
 	var i uint
-	var prev uint16 = 0
+
+	// build the table
 	for i = 0; i < entryCount; i++ {
 		bytecodeNumber := uint16(attrContent[loc])*256 + uint16(attrContent[loc+1])
 		sourceLineNumber := uint16(attrContent[loc+2])*256 + uint16(attrContent[loc+3])
 		loc += 4
 
+		tableEntry := BytecodeToSourceLine{bytecodeNumber, sourceLineNumber}
+		table = append(table, tableEntry)
+	}
+
+	// sort the table
+	if len(table) > 1 {
+		sort.Sort(b2sTable(table))
+	}
+
+	// traverse the table
+	var prev uint16 = 0
+	for i = 0; i < entryCount; i++ {
+		bytecodeNumber := table[i].BytecodePos
+		sourceLineNumber := table[i].SourceLine
 		if bytecodeNumber > uint16(PC) {
 			break
 		} else if bytecodeNumber == uint16(PC) {
@@ -202,70 +219,16 @@ func searchLineNumberTable(attrContent []byte, PC int) int {
 	return int(prev)
 }
 
-// sourceMap := class.Data.Methods[0].CodeAttr.BytecodeSourceMap
-// prev := uint16(0)
-// for i := 0; i < len(sourceMap); i++ {
-// 	entry := sourceMap[i]
-// 	if entry.BytecodePos > uint16(frame.PC) {
-// 		break
-// 	} else if entry.BytecodePos == uint16(frame.PC) {
-// 		prev = entry.SourceLine
-// 		break
-// 	} else {
-// 		prev = entry.SourceLine
-// 	}
-// }
-// sourceLineNumber = fmt.Sprintf("%d", prev)
-// addField("sourceLine", sourceLineNumber)
+// the following four lines are all needed for the call to Sort()
+type b2sTable []BytecodeToSourceLine
 
-// build the table of line numbers (that map bytecode location to source line #)
-// consult https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.12
-// func buildLineNumberTable(codeAttr *codeAttrib, thisAttr *attr, methodName string) {
-// 	entryCount := uint(thisAttr.attrContent[0])*256 + uint(thisAttr.attrContent[1])
-// 	loc := 2 // we're two bytes into the attr.Content byte array
-// 	if entryCount < 1 {
-// 		(*codeAttr).sourceLineTable = nil
-// 		return
-// 	}
-//
-// 	var table []BytecodeToSourceLine
-// 	if (*codeAttr).sourceLineTable != nil { // we could be adding to the table
-// 		table = []BytecodeToSourceLine{}
-// 		(*codeAttr).sourceLineTable = &table
-// 	}
-// 	var i uint
-// 	for i = 0; i < entryCount; i++ {
-// 		bytecodeNumber := uint16(thisAttr.attrContent[loc])*256 + uint16(thisAttr.attrContent[loc+1])
-// 		sourceLineNumber := uint16(thisAttr.attrContent[loc+2])*256 + uint16(thisAttr.attrContent[loc+3])
-// 		loc += 4
-//
-// 		tableEntry := BytecodeToSourceLine{bytecodeNumber, sourceLineNumber}
-// 		table = append(table, tableEntry)
-// 	}
-//
-// 	// now sort the table
-// 	if len(table) > 1 {
-// 		sort.Sort(b2sTable(table))
-// 	}
-//
-// 	(*codeAttr).sourceLineTable = &table
-//
-// 	// if methodName == "main" {
-// 	// 	fmt.Fprintf(os.Stderr, "%v\n", table)
-// 	// }
-// }
-//
-// // the following four lines are all needed for the call to Sort()
-// type b2sTable []BytecodeToSourceLine
-//
-// func (t b2sTable) Len() int           { return len(t) }
-// func (t b2sTable) Swap(k, j int)      { (t)[k], (t)[j] = (t)[j], (t)[k] }
-// func (t b2sTable) Less(k, j int) bool { return (t)[k].BytecodePos < (t)[j].BytecodePos }
-//
-// // BytecodeToSourceLine maps the PC in a method to the
-// // corresponding source line in the original source file.
-// // This data is captured in the method's attributes
-// type BytecodeToSourceLine struct {
-// 	BytecodePos uint16
-// 	SourceLine  uint16
-// }
+func (t b2sTable) Len() int           { return len(t) }
+func (t b2sTable) Swap(k, j int)      { (t)[k], (t)[j] = (t)[j], (t)[k] }
+func (t b2sTable) Less(k, j int) bool { return (t)[k].BytecodePos < (t)[j].BytecodePos }
+
+// BytecodeToSourceLine maps the PC in a method to the
+// corresponding source line in the original source file.
+type BytecodeToSourceLine struct {
+	BytecodePos uint16
+	SourceLine  uint16
+}
