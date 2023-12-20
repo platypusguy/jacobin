@@ -15,6 +15,7 @@ import (
 	"jacobin/statics"
 	"jacobin/types"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -106,5 +107,44 @@ func TestInstantiateNonExistentClass(t *testing.T) {
 
 	if myobj != nil {
 		t.Errorf("Expected nil object, got %v", myobj)
+	}
+}
+
+func TestLoadClassWithEmptyStringAsName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr, to avoid all the error msgs for a non-existent class
+	normalStderr := os.Stderr
+	_, werr, err := os.Pipe()
+	os.Stderr = werr
+
+	classloader.InitMethodArea()
+
+	// initialize the MTable and other class entries
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	// Init classloader and load base classes
+	err = classloader.Init() // must precede classloader.LoadBaseClasses
+	if err != nil {
+		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
+	gfunction.MTableLoadNatives(&classloader.MTable)
+	statics.StaticsPreload()
+
+	err = loadThisClass("")
+
+	// restore stderr
+	_ = werr.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+		t.Errorf("Expected error message for class with no nsmr, but got none")
+	}
+
+	if !strings.Contains(err.Error(), "Failed to load class") {
+		t.Errorf("Got the wrong error message: %s", err.Error())
 	}
 }
