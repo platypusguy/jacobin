@@ -61,6 +61,15 @@ func MethAreaSize() int {
 	return size
 }
 
+// this function deletes an entry in the method area
+// at present, it is used only in testing
+func MethAreadDelete(key string) {
+	MethAreaMutex.Lock()
+	MethArea.Delete(key)
+	methAreaSize--
+	MethAreaMutex.Unlock()
+}
+
 // Wait for klass.Status to no longer be "I"
 // TODO: must be a better way to do this!
 func WaitForClassStatus(className string) error {

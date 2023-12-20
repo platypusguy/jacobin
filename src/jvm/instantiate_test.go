@@ -110,6 +110,53 @@ func TestInstantiateNonExistentClass(t *testing.T) {
 	}
 }
 
+func TestLoadValidClass(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr, to avoid all the error msgs for a non-existent class
+	normalStderr := os.Stderr
+	_, werr, err := os.Pipe()
+	os.Stderr = werr
+
+	classloader.InitMethodArea()
+
+	// initialize the MTable and other class entries
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	// Init classloader and load base classes
+	err = classloader.Init() // must precede classloader.LoadBaseClasses
+	if err != nil {
+		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
+
+	// we'll check that the class is loaded, then delete it, then load it and check again
+
+	class := classloader.MethAreaFetch("java/lang/Integer")
+	if class == nil {
+		t.Errorf("Expected java.lang.Integer to be loaded in method area, but it wasn't")
+	}
+
+	classloader.MethAreadDelete("java/lang/Integer")
+	class = classloader.MethAreaFetch("java/lang/Integer")
+	if class != nil {
+		t.Errorf("Expected java.lang.Integer to be absent from method area, but it wasn't")
+	}
+
+	// now load the class
+	loadThisClass("java/lang/Integer")
+	class = classloader.MethAreaFetch("java/lang/Integer")
+	if class == nil {
+		t.Errorf("Expected java.lang.Integer to be loaded in method area, but it wasn't")
+	}
+
+	// restore stderr
+	_ = werr.Close()
+	os.Stderr = normalStderr
+}
+
 func TestLoadClassWithEmptyStringAsName(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
