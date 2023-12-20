@@ -41,16 +41,15 @@ type MData interface{}
 
 // JmEntry is the entry in the Mtable for Java methods.
 type JmEntry struct {
-	AccessFlags       int
-	MaxStack          int
-	MaxLocals         int
-	Code              []byte
-	Exceptions        []CodeException
-	Attribs           []Attr
-	params            []ParamAttrib
-	deprecated        bool
-	Cp                *CPool
-	BytecodeSourceMap []BytecodeToSourceLine
+	AccessFlags int
+	MaxStack    int
+	MaxLocals   int
+	Code        []byte
+	Exceptions  []CodeException
+	Attribs     []Attr
+	params      []ParamAttrib
+	deprecated  bool
+	Cp          *CPool
 }
 
 // Function is the generic-style function used for Go entries: a function that accepts a

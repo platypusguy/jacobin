@@ -269,16 +269,15 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// lookup in the MTable (as all native methods are loaded there before
 		// program execution begins.
 		jme := JmEntry{
-			AccessFlags:       m.AccessFlags,
-			MaxStack:          m.CodeAttr.MaxStack,
-			MaxLocals:         m.CodeAttr.MaxLocals,
-			Code:              m.CodeAttr.Code,
-			Exceptions:        m.CodeAttr.Exceptions,
-			Attribs:           m.CodeAttr.Attributes,
-			params:            m.Parameters,
-			deprecated:        m.Deprecated,
-			Cp:                &k.Data.CP,
-			BytecodeSourceMap: m.CodeAttr.BytecodeSourceMap,
+			AccessFlags: m.AccessFlags,
+			MaxStack:    m.CodeAttr.MaxStack,
+			MaxLocals:   m.CodeAttr.MaxLocals,
+			Code:        m.CodeAttr.Code,
+			Exceptions:  m.CodeAttr.Exceptions,
+			Attribs:     m.CodeAttr.Attributes,
+			params:      m.Parameters,
+			deprecated:  m.Deprecated,
+			Cp:          &k.Data.CP,
 		}
 		MTable[methFQN] = MTentry{
 			Meth:  jme,
