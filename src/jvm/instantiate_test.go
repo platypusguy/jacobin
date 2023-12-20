@@ -14,6 +14,7 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"os"
 	"testing"
 )
 
@@ -65,5 +66,45 @@ func TestInstantiateString1(t *testing.T) {
 
 	if len(obj.Fields) < 5 {
 		t.Errorf("Expected more than 4 fielsd in String object, got %d fields", len(obj.Fields))
+	}
+}
+
+func TestInstantiateNonExistentClass(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// redirect stderr, to avoid all the error msgs for a non-existent class
+	normalStderr := os.Stderr
+	_, werr, err := os.Pipe()
+
+	os.Stderr = werr
+
+	classloader.InitMethodArea()
+
+	// initialize the MTable and other class entries
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	// Init classloader and load base classes
+	err = classloader.Init() // must precede classloader.LoadBaseClasses
+	if err != nil {
+		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
+	gfunction.MTableLoadNatives(&classloader.MTable)
+	statics.StaticsPreload()
+
+	myobj, err := InstantiateClass("$nosuchclass", nil)
+
+	// restore stderr
+	_ = werr.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+		t.Errorf("Expected error message for nonexistent class, but got none")
+	}
+
+	if myobj != nil {
+		t.Errorf("Expected nil object, got %v", myobj)
 	}
 }
