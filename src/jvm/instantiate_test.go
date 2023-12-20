@@ -8,9 +8,11 @@ package jvm
 
 import (
 	"jacobin/classloader"
+	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/statics"
 	"jacobin/types"
 	"testing"
 )
@@ -30,5 +32,38 @@ func TestInstantiateArray(t *testing.T) {
 	obj := anything.(*object.Object)
 	if len(obj.Fields) != 0 {
 		t.Errorf("Expected 0 fields in array class, got %d fields", len(obj.Fields))
+	}
+}
+
+func TestInstantiateString1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+	classloader.InitMethodArea()
+
+	// initialize the MTable and other class entries
+	classloader.MTable = make(map[string]classloader.MTentry)
+
+	// Init classloader and load base classes
+	err := classloader.Init() // must precede classloader.LoadBaseClasses
+	if err != nil {
+		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
+	}
+	classloader.LoadBaseClasses()
+	gfunction.MTableLoadNatives(&classloader.MTable)
+	statics.StaticsPreload()
+
+	myobj, err := InstantiateClass("java/lang/String", nil)
+	if err != nil {
+		t.Errorf("Got unexpected error from instantiating string: %s", err.Error())
+	}
+
+	obj := myobj.(*object.Object)
+	if *obj.Klass != "java/lang/String" {
+		t.Errorf("Expected 'java/lang/String', got %s", *obj.Klass)
+	}
+
+	if len(obj.Fields) < 5 {
+		t.Errorf("Expected more than 4 fielsd in String object, got %d fields", len(obj.Fields))
 	}
 }
