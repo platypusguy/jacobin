@@ -49,3 +49,19 @@ func TestMTableLoadLib(t *testing.T) {
 		t.Errorf("Expecting MTable entry's NeedContext to be false")
 	}
 }
+
+// test loading of native functions
+
+func TestMTableLoadNatives(t *testing.T) {
+	classloader.MTable = make(map[string]classloader.MTentry)
+	MTableLoadNatives(&classloader.MTable)
+	mte, exists := classloader.MTable["java/lang/Object.<init>()V"]
+	if !exists {
+		t.Errorf("Expecting MTable entry for java/lang/Object.<init>()V, but it does not exist")
+	}
+
+	if mte.MType != 'G' {
+		t.Errorf("Expecting java/lang/Object.<init>()V to be of type 'G', but got type: %c",
+			mte.MType)
+	}
+}
