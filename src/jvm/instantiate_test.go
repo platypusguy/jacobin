@@ -52,8 +52,6 @@ func TestInstantiateString1(t *testing.T) {
 		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
 	}
 	classloader.LoadBaseClasses()
-	gfunction.MTableLoadNatives(&classloader.MTable)
-	statics.StaticsPreload()
 
 	myobj, err := InstantiateClass("java/lang/String", nil)
 	if err != nil {
@@ -178,8 +176,6 @@ func TestLoadClassWithEmptyStringAsName(t *testing.T) {
 		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
 	}
 	classloader.LoadBaseClasses()
-	gfunction.MTableLoadNatives(&classloader.MTable)
-	statics.StaticsPreload()
 
 	err = loadThisClass("")
 
