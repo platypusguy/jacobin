@@ -11,24 +11,6 @@ import (
 	"testing"
 )
 
-func TestMTableAdd(t *testing.T) {
-	mtbl := make(classloader.MT)
-	classloader.AddEntry(&mtbl, "test1", classloader.MTentry{
-		Meth:  nil,
-		MType: 'G',
-	})
-
-	if len(mtbl) != 1 {
-		t.Errorf("Expecting MTable size of 1, got: %d", len(mtbl))
-	}
-
-	if mtbl["test1"].MType != 'G' {
-		t.Errorf("Expecting fetch of a 'G' MTable rec, but got type: %c",
-			mtbl["test1"].MType)
-	}
-
-}
-
 func TestMTableLoadLib(t *testing.T) {
 	libMeths := make(map[string]GMeth)
 	libMeths["testG1"] = GMeth{ParamSlots: 1, GFunction: nil}
@@ -63,5 +45,13 @@ func TestMTableLoadNatives(t *testing.T) {
 	if mte.MType != 'G' {
 		t.Errorf("Expecting java/lang/Object.<init>()V to be of type 'G', but got type: %c",
 			mte.MType)
+	}
+}
+
+// make sure that JustReturn in fact does nothing
+func TestJustReturn(t *testing.T) {
+	retVal := justReturn(nil)
+	if retVal != nil {
+		t.Errorf("Expecting nil return value, got: %v", retVal)
 	}
 }
