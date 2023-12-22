@@ -95,6 +95,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	err = runThread(&MainThread)
 	if err != nil {
+		statics.DumpStatics()
 		return err
 	}
 
