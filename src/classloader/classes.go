@@ -279,18 +279,20 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			deprecated:  m.Deprecated,
 			Cp:          &k.Data.CP,
 		}
-		MTable[methFQN] = MTentry{
-			Meth:  jme,
-			MType: 'J',
-		}
-		return MTentry{Meth: jme, MType: 'J'}, nil
+
+		// add the method to the MTable and return it
+		methodEntry := MTentry{Meth: jme, MType: 'J'}
+		AddEntry(&MTable, methFQN, methodEntry)
+		return methodEntry, nil
 	}
 
-	// if we're here, the className did not contain the searched-for method. So, go up the superclasses,
+	// if we're here, the className did not contain the searched-for method. So, go up the superclasses, (TODO)
 	// except if we're searching for main(), in which case, we don't go up the list of superclasses
-	if methName == "main" { // to be consistent with the JDK, we print this peculiar error message when main() is missing
+	if methName == "main" {
 		noMainError(origClassName)
-		// break
+		// even though noMainError() exits, in testing the exit is disabled,
+		// so we add this return statement to test for correct operation
+		return MTentry{}, errors.New("main() not found")
 	}
 
 	// if we got this far, something went wrong with locating the method
@@ -298,18 +300,21 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	return MTentry{}, errors.New(msg)
 }
 
-// error message when main() can't be found
+// error message when main() can't be found. Syntax mirrors OpenJDK HotSpot
 func noMainError(className string) {
-	_ = log.Log("Error: main() method not found in class "+className+"\n"+
+	errMsg := fmt.Sprintf("Error: main() method not found in class %s\n"+
 		"Please define the main method as:\n"+
-		"   public static void main(String[] args)", log.SEVERE)
+		"   public static void main(String[] args)", className)
+	_ = log.Log(errMsg, log.SEVERE)
+	shutdown.Exit(shutdown.APP_EXCEPTION)
 }
 
 // FetchUTF8stringFromCPEntryNumber fetches the UTF8 string using the CP entry number
 // for that string in the designated ClData.CP. Returns "" on error.
 func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
-		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)", entry, uint16(len(cp.CpIndex)))
+		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)",
+			entry, uint16(len(cp.CpIndex)))
 		_ = log.Log(errMsg, log.SEVERE)
 		return ""
 	}
