@@ -16,6 +16,7 @@ import (
 
 func TestMethAreadDelete(t *testing.T) {
 	MethArea = &sync.Map{}
+	methAreaSize = 0
 	currLen := MethAreaSize()
 	if currLen != 0 {
 		t.Errorf("Expecting MethArea size of 0, got: %d", currLen)
@@ -30,22 +31,24 @@ func TestMethAreadDelete(t *testing.T) {
 	k.Data.Superclass = "java/lang/Object"
 	k.Loader = "testloader"
 	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
+	MethAreaInsert("TestEntry1", &k)
+	MethAreaInsert("TestEntry2", &k)
 	currLen = MethAreaSize()
-	if MethAreaSize() != 1 {
-		t.Errorf("Expecting MethArea size of 1, got: %d", currLen)
+	if MethAreaSize() != 2 {
+		t.Errorf("Expecting MethArea size of 2, got: %d", currLen)
 	}
 
-	MethAreaDelete("TestEntry")
+	MethAreaDelete("TestEntry1")
 	newLen := MethAreaSize()
-	if newLen != 0 {
-		t.Errorf("Expected post-deletion MethArea[] to have length of 0, got: %d",
+	if newLen != 1 {
+		t.Errorf("Expected post-deletion MethArea[] to have length of 1, got: %d",
 			newLen)
 	}
 }
 
 func TestMethAreadDeleteNonExistentEntry(t *testing.T) {
 	MethArea = &sync.Map{}
+	methAreaSize = 0
 	currLen := MethAreaSize()
 	if currLen != 0 {
 		t.Errorf("Expecting MethArea size of 0, got: %d", currLen)
