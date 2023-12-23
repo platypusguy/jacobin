@@ -49,9 +49,19 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 				elements = append(elements, '[')
 				i += 1
 			}
-			// i is now pointing to the primitive in the array
+			// i is now pointing to the type-character of the array
 			elements = append(elements, paramChars[i])
 			params = append(params, string(elements))
+			if paramChars[i] == 'L' {
+				for j := i + 1; j < len(paramChars); j++ {
+					if paramChars[j] != ';' { // the end of the link is a ;
+						continue
+					} else {
+						i = j // j now points to the ;, continue will add 1
+						break
+					}
+				}
+			}
 		}
 	}
 	return params

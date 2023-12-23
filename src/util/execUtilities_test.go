@@ -7,6 +7,7 @@
 package util
 
 import (
+	"fmt"
 	"jacobin/types"
 	"testing"
 )
@@ -42,14 +43,40 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
 // test that pointer/reference in the params is handled correctly
 // especially, that references (start with L and with ;) are correctly
 // parsed and represented in the output
-func TestParseIncomingReferenceParamsFromMethType(t *testing.T) {
-	res := ParseIncomingParamsFromMethTypeString("(LString;Ljava/lang/Integer;JJ)")
-	if len(res) != 4 { // short, byte and int all become 'I'
-		t.Errorf("Expected 4 parsed parameters, got %d", len(res))
+
+// Parameter-driven checker
+func checker(t *testing.T, methType string, expCount int, expString string) {
+	res := ParseIncomingParamsFromMethTypeString(methType)
+	if len(res) != expCount { // short, byte and int all become 'I'
+		t.Errorf("Expected %d parsed parameters, got %d", expCount, len(res))
+		for ii := 0; ii < len(res); ii++ {
+			fmt.Printf("Parameter %d: %v\n", ii, res[ii])
+		}
 	}
 
-	var params string = res[0] + res[1] + res[2] + res[3]
-	if params != "LLJJ" {
-		t.Errorf("Expected param string of 'LLJJ', got: %s", params)
+	var paramString string
+	for ii := 0; ii < len(res); ii++ {
+		paramString += res[ii]
 	}
+	if paramString != expString {
+		t.Errorf("Expected param string of '%s', got: %s", expString, paramString)
+	}
+}
+
+// Individual tests for ParseIncomingParamsFromMethTypeString
+
+func TestParseIncomingReferenceParamsFromMethType1(t *testing.T) {
+	checker(t, "(LString;Ljava/lang/Integer;JJ)V", 4, "LLJJ")
+}
+
+func TestParseIncomingReferenceParamsFromMethType2(t *testing.T) {
+	checker(t, "(Ljava/lang/String;Ljava/lang/String;)Ljava/nio/file/Path;", 2, "LL")
+}
+
+func TestParseIncomingReferenceParamsFromMethType3(t *testing.T) {
+	checker(t, "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;", 2, "L[L")
+}
+
+func TestParseIncomingReferenceParamsFromMethType4(t *testing.T) {
+	checker(t, "([Ljava/lang/String;)V", 1, "[L")
 }
