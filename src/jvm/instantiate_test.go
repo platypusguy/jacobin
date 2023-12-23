@@ -137,7 +137,7 @@ func TestLoadValidClass(t *testing.T) {
 		t.Errorf("Expected java.lang.Integer to be loaded in method area, but it wasn't")
 	}
 
-	classloader.MethAreadDelete("java/lang/Integer")
+	classloader.MethAreaDelete("java/lang/Integer")
 	class = classloader.MethAreaFetch("java/lang/Integer")
 	if class != nil {
 		t.Errorf("Expected java.lang.Integer to be absent from method area, but it wasn't")
