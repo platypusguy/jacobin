@@ -130,7 +130,6 @@ func TestMethAreadFetchNonExistentEntry(t *testing.T) {
 }
 
 func TestWaitFornNonExistentClass(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.CLASS)
@@ -155,6 +154,52 @@ func TestWaitFornNonExistentClass(t *testing.T) {
 
 	// fetching a non-entry should not cause an error, shiuld return nil
 	me := WaitForClassStatus("NoSuchEntry")
+	if me == nil {
+		t.Errorf("Expected error return from methArea.WaitForClassStatus(), got none")
+	}
+
+	if !strings.Contains(me.Error(), "Timeout waiting for class") {
+		t.Errorf("Expected different log message, got: %s", me)
+	}
+
+	// restore stderr
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+	if !strings.Contains(msg, "--> nil") {
+		t.Errorf("Expected different log message, got: %s", msg)
+	}
+}
+
+// class status 'i' means the class is presently being instantiated and to retry load of the class
+// this tests the failure of the rerty
+func TestWaitFornUnresolvedClassStatus(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.CLASS)
+
+	// redirect stderr to capture results from stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	MethArea = &sync.Map{}
+
+	k := Klass{
+		Status: 0,
+		Loader: "",
+		Data:   &ClData{},
+	}
+	k.Data.Name = "testClass1"
+	k.Data.Superclass = "java/lang/Object"
+	k.Loader = "testloader"
+	k.Status = 'I'
+	MethAreaInsert("TestEntry", &k)
+
+	// fetching a non-entry should not cause an error, shiuld return nil
+	me := WaitForClassStatus("testClass1")
 	if me == nil {
 		t.Errorf("Expected error return from methArea.WaitForClassStatus(), got none")
 	}
