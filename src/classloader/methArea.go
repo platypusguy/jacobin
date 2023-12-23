@@ -81,7 +81,7 @@ func WaitForClassStatus(className string) error {
 		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds
 		klass = MethAreaFetch(className)
 		if klass == nil {
-			msg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class {%s} to load", className)
+			msg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to load", className)
 			return errors.New(msg)
 		}
 	}
