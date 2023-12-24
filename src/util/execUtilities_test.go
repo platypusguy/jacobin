@@ -59,7 +59,7 @@ func checker(t *testing.T, methType string, expCount int, expString string) {
 		paramString += res[ii]
 	}
 	if paramString != expString {
-		t.Errorf("Expected param string of '%s', got: %s", expString, paramString)
+		t.Errorf("Expected param string of '%s', got: '%s'", expString, paramString)
 	}
 }
 
@@ -91,4 +91,32 @@ func TestParseIncomingReferenceParamsFromMethType6(t *testing.T) {
 
 func TestParseIncomingReferenceParamsFromMethType7(t *testing.T) {
 	checker(t, "(F[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[LJ[LD")
+}
+
+func TestParseIncomingReferenceParamsFromMethType8(t *testing.T) {
+	checker(t, "(F[[[[[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[[[[[LJ[LD")
+}
+
+func TestParseIncomingReferenceParamsFromMethType9(t *testing.T) {
+	checker(t, "(Labc)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType10(t *testing.T) {
+	checker(t, "([Labc)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType11(t *testing.T) {
+	checker(t, "([[[Labc)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType12(t *testing.T) {
+	checker(t, "([[[[)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType13(t *testing.T) {
+	checker(t, "([[[[I)V", 1, "[[[[I")
+}
+
+func TestParseIncomingReferenceParamsFromMethType14(t *testing.T) {
+	checker(t, "(JF[[[[[Ljava/lang/String;[[[J)V", 4, "JF[[[[[L[[[J")
 }
