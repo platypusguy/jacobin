@@ -80,3 +80,15 @@ func TestParseIncomingReferenceParamsFromMethType3(t *testing.T) {
 func TestParseIncomingReferenceParamsFromMethType4(t *testing.T) {
 	checker(t, "([Ljava/lang/String;)V", 1, "[L")
 }
+
+func TestParseIncomingReferenceParamsFromMethType5(t *testing.T) {
+	checker(t, "([Ljava/lang/String;JLjava/lang/String;)V", 3, "[LJL")
+}
+
+func TestParseIncomingReferenceParamsFromMethType6(t *testing.T) {
+	checker(t, "([Ljava/lang/String;J[Ljava/lang/String;)V", 3, "[LJ[L")
+}
+
+func TestParseIncomingReferenceParamsFromMethType7(t *testing.T) {
+	checker(t, "(F[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[LJ[LD")
+}
