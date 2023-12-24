@@ -212,9 +212,9 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			if methName == "main" {
 				// the starting className is always loaded, so if main() isn't found
 				// right away, just bail.
-
+				shutdown.Exit(shutdown.JVM_EXCEPTION)
 				noMainError(origClassName)
-				// noMainError() calls shutdown.Exit(). However, in test mode, shutdown.Eexit() doesn't exit,
+				// noMainError() calls shutdown.Exit(). However, in test mode, shutdown.Exit() doesn't exit,
 				// so the following error return is needed
 				return MTentry{}, errors.New("Error: main() method not found in class " + origClassName + "\n")
 			}
