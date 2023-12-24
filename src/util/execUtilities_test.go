@@ -45,10 +45,10 @@ func TestParseIncomingParamsFromMethType(t *testing.T) {
 // parsed and represented in the output
 
 // Parameter-driven checker
-func checker(t *testing.T, methType string, expCount int, expString string) {
+func checker(t *testing.T, caller int, methType string, expCount int, expString string) {
 	res := ParseIncomingParamsFromMethTypeString(methType)
 	if len(res) != expCount { // short, byte and int all become 'I'
-		t.Errorf("Expected %d parsed parameters, got %d", expCount, len(res))
+		t.Errorf("[%d] Expected %d parsed parameters, got %d", caller, expCount, len(res))
 		for ii := 0; ii < len(res); ii++ {
 			fmt.Printf("Parameter %d: %v\n", ii, res[ii])
 		}
@@ -59,64 +59,80 @@ func checker(t *testing.T, methType string, expCount int, expString string) {
 		paramString += res[ii]
 	}
 	if paramString != expString {
-		t.Errorf("Expected param string of '%s', got: '%s'", expString, paramString)
+		t.Errorf("[%d] Expected param string of '%s', got: '%s'", caller, expString, paramString)
 	}
 }
 
 // Individual tests for ParseIncomingParamsFromMethTypeString
 
 func TestParseIncomingReferenceParamsFromMethType1(t *testing.T) {
-	checker(t, "(LString;Ljava/lang/Integer;JJ)V", 4, "LLJJ")
+	checker(t, 1, "(LString;Ljava/lang/Integer;JJ)V", 4, "LLJJ")
 }
 
 func TestParseIncomingReferenceParamsFromMethType2(t *testing.T) {
-	checker(t, "(Ljava/lang/String;Ljava/lang/String;)Ljava/nio/file/Path;", 2, "LL")
+	checker(t, 2, "(Ljava/lang/String;Ljava/lang/String;)Ljava/nio/file/Path;", 2, "LL")
 }
 
 func TestParseIncomingReferenceParamsFromMethType3(t *testing.T) {
-	checker(t, "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;", 2, "L[L")
+	checker(t, 3, "(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;", 2, "L[L")
 }
 
 func TestParseIncomingReferenceParamsFromMethType4(t *testing.T) {
-	checker(t, "([Ljava/lang/String;)V", 1, "[L")
+	checker(t, 4, "([Ljava/lang/String;)V", 1, "[L")
 }
 
 func TestParseIncomingReferenceParamsFromMethType5(t *testing.T) {
-	checker(t, "([Ljava/lang/String;JLjava/lang/String;)V", 3, "[LJL")
+	checker(t, 5, "([Ljava/lang/String;JLjava/lang/String;)V", 3, "[LJL")
 }
 
 func TestParseIncomingReferenceParamsFromMethType6(t *testing.T) {
-	checker(t, "([Ljava/lang/String;J[Ljava/lang/String;)V", 3, "[LJ[L")
+	checker(t, 6, "([Ljava/lang/String;J[Ljava/lang/String;)V", 3, "[LJ[L")
 }
 
 func TestParseIncomingReferenceParamsFromMethType7(t *testing.T) {
-	checker(t, "(F[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[LJ[LD")
+	checker(t, 7, "(F[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[LJ[LD")
 }
 
 func TestParseIncomingReferenceParamsFromMethType8(t *testing.T) {
-	checker(t, "(F[[[[[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[[[[[LJ[LD")
+	checker(t, 8, "(F[[[[[Ljava/lang/String;J[Ljava/lang/String;D)V", 5, "F[[[[[LJ[LD")
 }
 
 func TestParseIncomingReferenceParamsFromMethType9(t *testing.T) {
-	checker(t, "(Labc)V", 0, "")
+	checker(t, 9, "(Labc)V", 0, "")
 }
 
 func TestParseIncomingReferenceParamsFromMethType10(t *testing.T) {
-	checker(t, "([Labc)V", 0, "")
+	checker(t, 10, "([Labc)V", 0, "")
 }
 
 func TestParseIncomingReferenceParamsFromMethType11(t *testing.T) {
-	checker(t, "([[[Labc)V", 0, "")
+	checker(t, 11, "([[[Labc)V", 0, "")
 }
 
 func TestParseIncomingReferenceParamsFromMethType12(t *testing.T) {
-	checker(t, "([[[[)V", 0, "")
+	checker(t, 12, "([[[[)V", 0, "")
 }
 
 func TestParseIncomingReferenceParamsFromMethType13(t *testing.T) {
-	checker(t, "([[[[I)V", 1, "[[[[I")
+	checker(t, 13, "([[[[I)V", 1, "[[[[I")
 }
 
 func TestParseIncomingReferenceParamsFromMethType14(t *testing.T) {
-	checker(t, "(JF[[[[[Ljava/lang/String;[[[J)V", 4, "JF[[[[[L[[[J")
+	checker(t, 14, "(JF[[[[[Ljava/lang/String;[[[J)V", 4, "JF[[[[[L[[[J")
+}
+
+func TestParseIncomingReferenceParamsFromMethType15(t *testing.T) {
+	checker(t, 15, "(JD[[[[[Ljava/lang/String;[[[J%)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType16(t *testing.T) {
+	checker(t, 16, "(JD[[I[[[Ljava/lang/String;[[[J)V", 5, "JD[[I[[[L[[[J")
+}
+
+func TestParseIncomingReferenceParamsFromMethType17(t *testing.T) {
+	checker(t, 17, "(JD[I[F[[[Ljava/lang/String;%[[[J)V", 0, "")
+}
+
+func TestParseIncomingReferenceParamsFromMethType18(t *testing.T) {
+	checker(t, 18, "(JD[I[F[[[Ljava/lang/String;[[[J)V", 6, "JD[I[F[[[L[[[J")
 }

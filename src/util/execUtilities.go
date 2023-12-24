@@ -89,6 +89,10 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 					return make([]string, 0)
 				}
 			}
+		default:
+			errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString default: illegal character '%c'", paramChars[i])
+			_ = log.Log(errMsg, log.SEVERE)
+			return make([]string, 0)
 		}
 	}
 	return params
