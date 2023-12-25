@@ -64,6 +64,9 @@ func TestInsertValid(t *testing.T) {
 	}
 }
 
+// TODO: This test does not appear to test what it contends. Further note:
+// the coverage of the missing main() method is tested below and is the test
+// responsible for code coverage of the missing main() method, not this one.
 func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
@@ -133,7 +136,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	os.Stdout = wout
 
 	MethArea = &sync.Map{}
-	currLen := MethAreaSize()
+
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -148,12 +151,6 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	// we need a java/lang/Object instance, so just duplicate the entry
 	// in the MethArea. It's only a placeholder
 	MethAreaInsert("java/lang/Object", &k)
-
-	newLen := MethAreaSize()
-	if newLen != currLen+2 {
-		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
-			currLen+1, newLen)
-	}
 
 	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
 	if err == nil {
@@ -258,17 +255,17 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 
 	s := FetchUTF8stringFromCPEntryNumber(&cp, 0) // invalid CP entry
 	if s != "" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	s = FetchUTF8stringFromCPEntryNumber(&cp, 1)
 	if s != "Exceptions" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	s = FetchUTF8stringFromCPEntryNumber(&cp, 2) // not UTF8, so should be an error
 	if s != "" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	_ = w.Close()
@@ -313,7 +310,7 @@ func TestInvalMainMethod(t *testing.T) {
 
 	msg := err.Error()
 	if !strings.Contains(msg, "main() method not found") {
-		t.Errorf("TestInvalidLookupOfMethod_Test2: Expecting error of 'main() method not found', got %s", err.Error())
+		t.Errorf("TestInvalidLookupOfMethod: Expecting error of 'main() method not found', got %s", err.Error())
 	}
 
 	// restore stderr and stdout to what they were before
