@@ -277,3 +277,46 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 }
+
+func TestInvalMainMethod(t *testing.T) {
+	// Testing the changes made as a result of JACOBIN-103
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINE)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	MethArea = &sync.Map{}
+	k := Klass{
+		Status: 0,
+		Loader: "",
+		Data:   &ClData{},
+	}
+	k.Data.Name = "testClass"
+	k.Data.Superclass = "java/lang/Object"
+	k.Loader = "testloader"
+	k.Status = 'F'
+	MethAreaInsert("TestEntry", &k)
+
+	// we need a java/lang/Object instance, so just duplicate the entry
+	// in the MethArea. It's only a placeholder
+	MethAreaInsert("java/lang/Object", &k)
+
+	// fetch a non-existent main() method
+	_, err := FetchMethodAndCP("java/lan/Object", "main", "([LString;)V")
+	if err == nil {
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main(), but got none")
+	}
+
+	msg := err.Error()
+	if !strings.Contains(msg, "main() method not found") {
+		t.Errorf("TestInvalidLookupOfMethod_Test2: Expecting error of 'main() method not found', got %s", err.Error())
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
