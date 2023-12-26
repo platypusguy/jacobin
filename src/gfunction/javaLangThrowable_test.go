@@ -7,7 +7,10 @@
 package gfunction
 
 import (
+	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/statics"
+	"strings"
 	"testing"
 )
 
@@ -29,5 +32,26 @@ func TestJavaLangThrowableClinit(t *testing.T) {
 	if !ok {
 		t.Error("Throwable.EMPTY_THROWABLE_ARRAY not found")
 	}
+}
 
+func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.SEVERE)
+
+	params := []interface{}{1}
+	err := fillInStackTrace(params)
+
+	var retVal error
+	switch err.(type) {
+	case error:
+		retVal = err.(error)
+	default:
+		t.Error("JavaLangThrowableFillInStack should have returned an error, but did not")
+	}
+
+	errMsg := retVal.Error()
+	if !strings.HasPrefix(errMsg, "fillInStackTrace() expected two parameters") {
+		t.Errorf("did not get expected error message, got: %s", errMsg)
+	}
 }

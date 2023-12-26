@@ -150,22 +150,22 @@ func Println(params []interface{}) interface{} {
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
-func PrintlnV(i []interface{}) interface{} {
+func PrintlnV([]interface{}) interface{} {
 	fmt.Println("")
 	return nil
 }
 
 // PrintlnI = java/io/Prinstream.println(int)
-func PrintlnI(i []interface{}) interface{} {
-	intToPrint := i[1].(int64) // contains an int
+func PrintlnI(params []interface{}) interface{} {
+	intToPrint := params[1].(int64) // contains an int
 	fmt.Println(intToPrint)
 	return nil
 }
 
 // PrintlnBoolean = java/io/Prinstream.println(boolean)
-func PrintlnBoolean(i []interface{}) interface{} {
+func PrintlnBoolean(params []interface{}) interface{} {
 	var boolToPrint bool
-	boolAsInt64 := i[1].(int64) // contains an int64
+	boolAsInt64 := params[1].(int64) // contains an int64
 	if boolAsInt64 > 0 {
 		boolToPrint = true
 	} else {
@@ -177,16 +177,16 @@ func PrintlnBoolean(i []interface{}) interface{} {
 
 // PrintlnLong = java/io/Prinstream.println(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
-func PrintlnLong(l []interface{}) interface{} {
-	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+func PrintlnLong(params []interface{}) interface{} {
+	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
 	fmt.Println(longToPrint)
 	return nil
 }
 
 // PrintlnDouble = java/io/Prinstream.println(double)
 // Doubles in Java are 64-bit FP. Like Hotspot, we print at least one decimal place of data.
-func PrintlnDouble(l []interface{}) interface{} {
-	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+func PrintlnDouble(params []interface{}) interface{} {
+	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Printf(formatDouble(doubleToPrint)+"\n", doubleToPrint)
 	return nil
 }
@@ -200,16 +200,16 @@ func PrintlnObject(params []interface{}) interface{} {
 }
 
 // PrintI = java/io/Prinstream.print(int)
-func PrintI(i []interface{}) interface{} {
-	intToPrint := i[1].(int64) // contains an int
+func PrintI(params []interface{}) interface{} {
+	intToPrint := params[1].(int64) // contains an int
 	fmt.Print(intToPrint)
 	return nil
 }
 
 // PrintBoolean = java/io/Prinstream.print(boolean)
-func PrintBoolean(i []interface{}) interface{} {
+func PrintBoolean(params []interface{}) interface{} {
 	var boolToPrint bool
-	boolAsInt64 := i[1].(int64) // contains an int64
+	boolAsInt64 := params[1].(int64) // contains an int64
 	if boolAsInt64 > 0 {
 		boolToPrint = true
 	} else {
@@ -221,24 +221,24 @@ func PrintBoolean(i []interface{}) interface{} {
 
 // PrintLong = java/io/Prinstream.print(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
-func PrintLong(l []interface{}) interface{} {
-	longToPrint := l[1].(int64) // contains to an int64--the equivalent of a Java long
+func PrintLong(params []interface{}) interface{} {
+	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
 	fmt.Print(longToPrint)
 	return nil
 }
 
 // Printfloat = java/io/Prinstream.print(float)
 // Doubles in Java are 64-bit FP
-func PrintFloat(l []interface{}) interface{} {
-	floatToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+func PrintFloat(params []interface{}) interface{} {
+	floatToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Printf(formatDouble(floatToPrint), floatToPrint)
 	return nil
 }
 
 // PrintDouble = java/io/Prinstream.print(double)
 // Doubles in Java are 64-bit FP
-func PrintDouble(l []interface{}) interface{} {
-	doubleToPrint := l[1].(float64) // contains to a float64--the equivalent of a Java double
+func PrintDouble(params []interface{}) interface{} {
+	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Printf(formatDouble(doubleToPrint), doubleToPrint)
 	return nil
 }
@@ -259,7 +259,7 @@ func PrintS(params []interface{}) interface{} {
 			fmt.Print(string(*baPtr))
 		}
 	default:
-		fmt.Printf("*** PrintS: Oops, cannot process type %T\n", strAddr.Fields[0].Fvalue)
+		fmt.Printf("*** PrintS: cannot process type %T\n", strAddr.Fields[0].Fvalue)
 	}
 	return nil
 }
