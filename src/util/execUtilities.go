@@ -6,7 +6,11 @@
 
 package util
 
-import "jacobin/types"
+import (
+	"fmt"
+	"jacobin/log"
+	"jacobin/types"
+)
 
 // ParseIncomingParamsFromMethTypeString takes a type string from a CP
 // and parses its passed-in parameters, returning them in reduced form
@@ -19,6 +23,7 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 	}
 
 	paramChars := []byte(s)
+	paramLen := len(paramChars)
 	for i := 0; i < len(paramChars); i++ {
 		switch paramChars[i] {
 		case '(':
@@ -35,7 +40,8 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 			params = append(params, types.Double)
 		case 'L':
 			params = append(params, types.Ref)
-			for j := i + 1; j < len(paramChars); j++ {
+			var j int
+			for j = i + 1; j < paramLen; j++ {
 				if paramChars[j] != ';' { // the end of the link is a ;
 					continue
 				} else {
@@ -43,15 +49,50 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 					break
 				}
 			}
+			if j >= paramLen {
+				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case 'L': failed to find final ';'")
+				_ = log.Log(errMsg, log.SEVERE)
+				return make([]string, 0)
+			}
 		case '[': // arrays
 			elements := make([]byte, 0)
-			for paramChars[i] == '[' {
+			for paramChars[i] == '[' && i < paramLen {
 				elements = append(elements, '[')
 				i += 1
 			}
-			// i is now pointing to the primitive in the array
+			if i >= paramLen {
+				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': unending '[' repetitions")
+				_ = log.Log(errMsg, log.SEVERE)
+				return make([]string, 0)
+			}
+			if paramChars[i] == ')' {
+				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': no array type specified")
+				_ = log.Log(errMsg, log.SEVERE)
+				return make([]string, 0)
+			}
+			// i is now pointing to the type-character of the array
 			elements = append(elements, paramChars[i])
 			params = append(params, string(elements))
+			if paramChars[i] == 'L' {
+				var j int
+				for j = i + 1; j < paramLen; j++ {
+					if paramChars[j] != ';' { // the end of the link is a ;
+						continue
+					} else {
+						i = j // j now points to the ;, continue will add 1
+						break
+					}
+				}
+				if j >= paramLen {
+					errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': failed to find final ';'")
+					_ = log.Log(errMsg, log.SEVERE)
+					return make([]string, 0)
+				}
+			}
+		default:
+			errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString default: illegal character '%c'", paramChars[i])
+			_ = log.Log(errMsg, log.SEVERE)
+			return make([]string, 0)
 		}
 	}
 	return params

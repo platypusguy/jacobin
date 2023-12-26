@@ -95,6 +95,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	err = runThread(&MainThread)
 	if err != nil {
+		statics.DumpStatics()
 		return err
 	}
 
@@ -117,6 +118,7 @@ func runThread(t *thread.ExecThread) error {
 			exceptions.ShowPanicCause(r)
 			exceptions.ShowFrameStack(t)
 			exceptions.ShowGoStackTrace(nil)
+			statics.DumpStatics()
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
@@ -2717,7 +2719,7 @@ func runFrame(fs *list.List) error {
 func logTraceStack(f *frames.Frame) {
 	var traceInfo, output string
 	if f.TOS == -1 {
-		traceInfo = fmt.Sprintf("%55s stack <empty>", "")
+		traceInfo = fmt.Sprintf("%55s %s.%s stack <empty>", "", f.ClName, f.MethName)
 		_ = log.Log(traceInfo, log.WARNING)
 		return
 	}
@@ -2739,9 +2741,9 @@ func logTraceStack(f *frames.Frame) {
 			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
 		}
 		if f.TOS == ii {
-			traceInfo = fmt.Sprintf("%55s TOS   [%d] %s", "", ii, output)
+			traceInfo = fmt.Sprintf("%55s %s.%s TOS   [%d] %s", "", f.ClName, f.MethName, ii, output)
 		} else {
-			traceInfo = fmt.Sprintf("%55s stack [%d] %s", "", ii, output)
+			traceInfo = fmt.Sprintf("%55s %s.%s stack [%d] %s", "", f.ClName, f.MethName, ii, output)
 		}
 		_ = log.Log(traceInfo, log.WARNING)
 	}

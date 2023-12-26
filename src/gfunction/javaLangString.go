@@ -319,7 +319,7 @@ func newStringFromBytes(params []interface{}) interface{} {
 
 	// Fetch a pointer to the raw slice of bytes from params[0].
 	// Convert the raw slice of bytes to a Go string.
-	wholeString := getGoString(params[0])
+	wholeString := getGoString(params[1])
 
 	// Convert the Go string to a compact string object, usable by Java. Return to caller.
 	obj := object.CreateCompactStringFromGoString(&wholeString)
@@ -338,11 +338,11 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 
 	// Fetch a pointer to the raw slice of bytes from params[0].
 	// Convert the raw slice of bytes to a Go string.
-	wholeString := getGoString(params[0])
+	wholeString := getGoString(params[1])
 
 	// Get substring offset and length
-	ssOffset := params[1].(int64)
-	ssLength := params[2].(int64)
+	ssOffset := params[2].(int64)
+	ssLength := params[3].(int64)
 
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))

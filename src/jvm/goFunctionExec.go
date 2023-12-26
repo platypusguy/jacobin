@@ -127,7 +127,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 		push(gf, (*params)[j])
 	}
 
-	// Set the Go frame TOS = parent frame TOS.
+	// Set the Go frame TOS --> first parameter.
 	gf.TOS = len(gf.OpStack) - 1
 	if localDebugging || MainThread.Trace {
 		_ = log.Log("runGmethod G method OpStack:", log.WARNING)
