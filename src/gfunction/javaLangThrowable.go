@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"container/list"
+	"errors"
 	"fmt"
 	"jacobin/log"
 	"jacobin/object"
@@ -118,12 +119,12 @@ func throwableClinit([]interface{}) interface{} {
  *         pertaining to this throwable.
  */
 func fillInStackTrace(params []interface{}) interface{} {
-	// get our parameters vetted and ready for use, then call
-	// getOurStackTrace()
+	// get our parameters vetted and ready for use, then call getOurStackTrace()
 	if len(params) != 2 {
-		_ = log.Log(fmt.Sprintf("fillInsStackTrace() expected two parameterss, got: %d",
-			len(params)), log.SEVERE)
+		errMsg := fmt.Sprintf("fillInStackTrace() expected two parameters, got: %d", len(params))
+		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg) // needed only for testing b/c shutdown.Exit() doesn't exit in tests
 	}
 	frameStack := params[0].(*list.List)
 	objRef := params[1].(*object.Object)
