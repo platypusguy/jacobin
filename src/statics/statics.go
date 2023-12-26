@@ -22,8 +22,6 @@ import (
 // Statics are placed into this map only when they are first referenced and resolved.
 var Statics = make(map[string]Static)
 
-// var StaticsArray []Static
-
 // Static contains all the various items needed for a static variable or function.
 type Static struct {
 	Type string // see the possible returns in types/javatypes.go

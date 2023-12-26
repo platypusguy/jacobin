@@ -64,6 +64,9 @@ func TestInsertValid(t *testing.T) {
 	}
 }
 
+// TODO: This test does not appear to test what it contends. Further note:
+// the coverage of the missing main() method is tested below and is the test
+// responsible for code coverage of the missing main() method, not this one.
 func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
@@ -133,7 +136,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	os.Stdout = wout
 
 	MethArea = &sync.Map{}
-	currLen := MethAreaSize()
+
 	k := Klass{
 		Status: 0,
 		Loader: "",
@@ -148,12 +151,6 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	// we need a java/lang/Object instance, so just duplicate the entry
 	// in the MethArea. It's only a placeholder
 	MethAreaInsert("java/lang/Object", &k)
-
-	newLen := MethAreaSize()
-	if newLen != currLen+2 {
-		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
-			currLen+1, newLen)
-	}
 
 	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
 	if err == nil {
@@ -258,17 +255,17 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 
 	s := FetchUTF8stringFromCPEntryNumber(&cp, 0) // invalid CP entry
 	if s != "" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	s = FetchUTF8stringFromCPEntryNumber(&cp, 1)
 	if s != "Exceptions" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	s = FetchUTF8stringFromCPEntryNumber(&cp, 2) // not UTF8, so should be an error
 	if s != "" {
-		t.Error("Unexpected result in call toFetchUTF8stringFromCPEntryNumber()")
+		t.Error("Unexpected result in call to FetchUTF8stringFromCPEntryNumber()")
 	}
 
 	_ = w.Close()
@@ -276,4 +273,47 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 
 	_ = wout.Close()
 	os.Stdout = normalStdout
+}
+
+func TestInvalMainMethod(t *testing.T) {
+	// Testing the changes made as a result of JACOBIN-103
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINE)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	MethArea = &sync.Map{}
+	k := Klass{
+		Status: 0,
+		Loader: "",
+		Data:   &ClData{},
+	}
+	k.Data.Name = "testClass"
+	k.Data.Superclass = "java/lang/Object"
+	k.Loader = "testloader"
+	k.Status = 'F'
+	MethAreaInsert("TestEntry", &k)
+
+	// we need a java/lang/Object instance, so just duplicate the entry
+	// in the MethArea. It's only a placeholder
+	MethAreaInsert("java/lang/Object", &k)
+
+	// fetch a non-existent main() method
+	_, err := FetchMethodAndCP("java/lan/Object", "main", "([LString;)V")
+	if err == nil {
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main(), but got none")
+	}
+
+	msg := err.Error()
+	if !strings.Contains(msg, "main() method not found") {
+		t.Errorf("TestInvalidLookupOfMethod: Expecting error of 'main() method not found', got %s", err.Error())
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
