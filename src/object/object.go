@@ -14,7 +14,8 @@ import (
 	"unsafe"
 )
 
-var tracing = false
+var DEBUGGING = false
+var SLICING = "_SLICING_"
 
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
@@ -76,33 +77,31 @@ func IsNull(value any) bool {
 	return value == nil || value == Null
 }
 
-// Return a string representing the field type and value.
-// Input for all fields:
+// fmtHelper - Return a string representing the field type and value.
 //
-//	field: structure of field type and field value if not static.
+// Input fields:
+// * field: structure of field type and field value (if not static).
+// * className: statics fields abd debugging
+// * fieldName: Key to the jacobin statics table.
 //
-// Input for static fields:
-//
-//	fieldName: Key to the jacobin statics table.
-//	frameStack: Required for getStaticValue() if the field is static.
+// If fieldName == SLICING, then the field is from the Fields slice.
 func fmtHelper(field Field, className string, fieldName string) string {
 	ftype := field.Ftype
 	fvalue := field.Fvalue
-	if tracing {
+	if DEBUGGING {
 		fmt.Printf("DEBUG fmtHelper ftype=[%s], fvalue=[%v], className=[%s], fieldName=[%s]\n", ftype, fvalue, className, fieldName)
 	}
-	flagStatic := false
-	if strings.HasPrefix(ftype, types.Static) {
-		flagStatic = true
-		ftype = ftype[1:] // get rid of leading 'X'
-	}
-	if len(fieldName) < 1 && flagStatic {
-		return "<ERROR field name nil but field is static>"
-	}
 
+	// Static?
+	flagStatic := strings.HasPrefix(ftype, types.Static)
+
+	// Lookup field in statics table if not a slice and its static.
+	flagLookup := (fieldName != SLICING) && flagStatic
+
+	// Process Java String class reference.
 	if ftype == StringClassRef {
 		// Special handling for String.
-		if flagStatic {
+		if flagLookup {
 			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
 		} else {
 			if fvalue != nil {
@@ -126,12 +125,12 @@ func fmtHelper(field Field, className string, fieldName string) string {
 		}
 	}
 
+	// Process the other types.
 	switch ftype {
-
 	case types.Bool:
 		// Special handling for boolean.
-		if flagStatic {
-			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+		if flagLookup {
+			return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
 		} else {
 			// TODO: Why does FieldTable[key] pass an int64 YET Fields[index] passes a bool???
 			switch field.Fvalue.(type) {
@@ -151,11 +150,10 @@ func fmtHelper(field Field, className string, fieldName string) string {
 				return fmt.Sprintf("<ERROR Ftype=bool but unexpected Fvalue variable type: %T >", field.Fvalue)
 			}
 		}
-
 	case types.ByteArray:
 		// Special handling for non-String byte array.
-		if flagStatic {
-			return fmt.Sprintf("% x", statics.GetStaticValue(className, fieldName))
+		if flagLookup {
+			return fmt.Sprintf("% x [static]", statics.GetStaticValue(className, fieldName))
 		} else {
 			if field.Fvalue == nil {
 				return "<ERROR nil Fvalue>"
@@ -176,8 +174,8 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	}
 
 	// Default action for anything else.
-	if flagStatic {
-		return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+	if flagLookup {
+		return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
 	} else {
 		return fmt.Sprintf("%v", field.Fvalue)
 	}
@@ -216,14 +214,14 @@ func (objPtr *Object) FormatField(fieldName string) string {
 	}
 
 	// Empty FieldTable. fieldName supplied?
-	if len(fieldName) > 0 && tracing {
+	if len(fieldName) > 0 && DEBUGGING {
 		// fieldName supplied but FieldTable is empty.
 		title := fmt.Sprintf("DEBUG FormatField: fieldName=%s but FieldTable is empty", fieldName)
 		obj.DumpObject(title, 0)
 	}
 
 	// fieldName was not supplied. FieldTable populated?
-	if len(obj.FieldTable) > 0 && tracing {
+	if len(obj.FieldTable) > 0 && DEBUGGING {
 		title := "DEBUG FormatField: FieldTable nonempty but fieldName is a nil string"
 		obj.DumpObject(title, 0)
 	}
@@ -232,7 +230,7 @@ func (objPtr *Object) FormatField(fieldName string) string {
 	if len(obj.Fields) > 0 {
 		// Using [0] in the Fields slice
 		field := obj.Fields[0]
-		str := fmtHelper(field, klassString, "")
+		str := fmtHelper(field, klassString, SLICING)
 		if strings.HasPrefix(str, "<ERROR") {
 			obj.DumpObject(str, 0)
 		}
@@ -241,7 +239,7 @@ func (objPtr *Object) FormatField(fieldName string) string {
 	}
 
 	// Field table and field slice are both empty.
-	if tracing {
+	if DEBUGGING {
 		output = "<Field table and field slice are both empty>"
 		obj.DumpObject(output, 0)
 	}
@@ -306,7 +304,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
 		for _, fld := range obj.Fields {
-			str := fmtHelper(fld, klassString, "")
+			str := fmtHelper(fld, klassString, SLICING)
 			output += fmt.Sprintf("\t\tFld (%s) %s\n", fld.Ftype, str)
 		}
 	} else {
