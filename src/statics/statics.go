@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/types"
 	"runtime/debug"
+	"sort"
 	"sync"
 )
 
@@ -48,7 +49,9 @@ var staticsMutex = sync.RWMutex{}
 // AddStatic adds a static field to the Statics table using a mutex
 func AddStatic(name string, s Static) error {
 	if name == "" {
-		return errors.New("AddStatic: Attempting to add invalid static entry")
+		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
+		_ = log.Log(errMsg, log.SEVERE)
+		return errors.New(errMsg)
 	}
 	staticsMutex.RLock()
 	Statics[name] = s
@@ -121,8 +124,17 @@ func GetStaticValue(className string, fieldName string) any {
 
 func DumpStatics() {
 	fmt.Println("\n===== DumpStatics BEGIN")
-	for key, value := range Statics {
-		fmt.Printf("%s     %v\n", key, value)
+	// Create an array of keys.
+	keys := make([]string, 0, len(Statics))
+	for key := range Statics {
+		keys = append(keys, key)
+	}
+	// Sort the keys.
+	// All the upper case entries precede all the lower case entries.
+	sort.Strings(keys)
+	// In key sequence order, display the key and its value.
+	for _, key := range keys {
+		fmt.Printf("%s     %v\n", key, Statics[key])
 	}
 	fmt.Println("===== DumpStatics END")
 }
