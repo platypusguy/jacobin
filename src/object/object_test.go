@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestDumpObject1(t *testing.T) {
+func TestDumpObjectFieldTable(t *testing.T) {
 	t.Log("Test Object.FieldTable DumpObject processing")
 	obj := MakeEmptyObject()
 	klassType := filepath.FromSlash("java/lang/madeUpClass")
@@ -81,7 +81,7 @@ func TestDumpObject1(t *testing.T) {
 }
 
 // Test field slice toString processing
-func TestDumpObject2(t *testing.T) {
+func TestDumpObjectFieldSlice(t *testing.T) {
 	t.Log("Test Object.Fields slice DumpObject processing")
 	literal := "This is a compact string from a Go string"
 	csObj := CreateCompactStringFromGoString(&literal)
@@ -158,6 +158,13 @@ func TestDumpObject2(t *testing.T) {
 	}
 	obj.Fields[0] = myCharField
 	obj.DumpObject("C", 0)
+
+	myCharField = Field{
+		Ftype:  "XC",
+		Fvalue: 'D',
+	}
+	obj.Fields[0] = myCharField
+	obj.DumpObject("XC", 0)
 
 }
 
