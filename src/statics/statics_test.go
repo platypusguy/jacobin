@@ -39,9 +39,9 @@ func tCheckStatic(t *testing.T, className string, fieldName string, expValue any
 	switch expValue.(type) {
 	case bool:
 		if expValue.(bool) {
-			expValue = int64(1)
+			expValue = types.JavaBoolTrue
 		} else {
-			expValue = int64(0)
+			expValue = types.JavaBoolFalse
 		}
 	}
 	if expValue == retValue {
@@ -83,8 +83,6 @@ func TestStatics1(t *testing.T) {
 	// Omitted: [x
 	// Omitted: G
 	// Omitted: T to avoid a cycle (object >> statics >> object)
-	t.Log("Try a nil statics name. Expecting AddStatic to complain and return an error.")
-	tAddStatic(t, "", "rubbishType", "rubbishValue")
 
 	/**
 	Check statics values.
@@ -92,7 +90,7 @@ func TestStatics1(t *testing.T) {
 	tCheckStatic(t, "main", "$assertionsDisabled", int64(1))
 	tCheckStatic(t, "java/lang/String", "COMPACT_STRINGS", true)
 	tCheckStatic(t, "AlphaBetaGamma", "ONE", int64(0x31))
-	tCheckStatic(t, "AlphaBetaGamma", "QM", '?')
+	tCheckStatic(t, "AlphaBetaGamma", "QM", int64('?'))
 	tCheckStatic(t, "AlphaBetaGamma", "PI", float64(3.14159265))
 	tCheckStatic(t, "AlphaBetaGamma", "TEN", float64(10.0))
 	tCheckStatic(t, "AlphaBetaGamma", "D-ADAMS", int64(42))
@@ -112,6 +110,49 @@ func TestInvalidStaticAdd(t *testing.T) {
 	err := AddStatic("", Static{})
 	if !strings.Contains(err.Error(), "Attempting to add static entry with a nil name") {
 		t.Errorf("TestInvalidStaticAdd: got unexpected error message: %s\n", err.Error())
+	}
+}
+
+func TestIntConversions(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	Statics = make(map[string]Static)
+
+	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
+	err2 := AddStatic("test.2", Static{Type: types.Int, Value: int(42)})
+	err3 := AddStatic("test.3", Static{Type: types.Double, Value: 24.0})
+	if err1 != nil || err2 != nil || err3 != nil {
+		t.Errorf("TestIntConversions: got unexpected error adding statics for testing")
+	}
+
+	retValue1 := GetStaticValue("test", "1")
+	switch retValue1.(type) {
+	case int64:
+		if retValue1.(int64) != 'B' {
+			t.Errorf("TestIntConversions: Expected 'B' but observed %v\n", retValue1)
+		}
+	default:
+		t.Errorf("TestIntConversions: invalid type for test.1: %T\n", retValue1)
+	}
+
+	retValue2 := GetStaticValue("test", "2")
+	switch retValue1.(type) {
+	case int64:
+		if retValue2.(int64) != 42 {
+			t.Errorf("TestIntConversions: Expected 42 but observed %d\n", retValue2)
+		}
+	default:
+		t.Errorf("TestIntConversions: invalid type for test.2: %T\n", retValue2)
+	}
+
+	retValue3 := GetStaticValue("test", "3")
+	switch retValue3.(type) {
+	case float64:
+		if retValue3.(float64) != 24.0 {
+			t.Errorf("TestIntConversions: Expected 24.0 but observed %fv\n", retValue3)
+		}
+	default:
+		t.Errorf("TestIntConversions: invalid type for test.3: %T\n", retValue3)
 	}
 }
 
