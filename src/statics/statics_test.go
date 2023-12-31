@@ -5,6 +5,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"sync"
 	"testing"
 )
@@ -100,4 +101,31 @@ func TestStatics1(t *testing.T) {
 	tCheckStatic(t, "AlphaBetaGamma", "TRUE", true)
 	DumpStatics()
 
+}
+
+func TestStaticsPreload(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	Statics = make(map[string]Static)
+
+	StaticsPreload()
+	s1 := GetStaticValue("java/lang/String", "COMPACT_STRINGS")
+	switch s1.(type) {
+	case int64:
+		if s1.(int64) != types.JavaBoolTrue {
+			t.Errorf("testStaticsPreload: Expected COMPACT_STRINGS to be true but observed false\n")
+		}
+	default:
+		t.Errorf("testStaticsPreload: invalid value for java/lang/String.COMPACT_STRINGS")
+	}
+
+	s2 := GetStaticValue("main", "$assertionsDisabled")
+	switch s2.(type) {
+	case int64:
+		if s2.(int64) != types.JavaBoolTrue {
+			t.Errorf("testStaticsPreload: Expected main.$assertionsDisabled to be true but observed false\n")
+		}
+	default:
+		t.Errorf("testStaticsPreload: invalid value for main.$assertionsDisabled")
+	}
 }
