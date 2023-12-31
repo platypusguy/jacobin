@@ -6,6 +6,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/types"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -101,6 +102,17 @@ func TestStatics1(t *testing.T) {
 	tCheckStatic(t, "AlphaBetaGamma", "TRUE", true)
 	DumpStatics()
 
+}
+
+func TestInvalidStaticAdd(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	Statics = make(map[string]Static)
+
+	err := AddStatic("", Static{})
+	if !strings.Contains(err.Error(), "Attempting to add static entry with a nil name") {
+		t.Errorf("TestInvalidStaticAdd: got unexpected error message: %s\n", err.Error())
+	}
 }
 
 func TestStaticsPreload(t *testing.T) {
