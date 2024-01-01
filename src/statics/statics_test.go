@@ -115,6 +115,36 @@ func TestInvalidStaticAdd(t *testing.T) {
 	}
 }
 
+func TestInvalidLookup(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	Statics = make(map[string]Static)
+
+	err1 := AddStatic("test.1", Static{Type: types.Int, Value: int(42)})
+	if err1 != nil {
+		t.Errorf("TestIntConversions: got unexpected error adding static for testing")
+	}
+
+	// redirect stderr, to avoid all the error msgs for a non-existent class
+	normalStderr := os.Stderr
+	_, werr, _ := os.Pipe()
+	os.Stderr = werr
+
+	retVal := GetStaticValue("test", "noSuchEntry")
+
+	_ = werr.Close()
+	os.Stderr = normalStderr
+
+	switch retVal.(type) {
+	case error:
+		if !strings.Contains(retVal.(error).Error(), "could not find static") {
+			t.Errorf("Did not get expected error message for missing static: %v\n", retVal)
+		}
+	default:
+		t.Errorf("Did not get an error for missing static")
+	}
+}
+
 func TestIntConversions(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
