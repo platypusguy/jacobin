@@ -2,10 +2,12 @@ package statics
 
 import (
 	"fmt"
+	"io"
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/types"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -180,5 +182,36 @@ func TestStaticsPreload(t *testing.T) {
 		}
 	default:
 		t.Errorf("testStaticsPreload: invalid value for main.$assertionsDisabled")
+	}
+}
+
+func TestDumpStatics(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	Statics = make(map[string]Static)
+
+	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
+	err2 := AddStatic("test.2", Static{Type: types.Int, Value: int(42)})
+	err3 := AddStatic("test.3", Static{Type: types.Double, Value: 24.0})
+	if err1 != nil || err2 != nil || err3 != nil {
+		t.Errorf("TestIntConversions: got unexpected error adding statics for testing")
+	}
+
+	// redirect stderr, to avoid all the error msgs for a non-existent class
+	normalStderr := os.Stderr
+	rerr, werr, _ := os.Pipe()
+	os.Stderr = werr
+
+	DumpStatics()
+
+	_ = werr.Close()
+	out, _ := io.ReadAll(rerr)
+	os.Stderr = normalStderr
+	contents := string(out[:])
+
+	os.Stderr = normalStderr
+
+	if !strings.Contains(contents, "test.1") || !strings.Contains(contents, "test.2") || !strings.Contains(contents, "test.3") {
+		t.Errorf("TestIntConversions: got unexpected error in DumpStatics: %s", contents)
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/types"
+	"os"
 	"runtime/debug"
 	"sort"
 	"sync"
@@ -124,8 +125,9 @@ func GetStaticValue(className string, fieldName string) any {
 	return retValue
 }
 
+// DumpStatics dumps the contents of the statics table in sorted order to stderr
 func DumpStatics() {
-	fmt.Println("\n===== DumpStatics BEGIN")
+	fmt.Fprintln(os.Stderr, "\n===== DumpStatics BEGIN")
 	// Create an array of keys.
 	keys := make([]string, 0, len(Statics))
 	for key := range Statics {
@@ -136,7 +138,7 @@ func DumpStatics() {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		fmt.Printf("%s     %v\n", key, Statics[key])
+		fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
 	}
-	fmt.Println("===== DumpStatics END")
+	fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }
