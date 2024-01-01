@@ -73,7 +73,7 @@ func TestStatics1(t *testing.T) {
 	Set statics values.
 	*/
 	LoadProgramStatics()
-	tAddStatic(t, "AlphaBetaGamma.ONE", "B", 0x31)
+	tAddStatic(t, "AlphaBetaGamma.ONE", "B", uint8(0x31))
 	tAddStatic(t, "AlphaBetaGamma.QM", "C", '?')
 	tAddStatic(t, "AlphaBetaGamma.PI", "D", 3.14159265)
 	tAddStatic(t, "AlphaBetaGamma.TEN", "F", 10.0)
