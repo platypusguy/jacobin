@@ -91,23 +91,22 @@ func LoadStringStatics() {
 // If successful, return the field value and a nil error;
 // Else (error), return a nil field value and the non-nil error.
 func GetStaticValue(className string, fieldName string) any {
-
 	var retValue any
 
-	keyStatics := className + "." + fieldName
+	staticName := className + "." + fieldName
 
 	// was this static field previously loaded? Is so, get its location and move on.
-	prevLoaded, ok := Statics[keyStatics]
+	prevLoaded, ok := Statics[staticName]
 	if !ok {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GetStaticValue: could not load statics key %s", keyStatics)
+		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)
 		_ = log.Log(errMsg, log.SEVERE)
-		return errMsg
+		return errors.New(errMsg)
 	}
 
 	// Field types bool, byte, and int need conversion to int64.
-	// The other types are ok as is.
+	// The other types are OK as is.
 	switch prevLoaded.Value.(type) {
 	case bool:
 		value := prevLoaded.Value.(bool)
