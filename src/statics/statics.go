@@ -60,9 +60,9 @@ func AddStatic(name string, s Static) error {
 	return nil
 }
 
-// StaticsPreload preloads static fields from java.lang.String and other
+// PreloadStatics preloads static fields from java.lang.String and other
 // immediately necessary statics. It's called in jvmStart.go
-func StaticsPreload() {
+func PreloadStatics() {
 	LoadProgramStatics()
 	LoadStringStatics()
 }
@@ -127,7 +127,7 @@ func GetStaticValue(className string, fieldName string) any {
 
 // DumpStatics dumps the contents of the statics table in sorted order to stderr
 func DumpStatics() {
-	fmt.Fprintln(os.Stderr, "\n===== DumpStatics BEGIN")
+	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpStatics BEGIN")
 	// Create an array of keys.
 	keys := make([]string, 0, len(Statics))
 	for key := range Statics {
@@ -138,7 +138,7 @@ func DumpStatics() {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
+		_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
 	}
-	fmt.Fprintln(os.Stderr, "===== DumpStatics END")
+	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }

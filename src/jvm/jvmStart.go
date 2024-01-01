@@ -64,7 +64,7 @@ func JVMrun() int {
 	var status error
 
 	// load static variables. Needs to be here b/c CLI might modify their values
-	statics.StaticsPreload()
+	statics.PreloadStatics()
 
 	// handle the command-line interface (cli) -- i.e., process the args
 	LoadOptionsTable(*globPtr)

@@ -91,7 +91,7 @@ func TestInstantiateNonExistentClass(t *testing.T) {
 	}
 	classloader.LoadBaseClasses()
 	gfunction.MTableLoadNatives(&classloader.MTable)
-	statics.StaticsPreload()
+	statics.PreloadStatics()
 
 	myobj, err := InstantiateClass("$nosuchclass", nil)
 

@@ -58,7 +58,7 @@ func TestStatics1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
 	// _ = log.SetLogLevel(log.CLASS)
-	StaticsPreload()
+	PreloadStatics()
 	classloader.MethArea = &sync.Map{}
 	k := classloader.Klass{}
 	k.Status = 'F'
@@ -163,7 +163,7 @@ func TestStaticsPreload(t *testing.T) {
 	log.Init()
 	Statics = make(map[string]Static)
 
-	StaticsPreload()
+	PreloadStatics()
 	s1 := GetStaticValue("java/lang/String", "COMPACT_STRINGS")
 	switch s1.(type) {
 	case int64:
