@@ -6,7 +6,10 @@
 
 package object
 
-import "testing"
+import (
+	"jacobin/types"
+	"testing"
+)
 
 func TestIsNull(t *testing.T) {
 	if !IsNull(nil) {
@@ -16,5 +19,17 @@ func TestIsNull(t *testing.T) {
 	var op *Object
 	if !IsNull(op) {
 		t.Errorf("pointer to non-allocated object should be null")
+	}
+}
+
+func TestMakeValidPrimitiveByte(t *testing.T) {
+	objPtr := MakePrimitiveObject("java/lang/Byte", types.Byte, uint8(0x61))
+	if *objPtr.Klass != "java/lang/Byte" {
+		t.Errorf("Klass should be java/lang/Byte, got %s", *objPtr.Klass)
+	}
+
+	value := objPtr.Fields[0].Fvalue.(uint8)
+	if value != uint8(0x61) {
+		t.Errorf("Value should be 0x61, got 0x%02x", value)
 	}
 }
