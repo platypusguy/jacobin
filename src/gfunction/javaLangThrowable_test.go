@@ -49,8 +49,10 @@ func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 	var retVal error
 	switch err.(type) {
 	case error:
+
 		retVal = err.(error)
 	default:
+
 		t.Error("JavaLangThrowableFillInStack should have returned an error, but did not")
 	}
 
@@ -109,12 +111,27 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	globPtr.FuncInstantiateClass = InstantiateFillIn
 
 	params := []interface{}{jvmStack, throw}
-	err := fillInStackTrace(params)
+	retVal := fillInStackTrace(params)
 
 	// var retVal error
-	switch err.(type) {
+	switch retVal.(type) {
 	case error:
-		t.Errorf("JavaLangThrowableFillInStack threw an unexpected error: %s", err.(error).Error())
+		t.Errorf("JavaLangThrowableFillInStack threw an unexpected error: %s", retVal.(error).Error())
+	}
+
+	// now, validate the fields in the stackTraceElementlement (ste)
+	x := retVal.(*object.Field).Fvalue.(*object.Object)
+	xt := x.Fields[0].Fvalue.(*[]*object.Object)
+	xtt := *xt
+	ste := xtt[0].FieldTable
+	steDeclCl := ste["declaringClass"]
+	if steDeclCl.Fvalue.(string) != "java/testClass" {
+		t.Errorf("invalid STE entry for declaringClass: %s", steDeclCl)
+	}
+
+	steMethName := ste["methodName"]
+	if steMethName.Fvalue.(string) != "java/testClass.test" {
+		t.Errorf("invalid STE entry for methodName: %s", steMethName)
 	}
 
 }
