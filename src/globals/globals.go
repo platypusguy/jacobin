@@ -252,6 +252,7 @@ func InitArrayAddressList() *list.List {
 
 // Fake InstantiateClass
 func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
-	fmt.Printf("\n***** fakeInstantiateClass: classname=%s\n", classname)
-	return nil, errors.New("fakeInstantiateClass: By definition, my execution is an error!")
+	errMsg := fmt.Sprintf("\n*Attempt to acess uninitialized InstantiateClass pointer func: classname=%s\n", classname)
+	fmt.Fprintf(os.Stderr, errMsg)
+	return nil, errors.New(errMsg)
 }
