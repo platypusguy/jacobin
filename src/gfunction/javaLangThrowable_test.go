@@ -97,7 +97,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	f.MethName = "java/testClass.test"
 
 	jvmStack := frames.CreateFrameStack()
-	frames.PushFrame(jvmStack, f)
+	_ = frames.PushFrame(jvmStack, f)
 
 	// create a Throwable object
 	throw := object.MakeEmptyObject()
@@ -134,9 +134,18 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 		t.Errorf("invalid STE entry for methodName: %s", steMethName)
 	}
 
+	steFileName := ste["fileName"]
+	if steFileName.Fvalue.(string) != "testClass.java" {
+		t.Errorf("invalid STE entry for fileName: %s", steFileName)
+	}
+
+	steLoaderName := ste["classLoaderName"]
+	if steLoaderName.Fvalue.(string) != "testLoader" {
+		t.Errorf("invalid STE entry for classLoaderName: %s", steLoaderName)
+	}
 }
 
-func InstantiateFillIn(name string, list *list.List) (any, error) {
+func InstantiateFillIn(name string, _ *list.List) (any, error) {
 	o := object.MakeEmptyObject()
 	o.Klass = &name
 	return o, nil
