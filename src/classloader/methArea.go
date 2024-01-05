@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-23 by Jacobin Authors. All rights reserved.
+ * Copyright (c) 2021-24 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -72,7 +72,7 @@ func MethAreaDelete(key string) {
 	}
 }
 
-// Wait for klass.Status to no longer be "I"
+// Wait for klass.Status to no longer be "I" (I = initializing)
 // TODO: must be a better way to do this!
 func WaitForClassStatus(className string) error {
 	_ = log.Log("WaitForClassStatus: class name: "+className, log.CLASS)
@@ -81,16 +81,16 @@ func WaitForClassStatus(className string) error {
 		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds
 		klass = MethAreaFetch(className)
 		if klass == nil {
-			msg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to load", className)
-			return errors.New(msg)
+			errMsg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to load", className)
+			return errors.New(errMsg)
 		}
 	}
 	if klass.Status == 'I' { // class is being initialized by a loader, so wait
 		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds
 		klass = MethAreaFetch(className)
 		if klass.Status == 'I' {
-			msg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class {%s} status", className)
-			return errors.New(msg)
+			errMsg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to be initialized", className)
+			return errors.New(errMsg)
 		}
 	}
 	return nil
