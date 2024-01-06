@@ -275,7 +275,7 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 	os.Stdout = normalStdout
 }
 
-func TestInvalMainMethod(t *testing.T) {
+func TestInvalidMainMethod(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
 	log.Init()
@@ -311,6 +311,34 @@ func TestInvalMainMethod(t *testing.T) {
 	msg := err.Error()
 	if !strings.Contains(msg, "main() method not found") {
 		t.Errorf("TestInvalidLookupOfMethod: Expecting error of 'main() method not found', got %s", err.Error())
+	}
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+func TestInvalidClassName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.FINE)
+
+	// redirect stderr & stdout to capture results from stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	MethArea = &sync.Map{}
+
+	// fetch a non-existent method in a non-existent class
+	_, err := FetchMethodAndCP("gherkin", "mcMurtry", "([LString;)V")
+	if err == nil {
+		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main(), but got none")
+	}
+
+	msg := err.Error()
+	if !strings.HasPrefix(msg, "FetchMethodAndCP: LoadClassFromNameOnly for gherkin failed") {
+		t.Errorf("TestInvalidClassName: Did not get expected error message', got %s", err.Error())
 	}
 
 	// restore stderr and stdout to what they were before
