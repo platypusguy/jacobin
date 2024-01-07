@@ -301,8 +301,8 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	}
 
 	// if we got this far, something went wrong with locating the method
-	msg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
-	return MTentry{}, errors.New(msg)
+	errMsg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
+	return MTentry{}, errors.New(errMsg)
 }
 
 // error message when main() can't be found. Syntax mirrors OpenJDK HotSpot
