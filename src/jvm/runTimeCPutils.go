@@ -7,6 +7,9 @@
 
 package jvm
 
+// This file contains utility routines for runtime operations involving the
+// class's constant pool (CP).
+
 import (
 	"jacobin/classloader"
 	"unsafe"
