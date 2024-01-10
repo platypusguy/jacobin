@@ -2302,6 +2302,29 @@ func runFrame(fs *list.List) error {
 			exceptionClass := *objectRef.Klass
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
+			// get the PC of the exception and check for any catch blocks
+			// exceptionPC := f.PC
+
+			// get the method and check for an exception catch table
+			// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
+			fullMethName := f.ClName + "." + f.MethName
+			methEntry, err := classloader.MTable[fullMethName]
+			if err != true {
+				errMsg := fmt.Sprintf("ATHROW:Method %s not found in MTable", fullMethName)
+				return errors.New(errMsg)
+			}
+
+			if methEntry.MType != 'J' {
+				errMsg := fmt.Sprintf("ATHROW:Method %s is a native method", fullMethName)
+				return errors.New(errMsg)
+			}
+			/*
+				method := methEntry.Meth.(classloader.JmEntry)
+				if method.Exceptions == nil {
+					errMsg := fmt.Sprintf("ATHROW:Method %s has no exception table", fullMethName)
+					return errors.New(errMsg)
+				}
+			*/
 			// if the exception is not caught, then print the data from the stackTraceElements (STEs)
 			// in the Throwable object or subclass (which is generally the specific exception class).
 
