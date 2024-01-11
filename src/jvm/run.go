@@ -2324,8 +2324,8 @@ func runFrame(fs *list.List) error {
 			method := methEntry.Meth.(classloader.JmEntry)
 			if method.Exceptions == nil {
 				errMsg := fmt.Sprintf("ATHROW: Method %s has no exception table", fullMethName)
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				_ = log.Log(errMsg, log.INFO)
+				// TODO: Check earlier frames for catch blocks
 			}
 
 			// if the exception is not caught, then print the data from the stackTraceElements (STEs)
