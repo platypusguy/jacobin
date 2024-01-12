@@ -2307,90 +2307,88 @@ func runFrame(fs *list.List) error {
 
 			// find the frame with a valid catch block for this exception, if any
 			catchFrame := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
-			if catchFrame != nil {
-				//     // handle the exception in the catch block
-				//     handleException(catchFrame, objectRef)
-				// } else {
-				//     // no catch block found, propagate the exception
-				//     propagateException(objectRef)
-			}
+			// if there is no catch block, then print out the data we have (conforming
+			// with whether we want the standard JDK info as elected with the -strictJDK
+			// command-line option)
+			if catchFrame == nil {
 
-			// get the method and check for an exception catch table
-			// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
-			fullMethName := f.ClName + "." + f.MethName + f.MethType
-			methEntry, found := classloader.MTable[fullMethName]
-			if !found {
-				errMsg := fmt.Sprintf("ATHROW: Method %s not found in MTable", fullMethName)
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
-			}
+				/*
+					// get the method and check for an exception catch table
+					// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
+					fullMethName := f.ClName + "." + f.MethName + f.MethType
+					methEntry, found := classloader.MTable[fullMethName]
+					if !found {
+						errMsg := fmt.Sprintf("ATHROW: Method %s not found in MTable", fullMethName)
+						_ = log.Log(errMsg, log.SEVERE)
+						return errors.New(errMsg)
+					}
 
-			if methEntry.MType != 'J' {
-				errMsg := fmt.Sprintf("ATHROW: Method %s is a native method", fullMethName)
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
-			}
+					if methEntry.MType != 'J' {
+						errMsg := fmt.Sprintf("ATHROW: Method %s is a native method", fullMethName)
+						_ = log.Log(errMsg, log.SEVERE)
+						return errors.New(errMsg)
+					}
 
-			method := methEntry.Meth.(classloader.JmEntry)
-			if method.Exceptions == nil {
-				errMsg := fmt.Sprintf("ATHROW: Method %s has no exception table", fullMethName)
-				_ = log.Log(errMsg, log.INFO)
-				// TODO: Check earlier frames for catch blocks
-			}
+					method := methEntry.Meth.(classloader.JmEntry)
+					if method.Exceptions == nil {
+						errMsg := fmt.Sprintf("ATHROW: Method %s has no exception table", fullMethName)
+						_ = log.Log(errMsg, log.INFO)
+						// TODO: Check earlier frames for catch blocks
+					}
+				*/
+				// if the exception is not caught, then print the data from the stackTraceElements (STEs)
+				// in the Throwable object or subclass (which is generally the specific exception class).
 
-			// if the exception is not caught, then print the data from the stackTraceElements (STEs)
-			// in the Throwable object or subclass (which is generally the specific exception class).
-
-			// print out the name of the exception/error and the thread it occurred on
-			msg := ""
-			if f.Thread == 1 { // if it's thread #1, use its name, "main"
-				msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
-			} else {
-				msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
-			}
-			_ = log.Log(msg, log.SEVERE)
-
-			steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
-			rawSteArrayPtr := steArrayPtr.Fields[0].Fvalue.(*[]*object.Object) // *[]*object.Object (each of which is an STE)
-			rawSteArray := *rawSteArrayPtr
-			for i := 0; i < len(rawSteArray); i++ {
-				ste := rawSteArray[i]
-				methodName := ste.FieldTable["methodName"].Fvalue.(string)
-				if methodName == "<init>" { // don't show constructors
-					continue
-				}
-				rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
-				if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
-					continue
-				}
-				className := strings.Replace(rawClassName, "/", ".", -1)
-
-				sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
-
-				var s string
-				if sourceLine != "" {
-					s = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
-						methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
+				// print out the name of the exception/error and the thread it occurred on
+				msg := ""
+				if f.Thread == 1 { // if it's thread #1, use its name, "main"
+					msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
 				} else {
-					s = fmt.Sprintf("\tat %s.%s(%s)", className,
-						methodName, ste.FieldTable["fileName"].Fvalue)
+					msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
 				}
-				_ = log.Log(s, log.SEVERE)
-			}
+				_ = log.Log(msg, log.SEVERE)
 
-			// show Jacobin's JVM stack info if -strictJDK is not set
-			if glob.StrictJDK == false {
-				_ = log.Log(" ", log.SEVERE)
-				for _, frameData := range *glob.JVMframeStack {
-					colon := strings.Index(frameData, ":")
-					shortenedFrameData := frameData[colon+1:]
-					_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+				steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
+				rawSteArrayPtr := steArrayPtr.Fields[0].Fvalue.(*[]*object.Object) // *[]*object.Object (each of which is an STE)
+				rawSteArray := *rawSteArrayPtr
+				for i := 0; i < len(rawSteArray); i++ {
+					ste := rawSteArray[i]
+					methodName := ste.FieldTable["methodName"].Fvalue.(string)
+					if methodName == "<init>" { // don't show constructors
+						continue
+					}
+					rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
+					if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
+						continue
+					}
+					className := strings.Replace(rawClassName, "/", ".", -1)
+
+					sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
+
+					var s string
+					if sourceLine != "" {
+						s = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
+							methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
+					} else {
+						s = fmt.Sprintf("\tat %s.%s(%s)", className,
+							methodName, ste.FieldTable["fileName"].Fvalue)
+					}
+					_ = log.Log(s, log.SEVERE)
 				}
+
+				// show Jacobin's JVM stack info if -strictJDK is not set
+				if glob.StrictJDK == false {
+					_ = log.Log(" ", log.SEVERE)
+					for _, frameData := range *glob.JVMframeStack {
+						colon := strings.Index(frameData, ":")
+						shortenedFrameData := frameData[colon+1:]
+						_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+					}
+				}
+
+				// all exceptions that got this far are untrapped, so shutdown with an error code
+				shutdown.Exit(shutdown.APP_EXCEPTION)
 			}
-
-			// all exceptions that got this far are untrapped, so shutdown with an error code
-			shutdown.Exit(shutdown.APP_EXCEPTION)
-
 		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
