@@ -2303,7 +2303,17 @@ func runFrame(fs *list.List) error {
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// get the PC of the exception and check for any catch blocks
-			// exceptionPC := f.PC
+			exceptionPC := f.PC
+
+			// find the frame with a valid catch block for this exception, if any
+			catchFrame := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
+			if catchFrame != nil {
+				//     // handle the exception in the catch block
+				//     handleException(catchFrame, objectRef)
+				// } else {
+				//     // no catch block found, propagate the exception
+				//     propagateException(objectRef)
+			}
 
 			// get the method and check for an exception catch table
 			// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
