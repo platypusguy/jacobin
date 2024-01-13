@@ -2306,7 +2306,7 @@ func runFrame(fs *list.List) error {
 			exceptionPC := f.PC
 
 			// find the frame with a valid catch block for this exception, if any
-			catchFrame := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
+			catchFrame, _ := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
 			// if there is no catch block, then print out the data we have (conforming
 			// with whether we want the standard JDK info as elected with the -strictJDK
 			// command-line option)

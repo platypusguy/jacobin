@@ -18,7 +18,7 @@ import (
 // current frame stack working its way up the frame stack (fs). If one is found,
 // it returns a pointer to that frame, otherwise it returns nil. Param pc is the
 // program counter in the current frame where the execption was thrown.
-func FindCatchFrame(fs *list.List, excName string, pc int) *frames.Frame {
+func FindCatchFrame(fs *list.List, excName string, pc int) (*frames.Frame, int) {
 	// presentPC := pc
 
 	for fr := fs.Front(); fr != nil; fr = fr.Next() {
@@ -31,13 +31,13 @@ func FindCatchFrame(fs *list.List, excName string, pc int) *frames.Frame {
 		if !found {
 			errMsg := fmt.Sprintf("ATHROW: Method %s not found in MTable", fullMethName)
 			_ = log.Log(errMsg, log.SEVERE)
-			return nil
+			return nil, -1
 		}
 
 		if methEntry.MType != 'J' {
 			errMsg := fmt.Sprintf("ATHROW: Method %s is a native method", fullMethName)
 			_ = log.Log(errMsg, log.SEVERE)
-			return nil
+			return nil, -1
 		}
 
 		method := methEntry.Meth.(classloader.JmEntry)
@@ -47,7 +47,17 @@ func FindCatchFrame(fs *list.List, excName string, pc int) *frames.Frame {
 			continue // loop to the next frame
 		}
 
-		return f
+		// if we got this far, the method has an exception table
+		for i := 0; i < len(method.Exceptions); i++ {
+			entry := method.Exceptions[i]
+			// per https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.3
+			// the StartPC value is inclusive, the EndPC value is exclusive
+			if pc >= entry.StartPc && pc < entry.EndPc {
+				// found a handler, now check that it's for the right exception
+				println("found handler")
+				return f, entry.HandlerPc
+			}
+		}
 	}
-	return nil
+	return nil, -1
 }
