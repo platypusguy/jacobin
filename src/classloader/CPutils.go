@@ -148,13 +148,13 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	// now get the method signature
 	nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType
 	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
-	nameAndTypeEntry := CP.NameAndTypes[nameAndTypeIndex]
-	methNameCPindex := nameAndTypeEntry.NameIndex
+	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
+	methNameCPindex := nameAndType.NameIndex
 	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
 	methName := CP.Utf8Refs[methNameUTF8index]
 
 	// and get the method signature/description
-	methSigCPindex := nameAndTypeEntry.DescIndex
+	methSigCPindex := nameAndType.DescIndex
 	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
 	methSig := CP.Utf8Refs[methSigUTF8index]
 
@@ -165,12 +165,11 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 // and resolves it to return a string containing the class name.
 // Returns an empty string if an error occurred
 func GetClassNameFromCPclassref(CP *CPool, cpIndex uint16) string {
-
-	cpEntry := FetchCPentry(CP, int(cpIndex))
-	if cpEntry.RetType == IS_ERROR {
+	entry := FetchCPentry(CP, int(cpIndex))
+	if entry.RetType == IS_ERROR {
 		return ""
 	}
 
-	className := FetchUTF8stringFromCPEntryNumber(CP, uint16(cpEntry.IntVal))
+	className := FetchUTF8stringFromCPEntryNumber(CP, uint16(entry.IntVal))
 	return className
 }
