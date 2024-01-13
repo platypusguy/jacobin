@@ -244,22 +244,22 @@ func runFrame(fs *list.List) error {
 			idx := f.Meth[f.PC+1]
 			f.PC += 1
 
-			CPe := FetchCPentry(f.CP.(*classloader.CPool), int(idx))
-			if CPe.entryType != 0 && // 0 = error
+			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), int(idx))
+			if CPe.EntryType != 0 && // 0 = error
 				// Note: an invalid CP entry causes a java.lang.Verify error and
 				//       is caught before execution of the program begins.
 				// This instruction does not load longs or doubles
-				CPe.entryType != classloader.DoubleConst &&
-				CPe.entryType != classloader.LongConst { // if no error
-				if CPe.retType == IS_INT64 {
-					push(f, CPe.intVal)
-				} else if CPe.retType == IS_FLOAT64 {
-					push(f, CPe.floatVal)
-				} else if CPe.retType == IS_STRUCT_ADDR {
-					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
-				} else if CPe.retType == IS_STRING_ADDR {
+				CPe.EntryType != classloader.DoubleConst &&
+				CPe.EntryType != classloader.LongConst { // if no error
+				if CPe.RetType == classloader.IS_INT64 {
+					push(f, CPe.IntVal)
+				} else if CPe.RetType == classloader.IS_FLOAT64 {
+					push(f, CPe.FloatVal)
+				} else if CPe.RetType == classloader.IS_STRUCT_ADDR {
+					push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
+				} else if CPe.RetType == classloader.IS_STRING_ADDR {
 					stringAddr :=
-						object.CreateCompactStringFromGoString(CPe.stringVal)
+						object.CreateCompactStringFromGoString(CPe.StringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
 						glob := globals.GetGlobalRef()
@@ -281,19 +281,19 @@ func runFrame(fs *list.List) error {
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
-			CPe := FetchCPentry(f.CP.(*classloader.CPool), idx)
-			if CPe.entryType != 0 && // this instruction does not load longs or doubles
-				CPe.entryType != classloader.DoubleConst &&
-				CPe.entryType != classloader.LongConst { // if no error
-				if CPe.retType == IS_INT64 {
-					push(f, CPe.intVal)
-				} else if CPe.retType == IS_FLOAT64 {
-					push(f, CPe.floatVal)
-				} else if CPe.retType == IS_STRUCT_ADDR {
-					push(f, (*object.Object)(unsafe.Pointer(CPe.addrVal)))
-				} else if CPe.retType == IS_STRING_ADDR {
+			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
+			if CPe.EntryType != 0 && // this instruction does not load longs or doubles
+				CPe.EntryType != classloader.DoubleConst &&
+				CPe.EntryType != classloader.LongConst { // if no error
+				if CPe.RetType == classloader.IS_INT64 {
+					push(f, CPe.IntVal)
+				} else if CPe.RetType == classloader.IS_FLOAT64 {
+					push(f, CPe.FloatVal)
+				} else if CPe.RetType == classloader.IS_STRUCT_ADDR {
+					push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
+				} else if CPe.RetType == classloader.IS_STRING_ADDR {
 					stringAddr :=
-						object.CreateCompactStringFromGoString(CPe.stringVal)
+						object.CreateCompactStringFromGoString(CPe.StringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
 						glob := globals.GetGlobalRef()
@@ -315,13 +315,13 @@ func runFrame(fs *list.List) error {
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 
-			CPe := FetchCPentry(f.CP.(*classloader.CPool), idx)
-			if CPe.retType == IS_INT64 { // push value twice (due to 64-bit width)
-				push(f, CPe.intVal)
-				push(f, CPe.intVal)
-			} else if CPe.retType == IS_FLOAT64 {
-				push(f, CPe.floatVal)
-				push(f, CPe.floatVal)
+			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
+			if CPe.RetType == classloader.IS_INT64 { // push value twice (due to 64-bit width)
+				push(f, CPe.IntVal)
+				push(f, CPe.IntVal)
+			} else if CPe.RetType == classloader.IS_FLOAT64 {
+				push(f, CPe.FloatVal)
+				push(f, CPe.FloatVal)
 			} else { // TODO: Determine what exception to throw
 				glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
@@ -1995,7 +1995,7 @@ func runFrame(fs *list.List) error {
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
-			className, methName, methSig := getMethInfoFromCPmethref(CP, CPslot)
+			className, methName, methSig := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
@@ -2425,8 +2425,8 @@ func runFrame(fs *list.List) error {
 			if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 				// a CP entry for a UTF8 record w/ name of class
 				var className string
-				classNamePtr := FetchCPentry(CP, CPslot)
-				if classNamePtr.retType != IS_STRING_ADDR {
+				classNamePtr := classloader.FetchCPentry(CP, CPslot)
+				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 					glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "CHECKCAST: Invalid classRef found"
@@ -2434,7 +2434,7 @@ func runFrame(fs *list.List) error {
 					return errors.New(errMsg)
 				}
 
-				className = *(classNamePtr.stringVal)
+				className = *(classNamePtr.StringVal)
 				if MainThread.Trace {
 					var traceInfo string
 					if strings.HasPrefix(className, "[") {
@@ -2518,15 +2518,15 @@ func runFrame(fs *list.List) error {
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
 						// a CP entry for a UTF8 record w/ name of class
 						var className string
-						classNamePtr := FetchCPentry(CP, CPslot)
-						if classNamePtr.retType != IS_STRING_ADDR {
+						classNamePtr := classloader.FetchCPentry(CP, CPslot)
+						if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 							glob := globals.GetGlobalRef()
 							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := "INSTANCEOF: Invalid classRef found"
 							_ = log.Log(errMsg, log.SEVERE)
 							return errors.New(errMsg)
 						} else {
-							className = *(classNamePtr.stringVal)
+							className = *(classNamePtr.StringVal)
 							if MainThread.Trace {
 								traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
 								_ = log.Log(traceInfo, log.TRACE_INST)

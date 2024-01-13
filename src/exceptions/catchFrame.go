@@ -54,7 +54,10 @@ func FindCatchFrame(fs *list.List, excName string, pc int) (*frames.Frame, int) 
 			// the StartPC value is inclusive, the EndPC value is exclusive
 			if pc >= entry.StartPc && pc < entry.EndPc {
 				// found a handler, now check that it's for the right exception
-				println("found handler")
+				CP := f.CP.(*classloader.CPool)
+				catchName :=
+					classloader.GetClassNameFromCPclassref(CP, uint16(entry.HandlerPc))
+				println("found handler for: " + catchName)
 				return f, entry.HandlerPc
 			}
 		}
