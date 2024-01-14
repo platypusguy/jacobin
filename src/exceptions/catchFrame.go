@@ -12,14 +12,15 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/log"
+	"jacobin/util"
 )
 
 // This routine looks for a handler for the given exception (excName) in the
 // current frame stack working its way up the frame stack (fs). If one is found,
 // it returns a pointer to that frame, otherwise it returns nil. Param pc is the
 // program counter in the current frame where the execption was thrown.
-func FindCatchFrame(fs *list.List, excName string, pc int) (*frames.Frame, int) {
-	// presentPC := pc
+func FindCatchFrame(fs *list.List, excetpName string, pc int) (*frames.Frame, int) {
+	excName := util.ConvertClassFilenameToInternalFormat(excetpName)
 
 	for fr := fs.Front(); fr != nil; fr = fr.Next() {
 		var f = fr.Value.(*frames.Frame)
