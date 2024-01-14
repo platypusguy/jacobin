@@ -56,7 +56,7 @@ func FindCatchFrame(fs *list.List, excName string, pc int) (*frames.Frame, int) 
 				// found a handler, now check that it's for the right exception
 				CP := f.CP.(*classloader.CPool)
 				catchName :=
-					classloader.GetClassNameFromCPclassref(CP, uint16(entry.HandlerPc))
+					classloader.GetClassNameFromCPclassref(CP, uint16(entry.CatchType))
 				println("found handler for: " + catchName)
 				return f, entry.HandlerPc
 			}

@@ -166,10 +166,9 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 // Returns an empty string if an error occurred
 func GetClassNameFromCPclassref(CP *CPool, cpIndex uint16) string {
 	entry := FetchCPentry(CP, int(cpIndex))
-	if entry.RetType == IS_ERROR {
+	if entry.RetType != IS_STRING_ADDR {
 		return ""
+	} else {
+		return *entry.StringVal
 	}
-
-	className := FetchUTF8stringFromCPEntryNumber(CP, uint16(entry.IntVal))
-	return className
 }
