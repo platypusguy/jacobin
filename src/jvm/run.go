@@ -2306,40 +2306,15 @@ func runFrame(fs *list.List) error {
 			exceptionPC := f.PC
 
 			// find the frame with a valid catch block for this exception, if any
-			catchFrame, _ := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
+			catchFrame, handlerBytecode := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
 			// if there is no catch block, then print out the data we have (conforming
 			// with whether we want the standard JDK info as elected with the -strictJDK
 			// command-line option)
 			if catchFrame == nil {
-
-				/*
-					// get the method and check for an exception catch table
-					// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
-					fullMethName := f.ClName + "." + f.MethName + f.MethType
-					methEntry, found := classloader.MTable[fullMethName]
-					if !found {
-						errMsg := fmt.Sprintf("ATHROW: Method %s not found in MTable", fullMethName)
-						_ = log.Log(errMsg, log.SEVERE)
-						return errors.New(errMsg)
-					}
-
-					if methEntry.MType != 'J' {
-						errMsg := fmt.Sprintf("ATHROW: Method %s is a native method", fullMethName)
-						_ = log.Log(errMsg, log.SEVERE)
-						return errors.New(errMsg)
-					}
-
-					method := methEntry.Meth.(classloader.JmEntry)
-					if method.Exceptions == nil {
-						errMsg := fmt.Sprintf("ATHROW: Method %s has no exception table", fullMethName)
-						_ = log.Log(errMsg, log.INFO)
-						// TODO: Check earlier frames for catch blocks
-					}
-				*/
 				// if the exception is not caught, then print the data from the stackTraceElements (STEs)
 				// in the Throwable object or subclass (which is generally the specific exception class).
 
-				// print out the name of the exception/error and the thread it occurred on
+				// start by printing out the name of the exception/error and the thread it occurred on
 				msg := ""
 				if f.Thread == 1 { // if it's thread #1, use its name, "main"
 					msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
@@ -2388,6 +2363,14 @@ func runFrame(fs *list.List) error {
 
 				// all exceptions that got this far are untrapped, so shutdown with an error code
 				shutdown.Exit(shutdown.APP_EXCEPTION)
+
+			} else { // perform the catch operation. We know the frame and the starting bytecode for the handler
+				if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
+					errMsg := "ATHROW: Invalid bytecode offset for catch block"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
+				// CURR: resume with locating the frame and resetting the PC to the handler
 			}
 		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should

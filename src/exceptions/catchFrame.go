@@ -58,7 +58,16 @@ func FindCatchFrame(fs *list.List, excName string, pc int) (*frames.Frame, int) 
 				catchName :=
 					classloader.GetClassNameFromCPclassref(CP, uint16(entry.CatchType))
 				println("found handler for: " + catchName)
-				return f, entry.HandlerPc
+
+				// TODO: add support for checking for subclasses
+				// In the meantime, check for a direct match or one of the typical
+				// superclasses.
+				if catchName == excName ||
+					catchName == "java/lang/Throwable" ||
+					catchName == "java/lang/Error" ||
+					catchName == "java/lang/Exception" {
+					return f, entry.HandlerPc
+				}
 			}
 		}
 	}
