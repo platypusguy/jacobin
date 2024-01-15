@@ -62,7 +62,6 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	f.ClName = className
 	f.CP = m.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
-	// f.ExceptionTable = &m.Exceptions
 
 	// allocate the local variables
 	for k := 0; k < m.MaxLocals; k++ {
@@ -2365,6 +2364,15 @@ func runFrame(fs *list.List) error {
 				shutdown.Exit(shutdown.APP_EXCEPTION)
 
 			} else { // perform the catch operation. We know the frame and the starting bytecode for the handler
+				for fr := fs.Front(); fr != nil; fr = fr.Next() {
+					var frm = fr.Value.(*frames.Frame)
+					// f.ExceptionTable = &m.Exceptions
+					if frm == catchFrame {
+						f.Meth = append(f.Meth, f.Meth[handlerBytecode:])
+						frm.PC = 0
+						return nil
+					}
+				}
 				if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
 					errMsg := "ATHROW: Invalid bytecode offset for catch block"
 					exceptions.Throw(exceptions.NullPointerException, errMsg)
