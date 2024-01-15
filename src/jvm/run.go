@@ -2370,7 +2370,7 @@ func runFrame(fs *list.List) error {
 					if frm == catchFrame {
 						f.Meth = f.Meth[handlerBytecode:]
 						frm.PC = 0
-						return nil
+						break
 					}
 				}
 				// if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
