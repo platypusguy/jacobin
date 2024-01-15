@@ -2370,15 +2370,9 @@ func runFrame(fs *list.List) error {
 					if frm == catchFrame {
 						f.Meth = f.Meth[handlerBytecode:]
 						frm.PC = 0
-						break
+						break // exit this processing and loop will resume at PC 0
 					}
 				}
-				// if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
-				// 	errMsg := "ATHROW: Invalid bytecode offset for catch block"
-				// 	exceptions.Throw(exceptions.NullPointerException, errMsg)
-				// 	return errors.New(errMsg)
-				// }
-				// CURR: resume with locating the frame and resetting the PC to the handler
 			}
 		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
 			// because this uses the same logic as INSTANCEOF, any change here should

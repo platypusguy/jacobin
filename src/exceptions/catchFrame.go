@@ -58,7 +58,6 @@ func FindCatchFrame(fs *list.List, excetpName string, pc int) (*frames.Frame, in
 				CP := f.CP.(*classloader.CPool)
 				catchName :=
 					classloader.GetClassNameFromCPclassref(CP, uint16(entry.CatchType))
-				println("found handler for: " + catchName)
 
 				// TODO: add support for checking for subclasses
 				// In the meantime, check for a direct match or one of the typical
