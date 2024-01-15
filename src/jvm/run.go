@@ -2368,16 +2368,16 @@ func runFrame(fs *list.List) error {
 					var frm = fr.Value.(*frames.Frame)
 					// f.ExceptionTable = &m.Exceptions
 					if frm == catchFrame {
-						f.Meth = append(f.Meth, f.Meth[handlerBytecode:])
+						f.Meth = f.Meth[handlerBytecode:]
 						frm.PC = 0
 						return nil
 					}
 				}
-				if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
-					errMsg := "ATHROW: Invalid bytecode offset for catch block"
-					exceptions.Throw(exceptions.NullPointerException, errMsg)
-					return errors.New(errMsg)
-				}
+				// if handlerBytecode == -1 { // ! In theory, impossible. Here just to avoid non-use golang warning
+				// 	errMsg := "ATHROW: Invalid bytecode offset for catch block"
+				// 	exceptions.Throw(exceptions.NullPointerException, errMsg)
+				// 	return errors.New(errMsg)
+				// }
 				// CURR: resume with locating the frame and resetting the PC to the handler
 			}
 		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
