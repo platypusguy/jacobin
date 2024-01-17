@@ -67,6 +67,16 @@ func FindCatchFrame(fs *list.List, excetpName string, pc int) (*frames.Frame, in
 					catchName == "java/lang/Error" ||
 					catchName == "java/lang/Exception" {
 					return f, entry.HandlerPc
+				} else {
+					catchClass := classloader.MethAreaFetch(catchName)
+					if catchClass == nil { // if the class isn't found, skip it
+						continue // in theory, this should be impossible
+					}
+					if catchClass.Data.Superclass == "java/lang/Throwable" ||
+						catchClass.Data.Superclass == "java/lang/Error" ||
+						catchClass.Data.Superclass == "java/lang/Exception" {
+						return f, entry.HandlerPc
+					}
 				}
 			}
 		}
