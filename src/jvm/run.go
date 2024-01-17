@@ -1267,11 +1267,11 @@ func runFrame(fs *list.List) error {
 		case opcodes.I2C: //	0x92 convert to 16-bit char
 			// determine what happens in Java if the int is negative
 			intVal := pop(f).(int64)
-			charVal := uint16(intVal) // Java chars are 16-bit unsigned value
+			charVal := uint16(intVal) // Java chars are 16-bit unsigned values
 			push(f, int64(charVal))
 		case opcodes.I2S: //	0x93 convert int to short
 			intVal := pop(f).(int64)
-			shortVal := int32(intVal)
+			shortVal := int16(intVal) // Java shorts are 16-bit signed values
 			push(f, int64(shortVal))
 		case opcodes.LCMP: // 	0x94 (compare two longs, push int -1, 0, or 1, depending on result)
 			value2 := pop(f).(int64)
