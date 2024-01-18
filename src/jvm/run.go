@@ -2368,7 +2368,9 @@ func runFrame(fs *list.List) error {
 					var frm = fr.Value.(*frames.Frame)
 					// f.ExceptionTable = &m.Exceptions
 					if frm == catchFrame {
-						f.Meth = f.Meth[handlerBytecode:]
+						frm.Meth = f.Meth[handlerBytecode:]
+						frm.TOS = -1
+						push(frm, objectRef)
 						frm.PC = 0
 						break // exit this processing and loop will resume at PC 0
 					}
