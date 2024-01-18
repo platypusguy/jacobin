@@ -148,6 +148,7 @@ func runThread(t *thread.ExecThread) error {
 // a different function for execution. Otherwise, bytecode interpretation takes
 // place through a giant switch statement.
 func runFrame(fs *list.List) error {
+frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
@@ -2372,6 +2373,9 @@ func runFrame(fs *list.List) error {
 						frm.TOS = -1
 						push(frm, objectRef)
 						frm.PC = 0
+						// make the frame with the catch block active
+						fs.Front().Value = frm
+						goto frameInterpreter
 						break // exit this processing and loop will resume at PC 0
 					}
 				}
