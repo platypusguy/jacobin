@@ -19,8 +19,8 @@ import (
 // current frame stack working its way up the frame stack (fs). If one is found,
 // it returns a pointer to that frame, otherwise it returns nil. Param pc is the
 // program counter in the current frame where the execption was thrown.
-func FindCatchFrame(fs *list.List, excetpName string, pc int) (*frames.Frame, int) {
-	excName := util.ConvertClassFilenameToInternalFormat(excetpName)
+func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, int) {
+	excName := util.ConvertClassFilenameToInternalFormat(exceptName)
 
 	for fr := fs.Front(); fr != nil; fr = fr.Next() {
 		var f = fr.Value.(*frames.Frame)
