@@ -148,6 +148,8 @@ func runThread(t *thread.ExecThread) error {
 // a different function for execution. Otherwise, bytecode interpretation takes
 // place through a giant switch statement.
 func runFrame(fs *list.List) error {
+	glob := globals.GetGlobalRef()
+
 frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
@@ -262,7 +264,7 @@ frameInterpreter:
 						object.CreateCompactStringFromGoString(CPe.StringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
-						glob := globals.GetGlobalRef()
+						// glob := globals.GetGlobalRef()
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(errMsg, log.SEVERE)
@@ -271,7 +273,7 @@ frameInterpreter:
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC: Invalid type for instruction"
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
@@ -296,7 +298,7 @@ frameInterpreter:
 						object.CreateCompactStringFromGoString(CPe.StringVal)
 					stringAddr.Klass = &object.StringClassName
 					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
-						glob := globals.GetGlobalRef()
+						// glob := globals.GetGlobalRef()
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(errMsg, log.SEVERE)
@@ -305,7 +307,7 @@ frameInterpreter:
 					push(f, stringAddr)
 				}
 			} else { // TODO: Determine what exception to throw
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC_W: Invalid type for instruction"
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
@@ -323,7 +325,7 @@ frameInterpreter:
 				push(f, CPe.FloatVal)
 				push(f, CPe.FloatVal)
 			} else { // TODO: Determine what exception to throw
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
 				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
@@ -402,7 +404,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == object.Null {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "I/C/SALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -412,7 +414,7 @@ frameInterpreter:
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 
 			if index >= int64(len(array)) {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "IALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -424,7 +426,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
 			if iAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -433,7 +435,7 @@ frameInterpreter:
 
 			array := *(iAref.Fields[0].Fvalue).(*[]int64)
 			if index >= int64(len(array)) {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
 					"LALOAD: Invalid array subscript")
@@ -448,7 +450,7 @@ frameInterpreter:
 			ref := pop(f) // ptr to array object
 			// fAref := (*object.JacobinFloatArray)(ref)
 			if ref == nil || ref == object.Null {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -458,7 +460,7 @@ frameInterpreter:
 			fAref := ref.(*object.Object)
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			if index >= int64(len(array)) {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -471,7 +473,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "DALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -480,7 +482,7 @@ frameInterpreter:
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 
 			if index >= int64(len(array)) {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "DALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -493,7 +495,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -503,7 +505,7 @@ frameInterpreter:
 			arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -517,7 +519,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			ref := pop(f) // the array object
 			if ref == nil || ref == object.Null {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
@@ -533,7 +535,7 @@ frameInterpreter:
 			case *[]uint8:
 				arrayPtr = ref.(*[]uint8)
 			default:
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
@@ -542,7 +544,7 @@ frameInterpreter:
 			size := int64(len(*arrayPtr))
 
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
@@ -639,7 +641,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			arrObj := pop(f).(*object.Object) // the array object
 			if arrObj == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"IA/CA/SASTORE: Invalid (null) reference to an array")
@@ -647,7 +649,7 @@ frameInterpreter:
 			}
 
 			if arrObj.Fields[0].Ftype != "[I" {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -658,7 +660,7 @@ frameInterpreter:
 			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("IA/CA/SASTORE: array size= %d but array index= %d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -673,7 +675,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			lAref := pop(f).(*object.Object) // ptr to array object
 			if lAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("LASTORE: Invalid (null) reference to an array")
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -683,7 +685,7 @@ frameInterpreter:
 			arrType := lAref.Fields[0].Ftype
 
 			if arrType != "[I" {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("LASTORE: field type expected=[I, observed=%s", arrType)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -695,7 +697,7 @@ frameInterpreter:
 			array := *(lAref.Fields[0].Fvalue).(*[]int64)
 			size := int64(len(array))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("LASTORE: array size=%d but index=%d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -710,7 +712,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			fAref := pop(f).(*object.Object) // ptr to array object
 			if fAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"FASTORE: Invalid (null) reference to an array")
@@ -718,7 +720,7 @@ frameInterpreter:
 			}
 
 			if fAref.Fields[0].Ftype != "[F" {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", fAref.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -730,7 +732,7 @@ frameInterpreter:
 			array := *(fAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("FASTORE: array size=%d but index=%d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -746,7 +748,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			dAref := pop(f).(*object.Object)
 			if dAref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"DASTORE: Invalid (null) reference to an array")
@@ -754,7 +756,7 @@ frameInterpreter:
 			}
 
 			if dAref.Fields[0].Ftype != "[F" {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", dAref.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -766,7 +768,7 @@ frameInterpreter:
 			array := *(dAref.Fields[0].Fvalue).(*[]float64)
 			size := int64(len(array))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -783,7 +785,7 @@ frameInterpreter:
 			ptrObj := pop(f).(*object.Object) // ptr to the array object
 
 			if ptrObj == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
@@ -791,7 +793,7 @@ frameInterpreter:
 			}
 
 			if !strings.HasPrefix(ptrObj.Fields[0].Ftype, types.RefArray) {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("AASTORE: field type must start with '[L', got %s", ptrObj.Fields[0].Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -804,7 +806,7 @@ frameInterpreter:
 			arrayPtr := ptrObj.Fields[0].Fvalue.(*[]*object.Object)
 			size := int64(len(*arrayPtr))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -823,7 +825,7 @@ frameInterpreter:
 			index := pop(f).(int64)
 			ptrObj := pop(f).(*object.Object) // ptr to array object
 			if ptrObj == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BASTORE: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -831,7 +833,7 @@ frameInterpreter:
 			}
 
 			if ptrObj.Fields[0].Ftype != "[B" {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
 					ptrObj.Fields[0].Ftype)
@@ -844,7 +846,7 @@ frameInterpreter:
 			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
 			size := int64(len(array))
 			if index >= size {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -855,7 +857,7 @@ frameInterpreter:
 
 		case opcodes.POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.FormatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
@@ -864,7 +866,7 @@ frameInterpreter:
 
 		case opcodes.POP2: // 0x58	(pop 2 items from stack and discard them)
 			if f.TOS < 1 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.FormatStackUnderflowError(f)
 				break // the error will be picked up on the next instruction
@@ -1001,7 +1003,7 @@ frameInterpreter:
 		case opcodes.IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
 			if val1 == 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArithmeticException, ""+
 					"IDIV: Arithmetic Exception: divide by zero")
@@ -1014,7 +1016,7 @@ frameInterpreter:
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDIV: Arithmetic Exception: divide by zero"
 				exceptions.Throw(exceptions.ArithmeticException, errMsg)
@@ -1063,7 +1065,7 @@ frameInterpreter:
 		case opcodes.IREM: // 	0x70	(remainder after int division, modulo)
 			val2 := pop(f).(int64)
 			if val2 == 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "IREM: Arithmetic Exception: divide by zero"
 				exceptions.Throw(exceptions.ArithmeticException, errMsg)
@@ -1077,7 +1079,7 @@ frameInterpreter:
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LREM: Arithmetic Exception: divide by zero"
 				exceptions.Throw(exceptions.ArithmeticException, errMsg)
@@ -1516,7 +1518,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1552,7 +1554,7 @@ frameInterpreter:
 				if err == nil {
 					prevLoaded, ok = statics.Statics[fieldName]
 				} else {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1563,7 +1565,7 @@ frameInterpreter:
 			// if the field can't be found even after instantiating the
 			// containing class, something is wrong so get out of here.
 			if !ok {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
@@ -1603,7 +1605,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1639,7 +1641,7 @@ frameInterpreter:
 				if err == nil {
 					prevLoaded, ok = statics.Statics[fieldName]
 				} else {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1650,7 +1652,7 @@ frameInterpreter:
 			// if the field can't be found even after instantiating the
 			// containing class, something is wrong so get out of here.
 			if !ok {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -1723,7 +1725,7 @@ frameInterpreter:
 						Value: value,
 					}
 				default:
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1743,7 +1745,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			fieldEntry := CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1758,7 +1760,7 @@ frameInterpreter:
 			case *object.Object:
 				break
 			default:
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T", ref)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -1803,7 +1805,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			fieldEntry := CP.CpIndex[CPslot]
 			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1856,7 +1858,7 @@ frameInterpreter:
 				// the slot number in CP.Fields. It will be the same
 				// index into the object's fields.
 				if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
@@ -1896,7 +1898,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1931,7 +1933,7 @@ frameInterpreter:
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the classpath and retry
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1959,7 +1961,7 @@ frameInterpreter:
 				_, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
 				if err != nil {
 					// any exception message will already have been displayed to the user
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
 						className, methodName)
@@ -1972,7 +1974,7 @@ frameInterpreter:
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName
 					_ = log.Log(errMsg, log.SEVERE)
@@ -1981,7 +1983,7 @@ frameInterpreter:
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName
 					return errors.New(errMsg)
@@ -2007,7 +2009,7 @@ frameInterpreter:
 			mtEntry, err := classloader.FetchMethodAndCP(className, methName, methSig)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methName
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2031,7 +2033,7 @@ frameInterpreter:
 				_, err = runGmethod(mtEntry, fs, className, methName, methSig, &params, true)
 				if err != nil {
 					// any exception message will already have been displayed to the user
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methName)
 					return errors.New(errMsg)
@@ -2042,7 +2044,7 @@ frameInterpreter:
 				m := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(className, methName, methSig, &m, true, f)
 				if err != nil {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methName
 					return errors.New(errMsg)
@@ -2083,7 +2085,7 @@ frameInterpreter:
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2097,7 +2099,7 @@ frameInterpreter:
 			if k.Data.ClInit == types.ClInitNotRun {
 				err = runInitializationBlock(k, nil, fs)
 				if err != nil {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
 						className)
@@ -2118,7 +2120,7 @@ frameInterpreter:
 
 				if err != nil {
 					// any exceptions message will already have been displayed to the user
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKESTATIC: Error encountered in: " +
 						className + "." + methodName)
@@ -2128,7 +2130,7 @@ frameInterpreter:
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, false, f)
 				if err != nil {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKESTATIC: Error creating frame in: " +
 						className + "." + methodName)
@@ -2146,7 +2148,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: Invalid type for new object")
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2162,7 +2164,7 @@ frameInterpreter:
 
 			ref, err := InstantiateClass(className, fs)
 			if err != nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: could not load class %s", className)
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2173,7 +2175,7 @@ frameInterpreter:
 		case opcodes.NEWARRAY: // 0xBC create a new array of primitives
 			size := pop(f).(int64)
 			if size < 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid size for array"
 				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
@@ -2185,7 +2187,7 @@ frameInterpreter:
 
 			actualType := object.JdkArrayTypeToJacobinType(arrayType)
 			if actualType == object.ERROR {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid array type specified"
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2200,7 +2202,7 @@ frameInterpreter:
 		case opcodes.ANEWARRAY: // 0xBD create array of references
 			size := pop(f).(int64)
 			if size < 0 {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ANEWARRAY: Invalid size for array"
 				exceptions.Throw(exceptions.NegativeArraySizeException, errMsg)
@@ -2238,7 +2240,7 @@ frameInterpreter:
 			// expects a pointer to an array
 			ref := pop(f)
 			if ref == nil {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
@@ -2292,7 +2294,7 @@ frameInterpreter:
 
 			// capture the golang stack
 			stack := string(debug.Stack())
-			glob := globals.GetGlobalRef()
+			// glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = stack
 
 			// capture the JVM frame stack
@@ -2376,7 +2378,6 @@ frameInterpreter:
 						// make the frame with the catch block active
 						fs.Front().Value = frm
 						goto frameInterpreter
-						break // exit this processing and loop will resume at PC 0
 					}
 				}
 			}
@@ -2401,7 +2402,7 @@ frameInterpreter:
 					obj = (ref).(*object.Object)
 				}
 			default:
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "CHECKCAST: Invalid class reference"
 				exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2418,7 +2419,7 @@ frameInterpreter:
 				var className string
 				classNamePtr := classloader.FetchCPentry(CP, CPslot)
 				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
-					glob := globals.GetGlobalRef()
+					// glob := globals.GetGlobalRef()
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "CHECKCAST: Invalid classRef found"
 					_ = log.Log(errMsg, log.SEVERE)
@@ -2455,7 +2456,7 @@ frameInterpreter:
 							_ = log.Log(warnMsg, log.WARNING)
 						}
 					} else {
-						glob := globals.GetGlobalRef()
+						// glob := globals.GetGlobalRef()
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2465,7 +2466,7 @@ frameInterpreter:
 					classPtr := classloader.MethAreaFetch(className)
 					if classPtr == nil { // class wasn't loaded, so load it now
 						if classloader.LoadClassFromNameOnly(className) != nil {
-							glob := globals.GetGlobalRef()
+							// glob := globals.GetGlobalRef()
 							glob.ErrorGoStack = string(debug.Stack())
 							return errors.New("CHECKCAST: Could not load class: " + className)
 						}
@@ -2473,7 +2474,7 @@ frameInterpreter:
 					}
 
 					if classPtr != classloader.MethAreaFetch(*obj.Klass) {
-						glob := globals.GetGlobalRef()
+						// glob := globals.GetGlobalRef()
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2511,7 +2512,7 @@ frameInterpreter:
 						var className string
 						classNamePtr := classloader.FetchCPentry(CP, CPslot)
 						if classNamePtr.RetType != classloader.IS_STRING_ADDR {
-							glob := globals.GetGlobalRef()
+							// glob := globals.GetGlobalRef()
 							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := "INSTANCEOF: Invalid classRef found"
 							_ = log.Log(errMsg, log.SEVERE)
@@ -2526,7 +2527,7 @@ frameInterpreter:
 						classPtr := classloader.MethAreaFetch(className)
 						if classPtr == nil { // class wasn't loaded, so load it now
 							if classloader.LoadClassFromNameOnly(className) != nil {
-								glob := globals.GetGlobalRef()
+								// glob := globals.GetGlobalRef()
 								glob.ErrorGoStack = string(debug.Stack())
 								errMsg := "INSTANCEOF: Could not load class: " + className
 								_ = log.Log(errMsg, log.SEVERE)
@@ -2563,7 +2564,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.ClassRef {
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				return errors.New("MULTIANEWARRAY: multi-dimensional array presently supports classes only")
 			} else {
@@ -2600,7 +2601,7 @@ frameInterpreter:
 			f.PC += 1
 
 			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
-				glob := globals.GetGlobalRef()
+				// glob := globals.GetGlobalRef()
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
 				_ = log.Log(errMsg, log.SEVERE)
@@ -2679,7 +2680,7 @@ frameInterpreter:
 			}
 
 		case opcodes.IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
-			glob := globals.GetGlobalRef()
+			// glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = string(debug.Stack())
 			errCode := f.Meth[2]
 			switch errCode {
@@ -2724,7 +2725,7 @@ frameInterpreter:
 				missingOpCode += fmt.Sprintf("(%s)", opcodes.BytecodeNames[f.Meth[f.PC]])
 			}
 
-			glob := globals.GetGlobalRef()
+			// glob := globals.GetGlobalRef()
 			glob.ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
 				missingOpCode, f.PC, f.MethName, f.ClName)
