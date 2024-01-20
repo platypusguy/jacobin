@@ -7,7 +7,6 @@
 package object
 
 import (
-	"jacobin/log"
 	"jacobin/types"
 )
 
@@ -115,7 +114,7 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		of = Field{Ftype: types.FloatArray, Fvalue: &farArr}
 		o.Fields = append(o.Fields, of)
 	case REF: // reference/pointer arrays
-		_ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
+		// TODO: Why? -->  _ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
 		rarArr := make([]*Object, size)
 		of = Field{Ftype: types.RefArray, Fvalue: &rarArr}
 		o.Fields = append(o.Fields, of)
