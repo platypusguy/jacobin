@@ -2117,7 +2117,7 @@ frameInterpreter:
 			f.PC += 1
 
 			actualType := object.JdkArrayTypeToJacobinType(arrayType)
-			if actualType == object.ERROR {
+			if actualType == object.ERROR || actualType == object.REF {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid array type specified"
 				_ = log.Log(errMsg, log.SEVERE)

@@ -119,7 +119,9 @@ func TestAaloadWithNil(t *testing.T) {
 	}
 }
 
-// AASTORE: store value in array of bytes
+// NEWARRAY: create an array of integers.
+// AASTORE: store value in array of bytes.
+//
 // Create an array of 30 elements, store ptr value in array[20],
 // then go through all the elements in the array, and test for
 // a non-nil value. Should result in a single non-nil value.
@@ -127,20 +129,20 @@ func TestAaloadWithNil(t *testing.T) {
 func TestAastore(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(30))                   // make the array 30 elements big
-	f.Meth = append(f.Meth, object.T_REF) // make it an array of references
+	f.Meth = append(f.Meth, object.T_INT) // make it an array of references
 
 	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.TOS != 0 {
-		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+		t.Errorf("TestAastore: Top of stack, expected 0, got: %d", f.TOS)
 	}
 
 	// did we capture the address of the new array in globals?
 	g := globals.GetGlobalRef()
 	if g.ArrayAddressList.Len() != 1 {
-		t.Errorf("Expecting array address list to have length 1, got %d",
+		t.Errorf("TestAastore: Expecting array address list to have length 1, got %d",
 			g.ArrayAddressList.Len())
 	}
 
@@ -155,15 +157,11 @@ func TestAastore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]*object.Object))
-	var total int64
+	array := *(ptr.Fields[0].Fvalue.(*[]int64))
 	for i := 0; i < 30; i++ {
-		if array[i] != nil {
-			total += 1
+		if array[i] != 0 {
+			t.Errorf("TestAastore: Expected array[%d]=0, observed: %d", i, array[i])
 		}
-	}
-	if total != 1 {
-		t.Errorf("AASTORE: Expected 1 value not to be nil, got: %d", total)
 	}
 }
 
@@ -545,7 +543,7 @@ func TestLongArrayLength(t *testing.T) {
 func TestRefArrayLength(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(34))                   // make the array 34 elements big
-	f.Meth = append(f.Meth, object.T_REF) // make it an array of references
+	f.Meth = append(f.Meth, object.T_INT) // make it an array of references
 
 	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
@@ -2386,8 +2384,8 @@ func TestNewrrayInvalidSize(t *testing.T) {
 	}
 }
 
-// NEWARRAY: Create new array -- test with invalid type
-func TestNewrrayInvalidType(t *testing.T) {
+// NEWARRAY: Create new array -- test with invalid type ERROR
+func TestNewrrayInvalidTypeError(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(13))                   // size
 	f.Meth = append(f.Meth, object.ERROR) // invalid type
@@ -2399,12 +2397,35 @@ func TestNewrrayInvalidType(t *testing.T) {
 	err := runFrame(fs)
 
 	if err == nil {
-		t.Errorf("NEWARRAY: Expected an error message, but got none")
+		t.Errorf("TestNewrrayInvalidTypeError: Expected an error message, but got none")
 	}
 
 	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid array type specified") {
-		t.Errorf("NEWARRAY: Got unexpected error message: %s", errMsg)
+		t.Errorf("TestNewrrayInvalidTypeError: Got unexpected error message: %s", errMsg)
+	}
+}
+
+// NEWARRAY: Create new array -- test with invalid type T_REF
+func TestNewrrayInvalidTypeRef(t *testing.T) {
+	f := newFrame(opcodes.NEWARRAY)
+	push(&f, int64(13))                   // size
+	f.Meth = append(f.Meth, object.T_REF) // invalid type
+
+	globals.InitGlobals("test")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("TestNewrrayInvalidTypeRef: Expected an error message, but got none")
+		return
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Invalid array type specified") {
+		t.Errorf("TestNewrrayInvalidTypeRef: Got unexpected error message: %s", errMsg)
 	}
 }
 
