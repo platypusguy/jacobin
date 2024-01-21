@@ -119,13 +119,12 @@ func TestAaloadWithNil(t *testing.T) {
 	}
 }
 
-// NEWARRAY: create an array of integers.
-// AASTORE: store value in array of bytes.
+// NEWARRAY: create an array of T_INT.
+// AASTORE: store the array.
 //
-// Create an array of 30 elements, store ptr value in array[20],
-// then go through all the elements in the array, and test for
-// a non-nil value. Should result in a single non-nil value.
-// TODO: Needs to be fixed, the array should be an array of references created with ANEWARRAY
+// Create an array of 30 elements and store ptr value in array[20].
+// Then, go through all the elements in the array and test for
+// a zero value in each element.
 func TestAastore(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(30))                   // make the array 30 elements big
