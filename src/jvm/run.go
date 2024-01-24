@@ -2366,7 +2366,6 @@ frameInterpreter:
 							break // exit this bytecode processing
 						} else {
 							/*** TODO: bypass this Throw action. Right thing to do?
-							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.Throw(exceptions.ClassCastException, errMsg)
 							return errors.New(errMsg)
