@@ -15,8 +15,9 @@ import (
 )
 
 // List of Java exceptions (as of Java 17)
+
 // -----------------------------------------------------------------------//
-// IMPORTANT: Do not modify this list unless you modify the corresponding
+// IMPORTANT! Do not modify this list unless you modify the corresponding
 // entries in JVMExceptionNames in exactly the same way.
 // This list and that table must be kept strictly in sync.
 const (
@@ -211,7 +212,7 @@ const (
 )
 
 // -----------------------------------------------------------------------//
-// IMPORTANT: Do not modify this list unless you modify the corresponding
+// IMPORTANT! Do not modify this list unless you modify the corresponding
 // entries in the preceding list of constants in exactly the same way.
 // This table and that list must be kept strictly in sync.
 var JVMexceptionNames = []string{
