@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -15,6 +15,10 @@ import (
 )
 
 // List of Java exceptions (as of Java 17)
+// -----------------------------------------------------------------------//
+// IMPORTANT: Do not modify this list unless you modify the corresponding
+// entries in JVMExceptionNames in exactly the same way.
+// This list and that table must be kept strictly in sync.
 const (
 	Unknown = iota
 
@@ -206,14 +210,7 @@ const (
 	UTFDataFormatException
 )
 
-// JacobinRuntimeErrLiterals are the displayed strings for the given exception.
-// They are in the order of the listed exceptions and errors above
-var JacobinRuntimeErrLiterals = []string{
-	"",
-	"",
-	"Arithmetic Exception, Divide by Zero",
-}
-
+// -----------------------------------------------------------------------//
 // IMPORTANT: Do not modify this list unless you modify the corresponding
 // entries in the preceding list of constants in exactly the same way.
 // This table and that list must be kept strictly in sync.
