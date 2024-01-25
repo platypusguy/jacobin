@@ -214,6 +214,9 @@ var JacobinRuntimeErrLiterals = []string{
 	"Arithmetic Exception, Divide by Zero",
 }
 
+// IMPORTANT: Do not modify this list unless you modify the corresponding
+// entries in the preceding list of constants in exactly the same way.
+// This table and that list must be kept strictly in sync.
 var JVMexceptionNames = []string{
 	"java.lang.AnnotationTypeMismatchException.class",
 	"java.lang.ArithmeticException.class",
