@@ -36,10 +36,11 @@ func throw(which int, msg string, f *frames.Frame) {
 	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
 
 	// the functionality we generate bytecodes for is (using a NPE as an example):
-	// 0: new           #7      // class java/lang/NullPointerException
+	// 0: new           #7                  // class java/lang/NullPointerException
 	// 3: dup
-	// 4: invokespecial #9      // Method java/lang/NullPointerException."<init>":()V
-	// 7: athrow
+	// 4: ldc           #9                  // String  (the msg passed into this function)
+	// 6: invokespecial #11                 // Method java/lang/NullPointerException."<init>":(Ljava/lang/String;)V
+	// 9: athrow
 	//
 	// Note that to do this, we need to twiddle with the constant pool as well
 
@@ -61,7 +62,27 @@ func throw(which int, msg string, f *frames.Frame) {
 	genCode = append(genCode, uint8(len(CP.CpIndex)-2))
 	genCode = append(genCode, opcodes.DUP)
 
-	// now work on the invokespecial of the constructor
+	// now load the error message, if any
+	if msg != "" {
+		CP.Utf8Refs = append(CP.Utf8Refs, msg)
+		ut8MsgIndex := uint16(len(CP.Utf8Refs) - 1)
+		CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+			Type: classloader.UTF8, Slot: ut8MsgIndex})
+		CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+			Type: classloader.StringConst, Slot: uint16(len(CP.CpIndex) - 1)})
+		stringMsgIndex := uint16(len(CP.CpIndex) - 1)
+		if stringMsgIndex < 256 {
+			genCode = append(genCode, opcodes.LDC)
+			genCode = append(genCode, uint8(stringMsgIndex))
+		} else {
+			// if the index is > 255, we need to use LDC_W and a two-byte index
+			hiByte := uint8(stringMsgIndex >> 8)
+			loByte := uint8(stringMsgIndex)
+			genCode = append(genCode, opcodes.LDC_W)
+			genCode = append(genCode, hiByte)
+			genCode = append(genCode, loByte)
+		}
+	}
 
 	fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
 		exceptionClassName, exceptionCPname)
