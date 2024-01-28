@@ -49,7 +49,7 @@ func throw(which int, msg string, f *frames.Frame) {
 	CP.Utf8Refs = append(CP.Utf8Refs, exceptionCPname)
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
-
+	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
 	// then add a classref entry for the exception
 	CP.ClassRefs = append(CP.ClassRefs, uint16(len(CP.CpIndex)-1)) // point to the UTF8 entry
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
@@ -83,6 +83,34 @@ func throw(which int, msg string, f *frames.Frame) {
 			genCode = append(genCode, loByte)
 		}
 	}
+
+	// now, set up the CP entries for INVOKESPECIAL. This includes a MethodRef
+	// which points to the previous classRef and to a name and type record, which
+	// itself pointos to a UTF8 entry for the method name and a UTF8 entry for
+	// the method's signature. We start with the NameAndType entry.
+	CP.Utf8Refs = append(CP.Utf8Refs, "<init>")
+	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
+	if msg != "" {
+		CP.Utf8Refs = append(CP.Utf8Refs, "(Ljava/lang/String;)V")
+	} else {
+		CP.Utf8Refs = append(CP.Utf8Refs, "()V")
+	}
+	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
+	CP.NameAndTypes = append(CP.NameAndTypes, classloader.NameAndTypeEntry{
+		NameIndex: uint16(len(CP.CpIndex) - 2),
+		DescIndex: uint16(len(CP.CpIndex) - 1)})
+	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+		Type: classloader.NameAndType, Slot: uint16(len(CP.NameAndTypes) - 1)})
+
+	// now the MethodRef entry
+	CP.MethodRefs = append(CP.MethodRefs, classloader.MethodRefEntry{
+		ClassIndex:  exceptionClassCPindex,
+		NameAndType: uint16(len(CP.CpIndex) - 1)})
+	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
+		Type: classloader.MethodRef, Slot: uint16(len(CP.MethodRefs) - 1)})
+	// methodCPindex := uint16(len(CP.CpIndex) - 1)  // CURR: resume with set up of invokespecial
 
 	fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
 		exceptionClassName, exceptionCPname)
