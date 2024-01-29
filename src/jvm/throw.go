@@ -110,7 +110,17 @@ func throw(which int, msg string, f *frames.Frame) {
 		NameAndType: uint16(len(CP.CpIndex) - 1)})
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.MethodRef, Slot: uint16(len(CP.MethodRefs) - 1)})
-	// methodCPindex := uint16(len(CP.CpIndex) - 1)  // CURR: resume with set up of invokespecial
+	methodCPindex := uint16(len(CP.CpIndex) - 1) // CURR: resume with set up of invokespecial
+
+	genCode = append(genCode, opcodes.INVOKESPECIAL)
+	hiByte := uint8(methodCPindex >> 8)
+	loByte := uint8(methodCPindex)
+	genCode = append(genCode, hiByte)
+	genCode = append(genCode, loByte)
+	genCode = append(genCode, opcodes.ATHROW)
+
+	// now append the genCode to the bytecode of the current method in the frame
+	// and set the PC to point to it.
 
 	fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
 		exceptionClassName, exceptionCPname)
