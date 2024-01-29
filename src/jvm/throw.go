@@ -121,6 +121,9 @@ func throw(which int, msg string, f *frames.Frame) {
 
 	// now append the genCode to the bytecode of the current method in the frame
 	// and set the PC to point to it.
+	endPoint := len(f.Meth)
+	f.Meth = append(f.Meth, genCode...)
+	f.PC = endPoint
 
 	fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
 		exceptionClassName, exceptionCPname)
