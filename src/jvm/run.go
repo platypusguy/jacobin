@@ -2245,6 +2245,12 @@ frameInterpreter:
 				} else {
 					msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
 				}
+
+				appMsg := objectRef.FieldTable["detailMessage"].Fvalue
+				if appMsg != nil {
+					s := appMsg.(*object.Object)
+					msg += fmt.Sprintf(": %s", string(*s.Fields[0].Fvalue.(*[]byte)))
+				}
 				_ = log.Log(msg, log.SEVERE)
 
 				steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
