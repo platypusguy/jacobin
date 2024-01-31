@@ -49,25 +49,29 @@ func throw(which int, msg string, f *frames.Frame) {
 	CP.Utf8Refs = append(CP.Utf8Refs, exceptionCPname)
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
-	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
 	// then add a classref entry for the exception
 	CP.ClassRefs = append(CP.ClassRefs, uint16(len(CP.CpIndex)-1)) // point to the UTF8 entry
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.ClassRef, Slot: uint16(len(CP.ClassRefs) - 1)})
+	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
 
 	// start converting previous work into bytecode
 	var genCode []byte
 	genCode = append(genCode, opcodes.NOP) // the first bytecode is skipped by the JVM
 	genCode = append(genCode, opcodes.NEW)
-	genCode = append(genCode, uint8(len(CP.CpIndex)-2))
+	hiByte := uint8((len(CP.CpIndex) - 1) >> 8)
+	loByte := uint8(len(CP.CpIndex) - 1)
+	genCode = append(genCode, hiByte)
+	genCode = append(genCode, loByte)
+	// genCode = append(genCode, uint8(len(CP.CpIndex)-2))
 	genCode = append(genCode, opcodes.DUP)
 
 	// now load the error message, if any
 	if msg != "" {
 		CP.Utf8Refs = append(CP.Utf8Refs, msg)
-		ut8MsgIndex := uint16(len(CP.Utf8Refs) - 1)
+		utf8MsgIndex := uint16(len(CP.Utf8Refs) - 1)
 		CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
-			Type: classloader.UTF8, Slot: ut8MsgIndex})
+			Type: classloader.UTF8, Slot: utf8MsgIndex})
 		CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 			Type: classloader.StringConst, Slot: uint16(len(CP.CpIndex) - 1)})
 		stringMsgIndex := uint16(len(CP.CpIndex) - 1)
@@ -76,8 +80,8 @@ func throw(which int, msg string, f *frames.Frame) {
 			genCode = append(genCode, uint8(stringMsgIndex))
 		} else {
 			// if the index is > 255, we need to use LDC_W and a two-byte index
-			hiByte := uint8(stringMsgIndex >> 8)
-			loByte := uint8(stringMsgIndex)
+			hiByte = uint8(stringMsgIndex >> 8)
+			loByte = uint8(stringMsgIndex)
 			genCode = append(genCode, opcodes.LDC_W)
 			genCode = append(genCode, hiByte)
 			genCode = append(genCode, loByte)
@@ -86,7 +90,7 @@ func throw(which int, msg string, f *frames.Frame) {
 
 	// now, set up the CP entries for INVOKESPECIAL. This includes a MethodRef
 	// which points to the previous classRef and to a name and type record, which
-	// itself pointos to a UTF8 entry for the method name and a UTF8 entry for
+	// itself points to a UTF8 entry for the method name and a UTF8 entry for
 	// the method's signature. We start with the NameAndType entry.
 	CP.Utf8Refs = append(CP.Utf8Refs, "<init>")
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
@@ -113,8 +117,8 @@ func throw(which int, msg string, f *frames.Frame) {
 	methodCPindex := uint16(len(CP.CpIndex) - 1) // CURR: resume with set up of invokespecial
 
 	genCode = append(genCode, opcodes.INVOKESPECIAL)
-	hiByte := uint8(methodCPindex >> 8)
-	loByte := uint8(methodCPindex)
+	hiByte = uint8(methodCPindex >> 8)
+	loByte = uint8(methodCPindex)
 	genCode = append(genCode, hiByte)
 	genCode = append(genCode, loByte)
 	genCode = append(genCode, opcodes.ATHROW)
