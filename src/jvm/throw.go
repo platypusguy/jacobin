@@ -7,13 +7,11 @@
 package jvm
 
 import (
-	"fmt"
 	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/opcodes"
 	"jacobin/util"
-	"os"
 )
 
 // This file contains support functions for throwing exceptions from within
@@ -29,8 +27,8 @@ func throw(which int, msg string, f *frames.Frame) {
 	// the name of the exception as shown to the user
 	exceptionNameForUser := exceptions.JVMexceptionNames[which]
 
-	// the name of the class that implements this exception
-	exceptionClassName := util.ConvertInternalClassNameToFilename(exceptionNameForUser)
+	// // the name of the class that implements this exception
+	// exceptionClassName := util.ConvertInternalClassNameToFilename(exceptionNameForUser)
 
 	// the internal format used in the constant pool
 	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
@@ -129,6 +127,6 @@ func throw(which int, msg string, f *frames.Frame) {
 	f.Meth = append(f.Meth, genCode...)
 	f.PC = endPoint
 
-	fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
-		exceptionClassName, exceptionCPname)
+	// fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
+	// 	exceptionClassName, exceptionCPname)
 }

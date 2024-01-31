@@ -91,9 +91,14 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 
 	case StringConst: // points to a CP entry, which is a UTF-8 string constant
 		e := cp.CpIndex[entry.Slot]
-		className := FetchUTF8stringFromCPEntryNumber(&cp, e.Slot)
+		// should point to a UTF-8
+		if e.Type != UTF8 {
+			return CpType{EntryType: 0, RetType: IS_ERROR}
+		}
+
+		str := cp.Utf8Refs[e.Slot]
 		return CpType{EntryType: int(entry.Type),
-			RetType: IS_STRING_ADDR, StringVal: &className}
+			RetType: IS_STRING_ADDR, StringVal: &str}
 	case UTF8: // same code as for ClassRef
 		v := &(cp.Utf8Refs[entry.Slot])
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRING_ADDR, StringVal: v}
