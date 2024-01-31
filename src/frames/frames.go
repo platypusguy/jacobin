@@ -29,17 +29,16 @@ type Number interface {
 // second stack entry for these data items.
 type Frame struct {
 	Thread   int
-	MethName string // method nam
-	MethType string // method type (signature)
-	ClName   string // class name
-	Meth     []byte // bytecode of method
-	// ExceptionTable *[]classloader.CodeException // list of code exceptions
-	CP      interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
-	Locals  []interface{} // local variables
-	OpStack []interface{} // operand stack
-	TOS     int           // top of the operand stack
-	PC      int           // program counter (index into the bytecode of the method)
-	Ftype   byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	MethName string        // method nam
+	MethType string        // method type (signature)
+	ClName   string        // class name
+	Meth     []byte        // bytecode of method
+	CP       interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
+	Locals   []interface{} // local variables
+	OpStack  []interface{} // operand stack
+	TOS      int           // top of the operand stack
+	PC       int           // program counter (index into the bytecode of the method)
+	Ftype    byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
 }
 
 // CreateFrameStack creates a stack of frames. Implemented as a list in which

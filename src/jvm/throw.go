@@ -61,7 +61,6 @@ func throw(which int, msg string, f *frames.Frame) {
 	loByte := uint8(len(CP.CpIndex) - 1)
 	genCode = append(genCode, hiByte)
 	genCode = append(genCode, loByte)
-	// genCode = append(genCode, uint8(len(CP.CpIndex)-2))
 	genCode = append(genCode, opcodes.DUP)
 
 	// now load the error message, if any
@@ -126,7 +125,4 @@ func throw(which int, msg string, f *frames.Frame) {
 	endPoint := len(f.Meth)
 	f.Meth = append(f.Meth, genCode...)
 	f.PC = endPoint
-
-	// fmt.Fprintf(os.Stderr, "Throwing exception: %s, internal name: %s\n",
-	// 	exceptionClassName, exceptionCPname)
 }
