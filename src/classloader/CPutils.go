@@ -83,12 +83,17 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 		return CpType{EntryType: int(entry.Type), RetType: IS_FLOAT64, FloatVal: retFloat}
 
 	// addresses of strings
-	case ClassRef: // points to a CP entry, which is a UTF-8 string for class name
+	case ClassRef: // points to a CP entry, which is a UTF-8 holding the class name
 		e := cp.ClassRefs[entry.Slot]
 		className := FetchUTF8stringFromCPEntryNumber(&cp, e)
 		return CpType{EntryType: int(entry.Type),
 			RetType: IS_STRING_ADDR, StringVal: &className}
 
+	case StringConst: // points to a CP entry, which is a UTF-8 string constant
+		e := cp.CpIndex[entry.Slot]
+		className := FetchUTF8stringFromCPEntryNumber(&cp, e.Slot)
+		return CpType{EntryType: int(entry.Type),
+			RetType: IS_STRING_ADDR, StringVal: &className}
 	case UTF8: // same code as for ClassRef
 		v := &(cp.Utf8Refs[entry.Slot])
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRING_ADDR, StringVal: v}
