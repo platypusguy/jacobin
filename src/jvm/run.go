@@ -966,7 +966,6 @@ frameInterpreter:
 			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
 				throw(exceptions.ArithmeticException, "IDIV: Arithmetic Exception: divide by zero", f)
-				//		return errors.New("IDIV: Arithmetic Exception: divide by zero")
 			} else {
 				val2 := pop(f).(int64)
 				push(f, val2/val1)
