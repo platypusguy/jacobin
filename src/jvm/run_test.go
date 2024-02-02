@@ -2251,13 +2251,12 @@ func TestIdiv(t *testing.T) {
 	}
 }
 
-/* ***TENTATIVELY commented out to allow work on exceptions ***
 // IDIV: make sure that divide by zero generates an Arithmetic Exception and
 // displays an error message.
+/* TEMPORARILY DISABLED because of reworking how exceptions are thrown.
 func TestIdivDivideByZero(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
-	// g.Threads = list.New()
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
 	log.Init()
 
@@ -2270,9 +2269,27 @@ func TestIdivDivideByZero(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
+	// Init classloader and load base classes
+	err := classloader.Init() // must precede classloader.LoadBaseClasses
+	if err != nil {
+		t.Errorf("Error initiating environment for IDIV test")
+	}
+	classloader.LoadBaseClasses() // load base classes
+
+	// initialize the MTable (table caching methods)
+	classloader.MTable = make(map[string]classloader.MTentry)
+	gfunction.MTableLoadNatives(&classloader.MTable) // load native classes
+
 	f := newFrame(opcodes.IDIV)
 	f.ClName = "testClass"
 	f.MethName = "testMethod"
+	var CP = classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.Utf8Refs = []string{"java/lang/ArithmeticException"}
+	CP.ClassRefs = []uint16{0}
+	f.CP = &CP
+
 	push(&f, int64(220))
 	push(&f, int64(0))
 	fs := frames.CreateFrameStack()
@@ -2294,11 +2311,11 @@ func TestIdivDivideByZero(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Arithmetic Exception") {
+	if !strings.Contains(errMsg, "java.lang.ArithmeticException") {
 		t.Errorf("IDIV: Did not get expected error msg, got: %s", errMsg)
 	}
-}
-*/
+} */
+
 // ICONST_M1:
 func TestIconstN1(t *testing.T) {
 	f := newFrame(opcodes.ICONST_M1)
