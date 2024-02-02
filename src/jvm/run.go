@@ -965,7 +965,11 @@ frameInterpreter:
 			val1 := pop(f).(int64)
 			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				throw(exceptions.ArithmeticException, "IDIV: Arithmetic Exception: divide by zero", f)
+				errMsg := fmt.Sprintf("IDIV: division by zero -- %d/0", val1)
+				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
+					errMsg = "/ by zero"
+				}
+				throw(exceptions.ArithmeticException, errMsg, f)
 			} else {
 				val2 := pop(f).(int64)
 				push(f, val2/val1)
