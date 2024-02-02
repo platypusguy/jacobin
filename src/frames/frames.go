@@ -29,7 +29,7 @@ type Number interface {
 // second stack entry for these data items.
 type Frame struct {
 	Thread   int
-	MethName string        // method nam
+	MethName string        // method name
 	MethType string        // method type (signature)
 	ClName   string        // class name
 	Meth     []byte        // bytecode of method
