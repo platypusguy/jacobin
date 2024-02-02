@@ -45,9 +45,6 @@ jobs:
         export JACOBIN_EXE=`pwd`/jacobin 
         go test -v ./...
 
-    - name: Codecov
-      uses: codecov/codecov-action@main
-
   windows-build-and-test:
     strategy:
       matrix:
@@ -87,6 +84,3 @@ jobs:
         $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
         go test -v ./...
-
-    - name: Codecov
-      uses: codecov/codecov-action@main
