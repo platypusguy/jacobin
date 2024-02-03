@@ -111,7 +111,7 @@ func throw(which int, msg string, f *frames.Frame) {
 		NameAndType: uint16(len(CP.CpIndex) - 1)})
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.MethodRef, Slot: uint16(len(CP.MethodRefs) - 1)})
-	methodCPindex := uint16(len(CP.CpIndex) - 1) // CURR: resume with set up of invokespecial
+	methodCPindex := uint16(len(CP.CpIndex) - 1)
 
 	genCode = append(genCode, opcodes.INVOKESPECIAL)
 	hiByte = uint8(methodCPindex >> 8)
