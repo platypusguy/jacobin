@@ -963,15 +963,15 @@ frameInterpreter:
 			push(f, res)
 		case opcodes.IDIV: //  0x6C (integer divide tos-1 by tos)
 			val1 := pop(f).(int64)
+			val2 := pop(f).(int64)
 			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IDIV: division by zero -- %d/0", val1)
+				errMsg := fmt.Sprintf("IDIV: division by zero -- %d/0", val2)
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
 					errMsg = "/ by zero"
 				}
 				throw(exceptions.ArithmeticException, errMsg, f)
 			} else {
-				val2 := pop(f).(int64)
 				push(f, val2/val1)
 			}
 		case opcodes.LDIV: //  0x6D   (long divide tos-2 by tos)
