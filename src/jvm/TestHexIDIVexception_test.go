@@ -53,7 +53,6 @@ var ThrowIDIVexceptionBytes = []byte{
 }
 
 func TestHexIDIVException(t *testing.T) {
-
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
