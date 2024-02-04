@@ -19,7 +19,8 @@ import (
 )
 
 // This test uses the byte array corresponding to the class file from the following Java code,
-// which tests the IDIV bytecode exception for division by zero:
+// which tests the IDIV bytecode exception for division by zero (see TestHexIDIVexception.java in
+// the \testdata directory):
 //
 //      // division by zero to throw exception
 //      public final class ThrowIDIVexception {
