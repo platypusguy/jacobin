@@ -2075,7 +2075,8 @@ frameInterpreter:
 				f.PC += 1                            // point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				return runFrame(fs)
+				// return runFrame(fs)
+				goto frameInterpreter // changed from return line above. Need to analyze which is better/safer
 			}
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
