@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -18,8 +18,17 @@ import (
 	"testing"
 )
 
-// These tests use the byte array corresponding to Hello2.class, which computes a series of small
-// numbers and prints them to stdout.
+// This test uses the byte array corresponding to the class file from the following Java code,
+// which tests the IDIV bytecode exception for division by zero:
+//
+//      // division by zero to throw exception
+//      public final class ThrowIDIVexception {
+//          public static void main(String[] args) {
+//              int n = 6;
+//	            int x = 0;
+//	            int y = n/x;
+//          }
+//      }
 
 var ThrowIDIVexceptionBytes = []byte{
 	0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x3D, 0x00, 0x0F, 0x0A, 0x00, 0x02, 0x00, 0x03, 0x07,
@@ -49,28 +58,26 @@ func TestHexIDIVException(t *testing.T) {
 		t.Skip()
 	}
 
-	redirecting := true
 	var normalStderr, rerr, werr *os.File
 	var normalStdout, _, wout *os.File
 	var err error
 
 	// redirect stderr & stdout to capture results from stderr
-	if redirecting {
-		// stderr
-		normalStderr = os.Stderr
-		rerr, werr, err = os.Pipe()
-		if err != nil {
-			t.Errorf("os.Pipe returned an error: %s", err.Error())
-			return
-		}
-		os.Stderr = werr
-		// stdout
-		normalStdout = os.Stdout
-		_, wout, _ = os.Pipe()
-		os.Stdout = wout
+	// stderr
+	normalStderr = os.Stderr
+	rerr, werr, err = os.Pipe()
+	if err != nil {
+		t.Errorf("os.Pipe returned an error: %s", err.Error())
+		return
 	}
+	os.Stderr = werr
 
-	// Initialise global, logging, classloader
+	// stdout
+	normalStdout = os.Stdout
+	_, wout, _ = os.Pipe()
+	os.Stdout = wout
+
+	// Initialize global, logging, classloader
 	globals.InitGlobals("test")
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
@@ -119,16 +126,14 @@ func TestHexIDIVException(t *testing.T) {
 		return
 	}
 
-	if redirecting {
-		_ = werr.Close()
-		_ = wout.Close()
-		msgStderr, _ := io.ReadAll(rerr)
+	_ = werr.Close()
+	_ = wout.Close()
+	msgStderr, _ := io.ReadAll(rerr)
 
-		os.Stderr = normalStderr
-		os.Stdout = normalStdout
-		if !strings.Contains(string(msgStderr), "java.lang.ArithmeticException: IDIV: division by zero") {
-			t.Errorf("Error expected 'java.lang.ArithmeticException: IDIV: division by zero', got: %s\n",
-				string(msgStderr))
-		}
+	os.Stderr = normalStderr
+	os.Stdout = normalStdout
+	if !strings.Contains(string(msgStderr), "java.lang.ArithmeticException: IDIV: division by zero") {
+		t.Errorf("Error expected 'java.lang.ArithmeticException: IDIV: division by zero', got: %s\n",
+			string(msgStderr))
 	}
 }
