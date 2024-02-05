@@ -2251,70 +2251,7 @@ func TestIdiv(t *testing.T) {
 	}
 }
 
-// IDIV: make sure that divide by zero generates an Arithmetic Exception and
-// displays an error message.
-/* TEMPORARILY DISABLED because of reworking how exceptions are thrown.
-func TestIdivDivideByZero(t *testing.T) {
-	g := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// Init classloader and load base classes
-	err := classloader.Init() // must precede classloader.LoadBaseClasses
-	if err != nil {
-		t.Errorf("Error initiating environment for IDIV test")
-	}
-	classloader.LoadBaseClasses() // load base classes
-
-	// initialize the MTable (table caching methods)
-	classloader.MTable = make(map[string]classloader.MTentry)
-	gfunction.MTableLoadNatives(&classloader.MTable) // load native classes
-
-	f := newFrame(opcodes.IDIV)
-	f.ClName = "testClass"
-	f.MethName = "testMethod"
-	var CP = classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.Utf8Refs = []string{"java/lang/ArithmeticException"}
-	CP.ClassRefs = []uint16{0}
-	f.CP = &CP
-
-	push(&f, int64(220))
-	push(&f, int64(0))
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-
-	// need to create a thread to catch the exception
-	thread := thread.CreateThread()
-	thread.Stack = fs
-	thread.AddThreadToTable(g)
-	_ = runFrame(fs)
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	if !strings.Contains(errMsg, "java.lang.ArithmeticException") {
-		t.Errorf("IDIV: Did not get expected error msg, got: %s", errMsg)
-	}
-} */
+// IDIV: Testing the exception is done in TestHexIDIVexception.go
 
 // ICONST_M1:
 func TestIconstN1(t *testing.T) {
