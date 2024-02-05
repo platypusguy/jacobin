@@ -975,17 +975,19 @@ frameInterpreter:
 				push(f, val2/val1)
 			}
 		case opcodes.LDIV: //  0x6D   (long divide tos-2 by tos)
-			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
-			if val2 == 0 {
+			val2 := pop(f).(int64)
+			pop(f)
+			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LDIV: Arithmetic Exception: divide by zero"
-				exceptions.Throw(exceptions.ArithmeticException, errMsg)
-				return errors.New(errMsg)
+				errMsg := fmt.Sprintf("LDIV: division by zero -- %d/0", val2)
+				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
+					errMsg = "/ by zero"
+				}
+				throw(exceptions.ArithmeticException, errMsg, f)
 			} else {
-				val1 := pop(f).(int64)
-				pop(f)
-				res := val1 / val2
+				res := val2 / val1
 				push(f, res)
 				push(f, res)
 			}
