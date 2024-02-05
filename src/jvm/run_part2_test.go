@@ -1068,23 +1068,7 @@ func TestLdiv(t *testing.T) {
 	}
 }
 
-// LDIV: with divide by zero error
-func TestLdivDivideByZero(t *testing.T) {
-	f := newFrame(opcodes.LDIV)
-	push(&f, int64(10))
-	push(&f, int64(10))
-
-	push(&f, int64(0))
-	push(&f, int64(0))
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	res := runFrame(fs)
-
-	if !strings.Contains(res.Error(), "divide by zero") {
-		t.Errorf("LDIV: Expected err msg re divide by zero, got: %s", res.Error())
-	}
-}
+// LDIV: with divide by zero error. This is handled in the wholeClassTests package
 
 // LLOAD: test load of long in locals[index] on to stack
 func TestLload(t *testing.T) {
