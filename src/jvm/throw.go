@@ -33,6 +33,9 @@ func throw(which int, msg string, f *frames.Frame) {
 	// the internal format used in the constant pool
 	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
 
+	// capture the PC where the exception was thrown (saved b/c later we modify the value of f.PC)
+	f.ExceptionPC = f.PC
+
 	// the functionality we generate bytecodes for is (using a NPE as an example):
 	// 0: new           #7                  // class java/lang/NullPointerException
 	// 3: dup

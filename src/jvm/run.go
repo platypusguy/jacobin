@@ -2232,10 +2232,10 @@ frameInterpreter:
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// get the PC of the exception and check for any catch blocks
-			exceptionPC := f.PC
+			// exceptionPC := f.PC
 
 			// find the frame with a valid catch block for this exception, if any
-			catchFrame, handlerBytecode := exceptions.FindCatchFrame(fs, exceptionName, exceptionPC)
+			catchFrame, handlerBytecode := exceptions.FindCatchFrame(fs, exceptionName, f.ExceptionPC)
 			// if there is no catch block, then print out the data we have (conforming
 			// with whether we want the standard JDK info as elected with the -strictJDK
 			// command-line option)

@@ -162,7 +162,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 		for i := 0; i < len(method.Attribs); i++ {
 			index := method.Attribs[i].AttrName
 			if method.Cp.Utf8Refs[index] == "LineNumberTable" {
-				line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.PC)
+				line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
 				if line != -1 { // -1 means not found
 					addField("sourceLine", fmt.Sprintf("%d", line))
 				}

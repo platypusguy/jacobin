@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -28,17 +28,18 @@ type Number interface {
 // without manipulation at this width. (However, there will still be need for the dummy
 // second stack entry for these data items.
 type Frame struct {
-	Thread   int
-	MethName string        // method name
-	MethType string        // method type (signature)
-	ClName   string        // class name
-	Meth     []byte        // bytecode of method
-	CP       interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
-	Locals   []interface{} // local variables
-	OpStack  []interface{} // operand stack
-	TOS      int           // top of the operand stack
-	PC       int           // program counter (index into the bytecode of the method)
-	Ftype    byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	Thread      int
+	MethName    string        // method name
+	MethType    string        // method type (signature)
+	ClName      string        // class name
+	Meth        []byte        // bytecode of method
+	CP          interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
+	Locals      []interface{} // local variables
+	OpStack     []interface{} // operand stack
+	TOS         int           // top of the operand stack
+	PC          int           // program counter (index into the bytecode of the method)
+	Ftype       byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	ExceptionPC int           // program counter at the moment the PC threw an exception
 }
 
 // CreateFrameStack creates a stack of frames. Implemented as a list in which
@@ -64,7 +65,9 @@ func CreateFrame(opStackSize int) *Frame {
 
 	// set top of stack to an empty stack
 	fram.TOS = -1
+
 	fram.PC = 0
+	fram.ExceptionPC = -1
 	return &fram
 }
 
