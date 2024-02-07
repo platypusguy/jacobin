@@ -2232,7 +2232,7 @@ frameInterpreter:
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// get the PC of the exception and check for any catch blocks
-			// exceptionPC := f.PC
+			f.ExceptionPC = f.PC
 
 			// find the frame with a valid catch block for this exception, if any
 			catchFrame, handlerBytecode := exceptions.FindCatchFrame(fs, exceptionName, f.ExceptionPC)
