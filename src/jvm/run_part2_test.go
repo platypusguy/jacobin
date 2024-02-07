@@ -436,19 +436,8 @@ func TestIrem(t *testing.T) {
 }
 
 // IREM: int modulo -- divide by zero
-func TestIremDivideByZero(t *testing.T) {
-	f := newFrame(opcodes.IREM)
-	push(&f, int64(6))
-	push(&f, int64(0))
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
-	errMsg := err.Error()
-	if !strings.Contains(errMsg, "divide by zero") {
-		t.Errorf("IREM: Expected divide by zero error msg, got: %s", errMsg)
-	}
-}
+// Because this test requires a full class set up due to IREM now throwing
+// a full exception, the test code has been moved to wholeClassTests.
 
 // IRETURN: push an int on to the op stack of the calling method and exit the present method/frame
 func TestIreturn(t *testing.T) {

@@ -1025,19 +1025,21 @@ frameInterpreter:
 				push(f, res)
 				push(f, res)
 			}
-		case opcodes.IREM: // 	0x70	(remainder after int division, modulo)
+		case opcodes.IREM: // 	0x70	(remainder after int division, aka modulo)
 			val2 := pop(f).(int64)
+			val1 := pop(f).(int64)
 			if val2 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "IREM: Arithmetic Exception: divide by zero"
-				exceptions.Throw(exceptions.ArithmeticException, errMsg)
-				return errors.New(errMsg)
+				errMsg := fmt.Sprintf("IREM: division by zero -- %d/0", val2)
+				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
+					errMsg = "/ by zero"
+				}
+				throw(exceptions.ArithmeticException, errMsg, f)
 			} else {
-				val1 := pop(f).(int64)
 				res := val1 % val2
 				push(f, res)
 			}
-		case opcodes.LREM: // 	0x71	(remainder after long division)
+		case opcodes.LREM: // 	0x71	(remainder after long division, aka modulo)
 			val2 := pop(f).(int64)
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
