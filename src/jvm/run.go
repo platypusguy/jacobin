@@ -970,7 +970,7 @@ frameInterpreter:
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
 					errMsg = "/ by zero"
 				}
-				throw(exceptions.ArithmeticException, errMsg, f)
+				exceptions.ThrowEx(exceptions.ArithmeticException, errMsg, f)
 			} else {
 				push(f, val2/val1)
 			}
@@ -985,7 +985,7 @@ frameInterpreter:
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
 					errMsg = "/ by zero"
 				}
-				throw(exceptions.ArithmeticException, errMsg, f)
+				exceptions.ThrowEx(exceptions.ArithmeticException, errMsg, f)
 			} else {
 				res := val2 / val1
 				push(f, res)
@@ -1034,7 +1034,7 @@ frameInterpreter:
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
 					errMsg = "/ by zero"
 				}
-				throw(exceptions.ArithmeticException, errMsg, f)
+				exceptions.ThrowEx(exceptions.ArithmeticException, errMsg, f)
 			} else {
 				res := val1 % val2
 				push(f, res)
