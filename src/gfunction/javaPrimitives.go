@@ -380,17 +380,17 @@ func doubleParseDouble(params []interface{}) interface{} {
 	}
 	if bptr == nil {
 		parmObj.DumpObject("javaPrimitives.doubleParseDouble: Nil byte array pointer", 0)
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: Nil byte array pointer")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: Nil byte array pointer")
 	}
 	strArg := string(*bptr)
 	if len(strArg) < 1 {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: string length < 1")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: string length < 1")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble Error(): "+err.Error())
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble Error(): "+err.Error())
 	}
 	return output
 
@@ -421,29 +421,29 @@ func integerParseInt(params []interface{}) interface{} {
 		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
 	}
 	if bptr == nil {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: Nil byte array pointer")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: Nil byte array pointer")
 	}
 	strArg := string(*bptr)
 	if len(strArg) < 1 {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
 	}
 
 	// Extract and validate the radix.
 	switch params[1].(type) {
 	case int64:
 	default:
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: radix is not an integer")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: radix is not an integer")
 	}
 	rdx := params[1].(int64)
 	if rdx < minRadix || rdx > maxRadix {
-		exceptions.Throw(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: invalid radix")
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: invalid radix")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseInt(strArg, int(rdx), 64)
 	if err != nil {
 		errMsg := fmt.Sprintf("javaPrimitives.integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
-		exceptions.Throw(exceptions.NumberFormatException, errMsg)
+		return getGErrBlk(exceptions.NumberFormatException, errMsg)
 	}
 	return output
 }
