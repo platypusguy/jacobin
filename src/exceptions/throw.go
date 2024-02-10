@@ -13,8 +13,28 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/opcodes"
+	"jacobin/shutdown"
+	"jacobin/thread"
 	"jacobin/util"
+	"runtime/debug"
 )
+
+func minimalAbort(msg string) {
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
+	glob := globals.GetGlobalRef()
+	glob.ErrorGoStack = stack
+	errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
+	ShowPanicCause(errMsg)
+	ShowFrameStack(&thread.ExecThread{})
+	ShowGoStackTrace(nil)
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+}
 
 // This file contains support functions for throwing exceptions from within
 // Jacobin. That is, situations in which Jacobin itself is throwing the error,
@@ -37,6 +57,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
 		log.Log(errMsg, log.SEVERE)
 		return
+	}
+
+	// Frame pointer provided?
+	if f == nil {
+		minimalAbort(msg)
 	}
 
 	// the name of the exception as shown to the user

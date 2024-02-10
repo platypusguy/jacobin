@@ -287,12 +287,11 @@ func stringClinit([]interface{}) interface{} {
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInString([]interface{}) interface{} {
 	errMsg := "No support yet for user-specified character sets and Unicode code point arrays"
-	exceptions.Throw(exceptions.UnsupportedEncodingException, errMsg)
-	return nil
+	return getGErrBlk(exceptions.UnsupportedEncodingException, errMsg)
 }
 
 // Given a Go interface parameter from caller, compute the associated Go string.
-func getGoString(param0 interface{}) string {
+func getGoString(param0 interface{}) interface{} {
 	var bptr *[]uint8
 	switch param0.(type) {
 	case *[]uint8:
@@ -301,9 +300,8 @@ func getGoString(param0 interface{}) string {
 		parmObj := param0.(*object.Object)
 		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
 	default:
-		errMsg := fmt.Sprintf("In getGoString, unexpected param[0] type = %T", param0)
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
-		bptr = nil
+		errMsg := fmt.Sprintf("getGoString: Unexpected param[0] type = %T", param0)
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	return string(*bptr)
 }
@@ -312,14 +310,20 @@ func getGoString(param0 interface{}) string {
 func newStringFromBytes(params []interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
-		errMsg := "In newStringFromBytes, expected java/lang/String to be in the MethodArea, but it was not"
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 
 	// Fetch a pointer to the raw slice of bytes from params[0].
 	// Convert the raw slice of bytes to a Go string.
-	wholeString := getGoString(params[1])
+	retval := getGoString(params[1])
+	switch retval.(type) {
+	case string:
+	default:
+		return retval
+	}
+	wholeString := retval.(string)
 
 	// Convert the Go string to a compact string object, usable by Java. Return to caller.
 	obj := object.CreateCompactStringFromGoString(&wholeString)
@@ -331,14 +335,20 @@ func newStringFromBytes(params []interface{}) interface{} {
 func newSubstringFromBytes(params []interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
-		errMsg := "In newStringFromBytes, expected java/lang/String to be in the MethodArea, but it was not"
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 
 	// Fetch a pointer to the raw slice of bytes from params[0].
 	// Convert the raw slice of bytes to a Go string.
-	wholeString := getGoString(params[1])
+	retval := getGoString(params[1])
+	switch retval.(type) {
+	case string:
+	default:
+		return retval
+	}
+	wholeString := retval.(string)
 
 	// Get substring offset and length
 	ssOffset := params[2].(int64)
@@ -347,8 +357,8 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssLength) > wholeLength {
-		errMsg := "In newSubstringFromBytes, either: nil input byte array, invalid substring offset, or invalid substring length"
-		exceptions.Throw(exceptions.StringIndexOutOfBoundsException, errMsg)
+		errMsg := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Compute substring.
@@ -367,9 +377,8 @@ func getBytesVoid(params []interface{}) interface{} {
 		bytes := parmObj.Fields[0].Fvalue.(*[]byte)
 		return bytes
 	default:
-		errMsg := fmt.Sprintf("In libs.GetBytesVoid, unexpected params[0] type=%T, value=%v", params[0], params[0])
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
-		return nil
+		errMsg := fmt.Sprintf("getBytesVoid: Unexpected params[0] type=%T, value=%v", params[0], params[0])
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 }
 
@@ -379,11 +388,11 @@ func sprintf(params []interface{}) interface{} {
 	return StringFormatter(params)
 }
 
-func StringFormatter(params []interface{}) *object.Object {
+func StringFormatter(params []interface{}) interface{} {
 	lenParams := len(params)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
-		exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
 	}
 	if lenParams == 1 { // No parameters beyond the format string
 		formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
@@ -442,7 +451,7 @@ func StringFormatter(params []interface{}) *object.Object {
 				valuesOut = append(valuesOut, fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, valuesIn[i].Fields[0].Ftype)
-				exceptions.Throw(exceptions.IllegalClassFormatException, errMsg)
+				return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
 			}
 		}
 	}
@@ -534,8 +543,8 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
-		errMsg := "In valueOfCharSubarray, either: nil input byte array, invalid substring offset, or invalid substring length"
-		exceptions.Throw(exceptions.StringIndexOutOfBoundsException, errMsg)
+		errMsg := "valueOfCharSubarray: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Compute substring.

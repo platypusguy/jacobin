@@ -220,9 +220,9 @@ func Load_Lang_Math() map[string]GMeth {
 func mathClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
-		errMsg := "In <clinit>, expected java/lang/Math to be in the MethodArea, but it was not"
+		errMsg := "mathClinit, expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
 	}
 	return nil
 }
