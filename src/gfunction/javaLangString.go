@@ -277,8 +277,8 @@ func Load_Lang_String() map[string]GMeth {
 func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
-		errMsg := "In stringClinit, expected java/lang/String to be in the MethodArea, but it was not"
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		errMsg := "stringClinit: Expected java/lang/String to be in the MethodArea, but it was not"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
