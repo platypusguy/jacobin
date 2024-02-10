@@ -160,7 +160,7 @@ frameInterpreter:
 	// if the return value (here, retval) is not nil, it is placed on the stack
 	// of the calling frame.
 	if f.Ftype == 'G' {
-		retval, slotCount, err := runGframe(f)
+		retval, slotCount, err := runGframe(fs, f)
 
 		if retval != nil {
 			f = fs.Front().Next().Value.(*frames.Frame)

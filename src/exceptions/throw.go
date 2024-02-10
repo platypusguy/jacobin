@@ -7,8 +7,11 @@
 package exceptions
 
 import (
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/opcodes"
 	"jacobin/util"
 )
@@ -23,6 +26,19 @@ import (
 // accomplish this, we generate bytecodes which are then placed in the frame of
 // the current thread.
 func ThrowEx(which int, msg string, f *frames.Frame) {
+
+	// If tracing, announce.
+	helloMsg := fmt.Sprintf("[ThrowEx] Arrived, which: %d, msg: %s", which, msg)
+	log.Log(helloMsg, log.TRACE_INST)
+
+	// If in a unit test, log a severe message and return.
+	glob := globals.GetGlobalRef()
+	if glob.JacobinName == "test" {
+		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
+		log.Log(errMsg, log.SEVERE)
+		return
+	}
+
 	// the name of the exception as shown to the user
 	exceptionNameForUser := JVMexceptionNames[which]
 

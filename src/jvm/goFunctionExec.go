@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/log"
@@ -27,7 +28,7 @@ var localDebugging bool = false
 // Any return value from the method is returned to run() as an interface{}
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
-func runGframe(fr *frames.Frame) (interface{}, int, error) {
+func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, error) {
 	if localDebugging || MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGframe %s.%s, f.OpStack:", fr.ClName, fr.MethName)
 		_ = log.Log(traceInfo, log.WARNING)
@@ -49,6 +50,23 @@ func runGframe(fr *frames.Frame) (interface{}, int, error) {
 
 	// call the function passing a pointer to the slice of arguments
 	ret := me.Meth.(gfunction.GMeth).GFunction(*params)
+
+	// Was a G error block was returned?
+	switch ret.(type) {
+	case *gfunction.GErrBlk:
+		// Get the G error block
+		ge := *ret.(*gfunction.GErrBlk)
+		// Pop the G frame off the frame stack.
+		fs.Remove(fs.Front())
+		// Get a pointer to the previous frame.
+		fprev := fs.Front().Value.(*frames.Frame)
+		// Throw an exception in the previous frame.
+		exceptions.ThrowEx(ge.ExceptionType, ge.ErrMsg, fprev)
+		// Create an error object to return to caller.
+		var err = errors.New(ge.ErrMsg)
+		// Return to caller a nil G function result, 0 slots, and an error object.
+		return nil, 0, err
+	}
 
 	// how many slots does the return value consume on the op stack?
 	// the last char in the method name indicates the data type of the return
@@ -140,14 +158,22 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 
 	// then run the frame, which will call run(), which will eventually call runGFrame()
 	err := runFrame(fs)
+
+	// If an error object is returned from runFrame,
+	// * The G frame has already been popped off,
+	//   ensuring that the previous frame is at the head of the frame stack.
+	// * ThrowEx has already executed, setting up the next op code to be ATHROW
+	//   which will take care of catching and exception reporting.
+	// * Return a pointer to the previous frame and a nil error object.
 	if err != nil {
-		_ = log.Log("Error: "+err.Error(), log.SEVERE)
-		return nil, err
+		f = fs.Front().Value.(*frames.Frame) // point f the head again
+		return f, nil
 	}
 
-	// now that the go function is done, pop the frame off the stack and
-	// make the previous frame the current frame
-	fs.Remove(fs.Front())                // pop the frame off
-	f = fs.Front().Value.(*frames.Frame) // point f the head again
+	// No errors.
+	// Pop off the G frame from the frame stack which
+	// makes the previous frame the current frame.
+	fs.Remove(fs.Front())                // pop off the G frame
+	f = fs.Front().Value.(*frames.Frame) // point f to the head (previous frame)
 	return f, nil
 }

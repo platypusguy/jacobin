@@ -9,12 +9,28 @@ package gfunction
 import "jacobin/classloader"
 
 // GMeth is the entry in the MTable for Go functions. See MTable comments for details.
-// Fu is a go function. All go functions accept a possibly empty slice of interface{} and
-// return a possibly nil interface{}
+// * ParamSlots - the number of user parameters in a G function. E.g. For atan2, this would be 2.
+// * GFunction - a go function. All go functions accept a possibly empty slice of interface{} and
+//               return an interface{} which might be nil (E.g. Java void).
+// * NeedsContext - does this method need a pointer to the frame stack? Defaults to false.
 type GMeth struct {
 	ParamSlots   int
 	GFunction    func([]interface{}) interface{}
-	NeedsContext bool // does this method need a pointer to the frame stack? Defaults to false.
+	NeedsContext bool 
+}
+
+// G function error block.
+type GErrBlk struct {
+	ExceptionType int
+	ErrMsg        string
+}
+
+// Construct a G function error block. Return a ptr to it.
+func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
+	var gErrBlk GErrBlk
+	gErrBlk.ExceptionType = exceptionType
+	gErrBlk.ErrMsg = errMsg
+	return &gErrBlk
 }
 
 // MTableLoadNatives loads the Go methods from files that contain them. It does this
