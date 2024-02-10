@@ -7,7 +7,6 @@
 package gfunction
 
 import (
-	"errors"
 	"jacobin/exceptions"
 	"jacobin/object"
 )
@@ -51,8 +50,7 @@ func arrayBaseOffset(param []interface{}) interface{} {
 	p := param[0]
 	if p == nil || p == object.Null {
 		errMsg := "jdk.internal.misc.Unsafe::arrayBaseOffset() was passed a null pointer"
-		exceptions.Throw(exceptions.NullPointerException, errMsg)
-		return errors.New(errMsg)
+		return getGErrBlk(exceptions.NullPointerException, errMsg)
 	}
 	return int64(0) // this should work...
 }
