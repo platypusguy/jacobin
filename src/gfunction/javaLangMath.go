@@ -220,9 +220,9 @@ func Load_Lang_Math() map[string]GMeth {
 func mathClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
-		errMsg := "In <clinit>, expected java/lang/Math to be in the MethodArea, but it was not"
+		errMsg := "mathClinit, expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
 	}
 	return nil
 }
@@ -322,9 +322,9 @@ func floorFloat64(params []interface{}) interface{} {
 
 // Largest (closest to positive infinity) int value that is less than or equal
 // to the algebraic quotient.
-func floorDivInt64(dividend int64, divisor int64) int64 {
+func floorDivInt64(dividend int64, divisor int64) interface{} {
 	if divisor == 0 {
-		exceptions.Throw(exceptions.ArithmeticException, "floorDivInt64: Divide by zero attempted")
+		return getGErrBlk(exceptions.ArithmeticException, "floorDivInt64: Divide by zero attempted")
 	}
 	if dividend <= math.MinInt64 && divisor == -1 {
 		return math.MinInt64
@@ -347,16 +347,30 @@ func floorDivJx(params []interface{}) interface{} {
 }
 
 // Largest (closest to positive infinity) int value that is less than or equal
-// to the algebraic quotient. Param[0]=dividend and param[1]=divisor.
+// to the algebraic quotient.
+// params[0]=dividend=x
+// params[1]=divisor=y
 // floorDiv(x, y) * y + floorMod(x, y) = x
 // Therefore, floorMod(x, y) = x - floorDiv(x, y) * y
 func floorModII(params []interface{}) interface{} {
-	fldiv := (floorDivII(params)).(int64)
-	return params[0].(int64) - fldiv*params[1].(int64)
+	fldiv := floorDivII(params)
+	switch fldiv.(type) {
+	case *GErrBlk:
+		// Return the G function error block
+		return fldiv
+	}
+	result := params[0].(int64) - fldiv.(int64)*params[1].(int64)
+	return result
 }
 func floorModJx(params []interface{}) interface{} {
-	fldiv := (floorDivJx(params)).(int64)
-	return params[0].(int64) - fldiv*params[2].(int64)
+	fldiv := floorDivJx(params)
+	switch fldiv.(type) {
+	case *GErrBlk:
+		// Return the G function error block
+		return fldiv
+	}
+	result := params[0].(int64) - fldiv.(int64)*params[2].(int64)
+	return result
 }
 
 // FMA (fused multiply add) the three arguments; that is, returns the exact product

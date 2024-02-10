@@ -277,7 +277,13 @@ func Printf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
 	*intfSprintf = append(*intfSprintf, params[1])
 	*intfSprintf = append(*intfSprintf, params[2])
-	objPtr := StringFormatter(*intfSprintf)
+	retval := StringFormatter(*intfSprintf)
+	switch retval.(type) {
+	case *object.Object:
+	default:
+		return retval
+	}
+	objPtr := retval.(*object.Object)
 	str := object.GetGoStringFromJavaStringPtr(objPtr)
 	fmt.Print(str)
 	return params[0] // Return the PrintStream object

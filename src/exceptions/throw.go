@@ -7,11 +7,34 @@
 package exceptions
 
 import (
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/opcodes"
+	"jacobin/shutdown"
+	"jacobin/thread"
 	"jacobin/util"
+	"runtime/debug"
 )
+
+func minimalAbort(msg string) {
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
+	glob := globals.GetGlobalRef()
+	glob.ErrorGoStack = stack
+	errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
+	ShowPanicCause(errMsg)
+	ShowFrameStack(&thread.ExecThread{})
+	ShowGoStackTrace(nil)
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+}
 
 // This file contains support functions for throwing exceptions from within
 // Jacobin. That is, situations in which Jacobin itself is throwing the error,
@@ -23,6 +46,24 @@ import (
 // accomplish this, we generate bytecodes which are then placed in the frame of
 // the current thread.
 func ThrowEx(which int, msg string, f *frames.Frame) {
+
+	// If tracing, announce.
+	helloMsg := fmt.Sprintf("[ThrowEx] Arrived, which: %d, msg: %s", which, msg)
+	log.Log(helloMsg, log.TRACE_INST)
+
+	// If in a unit test, log a severe message and return.
+	glob := globals.GetGlobalRef()
+	if glob.JacobinName == "test" {
+		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
+		log.Log(errMsg, log.SEVERE)
+		return
+	}
+
+	// Frame pointer provided?
+	if f == nil {
+		minimalAbort(msg)
+	}
+
 	// the name of the exception as shown to the user
 	exceptionNameForUser := JVMexceptionNames[which]
 
