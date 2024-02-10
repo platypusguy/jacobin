@@ -108,9 +108,9 @@ func Load_Lang_System() map[string]GMeth {
 func clinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
-		errMsg := "In <clinit>, expected java/lang/System to be in the MethodArea, but it was not"
+		errMsg := "System <clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
 		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "L", Value: object.Null})
