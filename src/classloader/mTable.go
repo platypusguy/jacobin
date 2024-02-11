@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2022-4 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -53,8 +53,7 @@ type JmEntry struct {
 }
 
 // Function is the generic-style function used for Go entries: a function that accepts a
-// slice of empty interfaces and returns nothing (b/c all returns are pushed onto the
-// stack rather than actually returned to a caller).
+// slice of empty interfaces and returns an empty interface
 type Function func([]interface{}) interface{}
 
 // MTmutex is used for updates to the MTable because multiple threads could be
