@@ -999,8 +999,8 @@ func TestLdcwFloat(t *testing.T) {
 	}
 }
 
-// LDC2_W: get CP entry for long or double indexed by following 2 bytes
-func TestLdc2w(t *testing.T) {
+// LDC2_W: get CP entry for double indexed by following 2 bytes
+func TestLdc2wForDouble(t *testing.T) {
 	f := newFrame(opcodes.LDC2_W)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01)
@@ -1030,6 +1030,40 @@ func TestLdc2w(t *testing.T) {
 	value := pop(&f).(float64)
 	if value != 25.0 {
 		t.Errorf("LDC2_W: Expected popped value to be 25.0, got: %f", value)
+	}
+}
+
+// LDC2_W: get CP entry for long indexed by following 2 bytes
+func TestLdc2wForLong(t *testing.T) {
+	f := newFrame(opcodes.LDC2_W)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
+	// now create a skeletal, two-entry CP
+	var longs = make([]int64, 1)
+	CP.LongConsts = longs
+	CP.LongConsts[0] = 25
+
+	CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	doubleEntry := classloader.CpEntry{
+		Type: classloader.LongConst, Slot: 0,
+	}
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, doubleEntry)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 1 {
+		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
+	}
+	value := pop(&f).(int64)
+	if value != 25. {
+		t.Errorf("LDC2_W: Expected popped value to be 25, got: %d", value)
 	}
 }
 
