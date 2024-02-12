@@ -97,8 +97,8 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 
 	f := fs.Front().Value.(*frames.Frame)
 
-	// if the method needs context (mt.Meth.NeedsContext = true),
-	// then add it to the parameter list here.
+	// if the method needs context (i.e., if mt.Meth.NeedsContext == true),
+	// then add pointer to the JVM frame stack to the parameter list here.
 	entry := mt.Meth.(gfunction.GMeth)
 	if entry.NeedsContext {
 		*params = append(*params, fs)
@@ -131,13 +131,20 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	gf.Ftype = 'G' // a golang function
 
 	// Current frame stack is one of 2 forms:
-	// (1) { pn | ... | p2 | p1 } where TOS --> p1                Note: calls from INVOKESTATIC
-	// (2) { pn | ... | p2 | p1 | extra } where TOS --> extra     Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
+	// (1) { pn | ... | p1 | p0 } where TOS is p0                    Note: calls from INVOKESTATIC
+	// (2) { pn | ... | p1 | p0 | object Ref }  TOS is object Ref    Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
 	//
-	// There is one exception to the above. If the method has NeedsContext set to true,
-	// then a pointer to JVM frame stack for the present thread is pushed. It will
-	// always appear as parameter[0]. There are not many functions in which this is
-	// the case.
+	// The object ref in #2 is the first argument passed in cases where objRef == true.
+	// This object reference points to the object whose method is being called. For example,
+	// if String.toUpperCase(), object reference points to the String instance. Note that this
+	// item is always at params[0] of the receiving gfunction. Its presence is not counted in
+	// the definitions used by LoadLib, as that parameter value is the number of true arguments
+	// passed by the original Java method.
+	//
+	// There exists one exception to the above. If the method has NeedsContext set to true
+	// in its definiton, then a pointer to JVM frame stack for the present thread is pushed.
+	// It will always appear as the last parameter. There are not many functions in which
+	// this is the case.
 
 	// Push the arguments in reverse order onto the Go op stack.
 	// If there was an extra parameter, it's at the Go op stack[0].
@@ -145,7 +152,7 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 		push(gf, (*params)[j])
 	}
 
-	// Set the Go frame TOS --> first parameter.
+	// Set the Go frame TOS to point to first parameter.
 	gf.TOS = len(gf.OpStack) - 1
 	if localDebugging || MainThread.Trace {
 		_ = log.Log("runGmethod G method OpStack:", log.WARNING)
