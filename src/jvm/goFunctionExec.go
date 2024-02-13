@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -131,15 +131,16 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	gf.Ftype = 'G' // a golang function
 
 	// Current frame stack is one of 2 forms:
-	// (1) { pn | ... | p1 | p0 } where TOS is p0                    Note: calls from INVOKESTATIC
-	// (2) { pn | ... | p1 | p0 | object Ref }  TOS is object Ref    Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
+	// (1) { pn | ... | p1 | p0 } where TOS is p0               Note: calls from INVOKESTATIC
+	// (2) { pn | ... | p1 | object Ref }  TOS is object Ref    Note: calls from INVOKEVIRTUAL and INVOKESPECIAL
 	//
-	// The object ref in #2 is the first argument passed in cases where objRef == true.
+	// The object ref in case 2 is the first argument passed in cases where objRef == true.
 	// This object reference points to the object whose method is being called. For example,
 	// if String.toUpperCase(), object reference points to the String instance. Note that this
 	// item is always at params[0] of the receiving gfunction. Its presence is not counted in
-	// the definitions used by LoadLib, as that parameter value is the number of true arguments
-	// passed by the original Java method.
+	// ParamSlots in the gfunction definitions used by LoadLib, because that parameter count
+	// is the number of true arguments passed by the original Java method. (So, for String.toUpperCase()
+	// ParamSlots is 0 (as it is in Java), but the actual parameter count is 1, due to object reference)
 	//
 	// There exists one exception to the above. If the method has NeedsContext set to true
 	// in its definiton, then a pointer to JVM frame stack for the present thread is pushed.
