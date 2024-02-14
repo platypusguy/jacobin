@@ -76,6 +76,13 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// capture the PC where the exception was thrown (saved b/c later we modify the value of f.PC)
 	f.ExceptionPC = f.PC
 
+	// find out if the exception is caught and if so point to the catch code
+	catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
+	if catchFrame != nil && catchFrame == f {
+		f.PC = catchPC - 1
+		return
+	}
+
 	// the functionality we generate bytecodes for is (using a NPE as an example):
 	// 0: new           #7                  // class java/lang/NullPointerException
 	// 3: dup
