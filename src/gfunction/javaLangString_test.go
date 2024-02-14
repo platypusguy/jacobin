@@ -39,7 +39,8 @@ func TestStringToUpperCase(t *testing.T) {
 	params := []interface{}{s}
 	s2 := toUpperCase(params)
 	sUpper := object.GetGoStringFromJavaStringPtr(s2.(*object.Object))
-	if string(sUpper) != "HELLO" {
-		t.Errorf("string ToUpperCase failed, got %s", sUpper)
+	expValue := "HELLO"
+	if string(sUpper) != expValue {
+		t.Errorf("string toUpperCase failed, expected: %s, observed: %s", expValue, sUpper)
 	}
 }
