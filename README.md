@@ -57,6 +57,7 @@ A more-than-minimal JVM written in Go.
   190 bytecodes fully operational, including one- and multi-dimensional arrays
 * Static initialization blocks
 * Throwing exceptions
+* Running native functions (written in go). [Details here.](https://github.com/platypusguy/jacobin/wiki/Native-golang-functions-methods )
   
 **To do:**
 * invokedynamic
