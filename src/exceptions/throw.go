@@ -79,7 +79,15 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// find out if the exception is caught and if so point to the catch code
 	catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil && catchFrame == f {
-
+		// set up the execution of the catch code by:
+		// 1. creating a new objRef for the exception
+		// 2. pushing the objRef on the stack of the frame
+		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
+		th := glob.Threads[f.Thread].(*thread.ExecThread)
+		fs := th.Stack
+		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
+		f.TOS += 1
+		f.OpStack[f.TOS] = objRef // push the objRef
 		f.PC = catchPC - 1
 		return
 	}
