@@ -79,10 +79,21 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// find out if the exception is caught and if so point to the catch code
 	catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil && catchFrame == f {
+
 		f.PC = catchPC - 1
 		return
 	}
 
+	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
+
+	// now append the genCode to the bytecode of the current method in the frame
+	// and set the PC to point to it.
+	endPoint := len(f.Meth)
+	f.Meth = append(f.Meth, genCode...)
+	f.PC = endPoint
+}
+
+func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string) []byte {
 	// the functionality we generate bytecodes for is (using a NPE as an example):
 	// 0: new           #7                  // class java/lang/NullPointerException
 	// 3: dup
@@ -169,10 +180,5 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	genCode = append(genCode, hiByte)
 	genCode = append(genCode, loByte)
 	genCode = append(genCode, opcodes.ATHROW)
-
-	// now append the genCode to the bytecode of the current method in the frame
-	// and set the PC to point to it.
-	endPoint := len(f.Meth)
-	f.Meth = append(f.Meth, genCode...)
-	f.PC = endPoint
+	return genCode
 }
