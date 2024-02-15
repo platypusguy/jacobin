@@ -31,7 +31,7 @@ const (
 func Exit(errorCondition ExitStatus) int {
 	globals.LoaderWg.Wait()
 	g := globals.GetGlobalRef()
-	if g.JacobinName == "test" {
+	if g.JacobinName == "test" || g.JacobinName == "testWithoutShutdown" {
 		if errorCondition == OK {
 			errorCondition = TEST_OK
 		} else {
