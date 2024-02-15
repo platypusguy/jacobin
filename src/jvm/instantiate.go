@@ -22,14 +22,15 @@ import (
 
 // instantiating an object is a two-part process (except for arrays, which are handled
 // by special bytecodes):
+//
 //  1. the class needs to be loaded, so that its details and its methods are knowable
+//
 //  2. the class fields (if static) and instance fields (if non-static) are allocated.
 //     Details for this second step appear in the loop that drives createField().
 //
-// NOTE: The "any" type returned is always *object.Object.
-//
-//	This is being done to avoid a golang circularity error when the caller
-//	is one of the native 'G' functions.
+//     NOTE: The "any" type returned is always *object.Object.
+//     This is being done to avoid a golang circularity error when the caller
+//     is one of the native 'G' functions.
 func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
