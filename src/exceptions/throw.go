@@ -19,23 +19,6 @@ import (
 	"runtime/debug"
 )
 
-func minimalAbort(msg string) {
-	var stack string
-	bytes := debug.Stack()
-	if len(bytes) > 0 {
-		stack = string(bytes)
-	} else {
-		stack = ""
-	}
-	glob := globals.GetGlobalRef()
-	glob.ErrorGoStack = stack
-	errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
-	ShowPanicCause(errMsg)
-	ShowFrameStack(&thread.ExecThread{})
-	ShowGoStackTrace(nil)
-	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-}
-
 // This file contains support functions for throwing exceptions from within
 // Jacobin. That is, situations in which Jacobin itself is throwing the error,
 // rather than the application. Typically, this is for errors/exceptions in the
@@ -76,25 +59,33 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// capture the PC where the exception was thrown (saved b/c later we modify the value of f.PC)
 	f.ExceptionPC = f.PC
 
+	th := glob.Threads[f.Thread].(*thread.ExecThread)
+	fs := th.Stack
+
 	// find out if the exception is caught and if so point to the catch code
-	catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
-	if catchFrame != nil && catchFrame == f {
-		// set up the execution of the catch code by:
+	// catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
+	catchFrame, catchPC := FindCatchFrame(fs, exceptionCPname, f.ExceptionPC)
+	if catchFrame != nil {
+		// at this point, we know that the exception was caught
+		// and that the top of the frame stack holds the frame
+		// containing the catch logic, referred to here as the catchFrame.
+		// now, set up the execution of the catch code by:
 		// 1. creating a new objRef for the exception
 		// 2. pushing the objRef on the stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
-		th := glob.Threads[f.Thread].(*thread.ExecThread)
-		fs := th.Stack
+		th = glob.Threads[f.Thread].(*thread.ExecThread)
+		fs = th.Stack
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
-		f.TOS += 1
-		f.OpStack[f.TOS] = objRef // push the objRef
-		f.PC = catchPC - 1
+		catchFrame.TOS = 0
+		catchFrame.OpStack[0] = objRef // push the objRef
+		catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
 		return
 	}
 
+	// if the exception was not caught...
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
 
-	// now append the genCode to the bytecode of the current method in the frame
+	// append the genCode to the bytecode of the current method in the frame
 	// and set the PC to point to it.
 	endPoint := len(f.Meth)
 	f.Meth = append(f.Meth, genCode...)
@@ -189,4 +180,21 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 	genCode = append(genCode, loByte)
 	genCode = append(genCode, opcodes.ATHROW)
 	return genCode
+}
+
+func minimalAbort(msg string) {
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
+	glob := globals.GetGlobalRef()
+	glob.ErrorGoStack = stack
+	errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
+	ShowPanicCause(errMsg)
+	ShowFrameStack(&thread.ExecThread{})
+	ShowGoStackTrace(nil)
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
