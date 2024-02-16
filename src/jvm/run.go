@@ -71,6 +71,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// create the first thread and place its first frame on it
 	// MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
+	mainThread.Stack = MainThread.Stack
 	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
 

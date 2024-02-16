@@ -38,6 +38,11 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 		if excFrame != nil {
 			break
 		} else { // if the exception was not found we delete the current frame
+			// unless it's the last frame
+			if fr.Next() == nil {
+				return nil, -1
+			}
+
 			frWithoutHanlder := fr
 			fr = fr.Next()
 			fs.Remove(frWithoutHanlder)
