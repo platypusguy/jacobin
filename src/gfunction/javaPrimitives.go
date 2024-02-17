@@ -12,6 +12,7 @@ import (
 	"jacobin/object"
 	"jacobin/types"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -23,16 +24,28 @@ var maxRadix int64 = 36
 
 func Load_Primitives() map[string]GMeth {
 
-	MethodSignatures["java/lang/Byte.valueOf(B)Ljava/lang/Byte;"] =
+	MethodSignatures["java/lang/Byte.decode(Ljava/lang/String;)Ljava/lang/Byte;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  byteValueOf,
+			GFunction:  byteDecode,
 		}
 
 	MethodSignatures["java/lang/Byte.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  byteDoubleValue,
+		}
+
+	MethodSignatures["java/lang/Byte.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  byteToString,
+		}
+
+	MethodSignatures["java/lang/Byte.valueOf(B)Ljava/lang/Byte;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  byteValueOf,
 		}
 
 	MethodSignatures["java/lang/Character.valueOf(C)Ljava/lang/Character;"] =
@@ -125,10 +138,40 @@ func Load_Primitives() map[string]GMeth {
 			GFunction:  integerParseInt,
 		}
 
+	MethodSignatures["java/lang/Integer.decode(Ljava/lang/String;)Ljava/lang/Integer;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerDecode,
+		}
+
+	MethodSignatures["java/lang/Integer.intValue()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerIntLongValue,
+		}
+
+	MethodSignatures["java/lang/Integer.longValue()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerIntLongValue,
+		}
+
 	MethodSignatures["java/lang/Integer.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  integerDoubleValue,
+			GFunction:  integerFloatDoubleValue,
+		}
+
+	MethodSignatures["java/lang/Integer.floatValue()F"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerFloatDoubleValue,
+		}
+
+	MethodSignatures["java/lang/Integer.byteValue()B"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerByteValue,
 		}
 
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
@@ -206,9 +249,23 @@ func Load_Primitives() map[string]GMeth {
 	return MethodSignatures
 }
 
+func byteToString(params []interface{}) interface{} {
+	var ii int64
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		ii = parmObj.FieldTable["value"].Fvalue.(int64)
+	} else {
+		ii = parmObj.Fields[0].Fvalue.(int64)
+	}
+	str := fmt.Sprintf("%d", ii)
+	objPtr := object.CreateCompactStringFromGoString(&str)
+	return objPtr
+}
+
 func byteValueOf(params []interface{}) interface{} {
-	bb := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, bb)
+	ii := params[0].(int64)
+	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, ii)
+	populateByte(objPtr, ii)
 	return objPtr
 }
 
@@ -224,9 +281,55 @@ func byteDoubleValue(params []interface{}) interface{} {
 	return float64(bb)
 }
 
+func byteDecode(params []interface{}) interface{} {
+	var bptr *[]byte
+	// Extract and validate the string argument.
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
+	} else {
+		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
+	}
+
+	// Validate byte array.
+	if bptr == nil {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: Nil byte array pointer")
+	}
+	strArg := string(*bptr)
+	if len(strArg) < 1 {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: byte array length < 1")
+	}
+
+	// Strip off a leading "#" or "0x" in strArg.
+	if strings.HasPrefix(strArg, "#") {
+		strArg = strings.Replace(strArg, "#", "", 1)
+	}
+	if strings.HasPrefix(strArg, "0x") {
+		strArg = strings.Replace(strArg, "0x", "", 1)
+	}
+
+	// Parse the input integer.
+	int64Value, err := strconv.ParseInt(strArg, 16, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("javaPrimitives.byteDecode: arg=%s, err: %s", strArg, err.Error())
+		return getGErrBlk(exceptions.NumberFormatException, errMsg)
+	}
+	if int64Value > 255 {
+		errMsg := fmt.Sprintf("javaPrimitives.byteDecode: value too large: %d", int64Value)
+		return getGErrBlk(exceptions.NumberFormatException, errMsg)
+	}
+
+	// Create Byte object.
+	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64Value)
+	populateByte(objPtr, int64Value)
+
+	return objPtr
+}
+
 func characterValueOf(params []interface{}) interface{} {
 	cc := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Character", types.Char, cc)
+	populateCharacter(objPtr, cc)
 	return objPtr
 }
 
@@ -363,7 +466,6 @@ func doubleToString(params []interface{}) interface{} {
 	} else {
 		dd = parmObj.Fields[0].Fvalue.(float64)
 	}
-
 	str := fmt.Sprintf("%f", dd)
 	objPtr := object.CreateCompactStringFromGoString(&str)
 	return objPtr
@@ -408,6 +510,45 @@ func integerValueOf(params []interface{}) interface{} {
 	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
 	ii := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, ii)
+	populateInteger(objPtr, ii)
+	return objPtr
+}
+
+func integerDecode(params []interface{}) interface{} {
+	var bptr *[]byte
+	// Extract and validate the string argument.
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
+	} else {
+		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
+	}
+
+	// Validate byte array.
+	if bptr == nil {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerDecode: Nil byte array pointer")
+	}
+	strArg := string(*bptr)
+	if len(strArg) < 1 {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerDecode: byte array length < 1")
+	}
+
+	// Replace a leading "#" with "0x" in strArg.
+	if strings.HasPrefix(strArg, "#") {
+		strArg = strings.Replace(strArg, "#", "0x", 1)
+	}
+
+	// Parse the input integer.
+	int64Value, err := strconv.ParseInt(strArg, 10, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("javaPrimitives.integerDecode: arg=%s, err: %s", strArg, err.Error())
+		return getGErrBlk(exceptions.NumberFormatException, errMsg)
+	}
+
+	// Create Integer object.
+	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64Value)
+	populateInteger(objPtr, int64Value)
+
 	return objPtr
 }
 
@@ -426,6 +567,11 @@ func integerParseInt(params []interface{}) interface{} {
 	strArg := string(*bptr)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
+	}
+
+	// Replace a leading "#" with "0x" in strArg.
+	if strings.HasPrefix(strArg, "#") {
+		strArg = strings.Replace(strArg, "#", "0x", 1)
 	}
 
 	// Extract and validate the radix.
@@ -448,7 +594,19 @@ func integerParseInt(params []interface{}) interface{} {
 	return output
 }
 
-func integerDoubleValue(params []interface{}) interface{} {
+func integerIntLongValue(params []interface{}) interface{} {
+	var ii int64
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		ii = parmObj.FieldTable["value"].Fvalue.(int64)
+	} else {
+		ii = parmObj.Fields[0].Fvalue.(int64)
+	}
+
+	return ii
+}
+
+func integerFloatDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
 	if len(parmObj.FieldTable) > 0 {
@@ -460,9 +618,22 @@ func integerDoubleValue(params []interface{}) interface{} {
 	return float64(ii)
 }
 
+func integerByteValue(params []interface{}) interface{} {
+	var ii int64
+	parmObj := params[0].(*object.Object)
+	if len(parmObj.FieldTable) > 0 {
+		ii = parmObj.FieldTable["value"].Fvalue.(int64)
+	} else {
+		ii = parmObj.Fields[0].Fvalue.(int64)
+	}
+
+	return ii
+}
+
 func longValueOf(params []interface{}) interface{} {
 	jj := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Long", types.Long, jj)
+	populateLong(objPtr, jj)
 	return objPtr
 }
 
@@ -480,6 +651,7 @@ func longDoubleValue(params []interface{}) interface{} {
 func shortValueOf(params []interface{}) interface{} {
 	ss := params[0].(int64)
 	objPtr := object.MakePrimitiveObject("java/lang/Short", types.Short, ss)
+	populateShort(objPtr, ss)
 	return objPtr
 }
 
