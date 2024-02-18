@@ -1,5 +1,5 @@
 ![Go version](https://img.shields.io/github/go-mod/go-version/platypusguy/jacobin?filename=src%2Fgo.mod)
-![GitHub](https://img.shields.io/github/license/platypusguy/jacobin)
+<!-- ![GitHub](https://img.shields.io/github/license/platypusguy/jacobin) -->
 ![Workflow](https://github.com/platypusguy/jacobin/actions/workflows/go.yml/badge.svg)
 <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/platypusguy/jacobin">
 <!--
