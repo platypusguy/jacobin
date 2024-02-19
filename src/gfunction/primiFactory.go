@@ -9,7 +9,7 @@ import (
 	"math"
 )
 
-func populator(classname string, fldtype string, value int64) interface{} {
+func populator(classname string, fldtype string, value interface{}) interface{} {
 	klass := classloader.MethAreaFetch(classname)
 	if klass == nil {
 		errMsg := fmt.Sprintf("populator: Could not find %s in the MethodArea", classname)
