@@ -509,7 +509,7 @@ func doubleDoubleValue(params []interface{}) interface{} {
 func integerValueOf(params []interface{}) interface{} {
 	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
 	int64Value := params[0].(int64)
-	return populateInteger(int64Value)
+	return populator("java/lang/Integer", types.Int, int64Value)
 }
 
 func integerDecode(params []interface{}) interface{} {
@@ -544,7 +544,7 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Create Integer object.
-	return populateInteger(int64Value)
+	return populator("java/lang/Integer", types.Int, int64Value)
 }
 
 func integerParseInt(params []interface{}) interface{} {

@@ -1,6 +1,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/classloader"
 	"jacobin/exceptions"
 	"jacobin/object"
@@ -8,15 +9,15 @@ import (
 	"math"
 )
 
-func populateInteger(value int64) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/Integer")
+func populator(classname string, fldtype string, value int64) interface{} {
+	klass := classloader.MethAreaFetch(classname)
 	if klass == nil {
-		errMsg := "populateInteger: Could not find java/lang/Integer in the MethodArea"
+		errMsg := fmt.Sprintf("populator: Could not find %s in the MethodArea", classname)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, value)
-	(*objPtr).FieldTable["value"] = &object.Field{types.Int, value}
+	objPtr := object.MakePrimitiveObject(classname, fldtype, value)
+	(*objPtr).FieldTable["value"] = &object.Field{fldtype, value}
 	return objPtr
 }
 
