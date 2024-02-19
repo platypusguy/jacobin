@@ -21,6 +21,8 @@ import (
 // Radix boundaries:
 var minRadix int64 = 2
 var maxRadix int64 = 36
+var MaxIntValue int64 = 2147483647
+var MinIntValue int64 = -2147483648
 
 func Load_Primitives() map[string]GMeth {
 
@@ -508,10 +510,8 @@ func doubleDoubleValue(params []interface{}) interface{} {
 
 func integerValueOf(params []interface{}) interface{} {
 	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
-	ii := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, ii)
-	populateInteger(objPtr, ii)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Integer", types.Int, int64Value)
 }
 
 func integerDecode(params []interface{}) interface{} {
@@ -546,10 +546,7 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Create Integer object.
-	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64Value)
-	populateInteger(objPtr, int64Value)
-
-	return objPtr
+	return populator("java/lang/Integer", types.Int, int64Value)
 }
 
 func integerParseInt(params []interface{}) interface{} {
@@ -591,6 +588,16 @@ func integerParseInt(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("javaPrimitives.integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
 		return getGErrBlk(exceptions.NumberFormatException, errMsg)
 	}
+
+	// Check Integer boundaries.
+	if output > MaxIntValue {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: upper limit is Integer.MAX_VALUE")
+	}
+	if output < MinIntValue {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: lower limit is Integer.MIN_VALUE")
+	}
+
+	// Return computed value.
 	return output
 }
 

@@ -1,18 +1,32 @@
 package gfunction
 
 import (
+	"fmt"
+	"jacobin/classloader"
+	"jacobin/exceptions"
 	"jacobin/object"
+	"jacobin/types"
 	"math"
 )
 
-var singletonName = "value"
+func populator(classname string, fldtype string, value interface{}) interface{} {
+	klass := classloader.MethAreaFetch(classname)
+	if klass == nil {
+		errMsg := fmt.Sprintf("populator: Could not find %s in the MethodArea", classname)
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	}
+	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+	objPtr := object.MakePrimitiveObject(classname, fldtype, value)
+	(*objPtr).FieldTable["value"] = &object.Field{fldtype, value}
+	return objPtr
+}
 
 func populateByte(objPtr *object.Object, value int64) {
 	(*objPtr).FieldTable["BYTES"] = &object.Field{"I", 1}
 	(*objPtr).FieldTable["MAX_VALUE"] = &object.Field{"B", 0x7f}
 	(*objPtr).FieldTable["MIN_VALUE"] = &object.Field{"B", 0x80}
 	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 8}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"B", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"B", value}
 }
 
 func populateCharacter(objPtr *object.Object, value int64) {
@@ -85,7 +99,7 @@ func populateCharacter(objPtr *object.Object, value int64) {
 	(*objPtr).FieldTable["TITLECASE_LETTER"] = &object.Field{"B", 0x3}
 	(*objPtr).FieldTable["UNASSIGNED"] = &object.Field{"B", 0x0}
 	(*objPtr).FieldTable["UPPERCASE_LETTER"] = &object.Field{"B", 0x1}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"C", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"C", value}
 }
 
 func populateDouble(objPtr *object.Object, value float64) {
@@ -99,7 +113,7 @@ func populateDouble(objPtr *object.Object, value float64) {
 	(*objPtr).FieldTable["NEGATIVE_INFINITY"] = &object.Field{"D", math.Inf(-1)}
 	(*objPtr).FieldTable["POSITIVE_INFINITY"] = &object.Field{"D", math.Inf(+1)}
 	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 64}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"D", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"D", value}
 }
 
 func populateFloat(objPtr *object.Object, value float64) {
@@ -113,15 +127,7 @@ func populateFloat(objPtr *object.Object, value float64) {
 	(*objPtr).FieldTable["NEGATIVE_INFINITY"] = &object.Field{"F", math.Inf(-1)}
 	(*objPtr).FieldTable["POSITIVE_INFINITY"] = &object.Field{"F", math.Inf(+1)}
 	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 32}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"D", value}
-}
-
-func populateInteger(objPtr *object.Object, value int64) {
-	(*objPtr).FieldTable["BYTES"] = &object.Field{"I", 4}
-	(*objPtr).FieldTable["MAX_VALUE"] = &object.Field{"I", 2147483647}
-	(*objPtr).FieldTable["MIN_VALUE"] = &object.Field{"I", -2147483648}
-	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 32}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"I", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"D", value}
 }
 
 func populateLong(objPtr *object.Object, value int64) {
@@ -129,7 +135,7 @@ func populateLong(objPtr *object.Object, value int64) {
 	(*objPtr).FieldTable["MAX_VALUE"] = &object.Field{"J", 9223372036854775807}
 	(*objPtr).FieldTable["MIN_VALUE"] = &object.Field{"J", -9223372036854775808}
 	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 64}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"J", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"J", value}
 }
 
 func populateShort(objPtr *object.Object, value int64) {
@@ -137,5 +143,5 @@ func populateShort(objPtr *object.Object, value int64) {
 	(*objPtr).FieldTable["MAX_VALUE"] = &object.Field{"S", 32767}
 	(*objPtr).FieldTable["MIN_VALUE"] = &object.Field{"S", -32768}
 	(*objPtr).FieldTable["SIZE"] = &object.Field{"I", 16}
-	(*objPtr).FieldTable[singletonName] = &object.Field{"S", value}
+	(*objPtr).FieldTable["value"] = &object.Field{"S", value}
 }
