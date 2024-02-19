@@ -65,6 +65,7 @@ func AddStatic(name string, s Static) error {
 func PreloadStatics() {
 	LoadProgramStatics()
 	LoadStringStatics()
+	LoadStaticsInteger()
 }
 
 // LoadProgramStatics loads static fields that the JVM expects to have

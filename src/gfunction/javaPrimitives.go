@@ -508,10 +508,8 @@ func doubleDoubleValue(params []interface{}) interface{} {
 
 func integerValueOf(params []interface{}) interface{} {
 	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
-	ii := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, ii)
-	populateInteger(objPtr, ii)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populateInteger(int64Value)
 }
 
 func integerDecode(params []interface{}) interface{} {
@@ -546,10 +544,7 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Create Integer object.
-	objPtr := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64Value)
-	populateInteger(objPtr, int64Value)
-
-	return objPtr
+	return populateInteger(int64Value)
 }
 
 func integerParseInt(params []interface{}) interface{} {
