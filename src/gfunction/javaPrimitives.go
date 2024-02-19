@@ -21,6 +21,8 @@ import (
 // Radix boundaries:
 var minRadix int64 = 2
 var maxRadix int64 = 36
+var MaxIntValue int64 = 2147483647
+var MinIntValue int64 = -2147483648
 
 func Load_Primitives() map[string]GMeth {
 
@@ -586,6 +588,16 @@ func integerParseInt(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("javaPrimitives.integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
 		return getGErrBlk(exceptions.NumberFormatException, errMsg)
 	}
+
+	// Check Integer boundaries.
+	if output > MaxIntValue {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: upper limit is Integer.MAX_VALUE")
+	}
+	if output < -MinIntValue {
+		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: lower limit is Integer.MIN_VALUE")
+	}
+
+	// Return computed value.
 	return output
 }
 
