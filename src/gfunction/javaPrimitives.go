@@ -593,7 +593,7 @@ func integerParseInt(params []interface{}) interface{} {
 	if output > MaxIntValue {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: upper limit is Integer.MAX_VALUE")
 	}
-	if output < -MinIntValue {
+	if output < MinIntValue {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: lower limit is Integer.MIN_VALUE")
 	}
 
