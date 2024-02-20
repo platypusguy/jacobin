@@ -32,7 +32,7 @@ import (
 var MethodSignatures = make(map[string]GMeth)
 
 func Load_Io_PrintStream() map[string]GMeth {
-	MethodSignatures["java/io/PrintStream.println()V"] = // println string
+	MethodSignatures["java/io/PrintStream.println()V"] = // println void
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  PrintlnV,
@@ -42,7 +42,22 @@ func Load_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 1, // [0] =  StringConst to print
 			GFunction:  Println,
 		}
+	MethodSignatures["java/io/PrintStream.println(B)V"] = // println byte
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnI,
+		}
+	MethodSignatures["java/io/PrintStream.println(C)V"] = // println char
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnI,
+		}
 	MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnI,
+		}
+	MethodSignatures["java/io/PrintStream.println(S)V"] = // println short
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  PrintlnI,
@@ -70,7 +85,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 			GFunction:  PrintlnDouble,
 		}
 
-	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println float
+	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
 		GMeth{
 			ParamSlots: 1, // 1 slot for the Object
 			GFunction:  PrintlnObject,
@@ -81,7 +96,22 @@ func Load_Io_PrintStream() map[string]GMeth {
 			ParamSlots: 1, // [0] =  StringConst to print
 			GFunction:  PrintS,
 		}
+	MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintI,
+		}
+	MethodSignatures["java/io/PrintStream.print(C)V"] = // print char
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintI,
+		}
 	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintI,
+		}
+	MethodSignatures["java/io/PrintStream.print(S)V"] = // print short
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  PrintI,
@@ -109,7 +139,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 			GFunction:  PrintFloat,
 		}
 
-	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // println float
+	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // print object
 		GMeth{
 			ParamSlots: 1, // 1 slot for the Object
 			GFunction:  PrintObject,
@@ -139,7 +169,7 @@ func Println(params []interface{}) interface{} {
 		str := string(fld.Fvalue.([]byte))
 		fmt.Println(str)
 	default:
-		fmt.Printf("Println: Oops, cannot process type %T\n", strAddr.Fields[0].Fvalue)
+		fmt.Printf("Println: Oops, cannot process type %T\n", fld.Fvalue)
 	}
 	return nil
 }
@@ -249,7 +279,7 @@ func PrintS(params []interface{}) interface{} {
 		bytes := fld.Fvalue.([]byte)
 		fmt.Print(string(bytes))
 	default:
-		fmt.Printf("*** PrintS: cannot process type %T\n", strAddr.Fields[0].Fvalue)
+		fmt.Printf("*** PrintS: cannot process type %T\n", fld.Fvalue)
 	}
 	return nil
 }

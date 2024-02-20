@@ -150,9 +150,8 @@ func forceGC([]interface{}) interface{} {
 // Get a property
 func getProperty(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object) // string
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str := *strPtr
-	prop := string(str)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	prop := string(bytes)
 
 	var value string
 	g := globals.GetGlobalRef()

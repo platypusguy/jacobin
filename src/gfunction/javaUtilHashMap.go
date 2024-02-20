@@ -33,12 +33,12 @@ func hashMapHash(params []interface{}) interface{} {
 	obj := params[0]
 	switch obj.(type) {
 	case *object.Object:
-		o := obj.(*object.Object)              // force golang to treat it as the object we know it to be
-		f := o.Fields[0].Fvalue.(*[]byte)      // get the first field
-		roughHash := md5.Sum(*f)               // md5.sum returns an array of bytes
-		hash := roughHash[:]                   // convert the array to a slice so we can convert to int
-		uHash := binary.BigEndian.Uint64(hash) // convert slice of bytes to Uint (int is not available)
-		return int64(uHash)                    // convert uint64 to int64
+		o := obj.(*object.Object)                      // force golang to treat it as the object we know it to be
+		bytes := o.FieldTable["value"].Fvalue.([]byte) // get the first field
+		roughHash := md5.Sum(bytes)                    // md5.sum returns an array of bytes
+		hash := roughHash[:]                           // convert the array to a slice so we can convert to int
+		uHash := binary.BigEndian.Uint64(hash)         // convert slice of bytes to Uint (int is not available)
+		return int64(uHash)                            // convert uint64 to int64
 	default:
 		panic("unrecognized type to hash in hashMapHash()")
 	}

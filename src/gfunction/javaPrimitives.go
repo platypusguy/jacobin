@@ -556,36 +556,21 @@ func integerParseInt(params []interface{}) interface{} {
 func integerIntLongValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
 }
 
 func integerFloatDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(ii)
 }
 
 func integerByteValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
 }
 
@@ -597,11 +582,7 @@ func longValueOf(params []interface{}) interface{} {
 func longDoubleValue(params []interface{}) interface{} {
 	var jj int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		jj = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		jj = parmObj.Fields[0].Fvalue.(int64)
-	}
+	jj = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(jj)
 }
 
@@ -613,12 +594,7 @@ func shortValueOf(params []interface{}) interface{} {
 func shortDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(ii)
 }
 
