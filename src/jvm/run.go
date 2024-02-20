@@ -515,7 +515,8 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				bAref = ref.(*object.Object)
-				arrayPtr = bAref.Fields[0].Fvalue.(*[]byte)
+				ao := bAref.FieldTable["value"].Fvalue.([]byte)
+				arrayPtr = &ao
 			case *[]uint8:
 				arrayPtr = ref.(*[]uint8)
 			default:
