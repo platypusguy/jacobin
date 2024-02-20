@@ -26,17 +26,20 @@ func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
 	s.Klass = &StringClassName // java/lang/String
+	s.FieldTable = make(map[string]*Field)
 
 	// ==== now the fields ====
 
-	// field 00 -- value: the content of the string as array of chars
+	// value: the content of the string as array of bytes
 	// Note: Post JDK9, this field is an array of bytes, so as to
-	// enable compact strings. Here, for better compatibility with
-	// go, for the nonce we make it an array of Java chars's
-	// equivalent in go: runes.
-	array := make([]byte, 10)
-	s.Fields = append(s.Fields,
-		Field{Ftype: types.ByteArray, Fvalue: &array})
+	// enable compact strings.
+	value := make([]byte, 10)
+	// make value (the content of the string) Fields[0] and FieldTable["value"]
+	valueField := Field{Ftype: types.ByteArray, Fvalue: &value}
+	s.Fields = append(s.Fields, valueField)
+	s.FieldTable["value"] = &valueField
+
+	// Field{Ftype: types.ByteArray, Fvalue: &value})
 
 	// field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
 	s.Fields = append(s.Fields, Field{Ftype: types.Byte, Fvalue: int64(1)})
@@ -44,24 +47,24 @@ func NewString() *Object {
 	// field 02 -- string hash
 	s.Fields = append(s.Fields, Field{Ftype: types.Int, Fvalue: int64(0)})
 
-	// field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
-	s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: types.JavaBoolTrue})
+	// // field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
+	// s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: types.JavaBoolTrue})
 
-	// field 04 -- UTF_8.INSTANCE ptr to encoder
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
+	// // field 04 -- UTF_8.INSTANCE ptr to encoder
+	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
-	// field 05 -- ISO_8859_1.INSTANCE ptr to encoder
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
+	// // field 05 -- ISO_8859_1.INSTANCE ptr to encoder
+	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
-	// field 06 -- sun/nio/cs/US_ASCII.INSTANCE
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
+	// // field 06 -- sun/nio/cs/US_ASCII.INSTANCE
+	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 07 -- java/nio/charset/CodingErrorAction.REPLACE
 	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
-	// field 08 -- java/lang/String.CASE_INSENSITIVE_ORDER
-	// points to a comparator. Will be useful to fill in later
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
+	// // field 08 -- java/lang/String.CASE_INSENSITIVE_ORDER
+	// // points to a comparator. Will be useful to fill in later
+	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
 
 	// field 09 -- hashIsZero (only true in rare case where hash is 0)
 	s.Fields = append(s.Fields, Field{Ftype: types.Bool, Fvalue: types.JavaBoolFalse})
