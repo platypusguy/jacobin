@@ -19,9 +19,9 @@ import (
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
 	Mark       MarkWord
-	Klass      *string           // the class name in the method area
-	Fields     []Field           // slice containing the fields
-	FieldTable map[string]*Field // map mapping field name to field
+	Klass      *string          // the class name in the method area
+	Fields     []Field          // slice containing the fields
+	FieldTable map[string]Field // map mapping field name to field
 }
 
 // These mark word contains values for different purposes. Here,
@@ -55,7 +55,7 @@ func MakeEmptyObject() *Object {
 	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
 
 	// initialize the map of this object's fields
-	o.FieldTable = make(map[string]*Field)
+	o.FieldTable = make(map[string]Field)
 	return &o
 }
 

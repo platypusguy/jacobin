@@ -138,7 +138,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	addField := func(name, value string) {
 		fld := object.Field{}
 		fld.Fvalue = value
-		stackTrace.FieldTable[name] = &fld
+		stackTrace.FieldTable[name] = fld
 	}
 
 	addField("declaringClass", frame.ClName)

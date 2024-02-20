@@ -138,7 +138,7 @@ func fillInStackTrace(params []interface{}) interface{} {
 		Ftype:  types.Ref,
 		Fvalue: frameStack,
 	}
-	objRef.FieldTable["frameStackRef"] = &jacobinSpecificField
+	objRef.FieldTable["frameStackRef"] = jacobinSpecificField
 	// fmt.Printf("Throwable object contains: %v\n", objRef.FieldTable)
 
 	args := []interface{}{objRef}
@@ -149,7 +149,7 @@ func fillInStackTrace(params []interface{}) interface{} {
 		Ftype:  types.Ref,
 		Fvalue: stackData,
 	}
-	throwable.FieldTable["stackTrace"] = &stackTraceField
+	throwable.FieldTable["stackTrace"] = stackTraceField
 	return &stackTraceField
 }
 

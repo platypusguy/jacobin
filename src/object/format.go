@@ -140,13 +140,13 @@ func (objPtr *Object) FormatField(fieldName string) string {
 	// Use the FieldTable map with key fieldName?
 	if len(fieldName) > 0 && len(obj.FieldTable) > 0 {
 		// Using key="value" in the FieldTable
-		ptr := obj.FieldTable[fieldName]
-		if ptr == nil {
+		ptr, ok := obj.FieldTable[fieldName]
+		if !ok {
 			str := fmt.Sprintf("<ERROR FieldTable[\"%s\"] not found>", fieldName)
 			obj.DumpObject(str, 0)
 			return str
 		}
-		field := *ptr
+		field := ptr
 		str := fmtHelper(field, klassString, fieldName)
 		if strings.HasPrefix(str, "<ERROR") {
 			obj.DumpObject(str, 0)
@@ -192,7 +192,7 @@ func (objPtr *Object) FormatField(fieldName string) string {
 // 3 sections:
 // * Class name
 // * Field table
-// * Field slice
+// * Field slice < getting rid of this section as part of JACOBIN-457
 func (objPtr *Object) DumpObject(title string, indent int) {
 	obj := *objPtr
 	output := ""
@@ -226,11 +226,11 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
 			}
-			ptr := obj.FieldTable[fieldName]
-			if ptr == nil {
+			_, ok := obj.FieldTable[fieldName]
+			if !ok {
 				output += fmt.Sprintf("\t\t<ERROR nil FieldTable[%s] ptr>\n", fieldName)
 			} else {
-				str := fmtHelper(*obj.FieldTable[fieldName], klassString, fieldName)
+				str := fmtHelper(obj.FieldTable[fieldName], klassString, fieldName)
 				output += fmt.Sprintf("\t\tFld %s: (%s) %s\n", fieldName, obj.FieldTable[fieldName].Ftype, str)
 			}
 		}

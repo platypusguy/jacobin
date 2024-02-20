@@ -416,7 +416,8 @@ func StringFormatter(params []interface{}) interface{} {
 			// Establish a pointer to the field.
 			var fldPtr *object.Field
 			if len(valuesIn[i].FieldTable) > 0 { // using FieldTable
-				fldPtr = valuesIn[i].FieldTable["value"]
+				fld := valuesIn[i].FieldTable["value"]
+				fldPtr = &fld
 			} else { // using Fields slice
 				fldPtr = &valuesIn[i].Fields[0]
 			}

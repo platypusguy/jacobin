@@ -26,7 +26,7 @@ func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
 	s.Klass = &StringClassName // java/lang/String
-	s.FieldTable = make(map[string]*Field)
+	s.FieldTable = make(map[string]Field)
 
 	// ==== now the fields ====
 
@@ -37,7 +37,7 @@ func NewString() *Object {
 	// make value (the content of the string) Fields[0] and FieldTable["value"]
 	valueField := Field{Ftype: types.ByteArray, Fvalue: &value}
 	s.Fields = append(s.Fields, valueField)
-	s.FieldTable["value"] = &valueField
+	s.FieldTable["value"] = valueField
 
 	// Field{Ftype: types.ByteArray, Fvalue: &value})
 

@@ -102,7 +102,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// initialize the map of this object's fields
-	obj.FieldTable = make(map[string]*object.Field)
+	obj.FieldTable = make(map[string]object.Field)
 
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
@@ -120,7 +120,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 				return nil, err
 			}
 			obj.Fields = append(obj.Fields, *fieldToAdd)
-			obj.FieldTable[name] = fieldToAdd
+			obj.FieldTable[name] = *fieldToAdd
 		} // loop through the fields if any
 		// add the field to the field table for this object
 
@@ -159,7 +159,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			}
 
 			// add the field to the field table for this object
-			obj.FieldTable[name] = fieldToAdd
+			obj.FieldTable[name] = *fieldToAdd
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
 

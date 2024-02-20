@@ -1913,8 +1913,12 @@ func TestGetField(t *testing.T) {
 
 	// push the string whose field[0] we'll be getting
 	str := object.NewString()
-	str.Fields[0].Fvalue = "hello"
-	str.FieldTable["value"].Fvalue = "hello"
+	// str.Fields[0].Fvalue = "hello"
+	str.FieldTable["value"] = object.Field{
+		Ftype:  "[B",
+		Fvalue: "hello",
+	}
+
 	push(&f, str)
 
 	fs := frames.CreateFrameStack()
