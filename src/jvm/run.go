@@ -750,20 +750,23 @@ frameInterpreter:
 			array[index] = value
 
 		case opcodes.AASTORE: // 0x53   (store a reference in a reference array)
-			value := pop(f).(*object.Object)  // reference we're inserting
-			index := pop(f).(int64)           // index into the array
-			ptrObj := pop(f).(*object.Object) // ptr to the array object
+			value := pop(f).(*object.Object)    // reference we're inserting
+			index := pop(f).(int64)             // index into the array
+			arrayRef := pop(f).(*object.Object) // ptr to the array object
 
-			if ptrObj == nil {
+			if arrayRef == nil {
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array")
 				return errors.New("AASTORE: Invalid array address")
 			}
 
-			if !strings.HasPrefix(ptrObj.Fields[0].Ftype, types.RefArray) {
+			arrayObj := *arrayRef
+			rawArrayObj := arrayObj.FieldTable["value"]
+
+			if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("AASTORE: field type must start with '[L', got %s", ptrObj.Fields[0].Ftype)
+				errMsg := fmt.Sprintf("AASTORE: field type must start with '[L', got %s", rawArrayObj.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type")
@@ -771,8 +774,8 @@ frameInterpreter:
 			}
 
 			// get pointer to the actual array
-			arrayPtr := ptrObj.Fields[0].Fvalue.(*[]*object.Object)
-			size := int64(len(*arrayPtr))
+			rawArray := rawArrayObj.Fvalue.([]*object.Object)
+			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
@@ -782,8 +785,7 @@ frameInterpreter:
 				return errors.New("AASTORE: Invalid array index")
 			}
 
-			array := *arrayPtr
-			array[index] = value
+			rawArray[index] = value
 
 		case opcodes.BASTORE: // 0x54 	(store a boolean or byte in byte array)
 			var value byte = 0
