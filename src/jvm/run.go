@@ -800,17 +800,18 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			if ptrObj.Fields[0].Ftype != "[B" {
+			o := ptrObj.FieldTable["value"]
+			if o.Ftype != "[B" {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
-					ptrObj.Fields[0].Ftype)
+					o.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
 
 			// array := *(ptrObj.Fields[0].Fvalue.(*[]types.JavaByte)) // changed w/ JACOBIN-282
-			array := *(ptrObj.Fields[0].Fvalue.(*[]byte))
+			array := o.Fvalue.([]byte)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
