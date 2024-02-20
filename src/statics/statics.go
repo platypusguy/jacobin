@@ -64,7 +64,8 @@ func AddStatic(name string, s Static) error {
 // immediately necessary statics. It's called in jvmStart.go
 func PreloadStatics() {
 	LoadProgramStatics()
-	LoadStringStatics()
+	LoadStaticsString()
+	LoadStaticsInteger()
 }
 
 // LoadProgramStatics loads static fields that the JVM expects to have
@@ -74,10 +75,10 @@ func LoadProgramStatics() {
 		Static{Type: types.Int, Value: types.JavaBoolTrue})
 }
 
-// LoadStringStatics loads the statics from java/lang/String directly
+// LoadStaticsString loads the statics from java/lang/String directly
 // into the Statics table as part of the setup operations of Jacobin.
 // This is done primarily for speed.
-func LoadStringStatics() {
+func LoadStaticsString() {
 	_ = AddStatic("java/lang/String.COMPACT_STRINGS",
 		Static{Type: types.Bool, Value: true})
 	_ = AddStatic("java/lang/String.UTF16",
