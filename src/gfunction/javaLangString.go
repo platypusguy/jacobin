@@ -508,7 +508,8 @@ func stringLength(params []interface{}) interface{} {
 		errMsg := "stringLength: reference object must be a String"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	return fld.Fvalue.(int64)
+	bytes := fld.Fvalue.([]byte)
+	return int64(len(bytes))
 }
 
 func toLowerCase(params []interface{}) interface{} {
