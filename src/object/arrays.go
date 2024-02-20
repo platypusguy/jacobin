@@ -101,29 +101,36 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	o := MakeEmptyObject()
 	var of Field
 
+	// JACOBIN-457: Converted to exclusive use of o.FieldTable and o.Fields
+	// contain the actual value rather than a pointer to the value. 2024-02
 	switch arrType {
 	// case 'B': // byte arrays
 	case BYTE:
 		// barArr := make([]types.JavaByte, size) // changed with JACOBIN-282
 		barArr := make([]byte, size)
-		of = Field{Ftype: types.ByteArray, Fvalue: &barArr}
-		o.Fields = append(o.Fields, of)
+		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
+		o.FieldTable["value"] = of
+		// o.Fields = append(o.Fields, of)
 	// case 'F', 'D': // float arrays
 	case FLOAT:
 		farArr := make([]float64, size)
-		of = Field{Ftype: types.FloatArray, Fvalue: &farArr}
-		o.Fields = append(o.Fields, of)
+		of = Field{Ftype: types.FloatArray, Fvalue: farArr}
+		o.FieldTable["value"] = of
+		// o.Fields = append(o.Fields, of)
 	case REF: // reference/pointer arrays
 		// JACOBIN-439: _ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
 		rarArr := make([]*Object, size)
-		of = Field{Ftype: types.RefArray, Fvalue: &rarArr}
-		o.Fields = append(o.Fields, of)
+		of = Field{Ftype: types.RefArray, Fvalue: rarArr}
+		o.FieldTable["value"] = of
+		// o.Fields = append(o.Fields, of)
 	default: // all the integer types
 		iarArr := make([]int64, size)
-		of = Field{Ftype: types.IntArray, Fvalue: &iarArr}
-		o.Fields = append(o.Fields, of)
+		of = Field{Ftype: types.IntArray, Fvalue: iarArr}
+		o.FieldTable["value"] = of
+		// o.Fields = append(o.Fields, of)
 	}
-	o.Klass = &o.Fields[0].Ftype // in arrays, Klass field is a pointer to the array type string
+	value := o.FieldTable["value"]
+	o.Klass = &value.Ftype // in arrays, Klass field is a pointer to the array type string
 	return o
 }
 
@@ -134,9 +141,11 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 	o := MakeEmptyObject()
 	rarArr := make([]*Object, size)
 	arrayType := types.RefArray + *objType
-	of := Field{Ftype: arrayType, Fvalue: &rarArr}
-	o.Fields = append(o.Fields, of)
-	o.Klass = &o.Fields[0].Ftype
+	of := Field{Ftype: arrayType, Fvalue: rarArr}
+	o.FieldTable["value"] = of
+	o.Klass = &of.Ftype
+	// o.Fields = append(o.Fields, of)
+	// o.Klass = &o.Fields[0].Ftype
 	return o
 }
 

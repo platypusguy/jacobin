@@ -119,16 +119,33 @@ func TestAaloadWithNil(t *testing.T) {
 	}
 }
 
-// NEWARRAY: create an array of T_INT.
+// ANEWARRAY: create an array of T_REF.
 // AASTORE: store the array.
 //
 // Create an array of 30 elements and store ptr value in array[20].
 // Then, go through all the elements in the array and test for
 // a zero value in each element.
 func TestAastore(t *testing.T) {
-	f := newFrame(opcodes.NEWARRAY)
-	push(&f, int64(30))                   // make the array 30 elements big
-	f.Meth = append(f.Meth, object.T_INT) // make it an array of references
+	f := newFrame(opcodes.ANEWARRAY)
+	push(&f, int64(30)) // make an array of 30 elements
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+
+	// now create the CP. CP[0] is perforce 0
+	// [1] entry points to a UTF8 entry with the class name
+	// [2] is a ClassRef that points to the UTF8 string in [1]
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	f.CP = &CP
+
+	// f := newFrame(opcodes.ANEWARRAY)
+	// push(&f, int64(30))                   // make the array 30 elements big
+	// f.Meth = append(f.Meth, object.T_REF) // make it an array of references
 
 	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
@@ -147,20 +164,21 @@ func TestAastore(t *testing.T) {
 
 	// now, get the reference to the array
 	ptr := pop(&f).(*object.Object)
-
 	f = newFrame(opcodes.AASTORE)
+
 	push(&f, ptr)       // push the reference to the array
 	push(&f, int64(20)) // index to array[20]
-	push(&f, ptr)       // store any viable address
+	objRef := object.NewStringFromGoString("test")
+	push(&f, objRef) // store the address of a string
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]int64))
-	for i := 0; i < 30; i++ {
-		if array[i] != 0 {
-			t.Errorf("TestAastore: Expected array[%d]=0, observed: %d", i, array[i])
-		}
+	// now retrieve the updated element
+	array := ptr.FieldTable["value"].Fvalue.([]*object.Object)
+	udpatedElement := array[20]
+	if udpatedElement != objRef { // check that the element is actually updated
+		t.Errorf("TestAastore: Expected array[20]=test, observed: %v", udpatedElement)
 	}
 }
 
