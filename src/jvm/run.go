@@ -1728,11 +1728,11 @@ frameInterpreter:
 			var fieldValue interface{}
 
 			if len(obj.FieldTable) < 1 {
-				// Extract field from FieldTable map.
+				// Extract field from Fields slice
 				fieldType = obj.Fields[fieldEntry.Slot].Ftype
 				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
 			} else {
-				// Extract field from Fields slice.
+				// Extract field from FieldTable map
 				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 				nameAndTypeCPIndex := fullFieldEntry.NameAndType
 				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
