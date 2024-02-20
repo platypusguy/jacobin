@@ -632,6 +632,7 @@ func TestRawInt8ArrayLength(t *testing.T) {
 
 // ARRAYLENGTH: Test length of nil array -- should return an error
 func TestNilArrayLength(t *testing.T) {
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.ARRAYLENGTH)
 	push(&f, nil) // push the reference to the array
 	fs := frames.CreateFrameStack()
