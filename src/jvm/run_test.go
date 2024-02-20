@@ -1893,14 +1893,28 @@ func TestGetField(t *testing.T) {
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to fieldRef[0]
+
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+
+	CP.ClassRefs = make([]uint16, 1, 1)
+	CP.ClassRefs[0] = 0 // classRefs are not used to access a field
+
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
+		NameIndex: 0, // UTF8: "value"
+		DescIndex: 1} // UTF8: "Ljava/lang/String;"
+
+	CP.Utf8Refs = make([]string, 2, 2)
+	CP.Utf8Refs[0] = "value"
+	CP.Utf8Refs[1] = "Ljava/lang/String;"
 	f.CP = &CP
 
 	// push the string whose field[0] we'll be getting
 	str := object.NewString()
 	str.Fields[0].Fvalue = "hello"
+	str.FieldTable["value"].Fvalue = "hello"
 	push(&f, str)
 
 	fs := frames.CreateFrameStack()
