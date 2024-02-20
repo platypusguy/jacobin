@@ -120,11 +120,9 @@ func TestAaloadWithNil(t *testing.T) {
 }
 
 // ANEWARRAY: create an array of T_REF.
-// AASTORE: store the array.
+// AASTORE: store a value in the array.
 //
 // Create an array of 30 elements and store ptr value in array[20].
-// Then, go through all the elements in the array and test for
-// a zero value in each element.
 func TestAastore(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(30)) // make an array of 30 elements
