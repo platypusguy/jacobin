@@ -502,15 +502,13 @@ func StringFormatter(params []interface{}) interface{} {
 }
 
 func stringLength(params []interface{}) interface{} {
-	var bytesPtr *[]byte
-	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bytesPtr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
-	} else {
-		bytesPtr = parmObj.Fields[0].Fvalue.(*[]byte)
+	ptrObj := params[0].(*object.Object)
+	fld := ptrObj.FieldTable["value"]
+	if fld.Ftype != types.ByteArray {
+		errMsg := "stringLength: reference object must be a String"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	return int64(len(*bytesPtr))
-
+	return fld.Fvalue.(int64)
 }
 
 func toLowerCase(params []interface{}) interface{} {
