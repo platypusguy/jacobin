@@ -265,10 +265,8 @@ func byteToString(params []interface{}) interface{} {
 }
 
 func byteValueOf(params []interface{}) interface{} {
-	ii := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, ii)
-	populateByte(objPtr, ii)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Byte", types.Byte, int64Value)
 }
 
 func byteDoubleValue(params []interface{}) interface{} {
@@ -284,20 +282,9 @@ func byteDoubleValue(params []interface{}) interface{} {
 }
 
 func byteDecode(params []interface{}) interface{} {
-	var bptr *[]byte
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
-	} else {
-		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
-	}
-
-	// Validate byte array.
-	if bptr == nil {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: Nil byte array pointer")
-	}
-	strArg := string(*bptr)
+	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: byte array length < 1")
 	}
@@ -322,17 +309,12 @@ func byteDecode(params []interface{}) interface{} {
 	}
 
 	// Create Byte object.
-	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64Value)
-	populateByte(objPtr, int64Value)
-
-	return objPtr
+	return populator("java/lang/Byte", types.Byte, int64Value)
 }
 
 func characterValueOf(params []interface{}) interface{} {
-	cc := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Character", types.Char, cc)
-	populateCharacter(objPtr, cc)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Character", types.Char, int64Value)
 }
 
 func charValue(params []interface{}) interface{} {
@@ -474,19 +456,9 @@ func doubleToString(params []interface{}) interface{} {
 }
 
 func doubleParseDouble(params []interface{}) interface{} {
-	var bptr *[]byte
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
-	} else {
-		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
-	}
-	if bptr == nil {
-		parmObj.DumpObject("javaPrimitives.doubleParseDouble: Nil byte array pointer", 0)
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: Nil byte array pointer")
-	}
-	strArg := string(*bptr)
+	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: string length < 1")
 	}
@@ -515,20 +487,9 @@ func integerValueOf(params []interface{}) interface{} {
 }
 
 func integerDecode(params []interface{}) interface{} {
-	var bptr *[]byte
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
-	} else {
-		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
-	}
-
-	// Validate byte array.
-	if bptr == nil {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerDecode: Nil byte array pointer")
-	}
-	strArg := string(*bptr)
+	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerDecode: byte array length < 1")
 	}
@@ -550,18 +511,9 @@ func integerDecode(params []interface{}) interface{} {
 }
 
 func integerParseInt(params []interface{}) interface{} {
-	var bptr *[]byte
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bptr = parmObj.FieldTable["value"].Fvalue.(*[]byte)
-	} else {
-		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
-	}
-	if bptr == nil {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: Nil byte array pointer")
-	}
-	strArg := string(*bptr)
+	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
 	}
@@ -638,10 +590,8 @@ func integerByteValue(params []interface{}) interface{} {
 }
 
 func longValueOf(params []interface{}) interface{} {
-	jj := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Long", types.Long, jj)
-	populateLong(objPtr, jj)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Long", types.Long, int64Value)
 }
 
 func longDoubleValue(params []interface{}) interface{} {
@@ -656,10 +606,8 @@ func longDoubleValue(params []interface{}) interface{} {
 }
 
 func shortValueOf(params []interface{}) interface{} {
-	ss := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Short", types.Short, ss)
-	populateShort(objPtr, ss)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Short", types.Short, int64Value)
 }
 
 func shortDoubleValue(params []interface{}) interface{} {

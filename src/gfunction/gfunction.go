@@ -6,17 +6,23 @@
 
 package gfunction
 
-import "jacobin/classloader"
+import (
+	"fmt"
+	"jacobin/classloader"
+	"jacobin/exceptions"
+	"jacobin/object"
+	"jacobin/types"
+)
 
 // GMeth is the entry in the MTable for Go functions. See MTable comments for details.
-// * ParamSlots - the number of user parameters in a G function. E.g. For atan2, this would be 2.
-// * GFunction - a go function. All go functions accept a possibly empty slice of interface{} and
-//               return an interface{} which might be nil (E.g. Java void).
-// * NeedsContext - does this method need a pointer to the frame stack? Defaults to false.
+//   - ParamSlots - the number of user parameters in a G function. E.g. For atan2, this would be 2.
+//   - GFunction - a go function. All go functions accept a possibly empty slice of interface{} and
+//     return an interface{} which might be nil (E.g. Java void).
+//   - NeedsContext - does this method need a pointer to the frame stack? Defaults to false.
 type GMeth struct {
 	ParamSlots   int
 	GFunction    func([]interface{}) interface{}
-	NeedsContext bool 
+	NeedsContext bool
 }
 
 // G function error block.
@@ -74,4 +80,17 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 // do-nothing Go function shared by several source files
 func justReturn([]interface{}) interface{} {
 	return nil
+}
+
+// Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short).
+func populator(classname string, fldtype string, value interface{}) interface{} {
+	klass := classloader.MethAreaFetch(classname)
+	if klass == nil {
+		errMsg := fmt.Sprintf("populator: Could not find %s in the MethodArea", classname)
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	}
+	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+	objPtr := object.MakePrimitiveObject(classname, fldtype, value)
+	(*objPtr).FieldTable["value"] = object.Field{fldtype, value}
+	return objPtr
 }

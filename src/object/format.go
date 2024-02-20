@@ -94,6 +94,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 		}
 	case types.ByteArray:
 		// Special handling for non-String byte array.
+		var bytes []byte
 		if flagLookup {
 			return fmt.Sprintf("% x [static]", statics.GetStaticValue(className, fieldName))
 		} else {
@@ -104,14 +105,19 @@ func fmtHelper(field Field, className string, fieldName string) string {
 			case *Object:
 				return "*** embedded object ***"
 			}
-			bytesPtr := field.Fvalue.(*[]byte)
-			if bytesPtr == nil {
-				return "<ERROR nil byte array ptr>"
+			switch field.Fvalue.(type) {
+			case *[]byte:
+				bptr := field.Fvalue.(*[]byte)
+				bytes = *bptr
+			case []byte:
+				bytes = field.Fvalue.([]byte)
+			default:
+				return "<type is byte array but value is not nor a ptr>"
 			}
-			if len(*bytesPtr) < 1 {
+			if len(bytes) < 1 {
 				return "<byte array of zero length>"
 			}
-			return fmt.Sprintf("% x", *bytesPtr)
+			return fmt.Sprintf("% x", bytes)
 		}
 	}
 
