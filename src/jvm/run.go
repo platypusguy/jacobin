@@ -2196,23 +2196,24 @@ frameInterpreter:
 				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
-				arrayType := r.Fields[0].Ftype
+				o := r.FieldTable["value"]
+				arrayType := o.Ftype
 				switch arrayType {
 				case types.ByteArray:
-					arrayPtr := r.Fields[0].Fvalue.(*[]byte)
-					size = int64(len(*arrayPtr))
+					array := o.Fvalue.([]byte)
+					size = int64(len(array))
 				case types.RefArray:
-					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
-					size = int64(len(*arrayPtr))
+					array := o.Fvalue.([]*object.Object)
+					size = int64(len(array))
 				case types.FloatArray:
-					arrayPtr := r.Fields[0].Fvalue.(*[]float64)
-					size = int64(len(*arrayPtr))
+					array := o.Fvalue.([]float64)
+					size = int64(len(array))
 				case types.IntArray:
-					arrayPtr := r.Fields[0].Fvalue.(*[]int64)
-					size = int64(len(*arrayPtr))
+					array := o.Fvalue.([]int64)
+					size = int64(len(array))
 				default:
-					arrayPtr := r.Fields[0].Fvalue.(*[]*object.Object)
-					size = int64(len(*arrayPtr))
+					array := o.Fvalue.([]*object.Object)
+					size = int64(len(array))
 				}
 			}
 			push(f, size)
