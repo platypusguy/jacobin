@@ -35,11 +35,11 @@ func NewString() *Object {
 	// enable compact strings.
 	value := make([]byte, 10)
 	// make value (the content of the string) Fields[0] and FieldTable["value"]
-	valueField := Field{Ftype: types.ByteArray, Fvalue: &value}
+	valueField := Field{Ftype: types.ByteArray, Fvalue: value}
 	s.Fields = append(s.Fields, valueField)
 	s.FieldTable["value"] = valueField
 
-	// Field{Ftype: types.ByteArray, Fvalue: &value})
+	// Field{Ftype: types.ByteArray, Fvalue: value})
 
 	// field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
 	s.Fields = append(s.Fields, Field{Ftype: types.Byte, Fvalue: int64(1)})
@@ -83,6 +83,9 @@ func NewStringFromGoString(in string) *Object {
 	s := NewString()
 	s.Fields[0].Ftype = types.RuneArray
 	s.Fields[0].Fvalue = in // test for compact strings and use GoStringToBytes() if on
+	// Populate FieldTable.
+	stringBytes := []byte(in)
+	s.FieldTable["value"] = Field{types.ByteArray, stringBytes}
 	return s
 }
 
@@ -98,14 +101,20 @@ func CreateCompactStringFromGoString(in *string) *Object {
 
 	// set the string to LATIN
 	s.Fields[1].Fvalue = int64(0)
+
+	// Populate FieldTable.
+	s.FieldTable["value"] = Field{types.ByteArray, stringBytes}
+
+	// Return a pointer to string object to caller.
 	return s
 }
 
 // convenience method to extract a Go string from a Java string
 func GetGoStringFromJavaStringPtr(strPtr *Object) string {
 	s := *strPtr
-	bytes := s.Fields[0].Fvalue.(*[]byte)
-	return string(*bytes)
+	fld := s.FieldTable["value"]
+	bytes := fld.Fvalue.([]byte)
+	return string(bytes)
 }
 
 // determine whether an object is a Java string

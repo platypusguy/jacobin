@@ -116,6 +116,13 @@ func Load_Lang_String() map[string]GMeth {
 
 	// === METHOD FUNCTIONS ===
 
+	// // Are 2 strings equal?
+	MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEquals,
+		}
+
 	// get the bytes from a string
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
@@ -288,6 +295,36 @@ func stringClinit([]interface{}) interface{} {
 func noSupportYetInString([]interface{}) interface{} {
 	errMsg := "No support yet for user-specified character sets and Unicode code point arrays"
 	return getGErrBlk(exceptions.UnsupportedEncodingException, errMsg)
+}
+
+// Are 2 strings equal?
+func stringEquals(params []interface{}) interface{} {
+	// params[0]: reference string object
+	// params[1]: compare-to string Object
+
+	// Unpack the reference string.
+	ptrObj := params[0].(*object.Object)
+	fld := ptrObj.FieldTable["value"]
+	if fld.Ftype != types.ByteArray {
+		errMsg := "stringEquals: reference object must be a String"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	}
+	str1 := string(fld.Fvalue.([]byte))
+
+	// Unpack the compare-to string
+	ptrObj = params[1].(*object.Object)
+	fld = ptrObj.FieldTable["value"]
+	if fld.Ftype != types.ByteArray {
+		return int64(0) // Not a string, return false
+	}
+	str2 := string(fld.Fvalue.([]byte))
+
+	// Are they equal in value?
+	if str1 == str2 {
+		return int64(1) // true
+	} else {
+		return int64(0) // false
+	}
 }
 
 // Given a Go interface parameter from caller, compute the associated Go string.
