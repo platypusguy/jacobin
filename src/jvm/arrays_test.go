@@ -672,7 +672,6 @@ func TestBaload(t *testing.T) {
 	}
 
 	// now, get the reference to the array
-	// ptr := pop(&f).(unsafe.Pointer)
 	ptr := pop(&f)
 
 	f = newFrame(opcodes.BASTORE)
@@ -806,7 +805,8 @@ func TestBastore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]byte)) // changed in JACOBIN-282
+	o := ptr.FieldTable["value"]
+	array := o.Fvalue.([]byte) // get the array
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
@@ -848,7 +848,8 @@ func TestBastoreInt64(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue.(*[]byte))
+	o := ptr.FieldTable["value"]
+	array := o.Fvalue.([]byte) // get the array
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
