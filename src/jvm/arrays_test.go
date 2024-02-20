@@ -330,9 +330,10 @@ func TestAnewrray(t *testing.T) {
 	// now, test the length of the array, which should be 13
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*object.Object)
-	arrayPtr := ptr.Fields[0].Fvalue.(*[]*object.Object)
-	if len(*arrayPtr) != 13 {
-		t.Errorf("ANEWARRAY: Expecting array length of 13, got %d", len(*arrayPtr))
+	o := ptr.FieldTable["value"]
+	array := o.Fvalue.([]*object.Object)
+	if len(array) != 13 {
+		t.Errorf("ANEWARRAY: Expecting array length of 13, got %d", len(array))
 	}
 }
 
