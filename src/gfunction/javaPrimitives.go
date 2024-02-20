@@ -265,10 +265,8 @@ func byteToString(params []interface{}) interface{} {
 }
 
 func byteValueOf(params []interface{}) interface{} {
-	ii := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, ii)
-	populateByte(objPtr, ii)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Byte", types.Byte, int64Value)
 }
 
 func byteDoubleValue(params []interface{}) interface{} {
@@ -322,17 +320,12 @@ func byteDecode(params []interface{}) interface{} {
 	}
 
 	// Create Byte object.
-	objPtr := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64Value)
-	populateByte(objPtr, int64Value)
-
-	return objPtr
+	return populator("java/lang/Byte", types.Byte, int64Value)
 }
 
 func characterValueOf(params []interface{}) interface{} {
-	cc := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Character", types.Char, cc)
-	populateCharacter(objPtr, cc)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Character", types.Char, int64Value)
 }
 
 func charValue(params []interface{}) interface{} {
@@ -638,10 +631,8 @@ func integerByteValue(params []interface{}) interface{} {
 }
 
 func longValueOf(params []interface{}) interface{} {
-	jj := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Long", types.Long, jj)
-	populateLong(objPtr, jj)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Long", types.Long, int64Value)
 }
 
 func longDoubleValue(params []interface{}) interface{} {
@@ -656,10 +647,8 @@ func longDoubleValue(params []interface{}) interface{} {
 }
 
 func shortValueOf(params []interface{}) interface{} {
-	ss := params[0].(int64)
-	objPtr := object.MakePrimitiveObject("java/lang/Short", types.Short, ss)
-	populateShort(objPtr, ss)
-	return objPtr
+	int64Value := params[0].(int64)
+	return populator("java/lang/Short", types.Short, int64Value)
 }
 
 func shortDoubleValue(params []interface{}) interface{} {
