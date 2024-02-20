@@ -1749,7 +1749,8 @@ func TestIastore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue).(*[]int64)
+	ao := ptr.FieldTable["value"].Fvalue
+	array := ao.([]int64)
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += array[i]

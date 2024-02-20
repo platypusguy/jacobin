@@ -405,7 +405,8 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			array := *(iAref.Fields[0].Fvalue).(*[]int64)
+			ao := iAref.FieldTable["value"].Fvalue
+			array := ao.([]int64)
 
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
@@ -415,6 +416,7 @@ frameInterpreter:
 			}
 			var value = array[index]
 			push(f, value)
+
 		case opcodes.LALOAD: //		0x2F	(push contents of a long array element)
 			index := pop(f).(int64)
 			iAref := pop(f).(*object.Object) // ptr to array object
@@ -630,15 +632,16 @@ frameInterpreter:
 				return errors.New("IA/CA/SASTORE: Invalid array address")
 			}
 
-			if arrObj.Fields[0].Ftype != "[I" {
+			ao := arrObj.FieldTable["value"]
+			if ao.Ftype != "[I" {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", arrObj.Fields[0].Ftype)
+				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", ao.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			array := *(arrObj.Fields[0].Fvalue).(*[]int64)
+			array := ao.Fvalue.([]int64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
