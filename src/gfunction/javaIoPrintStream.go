@@ -133,16 +133,11 @@ func Load_Io_PrintStream() map[string]GMeth {
 // is no return value.
 func Println(params []interface{}) interface{} {
 	strAddr := params[1].(*object.Object)
-	switch strAddr.Fields[0].Fvalue.(type) {
-	case *[]byte:
-		baPtr := (strAddr.Fields[0].Fvalue).(*[]byte)
-		fmt.Println(string(*baPtr))
-	case *object.Object:
-		objPtr := (strAddr.Fields[0].Fvalue).(*object.Object)
-		if len((*objPtr).Fields) > 0 {
-			baPtr := (*objPtr).Fields[0].Fvalue.(*[]byte)
-			fmt.Println(string(*baPtr))
-		}
+	fld := strAddr.FieldTable["value"]
+	switch fld.Fvalue.(type) {
+	case []byte:
+		str := string(fld.Fvalue.([]byte))
+		fmt.Println(str)
 	default:
 		fmt.Printf("Println: Oops, cannot process type %T\n", strAddr.Fields[0].Fvalue)
 	}
@@ -248,16 +243,11 @@ func PrintS(params []interface{}) interface{} {
 	// TODO: Eventually will need to check whether or not i[1] is a compact string.
 	//       Presently, we assume it is.
 	strAddr := params[1].(*object.Object)
-	switch strAddr.Fields[0].Fvalue.(type) {
-	case *[]byte:
-		baPtr := (strAddr.Fields[0].Fvalue).(*[]byte)
-		fmt.Print(string(*baPtr))
-	case *object.Object:
-		objPtr := (strAddr.Fields[0].Fvalue).(*object.Object)
-		if len((*objPtr).Fields) > 0 {
-			baPtr := (*objPtr).Fields[0].Fvalue.(*[]byte)
-			fmt.Print(string(*baPtr))
-		}
+	fld := strAddr.FieldTable["value"]
+	switch fld.Fvalue.(type) {
+	case []byte:
+		bytes := fld.Fvalue.([]byte)
+		fmt.Print(string(bytes))
 	default:
 		fmt.Printf("*** PrintS: cannot process type %T\n", strAddr.Fields[0].Fvalue)
 	}
