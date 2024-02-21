@@ -45,55 +45,68 @@ func TestJdkArrayTypeToJacobinType(t *testing.T) {
 
 // AALOAD: Test fetching and pushing the value of an element in a reference array
 // The logic here is effectively identical to IALOAD. This code also tests AASTORE.
-// TODO: can't create ANEWARRAY b/c the two bytes after the bytecode, which point to the
-//       class type are missing. Ugh! Fix at leisure
-// func TestAaload(t *testing.T) {
-// 	f := newFrame(opcodes.ANEWARRAY)
-// 	push(&f, int64(30)) // make the array 30 elements big
-//
-// 	globals.InitGlobals("test")
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs)
-// 	if f.TOS != 0 {
-// 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
-// 	}
-//
-// 	// did we capture the address of the new array in globals?
-// 	g := globals.GetGlobalRef()
-// 	if g.ArrayAddressList.Len() != 1 {
-// 		t.Errorf("Expecting array address list to have length 1, got %d",
-// 			g.ArrayAddressList.Len())
-// 	}
-//
-// 	// now, get the reference to the array
-// 	ptr := pop(&f).(*object.Object)
-//
-// 	f = newFrame(opcodes.AASTORE)
-// 	push(&f, ptr)       // push the reference to the array
-// 	push(&f, int64(20)) // in array[20]
-// 	oPtr := object.MakeEmptyObject()
-// 	push(&f, oPtr) // the value we're storing
-// 	fs = frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs) // execute the bytecode
-//
-// 	f = newFrame(opcodes.AALOAD) // now fetch the value in array[20]
-// 	push(&f, ptr)                // push the reference to the array
-// 	push(&f, int64(20))          // get contents in array[20]
-// 	fs = frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs) // execute the bytecode
-//
-// 	res := pop(&f)
-// 	if res != oPtr {
-// 		t.Errorf("AALOAD: Expected loaded array value = %v, got: %v", oPtr, res)
-// 	}
-//
-// 	if f.TOS != -1 {
-// 		t.Errorf("AALOAD: Top of stack, expected -1, got: %d", f.TOS)
-// 	}
-// }
+func TestAaload(t *testing.T) {
+
+	f := newFrame(opcodes.ANEWARRAY)
+	push(&f, int64(30)) // make an array of 30 elements
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+
+	// now create the CP. CP[0] is perforce 0
+	// [1] entry points to a UTF8 entry with the class name
+	// [2] is a ClassRef that points to the UTF8 string in [1]
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	f.CP = &CP
+
+	globals.InitGlobals("test")
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	// did we capture the address of the new array in globals?
+	g := globals.GetGlobalRef()
+	if g.ArrayAddressList.Len() != 1 {
+		t.Errorf("Expecting array address list to have length 1, got %d",
+			g.ArrayAddressList.Len())
+	}
+
+	// now, get the reference to the array
+	ptr := pop(&f).(*object.Object)
+
+	f = newFrame(opcodes.AASTORE)
+	push(&f, ptr)       // push the reference to the array
+	push(&f, int64(20)) // in array[20]
+	oPtr := object.MakeEmptyObject()
+	push(&f, oPtr) // the value we're storing
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	f = newFrame(opcodes.AALOAD) // now fetch the value in array[20]
+	push(&f, ptr)                // push the reference to the array
+	push(&f, int64(20))          // get contents in array[20]
+	fs = frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs) // execute the bytecode
+
+	res := pop(&f)
+	if res != oPtr {
+		t.Errorf("AALOAD: Expected loaded array value = %v, got: %v", oPtr, res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("AALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
 
 // AALOAD: Test with a nil
 func TestAaloadWithNil(t *testing.T) {

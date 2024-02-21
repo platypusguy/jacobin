@@ -494,15 +494,17 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
-			size := int64(len(*arrayPtr))
+			// arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
+			array := (rAref.(*object.Object)).FieldTable["value"].Fvalue.([]*object.Object)
+
+			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
-			array := *(arrayPtr)
+			// array := *(arrayPtr)
 			var value = array[index]
 			push(f, value)
 
