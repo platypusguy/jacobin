@@ -450,7 +450,8 @@ frameInterpreter:
 			}
 
 			fAref := ref.(*object.Object)
-			array := *(fAref.Fields[0].Fvalue).(*[]float64)
+			oa := fAref.FieldTable["value"]
+			array := oa.Fvalue.([]float64)
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid array subscript"
