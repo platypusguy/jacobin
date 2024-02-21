@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-3 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -1773,7 +1773,7 @@ frameInterpreter:
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			fieldEntry := CP.CpIndex[CPslot]
-			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a method reference
+			if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
@@ -1811,33 +1811,15 @@ frameInterpreter:
 				if value != object.Null {
 					v := *(value.(*object.Object))
 					if obj.Fields != nil {
-						if strings.HasPrefix(v.Fields[0].Ftype, types.Array) {
-							value = v.Fields[0].Fvalue
+						if strings.HasPrefix(v.FieldTable["value"].Ftype, types.Array) {
+							value = v.FieldTable["value"].Fvalue
 						}
 					}
 				}
 			}
 
-			if obj.Fields != nil {
-				// If it's a simple object w/out superclasses other than Object,
-				// the fields in the object are numbered in the same
-				// order they are declared in the constant pool. So,
-				// to get to the right field, we only need to know
-				// the slot number in CP.Fields. It will be the same
-				// index into the object's fields.
-				if strings.HasPrefix(obj.Fields[fieldEntry.Slot].Ftype, types.Static) {
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
-						f.ClName, f.MethName)
-					_ = log.Log(errMsg, log.SEVERE)
-					logTraceStack(f)
-					return errors.New(errMsg)
-				} else {
-					obj.Fields[fieldEntry.Slot].Fvalue = value
-				}
-			} else {
-				// otherwise, it's an object that contains superclass fields and
-				// we need to access the field via the field table using the field name
+			// otherwise look up the field name in the CP and find it in the FieldTable, then do the update
+			if len(obj.FieldTable) != 0 {
 				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 				nameAndTypeCPIndex := fullFieldEntry.NameAndType
 				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
@@ -1854,6 +1836,17 @@ frameInterpreter:
 					logTraceStack(f)
 					return errors.New(errMsg)
 				}
+
+				// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
+				if strings.HasPrefix(objField.Ftype, types.Static) {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
+						f.ClName, f.MethName)
+					_ = log.Log(errMsg, log.SEVERE)
+					logTraceStack(f)
+					return errors.New(errMsg)
+				}
+
 				objField.Fvalue = value
 				obj.FieldTable[fieldName] = objField
 			}

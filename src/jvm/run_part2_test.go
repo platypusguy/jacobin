@@ -1780,16 +1780,27 @@ func TestPutFieldSimpleInt(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+
 	// now create the pointed-to FieldRef
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+
+	// now create the NameAndType records
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
+
+	// and finally the UTF8 records pointed to by the NameAndType entry above
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "value"
+	CP.Utf8Refs[1] = "I"
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
 	obj := object.MakeEmptyObject()
-	obj.Fields = make([]object.Field, 1, 1)
-	obj.Fields[0].Fvalue = int64(42) // set the field = 42
-	obj.Fields[0].Ftype = types.Int
+	obj.FieldTable["value"] = object.Field{
+		Ftype:  types.Int,
+		Fvalue: int64(42),
+	}
 	push(&f, obj)
 
 	push(&f, int64(26)) // update the field to 26
@@ -1802,13 +1813,13 @@ func TestPutFieldSimpleInt(t *testing.T) {
 		t.Errorf("PUTFIELD: Got unexpected error msg: %s", err.Error())
 	}
 
-	res := obj.Fields[0].Fvalue.(int64)
+	res := obj.FieldTable["value"].Fvalue.(int64)
 	if res != 26 {
 		t.Errorf("PUTFIELD: Expected a new value of 26, got: %d", res)
 	}
 }
 
-// PUTFIELD
+// PUTFIELD for a double
 func TestPutFieldDouble(t *testing.T) {
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
@@ -1818,16 +1829,28 @@ func TestPutFieldDouble(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+
 	// now create the pointed-to FieldRef
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+
+	// now create the NameAndType records
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
+
+	// and finally the UTF8 records pointed to by the NameAndType entry above
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "value"
+	CP.Utf8Refs[1] = "D"
+
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
 	obj := object.MakeEmptyObject()
-	obj.Fields = make([]object.Field, 1, 1)
-	obj.Fields[0].Fvalue = float64(42.0) // set the field = 42
-	obj.Fields[0].Ftype = types.Double
+	obj.FieldTable["value"] = object.Field{
+		Ftype:  types.Double,
+		Fvalue: float64(42.0),
+	}
 	push(&f, obj)
 
 	push(&f, float64(26.8)) // update the field to 26.8
@@ -1841,7 +1864,7 @@ func TestPutFieldDouble(t *testing.T) {
 		t.Errorf("PUTFIELD: Got unexpected error msg: %s", err.Error())
 	}
 
-	res := obj.Fields[0].Fvalue.(float64)
+	res := obj.FieldTable["value"].Fvalue.(float64)
 	if res != 26.8 {
 		t.Errorf("PUTFIELD: Expected a new value of 26.8, got: %f", res)
 	}
@@ -1871,7 +1894,7 @@ func TestPutFieldNonFieldCPentry(t *testing.T) {
 	}
 }
 
-// PUTFIELD: Error: attempt to update a non-static field
+// PUTFIELD: Error: attempt to update a static field (which should be done by PUTSTATIC, not PUTFIELD)
 func TestPutFieldErrorUpdatingStatic(t *testing.T) {
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
@@ -1881,16 +1904,28 @@ func TestPutFieldErrorUpdatingStatic(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+
 	// now create the pointed-to FieldRef
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+
+	// now create the NameAndType records
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
+
+	// and finally the UTF8 records pointed to by the NameAndType entry above
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "value"
+	CP.Utf8Refs[1] = types.Static + types.Int
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
 	obj := object.MakeEmptyObject()
 	obj.Fields = make([]object.Field, 1, 1)
-	obj.Fields[0].Fvalue = int64(42) // set the field = 42
-	obj.Fields[0].Ftype = types.Static + types.Int
+	obj.FieldTable["value"] = object.Field{
+		Ftype:  types.Static + types.Int,
+		Fvalue: int64(42),
+	}
 	push(&f, obj)
 
 	push(&f, int64(26)) // update the field to 26
