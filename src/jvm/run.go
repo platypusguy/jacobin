@@ -469,7 +469,9 @@ frameInterpreter:
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
 			}
-			array := *(fAref.Fields[0].Fvalue).(*[]float64)
+
+			oa := fAref.FieldTable["value"]
+			array := oa.Fvalue.([]float64)
 
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
@@ -480,6 +482,7 @@ frameInterpreter:
 			var value = array[index]
 			push(f, value)
 			push(f, value)
+
 		case opcodes.AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
