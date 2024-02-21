@@ -2355,9 +2355,9 @@ func TestNewrray(t *testing.T) {
 	// now, test the length of the array, which should be 13
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*object.Object)
-	arrayPtr := ptr.Fields[0].Fvalue.(*[]int64)
-	if len(*arrayPtr) != 13 {
-		t.Errorf("NEWARRAY: Expecting array length of 13, got %d", len(*arrayPtr))
+	array := ptr.FieldTable["value"].Fvalue.([]int64)
+	if len(array) != 13 {
+		t.Errorf("NEWARRAY: Expecting array length of 13, got %d", len(array))
 	}
 }
 
@@ -2378,9 +2378,9 @@ func TestNewrrayForByteArray(t *testing.T) {
 	}
 
 	arrayPtr := pop(&f).(*object.Object)
-	array := arrayPtr.Fields[0].Fvalue.(*[]byte)
-	if len(*array) != 13 {
-		t.Errorf("NEWARRAY: Got unexpected array size: %d", len(*array))
+	array := arrayPtr.FieldTable["value"].Fvalue.([]byte)
+	if len(array) != 13 {
+		t.Errorf("NEWARRAY: Got unexpected array size: %d", len(array))
 	}
 }
 
@@ -2533,7 +2533,7 @@ func TestSastore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue).(*[]int64)
+	array := ptr.FieldTable["value"].Fvalue.([]int64)
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += array[i]
