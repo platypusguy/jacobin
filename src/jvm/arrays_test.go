@@ -2320,7 +2320,7 @@ func Test3DimArray2(t *testing.T) {
 	topLevelArray := *(arrayPtr.(*object.Object))
 	if topLevelArray.FieldTable["value"].Ftype != "[I" {
 		t.Errorf("MULTIANEWARRAY: Expected 1st dim to be type '[I', got %s",
-			topLevelArray.Fields[0].Ftype)
+			topLevelArray.FieldTable["value"].Ftype)
 	}
 
 	dim1 := topLevelArray.FieldTable["value"].Fvalue.([]int64)
