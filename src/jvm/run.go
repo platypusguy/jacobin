@@ -1689,7 +1689,7 @@ frameInterpreter:
 						Ftype:  "L" + kPtr.Data.Name + ";",
 						Fvalue: kPtr,
 					}
-					// obj.Fields = append(obj.Fields, objField)
+
 					obj.FieldTable[fieldName] = objField
 
 					statics.Statics[fieldName] = statics.Static{
@@ -1741,26 +1741,18 @@ frameInterpreter:
 			var fieldType string
 			var fieldValue interface{}
 
-			if len(obj.FieldTable) < 1 {
-				// Extract field from Fields slice
-				fieldType = obj.Fields[fieldEntry.Slot].Ftype
-				fieldValue = obj.Fields[fieldEntry.Slot].Fvalue
-			} else {
-				// Extract field from FieldTable map
-				fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-				nameAndTypeCPIndex := fullFieldEntry.NameAndType
-				nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-				nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-				nameCPIndex := nameAndType.NameIndex
-				nameCPentry := CP.CpIndex[nameCPIndex]
-				fieldName := CP.Utf8Refs[nameCPentry.Slot]
-				objField := obj.FieldTable[fieldName]
-				fieldType = objField.Ftype
-				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
-			}
+			fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+			nameAndTypeCPIndex := fullFieldEntry.NameAndType
+			nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+			nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+			nameCPIndex := nameAndType.NameIndex
+			nameCPentry := CP.CpIndex[nameCPIndex]
+			fieldName := CP.Utf8Refs[nameCPentry.Slot]
+			objField := obj.FieldTable[fieldName]
+			fieldType = objField.Ftype
+			fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
 
 			push(f, fieldValue)
-			// fmt.Printf("DEBUG GETFIELD pushed type %s, value %v\n", fieldType, fieldValue)
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
@@ -1810,10 +1802,9 @@ frameInterpreter:
 			case *object.Object:
 				if value != object.Null {
 					v := *(value.(*object.Object))
-					if obj.Fields != nil {
-						if strings.HasPrefix(v.FieldTable["value"].Ftype, types.Array) {
-							value = v.FieldTable["value"].Fvalue
-						}
+					o, ok := v.FieldTable["value"]
+					if ok && strings.HasPrefix(o.Ftype, types.Array) {
+						value = v.FieldTable["value"].Fvalue
 					}
 				}
 			}
