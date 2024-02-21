@@ -1913,9 +1913,8 @@ func TestGetField(t *testing.T) {
 
 	// push the string whose field[0] we'll be getting
 	str := object.NewString()
-	// str.Fields[0].Fvalue = "hello"
 	str.FieldTable["value"] = object.Field{
-		Ftype:  "[B",
+		Ftype:  types.ByteArray,
 		Fvalue: "hello",
 	}
 
@@ -1951,10 +1950,8 @@ func TestGetFieldWithLong(t *testing.T) {
 	f.CP = &CP
 
 	// push the string whose field[0] we'll be getting
-	obj := object.MakeEmptyObject()
-	obj.Fields = make([]object.Field, 1, 1)
-	obj.Fields[0].Fvalue = int64(222)
-	obj.Fields[0].Ftype = types.Long
+	obj := object.MakePrimitiveObject("java/lang/Long", types.Long, int64(222))
+	obj.DumpObject("TestGetFieldWithLong", 0)
 	push(&f, obj)
 
 	fs := frames.CreateFrameStack()

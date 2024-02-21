@@ -15,6 +15,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/types"
 	"math"
 	"runtime/debug"
 	"unsafe"
@@ -176,12 +177,12 @@ func pop(f *frames.Frame) interface{} {
 						break
 					}
 					if len(obj.Fields) > 0 {
-						if obj.Fields[0].Ftype == "[B" {
-							if obj.Fields[0].Fvalue == nil {
+						if obj.FieldTable["value"].Ftype == types.ByteArray {
+							if obj.FieldTable["value"].Fvalue == nil {
 								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 									fmt.Sprintf("%3d []byte]: <nil>", f.TOS)
 							} else {
-								strVal := (obj.Fields[0].Fvalue).(*[]byte)
+								strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
 								str := string(*strVal)
 								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 									fmt.Sprintf("%3d String: %-10s", f.TOS, str)
@@ -234,13 +235,13 @@ func peek(f *frames.Frame) interface{} {
 			switch value.(type) {
 			case *object.Object:
 				obj := value.(*object.Object)
-				if len(obj.Fields) > 0 {
-					if obj.Fields[0].Ftype == "[B" {
-						if obj.Fields[0].Fvalue == nil {
+				if len(obj.FieldTable) > 0 {
+					if obj.FieldTable["value"].Ftype == types.ByteArray {
+						if obj.FieldTable["value"].Fvalue == nil {
 							traceInfo = fmt.Sprintf("                                                  "+
 								"      PEEK          TOS:%3d []byte: <nil>", f.TOS)
 						} else {
-							strVal := (obj.Fields[0].Fvalue).(*[]byte)
+							strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
 							str := string(*strVal)
 							traceInfo = fmt.Sprintf("                                                  "+
 								"      PEEK          TOS:%3d String: %-10s", f.TOS, str)
@@ -292,13 +293,13 @@ func push(f *frames.Frame, x interface{}) {
 					switch x.(type) {
 					case *object.Object:
 						obj := x.(*object.Object)
-						if len(obj.Fields) > 0 {
-							if obj.Fields[0].Ftype == "[B" {
-								if obj.Fields[0].Fvalue == nil {
+						if len(obj.FieldTable) > 0 {
+							if obj.FieldTable["value"].Ftype == types.ByteArray {
+								if obj.FieldTable["value"].Fvalue == nil {
 									traceInfo = fmt.Sprintf("%56s", " ") +
 										fmt.Sprintf("PUSH          TOS:%3d []byte: <nil>", f.TOS)
 								} else {
-									strVal := (obj.Fields[0].Fvalue).(*[]byte)
+									strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
 									str := string(*strVal)
 									traceInfo = fmt.Sprintf("%56s", " ") +
 										fmt.Sprintf("PUSH          TOS:%3d String: %-10s", f.TOS, str)

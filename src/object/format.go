@@ -112,7 +112,8 @@ func fmtHelper(field Field, className string, fieldName string) string {
 			case []byte:
 				bytes = field.Fvalue.([]byte)
 			default:
-				return "<type is byte array but value is not nor a ptr>"
+				errMsg := fmt.Sprintf("<type is byte array but value is of type %T>", field.Fvalue)
+				return errMsg
 			}
 			if len(bytes) < 1 {
 				return "<byte array of zero length>"
