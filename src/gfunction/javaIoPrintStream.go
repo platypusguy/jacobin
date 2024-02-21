@@ -182,7 +182,7 @@ func PrintlnV([]interface{}) interface{} {
 
 // PrintlnC = java/io/Prinstream.println(char)
 func PrintlnC(params []interface{}) interface{} {
-	cc := string(params[1].(int64))
+	cc := fmt.Sprint(params[1].(int64))
 	fmt.Println(cc)
 	return nil
 }
@@ -233,7 +233,7 @@ func PrintlnObject(params []interface{}) interface{} {
 
 // PrintC = java/io/Prinstream.print(char)
 func PrintC(params []interface{}) interface{} {
-	cc := string(params[1].(int64))
+	cc := fmt.Sprint(params[1].(int64))
 	fmt.Print(cc)
 	return nil
 }
