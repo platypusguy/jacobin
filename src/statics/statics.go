@@ -15,6 +15,7 @@ import (
 	"os"
 	"runtime/debug"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -156,7 +157,10 @@ func DumpStatics() {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
+		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
+			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
+			_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
+		}
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }
