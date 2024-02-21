@@ -33,6 +33,9 @@ import (
 // This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
 // we're running the tests on. The folder which contains the test class should be specified in the environmental
 // variable JACOBIN_TESTDATA (without a terminating slash).
+
+const helloMsg = "Hello from Hello.main!"
+
 func initVarsHello() error {
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		return fmt.Errorf("test not run due to -short")
@@ -107,7 +110,7 @@ func TestRunHello(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stdout)
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), helloMsg) {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
@@ -161,7 +164,7 @@ func TestRunHelloVerboseClass(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stdout)
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), helloMsg) {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
@@ -215,7 +218,7 @@ func TestRunHelloVerboseFinest(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stdout)
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), helloMsg) {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }
@@ -271,7 +274,7 @@ func TestRunHelloTraceInst(t *testing.T) {
 
 	slurp, _ = io.ReadAll(stdout)
 
-	if !strings.Contains(string(slurp), "Hello from Hello.main!") {
+	if !strings.Contains(string(slurp), helloMsg) {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }

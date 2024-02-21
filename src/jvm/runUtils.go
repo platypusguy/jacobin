@@ -182,8 +182,8 @@ func pop(f *frames.Frame) interface{} {
 								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 									fmt.Sprintf("%3d []byte]: <nil>", f.TOS)
 							} else {
-								strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
-								str := string(*strVal)
+								bytes := (obj.FieldTable["value"].Fvalue).([]byte)
+								str := string(bytes)
 								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 									fmt.Sprintf("%3d String: %-10s", f.TOS, str)
 							}
@@ -299,8 +299,8 @@ func push(f *frames.Frame, x interface{}) {
 									traceInfo = fmt.Sprintf("%56s", " ") +
 										fmt.Sprintf("PUSH          TOS:%3d []byte: <nil>", f.TOS)
 								} else {
-									strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
-									str := string(*strVal)
+									bytes := (obj.FieldTable["value"].Fvalue).([]byte)
+									str := string(bytes)
 									traceInfo = fmt.Sprintf("%56s", " ") +
 										fmt.Sprintf("PUSH          TOS:%3d String: %-10s", f.TOS, str)
 								}
