@@ -1945,13 +1945,25 @@ func TestGetFieldWithLong(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
+
+	// now create the pointed-to FieldRef
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
 	f.CP = &CP
 
+	// now create the NameAndType records
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
+
+	// and finally the UTF8 records pointed to by the NameAndType entry above
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "value"
+	CP.Utf8Refs[1] = types.Long
+	f.CP = &CP
+
 	// push the string whose field[0] we'll be getting
 	obj := object.MakePrimitiveObject("java/lang/Long", types.Long, int64(222))
-	obj.DumpObject("TestGetFieldWithLong", 0)
+	// obj.DumpObject("TestGetFieldWithLong", 0)
 	push(&f, obj)
 
 	fs := frames.CreateFrameStack()
