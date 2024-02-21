@@ -467,7 +467,8 @@ func StringFormatter(params []interface{}) interface{} {
 				}
 				valuesOut = append(valuesOut, zz)
 			case types.Char:
-				valuesOut = append(valuesOut, fld.Fvalue.(int64))
+				cc := string(fld.Fvalue.(int64))
+				valuesOut = append(valuesOut, cc)
 			case types.Double:
 				valuesOut = append(valuesOut, fld.Fvalue.(float64))
 			case types.Float:
