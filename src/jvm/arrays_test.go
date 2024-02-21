@@ -1460,7 +1460,8 @@ func TestFastore(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
 
-	array := *(ptr.Fields[0].Fvalue).(*[]float64)
+	oa := ptr.FieldTable["value"]
+	array := oa.Fvalue.([]float64)
 	var fsum float64
 	for i := 0; i < 30; i++ {
 		fsum += array[i]

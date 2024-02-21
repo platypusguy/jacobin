@@ -701,16 +701,17 @@ frameInterpreter:
 				return errors.New("FASTORE: Invalid array address")
 			}
 
-			if fAref.Fields[0].Ftype != "[F" {
+			oa := fAref.FieldTable["value"]
+			if oa.Ftype != "[F" {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", fAref.Fields[0].Ftype)
+				errMsg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", oa.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"FASTORE: Attempt to access array of incorrect type")
 				return errors.New("FASTORE: Invalid array type")
 			}
 
-			array := *(fAref.Fields[0].Fvalue).(*[]float64)
+			array := oa.Fvalue.([]float64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
