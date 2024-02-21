@@ -2033,7 +2033,8 @@ func TestLastore(t *testing.T) {
 		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
 	}
 
-	array := *(ptr.Fields[0].Fvalue).(*[]int64)
+	oa := ptr.FieldTable["value"]
+	array := oa.Fvalue.([]int64)
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += array[i]

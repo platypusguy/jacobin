@@ -668,7 +668,8 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			arrType := lAref.Fields[0].Ftype
+			oa := lAref.FieldTable["value"]
+			arrType := oa.Ftype
 
 			if arrType != "[I" {
 				glob.ErrorGoStack = string(debug.Stack())
@@ -679,7 +680,7 @@ frameInterpreter:
 				return errors.New("LASTORE: Invalid array type")
 			}
 
-			array := *(lAref.Fields[0].Fvalue).(*[]int64)
+			array := oa.Fvalue.([]int64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
