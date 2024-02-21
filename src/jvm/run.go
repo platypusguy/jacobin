@@ -731,16 +731,17 @@ frameInterpreter:
 				return errors.New("DASTORE: Invalid array reference")
 			}
 
-			if dAref.Fields[0].Ftype != "[F" {
+			oa := dAref.FieldTable["value"]
+			if oa.Ftype != "[F" {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", dAref.Fields[0].Ftype)
+				errMsg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", oa.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.Throw(exceptions.ArrayStoreException,
 					"DASTORE: Attempt to access array of incorrect type")
 				return errors.New("DASTORE: Invalid array type")
 			}
 
-			array := *(dAref.Fields[0].Fvalue).(*[]float64)
+			array := oa.Fvalue.([]float64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
