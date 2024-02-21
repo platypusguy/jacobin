@@ -122,8 +122,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 
 	// now, validate the fields in the stackTraceElementlement (ste)
 	x := retVal.(*object.Field).Fvalue.(*object.Object)
-	xt := x.Fields[0].Fvalue.(*[]*object.Object)
-	xtt := *xt
+	xtt := x.FieldTable["value"].Fvalue.([]*object.Object)
 	ste := xtt[0].FieldTable
 	steDeclCl := ste["declaringClass"]
 	if steDeclCl.Fvalue.(string) != "java/testClass" {
