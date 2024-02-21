@@ -494,7 +494,6 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			// arrayPtr := (rAref.(*object.Object)).Fields[0].Fvalue.(*[]*object.Object)
 			array := (rAref.(*object.Object)).FieldTable["value"].Fvalue.([]*object.Object)
 
 			size := int64(len(array))
@@ -823,7 +822,6 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			// array := *(ptrObj.Fields[0].Fvalue.(*[]types.JavaByte)) // changed w/ JACOBIN-282
 			array := o.Fvalue.([]byte)
 			size := int64(len(array))
 			if index >= size {
@@ -1691,8 +1689,8 @@ frameInterpreter:
 						Ftype:  "L" + kPtr.Data.Name + ";",
 						Fvalue: kPtr,
 					}
-					obj.Fields = append(obj.Fields, objField)
-					obj.FieldTable = nil
+					// obj.Fields = append(obj.Fields, objField)
+					obj.FieldTable[fieldName] = objField
 
 					statics.Statics[fieldName] = statics.Static{
 						Type:  objField.Ftype,
