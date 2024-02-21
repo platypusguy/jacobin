@@ -74,24 +74,26 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 	}
 }
 
-// Make2DimArray creates a the last two dimensions of a multi-
-// dimensional array. (All the dimensions > 2 are simply arrays
-// of pointers to arrays.)
+// Make2DimArray creates the last two dimensions of a multi// dimensional array.
+// (All the dimensions > 2 are simply arrays  of pointers to arrays.)
 func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error) {
-	ptrArr := MakeEmptyObject()                      // ptrArr is the pointer to the array of pointers to the leaf arrays
-	value := make([]*Object, ptrArrSize, ptrArrSize) // the actual ptr-level array
-	ptrArr.Fields = append(ptrArr.Fields, Field{Fvalue: &(value)})
-	for i := 0; i < len(value); i++ { // for each entry in the ptr array
+	ptrArr := MakeEmptyObject()          // ptrArr is the pointer to the array of pointers to the leaf arrays
+	value := make([]*Object, ptrArrSize) // the actual ptr-level array
+
+	// make the first array in the ptr array and get its type converted to a string
+	firstArray := Make1DimArray(arrType, leafArrSize)
+	aType := "[" + *firstArray.Klass
+	ptrArr.FieldTable["value"] = Field{
+		Ftype:  aType,
+		Fvalue: value,
+	}
+
+	value[0] = firstArray
+	for i := 1; i < len(value); i++ { // for each entry in the ptr array
 		value[i] = Make1DimArray(arrType, leafArrSize)
 	}
 
-	// the type of the pointer array will be the type of the leaf
-	// array with a [ pre pended.
-	ptrArrType := "[" + value[0].Fields[0].Ftype
-	ptrArr.Fields[0].Ftype = ptrArrType
-
-	ptrArr.Klass = &value[0].Fields[0].Ftype
-
+	ptrArr.Klass = firstArray.Klass
 	return ptrArr, nil
 }
 

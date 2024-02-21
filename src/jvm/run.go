@@ -2578,7 +2578,7 @@ frameInterpreter:
 			// can no longer be considered reliable. Use len(dimSizes).
 			if len(dimSizes) == 3 {
 				multiArr := object.Make1DimArray(object.REF, dimSizes[0])
-				actualArray := *multiArr.Fields[0].Fvalue.(*[]*object.Object)
+				actualArray := multiArr.FieldTable["value"].Fvalue.([]*object.Object)
 				for i := 0; i < len(actualArray); i++ {
 					actualArray[i], _ = object.Make2DimArray(dimSizes[1],
 						dimSizes[2], arrayType)

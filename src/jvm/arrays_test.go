@@ -2166,17 +2166,18 @@ func Test2DimArray1(t *testing.T) {
 		t.Error("Error creating 2-dimensional array")
 	}
 
-	arrLevelArrayPtr := (arr.Fields[0].Fvalue).(*[]*object.Object)
-	if len(*arrLevelArrayPtr) != 3 {
+	o := arr.FieldTable["value"]
+	arrLevelArrayPtr := o.Fvalue.([]*object.Object)
+	if len(arrLevelArrayPtr) != 3 {
 		t.Errorf("MULTIANEWARRAY: Expected length of pointer array of 3, got: %d",
-			len(*arrLevelArrayPtr))
+			len(arrLevelArrayPtr))
 	}
 
-	leafLevelArrayPtr := ((*arrLevelArrayPtr)[0].Fields[0].Fvalue).(*[]byte)
-	arrLen := len(*leafLevelArrayPtr)
+	oa := arrLevelArrayPtr[0].FieldTable["value"]
+	leafLevelArrayPtr := (oa.Fvalue).([]byte)
+	arrLen := len(leafLevelArrayPtr)
 	if arrLen != 4 {
-		t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d",
-			arrLen)
+		t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d", arrLen)
 	}
 }
 
@@ -2236,36 +2237,36 @@ func Test3DimArray1(t *testing.T) {
 	}
 
 	topLevelArray := *(arrayPtr.(*object.Object))
-	if topLevelArray.Fields[0].Ftype != "[L" {
+	if topLevelArray.FieldTable["value"].Ftype != "[L" {
 		t.Errorf("MULTIANEWARRAY: Expected 1st dim to be type '[L', got %s",
-			topLevelArray.Fields[0].Ftype)
+			topLevelArray.FieldTable["value"].Ftype)
 	}
 
-	dim1 := *(topLevelArray.Fields[0].Fvalue.(*[]*object.Object))
+	dim1 := topLevelArray.FieldTable["value"].Fvalue.([]*object.Object)
 	if len(dim1) != 3 {
 		t.Errorf("MULTINEWARRAY: Expected 1st dim to have 3 elements, got: %d",
 			len(dim1))
 	}
 
-	dim2type := dim1[0].Fields[0].Ftype
+	dim2type := dim1[0].FieldTable["value"].Ftype
 	if dim2type != "[[I" {
 		t.Errorf("MULTIANEWARRAY: Expected 2nd dim to be type '[[I', got %s",
 			dim2type)
 	}
 
-	dim2 := *(dim1[0].Fields[0].Fvalue.(*[]*object.Object))
+	dim2 := dim1[0].FieldTable["value"].Fvalue.([]*object.Object)
 	if len(dim2) != 3 {
 		t.Errorf("MULTINEWARRAY: Expected 2nd dim to have 3 elements, got: %d",
 			len(dim2))
 	}
 
-	dim3type := dim2[0].Fields[0].Ftype
+	dim3type := dim2[0].FieldTable["value"].Ftype
 	if dim3type != "[I" {
 		t.Errorf("MULTIANEWARRAY: Expected leaf dim to be type '[I', got %s",
 			dim3type)
 	}
 
-	dim3 := *(dim2[0].Fields[0].Fvalue.(*[]int64))
+	dim3 := dim2[0].FieldTable["value"].Fvalue.([]int64)
 	if len(dim3) != 4 {
 		t.Errorf("MULTINEWARRAY: Expected leaf dim to have 4 elements, got: %d",
 			len(dim3))
@@ -2317,17 +2318,16 @@ func Test3DimArray2(t *testing.T) {
 	}
 
 	topLevelArray := *(arrayPtr.(*object.Object))
-	if topLevelArray.Fields[0].Ftype != "[I" {
+	if topLevelArray.FieldTable["value"].Ftype != "[I" {
 		t.Errorf("MULTIANEWARRAY: Expected 1st dim to be type '[I', got %s",
 			topLevelArray.Fields[0].Ftype)
 	}
 
-	dim1 := *(topLevelArray.Fields[0].Fvalue.(*[]int64))
+	dim1 := topLevelArray.FieldTable["value"].Fvalue.([]int64)
 	if len(dim1) != 4 {
 		t.Errorf("MULTINEWARRAY: Expected 1st dim to have 4 elements, got: %d",
 			len(dim1))
 	}
-
 }
 
 // NEWARRAY: creation of array for primitive values
