@@ -329,18 +329,16 @@ func stringEquals(params []interface{}) interface{} {
 
 // Given a Go interface parameter from caller, compute the associated Go string.
 func getGoString(param0 interface{}) interface{} {
-	var bptr *[]uint8
+	var bytes []uint8
 	switch param0.(type) {
-	case *[]uint8:
-		bptr = param0.(*[]uint8)
 	case *object.Object:
 		parmObj := param0.(*object.Object)
-		bptr = parmObj.Fields[0].Fvalue.(*[]byte)
+		bytes = parmObj.FieldTable["value"].Fvalue.([]byte)
 	default:
 		errMsg := fmt.Sprintf("getGoString: Unexpected param[0] type = %T", param0)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	return string(*bptr)
+	return string(bytes)
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
@@ -411,7 +409,7 @@ func getBytesVoid(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		parmObj := params[0].(*object.Object)
-		bytes := parmObj.Fields[0].Fvalue.(*[]byte)
+		bytes := parmObj.FieldTable["value"].Fvalue.([]byte)
 		return bytes
 	default:
 		errMsg := fmt.Sprintf("getBytesVoid: Unexpected params[0] type=%T, value=%v", params[0], params[0])
@@ -437,7 +435,9 @@ func StringFormatter(params []interface{}) interface{} {
 	}
 	formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
 	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
-	valuesIn := *(params[1].(*object.Object).Fields[0].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
+	//valuesIn := *(params[1].(*object.Object).FieldTable["value"].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
+	fld := params[1].(*object.Object).FieldTable["value"]
+	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 	valuesOut := []any{}
 
 	for i := 0; i < len(valuesIn); i++ {
@@ -450,45 +450,36 @@ func StringFormatter(params []interface{}) interface{} {
 			// str := valuesIn[i].FormatField()
 			// fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
 
-			// Establish a pointer to the field.
-			var fldPtr *object.Field
-			if len(valuesIn[i].FieldTable) > 0 { // using FieldTable
-				fld := valuesIn[i].FieldTable["value"]
-				fldPtr = &fld
-			} else { // using Fields slice
-				fldPtr = &valuesIn[i].Fields[0]
-			}
-
-			// Get the field value.
-			fvalue := (*fldPtr).Fvalue
+			// Extract the field.
+			fld := valuesIn[i].FieldTable["value"]
 
 			// Process depending on field type
-			switch (*fldPtr).Ftype {
+			switch fld.Ftype {
 			case types.Byte:
-				valuesOut = append(valuesOut, fvalue.(int64))
+				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Bool:
 				// fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
 				var zz bool
-				if fvalue.(int64) == 0 {
+				if fld.Fvalue.(int64) == 0 {
 					zz = false
 				} else {
 					zz = true
 				}
 				valuesOut = append(valuesOut, zz)
 			case types.Char:
-				valuesOut = append(valuesOut, fvalue.(int64))
+				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Double:
-				valuesOut = append(valuesOut, fvalue.(float64))
+				valuesOut = append(valuesOut, fld.Fvalue.(float64))
 			case types.Float:
-				valuesOut = append(valuesOut, fvalue.(float64))
+				valuesOut = append(valuesOut, fld.Fvalue.(float64))
 			case types.Int:
-				valuesOut = append(valuesOut, fvalue.(int64))
+				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Long:
-				valuesOut = append(valuesOut, fvalue.(int64))
+				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Short:
-				valuesOut = append(valuesOut, fvalue.(int64))
+				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
-				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, valuesIn[i].Fields[0].Ftype)
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, fld.Ftype)
 				return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
 			}
 		}
@@ -515,8 +506,8 @@ func stringLength(params []interface{}) interface{} {
 func toLowerCase(params []interface{}) interface{} {
 	// params[0]: input string
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str := strings.ToLower(string(*strPtr))
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str := strings.ToLower(string(bytes))
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
 }
@@ -524,8 +515,8 @@ func toLowerCase(params []interface{}) interface{} {
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str := strings.ToUpper(string(*strPtr))
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str := strings.ToUpper(string(bytes))
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
 }
@@ -554,7 +545,7 @@ func valueOfChar(params []interface{}) interface{} {
 func valueOfCharArray(params []interface{}) interface{} {
 	// params[0]: input char array
 	propObj := params[0].(*object.Object)
-	caPtr := propObj.Fields[0].Fvalue.(*[]int64)
+	caPtr := propObj.FieldTable["value"].Fvalue.(*[]int64)
 	var str string
 	for _, ch := range *caPtr {
 		str += fmt.Sprintf("%c", ch)
@@ -568,7 +559,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// params[1]: input offset
 	// params[2]: input count
 	propObj := params[0].(*object.Object)
-	caPtr := propObj.Fields[0].Fvalue.(*[]int64)
+	caPtr := propObj.FieldTable["value"].Fvalue.(*[]int64)
 	var wholeString string
 	for _, ch := range *caPtr {
 		wholeString += fmt.Sprintf("%c", ch)
@@ -640,11 +631,11 @@ func valueOfObject(params []interface{}) interface{} {
 
 func compareToCaseSensitive(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str1 := string(*strPtr)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str1 := string(bytes)
 	propObj = params[1].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str2 := string(*strPtr)
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str2 := string(bytes)
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -656,11 +647,11 @@ func compareToCaseSensitive(params []interface{}) interface{} {
 
 func compareToIgnoreCase(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str1 := strings.ToLower(string(*strPtr))
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str1 := strings.ToLower(string(bytes))
 	propObj = params[1].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str2 := strings.ToLower(string(*strPtr))
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str2 := strings.ToLower(string(bytes))
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -672,11 +663,11 @@ func compareToIgnoreCase(params []interface{}) interface{} {
 
 func stringConcat(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	strRef := strings.ToLower(string(*strPtr))
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	strRef := strings.ToLower(string(bytes))
 	propObj = params[1].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	strArg := strings.ToLower(string(*strPtr))
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	strArg := strings.ToLower(string(bytes))
 	str := strRef + strArg
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj

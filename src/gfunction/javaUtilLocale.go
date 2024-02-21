@@ -52,8 +52,8 @@ func Load_Util_Locale() map[string]GMeth {
 func localeFromLanguage(params []interface{}) interface{} {
 	// params[0]: input string
 	propObj := params[0].(*object.Object) // string
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str := string(*strPtr)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str := string(bytes)
 	obj := object.CreateCompactStringFromGoString(&str)
 	return obj
 }
@@ -61,12 +61,12 @@ func localeFromLanguage(params []interface{}) interface{} {
 func localeFromLanguageCountry(params []interface{}) interface{} {
 	// params[0]: input string
 	propObj := params[0].(*object.Object) // string
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str1 := string(*strPtr)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str1 := string(bytes)
 
 	propObj = params[1].(*object.Object) // string
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str2 := string(*strPtr)
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str2 := string(bytes)
 
 	str := str1 + "_" + str2
 	obj := object.CreateCompactStringFromGoString(&str)
@@ -76,16 +76,16 @@ func localeFromLanguageCountry(params []interface{}) interface{} {
 func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	// params[0]: input string
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.Fields[0].Fvalue.(*[]byte)
-	str1 := string(*strPtr)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str1 := string(bytes)
 
 	propObj = params[1].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str2 := string(*strPtr)
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str2 := string(bytes)
 
 	propObj = params[2].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str3 := string(*strPtr)
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str3 := string(bytes)
 
 	str := str1 + "_" + str2 + "_" + str3
 	obj := object.CreateCompactStringFromGoString(&str)

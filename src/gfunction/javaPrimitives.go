@@ -254,11 +254,7 @@ func Load_Primitives() map[string]GMeth {
 func byteToString(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	str := fmt.Sprintf("%d", ii)
 	objPtr := object.CreateCompactStringFromGoString(&str)
 	return objPtr
@@ -272,12 +268,7 @@ func byteValueOf(params []interface{}) interface{} {
 func byteDoubleValue(params []interface{}) interface{} {
 	var bb int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		bb = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		bb = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	bb = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(bb)
 }
 
@@ -320,11 +311,7 @@ func characterValueOf(params []interface{}) interface{} {
 func charValue(params []interface{}) interface{} {
 	var ch int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ch = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ch = parmObj.Fields[0].Fvalue.(int64)
-	}
+	ch = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ch
 }
 
@@ -359,11 +346,7 @@ func charToUpperCase(params []interface{}) interface{} {
 func doubleByteValue(params []interface{}) interface{} {
 	var dd float64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		dd = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd = parmObj.FieldTable["value"].Fvalue.(float64)
 	return int64(byte(dd))
 }
 
@@ -384,19 +367,11 @@ func doubleCompareTo(params []interface{}) interface{} {
 
 	// Get the Double object reference
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		dd1 = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd1 = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd1 = parmObj.FieldTable["value"].Fvalue.(float64)
 
 	// Get the actual Java Double parameter
 	parmObj = params[1].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		dd2 = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd2 = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd2 = parmObj.FieldTable["value"].Fvalue.(float64)
 
 	// Now, its just like doubleCompare.
 	if dd1 == dd2 {
@@ -413,11 +388,7 @@ func doubleEquals(params []interface{}) interface{} {
 
 	// Get the Double object reference
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		dd1 = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd1 = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd1 = parmObj.FieldTable["value"].Fvalue.(float64)
 
 	// Get the actual Java Object parameter
 	parmObj = params[1].(*object.Object)
@@ -428,11 +399,7 @@ func doubleEquals(params []interface{}) interface{} {
 	if *parmObj.Klass != "java/lang/Double" {
 		return int64(0)
 	}
-	if len(parmObj.FieldTable) > 0 {
-		dd2 = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd2 = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd2 = parmObj.FieldTable["value"].Fvalue.(float64)
 
 	// If equal, return true; else return false.
 	// fmt.Printf("DEBUG doubleEquals dd1=%f, dd2=%f\n", dd1, dd2)
@@ -445,11 +412,7 @@ func doubleEquals(params []interface{}) interface{} {
 func doubleToString(params []interface{}) interface{} {
 	var dd float64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		dd = parmObj.FieldTable["value"].Fvalue.(float64)
-	} else {
-		dd = parmObj.Fields[0].Fvalue.(float64)
-	}
+	dd = parmObj.FieldTable["value"].Fvalue.(float64)
 	str := fmt.Sprintf("%f", dd)
 	objPtr := object.CreateCompactStringFromGoString(&str)
 	return objPtr
@@ -477,7 +440,7 @@ func doubleDoubleValue(params []interface{}) interface{} {
 	if len(parmObj.FieldTable) > 0 {
 		return parmObj.FieldTable["value"].Fvalue.(float64)
 	}
-	return parmObj.Fields[0].Fvalue.(float64)
+	return parmObj.FieldTable["value"].Fvalue.(float64)
 }
 
 func integerValueOf(params []interface{}) interface{} {
@@ -556,36 +519,21 @@ func integerParseInt(params []interface{}) interface{} {
 func integerIntLongValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
 }
 
 func integerFloatDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(ii)
 }
 
 func integerByteValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
 }
 
@@ -597,11 +545,7 @@ func longValueOf(params []interface{}) interface{} {
 func longDoubleValue(params []interface{}) interface{} {
 	var jj int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		jj = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		jj = parmObj.Fields[0].Fvalue.(int64)
-	}
+	jj = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(jj)
 }
 
@@ -613,12 +557,7 @@ func shortValueOf(params []interface{}) interface{} {
 func shortDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		ii = parmObj.FieldTable["value"].Fvalue.(int64)
-	} else {
-		ii = parmObj.Fields[0].Fvalue.(int64)
-	}
-
+	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(ii)
 }
 
