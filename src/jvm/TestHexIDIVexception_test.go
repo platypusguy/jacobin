@@ -133,8 +133,9 @@ func TestHexIDIVException(t *testing.T) {
 
 	os.Stderr = normalStderr
 	os.Stdout = normalStdout
-	msgExpected := "IDIV: division by zero"
+	msgExpected := "java.lang.ArithmeticException"
 	if !strings.Contains(string(msgStderr), msgExpected) {
-		t.Errorf("Error expected '%s', got: %s\n", msgExpected, string(msgStderr))
+		t.Errorf("Error expected error message to contain ' java.lang.ArithmeticException', got: %s\n",
+			string(msgStderr))
 	}
 }

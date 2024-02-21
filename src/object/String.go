@@ -7,6 +7,7 @@
 package object
 
 import (
+	"jacobin/statics"
 	"jacobin/types"
 )
 
@@ -30,16 +31,16 @@ func NewString() *Object {
 
 	// ==== now the fields ====
 
-	// value: the content of the string as array of bytes
+	// value: the content of the string as array of runes or bytes
 	// Note: Post JDK9, this field is an array of bytes, so as to
 	// enable compact strings.
 	value := make([]byte, 10)
-	// make value (the content of the string) Fields[0] and FieldTable["value"]
-	valueField := Field{Ftype: types.ByteArray, Fvalue: value}
+	// make value (the content of the string) in FieldTable["value"]
+	valueField := Field{Ftype: types.ByteArray, Fvalue: &value}
 	s.Fields = append(s.Fields, valueField)
 	s.FieldTable["value"] = valueField
 
-	// Field{Ftype: types.ByteArray, Fvalue: value})
+	// Field{Ftype: types.ByteArray, Fvalue: &value})
 
 	// field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
 	s.Fields = append(s.Fields, Field{Ftype: types.Byte, Fvalue: int64(1)})
@@ -76,44 +77,32 @@ func NewString() *Object {
 }
 
 // NewStringFromGoString converts a go string to a Java string-like
-// entity, in which the chars are stored as runes, rather than chars.
-// TODO: it needs to determine whether a string can be stored as bytes or
-// chars and set the flags in the String instance correctly.
+// entity, in which the chars are stored as runes, rather than chars
+// or as bytes, depending on the status of COMPACT_STRINGS (which defaults
+// to true for JDK >= 9).
+
 func NewStringFromGoString(in string) *Object {
 	s := NewString()
-	s.Fields[0].Ftype = types.RuneArray
-	s.Fields[0].Fvalue = in // test for compact strings and use GoStringToBytes() if on
-	// Populate FieldTable.
-	stringBytes := []byte(in)
-	s.FieldTable["value"] = Field{types.ByteArray, stringBytes}
+	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
+		s.FieldTable["value"] = Field{types.RuneArray, in}
+	} else {
+		s.FieldTable["value"] = Field{types.ByteArray, []byte(in)}
+	}
 	return s
 }
 
 // CreateCompactStringFromGoString creates a string in which the chars
 // are stored as bytes--that is, a compact string.
 func CreateCompactStringFromGoString(in *string) *Object {
-	stringBytes := []byte(*in)
 	s := NewString()
-
-	// set the value of the string
-	s.Fields[0].Ftype = types.ByteArray
-	s.Fields[0].Fvalue = &stringBytes
-
-	// set the string to LATIN
-	s.Fields[1].Fvalue = int64(0)
-
-	// Populate FieldTable.
-	s.FieldTable["value"] = Field{types.ByteArray, stringBytes}
-
-	// Return a pointer to string object to caller.
+	s.FieldTable["value"] = Field{types.ByteArray, []byte(*in)}
 	return s
 }
 
 // convenience method to extract a Go string from a Java string
 func GetGoStringFromJavaStringPtr(strPtr *Object) string {
 	s := *strPtr
-	fld := s.FieldTable["value"]
-	bytes := fld.Fvalue.([]byte)
+	bytes := s.FieldTable["value"].Fvalue.([]byte)
 	return string(bytes)
 }
 
