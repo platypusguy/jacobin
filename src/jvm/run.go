@@ -427,7 +427,8 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			array := *(iAref.Fields[0].Fvalue).(*[]int64)
+			oa := iAref.FieldTable["value"]
+			array := oa.Fvalue.([]int64)
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
@@ -441,7 +442,6 @@ frameInterpreter:
 		case opcodes.FALOAD: //		0x30	(push contents of an float array element)
 			index := pop(f).(int64)
 			ref := pop(f) // ptr to array object
-			// fAref := (*object.JacobinFloatArray)(ref)
 			if ref == nil || ref == object.Null {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "FALOAD: Invalid (null) reference to an array"
