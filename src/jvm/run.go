@@ -2279,8 +2279,7 @@ frameInterpreter:
 				_ = log.Log(msg, log.SEVERE)
 
 				steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
-				rawSteArrayPtr := steArrayPtr.Fields[0].Fvalue.(*[]*object.Object) // *[]*object.Object (each of which is an STE)
-				rawSteArray := *rawSteArrayPtr
+				rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
 				for i := 0; i < len(rawSteArray); i++ {
 					ste := rawSteArray[i]
 					methodName := ste.FieldTable["methodName"].Fvalue.(string)

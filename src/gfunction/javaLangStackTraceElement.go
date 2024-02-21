@@ -84,8 +84,7 @@ func of(params []interface{}) interface{} {
 	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
 
 	// insert empty stackTraceElements into the array.
-	rawArrayPtr := stackTrace.Fields[0].Fvalue.(*[]*object.Object)
-	rawArray := *rawArrayPtr
+	rawArray := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
 	global := globals.GetGlobalRef()
 	for i := int64(0); i < depth; i++ {
 		ste, err := global.FuncInstantiateClass("java/lang/StackTraceElement", nil)
@@ -107,8 +106,8 @@ func of(params []interface{}) interface{} {
 func initStackTraceElements(params []interface{}) interface{} {
 	arrayObjPtr := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
 	arrayObj := *arrayObjPtr
-	rawSteArrayPtr := arrayObj.Fields[0].Fvalue.(*[]*object.Object)
-	rawSteArray := *rawSteArrayPtr
+	rawSteArray := arrayObj.FieldTable["value"].Fvalue.([]*object.Object)
+	// rawSteArray := *rawSteArrayPtr
 
 	throwable := params[1].(*object.Object) // pointer to the Throwable object
 	jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
