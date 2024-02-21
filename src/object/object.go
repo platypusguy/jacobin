@@ -67,6 +67,7 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	field.Ftype = ftype
 	field.Fvalue = arg
 	(*objPtr).Fields = append((*objPtr).Fields, field)
+	(*objPtr).FieldTable["value"] = field
 	return objPtr
 }
 

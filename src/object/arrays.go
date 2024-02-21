@@ -146,8 +146,6 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
 	o.FieldTable["value"] = of
 	o.Klass = &of.Ftype
-	// o.Fields = append(o.Fields, of)
-	// o.Klass = &o.Fields[0].Ftype
 	return o
 }
 

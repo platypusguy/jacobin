@@ -28,7 +28,7 @@ func TestMakeValidPrimitiveByte(t *testing.T) {
 		t.Errorf("Klass should be java/lang/Byte, got %s", *objPtr.Klass)
 	}
 
-	value := objPtr.Fields[0].Fvalue.(uint8)
+	value := objPtr.FieldTable["value"].Fvalue.(uint8)
 	if value != uint8(0x61) {
 		t.Errorf("Value should be 0x61, got 0x%02x", value)
 	}
@@ -40,7 +40,7 @@ func TestMakeValidPrimitiveDouble(t *testing.T) {
 		t.Errorf("Klass should be java/lang/Double, got %s", *objPtr.Klass)
 	}
 
-	value := objPtr.Fields[0].Fvalue.(float64)
+	value := objPtr.FieldTable["value"].Fvalue.(float64)
 	if value != 42.0 {
 		t.Errorf("Value should be 0x42.0, got 0x%f", value)
 	}
