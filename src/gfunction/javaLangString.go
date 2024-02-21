@@ -631,11 +631,11 @@ func valueOfObject(params []interface{}) interface{} {
 
 func compareToCaseSensitive(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object)
-	strPtr := propObj.FieldTable["value"].Fvalue.(*[]byte)
-	str1 := string(*strPtr)
+	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
+	str1 := string(bytes)
 	propObj = params[1].(*object.Object)
-	strPtr = propObj.Fields[0].Fvalue.(*[]byte)
-	str2 := string(*strPtr)
+	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
+	str2 := string(bytes)
 	if str2 == str1 {
 		return int64(0)
 	}
