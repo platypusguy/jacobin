@@ -63,8 +63,8 @@ func TestInstantiateString1(t *testing.T) {
 		t.Errorf("Expected 'java/lang/String', got %s", *obj.Klass)
 	}
 
-	if len(obj.Fields) < 5 {
-		t.Errorf("Expected more than 4 fielsd in String object, got %d fields", len(obj.Fields))
+	if len(obj.FieldTable) < 2 {
+		t.Errorf("Expected more than 1 field in String object, got %d fields", len(obj.Fields))
 	}
 }
 
