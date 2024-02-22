@@ -2257,8 +2257,14 @@ frameInterpreter:
 
 				appMsg := objectRef.FieldTable["detailMessage"].Fvalue
 				if appMsg != nil {
-					s := appMsg.(*object.Object)
-					msg += fmt.Sprintf(": %s", string(*s.Fields[0].Fvalue.(*[]byte)))
+					switch appMsg.(type) {
+					case []uint8:
+						st := appMsg.([]uint8)
+						msg += fmt.Sprintf(": %s", string(st))
+					case *object.Object:
+						st := appMsg.(*object.Object)
+						msg += fmt.Sprintf(": %s", string(*st.FieldTable["value"].Fvalue.(*[]byte)))
+					}
 				}
 				_ = log.Log(msg, log.SEVERE)
 
