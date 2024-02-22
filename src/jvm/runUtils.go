@@ -95,6 +95,11 @@ func logTraceStack(f *frames.Frame) {
 			strPtr := value.(*[]byte)
 			str := string(*strPtr)
 			output = fmt.Sprintf("*[]byte: %-10s", str)
+		case []uint8:
+			value := f.OpStack[ii]
+			bytes := value.([]byte)
+			str := string(bytes)
+			output = fmt.Sprintf("[]byte: %-10s", str)
 		default:
 			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
 		}
@@ -128,6 +133,11 @@ func emitTraceData(f *frames.Frame) string {
 			strPtr := value.(*[]byte)
 			str := string(*strPtr)
 			stackTop = fmt.Sprintf("*[]byte: %-10s", str)
+		case []uint8:
+			value := f.OpStack[f.TOS]
+			bytes := value.([]byte)
+			str := string(bytes)
+			stackTop = fmt.Sprintf("[]byte: %-10s", str)
 		default:
 			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
 		}
@@ -200,6 +210,11 @@ func pop(f *frames.Frame) interface{} {
 					str := string(*strPtr)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
+				case []uint8:
+					bytes := value.([]byte)
+					str := string(bytes)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
 				default:
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d %T %v", f.TOS, value, value)
@@ -241,8 +256,8 @@ func peek(f *frames.Frame) interface{} {
 							traceInfo = fmt.Sprintf("                                                  "+
 								"      PEEK          TOS:%3d []byte: <nil>", f.TOS)
 						} else {
-							strVal := (obj.FieldTable["value"].Fvalue).(*[]byte)
-							str := string(*strVal)
+							bytes := (obj.FieldTable["value"].Fvalue).([]byte)
+							str := string(bytes)
 							traceInfo = fmt.Sprintf("                                                  "+
 								"      PEEK          TOS:%3d String: %-10s", f.TOS, str)
 						}
@@ -317,6 +332,11 @@ func push(f *frames.Frame, x interface{}) {
 						str := string(*strPtr)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 							fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
+					case []uint8:
+						bytes := x.([]byte)
+						str := string(bytes)
+						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
 					default:
 						traceInfo = fmt.Sprintf("%56s", " ") +
 							fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
