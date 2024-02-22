@@ -94,11 +94,15 @@ func LoadStaticsString() {
 		Static{Type: types.Byte, Value: int64(1)})
 	_ = AddStatic("java/lang/String.LATIN1",
 		Static{Type: types.Byte, Value: int64(0)})
-	_ = AddStatic("java/lang/String.UTF_8.INSTANCE",
+	_ = AddStatic("sun/nio/cs/UTF_8.INSTANCE",
 		Static{Type: types.Ref, Value: nil})
-	_ = AddStatic("java/lang/String.ISO_8859_1.INSTANCE",
+	_ = AddStatic("sun/nio/cs/.ISO_8859_1.INSTANCE",
 		Static{Type: types.Ref, Value: nil})
-	_ = AddStatic("java/lang/String.US_ASCII.INSTANCE",
+	_ = AddStatic("sun/nio/cs/.US_ASCII.INSTANCE",
+		Static{Type: types.Ref, Value: nil})
+	_ = AddStatic("java/nio/charset/CodingErrorAction.REPLACE",
+		Static{Type: types.Ref, Value: nil})
+	_ = AddStatic("java/lang/String.serialPersistentFields",
 		Static{Type: types.Ref, Value: nil})
 	// next entry points to a comparator. Might be useful to fill in later
 	_ = AddStatic("java/lang/String.CASE_INSENSITIVE_ORDER",
