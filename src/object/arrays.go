@@ -112,19 +112,15 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		barArr := make([]byte, size)
 		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
 		o.FieldTable["value"] = of
-		// o.Fields = append(o.Fields, of)
-	// case 'F', 'D': // float arrays
-	case FLOAT:
+	case FLOAT: // case 'F', 'D': // float arrays
 		farArr := make([]float64, size)
 		of = Field{Ftype: types.FloatArray, Fvalue: farArr}
 		o.FieldTable["value"] = of
-		// o.Fields = append(o.Fields, of)
 	case REF: // reference/pointer arrays
 		// JACOBIN-439: _ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
 		rarArr := make([]*Object, size)
 		of = Field{Ftype: types.RefArray, Fvalue: rarArr}
 		o.FieldTable["value"] = of
-		// o.Fields = append(o.Fields, of)
 	default: // all the integer types
 		iarArr := make([]int64, size)
 		of = Field{Ftype: types.IntArray, Fvalue: iarArr}
@@ -157,7 +153,10 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		arr := rawArray.(*Object)
 		return arr
 	case *[]uint8: // an array of bytes
-		objPtr := MakePrimitiveObject("", types.ByteArray, rawArray)
+		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]uint8))
+		return objPtr
+	case []uint8: // an array of bytes
+		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
 		return objPtr
 	}
 	return nil

@@ -2192,6 +2192,12 @@ frameInterpreter:
 				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
+				if r == nil {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
 				o := r.FieldTable["value"]
 				arrayType := o.Ftype
 				switch arrayType {

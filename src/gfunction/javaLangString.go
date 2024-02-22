@@ -334,6 +334,8 @@ func getGoString(param0 interface{}) interface{} {
 	case *object.Object:
 		parmObj := param0.(*object.Object)
 		bytes = parmObj.FieldTable["value"].Fvalue.([]byte)
+	case []byte:
+		return string(param0.([]byte))
 	default:
 		errMsg := fmt.Sprintf("getGoString: Unexpected param[0] type = %T", param0)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
@@ -388,6 +390,7 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 	// Get substring offset and length
 	ssOffset := params[2].(int64)
 	ssLength := params[3].(int64)
+	fmt.
 
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
