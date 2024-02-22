@@ -518,21 +518,22 @@ frameInterpreter:
 			}
 
 			var bAref *object.Object
-			var arrayPtr *[]byte
+			var array []byte
 			switch ref.(type) {
 			case *object.Object:
 				bAref = ref.(*object.Object)
-				ao := bAref.FieldTable["value"].Fvalue.([]byte)
-				arrayPtr = &ao
+				array = bAref.FieldTable["value"].Fvalue.([]byte)
 			case *[]uint8:
-				arrayPtr = ref.(*[]uint8)
+				array = *(ref.(*[]uint8))
+			case []uint8:
+				array = ref.([]uint8)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
-			size := int64(len(*arrayPtr))
+			size := int64(len(array))
 
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
@@ -540,7 +541,6 @@ frameInterpreter:
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
-			array := *(arrayPtr)
 			var value = array[index]
 			push(f, int64(value))
 
@@ -2263,7 +2263,7 @@ frameInterpreter:
 						msg += fmt.Sprintf(": %s", string(st))
 					case *object.Object:
 						st := appMsg.(*object.Object)
-						msg += fmt.Sprintf(": %s", string(*st.FieldTable["value"].Fvalue.(*[]byte)))
+						msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
 					}
 				}
 				_ = log.Log(msg, log.SEVERE)
