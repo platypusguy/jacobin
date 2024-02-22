@@ -2190,6 +2190,9 @@ frameInterpreter:
 			case *[]uint8: // = go byte
 				array := *ref.(*[]uint8)
 				size = int64(len(array))
+			case []*object.Object:
+				array := ref.([]*object.Object)
+				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
 				if r == nil {
