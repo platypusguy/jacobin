@@ -176,7 +176,7 @@ func pop(f *frames.Frame) interface{} {
 							fmt.Sprintf("%3d null", f.TOS)
 						break
 					}
-					if len(obj.Fields) > 0 {
+					if len(obj.FieldTable) > 0 {
 						if obj.FieldTable["value"].Ftype == types.ByteArray {
 							if obj.FieldTable["value"].Fvalue == nil {
 								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +

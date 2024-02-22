@@ -1921,7 +1921,6 @@ func TestPutFieldErrorUpdatingStatic(t *testing.T) {
 
 	// now create the object we're updating, with one int field
 	obj := object.MakeEmptyObject()
-	obj.Fields = make([]object.Field, 1, 1)
 	obj.FieldTable["value"] = object.Field{
 		Ftype:  types.Static + types.Int,
 		Fvalue: int64(42),

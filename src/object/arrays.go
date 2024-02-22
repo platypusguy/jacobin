@@ -157,12 +157,8 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		arr := rawArray.(*Object)
 		return arr
 	case *[]uint8: // an array of bytes
-		raw := rawArray.(*[]uint8)
-		o := MakeEmptyObject()
-		o.Klass = nil
-		of := Field{Ftype: types.ByteArray, Fvalue: raw}
-		o.Fields = append(o.Fields, of)
-		return o
+		objPtr := MakePrimitiveObject("", types.ByteArray, rawArray)
+		return objPtr
 	}
 	return nil
 }
