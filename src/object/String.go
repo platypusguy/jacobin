@@ -34,44 +34,31 @@ func NewString() *Object {
 	// value: the content of the string as array of runes or bytes
 	// Note: Post JDK9, this field is an array of bytes, so as to
 	// enable compact strings.
-	value := make([]byte, 10)
-	// make value (the content of the string) in FieldTable["value"]
-	valueField := Field{Ftype: types.ByteArray, Fvalue: &value}
-	s.Fields = append(s.Fields, valueField)
+	value := make([]byte, 0) // presently empty
+	valueField := Field{Ftype: types.ByteArray, Fvalue: value}
 	s.FieldTable["value"] = valueField
 
-	// Field{Ftype: types.ByteArray, Fvalue: &value})
+	// coder has two possible values:
+	// LATIN(e.g., 0 = bytes for compact strings) or UTF16(e.g., 1 = UTF16)
+	coderField := Field{Ftype: types.Byte, Fvalue: int64(0)}
+	s.FieldTable["coder"] = coderField
 
-	// field 01 -- coder LATIN(=bytes, for compact strings) is 0; UTF16 is 1
-	s.Fields = append(s.Fields, Field{Ftype: types.Byte, Fvalue: int64(1)})
+	// the hash code, which is initialized to 0
+	hash := Field{Ftype: types.Int, Fvalue: int64(0)}
+	s.FieldTable["hash"] = hash
 
-	// field 02 -- string hash
-	s.Fields = append(s.Fields, Field{Ftype: types.Int, Fvalue: int64(0)})
+	// hashIsZero: only true in rare case where compute hash is 0
+	hashIsZero := Field{Ftype: types.Bool, Fvalue: types.JavaBoolFalse}
+	s.FieldTable["hashIsZero"] = hashIsZero
 
-	// // field 03 -- COMPACT_STRINGS (always true for JDK >= 9)
-	// s.Fields = append(s.Fields, Field{Ftype: "XZ", Fvalue: types.JavaBoolTrue})
-
-	// // field 04 -- UTF_8.INSTANCE ptr to encoder
-	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
-
-	// // field 05 -- ISO_8859_1.INSTANCE ptr to encoder
-	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
-
-	// // field 06 -- sun/nio/cs/US_ASCII.INSTANCE
-	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
-
-	// field 07 -- java/nio/charset/CodingErrorAction.REPLACE
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
-
-	// // field 08 -- java/lang/String.CASE_INSENSITIVE_ORDER
-	// // points to a comparator. Will be useful to fill in later
-	// s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
-
-	// field 09 -- hashIsZero (only true in rare case where hash is 0)
-	s.Fields = append(s.Fields, Field{Ftype: types.Bool, Fvalue: types.JavaBoolFalse})
-
-	// field 10 -- serialPersistentFields
-	s.Fields = append(s.Fields, Field{Ftype: types.Ref, Fvalue: nil})
+	// The following static fields are preloaded in statics/LoadStaticsString()
+	//   COMPACT_STRINGS (always true for JDK >= 9)
+	//   UTF_8.INSTANCE ptr to encoder
+	//   ISO_8859_1.INSTANCE ptr to encoder
+	//   US_ASCII.INSTANCE ptr to encoder
+	//   CodingErrorAction.REPLACE
+	//   CASE_INSENSITIVE_ORDER
+	//   serialPersistentFields
 
 	return s
 }
