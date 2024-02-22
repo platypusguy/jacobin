@@ -626,7 +626,7 @@ func TestRawByteArrayLength(t *testing.T) {
 
 // ARRAYLENGTH: Test length of raw int8 array
 func TestRawInt8ArrayLength(t *testing.T) {
-	array := []int8{'a', 'b', 'c'}
+	array := []uint8{'a', 'b', 'c'}
 	f := newFrame(opcodes.ARRAYLENGTH)
 	push(&f, &array) // push the reference to the array
 	fs := frames.CreateFrameStack()
@@ -634,12 +634,12 @@ func TestRawInt8ArrayLength(t *testing.T) {
 	err := runFrame(fs) // execute the bytecode
 
 	if err != nil {
-		t.Errorf("ARRAYLENGTH: Got unexpected error message: %s", err.Error())
+		t.Errorf("TestRawInt8ArrayLength: Got unexpected error message: %s", err.Error())
 	}
 
 	length := pop(&f).(int64)
 	if length != 3 {
-		t.Errorf("ARRAYLENGTH: Expecting length of 3, got: %d", length)
+		t.Errorf("TestRawInt8ArrayLength: Expecting length of 3, got: %d", length)
 	}
 }
 
