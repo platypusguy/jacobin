@@ -50,7 +50,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println(C)V"] = // println char
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnI,
+			GFunction:  PrintlnC,
 		}
 	MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
 		GMeth{
@@ -104,7 +104,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.print(C)V"] = // print char
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintI,
+			GFunction:  PrintC,
 		}
 	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
 		GMeth{
@@ -180,6 +180,13 @@ func PrintlnV([]interface{}) interface{} {
 	return nil
 }
 
+// PrintlnC = java/io/Prinstream.println(char)
+func PrintlnC(params []interface{}) interface{} {
+	cc := fmt.Sprint(params[1].(int64))
+	fmt.Println(cc)
+	return nil
+}
+
 // PrintlnI = java/io/Prinstream.println(int)
 func PrintlnI(params []interface{}) interface{} {
 	intToPrint := params[1].(int64) // contains an int
@@ -221,6 +228,13 @@ func PrintlnObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
 	str := objPtr.FormatField("")
 	fmt.Println(str)
+	return nil
+}
+
+// PrintC = java/io/Prinstream.print(char)
+func PrintC(params []interface{}) interface{} {
+	cc := fmt.Sprint(params[1].(int64))
+	fmt.Print(cc)
 	return nil
 }
 
