@@ -127,7 +127,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getBytesVoid,
+			GFunction:  getBytesFromString,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -408,14 +408,14 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 
 }
 
-func getBytesVoid(params []interface{}) interface{} {
+func getBytesFromString(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		parmObj := params[0].(*object.Object)
 		bytes := parmObj.FieldTable["value"].Fvalue.([]byte)
 		return bytes
 	default:
-		errMsg := fmt.Sprintf("getBytesVoid: Unexpected params[0] type=%T, value=%v", params[0], params[0])
+		errMsg := fmt.Sprintf("getBytesFromString: Unexpected params[0] type=%T, value=%v", params[0], params[0])
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 }

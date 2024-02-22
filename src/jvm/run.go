@@ -2184,8 +2184,8 @@ frameInterpreter:
 			// array of bytes will be extracted as a field and passed
 			// to this function, so we need to accommodate all types--
 			// hence, the switch on type.
-			case *[]int8:
-				array := *ref.(*[]int8)
+			case []int8:
+				array := ref.([]int8)
 				size = int64(len(array))
 			case *[]uint8: // = go byte
 				array := *ref.(*[]uint8)
