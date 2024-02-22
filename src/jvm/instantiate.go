@@ -119,7 +119,6 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			if err != nil {
 				return nil, err
 			}
-			obj.Fields = append(obj.Fields, *fieldToAdd)
 			obj.FieldTable[name] = *fieldToAdd
 		} // loop through the fields if any
 		// add the field to the field table for this object

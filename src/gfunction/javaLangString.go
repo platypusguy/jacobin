@@ -127,7 +127,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getBytesVoid,
+			GFunction:  getBytesFromString,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -334,6 +334,8 @@ func getGoString(param0 interface{}) interface{} {
 	case *object.Object:
 		parmObj := param0.(*object.Object)
 		bytes = parmObj.FieldTable["value"].Fvalue.([]byte)
+	case []byte:
+		return string(param0.([]byte))
 	default:
 		errMsg := fmt.Sprintf("getGoString: Unexpected param[0] type = %T", param0)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
@@ -392,8 +394,9 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssLength) > wholeLength {
-		errMsg := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg)
+		errMsg1 := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", wholeString, wholeLength, ssOffset, ssLength)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute substring.
@@ -405,14 +408,14 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 
 }
 
-func getBytesVoid(params []interface{}) interface{} {
+func getBytesFromString(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		parmObj := params[0].(*object.Object)
 		bytes := parmObj.FieldTable["value"].Fvalue.([]byte)
 		return bytes
 	default:
-		errMsg := fmt.Sprintf("getBytesVoid: Unexpected params[0] type=%T, value=%v", params[0], params[0])
+		errMsg := fmt.Sprintf("getBytesFromString: Unexpected params[0] type=%T, value=%v", params[0], params[0])
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 }

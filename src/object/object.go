@@ -20,7 +20,6 @@ import (
 type Object struct {
 	Mark       MarkWord
 	Klass      *string          // the class name in the method area
-	Fields     []Field          // slice containing the fields
 	FieldTable map[string]Field // map mapping field name to field
 }
 
@@ -66,7 +65,6 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	var field Field
 	field.Ftype = ftype
 	field.Fvalue = arg
-	(*objPtr).Fields = append((*objPtr).Fields, field)
 	(*objPtr).FieldTable["value"] = field
 	return objPtr
 }

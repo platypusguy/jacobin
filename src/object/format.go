@@ -74,7 +74,6 @@ func fmtHelper(field Field, className string, fieldName string) string {
 		if flagLookup {
 			return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
 		} else {
-			// TODO: Why does FieldTable[key] pass an int64 YET Fields[index] passes a bool???
 			switch field.Fvalue.(type) {
 			case bool:
 				if field.Fvalue.(bool) {
@@ -175,18 +174,6 @@ func (objPtr *Object) FormatField(fieldName string) string {
 		obj.DumpObject(title, 0)
 	}
 
-	// Check use of the Fields slice.
-	if len(obj.Fields) > 0 {
-		// Using [0] in the Fields slice
-		field := obj.Fields[0]
-		str := fmtHelper(field, klassString, SLICING)
-		if strings.HasPrefix(str, "<ERROR") {
-			obj.DumpObject(str, 0)
-		}
-		output = fmt.Sprintf("(%s) %s", obj.Fields[0].Ftype, str)
-		return output
-	}
-
 	// Field table and field slice are both empty.
 	if DEBUGGING {
 		output = "<Field table and field slice are both empty>"
@@ -248,16 +235,6 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	// Emit Fields slice.
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
-	}
-	nflds = len(obj.Fields)
-	if nflds > 0 {
-		output += fmt.Sprintf("\tField Slice (%d):\n", nflds)
-		for _, fld := range obj.Fields {
-			str := fmtHelper(fld, klassString, SLICING)
-			output += fmt.Sprintf("\t\tFld (%s) %s\n", fld.Ftype, str)
-		}
-	} else {
-		output += "\tField Slice is <empty>\n"
 	}
 
 	// Emit END

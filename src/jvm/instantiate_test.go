@@ -32,8 +32,8 @@ func TestInstantiateArray(t *testing.T) {
 		t.Errorf("Got unexpected error from instantiating array: %s", err.Error())
 	}
 	obj := anything.(*object.Object)
-	if len(obj.Fields) != 0 {
-		t.Errorf("Expected 0 fields in array class, got %d fields", len(obj.Fields))
+	if len(obj.FieldTable) != 0 {
+		t.Errorf("Expected 0 fields in array class, got %d fields", len(obj.FieldTable))
 	}
 }
 
@@ -64,7 +64,7 @@ func TestInstantiateString1(t *testing.T) {
 	}
 
 	if len(obj.FieldTable) < 2 {
-		t.Errorf("Expected more than 1 field in String object, got %d fields", len(obj.Fields))
+		t.Errorf("Expected more than 1 field in String object, got %d fields", len(obj.FieldTable))
 	}
 }
 
@@ -144,7 +144,10 @@ func TestLoadValidClass(t *testing.T) {
 	}
 
 	// now load the class
-	loadThisClass("java/lang/Integer")
+	err = loadThisClass("java/lang/Integer")
+	if err != nil {
+		t.Errorf("Got unexpected error from loadThisClass(\"java/lang/Integer\"): %s", err.Error())
+	}
 	class = classloader.MethAreaFetch("java/lang/Integer")
 	if class == nil {
 		t.Errorf("Expected java.lang.Integer to be loaded in method area, but it wasn't")

@@ -518,21 +518,22 @@ frameInterpreter:
 			}
 
 			var bAref *object.Object
-			var arrayPtr *[]byte
+			var array []byte
 			switch ref.(type) {
 			case *object.Object:
 				bAref = ref.(*object.Object)
-				ao := bAref.FieldTable["value"].Fvalue.([]byte)
-				arrayPtr = &ao
+				array = bAref.FieldTable["value"].Fvalue.([]byte)
 			case *[]uint8:
-				arrayPtr = ref.(*[]uint8)
+				array = *(ref.(*[]uint8))
+			case []uint8:
+				array = ref.([]uint8)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
-			size := int64(len(*arrayPtr))
+			size := int64(len(array))
 
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
@@ -540,7 +541,6 @@ frameInterpreter:
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
-			array := *(arrayPtr)
 			var value = array[index]
 			push(f, int64(value))
 
@@ -2184,14 +2184,23 @@ frameInterpreter:
 			// array of bytes will be extracted as a field and passed
 			// to this function, so we need to accommodate all types--
 			// hence, the switch on type.
-			case *[]int8:
-				array := *ref.(*[]int8)
+			case []uint8:
+				array := ref.([]uint8)
 				size = int64(len(array))
 			case *[]uint8: // = go byte
 				array := *ref.(*[]uint8)
 				size = int64(len(array))
+			case []*object.Object:
+				array := ref.([]*object.Object)
+				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
+				if r == nil {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
 				o := r.FieldTable["value"]
 				arrayType := o.Ftype
 				switch arrayType {
@@ -2211,6 +2220,11 @@ frameInterpreter:
 					array := o.Fvalue.([]*object.Object)
 					size = int64(len(array))
 				}
+			default:
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
+				exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+				return errors.New(errMsg)
 			}
 			push(f, size)
 		case opcodes.ATHROW: // 0xBF throw an exception
@@ -2263,7 +2277,7 @@ frameInterpreter:
 						msg += fmt.Sprintf(": %s", string(st))
 					case *object.Object:
 						st := appMsg.(*object.Object)
-						msg += fmt.Sprintf(": %s", string(*st.FieldTable["value"].Fvalue.(*[]byte)))
+						msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
 					}
 				}
 				_ = log.Log(msg, log.SEVERE)
