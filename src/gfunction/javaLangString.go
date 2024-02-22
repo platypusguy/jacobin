@@ -390,13 +390,13 @@ func newSubstringFromBytes(params []interface{}) interface{} {
 	// Get substring offset and length
 	ssOffset := params[2].(int64)
 	ssLength := params[3].(int64)
-	fmt.
 
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssLength) > wholeLength {
-		errMsg := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg)
+		errMsg1 := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", wholeString, wholeLength, ssOffset, ssLength)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute substring.
