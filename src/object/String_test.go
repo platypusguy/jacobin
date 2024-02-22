@@ -61,3 +61,32 @@ func TestCreateCompactStringFromGoString(t *testing.T) {
 			compactString)
 	}
 }
+
+func TestGetGoStringFromJavaStringPtr(t *testing.T) {
+	s := NewString()
+	s.FieldTable["value"] = Field{types.ByteArray, []byte("hello, again")}
+	goString := GetGoStringFromJavaStringPtr(s)
+	if goString != "hello, again" {
+		t.Errorf("expected string 'hello, again', got: %s", goString)
+	}
+}
+
+func TestIsJavaStringValid(t *testing.T) {
+	s := NewString()
+	s.FieldTable["value"] = Field{types.ByteArray, []byte("hello, again")}
+	if IsJavaString(s) != true {
+		t.Errorf("expected TestIsJavaString(s) to be true, got false")
+	}
+}
+
+func TestIsJavaStringNil(t *testing.T) {
+	if IsJavaString(nil) != false {
+		t.Errorf("expected TestIsJavaString(nil) to be false, got true")
+	}
+}
+
+func TestIsJavaStringWithGoString(t *testing.T) {
+	if IsJavaString("go string") != false {
+		t.Errorf("expected TestIsJavaString(nil) to be false, got true")
+	}
+}
