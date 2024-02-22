@@ -2184,8 +2184,8 @@ frameInterpreter:
 			// array of bytes will be extracted as a field and passed
 			// to this function, so we need to accommodate all types--
 			// hence, the switch on type.
-			case []int8:
-				array := ref.([]int8)
+			case []uint8:
+				array := ref.([]uint8)
 				size = int64(len(array))
 			case *[]uint8: // = go byte
 				array := *ref.(*[]uint8)
@@ -2217,6 +2217,11 @@ frameInterpreter:
 					array := o.Fvalue.([]*object.Object)
 					size = int64(len(array))
 				}
+			default:
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
+				exceptions.Throw(exceptions.VirtualMachineError, errMsg)
+				return errors.New(errMsg)
 			}
 			push(f, size)
 		case opcodes.ATHROW: // 0xBF throw an exception
