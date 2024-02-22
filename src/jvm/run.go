@@ -68,6 +68,14 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 		f.Locals = append(f.Locals, 0)
 	}
 
+	// Create an array of string objects in locals[0].
+	var objArray []*object.Object
+	for _, str := range globals.AppArgs {
+		sobj := object.NewStringFromGoString(str)
+		objArray = append(objArray, sobj)
+	}
+	f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
+
 	// create the first thread and place its first frame on it
 	// MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
