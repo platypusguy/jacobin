@@ -7,6 +7,7 @@
 package object
 
 import (
+	"jacobin/statics"
 	"jacobin/types"
 	"testing"
 )
@@ -37,5 +38,26 @@ func TestNewString(t *testing.T) {
 	hashIsZero := str.FieldTable["hashIsZero"].Fvalue.(int64)
 	if hash != types.JavaBoolFalse {
 		t.Errorf("hashIsZero field should be false, got: %d", hashIsZero)
+	}
+}
+
+func TestNewStringFromGoString(t *testing.T) {
+	statics.LoadStaticsString()
+
+	s := NewStringFromGoString("hello")
+	newString := string(s.FieldTable["value"].Fvalue.([]byte))
+	if newString != "hello" {
+		t.Errorf("expected strint to be 'hello', got: %s", newString)
+	}
+}
+
+func TestCreateCompactStringFromGoString(t *testing.T) {
+	goString := "You say hello!"
+	s := CreateCompactStringFromGoString(&goString)
+	compactString := string(s.FieldTable["value"].Fvalue.([]byte))
+
+	if compactString != "You say hello!" {
+		t.Errorf("expected string to be 'You say hello!', got: %s",
+			compactString)
 	}
 }
