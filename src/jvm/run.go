@@ -1574,7 +1574,7 @@ frameInterpreter:
 				push(f, prevLoaded.Value)
 			}
 
-		case opcodes.PUTSTATIC: // 0xB2		(get static field)
+		case opcodes.PUTSTATIC: // 0xB2		(update static field)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
