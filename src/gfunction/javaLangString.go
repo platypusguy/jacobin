@@ -550,9 +550,9 @@ func valueOfChar(params []interface{}) interface{} {
 func valueOfCharArray(params []interface{}) interface{} {
 	// params[0]: input char array
 	propObj := params[0].(*object.Object)
-	caPtr := propObj.FieldTable["value"].Fvalue.(*[]int64)
+	intArray := propObj.FieldTable["value"].Fvalue.([]int64)
 	var str string
-	for _, ch := range *caPtr {
+	for _, ch := range intArray {
 		str += fmt.Sprintf("%c", ch)
 	}
 	obj := object.CreateCompactStringFromGoString(&str)
@@ -564,9 +564,9 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// params[1]: input offset
 	// params[2]: input count
 	propObj := params[0].(*object.Object)
-	caPtr := propObj.FieldTable["value"].Fvalue.(*[]int64)
+	intArray := propObj.FieldTable["value"].Fvalue.([]int64)
 	var wholeString string
-	for _, ch := range *caPtr {
+	for _, ch := range intArray {
 		wholeString += fmt.Sprintf("%c", ch)
 	}
 	// Get substring offset and count
