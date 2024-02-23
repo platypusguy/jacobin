@@ -351,7 +351,7 @@ func newStringFromBytes(params []interface{}) interface{} {
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-
+	/* JACOBIN-422 commented out because functions with V return do not return anything
 	// Fetch a pointer to the raw slice of bytes from params[0].
 	// Convert the raw slice of bytes to a Go string.
 	retval := getGoString(params[1])
@@ -365,7 +365,8 @@ func newStringFromBytes(params []interface{}) interface{} {
 	// Convert the Go string to a compact string object, usable by Java. Return to caller.
 	obj := object.CreateCompactStringFromGoString(&wholeString)
 	return obj
-
+	*/
+	return nil
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
@@ -438,7 +439,7 @@ func StringFormatter(params []interface{}) interface{} {
 	}
 	formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
 	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
-	//valuesIn := *(params[1].(*object.Object).FieldTable["value"].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
+	// valuesIn := *(params[1].(*object.Object).FieldTable["value"].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
 	fld := params[1].(*object.Object).FieldTable["value"]
 	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 	valuesOut := []any{}
