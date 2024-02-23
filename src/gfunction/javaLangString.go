@@ -49,7 +49,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.<init>([BII)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  newSubstringFromBytes,
+			GFunction:  newStringFromBytesSubset,
 		}
 
 	// String(byte[] ascii, int hibyte, int offset, int count) *** DEPRECATED
@@ -350,62 +350,49 @@ func newStringFromBytes(params []interface{}) interface{} {
 		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-	/* JACOBIN-422 commented out because functions with V return do not return anything
-	// Fetch a pointer to the raw slice of bytes from params[0].
-	// Convert the raw slice of bytes to a Go string.
-	retval := getGoString(params[1])
-	switch retval.(type) {
-	case string:
-	default:
-		return retval
-	}
-	wholeString := retval.(string)
 
-	// Convert the Go string to a compact string object, usable by Java. Return to caller.
-	obj := object.CreateCompactStringFromGoString(&wholeString)
-	return obj
-	*/
+	// Mark that String.<clinit>() has been run.
+	klass.Data.ClInit = types.ClInitRun
+
+	// Copy FieldTable["value"] from params[1] to params[0].
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+	params[0].(*object.Object).FieldTable["value"] = fld
 	return nil
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
-func newSubstringFromBytes(params []interface{}) interface{} {
+func newStringFromBytesSubset(params []interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/String")
 	if klass == nil {
 		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 
-	// Fetch a pointer to the raw slice of bytes from params[0].
-	// Convert the raw slice of bytes to a Go string.
-	retval := getGoString(params[1])
-	switch retval.(type) {
-	case string:
-	default:
-		return retval
-	}
-	wholeString := retval.(string)
+	// Mark that String.<clinit>() has been run.
+	klass.Data.ClInit = types.ClInitRun
+
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 
 	// Get substring offset and length
 	ssOffset := params[2].(int64)
 	ssLength := params[3].(int64)
 
 	// Validate boundaries.
-	wholeLength := int64(len(wholeString))
-	if wholeLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssLength) > wholeLength {
-		errMsg1 := "newSubstringFromBytes: Either: nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", wholeString, wholeLength, ssOffset, ssLength)
+	totalLength := int64(len(bytes))
+	if totalLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (totalLength-1) || (ssOffset+ssLength) > totalLength {
+		errMsg1 := "newStringFromBytesSubset: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssOffset, ssLength)
 		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute substring.
-	ss := wholeString[ssOffset : ssOffset+ssLength]
+	bytes = bytes[ssOffset : ssOffset+ssLength]
 
-	// Convert the Go string (ss) to a compact string object, usable by Java. Return to caller.
-	obj := object.CreateCompactStringFromGoString(&ss)
-	return obj
+	// Copy subset of byte array from params[1] to the whole byte array in params[0].
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+	params[0].(*object.Object).FieldTable["value"] = fld
+	return nil
 
 }
 
