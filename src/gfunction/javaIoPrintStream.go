@@ -165,7 +165,7 @@ func Println(params []interface{}) interface{} {
 		return nil
 	default:
 		errMsg := fmt.Sprintf("Println: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	strAddr := params[1].(*object.Object)
 	fld := strAddr.FieldTable["value"]
@@ -175,7 +175,7 @@ func Println(params []interface{}) interface{} {
 		fmt.Println(str)
 	default:
 		errMsg := fmt.Sprintf("Println: expected Fvalue of type []byte but observed type %T\n", fld.Fvalue)
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	return nil
 }
