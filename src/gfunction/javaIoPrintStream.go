@@ -159,6 +159,10 @@ func Load_Io_PrintStream() map[string]GMeth {
 func Println(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case *object.Object:
+	case []byte:
+		str := string(params[1].([]byte))
+		fmt.Println(str)
+		return nil
 	default:
 		errMsg := fmt.Sprintf("Println: expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
