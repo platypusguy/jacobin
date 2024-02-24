@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/exceptions"
 	"jacobin/object"
 	"math"
 )
@@ -154,14 +155,14 @@ func Load_Io_PrintStream() map[string]GMeth {
 	return MethodSignatures
 }
 
-// Println is the go equivalent of System.out.println(). It accepts two args,
-// which are passed in a two-entry slice of type interface{}. The first arg is an
-// index in the CP to a StringConst entry; the second arg is an index into the
-// array of static fields, Statics. The entry there includes a pointer to the CP
-// for this class. The first arg then gets the StringConst ref, which is an index
-// into the UTF8 entries of the CP. This string is then printed to stdout. There
-// is no return value.
+// Println is the go equivalent of System.out.println().
 func Println(params []interface{}) interface{} {
+	switch params[1].(type) {
+	case *object.Object:
+	default:
+		errMsg := fmt.Sprintf("Println: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	}
 	strAddr := params[1].(*object.Object)
 	fld := strAddr.FieldTable["value"]
 	switch fld.Fvalue.(type) {
@@ -169,7 +170,8 @@ func Println(params []interface{}) interface{} {
 		str := string(fld.Fvalue.([]byte))
 		fmt.Println(str)
 	default:
-		fmt.Printf("Println: Oops, cannot process type %T\n", fld.Fvalue)
+		errMsg := fmt.Sprintf("Println: expected Fvalue of type []byte but observed type %T\n", fld.Fvalue)
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	return nil
 }
