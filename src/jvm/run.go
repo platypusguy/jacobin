@@ -808,19 +808,17 @@ frameInterpreter:
 			rawArray[index] = value
 
 		case opcodes.BASTORE: // 0x54 	(store a boolean or byte in byte array)
-			var value byte = 0
-			rawValue := pop(f)
-			value = convertInterfaceToByte(rawValue)
+			value := convertInterfaceToByte(pop(f))
 			index := pop(f).(int64)
-			ptrObj := pop(f).(*object.Object) // ptr to array object
-			if ptrObj == nil {
+			arrayRef := pop(f).(*object.Object) // ptr to array object
+			if arrayRef == nil {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BASTORE: Invalid (null) reference to an array"
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			o := ptrObj.FieldTable["value"]
+			o := arrayRef.FieldTable["value"]
 			if o.Ftype != "[B" {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
@@ -830,8 +828,8 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			array := o.Fvalue.([]byte)
-			size := int64(len(array))
+			rawArray := o.Fvalue.([]byte)
+			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
@@ -839,7 +837,7 @@ frameInterpreter:
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
-			array[index] = value
+			rawArray[index] = value
 
 		case opcodes.POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {

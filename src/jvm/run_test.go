@@ -290,6 +290,8 @@ func TestAstore3(t *testing.T) {
 	}
 }
 
+// BASTORE is tested in arrays_test.go
+
 // BIPUSH
 func TestBipush(t *testing.T) {
 	f := newFrame(opcodes.BIPUSH)
