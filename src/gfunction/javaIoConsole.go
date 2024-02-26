@@ -179,6 +179,8 @@ func consoleReadPassword(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("consoleReadPassword term.ReadPassword: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
+	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
+	fmt.Fprint(stdout, "\n")
 	return password
 }
 
