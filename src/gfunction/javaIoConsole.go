@@ -43,6 +43,13 @@ func Load_Io_Console() map[string]GMeth {
 			GFunction:  consoleFlush,
 		}
 
+	// Console format.
+	MethodSignatures["java/io/Console.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"] =
+		GMeth{
+			ParamSlots: 2, // the format string, the parameters (if any)
+			GFunction:  consolePrintf,
+		}
+
 	// Console Printf.
 	MethodSignatures["java/io/Console.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"] =
 		GMeth{
