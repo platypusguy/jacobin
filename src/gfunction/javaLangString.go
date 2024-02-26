@@ -424,8 +424,19 @@ func StringFormatter(params []interface{}) interface{} {
 		formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
 		return formatStringObj
 	}
-	formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
-	formatString := object.GetGoStringFromJavaStringPtr(formatStringObj)
+
+	var formatString string
+	switch params[0].(type) {
+	case *object.Object:
+		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
+		formatString = object.GetGoStringFromJavaStringPtr(formatStringObj)
+	case []uint8:
+		formatString = string(params[0].([]byte))
+	default:
+		errMsg := fmt.Sprintf("StringFormatter: Invalid variable type for format string: %T", params[0])
+		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+	}
+
 	// valuesIn := *(params[1].(*object.Object).FieldTable["value"].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
 	fld := params[1].(*object.Object).FieldTable["value"]
 	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects

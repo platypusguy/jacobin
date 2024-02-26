@@ -113,9 +113,9 @@ func clinit([]interface{}) interface{} {
 		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
-		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "L", Value: object.Null})
-		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "L", Value: object.Null})
-		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "L", Value: object.Null})
+		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: os.Stdin})
+		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "GS", Value: os.Stderr})
+		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil
