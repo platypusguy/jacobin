@@ -2815,8 +2815,7 @@ func createAndInitNewFrame(
 			argList = append(argList, arg)
 			pop(f)
 		case 'L': // pointer/reference
-			// arg := pop(f).(*object.Object)
-			arg := pop(f) // can't be case to *Object b/c it could be nil, which would panic
+			arg := pop(f) // can't be *Object b/c the arg could be nil, which would panic
 			argList = append(argList, arg)
 		default:
 			arg := pop(f)
