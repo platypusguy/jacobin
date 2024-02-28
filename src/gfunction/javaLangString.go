@@ -87,15 +87,8 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// String(byte[] bytes) - instantiate a String from a char array - []byte
-	MethodSignatures["java/lang/String.<init>([C)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  newStringFromChars,
-		}
-
-	// String(char[] value, int offset, int count) ***************************- works fine in Java
-	// True? Verified 28 Feb 2024.
+	// String(char[] value) ****************************** works fine with JDK libraries
+	// String(char[] value, int offset, int count) ******* works fine with JDK libraries
 
 	// String(int[] codePoints, int offset, int count) ************************ CODEPOINTS
 	MethodSignatures["java/lang/String.<init>([III)V"] =
@@ -406,29 +399,6 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	params[0].(*object.Object).FieldTable["value"] = fld
 	return nil
 
-}
-
-// Construct a compact string object (usable by Java) from a Go byte array.
-func newStringFromChars(params []interface{}) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/String")
-	if klass == nil {
-		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
-
-	// Mark that String.<clinit>() has been run.
-	klass.Data.ClInit = types.ClInitRun
-
-	// Copy FieldTable["value"] from params[1] to params[0].
-	var fld object.Field
-	iiArray := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
-	var bytes []byte
-	for _, ii := range iiArray {
-		bytes = append(bytes, byte(ii))
-	}
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: bytes}
-	params[0].(*object.Object).FieldTable["value"] = fld
-	return nil
 }
 
 func getBytesFromString(params []interface{}) interface{} {
