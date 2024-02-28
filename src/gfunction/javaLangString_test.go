@@ -26,7 +26,7 @@ func TestStringClinit(t *testing.T) {
 		if !strings.Contains(gErr.ErrMsg, "stringClinit: Could not find java/lang/String") {
 			t.Errorf("Unexpected error message. got %s", gErr.ErrMsg)
 		}
-		if gErr.ExceptionType != exceptions.VirtualMachineError {
+		if gErr.ExceptionType != exceptions.ClassNotLoadedException {
 			t.Errorf("Unexpected exception type. got %d", gErr.ExceptionType)
 		}
 	default:
