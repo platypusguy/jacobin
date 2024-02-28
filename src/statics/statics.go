@@ -42,6 +42,7 @@ type Static struct {
 		plus (Jacobin implementation-specific):
 		G   native method (that is, one written in Go)
 		T	string (ptr to an object, but facilitates processing knowing it's a string)
+		GS  Go I/O stream (os.Stdin, os.Stdout, os.Stderr)
 	*/
 	Value any
 }

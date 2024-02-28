@@ -1909,9 +1909,9 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				// now get the objectRef (the object whose method we're invoking)
-				objRef := pop(f).(*object.Object)
-				params = append(params, objRef)
+				// now get the objectRef (the object whose method we're invoking) or a *os.File (stream I/O)
+				popped := pop(f)
+				params = append(params, popped)
 
 				_, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
 				if err != nil {

@@ -11,6 +11,7 @@ import (
 	"jacobin/exceptions"
 	"jacobin/object"
 	"math"
+	"os"
 )
 
 /*
@@ -172,7 +173,7 @@ func Println(params []interface{}) interface{} {
 	switch fld.Fvalue.(type) {
 	case []byte:
 		str := string(fld.Fvalue.([]byte))
-		fmt.Println(str)
+		fmt.Fprintln(params[0].(*os.File), str)
 	default:
 		errMsg := fmt.Sprintf("Println: expected Fvalue of type []byte but observed type %T\n", fld.Fvalue)
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
@@ -181,22 +182,22 @@ func Println(params []interface{}) interface{} {
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
-func PrintlnV([]interface{}) interface{} {
-	fmt.Println("")
+func PrintlnV(params []interface{}) interface{} {
+	fmt.Fprintln(params[0].(*os.File), "")
 	return nil
 }
 
 // PrintlnC = java/io/Prinstream.println(char)
 func PrintlnC(params []interface{}) interface{} {
 	cc := fmt.Sprint(params[1].(int64))
-	fmt.Println(cc)
+	fmt.Fprintln(params[0].(*os.File), cc)
 	return nil
 }
 
 // PrintlnI = java/io/Prinstream.println(int)
 func PrintlnI(params []interface{}) interface{} {
 	intToPrint := params[1].(int64) // contains an int
-	fmt.Println(intToPrint)
+	fmt.Fprintln(params[0].(*os.File), intToPrint)
 	return nil
 }
 
@@ -209,7 +210,7 @@ func PrintlnBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Println(boolToPrint)
+	fmt.Fprintln(params[0].(*os.File), boolToPrint)
 	return nil
 }
 
@@ -217,15 +218,15 @@ func PrintlnBoolean(params []interface{}) interface{} {
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintlnLong(params []interface{}) interface{} {
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Println(longToPrint)
+	fmt.Fprintln(params[0].(*os.File), longToPrint)
 	return nil
 }
 
-// PrintlnDouble = java/io/Prinstream.println(double)
+// PrintlnDouble = java/io/Prinstream.println(double) or java/io/Prinstream.println(float)
 // Doubles in Java are 64-bit FP. Like Hotspot, we print at least one decimal place of data.
 func PrintlnDouble(params []interface{}) interface{} {
 	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Printf(formatDouble(doubleToPrint)+"\n", doubleToPrint)
+	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint)+"\n", doubleToPrint)
 	return nil
 }
 
@@ -233,21 +234,21 @@ func PrintlnDouble(params []interface{}) interface{} {
 func PrintlnObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
 	str := objPtr.FormatField("")
-	fmt.Println(str)
+	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
 
 // PrintC = java/io/Prinstream.print(char)
 func PrintC(params []interface{}) interface{} {
 	cc := fmt.Sprint(params[1].(int64))
-	fmt.Print(cc)
+	fmt.Fprint(params[0].(*os.File), cc)
 	return nil
 }
 
 // PrintI = java/io/Prinstream.print(int)
 func PrintI(params []interface{}) interface{} {
 	intToPrint := params[1].(int64) // contains an int
-	fmt.Print(intToPrint)
+	fmt.Fprint(params[0].(*os.File), intToPrint)
 	return nil
 }
 
@@ -260,7 +261,7 @@ func PrintBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Print(boolToPrint)
+	fmt.Fprint(params[0].(*os.File), boolToPrint)
 	return nil
 }
 
@@ -268,7 +269,7 @@ func PrintBoolean(params []interface{}) interface{} {
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 func PrintLong(params []interface{}) interface{} {
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Print(longToPrint)
+	fmt.Fprint(params[0].(*os.File), longToPrint)
 	return nil
 }
 
@@ -276,7 +277,7 @@ func PrintLong(params []interface{}) interface{} {
 // Doubles in Java are 64-bit FP
 func PrintFloat(params []interface{}) interface{} {
 	floatToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Printf(formatDouble(floatToPrint), floatToPrint)
+	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(floatToPrint), floatToPrint)
 	return nil
 }
 
@@ -284,7 +285,7 @@ func PrintFloat(params []interface{}) interface{} {
 // Doubles in Java are 64-bit FP
 func PrintDouble(params []interface{}) interface{} {
 	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Printf(formatDouble(doubleToPrint), doubleToPrint)
+	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint), doubleToPrint)
 	return nil
 }
 
@@ -297,9 +298,10 @@ func PrintS(params []interface{}) interface{} {
 	switch fld.Fvalue.(type) {
 	case []byte:
 		bytes := fld.Fvalue.([]byte)
-		fmt.Print(string(bytes))
+		fmt.Fprint(params[0].(*os.File), string(bytes))
 	default:
-		fmt.Printf("*** PrintS: cannot process type %T\n", fld.Fvalue)
+		errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	return nil
 }
@@ -308,7 +310,7 @@ func PrintS(params []interface{}) interface{} {
 func PrintObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
 	str := objPtr.FormatField("")
-	fmt.Print(str)
+	fmt.Fprint(params[0].(*os.File), str)
 	return nil
 }
 
@@ -325,14 +327,14 @@ func Printf(params []interface{}) interface{} {
 	}
 	objPtr := retval.(*object.Object)
 	str := object.GetGoStringFromJavaStringPtr(objPtr)
-	fmt.Print(str)
+	fmt.Fprint(params[0].(*os.File), str)
 	return params[0] // Return the PrintStream object
 
 }
 
 // Trying to approximate the exact formatting used in HotSpot JVM
 // TODO: look at the JDK source code to map this formatting exactly.
-func formatDouble(d float64) string {
+func getDoubleFormat(d float64) string {
 	if d < 0.0000001 || d > 10_000_000 {
 		return "%E"
 	} else {

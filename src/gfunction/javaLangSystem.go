@@ -83,6 +83,12 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] = // get nanoseconds time, returned as long
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getConsole,
+		}
+
 	MethodSignatures["java/lang/System.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -110,15 +116,20 @@ func clinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "System <clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
+		exceptions.ThrowEx(exceptions.ClassNotLoadedException, errMsg, nil)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
-		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "L", Value: object.Null})
-		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "L", Value: object.Null})
-		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "L", Value: object.Null})
+		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: os.Stdin})
+		_ = statics.AddStatic("java/lang/System.err", statics.Static{Type: "GS", Value: os.Stderr})
+		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil
+}
+
+// Return the system input console as a *os.File.
+func getConsole([]interface{}) interface{} {
+	return statics.GetStaticValue("java/lang/System", "in")
 }
 
 // Return time in milliseconds, measured since midnight of Jan 1, 1970
