@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/exceptions"
 	"jacobin/object"
+	"jacobin/types"
 	"math"
 	"os"
 )
@@ -233,8 +234,12 @@ func PrintlnDouble(params []interface{}) interface{} {
 // Println an Object's contents
 func PrintlnObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField("")
-	fmt.Fprintln(params[0].(*os.File), str)
+	fld := objPtr.FieldTable["value"]
+	if fld.Ftype == types.ByteArray {
+		fmt.Fprintln(params[0].(*os.File), string(fld.Fvalue.([]byte)))
+		return nil
+	}
+	fmt.Fprintln(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
@@ -309,8 +314,12 @@ func PrintS(params []interface{}) interface{} {
 // Print an Object's contents
 func PrintObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField("")
-	fmt.Fprint(params[0].(*os.File), str)
+	fld := objPtr.FieldTable["value"]
+	if fld.Ftype == types.ByteArray {
+		fmt.Fprint(params[0].(*os.File), string(fld.Fvalue.([]byte)))
+		return nil
+	}
+	fmt.Fprint(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
