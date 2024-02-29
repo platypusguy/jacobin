@@ -377,7 +377,13 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// Mark that String.<clinit>() has been run.
 	klass.Data.ClInit = types.ClInitRun
 
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	var bytes []byte
+	switch params[1].(type) {
+	case *object.Object:
+		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	case []byte:
+		bytes = params[1].([]byte)
+	}
 
 	// Get substring offset and length
 	ssOffset := params[2].(int64)
