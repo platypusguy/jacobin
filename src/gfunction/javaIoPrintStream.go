@@ -296,19 +296,28 @@ func PrintDouble(params []interface{}) interface{} {
 
 // Print string
 func PrintS(params []interface{}) interface{} {
-	// TODO: Eventually will need to check whether or not i[1] is a compact string.
-	//       Presently, we assume it is.
-	strAddr := params[1].(*object.Object)
-	fld := strAddr.FieldTable["value"]
-	switch fld.Fvalue.(type) {
+	switch params[1].(type) {
+	case *object.Object:
+		strAddr := params[1].(*object.Object)
+		fld := strAddr.FieldTable["value"]
+		switch fld.Fvalue.(type) {
+		case []byte:
+			bytes := fld.Fvalue.([]byte)
+			fmt.Fprint(params[0].(*os.File), string(bytes))
+		default:
+			errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
+			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		}
 	case []byte:
-		bytes := fld.Fvalue.([]byte)
+		bytes := params[1].([]byte)
 		fmt.Fprint(params[0].(*os.File), string(bytes))
 	default:
-		errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
+		errMsg := fmt.Sprintf("PrintS: cannot process params[1] type %T\n", params[1])
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
+
 	return nil
+
 }
 
 // Print an Object's contents
