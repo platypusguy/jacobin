@@ -7,7 +7,9 @@
 package gfunction
 
 import (
+	"bytes"
 	"jacobin/object"
+	"jacobin/types"
 	"os"
 )
 
@@ -50,50 +52,60 @@ func Load_Util_Locale() map[string]GMeth {
 }
 
 func localeFromLanguage(params []interface{}) interface{} {
-	// params[0]: input string
-	propObj := params[0].(*object.Object) // string
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str := string(bytes)
-	obj := object.CreateCompactStringFromGoString(&str)
-	return obj
+	// params[0]: Locale object to update
+	// params[1]: input language string
+	inObj := params[1].(*object.Object)
+	fld := inObj.FieldTable["value"]
+	bites := bytes.ToLower(fld.Fvalue.([]byte))
+	fld.Fvalue = bites
+	params[0].(*object.Object).FieldTable["value"] = fld
+	return nil
 }
 
 func localeFromLanguageCountry(params []interface{}) interface{} {
-	// params[0]: input string
-	propObj := params[0].(*object.Object) // string
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str1 := string(bytes)
+	// params[0]: Locale object to update
+	// params[1]: input language string
+	// params[2]: input country string
+	inObj := params[1].(*object.Object) // string
+	bites := inObj.FieldTable["value"].Fvalue.([]byte)
 
-	propObj = params[1].(*object.Object) // string
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	str2 := string(bytes)
+	inObj = params[2].(*object.Object) // string
+	bytesCountry := inObj.FieldTable["value"].Fvalue.([]byte)
+	bites = append(bites, '_')
+	bites = append(bites, bytesCountry...)
 
-	str := str1 + "_" + str2
-	obj := object.CreateCompactStringFromGoString(&str)
-	return obj
+	bites = bytes.ToLower(bites)
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: bites}
+	params[0].(*object.Object).FieldTable["value"] = fld
+	return nil
 }
 
 func localeFromLanguageCountryVariant(params []interface{}) interface{} {
-	// params[0]: input string
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str1 := string(bytes)
+	// params[0]: Locale object to update
+	// params[1]: input language string
+	// params[2]: input country string
+	// params[3]: input variant string
+	inObj := params[1].(*object.Object) // string
+	bites := inObj.FieldTable["value"].Fvalue.([]byte)
 
-	propObj = params[1].(*object.Object)
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	str2 := string(bytes)
+	inObj = params[2].(*object.Object) // string
+	bytesCountry := inObj.FieldTable["value"].Fvalue.([]byte)
+	bites = append(bites, '_')
+	bites = append(bites, bytesCountry...)
 
-	propObj = params[2].(*object.Object)
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	str3 := string(bytes)
+	inObj = params[3].(*object.Object) // string
+	bytesVariant := inObj.FieldTable["value"].Fvalue.([]byte)
+	bites = append(bites, '_')
+	bites = append(bites, bytesVariant...)
 
-	str := str1 + "_" + str2 + "_" + str3
-	obj := object.CreateCompactStringFromGoString(&str)
-	return obj
+	bites = bytes.ToLower(bites)
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: bites}
+	params[0].(*object.Object).FieldTable["value"] = fld
+	return nil
 }
 
 func getDefaultLocale(params []interface{}) interface{} {
 	str := os.Getenv("LANGUAGE")
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.MakePrimitiveObject("java/util/Locale", types.ByteArray, []byte(str))
 	return obj
 }

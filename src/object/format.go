@@ -25,8 +25,6 @@ var SLICING = "_SLICING_"
 // * field: structure of field type and field value (if not static).
 // * className: statics fields abd debugging
 // * fieldName: Key to the jacobin statics table.
-//
-// If fieldName == SLICING, then the field is from the Fields slice.
 func fmtHelper(field Field, className string, fieldName string) string {
 	ftype := field.Ftype
 	fvalue := field.Fvalue
@@ -37,13 +35,10 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	// Static?
 	flagStatic := strings.HasPrefix(ftype, types.Static)
 
-	// Lookup field in statics table if not a slice and its static.
-	flagLookup := (fieldName != SLICING) && flagStatic
-
 	// Process Java String class reference.
 	if ftype == StringClassRef {
 		// Special handling for String.
-		if flagLookup {
+		if flagStatic {
 			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
 		} else {
 			if fvalue != nil {
@@ -71,7 +66,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	switch ftype {
 	case types.Bool:
 		// Special handling for boolean.
-		if flagLookup {
+		if flagStatic {
 			return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
 		} else {
 			switch field.Fvalue.(type) {
@@ -94,7 +89,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	case types.ByteArray:
 		// Special handling for non-String byte array.
 		var bytes []byte
-		if flagLookup {
+		if flagStatic {
 			return fmt.Sprintf("% x [static]", statics.GetStaticValue(className, fieldName))
 		} else {
 			if field.Fvalue == nil {
@@ -122,7 +117,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	}
 
 	// Default action for anything else.
-	if flagLookup {
+	if flagStatic {
 		return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
 	} else {
 		return fmt.Sprintf("%v", field.Fvalue)
@@ -174,9 +169,9 @@ func (objPtr *Object) FormatField(fieldName string) string {
 		obj.DumpObject(title, 0)
 	}
 
-	// Field table and field slice are both empty.
+	// Field table is empty.
 	if DEBUGGING {
-		output = "<Field table and field slice are both empty>"
+		output = "<Field table is empty>"
 		obj.DumpObject(output, 0)
 	}
 	return klassString
@@ -186,7 +181,6 @@ func (objPtr *Object) FormatField(fieldName string) string {
 // 3 sections:
 // * Class name
 // * Field table
-// * Field slice < getting rid of this section as part of JACOBIN-457
 func (objPtr *Object) DumpObject(title string, indent int) {
 	obj := *objPtr
 	output := ""
@@ -230,11 +224,6 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 		}
 	} else {
 		output += fmt.Sprintf("\tField Table is <empty>\n")
-	}
-
-	// Emit Fields slice.
-	if indent > 0 {
-		output += strings.Repeat(" ", indent)
 	}
 
 	// Emit END

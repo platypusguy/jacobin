@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/exceptions"
 	"jacobin/object"
+	"jacobin/types"
 	"math"
 	"os"
 )
@@ -233,8 +234,12 @@ func PrintlnDouble(params []interface{}) interface{} {
 // Println an Object's contents
 func PrintlnObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField("")
-	fmt.Fprintln(params[0].(*os.File), str)
+	fld := objPtr.FieldTable["value"]
+	if fld.Ftype == types.ByteArray {
+		fmt.Fprintln(params[0].(*os.File), string(fld.Fvalue.([]byte)))
+		return nil
+	}
+	fmt.Fprintln(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
@@ -291,26 +296,39 @@ func PrintDouble(params []interface{}) interface{} {
 
 // Print string
 func PrintS(params []interface{}) interface{} {
-	// TODO: Eventually will need to check whether or not i[1] is a compact string.
-	//       Presently, we assume it is.
-	strAddr := params[1].(*object.Object)
-	fld := strAddr.FieldTable["value"]
-	switch fld.Fvalue.(type) {
+	switch params[1].(type) {
+	case *object.Object:
+		strAddr := params[1].(*object.Object)
+		fld := strAddr.FieldTable["value"]
+		switch fld.Fvalue.(type) {
+		case []byte:
+			bytes := fld.Fvalue.([]byte)
+			fmt.Fprint(params[0].(*os.File), string(bytes))
+		default:
+			errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
+			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		}
 	case []byte:
-		bytes := fld.Fvalue.([]byte)
+		bytes := params[1].([]byte)
 		fmt.Fprint(params[0].(*os.File), string(bytes))
 	default:
-		errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
+		errMsg := fmt.Sprintf("PrintS: cannot process params[1] type %T\n", params[1])
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
+
 	return nil
+
 }
 
 // Print an Object's contents
 func PrintObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
-	str := objPtr.FormatField("")
-	fmt.Fprint(params[0].(*os.File), str)
+	fld := objPtr.FieldTable["value"]
+	if fld.Ftype == types.ByteArray {
+		fmt.Fprint(params[0].(*os.File), string(fld.Fvalue.([]byte)))
+		return nil
+	}
+	fmt.Fprint(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
