@@ -10,6 +10,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/thread"
 	"runtime/debug"
 )
@@ -434,6 +435,7 @@ func Throw(exceptionType int, msg string) {
 	ShowPanicCause(msg)
 	ShowFrameStack(&thread.ExecThread{})
 	ShowGoStackTrace(nil)
+	statics.DumpStatics()
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
 
