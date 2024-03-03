@@ -1469,6 +1469,11 @@ frameInterpreter:
 			f = fs.Front().Next().Value.(*frames.Frame)
 			push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
 			return nil
+		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
+			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
+			paddingBytes := (f.PC + 1) % 4
+			f.PC += paddingBytes // CURR: continue here
+
 		case opcodes.LRETURN: // 0xAD (return a long and exit current frame)
 			valToReturn := pop(f).(int64)
 			f = fs.Front().Next().Value.(*frames.Frame)
