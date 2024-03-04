@@ -1490,7 +1490,7 @@ frameInterpreter:
 				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
 			f.PC += 4
 
-			// CURR: continue here
+			// CURR: continue here using fourBytesToInt64
 			msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d",
 				basePC, defaultJump, npairs)
 			println(msg)
