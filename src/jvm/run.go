@@ -1471,9 +1471,29 @@ frameInterpreter:
 			return nil
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
-			paddingBytes := (f.PC + 1) % 4
-			f.PC += paddingBytes // CURR: continue here
+			// key := pop(f).(int64)
+			basePC := f.PC // where we are when the processing begins
 
+			paddingBytes := 4 - ((f.PC + 1) % 4)
+			if paddingBytes == 4 {
+				paddingBytes = 0
+			}
+			f.PC += paddingBytes
+
+			// get the jump size for the default branch
+			defaultJump := binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			f.PC += 4
+
+			// how many branches in this switch (other than default)
+			npairs := binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			f.PC += 4
+
+			// CURR: continue here
+			msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d",
+				basePC, defaultJump, npairs)
+			println(msg)
 		case opcodes.LRETURN: // 0xAD (return a long and exit current frame)
 			valToReturn := pop(f).(int64)
 			f = fs.Front().Next().Value.(*frames.Frame)
