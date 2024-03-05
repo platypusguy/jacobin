@@ -1490,9 +1490,19 @@ frameInterpreter:
 				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
 			f.PC += 4
 
-			// CURR: continue here using fourBytesToInt64
-			msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d",
-				basePC, defaultJump, npairs)
+			jumpTable := make(map[int64]int)
+			for i := 0; i < int(npairs); i++ {
+				// get the jump size for each case branch
+				caseValue := fourBytesToInt64(
+					f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
+				f.PC += 4
+				jumpOffset := fourBytesToInt64(f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
+				f.PC += 4
+				jumpTable[caseValue] = int(jumpOffset)
+			}
+
+			msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d, jumpTable: %v",
+				basePC, defaultJump, npairs, jumpTable)
 			println(msg)
 		case opcodes.LRETURN: // 0xAD (return a long and exit current frame)
 			valToReturn := pop(f).(int64)
