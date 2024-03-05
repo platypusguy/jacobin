@@ -1471,7 +1471,6 @@ frameInterpreter:
 			return nil
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
-			// key := pop(f).(int64)
 			basePC := f.PC // where we are when the processing begins
 
 			paddingBytes := 4 - ((f.PC + 1) % 4)
@@ -1501,9 +1500,18 @@ frameInterpreter:
 				jumpTable[caseValue] = int(jumpOffset)
 			}
 
-			msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d, jumpTable: %v",
-				basePC, defaultJump, npairs, jumpTable)
-			println(msg)
+			// now get the value we're switching on and find the distance to jump
+			key := pop(f).(int64)
+			jumpDistance, present := jumpTable[key]
+			if present {
+				f.PC = basePC + jumpDistance - 1
+			} else {
+				f.PC = basePC + int(defaultJump) - 1
+			}
+
+			// msg := fmt.Sprintf("LOOKUPSWITCH, basePC: %d, defaultJump: %d, npairs: %d, jumpTable: %v",
+			// 	basePC, defaultJump, npairs, jumpTable)
+			// println(msg)
 		case opcodes.LRETURN: // 0xAD (return a long and exit current frame)
 			valToReturn := pop(f).(int64)
 			f = fs.Front().Next().Value.(*frames.Frame)
