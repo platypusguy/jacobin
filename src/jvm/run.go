@@ -2236,6 +2236,12 @@ frameInterpreter:
 			case []uint8:
 				array := ref.([]uint8)
 				size = int64(len(array))
+			case []float64:
+				array := ref.([]float64)
+				size = int64(len(array))
+			case []int64:
+				array := ref.([]int64)
+				size = int64(len(array))
 			case *[]uint8: // = go byte
 				array := *ref.(*[]uint8)
 				size = int64(len(array))
