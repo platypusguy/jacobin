@@ -66,7 +66,7 @@ func AddStatic(name string, s Static) error {
 // immediately necessary statics. It's called in jvmStart.go
 func PreloadStatics() {
 	LoadProgramStatics()
-	LoadStaticsString()
+	// java.lang.*
 	LoadStaticsByte()
 	LoadStaticsCharacter()
 	LoadStaticsDouble()
@@ -76,6 +76,7 @@ func PreloadStatics() {
 	LoadStaticsMath()
 	LoadStaticsShort()
 	LoadStaticsStrictMath()
+	LoadStaticsString()
 }
 
 // LoadProgramStatics loads static fields that the JVM expects to have

@@ -9,6 +9,7 @@ package object
 import (
 	"jacobin/statics"
 	"jacobin/types"
+	"sync"
 )
 
 // Strings are so commonly used in Java, that it makes sense
@@ -112,4 +113,33 @@ func IsJavaString(unknown any) bool {
 	}
 
 	return *objPtr.Klass == "java/lang/String"
+}
+
+/*
+--------------------------------
+The new string primitives follow
+--------------------------------
+*/
+
+var stringTable = make(map[string]uint32)
+var stringList []string
+var stringNext = uint32(0)
+var stringLock sync.Mutex
+
+func GetStringIndex(arg *string) uint32 {
+	index, ok := stringTable[*arg]
+	if ok {
+		return index
+	}
+	stringLock.Lock()
+	index = stringNext
+	stringTable[*arg] = index
+	stringList = append(stringList, *arg)
+	stringNext++
+	stringLock.Unlock()
+	return index
+}
+
+func GetStringPointer(index uint32) *string {
+	return &stringList[index]
 }
