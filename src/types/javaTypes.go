@@ -30,8 +30,8 @@ const RuneArray = "[R" // used only in strings that are not compact
 // Jacobin-specific types
 const StringIndex = "T"
 const Static = "X"
-const StatidDouble = "XD"
-const StatidLong = "XJ"
+const StaticDouble = "XD"
+const StaticLong = "XJ"
 
 const GoMeth = "G" // a go mehod
 
@@ -77,7 +77,7 @@ func IsError(t string) bool {
 // UsesTwoSlots identifies longs and doubles -- the two data items
 // that occupy two slots on the op stack and elsewhere
 func UsesTwoSlots(t string) bool {
-	if t == Double || t == Long || t == StatidDouble || t == StatidLong {
+	if t == Double || t == Long || t == StaticDouble || t == StaticLong {
 		return true
 	}
 	return false
