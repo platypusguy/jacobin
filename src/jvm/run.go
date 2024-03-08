@@ -1799,8 +1799,11 @@ frameInterpreter:
 			fieldName := CP.Utf8Refs[nameCPentry.Slot]
 			objField := obj.FieldTable[fieldName]
 			fieldType = objField.Ftype
-			fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
-
+			if fieldType == types.StringIndex {
+				fieldValue = object.GetStringPointer(fieldValue.(uint32))
+			} else {
+				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
+			}
 			push(f, fieldValue)
 
 			// doubles and longs consume two slots on the op stack
