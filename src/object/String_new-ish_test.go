@@ -72,7 +72,7 @@ func randomString(length int) string {
 }
 
 func TestStringIndexPrimitives_2(t *testing.T) {
-	var LIMIT uint32 = 10000
+	var LIMIT uint32 = 1000000
 	t.Logf("string slice size to be filled up: %d\n", LIMIT)
 	finalIndex := LIMIT - 1
 	midIndex := LIMIT / 2
