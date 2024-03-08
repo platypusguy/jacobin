@@ -477,7 +477,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 				switch desc {
 				case types.Ref, types.Bool: // TODO: Find out how to process these
 					f.constValue = nil
-				case types.Byte: // byte--same logic as for "I", only error message is different
+				case types.Byte: // byte--same logic as for types.Int, only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]
@@ -486,7 +486,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					f.constValue = klass.intConsts[entryInCp.slot]
-				case types.Char: // char--same logic as for "I", only error message is different
+				case types.Char: // char--same logic as for types.Int, only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
 					entryInCp := klass.cpIndex[indexIntoCP]

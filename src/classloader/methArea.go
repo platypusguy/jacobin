@@ -72,7 +72,7 @@ func MethAreaDelete(key string) {
 	}
 }
 
-// Wait for klass.Status to no longer be "I" (I = initializing)
+// Wait for klass.Status to no longer be 'I' (I = initializing)
 // TODO: must be a better way to do this!
 func WaitForClassStatus(className string) error {
 	_ = log.Log("WaitForClassStatus: class name: "+className, log.CLASS)

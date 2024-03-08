@@ -73,15 +73,15 @@ func TestStatics1(t *testing.T) {
 	Set statics values.
 	*/
 	LoadProgramStatics()
-	tAddStatic(t, "AlphaBetaGamma.ONE", "B", uint8(0x31))
-	tAddStatic(t, "AlphaBetaGamma.QM", "C", '?')
-	tAddStatic(t, "AlphaBetaGamma.PI", "D", 3.14159265)
-	tAddStatic(t, "AlphaBetaGamma.TEN", "F", 10.0)
-	tAddStatic(t, "AlphaBetaGamma.D-ADAMS", "I", 42)
-	tAddStatic(t, "AlphaBetaGamma.BILLION", "J", 2000000000)
+	tAddStatic(t, "AlphaBetaGamma.ONE", types.Byte, uint8(0x31))
+	tAddStatic(t, "AlphaBetaGamma.QM", types.Char, '?')
+	tAddStatic(t, "AlphaBetaGamma.PI", types.Double, 3.14159265)
+	tAddStatic(t, "AlphaBetaGamma.TEN", types.Float, 10.0)
+	tAddStatic(t, "AlphaBetaGamma.D-ADAMS", types.Int, 42)
+	tAddStatic(t, "AlphaBetaGamma.BILLION", types.Long, 2000000000)
 	tAddStatic(t, "AlphaBetaGamma.WILLIE", "LAlphaBetaGamma;", ref)
-	tAddStatic(t, "AlphaBetaGamma.THIRTEEN", "S", 13)
-	tAddStatic(t, "AlphaBetaGamma.TRUE", "Z", true)
+	tAddStatic(t, "AlphaBetaGamma.THIRTEEN", types.Short, 13)
+	tAddStatic(t, "AlphaBetaGamma.TRUE", types.Bool, true)
 	// Omitted: [x
 	// Omitted: G
 	// Omitted: T to avoid a cycle (object >> statics >> object)
