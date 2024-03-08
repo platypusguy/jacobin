@@ -7,8 +7,12 @@
 package object
 
 import (
+	"fmt"
 	"jacobin/statics"
 	"jacobin/types"
+	"os"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -142,4 +146,30 @@ func GetStringIndex(arg *string) uint32 {
 
 func GetStringPointer(index uint32) *string {
 	return &stringList[index]
+}
+
+func GetStringRepoSize() uint32 {
+	return stringNext
+}
+
+func DumpStringRepo() {
+	stringLock.Lock()
+	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpStringRepo BEGIN")
+	// Create an array of keys.
+	keys := make([]string, 0, len(stringTable))
+	for key := range stringTable {
+		keys = append(keys, key)
+	}
+	// Sort the keys.
+	// All the upper case entries precede all the lower case entries.
+	sort.Strings(keys)
+	// In key sequence order, display the key and its value.
+	for _, key := range keys {
+		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
+			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
+			_, _ = fmt.Fprintf(os.Stderr, "%d\t%s\n", stringTable[key], key)
+		}
+	}
+	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStringRepo END")
+	stringLock.Unlock()
 }
