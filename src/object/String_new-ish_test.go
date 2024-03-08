@@ -39,40 +39,40 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
 	if index != 0 {
-		t.Errorf("Expected string index 0 but observed: %d", index)
+		t.Errorf("Expected string str1 index 0 but observed: %d", index)
 	}
 	if str != str1 {
-		t.Errorf("Expected string value %s but observed: %s", str1, str)
+		t.Errorf("Expected string str1 value %s but observed: %s", str1, str)
 	}
 
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
 	if index != 1 {
-		t.Errorf("Expected string index 1 but observed: %d", index)
+		t.Errorf("Expected string str2 index 1 but observed: %d", index)
 	}
 	if str != str2 {
-		t.Errorf("Expected string value %s but observed: %s", str2, str)
+		t.Errorf("Expected string str2 value %s but observed: %s", str2, str)
 	}
 
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
 	if index != 0 {
-		t.Errorf("Expected string index 0 but observed: %d", index)
+		t.Errorf("Expected string str1 index 0 but observed: %d", index)
 	}
 	if str != str1 {
-		t.Errorf("Expected string value %s but observed: %s", str1, str)
+		t.Errorf("Expected string str1 value %s but observed: %s", str1, str)
 	}
 
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
 	if index != 1 {
-		t.Errorf("Expected string index 1 but observed: %d", index)
+		t.Errorf("Expected string str2 index 1 but observed: %d", index)
 	}
 	if str != str2 {
-		t.Errorf("Expected string value %s but observed: %s", str2, str)
+		t.Errorf("Expected string str2 value %s but observed: %s", str2, str)
 	}
 
 	for ix := 0; ix < 18; ix++ {
@@ -82,7 +82,7 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 
 	sz := GetStringRepoSize()
 	if sz != 20 {
-		t.Errorf("Expected string value 20 but observed: %d", sz)
+		t.Errorf("Expected string repo size 20 but observed: %d", sz)
 	}
 
 	DumpStringRepo()
@@ -118,7 +118,7 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 
 	sz := GetStringRepoSize()
 	if sz != LIMIT {
-		t.Errorf("Expected string value %d but observed: %d", LIMIT, sz)
+		t.Errorf("Expected string repo size %d but observed: %d", LIMIT, sz)
 	}
 
 }
