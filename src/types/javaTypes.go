@@ -1,12 +1,14 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Jacobin authors. All rights reserved.
+ * Copyright (c) 2023-4 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
 package types
 
 import "strings"
+
+// These are the types that are used in an object's field.Ftype and elsewhere.
 
 const Bool = "Z"
 const Byte = "B"
@@ -26,8 +28,10 @@ const RefArray = "[L"
 const RuneArray = "[R" // used only in strings that are not compact
 
 // Jacobin-specific types
-const String = "T"
+const StringIndex = "T"
 const Static = "X"
+const StatidDouble = "XD"
+const StatidLong = "XJ"
 
 const GoMeth = "G" // a go mehod
 
@@ -35,36 +39,36 @@ const Error = "0"  // if an error occurred in getting a type
 const Struct = "9" // used primarily in returning items from the CP
 
 func IsIntegral(t string) bool {
-	if t == "B" || t == "C" || t == "I" ||
-		t == "J" || t == "S" || t == "Z" {
+	if t == Byte || t == Char || t == Int ||
+		t == Long || t == Short || t == Bool {
 		return true
 	}
 	return false
 }
 
 func IsFloatingPoint(t string) bool {
-	if t == "F" || t == "D" {
+	if t == Float || t == Double {
 		return true
 	}
 	return false
 }
 
 func IsAddress(t string) bool {
-	if strings.HasPrefix(t, "L") || strings.HasPrefix(t, "[") || t == "T" {
+	if strings.HasPrefix(t, Ref) || strings.HasPrefix(t, Array) {
 		return true
 	}
 	return false
 }
 
 func IsStatic(t string) bool {
-	if strings.HasPrefix(t, "X") {
+	if strings.HasPrefix(t, Static) {
 		return true
 	}
 	return false
 }
 
 func IsError(t string) bool {
-	if t == "0" {
+	if t == Error {
 		return true
 	}
 	return false
@@ -73,7 +77,7 @@ func IsError(t string) bool {
 // UsesTwoSlots identifies longs and doubles -- the two data items
 // that occupy two slots on the op stack and elsewhere
 func UsesTwoSlots(t string) bool {
-	if t == "D" || t == "J" || t == "XD" || t == "XJ" {
+	if t == Double || t == Long || t == StatidDouble || t == StatidLong {
 		return true
 	}
 	return false
