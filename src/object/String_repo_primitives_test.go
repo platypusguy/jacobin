@@ -30,10 +30,17 @@ func randomString(maxlength int) string {
 }
 
 func TestStringIndexPrimitives_1(t *testing.T) {
-	var index uint32
+	index := uint32(0)
 	var str string
 	str1 := "Mary had a little lamb"
 	str2 := "Whose fleece was white as snow"
+
+	EmptyStringRepo()
+	DumpStringRepo("TestStringIndexPrimitives_1: should be empty")
+	sz := GetStringRepoSize()
+	if sz != 0 {
+		t.Errorf("Expected string repo size 0 but observed: %d", sz)
+	}
 
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
@@ -80,23 +87,33 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 		index = GetStringIndex(&str)
 	}
 
-	sz := GetStringRepoSize()
+	sz = GetStringRepoSize()
 	if sz != 20 {
 		t.Errorf("Expected string repo size 20 but observed: %d", sz)
 	}
 
-	DumpStringRepo()
+	DumpStringRepo("TestStringIndexPrimitives_1: final repo")
 }
 
 func TestStringIndexPrimitives_2(t *testing.T) {
-	var LIMIT uint32 = 1000000
+	var LIMIT uint32 = 10
 	t.Logf("string slice size to be filled up: %d\n", LIMIT)
 	finalIndex := LIMIT - 1
+	t.Logf("final index value: %d\n", finalIndex)
 	midIndex := LIMIT / 2
+	t.Logf("mid index value: %d\n", midIndex)
 	midString := "Mary had a little lamb"
+	var index uint32 = 0
 	var str string
-	var index uint32
 	var ix uint32
+
+	EmptyStringRepo()
+	DumpStringRepo("TestStringIndexPrimitives_2: should be empty")
+	sz := GetStringRepoSize()
+	if sz != 0 {
+		t.Errorf("Expected string repo size 0 but observed: %d", sz)
+	}
+
 	for ix = 0; ix < LIMIT; ix++ {
 		if ix == midIndex {
 			str = midString
@@ -104,6 +121,7 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 			str = randomString(stringLength)
 		}
 		index = GetStringIndex(&str)
+		t.Logf("DEBUG %d) string %d %s\n", ix, index, str)
 	}
 	t.Logf("last index value: %d\n", index)
 	str = *GetStringPointer(0)
@@ -116,9 +134,12 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 	str = *GetStringPointer(finalIndex)
 	t.Logf("str1 index %d: %s\n", finalIndex, str)
 
-	sz := GetStringRepoSize()
+	sz = GetStringRepoSize()
 	if sz != LIMIT {
 		t.Errorf("Expected string repo size %d but observed: %d", LIMIT, sz)
+	}
+	if sz < 100 {
+		DumpStringRepo("TestStringIndexPrimitives_2: final repo")
 	}
 
 }
