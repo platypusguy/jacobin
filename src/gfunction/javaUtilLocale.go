@@ -102,8 +102,12 @@ func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	return nil
 }
 
-func getDefaultLocale(params []interface{}) interface{} {
-	str := os.Getenv("LANGUAGE")
-	obj := object.MakePrimitiveObject("java/util/Locale", types.ByteArray, []byte(str))
+func getDefaultLocale([]interface{}) interface{} {
+	langStr := os.Getenv("LANGUAGE")
+	classStr := "java/lang/Locale"
+	index := stringPool.GetStringIndex(&langStr)
+	obj := object.MakeEmptyObjectWithClassName(&classStr)
+	fld := object.Field{Ftype: types.StringIndex, Fvalue: index}
+	obj.FieldTable["value"] = fld
 	return obj
 }
