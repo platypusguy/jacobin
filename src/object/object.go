@@ -7,6 +7,7 @@
 package object
 
 import (
+	"jacobin/stringPool"
 	"unsafe"
 )
 
@@ -20,6 +21,7 @@ import (
 type Object struct {
 	Mark       MarkWord
 	Klass      *string          // the class name in the method area
+	KlassName  uint32           // the index of the class name
 	FieldTable map[string]Field // map mapping field name to field
 }
 
@@ -52,6 +54,18 @@ func MakeEmptyObject() *Object {
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
 	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
+
+	// initialize the map of this object's fields
+	o.FieldTable = make(map[string]Field)
+	return &o
+}
+
+// MakeEmptyObjectWithClassName() creates an empty Object using the passed-in class name
+func MakeEmptyObjectWithClassName(className *string) *Object {
+	o := Object{}
+	h := uintptr(unsafe.Pointer(&o))
+	o.Mark.Hash = uint32(h)
+	o.KlassName = stringPool.GetStringIndex(className)
 
 	// initialize the map of this object's fields
 	o.FieldTable = make(map[string]Field)
