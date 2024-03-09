@@ -18,29 +18,29 @@ func TestStringClinit(t *testing.T) {
 	classloader.InitMethodArea()
 	retval := stringClinit(nil)
 	if retval == nil {
-		t.Error("Was expecting an error message, but got none.")
+		t.Error("TestStringClinit: Was expecting an error message, but got none.")
 	}
 	switch retval.(type) {
 	case *GErrBlk:
 		gErr := retval.(*GErrBlk)
-		if !strings.Contains(gErr.ErrMsg, "stringClinit: Could not find java/lang/String") {
-			t.Errorf("Unexpected error message. got %s", gErr.ErrMsg)
+		if !strings.Contains(gErr.ErrMsg, "TestStringClinit: Could not find java/lang/String") {
+			t.Errorf("TestStringClinit: Unexpected error message. got %s", gErr.ErrMsg)
 		}
 		if gErr.ExceptionType != exceptions.ClassNotLoadedException {
-			t.Errorf("Unexpected exception type. got %d", gErr.ExceptionType)
+			t.Errorf("TestStringClinit: Unexpected exception type. got %d", gErr.ExceptionType)
 		}
 	default:
-		t.Errorf("Did not get expected error message, got %v", retval)
+		t.Errorf("TestStringClinit: Did not get expected error message, got %v", retval)
 	}
 }
 func TestStringToUpperCase(t *testing.T) {
 	originalString := "hello"
-	s := object.CreateCompactStringFromGoString(&originalString)
-	params := []interface{}{s}
-	s2 := toUpperCase(params)
-	sUpper := object.GetGoStringFromJavaStringPtr(s2.(*object.Object))
+	originalObj := object.NewPoolStringFromGoString(originalString)
+	params := []interface{}{originalObj}
+	ucObj := toUpperCase(params)
+	strUpper := object.GetGoStringFromObject(ucObj.(*object.Object))
 	expValue := "HELLO"
-	if string(sUpper) != expValue {
-		t.Errorf("string toUpperCase failed, expected: %s, observed: %s", expValue, sUpper)
+	if string(strUpper) != expValue {
+		t.Errorf("TestStringToUpperCase failed, expected: %s, observed: %s", expValue, strUpper)
 	}
 }

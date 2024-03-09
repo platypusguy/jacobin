@@ -84,9 +84,9 @@ func integerByteValue(params []interface{}) interface{} {
 func integerDecode(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
+	strArg := object.GetGoStringFromObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerDecode: byte array length < 1")
+		return getGErrBlk(exceptions.NumberFormatException, "integerDecode: byte array length < 1")
 	}
 
 	// Replace a leading "#" with "0x" in strArg.
@@ -97,7 +97,7 @@ func integerDecode(params []interface{}) interface{} {
 	// Parse the input integer.
 	int64Value, err := strconv.ParseInt(strArg, 10, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("javaPrimitives.integerDecode: arg=%s, err: %s", strArg, err.Error())
+		errMsg := fmt.Sprintf("integerDecode: arg=%s, err: %s", strArg, err.Error())
 		return getGErrBlk(exceptions.NumberFormatException, errMsg)
 	}
 
@@ -122,9 +122,9 @@ func integerIntLongValue(params []interface{}) interface{} {
 func integerParseInt(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
+	strArg := object.GetGoStringFromObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: string length < 1")
+		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: string length < 1")
 	}
 
 	// Replace a leading "#" with "0x" in strArg.
@@ -136,26 +136,26 @@ func integerParseInt(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case int64:
 	default:
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: radix is not an integer")
+		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: radix is not an integer")
 	}
 	rdx := params[1].(int64)
 	if rdx < MinRadix || rdx > MaxRadix {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: invalid radix")
+		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: invalid radix")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseInt(strArg, int(rdx), 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("javaPrimitives.integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
+		errMsg := fmt.Sprintf("integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
 		return getGErrBlk(exceptions.NumberFormatException, errMsg)
 	}
 
 	// Check Integer boundaries.
 	if output > MaxIntValue {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: upper limit is Integer.MAX_VALUE")
+		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: upper limit is Integer.MAX_VALUE")
 	}
 	if output < MinIntValue {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.integerParseInt: lower limit is Integer.MIN_VALUE")
+		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: lower limit is Integer.MIN_VALUE")
 	}
 
 	// Return computed value.

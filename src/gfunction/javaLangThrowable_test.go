@@ -101,9 +101,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	_ = frames.PushFrame(jvmStack, f)
 
 	// create a Throwable object
-	throw := object.MakeEmptyObject()
-	klassType := "java/lang/Throwable"
-	throw.Klass = &klassType
+	throw := object.MakeNewEmptyObject("java/lang/Throwable")
 
 	// set up instantiate function
 	globPtr := globals.GetGlobalRef()

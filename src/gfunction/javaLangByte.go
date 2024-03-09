@@ -58,7 +58,7 @@ func byteValueOf(params []interface{}) interface{} {
 func byteDecode(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
+	strArg := object.GetGoStringFromObject(parmObj)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: byte array length < 1")
 	}
@@ -98,6 +98,6 @@ func byteToString(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	str := fmt.Sprintf("%d", ii)
-	objPtr := object.CreateCompactStringFromGoString(&str)
-	return objPtr
+	outObjPtr := object.NewPoolStringFromGoString(str)
+	return outObjPtr
 }

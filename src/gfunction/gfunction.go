@@ -96,15 +96,20 @@ func justReturn([]interface{}) interface{} {
 	return nil
 }
 
-// Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short).
-func populator(classname string, fldtype string, value interface{}) interface{} {
+// Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
+func populator(classname string, fldtype string, fldvalue interface{}) interface{} {
 	klass := classloader.MethAreaFetch(classname)
 	if klass == nil {
 		errMsg := fmt.Sprintf("populator: Could not find %s in the MethodArea", classname)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-	objPtr := object.MakePrimitiveObject(classname, fldtype, value)
-	(*objPtr).FieldTable["value"] = object.Field{fldtype, value}
+	var objPtr *object.Object
+	if fldtype == types.StringIndex {
+		objPtr = object.NewPoolStringFromGoString(fldvalue.(string))
+	} else {
+		objPtr = object.MakePrimitiveObject(classname, fldtype, fldvalue)
+		(*objPtr).FieldTable["value"] = object.Field{fldtype, fldvalue}
+	}
 	return objPtr
 }

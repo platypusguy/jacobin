@@ -18,7 +18,7 @@ import (
 	"syscall"
 )
 
-// Implementation of some of the functions in in Java/lang/Class.
+// Implementation of some of the functions in Java/lang/Class.
 
 func Load_Io_Console() map[string]GMeth {
 
@@ -103,7 +103,7 @@ func Load_Io_Console() map[string]GMeth {
 }
 
 // Initialise class Console.
-func consoleClinit(params []interface{}) interface{} {
+func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
 	if klass == nil {
 		errMsg := "consoleClinit: Could not find java/io/Console in the MethodArea"
@@ -120,11 +120,11 @@ func noSupportYetInConsole([]interface{}) interface{} {
 }
 
 // Flush java/lang/System.in/out/err.
-func consoleFlush(params []interface{}) interface{} {
+func consoleFlush([]interface{}) interface{} {
 	stdinout := statics.GetStaticValue("java/lang/System", "in").(*os.File)
-	stdinout.Sync()
+	_ = stdinout.Sync()
 	stdinout = statics.GetStaticValue("java/lang/System", "out").(*os.File)
-	stdinout.Sync()
+	_ = stdinout.Sync()
 	// Note: java/lang/System.err is not associated with the system console.
 	return nil
 }
@@ -141,15 +141,15 @@ func consolePrintf(params []interface{}) interface{} {
 		return retval
 	}
 	objPtr := retval.(*object.Object)
-	str := object.GetGoStringFromJavaStringPtr(objPtr)
+	str := object.GetGoStringFromObject(objPtr)
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
-	fmt.Fprint(stdout, str)
+	_, _ = fmt.Fprint(stdout, str)
 	return stdout // Return the *os.File
 
 }
 
 // Reads a single line of text from the console.
-func consoleReadLine(params []interface{}) interface{} {
+func consoleReadLine([]interface{}) interface{} {
 	var bytes []byte
 	var bite = []byte{0x00}
 	var nbytes int
@@ -170,7 +170,7 @@ func consoleReadLine(params []interface{}) interface{} {
 		bytes = append(bytes, bite[0])
 	}
 	str := string(bytes)
-	return object.CreateCompactStringFromGoString(&str)
+	return object.NewPoolStringFromGoString(str)
 }
 
 // Provides a formatted prompt, then reads a single line of text from the console.
@@ -180,14 +180,14 @@ func consolePrintfReadLine(params []interface{}) interface{} {
 	return objPtr
 }
 
-func consoleReadPassword(params []interface{}) interface{} {
-	password, err := term.ReadPassword(int(syscall.Stdin))
+func consoleReadPassword([]interface{}) interface{} {
+	password, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
 		errMsg := fmt.Sprintf("consoleReadPassword term.ReadPassword: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
-	fmt.Fprint(stdout, "\n")
+	_, _ = fmt.Fprint(stdout, "\n")
 	return password
 }
 

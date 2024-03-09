@@ -7,7 +7,6 @@
 package gfunction
 
 import (
-	"bytes"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -55,10 +54,8 @@ func localeFromLanguage(params []interface{}) interface{} {
 	// params[0]: Locale object to update
 	// params[1]: input language string
 	inObj := params[1].(*object.Object)
-	fld := inObj.FieldTable["value"]
-	bites := bytes.ToLower(fld.Fvalue.([]byte))
-	fld.Fvalue = bites
-	params[0].(*object.Object).FieldTable["value"] = fld
+	outObj := params[0].(*object.Object)
+	outObj.FieldTable["value"] = inObj.FieldTable["value"]
 	return nil
 }
 
@@ -66,17 +63,18 @@ func localeFromLanguageCountry(params []interface{}) interface{} {
 	// params[0]: Locale object to update
 	// params[1]: input language string
 	// params[2]: input country string
-	inObj := params[1].(*object.Object) // string
-	bites := inObj.FieldTable["value"].Fvalue.([]byte)
+	langObj := params[1].(*object.Object) // string
+	langStr := object.GetGoStringFromObject(langObj)
 
-	inObj = params[2].(*object.Object) // string
-	bytesCountry := inObj.FieldTable["value"].Fvalue.([]byte)
-	bites = append(bites, '_')
-	bites = append(bites, bytesCountry...)
+	countryObj := params[2].(*object.Object) // string
+	countryStr := object.GetGoStringFromObject(countryObj)
 
-	bites = bytes.ToLower(bites)
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: bites}
+	str := langStr + "_" + countryStr
+	fld := params[0].(*object.Object).FieldTable["value"]
+	fld.Ftype = types.StringIndex
+	fld.Fvalue = object.GetStringIndex(&str)
 	params[0].(*object.Object).FieldTable["value"] = fld
+
 	return nil
 }
 
@@ -85,22 +83,21 @@ func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	// params[1]: input language string
 	// params[2]: input country string
 	// params[3]: input variant string
-	inObj := params[1].(*object.Object) // string
-	bites := inObj.FieldTable["value"].Fvalue.([]byte)
+	langObj := params[1].(*object.Object)
+	langStr := object.GetGoStringFromObject(langObj)
 
-	inObj = params[2].(*object.Object) // string
-	bytesCountry := inObj.FieldTable["value"].Fvalue.([]byte)
-	bites = append(bites, '_')
-	bites = append(bites, bytesCountry...)
+	countryObj := params[2].(*object.Object)
+	countryStr := object.GetGoStringFromObject(countryObj)
 
-	inObj = params[3].(*object.Object) // string
-	bytesVariant := inObj.FieldTable["value"].Fvalue.([]byte)
-	bites = append(bites, '_')
-	bites = append(bites, bytesVariant...)
+	variantObj := params[3].(*object.Object)
+	variantStr := object.GetGoStringFromObject(variantObj)
 
-	bites = bytes.ToLower(bites)
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: bites}
+	str := langStr + "_" + countryStr + "_" + variantStr
+	fld := params[0].(*object.Object).FieldTable["value"]
+	fld.Ftype = types.StringIndex
+	fld.Fvalue = object.GetStringIndex(&str)
 	params[0].(*object.Object).FieldTable["value"] = fld
+
 	return nil
 }
 
