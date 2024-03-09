@@ -7,10 +7,12 @@
 package object
 
 import (
+	"jacobin/globals"
 	"testing"
 )
 
 // Test MakeEmptyStringObject
+// This test does not use the String Pool
 func TestStringMidLevel_1(t *testing.T) {
 	objPtr := MakeEmptyStringObject()
 	if *(objPtr.Klass) != StringClassName {
@@ -22,11 +24,12 @@ func TestStringMidLevel_1(t *testing.T) {
 	}
 }
 
-// Test NewRepoStringFromGoString and GetGoStringFromObject
+// Test NewPoolStringFromGoString and GetGoStringFromObject
 func TestStringMidLevel_2(t *testing.T) {
+	_ = globals.InitGlobals("test") // Initialise the String Pool
 	str1 := "The rain in Spain falls mainly on the plain"
-	objPtr := NewRepoStringFromGoString(str1)
-	objPtr.DumpObject("TestNewRepoStringFromGoString", 0)
+	objPtr := NewPoolStringFromGoString(str1)
+	objPtr.DumpObject("TestStringMidLevel_2", 0)
 	str2 := GetGoStringFromObject(objPtr)
 	if str1 != str2 {
 		t.Errorf("Expected GetGoStringFromObject to return %s but observed: %s", str1, str2)
