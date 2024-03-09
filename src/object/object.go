@@ -54,6 +54,7 @@ func MakeEmptyObject() *Object {
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
 	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
+	o.KlassName = stringPool.GetStringIndex(&EmptyString)
 
 	// initialize the map of this object's fields
 	o.FieldTable = make(map[string]Field)
