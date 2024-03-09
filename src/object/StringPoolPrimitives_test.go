@@ -35,9 +35,9 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	str1 := "Mary had a little lamb"
 	str2 := "Whose fleece was white as snow"
 
-	EmptyStringRepo()
-	DumpStringRepo("TestStringIndexPrimitives_1: should be empty")
-	sz := GetStringRepoSize()
+	EmptyStringPool()
+	DumpStringPool("TestStringIndexPrimitives_1: should be empty")
+	sz := GetStringPoolSize()
 	if sz != 0 {
 		t.Errorf("Expected string repo size 0 but observed: %d", sz)
 	}
@@ -87,16 +87,16 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 		index = GetStringIndex(&str)
 	}
 
-	sz = GetStringRepoSize()
+	sz = GetStringPoolSize()
 	if sz != 20 {
 		t.Errorf("Expected string repo size 20 but observed: %d", sz)
 	}
 
-	DumpStringRepo("TestStringIndexPrimitives_1: final repo")
+	DumpStringPool("TestStringIndexPrimitives_1: final repo")
 }
 
 func TestStringIndexPrimitives_2(t *testing.T) {
-	var LIMIT uint32 = 10
+	var LIMIT uint32 = 1000000
 	t.Logf("string slice size to be filled up: %d\n", LIMIT)
 	finalIndex := LIMIT - 1
 	t.Logf("final index value: %d\n", finalIndex)
@@ -107,9 +107,9 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 	var str string
 	var ix uint32
 
-	EmptyStringRepo()
-	DumpStringRepo("TestStringIndexPrimitives_2: should be empty")
-	sz := GetStringRepoSize()
+	EmptyStringPool()
+	DumpStringPool("TestStringIndexPrimitives_2: should be empty")
+	sz := GetStringPoolSize()
 	if sz != 0 {
 		t.Errorf("Expected string repo size 0 but observed: %d", sz)
 	}
@@ -121,7 +121,7 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 			str = randomString(stringLength)
 		}
 		index = GetStringIndex(&str)
-		t.Logf("DEBUG %d) string %d %s\n", ix, index, str)
+		//t.Logf("DEBUG %d) string %d %s\n", ix, index, str)
 	}
 	t.Logf("last index value: %d\n", index)
 	str = *GetStringPointer(0)
@@ -134,12 +134,12 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 	str = *GetStringPointer(finalIndex)
 	t.Logf("str1 index %d: %s\n", finalIndex, str)
 
-	sz = GetStringRepoSize()
+	sz = GetStringPoolSize()
 	if sz != LIMIT {
 		t.Errorf("Expected string repo size %d but observed: %d", LIMIT, sz)
 	}
 	if sz < 100 {
-		DumpStringRepo("TestStringIndexPrimitives_2: final repo")
+		DumpStringPool("TestStringIndexPrimitives_2: final repo")
 	}
 
 }

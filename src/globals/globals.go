@@ -86,6 +86,12 @@ type Globals struct {
 	// To be set up in jvmStart.
 	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
+
+	// ----- String Pool
+	StringPoolTable map[string]uint32
+	StringPoolList  []string
+	StringPoolNext  uint32
+	StringPoolLock  sync.Mutex
 }
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -120,6 +126,12 @@ func InitGlobals(progName string) Globals {
 		JvmFrameStackShown:   false,
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
+
+		// ----- String Pool
+		StringPoolTable: make(map[string]uint32),
+		StringPoolList:  nil,
+		StringPoolNext:  uint32(0),
+		// Nothing to do for StringPoolLock
 	}
 
 	InitJavaHome()
