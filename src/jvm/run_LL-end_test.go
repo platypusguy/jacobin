@@ -724,7 +724,7 @@ func TestPutFieldSimpleInt(t *testing.T) {
 	// and finally the UTF8 records pointed to by the NameAndType entry above
 	CP.Utf8Refs = make([]string, 2)
 	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = "I"
+	CP.Utf8Refs[1] = types.Int
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
@@ -773,7 +773,7 @@ func TestPutFieldDouble(t *testing.T) {
 	// and finally the UTF8 records pointed to by the NameAndType entry above
 	CP.Utf8Refs = make([]string, 2)
 	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = "D"
+	CP.Utf8Refs[1] = types.Double
 
 	f.CP = &CP
 

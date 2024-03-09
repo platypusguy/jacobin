@@ -7,6 +7,7 @@
 package object
 
 import (
+	"jacobin/types"
 	"path/filepath"
 	"testing"
 )
@@ -18,55 +19,55 @@ func TestDumpObjectFieldTable(t *testing.T) {
 	obj.Klass = &klassType
 
 	myFloatField := Field{
-		Ftype:  "F",
+		Ftype:  types.Float,
 		Fvalue: 1.0,
 	}
 	obj.FieldTable["myFloat"] = myFloatField
 
 	myDoubleField := Field{
-		Ftype:  "D",
+		Ftype:  types.Double,
 		Fvalue: 2.0,
 	}
 	obj.FieldTable["myDouble"] = myDoubleField
 
 	myIntField := Field{
-		Ftype:  "I",
+		Ftype:  types.Int,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myInt"] = myIntField
 
 	myLongField := Field{
-		Ftype:  "J",
+		Ftype:  types.Long,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myLong"] = myLongField
 
 	myShortField := Field{
-		Ftype:  "S",
+		Ftype:  types.Short,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myShort"] = myShortField
 
 	myByteField := Field{
-		Ftype:  "B",
+		Ftype:  types.Byte,
 		Fvalue: 0x61,
 	}
 	obj.FieldTable["myByte"] = myByteField
 
 	myStaticTrueField := Field{
-		Ftype:  "XZ",
+		Ftype:  types.Static + types.Bool,
 		Fvalue: true,
 	}
 	obj.FieldTable["myStaticTrue"] = myStaticTrueField
 
 	myFalseField := Field{
-		Ftype:  "Z",
+		Ftype:  types.Bool,
 		Fvalue: false,
 	}
 	obj.FieldTable["myFalse"] = myFalseField
 
 	myCharField := Field{
-		Ftype:  "C",
+		Ftype:  types.Char,
 		Fvalue: 'C',
 	}
 	obj.FieldTable["myChar"] = myCharField
@@ -88,55 +89,55 @@ func TestFormatField(t *testing.T) {
 	obj.Klass = &klassType
 
 	myFloatField := Field{
-		Ftype:  "F",
+		Ftype:  types.Float,
 		Fvalue: 1.0,
 	}
 	obj.FieldTable["myFloat"] = myFloatField
 
 	myDoubleField := Field{
-		Ftype:  "D",
+		Ftype:  types.Double,
 		Fvalue: 2.0,
 	}
 	obj.FieldTable["myDouble"] = myDoubleField
 
 	myIntField := Field{
-		Ftype:  "I",
+		Ftype:  types.Int,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myInt"] = myIntField
 
 	myLongField := Field{
-		Ftype:  "J",
+		Ftype:  types.Long,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myLong"] = myLongField
 
 	myShortField := Field{
-		Ftype:  "S",
+		Ftype:  types.Short,
 		Fvalue: 42,
 	}
 	obj.FieldTable["myShort"] = myShortField
 
 	myByteField := Field{
-		Ftype:  "B",
+		Ftype:  types.Byte,
 		Fvalue: 0x61,
 	}
 	obj.FieldTable["myByte"] = myByteField
 
 	myStaticTrueField := Field{
-		Ftype:  "XZ",
+		Ftype:  types.Static + types.Bool,
 		Fvalue: true,
 	}
 	obj.FieldTable["myStaticTrue"] = myStaticTrueField
 
 	myFalseField := Field{
-		Ftype:  "Z",
+		Ftype:  types.Bool,
 		Fvalue: false,
 	}
 	obj.FieldTable["myFalse"] = myFalseField
 
 	myCharField := Field{
-		Ftype:  "C",
+		Ftype:  types.Char,
 		Fvalue: 'C',
 	}
 	obj.FieldTable["myChar"] = myCharField
