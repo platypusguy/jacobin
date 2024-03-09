@@ -4,6 +4,8 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
+package object
+
 /*
 Overview of the String Pool Functions
 
@@ -60,7 +62,6 @@ DumpStringPool(context string) -
   - Dump the contents of the string Pool.
   - If the context parameter is not "", the context string will be shown at the beginning of the dump.
 */
-package object
 
 import (
 	"fmt"
@@ -78,7 +79,7 @@ The string pool mid-level functions follow
 ------------------------------------------
 */
 
-// MakeEmptyStringObject() creates an empty object.Object.
+// MakeEmptyStringObject creates an empty object.Object.
 // It is expected that the caller will fill in the FieldTable.
 func MakeEmptyStringObject() *Object {
 	object := Object{}
@@ -106,7 +107,7 @@ func NewPoolStringFromGoString(str string) *Object {
 	return objPtr
 }
 
-// convenience method to extract a Go string from a Pool string
+// GetGoStringFromObject : convenience method to extract a Go string from a Pool string
 func GetGoStringFromObject(strPtr *Object) string {
 	obj := *strPtr
 	index := obj.FieldTable["value"].Fvalue.(uint32)
