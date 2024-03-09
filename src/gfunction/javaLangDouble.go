@@ -143,15 +143,15 @@ func doubleEquals(params []interface{}) interface{} {
 func doubleParseDouble(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := string(parmObj.FieldTable["value"].Fvalue.([]byte))
+	strArg := object.GetGoStringFromObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble: string length < 1")
+		return getGErrBlk(exceptions.NumberFormatException, "doubleParseDouble: string length < 1")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.doubleParseDouble Error(): "+err.Error())
+		return getGErrBlk(exceptions.NumberFormatException, "doubleParseDouble Error(): "+err.Error())
 	}
 	return output
 
@@ -162,6 +162,6 @@ func doubleToString(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	dd = parmObj.FieldTable["value"].Fvalue.(float64)
 	str := fmt.Sprintf("%f", dd)
-	objPtr := object.CreateCompactStringFromGoString(&str)
+	objPtr := object.NewPoolStringFromGoString(str)
 	return objPtr
 }

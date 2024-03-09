@@ -42,8 +42,8 @@ func Load_Io_PrintStream() map[string]GMeth {
 		}
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/String;)V"] = // println string
 		GMeth{
-			ParamSlots: 1, // [0] =  StringConst to print
-			GFunction:  Println,
+			ParamSlots: 1,
+			GFunction:  PrintlnString,
 		}
 	MethodSignatures["java/io/PrintStream.println(B)V"] = // println byte
 		GMeth{
@@ -97,7 +97,7 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
 		GMeth{
 			ParamSlots: 1, // [0] =  StringConst to print
-			GFunction:  PrintS,
+			GFunction:  PrintString,
 		}
 	MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
 		GMeth{
@@ -157,26 +157,13 @@ func Load_Io_PrintStream() map[string]GMeth {
 	return MethodSignatures
 }
 
-// Println is the go equivalent of System.out.println().
-func Println(params []interface{}) interface{} {
+func PrintlnString(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case *object.Object:
-	case []byte:
-		str := string(params[1].([]byte))
-		fmt.Println(str)
-		return nil
-	default:
-		errMsg := fmt.Sprintf("Println: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
-	}
-	strAddr := params[1].(*object.Object)
-	fld := strAddr.FieldTable["value"]
-	switch fld.Fvalue.(type) {
-	case []byte:
-		str := string(fld.Fvalue.([]byte))
+		str := object.GetGoStringFromObject(params[1].(*object.Object))
 		fmt.Fprintln(params[0].(*os.File), str)
 	default:
-		errMsg := fmt.Sprintf("Println: expected Fvalue of type []byte but observed type %T\n", fld.Fvalue)
+		errMsg := fmt.Sprintf("PrintlnString: expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	return nil
@@ -295,27 +282,15 @@ func PrintDouble(params []interface{}) interface{} {
 }
 
 // Print string
-func PrintS(params []interface{}) interface{} {
+func PrintString(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case *object.Object:
-		strAddr := params[1].(*object.Object)
-		fld := strAddr.FieldTable["value"]
-		switch fld.Fvalue.(type) {
-		case []byte:
-			bytes := fld.Fvalue.([]byte)
-			fmt.Fprint(params[0].(*os.File), string(bytes))
-		default:
-			errMsg := fmt.Sprintf("PrintS: cannot process type %T\n", fld.Fvalue)
-			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
-		}
-	case []byte:
-		bytes := params[1].([]byte)
-		fmt.Fprint(params[0].(*os.File), string(bytes))
+		str := object.GetGoStringFromObject(params[1].(*object.Object))
+		fmt.Fprint(params[0].(*os.File), str)
 	default:
-		errMsg := fmt.Sprintf("PrintS: cannot process params[1] type %T\n", params[1])
+		errMsg := fmt.Sprintf("PrintString: expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
-
 	return nil
 
 }
@@ -324,11 +299,15 @@ func PrintS(params []interface{}) interface{} {
 func PrintObject(params []interface{}) interface{} {
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
-	if fld.Ftype == types.ByteArray {
+	switch fld.Ftype {
+	case types.StringIndex:
+		str := object.GetGoStringFromObject(objPtr)
+		fmt.Fprintln(params[0].(*os.File), str)
+	case types.ByteArray:
 		fmt.Fprint(params[0].(*os.File), string(fld.Fvalue.([]byte)))
-		return nil
+	default:
+		fmt.Fprint(params[0].(*os.File), fld.Fvalue)
 	}
-	fmt.Fprint(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
@@ -344,7 +323,7 @@ func Printf(params []interface{}) interface{} {
 		return retval
 	}
 	objPtr := retval.(*object.Object)
-	str := object.GetGoStringFromJavaStringPtr(objPtr)
+	str := object.GetGoStringFromObject(objPtr)
 	fmt.Fprint(params[0].(*os.File), str)
 	return params[0] // Return the PrintStream object
 

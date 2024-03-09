@@ -161,14 +161,13 @@ func forceGC([]interface{}) interface{} {
 // Get a property
 func getProperty(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object) // string
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	prop := string(bytes)
+	propStr := object.GetGoStringFromObject(propObj)
 
 	var value string
 	g := globals.GetGlobalRef()
 	operSys := runtime.GOOS
 
-	switch prop {
+	switch propStr {
 	case "file.encoding":
 		value = g.FileEncoding
 	case "file.separator":
@@ -184,7 +183,7 @@ func getProperty(params []interface{}) interface{} {
 	case "java.vendor":
 		value = "Jacobin"
 	case "java.vendor.url":
-		value = "http://jacobin.org"
+		value = "https://jacobin.org"
 	case "java.vendor.version":
 		value = g.Version
 	case "java.version":
@@ -232,6 +231,6 @@ func getProperty(params []interface{}) interface{} {
 		return object.Null
 	}
 
-	obj := object.CreateCompactStringFromGoString(&value)
+	obj := object.NewPoolStringFromGoString(value)
 	return obj
 }

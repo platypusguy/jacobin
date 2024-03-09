@@ -51,7 +51,7 @@ func Load_Lang_Class() map[string]GMeth {
 // This duplicates the behavior of OpenJDK JVMs.
 func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
-	str := object.GetGoStringFromJavaStringPtr(primitive)
+	str := object.GetGoStringFromObject(primitive)
 
 	var k *classloader.Klass
 	var err error
@@ -76,13 +76,13 @@ func getPrimitiveClass(params []interface{}) interface{} {
 		k, err = simpleClassLoadByName("java/lang/Void")
 	default:
 		k = nil
-		err = errors.New("urecognized primitive")
+		err = errors.New("getPrimitiveClass: unrecognized primitive")
 	}
 
 	if err == nil {
 		return k
 	} else {
-		errMsg := fmt.Sprintf("getPrimitiveClass() does not handle: %s", str)
+		errMsg := fmt.Sprintf("getPrimitiveClass: does not handle: %s", str)
 		_ = log.Log(errMsg, log.SEVERE)
 		return errors.New(errMsg)
 	}
@@ -108,14 +108,14 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 		_ = log.Log(errMsg, log.SEVERE)
 		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
-		return nil, errors.New(errMsg) // needed for testing, which does not shutdown on failure
+		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
 	} else {
 		return classloader.MethAreaFetch(className), nil
 	}
 }
 
 // returns boolean indicating whether assertions are enabled or not.
-func getAssertionsEnabledStatus(params []interface{}) interface{} {
+func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// note that statics have been preloaded before this function
 	// can be called, and CLI processing has also occurred. So, we
 	// know we have the latest assertion-enabled status.
