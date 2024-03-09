@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package object
+package stringPool
 
 import (
 	"math/rand"
@@ -121,7 +121,7 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 			str = randomString(stringLength)
 		}
 		index = GetStringIndex(&str)
-		//t.Logf("DEBUG %d) string %d %s\n", ix, index, str)
+		// t.Logf("DEBUG %d) string %d %s\n", ix, index, str)
 	}
 	t.Logf("last index value: %d\n", index)
 	str = *GetStringPointer(0)

@@ -181,7 +181,7 @@ func consolePrintfReadLine(params []interface{}) interface{} {
 }
 
 func consoleReadPassword([]interface{}) interface{} {
-	password, err := term.ReadPassword(syscall.Stdin)
+	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		errMsg := fmt.Sprintf("consoleReadPassword term.ReadPassword: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)

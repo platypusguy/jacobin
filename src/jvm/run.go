@@ -21,6 +21,7 @@ import (
 	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/types"
 	"jacobin/util"
@@ -1800,7 +1801,7 @@ frameInterpreter:
 			objField := obj.FieldTable[fieldName]
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
-				fieldValue = object.GetStringPointer(fieldValue.(uint32))
+				fieldValue = stringPool.GetStringPointer(fieldValue.(uint32))
 			} else {
 				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
 			}

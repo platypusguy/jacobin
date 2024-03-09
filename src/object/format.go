@@ -9,6 +9,7 @@ package object
 import (
 	"fmt"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"strings"
 )
@@ -65,7 +66,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	// Process the other types.
 	switch ftype {
 	case types.StringIndex:
-		return *GetStringPointer(fvalue.(uint32))
+		return *stringPool.GetStringPointer(fvalue.(uint32))
 	case types.Bool:
 		// Special handling for boolean.
 		if flagStatic {

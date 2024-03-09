@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"jacobin/object"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 )
@@ -72,7 +73,7 @@ func localeFromLanguageCountry(params []interface{}) interface{} {
 	str := langStr + "_" + countryStr
 	fld := params[0].(*object.Object).FieldTable["value"]
 	fld.Ftype = types.StringIndex
-	fld.Fvalue = object.GetStringIndex(&str)
+	fld.Fvalue = stringPool.GetStringIndex(&str)
 	params[0].(*object.Object).FieldTable["value"] = fld
 
 	return nil
@@ -95,7 +96,7 @@ func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	str := langStr + "_" + countryStr + "_" + variantStr
 	fld := params[0].(*object.Object).FieldTable["value"]
 	fld.Ftype = types.StringIndex
-	fld.Fvalue = object.GetStringIndex(&str)
+	fld.Fvalue = stringPool.GetStringIndex(&str)
 	params[0].(*object.Object).FieldTable["value"] = fld
 
 	return nil

@@ -8,7 +8,9 @@ package object
 
 import (
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
+	"unsafe"
 )
 
 // Strings are so commonly used in Java, that it makes sense
@@ -112,4 +114,45 @@ func IsJavaString(unknown any) bool {
 	}
 
 	return *objPtr.Klass == "java/lang/String"
+}
+
+/*
+------------------------------------------
+The string pool mid-level functions follow
+------------------------------------------
+*/
+
+// MakeEmptyStringObject creates an empty object.Object.
+// It is expected that the caller will fill in the FieldTable.
+func MakeEmptyStringObject() *Object {
+	object := Object{}
+	ptrObject := uintptr(unsafe.Pointer(&object))
+	object.Mark.Hash = uint32(ptrObject)
+
+	// TODO: Change object.Klass to be type uint32
+	object.Klass = &StringClassName // java/lang/String
+
+	// initialize the map of this object's fields
+	object.FieldTable = make(map[string]Field)
+	return &object
+}
+
+func NewPoolStringFromGoString(str string) *Object {
+	objPtr := MakeEmptyStringObject()
+	/* TODO - Is ignoring the COMPACT_STRINGS flag valid?
+	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
+		objPtr.FieldTable["value"] = Field{types.RuneArray, in}
+	} else {
+		objPtr.FieldTable["value"] = Field{types.StringIndex, GetStringIndex(&in)}
+	}
+	*/
+	objPtr.FieldTable["value"] = Field{types.StringIndex, stringPool.GetStringIndex(&str)}
+	return objPtr
+}
+
+// GetGoStringFromObject : convenience method to extract a Go string from a Pool string
+func GetGoStringFromObject(strPtr *Object) string {
+	obj := *strPtr
+	index := obj.FieldTable["value"].Fvalue.(uint32)
+	return *stringPool.GetStringPointer(index)
 }

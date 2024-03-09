@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io"
 	"jacobin/classloader"
+	"sync"
+
+	// "jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/types"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 )
 

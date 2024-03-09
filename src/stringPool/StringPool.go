@@ -1,10 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Andrew Binstock. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package object
+package stringPool
 
 /*
 Overview of the String Pool Functions
@@ -66,53 +66,10 @@ DumpStringPool(context string) -
 import (
 	"fmt"
 	"jacobin/globals"
-	"jacobin/types"
 	"os"
 	"sort"
 	"strings"
-	"unsafe"
 )
-
-/*
-------------------------------------------
-The string pool mid-level functions follow
-------------------------------------------
-*/
-
-// MakeEmptyStringObject creates an empty object.Object.
-// It is expected that the caller will fill in the FieldTable.
-func MakeEmptyStringObject() *Object {
-	object := Object{}
-	ptrObject := uintptr(unsafe.Pointer(&object))
-	object.Mark.Hash = uint32(ptrObject)
-
-	// TODO: Change object.Klass to be type uint32
-	object.Klass = &StringClassName // java/lang/String
-
-	// initialize the map of this object's fields
-	object.FieldTable = make(map[string]Field)
-	return &object
-}
-
-func NewPoolStringFromGoString(str string) *Object {
-	objPtr := MakeEmptyStringObject()
-	/* TODO - Is ignoring the COMPACT_STRINGS flag valid?
-	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
-		objPtr.FieldTable["value"] = Field{types.RuneArray, in}
-	} else {
-		objPtr.FieldTable["value"] = Field{types.StringIndex, GetStringIndex(&in)}
-	}
-	*/
-	objPtr.FieldTable["value"] = Field{types.StringIndex, GetStringIndex(&str)}
-	return objPtr
-}
-
-// GetGoStringFromObject : convenience method to extract a Go string from a Pool string
-func GetGoStringFromObject(strPtr *Object) string {
-	obj := *strPtr
-	index := obj.FieldTable["value"].Fvalue.(uint32)
-	return *GetStringPointer(index)
-}
 
 /*
 ------------------------------------------

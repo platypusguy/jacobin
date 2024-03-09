@@ -12,6 +12,9 @@ import (
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
+
+	// "jacobin/object"
 	"jacobin/types"
 	"os"
 	"strconv"
@@ -277,6 +280,7 @@ func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	}
 
 	klass.className = className
+	klass.classNameIndex = stringPool.GetStringIndex(&className)
 	return pos, nil
 }
 
@@ -330,6 +334,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 	}
 
 	klass.superClass = superClassName
+	klass.superClassIndex = stringPool.GetStringIndex(&superClassName)
 	return pos, nil
 }
 

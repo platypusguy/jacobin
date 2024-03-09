@@ -48,22 +48,24 @@ var ExtensionCL Classloader
 
 // ParsedClass contains all the parsed fields
 type ParsedClass struct {
-	javaVersion    int
-	className      string // name of class without path and without .class
-	superClass     string // name of superclass for this class
-	moduleName     string
-	packageName    string
-	interfaceCount int   // number of interfaces this class implements
-	interfaces     []int // the interfaces this class implements, as indices into utf8Refs
-	fieldCount     int   // number of fields in this class
-	fields         []field
-	methodCount    int
-	methods        []method
-	attribCount    int
-	attributes     []attr
-	sourceFile     string
-	bootstrapCount int // the number of bootstrap methods
-	bootstraps     []bootstrapMethod
+	javaVersion     int
+	className       string // name of class without path and without .class
+	classNameIndex  uint32 // index into StringPool
+	superClass      string // name of superclass for this class
+	superClassIndex uint32 // index of into StringPool
+	moduleName      string
+	packageName     string
+	interfaceCount  int   // number of interfaces this class implements
+	interfaces      []int // the interfaces this class implements, as indices into utf8Refs
+	fieldCount      int   // number of fields in this class
+	fields          []field
+	methodCount     int
+	methods         []method
+	attribCount     int
+	attributes      []attr
+	sourceFile      string
+	bootstrapCount  int // the number of bootstrap methods
+	bootstraps      []bootstrapMethod
 
 	deprecated bool
 
@@ -433,6 +435,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	}
 	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
+	// prepare the class for posting
 	classToPost := convertToPostableClass(&fullyParsedClass)
 	eKF := Klass{
 		Status: 'F', // F = format-checked
@@ -441,7 +444,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	}
 	MethAreaInsert(fullyParsedClass.className, &eKF)
 
-	// // record the class in the classloader
+	// record the class in the classloader
 	ClassesLock.Lock()
 	cl.ClassCount += 1
 	ClassesLock.Unlock()
@@ -456,8 +459,12 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd := ClData{}
-	kd.Name = fullyParsedClass.className
-	kd.Superclass = fullyParsedClass.superClass
+
+	kd.Name = fullyParsedClass.className // eventually to be deleted in favor of class index
+	kd.NameIndex = fullyParsedClass.classNameIndex
+	kd.Superclass = fullyParsedClass.superClass // eventually to be delete in favor of class index
+	kd.SuperclassIndex = fullyParsedClass.superClassIndex
+
 	kd.Module = fullyParsedClass.moduleName
 	kd.Pkg = fullyParsedClass.packageName
 	for i := 0; i < len(fullyParsedClass.interfaces); i++ {
