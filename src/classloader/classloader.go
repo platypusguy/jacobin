@@ -342,7 +342,7 @@ func LoadClassFromNameOnly(className string) error {
 
 // LoadClassFromFile first canonicalizes the filename, and reads
 // the indicated file, and runs it through the classloader.
-func LoadClassFromFile(cl Classloader, fname string) (string, error) {
+func LoadClassFromFile(cl Classloader, fname string) (uint32, error) {
 	var filename string
 	if !strings.HasSuffix(fname, ".class") {
 		filename = fname + ".class"
@@ -353,12 +353,12 @@ func LoadClassFromFile(cl Classloader, fname string) (string, error) {
 		msg := "LoadClassFromFile: class name" + fname + " is invalid"
 		_ = log.Log(msg, log.SEVERE)
 		debug.PrintStack()
-		return "", errors.New(msg)
+		return types.InvalidIndex, errors.New(msg)
 	}
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		_ = log.Log("LoadClassFromFile: os.ReadFile("+filename+") failed", log.SEVERE)
-		return "", err
+		return types.InvalidIndex, err
 	}
 	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
 
@@ -393,45 +393,45 @@ func GetMainClassFromJar(cl Classloader, jarFileName string) (string, error) {
 	return jar.getMainClass(), nil
 }
 
-func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (string, error) {
+func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (uint32, error) {
 	jar, err := getJarFile(cl, jarFileName)
 
 	if err != nil {
-		return "", err
+		return types.InvalidIndex, err
 	}
 
 	result, err := jar.loadClass(filename)
 
 	if err != nil {
-		return "", err
+		return types.InvalidIndex, err
 	}
 
 	if !result.Success {
-		return "", fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
+		return types.InvalidIndex, fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
 	}
 
 	return ParseAndPostClass(&cl, filename, *result.Data)
 }
 
-func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (string, error) {
+func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (uint32, error) {
 	return ParseAndPostClass(&cl, filename, rawBytes)
 }
 
 // ParseAndPostClass parses a class, presented as a slice of bytes, and
 // if no errors occurred, posts/loads it to the method area.
-func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (string, error) {
+func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint32, error) {
 
 	_ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.CLASS)
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
-		return "", fmt.Errorf("parsing error")
+		return types.InvalidIndex, fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
-		return "", fmt.Errorf("format-checking error")
+		return types.InvalidIndex, fmt.Errorf("format-checking error")
 	}
 	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
@@ -450,7 +450,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (strin
 	ClassesLock.Unlock()
 	_ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.CLASS)
 
-	return fullyParsedClass.className, nil
+	return fullyParsedClass.classNameIndex, nil
 }
 
 // load the parsed class into a form suitable for posting to the method area (which is

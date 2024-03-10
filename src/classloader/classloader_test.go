@@ -26,6 +26,7 @@ import (
 // This files tests remaining routines.
 
 func TestInitOfClassloaders(t *testing.T) {
+	globals.InitGlobals("test")
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	_ = log.SetLogLevel(log.WARNING)
 
@@ -100,9 +101,9 @@ func TestLoadClassFromFileInvalidName(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	name, err := LoadClassFromFile(Classloader{}, "noSuchFile")
+	nameIndex, err := LoadClassFromFile(Classloader{}, "noSuchFile")
 
-	if name != "" {
+	if nameIndex != types.InvalidIndex {
 		t.Errorf("Expected empty filename due to error, got: %s", err.Error())
 	}
 	if err == nil {

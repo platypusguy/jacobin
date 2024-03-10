@@ -15,6 +15,7 @@ import (
 	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/types"
 	"os"
@@ -84,7 +85,7 @@ func JVMrun() int {
 	}
 	classloader.LoadBaseClasses() // must follow classloader.Init
 
-	var mainClass string
+	var mainClassNameIndex uint32
 
 	if globPtr.StartingJar != "" {
 		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, globPtr.StartingJar)
@@ -98,12 +99,12 @@ func JVMrun() int {
 			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", globPtr.StartingJar), log.INFO)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
-		mainClass, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
+		mainClassNameIndex, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	} else if globPtr.StartingClass != "" {
-		mainClass, err = classloader.LoadClassFromFile(classloader.BootstrapCL, globPtr.StartingClass)
+		mainClassNameIndex, err = classloader.LoadClassFromFile(classloader.BootstrapCL, globPtr.StartingClass)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
@@ -134,8 +135,9 @@ func JVMrun() int {
 	MainThread.AddThreadToTable(globPtr)
 
 	// begin execution
-	_ = log.Log("Starting execution with: "+mainClass, log.INFO)
-	status = StartExec(mainClass, &MainThread, globPtr)
+	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
+	_ = log.Log("Starting execution with: "+*mainClass, log.INFO)
+	status = StartExec(*mainClass, &MainThread, globPtr)
 
 	if status != nil {
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
