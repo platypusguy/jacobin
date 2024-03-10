@@ -113,7 +113,7 @@ func IsJavaString(unknown any) bool {
 		return false
 	}
 
-	return *objPtr.Klass == "java/lang/String"
+	return *objPtr.Klass == StringClassName
 }
 
 /*
@@ -155,4 +155,11 @@ func GetGoStringFromObject(strPtr *Object) string {
 	obj := *strPtr
 	index := obj.FieldTable["value"].Fvalue.(uint32)
 	return *stringPool.GetStringPointer(index)
+}
+
+// UpdateObjectFromGoString : Set the value field of the given object to the given string
+func UpdateObjectFromGoString(objPtr *Object, argString string) {
+	index := stringPool.GetStringIndex(&argString)
+	fld := Field{Ftype: types.StringIndex, Fvalue: index}
+	objPtr.FieldTable["value"] = fld
 }

@@ -132,20 +132,10 @@ func InitGlobals(progName string) Globals {
 		JvmFrameStackShown:   false,
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
-
-		// // ----- String Pool
-		// StringPoolTable: make(map[string]uint32),
-		// StringPoolList:  nil,
-		// StringPoolNext:  uint32(0),
-		// Nothing to do for StringPoolLock
 	}
 
 	// ----- String Pool
-	// create the string pool and pre-populate it for class instantiation
-	StringPoolTable = make(map[string]uint32)
-	StringPoolTable["java/lang/Object"] = 0
-	StringPoolList = append(StringPoolList, "java/lang/Object")
-	StringPoolNext = uint32(1)
+	InitStringPool()
 
 	InitJavaHome()
 	if global.JavaHome == "" || global.JavaVersion == "" {
@@ -280,4 +270,27 @@ func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) 
 	errMsg := fmt.Sprintf("\n*Attempt to acess uninitialized InstantiateClass pointer func: classname=%s\n", classname)
 	fmt.Fprintf(os.Stderr, errMsg)
 	return nil, errors.New(errMsg)
+}
+
+func InitStringPool() {
+	// NOTE that TestStringIndexPrimitives_2 is dependent on the pool size!
+
+	StringPoolLock.Lock()
+
+	// create the string pool
+	StringPoolTable = make(map[string]uint32)
+	StringPoolList = nil
+
+	// Add "java/lang/Object"
+	StringPoolTable["java/lang/Object"] = 0
+	StringPoolList = append(StringPoolList, "java/lang/Object")
+
+	// Add "java/lang/String"
+	StringPoolTable["java/lang/String"] = 1
+	StringPoolList = append(StringPoolList, "java/lang/String")
+
+	// Set up next available index
+	StringPoolNext = uint32(2)
+
+	StringPoolLock.Unlock()
 }
