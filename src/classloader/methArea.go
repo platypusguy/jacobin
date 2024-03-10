@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"sync"
 	"time"
@@ -21,9 +22,42 @@ var MethArea *sync.Map
 var methAreaSize = 0
 var MethAreaMutex sync.RWMutex // All additions or updates to MethArea map come through this mutex
 
-// MethAreaFetch retrieves a pointer to a loaded class from the
-// method area. In the event the class is not present there, the
-// function returns nil.
+// InitMethodArea initializes MethArea (the method area table of loaded classes),
+// initializes the counter of classes, and preloads the synthetic array classes.
+func InitMethodArea() {
+	MethAreaMutex.Lock()
+	ma := sync.Map{}
+	MethArea = &ma
+	methAreaSize = 0
+	MethAreaMutex.Unlock()
+
+	// preload the synthetic classes for arrays
+	MethAreaPreload()
+}
+
+// MethAreaPreload preloads the synthetic entries for array types into
+// the method area.
+func MethAreaPreload() {
+	emptyKlass := Klass{
+		Status: 'N', // N = instantiated
+		Loader: "bootstrap",
+		Data:   &ClData{Superclass: "java/lang/Object"}, // empty class info
+	}
+	classesToPreload := []string{
+		types.ByteArray, types.FloatArray, types.IntArray,
+		types.RefArray, types.RuneArray,
+	}
+
+	for _, x := range classesToPreload {
+		k := emptyKlass
+		k.Data.Name = x
+		k.Data.NameIndex = stringPool.GetStringIndex(&x)
+		MethAreaInsert(x, &emptyKlass)
+	}
+}
+
+// MethAreaFetch retrieves a pointer to a loaded class from the method area.
+// In the event the class is not present there, the function returns nil.
 func MethAreaFetch(key string) *Klass {
 	MethAreaMutex.RLock()
 	v, _ := MethArea.Load(key)
@@ -36,8 +70,7 @@ func MethAreaFetch(key string) *Klass {
 	return v.(*Klass)
 }
 
-// MethAreaInsert adds a class to the method area, using a pointer
-// to the parsed class.
+// MethAreaInsert adds a class to the method area, using a pointer to the parsed class.
 func MethAreaInsert(name string, klass *Klass) {
 	_ = log.Log("MethAreaInsert: key("+name+")", log.CLASS)
 	MethAreaMutex.Lock()
@@ -50,9 +83,8 @@ func MethAreaInsert(name string, klass *Klass) {
 	}
 }
 
-// Size returns the number of entries in MethArea.
-// Because the golang's sync.Map does not have a len() function
-// we have to track our additions with a counter, which is
+// MethAreaSize returns the number of entries in MethArea. Because the golang's sync.Map
+// does not have a len() function, we need to track our additions with a counter, which is
 // returned here.
 func MethAreaSize() int {
 	MethAreaMutex.RLock()
@@ -61,8 +93,8 @@ func MethAreaSize() int {
 	return size
 }
 
-// this function deletes an entry in the method area
-// at present, it is used only in testing
+// MethAreaDelete deletes an entry in the method area
+// **at present, it is used only in testing **
 func MethAreaDelete(key string) {
 	if MethAreaFetch(key) != nil {
 		MethAreaMutex.Lock()
@@ -94,37 +126,4 @@ func WaitForClassStatus(className string) error {
 		}
 	}
 	return nil
-}
-
-// InitMethodArea simply initializes MethArea (the method area
-// table of loaded classes) and initializes the counter of classes.
-func InitMethodArea() {
-	MethAreaMutex.Lock()
-	ma := sync.Map{}
-	MethArea = &ma
-	methAreaSize = 0
-	MethAreaMutex.Unlock()
-
-	// preload the synthetic classes for arrays
-	MethAreaPreload()
-}
-
-// MethAreaPreload preloads the synthetic entries for array types into
-// the method area.
-func MethAreaPreload() {
-	emptyKlass := Klass{
-		Status: 'N', // N = instantiated
-		Loader: "bootstrap",
-		Data:   &ClData{Superclass: "java/lang/Object"}, // empty class info
-	}
-	classesToPreload := []string{
-		types.ByteArray, types.FloatArray, types.IntArray,
-		types.RefArray, types.RuneArray,
-	}
-
-	for _, x := range classesToPreload {
-		k := emptyKlass
-		k.Data.Name = x
-		MethAreaInsert(x, &emptyKlass)
-	}
 }
