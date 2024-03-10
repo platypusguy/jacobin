@@ -100,3 +100,52 @@ func TestCompareToIgnoreCaseNotOk_2(t *testing.T) {
 		t.Errorf("TestCompareToIgnoreCaseOk_2: expected: >0, observed: %d", result)
 	}
 }
+
+func TestStringLength_1(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "It was a graveyard smash!"
+	aObj := object.NewPoolStringFromGoString(aString)
+	params := []interface{}{aObj}
+	result := stringLength(params).(int64)
+	if result != 25 {
+		t.Errorf("TestStringLength_1: expected: 25, observed: %d", result)
+	}
+}
+
+func TestStringLength_2(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := ""
+	aObj := object.NewPoolStringFromGoString(aString)
+	params := []interface{}{aObj}
+	result := stringLength(params).(int64)
+	if result != 0 {
+		t.Errorf("TestStringLength_2: expected: 0, observed: %d", result)
+	}
+}
+
+func TestSprintf_1(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "Mary had a %s little lamb"
+	aObj := object.NewPoolStringFromGoString(aString)
+	params := []interface{}{aObj}
+	resultObj := (sprintf(params)).(*object.Object)
+	str := object.GetGoStringFromObject(resultObj)
+	if str != aString {
+		t.Errorf("TestSprintf_1: expected: %s, observed: %s", aString, str)
+	}
+}
+
+func TestSprintf_2(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "Mary had a %s lamb"
+	bString := "little"
+	cString := "Mary had a little lamb"
+	aObj := object.NewPoolStringFromGoString(aString)
+	bObj := object.NewPoolStringFromGoString(bString)
+	params := []interface{}{aObj, bObj}
+	resultObj := (sprintf(params)).(*object.Object)
+	str := object.GetGoStringFromObject(resultObj)
+	if str != cString {
+		t.Errorf("TestSprintf_2: expected: %s, observed: %s", cString, str)
+	}
+}

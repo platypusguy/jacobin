@@ -411,12 +411,13 @@ func sprintf(params []interface{}) interface{} {
 
 func StringFormatter(params []interface{}) interface{} {
 	lenParams := len(params)
+	//fmt.Printf("DEBUG StringFormatter lenParams=%d\n", lenParams)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
 		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
 	}
 	if lenParams == 1 { // No parameters beyond the format string
-		formatStringObj := params[1].(*object.Object) // the format string is passed as a pointer to a string object
+		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
 		return formatStringObj
 	}
 
@@ -424,9 +425,17 @@ func StringFormatter(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
-		formatString = object.GetGoStringFromObject(formatStringObj)
-	case []uint8:
-		formatString = string(params[0].([]byte))
+		switch formatStringObj.FieldTable["value"].Ftype {
+		case types.StringIndex:
+			formatString = object.GetGoStringFromObject(formatStringObj)
+		case types.ByteArray:
+			formatString = string(formatStringObj.FieldTable["value"].Fvalue.([]byte))
+		default:
+			errMsg := fmt.Sprintf("StringFormatter: Invalid Ftype in format string object: %s",
+				formatStringObj.FieldTable["value"].Ftype)
+			return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+		}
+		//fmt.Printf("DEBUG StringFormatter formatString=%s\n", formatString)
 	default:
 		errMsg := fmt.Sprintf("StringFormatter: Invalid variable type for format string: %T", params[0])
 		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
@@ -437,21 +446,26 @@ func StringFormatter(params []interface{}) interface{} {
 	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 	valuesOut := []any{}
 
-	for i := 0; i < len(valuesIn); i++ {
-		// fmt.Printf("DEBUG i: %d of %d\n", i+1, len(valuesIn))
-		// fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
-		if object.IsJavaString(valuesIn[i]) {
-			valuesOut = append(valuesOut, object.GetGoStringFromObject(valuesIn[i]))
-			// fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+	for ii := 0; ii < len(valuesIn); ii++ {
+		//fmt.Printf("DEBUG StringFormatter ii: %d of %d\n", ii+1, len(valuesIn))
+		//fmt.Printf("DEBUG StringFormatter valuesIn[ii] field type: %s, field value: %v\n",
+		//	valuesIn[ii].FieldTable["value"].Ftype, valuesIn[ii].FieldTable["value"].Fvalue)
+		if valuesIn[ii].FieldTable["value"].Ftype == types.StringIndex {
+			str := object.GetGoStringFromObject(valuesIn[ii])
+			valuesOut = append(valuesOut, str)
+			//fmt.Printf("DEBUG StringFormatter got a string: %s\n", str)
 		} else {
-			// str := valuesIn[i].FormatField()
-			// fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField:\n%s", i, str)
+			//str := valuesIn[ii].FormatField("value")
+			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField: %s\n", ii, str)
 
 			// Extract the field.
-			fld := valuesIn[i].FieldTable["value"]
+			fld := valuesIn[ii].FieldTable["value"]
 
 			// Process depending on field type
 			switch fld.Ftype {
+			case types.ByteArray:
+				str := string(fld.Fvalue.([]byte))
+				valuesOut = append(valuesOut, str)
 			case types.Byte:
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Bool:
@@ -477,7 +491,7 @@ func StringFormatter(params []interface{}) interface{} {
 			case types.Short:
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
-				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", i+1, fld.Ftype)
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
 				return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
 			}
 		}
