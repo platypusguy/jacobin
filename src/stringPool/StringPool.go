@@ -68,7 +68,6 @@ import (
 	"jacobin/globals"
 	"os"
 	"sort"
-	"strings"
 )
 
 /*
@@ -103,12 +102,7 @@ func GetStringPoolSize() uint32 {
 }
 
 func EmptyStringPool() {
-	// glob := globals.GetGlobalRef()
-	globals.StringPoolLock.Lock()
-	globals.StringPoolTable = make(map[string]uint32)
-	globals.StringPoolNext = 0
-	globals.StringPoolList = nil
-	globals.StringPoolLock.Unlock()
+	globals.InitStringPool()
 }
 
 func DumpStringPool(context string) {
@@ -129,10 +123,7 @@ func DumpStringPool(context string) {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
-			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
-			_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", globals.StringPoolTable[key], key)
-		}
+		_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", globals.StringPoolTable[key], key)
 	}
 	_, _ = fmt.Fprintln(os.Stdout, "===== DumpStringPool END")
 	globals.StringPoolLock.Unlock()
