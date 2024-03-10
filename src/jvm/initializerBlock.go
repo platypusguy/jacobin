@@ -13,6 +13,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"jacobin/types"
 )
 
@@ -35,7 +36,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 		// because we'll need to run its clinit() code, if any
 		superclasses = append(superclasses, k.Data.Name)
 
-		superclass := k.Data.Superclass
+		superclass := *stringPool.GetStringPointer(k.Data.SuperclassIndex)
 		for {
 			if superclass == "java/lang/Object" {
 				break
@@ -53,7 +54,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 			}
 
 			// now loop to see whether this superclass has a superclass
-			superclass = loadedSuperclass.Data.Superclass
+			superclass = *stringPool.GetStringPointer(loadedSuperclass.Data.SuperclassIndex)
 		}
 		superClasses = superclasses
 	}

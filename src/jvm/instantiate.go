@@ -15,6 +15,7 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"strings"
 	"unsafe"
@@ -41,7 +42,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// strings are handled separately
-	if classname == "java/lang/String" {
+	if classname == object.StringClassName {
 		return object.NewString(), nil
 	}
 
@@ -65,25 +66,25 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	// go up the chain of superclasses until we hit java/lang/Object
 	superclasses := []string{}
-	superclass := k.Data.Superclass
+	superclassNamePtr := stringPool.GetStringPointer(k.Data.SuperclassIndex)
 	for {
 		// if the present class is Object, it has no superclass. If the present
 		// class's superclass is Object, we've reached the top of the superclass
 		// hierarchy. Otherwise, keep looping up the superclasses.
-		if classname == "java/lang/Object" || superclass == "java/lang/Object" {
+		if classname == "java/lang/Object" || *superclassNamePtr == "java/lang/Object" {
 			break
 		}
 
-		err := loadThisClass(superclass) // load the superclass
-		if err != nil {                  // error message will have been displayed
+		err := loadThisClass(*superclassNamePtr) // load the superclass
+		if err != nil {                          // error message will have been displayed
 			return nil, err
 		} else {
-			superclasses = append(superclasses, superclass)
+			superclasses = append(superclasses, *superclassNamePtr)
 		}
 
-		loadedSuperclass := classloader.MethAreaFetch(superclass)
+		loadedSuperclass := classloader.MethAreaFetch(*superclassNamePtr)
 		// now loop to see whether this superclass has a superclass
-		superclass = loadedSuperclass.Data.Superclass
+		superclassNamePtr = stringPool.GetStringPointer(loadedSuperclass.Data.SuperclassIndex)
 	}
 
 	// the object's mark field contains the lower 32-bits of the object's

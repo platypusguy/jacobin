@@ -87,12 +87,18 @@ type Globals struct {
 	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
 
-	// ----- String Pool
-	StringPoolTable map[string]uint32
-	StringPoolList  []string
-	StringPoolNext  uint32
-	StringPoolLock  sync.Mutex
+	// // ----- String Pool
+	// StringPoolTable map[string]uint32
+	// StringPoolList  []string
+	// StringPoolNext  uint32
+	// StringPoolLock  sync.Mutex
 }
+
+// ----- String Pool
+var StringPoolTable map[string]uint32
+var StringPoolList []string
+var StringPoolNext uint32
+var StringPoolLock sync.Mutex
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
@@ -127,12 +133,19 @@ func InitGlobals(progName string) Globals {
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
 
-		// ----- String Pool
-		StringPoolTable: make(map[string]uint32),
-		StringPoolList:  nil,
-		StringPoolNext:  uint32(0),
+		// // ----- String Pool
+		// StringPoolTable: make(map[string]uint32),
+		// StringPoolList:  nil,
+		// StringPoolNext:  uint32(0),
 		// Nothing to do for StringPoolLock
 	}
+
+	// ----- String Pool
+	// create the string pool and pre-populate it for class instantiation
+	StringPoolTable = make(map[string]uint32)
+	StringPoolTable["java/lang/Object"] = 0
+	StringPoolList = append(StringPoolList, "java/lang/Object")
+	StringPoolNext = uint32(1)
 
 	InitJavaHome()
 	if global.JavaHome == "" || global.JavaVersion == "" {

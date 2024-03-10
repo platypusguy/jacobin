@@ -78,50 +78,50 @@ The string pool primitive functions follow
 */
 
 func GetStringIndex(arg *string) uint32 {
-	glob := globals.GetGlobalRef()
-	index, ok := glob.StringPoolTable[*arg]
+	// glob := globals.GetGlobalRef()
+	index, ok := globals.StringPoolTable[*arg]
 	if ok {
 		return index
 	}
-	glob.StringPoolLock.Lock()
-	index = glob.StringPoolNext
-	glob.StringPoolTable[*arg] = index
-	glob.StringPoolList = append(glob.StringPoolList, *arg)
-	glob.StringPoolNext++
-	glob.StringPoolLock.Unlock()
+	globals.StringPoolLock.Lock()
+	index = globals.StringPoolNext
+	globals.StringPoolTable[*arg] = index
+	globals.StringPoolList = append(globals.StringPoolList, *arg)
+	globals.StringPoolNext++
+	globals.StringPoolLock.Unlock()
 	return index
 }
 
 func GetStringPointer(index uint32) *string {
-	glob := globals.GetGlobalRef()
-	return &glob.StringPoolList[index]
+	// glob := globals.GetGlobalRef()
+	return &globals.StringPoolList[index]
 }
 
 func GetStringPoolSize() uint32 {
-	glob := globals.GetGlobalRef()
-	return glob.StringPoolNext
+	// glob := globals.GetGlobalRef()
+	return globals.StringPoolNext
 }
 
 func EmptyStringPool() {
-	glob := globals.GetGlobalRef()
-	glob.StringPoolLock.Lock()
-	glob.StringPoolTable = make(map[string]uint32)
-	glob.StringPoolNext = 0
-	glob.StringPoolList = nil
-	glob.StringPoolLock.Unlock()
+	// glob := globals.GetGlobalRef()
+	globals.StringPoolLock.Lock()
+	globals.StringPoolTable = make(map[string]uint32)
+	globals.StringPoolNext = 0
+	globals.StringPoolList = nil
+	globals.StringPoolLock.Unlock()
 }
 
 func DumpStringPool(context string) {
-	glob := globals.GetGlobalRef()
-	glob.StringPoolLock.Lock()
+	// glob := globals.GetGlobalRef()
+	globals.StringPoolLock.Lock()
 	if len(context) > 0 {
 		_, _ = fmt.Fprintf(os.Stdout, "\n===== DumpStringPool BEGIN context: %s\n", context)
 	} else {
 		_, _ = fmt.Fprintln(os.Stdout, "\n===== DumpStringPool BEGIN")
 	}
 	// Create an array of keys.
-	keys := make([]string, 0, len(glob.StringPoolTable))
-	for key := range glob.StringPoolTable {
+	keys := make([]string, 0, len(globals.StringPoolTable))
+	for key := range globals.StringPoolTable {
 		keys = append(keys, key)
 	}
 	// Sort the keys.
@@ -131,9 +131,9 @@ func DumpStringPool(context string) {
 	for _, key := range keys {
 		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
 			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
-			_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", glob.StringPoolTable[key], key)
+			_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", globals.StringPoolTable[key], key)
 		}
 	}
 	_, _ = fmt.Fprintln(os.Stdout, "===== DumpStringPool END")
-	glob.StringPoolLock.Unlock()
+	globals.StringPoolLock.Unlock()
 }
