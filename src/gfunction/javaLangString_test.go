@@ -144,7 +144,12 @@ func TestSprintf_2(t *testing.T) {
 	aObj.DumpObject("TestSprintf_2 aObj", 0)
 	bObj := object.NewPoolStringFromGoString(bString)
 	bObj.DumpObject("TestSprintf_2 bObj", 0)
-	params := []interface{}{aObj, bObj}
+	var bArray []*object.Object
+	bArray = append(bArray, bObj)
+	classStr := "[Ljava/lang/Object"
+	lsObj := object.MakeEmptyObjectWithClassName(&classStr)
+	lsObj.FieldTable["value"] = object.Field{Ftype: classStr, Fvalue: bArray}
+	params := []interface{}{aObj, lsObj}
 	result := sprintf(params)
 
 	switch result.(type) {
