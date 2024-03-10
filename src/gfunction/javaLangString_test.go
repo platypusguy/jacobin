@@ -9,13 +9,15 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/exceptions"
+	"jacobin/globals"
 	"jacobin/object"
 	"strings"
 	"testing"
 )
 
 func TestStringClinit(t *testing.T) {
-	classloader.InitMethodArea()
+	globals.InitGlobals("test")
+	_ = classloader.Init()
 	retval := stringClinit(nil)
 	if retval == nil {
 		t.Error("TestStringClinit: Was expecting an error message, but got none.")
@@ -33,14 +35,68 @@ func TestStringClinit(t *testing.T) {
 		t.Errorf("TestStringClinit: Did not get expected error message, got %v", retval)
 	}
 }
+
 func TestStringToUpperCase(t *testing.T) {
-	originalString := "hello"
+	globals.InitGlobals("test")
+	originalString := "He did the Monster Mash!"
 	originalObj := object.NewPoolStringFromGoString(originalString)
 	params := []interface{}{originalObj}
-	ucObj := toUpperCase(params)
-	strUpper := object.GetGoStringFromObject(ucObj.(*object.Object))
-	expValue := "HELLO"
+	ucObj := toUpperCase(params).(*object.Object)
+	strUpper := object.GetGoStringFromObject(ucObj)
+	expValue := strings.ToUpper(originalString)
 	if string(strUpper) != expValue {
 		t.Errorf("TestStringToUpperCase failed, expected: %s, observed: %s", expValue, strUpper)
+	}
+}
+
+func TestStringToLowerCase(t *testing.T) {
+	globals.InitGlobals("test")
+	originalString := "It was a graveyard smash!"
+	originalObj := object.NewPoolStringFromGoString(originalString)
+	params := []interface{}{originalObj}
+	ucObj := toLowerCase(params).(*object.Object)
+	strUpper := object.GetGoStringFromObject(ucObj)
+	expValue := strings.ToLower(originalString)
+	if string(strUpper) != expValue {
+		t.Errorf("TestStringToLowerCase failed, expected: %s, observed: %s", expValue, strUpper)
+	}
+}
+
+func TestCompareToIgnoreCaseOk(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "It was a graveyard smash!"
+	bString := "It waS a graveYARD sMash!"
+	aObj := object.NewPoolStringFromGoString(aString)
+	bObj := object.NewPoolStringFromGoString(bString)
+	params := []interface{}{aObj, bObj}
+	result := compareToIgnoreCase(params).(int64)
+	if result != 0 {
+		t.Errorf("TestCompareToIgnoreCaseOk: expected: 0, observed: %d", result)
+	}
+}
+
+func TestCompareToIgnoreCaseNotOk_1(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "It was a graveyard smash!"
+	bString := "It waS a graveYARE sMash!"
+	aObj := object.NewPoolStringFromGoString(aString)
+	bObj := object.NewPoolStringFromGoString(bString)
+	params := []interface{}{aObj, bObj}
+	result := compareToIgnoreCase(params).(int64)
+	if result >= 0 {
+		t.Errorf("TestCompareToIgnoreCaseOk_1: expected: <0, observed: %d", result)
+	}
+}
+
+func TestCompareToIgnoreCaseNotOk_2(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "It was a graveyard smash!"
+	bString := "It waS a graveYARc sMash!"
+	aObj := object.NewPoolStringFromGoString(aString)
+	bObj := object.NewPoolStringFromGoString(bString)
+	params := []interface{}{aObj, bObj}
+	result := compareToIgnoreCase(params).(int64)
+	if result <= 0 {
+		t.Errorf("TestCompareToIgnoreCaseOk_2: expected: >0, observed: %d", result)
 	}
 }

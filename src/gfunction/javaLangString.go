@@ -281,9 +281,9 @@ func Load_Lang_String() map[string]GMeth {
 }
 
 func stringClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/String")
+	klass := classloader.MethAreaFetch(object.StringClassName)
 	if klass == nil {
-		errMsg := "stringClinit: Could not find java/lang/String in the MethodArea"
+		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", object.StringClassName)
 		return getGErrBlk(exceptions.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
@@ -292,7 +292,7 @@ func stringClinit([]interface{}) interface{} {
 
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInString([]interface{}) interface{} {
-	errMsg := "No support yet for user-specified character sets and Unicode code point arrays"
+	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", object.StringClassName)
 	return getGErrBlk(exceptions.UnsupportedEncodingException, errMsg)
 }
 
@@ -304,19 +304,19 @@ func stringEquals(params []interface{}) interface{} {
 	// Unpack the reference string.
 	ptrObj := params[0].(*object.Object)
 	fld := ptrObj.FieldTable["value"]
-	if fld.Ftype != types.ByteArray {
+	if fld.Ftype != types.StringIndex {
 		errMsg := "stringEquals: reference object must be a String"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	str1 := string(fld.Fvalue.([]byte))
+	str1 := object.GetGoStringFromObject(ptrObj)
 
 	// Unpack the compare-to string
 	ptrObj = params[1].(*object.Object)
 	fld = ptrObj.FieldTable["value"]
-	if fld.Ftype != types.ByteArray {
+	if fld.Ftype != types.StringIndex {
 		return int64(0) // Not a string, return false
 	}
-	str2 := string(fld.Fvalue.([]byte))
+	str2 := object.GetGoStringFromObject(ptrObj)
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -326,51 +326,36 @@ func stringEquals(params []interface{}) interface{} {
 	}
 }
 
-// Given a Go interface parameter from caller, compute the associated Go string.
-func getGoString(param0 interface{}) interface{} {
-	var bytes []uint8
-	switch param0.(type) {
-	case *object.Object:
-		parmObj := param0.(*object.Object)
-		bytes = parmObj.FieldTable["value"].Fvalue.([]byte)
-	case []byte:
-		return string(param0.([]byte))
-	default:
-		errMsg := fmt.Sprintf("getGoString: Unexpected param[0] type = %T", param0)
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
-	return string(bytes)
-}
-
 // Construct a compact string object (usable by Java) from a Go byte array.
 func newStringFromBytes(params []interface{}) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/String")
+	// params[1] = byte array object
+	// params[0] = target object for string (updated)
+	klass := classloader.MethAreaFetch(object.StringClassName)
 	if klass == nil {
-		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
+		errMsg := fmt.Sprintf("newStringFromBytes: Expected %s to be in the MethodArea, but it was not", object.StringClassName)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 
 	// Mark that String.<clinit>() has been run.
 	klass.Data.ClInit = types.ClInitRun
 
-	// Copy FieldTable["value"] from params[1] to params[0].
-	var fld object.Field
+	var str string
 	switch params[1].(type) {
 	case *object.Object:
 		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-		fld = object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+		str = string(bytes)
 	case []byte:
-		fld = object.Field{Ftype: types.ByteArray, Fvalue: params[1]}
+		str = string(params[1].([]byte))
 	}
-	params[0].(*object.Object).FieldTable["value"] = fld
+	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
 	return nil
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
 func newStringFromBytesSubset(params []interface{}) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/String")
+	klass := classloader.MethAreaFetch(object.StringClassName)
 	if klass == nil {
-		errMsg := "newStringFromBytes: Expected java/lang/String to be in the MethodArea, but it was not"
+		errMsg := fmt.Sprintf("newStringFromBytes: Expected %s to be in the MethodArea, but it was not", object.StringClassName)
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 
@@ -401,8 +386,8 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	bytes = bytes[ssOffset : ssOffset+ssLength]
 
 	// Copy subset of byte array from params[1] to the whole byte array in params[0].
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: bytes}
-	params[0].(*object.Object).FieldTable["value"] = fld
+	str := string(bytes)
+	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
 	return nil
 
 }
@@ -410,9 +395,8 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 func getBytesFromString(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
-		parmObj := params[0].(*object.Object)
-		bytes := parmObj.FieldTable["value"].Fvalue.([]byte)
-		return bytes
+		str := object.GetGoStringFromObject(params[0].(*object.Object))
+		return []byte(str)
 	default:
 		errMsg := fmt.Sprintf("getBytesFromString: Unexpected params[0] type=%T, value=%v", params[0], params[0])
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
@@ -440,7 +424,7 @@ func StringFormatter(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
-		formatString = object.GetGoStringFromJavaStringPtr(formatStringObj)
+		formatString = object.GetGoStringFromObject(formatStringObj)
 	case []uint8:
 		formatString = string(params[0].([]byte))
 	default:
@@ -457,7 +441,7 @@ func StringFormatter(params []interface{}) interface{} {
 		// fmt.Printf("DEBUG i: %d of %d\n", i+1, len(valuesIn))
 		// fmt.Printf("DEBUG valuesIn[i] klass: %s, fields: %v\n", *valuesIn[i].Klass, valuesIn[i].Fields)
 		if object.IsJavaString(valuesIn[i]) {
-			valuesOut = append(valuesOut, object.GetGoStringFromJavaStringPtr(valuesIn[i]))
+			valuesOut = append(valuesOut, object.GetGoStringFromObject(valuesIn[i]))
 			// fmt.Printf("DEBUG got a string: %s\n", object.GetGoStringFromJavaStringPtr(valuesIn[i]))
 		} else {
 			// str := valuesIn[i].FormatField()
@@ -503,35 +487,31 @@ func StringFormatter(params []interface{}) interface{} {
 	str := fmt.Sprintf(formatString, valuesOut...)
 
 	// Return a pointer to an object.Object that wraps the string byte array.
-	return object.CreateCompactStringFromGoString(&str)
+	return object.NewPoolStringFromGoString(str)
 }
 
 func stringLength(params []interface{}) interface{} {
-	ptrObj := params[0].(*object.Object)
-	fld := ptrObj.FieldTable["value"]
-	if fld.Ftype != types.ByteArray {
+	obj := params[0].(*object.Object)
+	fld := obj.FieldTable["value"]
+	if fld.Ftype != types.StringIndex {
 		errMsg := "stringLength: reference object must be a String"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
-	bytes := fld.Fvalue.([]byte)
+	bytes := []byte(object.GetGoStringFromObject(obj))
 	return int64(len(bytes))
 }
 
 func toLowerCase(params []interface{}) interface{} {
 	// params[0]: input string
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str := strings.ToLower(string(bytes))
-	obj := object.CreateCompactStringFromGoString(&str)
+	str := strings.ToLower(object.GetGoStringFromObject(params[0].(*object.Object)))
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str := strings.ToUpper(string(bytes))
-	obj := object.CreateCompactStringFromGoString(&str)
+	str := strings.ToUpper(object.GetGoStringFromObject(params[0].(*object.Object)))
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -544,7 +524,7 @@ func valueOfBoolean(params []interface{}) interface{} {
 	} else {
 		str = "false"
 	}
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -552,7 +532,7 @@ func valueOfChar(params []interface{}) interface{} {
 	// params[0]: input char
 	value := params[0].(int64)
 	str := fmt.Sprintf("%c", value)
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -564,7 +544,7 @@ func valueOfCharArray(params []interface{}) interface{} {
 	for _, ch := range intArray {
 		str += fmt.Sprintf("%c", ch)
 	}
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -592,7 +572,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Compute substring.
 	str := wholeString[ssOffset : ssOffset+ssCount]
 
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -603,7 +583,7 @@ func valueOfDouble(params []interface{}) interface{} {
 	if !strings.Contains(str, ".") {
 		str += ".0"
 	}
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -615,7 +595,7 @@ func valueOfFloat(params []interface{}) interface{} {
 	if !strings.Contains(str, ".") {
 		str += ".0"
 	}
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -623,7 +603,7 @@ func valueOfInt(params []interface{}) interface{} {
 	// params[0]: input int
 	value := params[0].(int64)
 	str := fmt.Sprintf("%d", value)
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -631,7 +611,7 @@ func valueOfLong(params []interface{}) interface{} {
 	// params[0]: input long
 	value := params[0].(int64)
 	str := fmt.Sprintf("%d", value)
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
@@ -639,17 +619,15 @@ func valueOfObject(params []interface{}) interface{} {
 	// params[0]: input Object
 	ptrObj := params[0].(*object.Object)
 	str := ptrObj.FormatField("")
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
 
 func compareToCaseSensitive(params []interface{}) interface{} {
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str1 := string(bytes)
-	propObj = params[1].(*object.Object)
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	str2 := string(bytes)
+	obj := params[0].(*object.Object)
+	str1 := object.GetGoStringFromObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GetGoStringFromObject(obj)
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -660,12 +638,10 @@ func compareToCaseSensitive(params []interface{}) interface{} {
 }
 
 func compareToIgnoreCase(params []interface{}) interface{} {
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	str1 := strings.ToLower(string(bytes))
-	propObj = params[1].(*object.Object)
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	str2 := strings.ToLower(string(bytes))
+	obj := params[0].(*object.Object)
+	str1 := strings.ToLower(object.GetGoStringFromObject(obj))
+	obj = params[1].(*object.Object)
+	str2 := strings.ToLower(object.GetGoStringFromObject(obj))
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -676,13 +652,11 @@ func compareToIgnoreCase(params []interface{}) interface{} {
 }
 
 func stringConcat(params []interface{}) interface{} {
-	propObj := params[0].(*object.Object)
-	bytes := propObj.FieldTable["value"].Fvalue.([]byte)
-	strRef := strings.ToLower(string(bytes))
-	propObj = params[1].(*object.Object)
-	bytes = propObj.FieldTable["value"].Fvalue.([]byte)
-	strArg := strings.ToLower(string(bytes))
+	obj := params[0].(*object.Object)
+	strRef := object.GetGoStringFromObject(obj)
+	obj = params[1].(*object.Object)
+	strArg := object.GetGoStringFromObject(obj)
 	str := strRef + strArg
-	obj := object.CreateCompactStringFromGoString(&str)
+	obj = object.NewPoolStringFromGoString(str)
 	return obj
 }
