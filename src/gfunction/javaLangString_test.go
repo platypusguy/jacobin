@@ -141,11 +141,25 @@ func TestSprintf_2(t *testing.T) {
 	bString := "little"
 	cString := "Mary had a little lamb"
 	aObj := object.NewPoolStringFromGoString(aString)
+	aObj.DumpObject("TestSprintf_2 aObj", 0)
 	bObj := object.NewPoolStringFromGoString(bString)
+	bObj.DumpObject("TestSprintf_2 bObj", 0)
 	params := []interface{}{aObj, bObj}
-	resultObj := (sprintf(params)).(*object.Object)
-	str := object.GetGoStringFromObject(resultObj)
-	if str != cString {
-		t.Errorf("TestSprintf_2: expected: %s, observed: %s", cString, str)
+	result := sprintf(params)
+
+	switch result.(type) {
+	case *GErrBlk:
+		geptr := *(result.(*GErrBlk))
+		errMsg := geptr.ErrMsg
+		t.Errorf("TestSprintf_2: %s\n", errMsg)
+	case *object.Object:
+		obj := result.(*object.Object)
+		obj.DumpObject("TestSprintf_2 result", 0)
+		str := object.GetGoStringFromObject(obj)
+		if str != cString {
+			t.Errorf("TestSprintf_2: expected: %s, observed: %s", cString, str)
+		}
+	default:
+		t.Errorf("TestSprintf_2: result type %T makes no sense", result)
 	}
 }

@@ -414,7 +414,7 @@ func StringFormatter(params []interface{}) interface{} {
 	//fmt.Printf("DEBUG StringFormatter lenParams=%d\n", lenParams)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
-		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	if lenParams == 1 { // No parameters beyond the format string
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
@@ -433,18 +433,23 @@ func StringFormatter(params []interface{}) interface{} {
 		default:
 			errMsg := fmt.Sprintf("StringFormatter: Invalid Ftype in format string object: %s",
 				formatStringObj.FieldTable["value"].Ftype)
-			return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 		}
 		//fmt.Printf("DEBUG StringFormatter formatString=%s\n", formatString)
 	default:
 		errMsg := fmt.Sprintf("StringFormatter: Invalid variable type for format string: %T", params[0])
-		return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 
-	// valuesIn := *(params[1].(*object.Object).FieldTable["value"].Fvalue).(*[]*object.Object) // ptr to slice of pointers to 1 or more objects
-	fld := params[1].(*object.Object).FieldTable["value"]
-	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 	valuesOut := []any{}
+	fld := params[1].(*object.Object).FieldTable["value"]
+	//fmt.Printf("DEBUG StringFormatter fld.Ftype=%s, fld.Fvalue=%v\n", fld.Ftype, fld.Fvalue)
+	if !strings.HasPrefix(fld.Ftype, types.RefArray) {
+		errMsg := fmt.Sprintf("StringFormatter: Expected Ftype=%s for params[1]: fld.Ftype=%s, fld.Fvalue=%v",
+			types.RefArray, fld.Ftype, fld.Fvalue)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+	}
+	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 
 	for ii := 0; ii < len(valuesIn); ii++ {
 		//fmt.Printf("DEBUG StringFormatter ii: %d of %d\n", ii+1, len(valuesIn))
@@ -492,7 +497,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				return getGErrBlk(exceptions.IllegalClassFormatException, errMsg)
+				return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 			}
 		}
 	}
