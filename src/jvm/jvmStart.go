@@ -78,15 +78,14 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.OK)
 	}
 
-	// Init classloader and load base classes
-	err = classloader.Init() // must precede classloader.LoadBaseClasses
+	// Initialize classloaders and method area
+	err = classloader.Init()
 	if err != nil {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
-	classloader.LoadBaseClasses() // must follow classloader.Init
+	classloader.LoadBaseClasses() // must follow classloader.Init()
 
 	var mainClassNameIndex uint32
-
 	if globPtr.StartingJar != "" {
 		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, globPtr.StartingJar)
 
