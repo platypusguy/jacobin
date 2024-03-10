@@ -9,12 +9,14 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/exceptions"
+	"jacobin/globals"
 	"jacobin/object"
 	"strings"
 	"testing"
 )
 
 func TestStringClinit(t *testing.T) {
+	globals.InitGlobals("test")
 	classloader.InitMethodArea()
 	retval := stringClinit(nil)
 	if retval == nil {
@@ -34,6 +36,7 @@ func TestStringClinit(t *testing.T) {
 	}
 }
 func TestStringToUpperCase(t *testing.T) {
+	globals.InitGlobals("test")
 	originalString := "hello"
 	originalObj := object.NewPoolStringFromGoString(originalString)
 	params := []interface{}{originalObj}
