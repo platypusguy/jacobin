@@ -15,4 +15,4 @@ const ClInitInProgress byte = 0x02
 const ClInitRun byte = 0x03
 
 // ---- invalid index into string pool ----
-const InvalidIndex uint32 = 0xffffffff
+const InvalidStringIndex uint32 = 0xffffffff

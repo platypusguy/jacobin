@@ -103,7 +103,7 @@ func TestLoadClassFromFileInvalidName(t *testing.T) {
 
 	nameIndex, err := LoadClassFromFile(Classloader{}, "noSuchFile")
 
-	if nameIndex != types.InvalidIndex {
+	if nameIndex != types.InvalidStringIndex {
 		t.Errorf("Expected empty filename due to error, got: %s", err.Error())
 	}
 	if err == nil {

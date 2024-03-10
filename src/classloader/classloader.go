@@ -353,12 +353,12 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, error) {
 		msg := "LoadClassFromFile: class name" + fname + " is invalid"
 		_ = log.Log(msg, log.SEVERE)
 		debug.PrintStack()
-		return types.InvalidIndex, errors.New(msg)
+		return types.InvalidStringIndex, errors.New(msg)
 	}
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		_ = log.Log("LoadClassFromFile: os.ReadFile("+filename+") failed", log.SEVERE)
-		return types.InvalidIndex, err
+		return types.InvalidStringIndex, err
 	}
 	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
 
@@ -397,17 +397,17 @@ func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (uint
 	jar, err := getJarFile(cl, jarFileName)
 
 	if err != nil {
-		return types.InvalidIndex, err
+		return types.InvalidStringIndex, err
 	}
 
 	result, err := jar.loadClass(filename)
 
 	if err != nil {
-		return types.InvalidIndex, err
+		return types.InvalidStringIndex, err
 	}
 
 	if !result.Success {
-		return types.InvalidIndex, fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
+		return types.InvalidStringIndex, fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
 	}
 
 	return ParseAndPostClass(&cl, filename, *result.Data)
@@ -425,13 +425,13 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
-		return types.InvalidIndex, fmt.Errorf("parsing error")
+		return types.InvalidStringIndex, fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
-		return types.InvalidIndex, fmt.Errorf("format-checking error")
+		return types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
 	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
