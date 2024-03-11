@@ -133,8 +133,8 @@ func (objPtr *Object) FormatField(fieldName string) string {
 	var klassString string // string class name
 	obj := *objPtr         // whole object
 
-	if obj.Klass != nil {
-		klassString = *obj.Klass
+	if obj.KlassName != types.InvalidStringIndex {
+		klassString = *stringPool.GetStringPointer(obj.KlassName)
 	} else {
 		klassString = "<ERROR nil class pointer>" // Why is there no class name pointer for this object?
 		obj.DumpObject(klassString, 0)
@@ -199,8 +199,8 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	if indent > 0 {
 		output += strings.Repeat(" ", indent)
 	}
-	if obj.Klass != nil {
-		klassString = "\tClass: " + *obj.Klass
+	if obj.KlassName != types.InvalidStringIndex {
+		klassString = "\tClass: " + *(stringPool.GetStringPointer(obj.KlassName))
 	} else {
 		klassString = "\t<class MISSING>"
 	}

@@ -7,6 +7,7 @@
 package object
 
 import (
+	"jacobin/stringPool"
 	"jacobin/types"
 )
 
@@ -82,7 +83,7 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 
 	// make the first array in the ptr array and get its type converted to a string
 	firstArray := Make1DimArray(arrType, leafArrSize)
-	aType := "[" + *firstArray.Klass
+	aType := "[" + *(stringPool.GetStringPointer(firstArray.KlassName)) // the type of the first array
 	ptrArr.FieldTable["value"] = Field{
 		Ftype:  aType,
 		Fvalue: value,
@@ -93,7 +94,7 @@ func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error
 		value[i] = Make1DimArray(arrType, leafArrSize)
 	}
 
-	ptrArr.Klass = firstArray.Klass
+	ptrArr.KlassName = firstArray.KlassName
 	return ptrArr, nil
 }
 
@@ -106,9 +107,7 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	// JACOBIN-457: Converted to exclusive use of o.FieldTable and o.Fields
 	// contain the actual value rather than a pointer to the value. 2024-02
 	switch arrType {
-	// case 'B': // byte arrays
 	case BYTE:
-		// barArr := make([]types.JavaByte, size) // changed with JACOBIN-282
 		barArr := make([]byte, size)
 		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
 		o.FieldTable["value"] = of
@@ -117,7 +116,6 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		of = Field{Ftype: types.FloatArray, Fvalue: farArr}
 		o.FieldTable["value"] = of
 	case REF: // reference/pointer arrays
-		// JACOBIN-439: _ = log.Log("object.Make1DimArray() should not be used to create a Reference Array", log.WARNING)
 		rarArr := make([]*Object, size)
 		of = Field{Ftype: types.RefArray, Fvalue: rarArr}
 		o.FieldTable["value"] = of
@@ -128,7 +126,8 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		// o.Fields = append(o.Fields, of)
 	}
 	value := o.FieldTable["value"]
-	o.Klass = &value.Ftype // in arrays, Klass field is a pointer to the array type string
+	o.KlassName = stringPool.GetStringIndex(&value.Ftype) // in arrays, Klass field is a pointer to the array type string
+	// o.Klass = &value.Ftype // in arrays, Klass field is a pointer to the array type string
 	return o
 }
 
@@ -141,7 +140,8 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 	arrayType := types.RefArray + *objType
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
 	o.FieldTable["value"] = of
-	o.Klass = &of.Ftype
+	o.KlassName = stringPool.GetStringIndex(&of.Ftype)
+	// o.Klass = &of.Ftype
 	return o
 }
 

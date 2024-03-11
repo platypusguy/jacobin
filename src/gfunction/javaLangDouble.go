@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"jacobin/exceptions"
 	"jacobin/object"
+	"jacobin/stringPool"
+	"jacobin/types"
 	"strconv"
 )
 
@@ -123,11 +125,10 @@ func doubleEquals(params []interface{}) interface{} {
 
 	// Get the actual Java Object parameter
 	parmObj = params[1].(*object.Object)
-	if parmObj.Klass == nil {
+	if parmObj.KlassName == types.InvalidStringIndex {
 		return int64(0)
 	}
-	// fmt.Printf("DEBUG doubleEquals Klass --> %s\n", *parmObj.Klass)
-	if *parmObj.Klass != "java/lang/Double" {
+	if *(stringPool.GetStringPointer(parmObj.KlassName)) != "java/lang/Double" {
 		return int64(0)
 	}
 	dd2 = parmObj.FieldTable["value"].Fvalue.(float64)

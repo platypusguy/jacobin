@@ -49,7 +49,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	// At this point, classname is ready
 	k := classloader.MethAreaFetch(classname)
 	obj := object.Object{
-		Klass: &classname,
+		KlassName: stringPool.GetStringIndex(&classname),
 	}
 
 	if k == nil {

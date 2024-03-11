@@ -280,6 +280,9 @@ func InitStringPool() {
 	StringPoolTable = make(map[string]uint32)
 	StringPoolList = nil
 
+	// Preload two values. java/lang/Object is always 0
+	// and java/lang/String is always 1.
+
 	// Add "java/lang/Object"
 	StringPoolTable["java/lang/Object"] = 0
 	StringPoolList = append(StringPoolList, "java/lang/Object")

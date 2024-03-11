@@ -8,6 +8,7 @@ package object
 
 import (
 	"jacobin/stringPool"
+	"jacobin/types"
 	"unsafe"
 )
 
@@ -19,8 +20,8 @@ import (
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark       MarkWord
-	Klass      *string          // the class name in the method area
+	Mark MarkWord
+	// Klass      *string          // the class name in the method area
 	KlassName  uint32           // the index of the class name
 	FieldTable map[string]Field // map mapping field name to field
 }
@@ -53,7 +54,8 @@ func MakeEmptyObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
-	o.Klass = &EmptyString // s/be filled in later, when class is filled in.
+	o.KlassName = types.InvalidStringIndex // s/be filled in later, when class is filled in.
+	// o.Klass = &EmptyString // s/be filled in later, when class is filled in.
 	o.KlassName = stringPool.GetStringIndex(&EmptyString)
 
 	// initialize the map of this object's fields
@@ -76,7 +78,8 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 // Make an object for a Java primitive field (byte, int, etc.), given the class and field type.
 func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	objPtr := MakeEmptyObject()
-	(*objPtr).Klass = &classString
+	// (*objPtr).Klass = &classString
+	(*objPtr).KlassName = stringPool.GetStringIndex(&classString)
 	var field Field
 	field.Ftype = ftype
 	field.Fvalue = arg

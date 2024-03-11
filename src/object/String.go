@@ -19,6 +19,7 @@ import (
 
 var StringClassName = "java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
+var StringPoolStringIndex = uint32(1)
 var EmptyString = ""
 
 // NewString creates an empty string. However, it lacks an updated
@@ -28,7 +29,8 @@ var EmptyString = ""
 func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
-	s.Klass = &StringClassName // java/lang/String
+	s.KlassName = StringPoolStringIndex // =  java/lang/String
+	// s.Klass = &StringClassName // java/lang/String
 	s.FieldTable = make(map[string]Field)
 
 	// ==== now the fields ====
@@ -113,7 +115,7 @@ func IsJavaString(unknown any) bool {
 		return false
 	}
 
-	return *objPtr.Klass == StringClassName
+	return *stringPool.GetStringPointer(objPtr.KlassName) == StringClassName
 }
 
 /*
@@ -128,9 +130,7 @@ func MakeEmptyStringObject() *Object {
 	object := Object{}
 	ptrObject := uintptr(unsafe.Pointer(&object))
 	object.Mark.Hash = uint32(ptrObject)
-
-	// TODO: Change object.Klass to be type uint32
-	object.Klass = &StringClassName // java/lang/String
+	object.KlassName = StringPoolStringIndex // = java/lang/String
 
 	// initialize the map of this object's fields
 	object.FieldTable = make(map[string]Field)
