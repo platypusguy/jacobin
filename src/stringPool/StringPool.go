@@ -71,13 +71,12 @@ import (
 )
 
 /*
-------------------------------------------
-The string pool primitive functions follow
-------------------------------------------
+-----------------------------------
+The string pool primitive functions
+-----------------------------------
 */
 
 func GetStringIndex(arg *string) uint32 {
-	// glob := globals.GetGlobalRef()
 	index, ok := globals.StringPoolTable[*arg]
 	if ok {
 		return index
@@ -92,7 +91,6 @@ func GetStringIndex(arg *string) uint32 {
 }
 
 func GetStringPointer(index uint32) *string {
-	// glob := globals.GetGlobalRef()
 	return &globals.StringPoolList[index]
 }
 
@@ -106,7 +104,6 @@ func EmptyStringPool() {
 }
 
 func DumpStringPool(context string) {
-	// glob := globals.GetGlobalRef()
 	globals.StringPoolLock.Lock()
 	if len(context) > 0 {
 		_, _ = fmt.Fprintf(os.Stdout, "\n===== DumpStringPool BEGIN context: %s\n", context)

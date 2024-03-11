@@ -273,7 +273,6 @@ func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) 
 }
 
 func InitStringPool() {
-	// NOTE that TestStringIndexPrimitives_2 is dependent on the pool size!
 
 	StringPoolLock.Lock()
 
