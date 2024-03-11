@@ -271,8 +271,8 @@ frameInterpreter:
 				} else if CPe.RetType == classloader.IS_STRING_ADDR {
 					stringAddr :=
 						object.CreateCompactStringFromGoString(CPe.StringVal)
-					stringAddr.Klass = &object.StringClassName
-					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
+					stringAddr.KlassName = object.StringPoolStringIndex
+					if classloader.MethAreaFetch(object.StringClassName) == nil {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(errMsg, log.SEVERE)
@@ -303,8 +303,8 @@ frameInterpreter:
 				} else if CPe.RetType == classloader.IS_STRING_ADDR {
 					stringAddr :=
 						object.CreateCompactStringFromGoString(CPe.StringVal)
-					stringAddr.Klass = &object.StringClassName
-					if classloader.MethAreaFetch(*stringAddr.Klass) == nil {
+					stringAddr.KlassName = object.StringPoolStringIndex
+					if classloader.MethAreaFetch(object.StringClassName) == nil {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
 						_ = log.Log(errMsg, log.SEVERE)
@@ -1734,7 +1734,7 @@ frameInterpreter:
 					// convert to an *object.Object
 					kPtr := value.(*classloader.Klass)
 					obj := object.MakeEmptyObject()
-					obj.Klass = &kPtr.Data.Name
+					obj.KlassName = stringPool.GetStringIndex(&kPtr.Data.Name)
 					objField := object.Field{
 						Ftype:  "L" + kPtr.Data.Name + ";",
 						Fvalue: kPtr,
@@ -2303,7 +2303,7 @@ frameInterpreter:
 			glob.JVMframeStack = exceptions.GrabFrameStack(fs)
 
 			// get the name of the exception in the format used by HotSpot
-			exceptionClass := *objectRef.Klass
+			exceptionClass := *(stringPool.GetStringPointer(objectRef.KlassName))
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// get the PC of the exception and check for any catch blocks
@@ -2451,8 +2451,8 @@ frameInterpreter:
 				}
 
 				if strings.HasPrefix(className, "[") { // the object being checked is an array
-					if obj.Klass != nil {
-						sptr := obj.Klass
+					if obj.KlassName != types.InvalidStringIndex {
+						sptr := stringPool.GetStringPointer(obj.KlassName)
 						// for the nonce if they're both the same type of arrays, we're good
 						// TODO: if both are arrays of reference, check the leaf types
 						if *sptr == className || strings.HasPrefix(className, *sptr) {
@@ -2482,7 +2482,7 @@ frameInterpreter:
 						classPtr = classloader.MethAreaFetch(className)
 					}
 
-					if classPtr != classloader.MethAreaFetch(*obj.Klass) {
+					if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						exceptions.Throw(exceptions.ClassCastException, errMsg)
@@ -2541,7 +2541,7 @@ frameInterpreter:
 							}
 							classPtr = classloader.MethAreaFetch(className)
 						}
-						if classPtr == classloader.MethAreaFetch(*obj.Klass) {
+						if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
 							push(f, int64(1))
 						} else {
 							push(f, int64(0))
