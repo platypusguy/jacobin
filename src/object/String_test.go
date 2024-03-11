@@ -7,16 +7,19 @@
 package object
 
 import (
+	"jacobin/globals"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"testing"
 )
 
 func TestNewString(t *testing.T) {
-	str := *NewString()
+	globals.InitGlobals("test")
 
-	if *str.Klass != "java/lang/String" {
-		t.Errorf("Klass should be java/lang/String, got: %s", *str.Klass)
+	str := *NewString()
+	if *(stringPool.GetStringPointer(str.KlassName)) != "java/lang/String" {
+		t.Errorf("Klass should be java/lang/String, got: %s", *(stringPool.GetStringPointer(str.KlassName)))
 	}
 
 	value := str.FieldTable["value"].Fvalue.([]byte)

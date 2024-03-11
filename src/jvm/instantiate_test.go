@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -59,8 +60,9 @@ func TestInstantiateString1(t *testing.T) {
 	}
 
 	obj := myobj.(*object.Object)
-	if *obj.Klass != "java/lang/String" {
-		t.Errorf("Expected 'java/lang/String', got %s", *obj.Klass)
+	klassType := stringPool.GetStringPointer(obj.KlassName)
+	if *klassType != "java/lang/String" {
+		t.Errorf("Expected 'java/lang/String', got %s", *klassType)
 	}
 
 	if len(obj.FieldTable) < 2 {

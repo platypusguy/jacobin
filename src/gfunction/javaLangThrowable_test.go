@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"strings"
 	"testing"
 )
@@ -146,6 +147,6 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 
 func InstantiateFillIn(name string, _ *list.List) (any, error) {
 	o := object.MakeEmptyObject()
-	o.Klass = &name
+	o.KlassName = stringPool.GetStringIndex(&name)
 	return o, nil
 }

@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -388,7 +389,7 @@ func TestAnewrrayKlassField(t *testing.T) {
 	// now, test the length of the array, which should be 13
 	element := g.ArrayAddressList.Front()
 	ptr := element.Value.(*object.Object)
-	klassString := ptr.Klass
+	klassString := stringPool.GetStringPointer(ptr.KlassName)
 	if !strings.HasPrefix(*klassString, types.RefArray) {
 		t.Errorf("ANEWARRAY: Expecting class to start with '[L', got %s", *klassString)
 	}
@@ -2201,12 +2202,12 @@ func Test2DimArrayKlassField(t *testing.T) {
 		t.Error("Error creating 2-dimensional array")
 	}
 
-	if arr.Klass == nil {
-		t.Errorf("Array Klass field was nil")
+	if arr.KlassName == types.InvalidStringIndex {
+		t.Errorf("Array Klass field was invalid")
 		return
 	}
 
-	arrKlass := arr.Klass
+	arrKlass := stringPool.GetStringPointer(arr.KlassName)
 	if *arrKlass != "[B" {
 		t.Errorf("Expecting array with Klass of '[B', got: %s", *arrKlass)
 	}

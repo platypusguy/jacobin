@@ -7,6 +7,8 @@
 package object
 
 import (
+	"jacobin/globals"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"testing"
 )
@@ -23,9 +25,11 @@ func TestIsNull(t *testing.T) {
 }
 
 func TestMakeValidPrimitiveByte(t *testing.T) {
+	globals.InitGlobals("test")
 	objPtr := MakePrimitiveObject("java/lang/Byte", types.Byte, uint8(0x61))
-	if *objPtr.Klass != "java/lang/Byte" {
-		t.Errorf("Klass should be java/lang/Byte, got %s", *objPtr.Klass)
+	if *(stringPool.GetStringPointer(objPtr.KlassName)) != "java/lang/Byte" {
+		t.Errorf("Klass should be java/lang/Byte, got %s",
+			*(stringPool.GetStringPointer(objPtr.KlassName)))
 	}
 
 	value := objPtr.FieldTable["value"].Fvalue.(uint8)
@@ -35,9 +39,10 @@ func TestMakeValidPrimitiveByte(t *testing.T) {
 }
 
 func TestMakeValidPrimitiveDouble(t *testing.T) {
+	globals.InitGlobals("test")
 	objPtr := MakePrimitiveObject("java/lang/Double", types.Double, 42.0)
-	if *objPtr.Klass != "java/lang/Double" {
-		t.Errorf("Klass should be java/lang/Double, got %s", *objPtr.Klass)
+	if *(stringPool.GetStringPointer(objPtr.KlassName)) != "java/lang/Double" {
+		t.Errorf("Klass should be java/lang/Double, got %s", *(stringPool.GetStringPointer(objPtr.KlassName)))
 	}
 
 	value := objPtr.FieldTable["value"].Fvalue.(float64)

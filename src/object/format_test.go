@@ -7,6 +7,8 @@
 package object
 
 import (
+	"jacobin/globals"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"path/filepath"
 	"testing"
@@ -14,9 +16,11 @@ import (
 
 func TestDumpObjectFieldTable(t *testing.T) {
 	t.Log("Test Object.FieldTable DumpObject processing")
+
+	globals.InitGlobals("test")
 	obj := MakeEmptyObject()
 	klassType := filepath.FromSlash("java/lang/madeUpClass")
-	obj.Klass = &klassType
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
 
 	myFloatField := Field{
 		Ftype:  types.Float,
@@ -84,9 +88,10 @@ func TestDumpObjectFieldTable(t *testing.T) {
 func TestFormatField(t *testing.T) {
 	t.Log("Test field slice DumpObject processing")
 
+	globals.InitGlobals("test")
 	obj := MakeEmptyObject()
 	klassType := filepath.FromSlash("java/lang/madeUpClass")
-	obj.Klass = &klassType
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
 
 	myFloatField := Field{
 		Ftype:  types.Float,
