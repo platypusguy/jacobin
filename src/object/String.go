@@ -90,6 +90,13 @@ func CreateCompactStringFromGoString(in *string) *Object {
 	return s
 }
 
+// Create stringPoolEntryFromGoString creates an object that refers to an interned string
+func CreateStringPoolEntryFromGoString(in *string) *Object {
+	s := NewString()
+	s.FieldTable["value"] = Field{types.StringIndex, stringPool.GetStringIndex(in)}
+	return s
+}
+
 // convenience method to extract a Go string from a Java string
 func GetGoStringFromJavaStringPtr(strPtr *Object) string {
 	s := *strPtr
