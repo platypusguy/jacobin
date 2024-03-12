@@ -281,10 +281,10 @@ frameInterpreter:
 					}
 					push(f, stringAddr)
 				}
-			} else { // TODO: Determine what exception to throw
+			} else {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC: Invalid type for instruction"
-				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 		case opcodes.LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
@@ -313,10 +313,10 @@ frameInterpreter:
 					}
 					push(f, stringAddr)
 				}
-			} else { // TODO: Determine what exception to throw
+			} else {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC_W: Invalid type for instruction"
-				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 		case opcodes.LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
@@ -333,7 +333,7 @@ frameInterpreter:
 			} else { // TODO: Determine what exception to throw
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
-				exceptions.Throw(exceptions.InaccessibleObjectException, errMsg)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
 		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
