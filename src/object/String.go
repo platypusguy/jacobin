@@ -90,7 +90,7 @@ func CreateCompactStringFromGoString(in *string) *Object {
 	return s
 }
 
-// Create stringPoolEntryFromGoString creates an object that refers to an interned string
+// CreateStringPoolEntryFromGoString creates an object that points to an interned string
 func CreateStringPoolEntryFromGoString(in *string) *Object {
 	s := NewString()
 	s.FieldTable["value"] = Field{types.StringIndex, stringPool.GetStringIndex(in)}
