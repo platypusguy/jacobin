@@ -251,11 +251,17 @@ frameInterpreter:
 			}
 			f.PC += 2
 			push(f, wint64)
-		case opcodes.LDC: // 	0x12   	(push constant from CP indexed by next byte)
-			idx := f.Meth[f.PC+1]
-			f.PC += 1
+		case opcodes.LDC, opcodes.LDC_W: // 	0x12, 0x13 	(get const from CP and push it onto stack)
+			var idx int
+			if f.Meth[f.PC] == opcodes.LDC { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
+				idx = int(f.Meth[f.PC+1])
+				f.PC += 1
+			} else {
+				idx = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+			}
 
-			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), int(idx))
+			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
 			if CPe.EntryType == 0 || // 0 = error
 				// Note: an invalid CP entry causes a java.lang.Verify error and
 				//       is caught before execution of the program begins.
@@ -278,47 +284,9 @@ frameInterpreter:
 			case classloader.IS_STRING_ADDR:
 				stringAddr := object.CreateStringPoolEntryFromGoString(CPe.StringVal)
 				stringAddr.KlassName = object.StringPoolStringIndex
-				if classloader.MethAreaFetch(object.StringClassName) == nil {
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("LDC: MethAreaFetch could not find class java/lang/String")
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New("LDC: MethAreaFetch could not find class java/lang/String")
-				}
 				push(f, stringAddr)
 			}
 
-		case opcodes.LDC_W: // 	0x13	(push constant from CP indexed by next two bytes)
-			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-			f.PC += 2
-
-			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
-			if CPe.EntryType != 0 && // this instruction does not load longs or doubles
-				CPe.EntryType != classloader.DoubleConst &&
-				CPe.EntryType != classloader.LongConst { // if no error
-				if CPe.RetType == classloader.IS_INT64 {
-					push(f, CPe.IntVal)
-				} else if CPe.RetType == classloader.IS_FLOAT64 {
-					push(f, CPe.FloatVal)
-				} else if CPe.RetType == classloader.IS_STRUCT_ADDR {
-					push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
-				} else if CPe.RetType == classloader.IS_STRING_ADDR {
-					stringAddr :=
-						object.CreateCompactStringFromGoString(CPe.StringVal)
-					stringAddr.KlassName = object.StringPoolStringIndex
-					if classloader.MethAreaFetch(object.StringClassName) == nil {
-						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := fmt.Sprintf("LDC_W: MethAreaFetch could not find class java/lang/String")
-						_ = log.Log(errMsg, log.SEVERE)
-						return errors.New("LDC_W: MethAreaFetch could not find class java/lang/String")
-					}
-					push(f, stringAddr)
-				}
-			} else {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LDC_W: Invalid type for instruction"
-				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
-				return errors.New(errMsg)
-			}
 		case opcodes.LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
