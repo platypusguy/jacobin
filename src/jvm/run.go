@@ -270,7 +270,8 @@ frameInterpreter:
 					push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
 				} else if CPe.RetType == classloader.IS_STRING_ADDR {
 					stringAddr :=
-						object.CreateCompactStringFromGoString(CPe.StringVal)
+						object.CreateStringPoolEntryFromGoString(CPe.StringVal)
+					// object.CreateCompactStringFromGoString(CPe.StringVal)
 					stringAddr.KlassName = object.StringPoolStringIndex
 					if classloader.MethAreaFetch(object.StringClassName) == nil {
 						glob.ErrorGoStack = string(debug.Stack())
@@ -2336,7 +2337,15 @@ frameInterpreter:
 						msg += fmt.Sprintf(": %s", string(st))
 					case *object.Object:
 						st := appMsg.(*object.Object)
-						msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+						value := st.FieldTable["value"].Fvalue
+						switch value.(type) {
+						case []byte:
+							msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+						case uint32:
+							str := stringPool.GetStringPointer(value.(uint32))
+							msg += fmt.Sprintf(": %s", *str)
+						}
+
 					}
 				}
 				_ = log.Log(msg, log.SEVERE)
@@ -2660,7 +2669,7 @@ frameInterpreter:
 			}
 
 		case opcodes.IFNULL: // 0xC6 jump if TOS holds a null address
-			// null = 0, so we duplicate logic of IFEQ instruction
+			// null = nil or object.Null (a pointer to nil)
 			value := pop(f)
 			if value == nil || value == object.Null {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
