@@ -22,10 +22,7 @@ var StringClassRef = "Ljava/lang/String;"
 var StringPoolStringIndex = uint32(1)
 var EmptyString = ""
 
-// NewString creates an empty string. However, it lacks an updated
-// Klass field, which due to circularity issues, is updated in
-// classloader.MakeString(). DO NOT CALL THIS FUNCTION DIRECTLYy.
-// It should be called ONLY by classloader.MakeString
+// NewString creates an empty string.
 func NewString() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
@@ -70,18 +67,21 @@ func NewString() *Object {
 // NewStringFromGoString converts a go string to a Java string-like
 // entity, in which the chars are stored as runes, rather than chars
 // or as bytes, depending on the status of COMPACT_STRINGS (which defaults
-// to true for JDK >= 9).
+// to true for JDK >= 9). In the latter case, the string is interned in
+// the string pool and the field is set to the index in the pool.
 
 func NewStringFromGoString(in string) *Object {
 	s := NewString()
 	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
 		s.FieldTable["value"] = Field{types.RuneArray, in}
 	} else {
-		s.FieldTable["value"] = Field{types.ByteArray, []byte(in)}
+		s.FieldTable["value"] = Field{types.StringIndex, stringPool.GetStringIndex(&in)}
+		// s.FieldTable["value"] = Field{types.ByteArray, []byte(in)} // changed in JACOBIN-463
 	}
 	return s
 }
 
+/* This function no longer is used due mostly to JACOBIN-463
 // CreateCompactStringFromGoString creates a string in which the chars
 // are stored as bytes--that is, a compact string.
 func CreateCompactStringFromGoString(in *string) *Object {
@@ -89,6 +89,7 @@ func CreateCompactStringFromGoString(in *string) *Object {
 	s.FieldTable["value"] = Field{types.ByteArray, []byte(*in)}
 	return s
 }
+*/
 
 // CreateStringPoolEntryFromGoString creates an object that points to an interned string
 func CreateStringPoolEntryFromGoString(in *string) *Object {

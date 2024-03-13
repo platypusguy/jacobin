@@ -45,25 +45,28 @@ func TestNewString(t *testing.T) {
 }
 
 func TestNewStringFromGoString(t *testing.T) {
+	globals.InitGlobals("test")
 	statics.LoadStaticsString()
 
 	s := NewStringFromGoString("hello")
-	newString := string(s.FieldTable["value"].Fvalue.([]byte))
+	// newString := string(s.FieldTable["value"].Fvalue.([]byte))
+	newString := *(stringPool.GetStringPointer(s.FieldTable["value"].Fvalue.(uint32)))
 	if newString != "hello" {
 		t.Errorf("expected strint to be 'hello', got: %s", newString)
 	}
 }
 
-func TestCreateCompactStringFromGoString(t *testing.T) {
-	goString := "You say hello!"
-	s := CreateCompactStringFromGoString(&goString)
-	compactString := string(s.FieldTable["value"].Fvalue.([]byte))
-
-	if compactString != "You say hello!" {
-		t.Errorf("expected string to be 'You say hello!', got: %s",
-			compactString)
-	}
-}
+// CreateCompactStringFromGoString() is no longer used due to JACOBIN-463
+// func TestCreateCompactStringFromGoString(t *testing.T) {
+// 	goString := "You say hello!"
+// 	s := CreateCompactStringFromGoString(&goString)
+// 	compactString := string(s.FieldTable["value"].Fvalue.([]byte))
+//
+// 	if compactString != "You say hello!" {
+// 		t.Errorf("expected string to be 'You say hello!', got: %s",
+// 			compactString)
+// 	}
+// }
 
 func TestGetGoStringFromJavaStringPtr(t *testing.T) {
 	s := NewString()
