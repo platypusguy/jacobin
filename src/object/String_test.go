@@ -22,10 +22,10 @@ func TestNewString(t *testing.T) {
 		t.Errorf("Klass should be java/lang/String, got: %s", *(stringPool.GetStringPointer(str.KlassName)))
 	}
 
-	value := str.FieldTable["value"].Fvalue.([]byte)
-	valueStr := string(value)
-	if len(valueStr) != 0 {
-		t.Errorf("value field should be empty string, got: %s", string(value))
+	value := str.FieldTable["value"].Fvalue.(uint32)
+	// valueStr := *stringPool.GetStringPointer(value)
+	if value != types.InvalidStringIndex {
+		t.Errorf("value field should be 0xFFFFFFFF, got: %X", value)
 	}
 
 	coder := str.FieldTable["coder"].Fvalue.(int64)
