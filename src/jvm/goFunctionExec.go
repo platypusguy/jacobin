@@ -181,7 +181,10 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	// No errors.
 	// Pop off the G frame from the frame stack which
 	// makes the previous frame the current frame.
-	fs.Remove(fs.Front())                // pop off the G frame
+	err = frames.PopFrame(fs)
+	if err != nil {
+		return nil, err
+	}
 	f = fs.Front().Value.(*frames.Frame) // point f to the head (previous frame)
 	return f, nil
 }
