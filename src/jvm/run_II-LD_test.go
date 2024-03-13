@@ -897,7 +897,7 @@ func TestLconst1(t *testing.T) {
 	}
 }
 
-// LDC_W: get CP entry indexed by following byte
+// LDC: get CP entry indexed by following byte
 func TestLdc(t *testing.T) {
 	f := newFrame(opcodes.LDC)
 	f.Meth = append(f.Meth, 0x01)
