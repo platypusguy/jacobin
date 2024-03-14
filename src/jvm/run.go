@@ -602,7 +602,7 @@ frameInterpreter:
 					return errors.New(errMsg)
 				}
 				array = fld.Fvalue.([]int64)
-			case []float64:
+			case []int64:
 				array = ref.([]int64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
