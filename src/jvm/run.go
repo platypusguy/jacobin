@@ -391,6 +391,11 @@ frameInterpreter:
 				array = obj.FieldTable["value"].Fvalue.([]int64)
 			case []int64:
 				array = ref.([]int64)
+			default:
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("I/C/S/LALOAD: Invalid reference type of an array: %T", ref)
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			if index >= int64(len(array)) {
@@ -422,6 +427,11 @@ frameInterpreter:
 					return errors.New(errMsg)
 				}
 				array = (*obj).FieldTable["value"].Fvalue.([]float64)
+			default:
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("D/FALOAD: Invalid reference type of an array: %T", ref)
+				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				return errors.New(errMsg)
 			}
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
