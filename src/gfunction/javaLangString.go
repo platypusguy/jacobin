@@ -442,7 +442,7 @@ func StringFormatter(params []interface{}) interface{} {
 	}
 
 	valuesOut := []any{}
-	fmt.Printf("DEBUG StringFormatter params[1]=%T\n", params[1])
+	//fmt.Printf("DEBUG StringFormatter params[1]=%T\n", params[1])
 	fld := params[1].(*object.Object).FieldTable["value"]
 	//fmt.Printf("DEBUG StringFormatter fld.Ftype=%s, fld.Fvalue=%v\n", fld.Ftype, fld.Fvalue)
 	if !strings.HasPrefix(fld.Ftype, types.RefArray) {
