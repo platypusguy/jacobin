@@ -1696,9 +1696,9 @@ frameInterpreter:
 			objField := obj.FieldTable[fieldName]
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
-				fieldValue = stringPool.GetStringPointer(fieldValue.(uint32))
+				fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
 			} else {
-				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
+				fieldValue = objField.Fvalue
 			}
 			push(f, fieldValue)
 
