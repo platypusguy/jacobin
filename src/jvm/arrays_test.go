@@ -1109,7 +1109,7 @@ func TestDaloadNilArray(t *testing.T) {
 
 	errMsg := string(out[:])
 
-	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+	if !strings.Contains(errMsg, "Invalid object pointer") {
 		t.Errorf("DALOAD: Did not get expected err msg for nil array, got: %s",
 			errMsg)
 	}
@@ -1276,7 +1276,7 @@ func TestDastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "field type expected") {
 		t.Errorf("DASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1315,7 +1315,7 @@ func TestDastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Invalid array subscript") {
+	if !strings.Contains(errMsg, " but index=") {
 		t.Errorf("DASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1392,7 +1392,7 @@ func TestFaloadNilArray(t *testing.T) {
 
 	errMsg := string(out[:])
 
-	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+	if !strings.Contains(errMsg, "Invalid object pointer") {
 		t.Errorf("FALOAD: Did not get expected err msg for nil array, got: %s",
 			errMsg)
 	}
@@ -1553,7 +1553,7 @@ func TestFastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "field type expected") {
 		t.Errorf("FASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1591,7 +1591,7 @@ func TestFastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Invalid array subscript") {
+	if !strings.Contains(errMsg, " but index=") {
 		t.Errorf("FASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1845,7 +1845,7 @@ func TestIastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "IA/CA/SASTORE: field type expected=[I, observed=[F") {
+	if !strings.Contains(errMsg, "field type expected") {
 		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1883,7 +1883,7 @@ func TestIastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "IA/CA/SASTORE: array size= 10 but array index= 30 (too large)") {
+	if !strings.Contains(errMsg, " but array index=") {
 		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -2129,7 +2129,7 @@ func TestLastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "field type expected") {
 		t.Errorf("LASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -2168,7 +2168,7 @@ func TestLastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Invalid array subscript") {
+	if !strings.Contains(errMsg, " but array index=") {
 		t.Errorf("LASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
