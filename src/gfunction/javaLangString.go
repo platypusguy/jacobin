@@ -143,6 +143,12 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
+	MethodSignatures["java/lang/String.charAt(I)C"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringCharAt,
+		}
+
 	// Return a formatted string using the reference object string as the format string
 	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
@@ -185,6 +191,13 @@ func Load_Lang_String() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  toUpperCase,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.trim()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trimString,
 		}
 
 	// Return a string representing a boolean value.
@@ -294,6 +307,26 @@ func stringClinit([]interface{}) interface{} {
 func noSupportYetInString([]interface{}) interface{} {
 	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", object.StringClassName)
 	return getGErrBlk(exceptions.UnsupportedEncodingException, errMsg)
+}
+
+// Get character at the given index.
+func stringCharAt(params []interface{}) interface{} {
+	// Unpack the reference string and convert it to a rune array.
+	ptrObj := params[0].(*object.Object)
+	fld := ptrObj.FieldTable["value"]
+	if fld.Ftype != types.StringIndex {
+		errMsg := "stringEquals: reference object must be a String"
+		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	}
+	str := object.GetGoStringFromObject(ptrObj)
+	runeArray := []rune(str)
+
+	// Get index.
+	index := params[1].(int64)
+
+	// Return indexed character.
+	runeValue := runeArray[index]
+	return int64(runeValue)
 }
 
 // Are 2 strings equal?
@@ -531,6 +564,13 @@ func toLowerCase(params []interface{}) interface{} {
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
 	str := strings.ToUpper(object.GetGoStringFromObject(params[0].(*object.Object)))
+	obj := object.NewPoolStringFromGoString(str)
+	return obj
+}
+
+func trimString(params []interface{}) interface{} {
+	// params[0]: input string
+	str := strings.Trim(object.GetGoStringFromObject(params[0].(*object.Object)), " ")
 	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }
