@@ -191,7 +191,8 @@ frameInterpreter:
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
 
-		switch f.Meth[f.PC] { // cases listed in numerical value of opcode
+		opcode := f.Meth[f.PC]
+		switch opcode { // cases listed in numerical value of opcode
 		case opcodes.NOP:
 			break
 		case opcodes.ACONST_NULL: // 0x01   (push null onto opStack)
@@ -253,7 +254,7 @@ frameInterpreter:
 			push(f, wint64)
 		case opcodes.LDC, opcodes.LDC_W: // 	0x12, 0x13 	(get const from CP and push it onto stack)
 			var idx int
-			if f.Meth[f.PC] == opcodes.LDC { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
+			if opcode == opcodes.LDC { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
 				idx = int(f.Meth[f.PC+1])
 				f.PC += 1
 			} else {
@@ -373,94 +374,76 @@ frameInterpreter:
 			push(f, f.Locals[3])
 		case opcodes.IALOAD, //		0x2E	(push contents of an int array element)
 			opcodes.CALOAD, //		0x34	(push contents of a (two-byte) char array element)
-			opcodes.SALOAD: //		0x35    (push contents of a short array element)
+			opcodes.SALOAD, //		0x35    (push contents of a short array element)
+			opcodes.LALOAD: //		0x2F	(push contents of a long array element)
+			var array []int64
 			index := pop(f).(int64)
-			iAref := pop(f).(*object.Object) // ptr to array object
-			if iAref == object.Null {
+			ref := pop(f)
+			switch ref.(type) {
+			case *object.Object:
+				obj := ref.(*object.Object)
+				if obj == object.Null {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "I/C/S/LALOAD: Invalid (null) reference to an array"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
+				array = obj.FieldTable["value"].Fvalue.([]int64)
+			case []int64:
+				array = ref.([]int64)
+			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "I/C/SALOAD: Invalid (null) reference to an array"
+				errMsg := fmt.Sprintf("I/C/S/LALOAD: Invalid reference type of an array: %T", ref)
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			ao := iAref.FieldTable["value"].Fvalue
-			array := ao.([]int64)
-
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "IALOAD: Invalid array subscript"
+				errMsg := "I/C/S/LALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
 			var value = array[index]
 			push(f, value)
+			if opcode == opcodes.LALOAD {
+				push(f, value)
+			}
 
-		case opcodes.LALOAD: //		0x2F	(push contents of a long array element)
+		case opcodes.DALOAD, //		0x31	(push contents of a double array element)
+			opcodes.FALOAD: //		0x30	(push contents of a float array element):
+			var array []float64
 			index := pop(f).(int64)
-			iAref := pop(f).(*object.Object) // ptr to array object
-			if iAref == nil {
+			ref := pop(f) // type is TBD
+			switch ref.(type) {
+			case []float64:
+				array = ref.([]float64)
+			case *object.Object:
+				obj := ref.(*object.Object)
+				if obj == object.Null {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "D/FALOAD: Invalid object pointer (nil)"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
+				array = (*obj).FieldTable["value"].Fvalue.([]float64)
+			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LALOAD: Invalid (null) reference to an array"
+				errMsg := fmt.Sprintf("D/FALOAD: Invalid reference type of an array: %T", ref)
 				exceptions.Throw(exceptions.NullPointerException, errMsg)
 				return errors.New(errMsg)
 			}
-
-			oa := iAref.FieldTable["value"]
-			array := oa.Fvalue.([]int64)
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"LALOAD: Invalid array subscript")
-				return errors.New("LALOAD error")
-			}
-			var value = array[index]
-			push(f, value)
-			push(f, value) // pushed twice due to JDK longs being 64 bits wide
-
-		case opcodes.FALOAD: //		0x30	(push contents of an float array element)
-			index := pop(f).(int64)
-			ref := pop(f) // ptr to array object
-			if ref == nil || ref == object.Null {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "FALOAD: Invalid (null) reference to an array"
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
-				return errors.New(errMsg)
-			}
-
-			fAref := ref.(*object.Object)
-			oa := fAref.FieldTable["value"]
-			array := oa.Fvalue.([]float64)
-			if index >= int64(len(array)) {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "FALOAD: Invalid array subscript"
+				errMsg := "D/FALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
 			var value = array[index]
 			push(f, value)
-
-		case opcodes.DALOAD: //		0x31	(push contents of a double array element)
-			index := pop(f).(int64)
-			fAref := pop(f).(*object.Object) // ptr to array object
-			if fAref == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "DALOAD: Invalid (null) reference to an array"
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
-				return errors.New(errMsg)
+			if opcode == opcodes.DALOAD {
+				push(f, value)
 			}
-
-			oa := fAref.FieldTable["value"]
-			array := oa.Fvalue.([]float64)
-
-			if index >= int64(len(array)) {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "DALOAD: Invalid array subscript"
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
-				return errors.New(errMsg)
-			}
-			var value = array[index]
-			push(f, value)
-			push(f, value)
 
 		case opcodes.AALOAD: // 0x32    (push contents of a reference array element)
 			index := pop(f).(int64)
@@ -524,12 +507,11 @@ frameInterpreter:
 
 		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
-			bytecode := f.Meth[f.PC]
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
 			f.Locals[index] = pop(f).(int64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
-			if bytecode == opcodes.LSTORE {
+			if opcode == opcodes.LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
@@ -604,137 +586,91 @@ frameInterpreter:
 			f.Locals[3] = pop(f)
 		case opcodes.IASTORE, //	0x4F	(store int in an array)
 			opcodes.CASTORE, //		0x55 	(store char (2 bytes) in an array)
-			opcodes.SASTORE: //    	0x56	(store a short in an array)
+			opcodes.SASTORE, //    	0x56	(store a short in an array)
+			opcodes.LASTORE: //     0x50	(store a long in a long array)
+			var array []int64
 			value := pop(f).(int64)
-			index := pop(f).(int64)
-			arrObj := pop(f).(*object.Object) // the array object
-			if arrObj == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.NullPointerException,
-					"IA/CA/SASTORE: Invalid (null) reference to an array")
-				return errors.New("IA/CA/SASTORE: Invalid array address")
+			if opcode == opcodes.LASTORE {
+				pop(f) // second pop b/c longs use two slots
 			}
-
-			ao := arrObj.FieldTable["value"]
-			if ao.Ftype != "[I" {
+			index := pop(f).(int64)
+			ref := pop(f)
+			switch ref.(type) {
+			case *object.Object:
+				obj := ref.(*object.Object)
+				if obj == object.Null {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "I/C/S/LASTORE: Invalid (null) reference to an array"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New(errMsg)
+				}
+				fld := obj.FieldTable["value"]
+				if fld.Ftype != types.IntArray {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("I/C/S/LASTORE: field type expected=[I, observed=%s", fld.Ftype)
+					exceptions.Throw(exceptions.ArrayStoreException, errMsg)
+					return errors.New(errMsg)
+				}
+				array = fld.Fvalue.([]int64)
+			case []int64:
+				array = ref.([]int64)
+			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IA/CA/SASTORE: field type expected=[I, observed=%s", ao.Ftype)
-				_ = log.Log(errMsg, log.SEVERE)
+				errMsg := fmt.Sprintf("I/C/S/LASTORE: unexpected reference type: %T", ref)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			array := ao.Fvalue.([]int64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IA/CA/SASTORE: array size= %d but array index= %d (too large)", size, index)
-				_ = log.Log(errMsg, log.SEVERE)
+				errMsg := fmt.Sprintf("I/C/S/LASTORE: array size= %d but array index= %d (too large)", size, index)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
 			array[index] = value
 
-		case opcodes.LASTORE: // 0x50	(store a long in a long array)
-			value := pop(f).(int64)
-			pop(f) // second pop b/c longs use two slots
+		case opcodes.DASTORE, // 0x52	(store a double in a doubles array)
+			opcodes.FASTORE: // 0x51	(store a float in a float array)
+			var array []float64
+			value := pop(f).(float64)
+			if opcode == opcodes.DASTORE {
+				pop(f) // second pop b/c doubles take two slots on the operand stack
+			}
 			index := pop(f).(int64)
-			lAref := pop(f).(*object.Object) // ptr to array object
-			if lAref == nil {
+			ref := pop(f)
+			switch ref.(type) {
+			case *object.Object:
+				obj := ref.(*object.Object)
+				if obj == object.Null {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "D/FASTORE: Invalid (null) reference to an array"
+					exceptions.Throw(exceptions.NullPointerException, errMsg)
+					return errors.New("DASTORE/FASTORE: Invalid array reference")
+				}
+				fld := obj.FieldTable["value"]
+				if fld.Ftype != types.FloatArray {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("D/FASTORE: field type expected=[F, observed=%s", fld.Ftype)
+					exceptions.Throw(exceptions.ArrayStoreException, errMsg)
+					return errors.New(errMsg)
+				}
+				array = fld.Fvalue.([]float64)
+			case []float64:
+				array = ref.([]float64)
+			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("LASTORE: Invalid (null) reference to an array")
-				exceptions.Throw(exceptions.NullPointerException, errMsg)
+				errMsg := fmt.Sprintf("D/FASTORE: unexpected reference type: %T", ref)
+				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
 
-			oa := lAref.FieldTable["value"]
-			arrType := oa.Ftype
-
-			if arrType != "[I" {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("LASTORE: field type expected=[I, observed=%s", arrType)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayStoreException,
-					"LASTORE: Attempt to access array of incorrect type")
-				return errors.New("LASTORE: Invalid array type")
-			}
-
-			array := oa.Fvalue.([]int64)
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("LASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"LASTORE: Invalid array subscript")
-				return errors.New("LASTORE: Invalid array index")
-			}
-			array[index] = value
-
-		case opcodes.FASTORE: // 0x51	(store a float in a float array)
-			value := pop(f).(float64)
-			index := pop(f).(int64)
-			fAref := pop(f).(*object.Object) // ptr to array object
-			if fAref == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.NullPointerException,
-					"FASTORE: Invalid (null) reference to an array")
-				return errors.New("FASTORE: Invalid array address")
-			}
-
-			oa := fAref.FieldTable["value"]
-			if oa.Ftype != "[F" {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("FASTORE: field type expected=[F, observed=%s", oa.Ftype)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayStoreException,
-					"FASTORE: Attempt to access array of incorrect type")
-				return errors.New("FASTORE: Invalid array type")
-			}
-
-			array := oa.Fvalue.([]float64)
-			size := int64(len(array))
-			if index >= size {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("FASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"FASTORE: Invalid array subscript")
-				return errors.New("FASTORE: Invalid array index")
-			}
-			array[index] = value
-
-		case opcodes.DASTORE: // 0x52	(store a double in a doubles array)
-			value := pop(f).(float64)
-			pop(f) // second pop b/c doubles take two slots on the operand stack
-			index := pop(f).(int64)
-			dAref := pop(f).(*object.Object)
-			if dAref == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.Throw(exceptions.NullPointerException,
-					"DASTORE: Invalid (null) reference to an array")
-				return errors.New("DASTORE: Invalid array reference")
-			}
-
-			oa := dAref.FieldTable["value"]
-			if oa.Ftype != "[F" {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("DASTORE: field type expected=[F, observed=%s", oa.Ftype)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayStoreException,
-					"DASTORE: Attempt to access array of incorrect type")
-				return errors.New("DASTORE: Invalid array type")
-			}
-
-			array := oa.Fvalue.([]float64)
-			size := int64(len(array))
-			if index >= size {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException,
-					"DASTORE: Invalid array subscript")
-				return errors.New("DASTORE: Invalid array index")
+				errMsg := fmt.Sprintf("D/FASTORE: array size=%d but index=%d (too large)", size, index)
+				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+				return errors.New(errMsg)
 			}
 
 			array[index] = value
@@ -1246,7 +1182,7 @@ frameInterpreter:
 			value2 := pop(f).(float64)
 			value1 := pop(f).(float64)
 			if math.IsNaN(value1) || math.IsNaN(value2) {
-				if f.Meth[f.PC] == opcodes.FCMPG {
+				if opcode == opcodes.FCMPG {
 					push(f, int64(1))
 				} else {
 					push(f, int64(-1))
@@ -1265,7 +1201,7 @@ frameInterpreter:
 			pop(f)
 
 			if math.IsNaN(value1) || math.IsNaN(value2) {
-				if f.Meth[f.PC] == opcodes.DCMPG {
+				if opcode == opcodes.DCMPG {
 					push(f, int64(1))
 				} else {
 					push(f, int64(-1))
@@ -1770,9 +1706,9 @@ frameInterpreter:
 			objField := obj.FieldTable[fieldName]
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
-				fieldValue = stringPool.GetStringPointer(fieldValue.(uint32))
+				fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
 			} else {
-				fieldValue = objField.Fvalue // <<<< test for string and return pointer to String object
+				fieldValue = objField.Fvalue
 			}
 			push(f, fieldValue)
 
@@ -2699,10 +2635,10 @@ frameInterpreter:
 			}
 
 		default:
-			missingOpCode := fmt.Sprintf("%d (0x%X)", f.Meth[f.PC], f.Meth[f.PC])
+			missingOpCode := fmt.Sprintf("%d (0x%X)", opcode, opcode)
 
-			if int(f.Meth[f.PC]) < len(opcodes.BytecodeNames) && int(f.Meth[f.PC]) > 0 {
-				missingOpCode += fmt.Sprintf("(%s)", opcodes.BytecodeNames[f.Meth[f.PC]])
+			if int(opcode) < len(opcodes.BytecodeNames) && int(opcode) > 0 {
+				missingOpCode += fmt.Sprintf("(%s)", opcodes.BytecodeNames[opcode])
 			}
 
 			glob.ErrorGoStack = string(debug.Stack())
