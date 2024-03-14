@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/stringPool"
 	"os"
 	"strings"
 	"testing"
@@ -927,6 +928,51 @@ func TestLdc(t *testing.T) {
 	value := pop(&f).(int64)
 	if value != 25 {
 		t.Errorf("LDC_W: Expected popped value to be 25, got: %d", value)
+	}
+}
+
+// LDC: get CP string entry indexed by following byte. Returns a string object
+// whose value field contains an index into the string pool
+func TestLdcTest2(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.LDC)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
+	// now create a skeletal, two-entry CP
+	var strings = make([]string, 1)
+	CP.Utf8Refs = strings
+	CP.Utf8Refs[0] = "hello"
+
+	CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	stringEntry := classloader.CpEntry{
+		Type: classloader.UTF8, Slot: 0,
+	}
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, stringEntry)
+
+	emptyStringPoolSize := stringPool.GetStringPoolSize()
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	if emptyStringPoolSize != stringPool.GetStringPoolSize()-1 {
+		t.Errorf("Expected string pool size to be %d, got: %d",
+			emptyStringPoolSize+1, stringPool.GetStringPoolSize())
+	}
+
+	strObj := pop(&f).(*object.Object)
+	index := strObj.FieldTable["value"].Fvalue.(uint32)
+	str := stringPool.GetStringPointer(index)
+	if *str != "hello" {
+		t.Errorf("LDC_W: Expected popped value to be index to 'hello', got %s", *str)
 	}
 }
 
