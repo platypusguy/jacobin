@@ -384,7 +384,7 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "I/C/SALOAD: Invalid (null) reference to an array"
+					errMsg := "I/C/S/LALOAD: Invalid (null) reference to an array"
 					exceptions.Throw(exceptions.NullPointerException, errMsg)
 					return errors.New(errMsg)
 				}
@@ -395,7 +395,7 @@ frameInterpreter:
 
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "IALOAD: Invalid array subscript"
+				errMsg := "I/C/S/LALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
@@ -417,7 +417,7 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "DALOAD: Invalid object pointer (nil)"
+					errMsg := "D/FALOAD: Invalid object pointer (nil)"
 					exceptions.Throw(exceptions.NullPointerException, errMsg)
 					return errors.New(errMsg)
 				}
@@ -425,7 +425,7 @@ frameInterpreter:
 			}
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "DALOAD: Invalid array subscript"
+				errMsg := "D/FALOAD: Invalid array subscript"
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
@@ -590,14 +590,14 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "IA/CA/SA/LASTORE: Invalid (null) reference to an array"
+					errMsg := "I/C/S/LASTORE: Invalid (null) reference to an array"
 					exceptions.Throw(exceptions.NullPointerException, errMsg)
 					return errors.New(errMsg)
 				}
 				fld := obj.FieldTable["value"]
 				if fld.Ftype != types.IntArray {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("IA/CA/SA/LASTORE: field type expected=[I, observed=%s", fld.Ftype)
+					errMsg := fmt.Sprintf("I/C/S/LASTORE: field type expected=[I, observed=%s", fld.Ftype)
 					exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 					return errors.New(errMsg)
 				}
@@ -606,7 +606,7 @@ frameInterpreter:
 				array = ref.([]int64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IA/CA/SA/LASTORE: unexpected reference type: %T", ref)
+				errMsg := fmt.Sprintf("I/C/S/LASTORE: unexpected reference type: %T", ref)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
@@ -614,7 +614,7 @@ frameInterpreter:
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IA/CA/SA/LASTORE: array size= %d but array index= %d (too large)", size, index)
+				errMsg := fmt.Sprintf("I/C/S/LASTORE: array size= %d but array index= %d (too large)", size, index)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
@@ -634,14 +634,14 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "DASTORE: Invalid (null) reference to an array"
+					errMsg := "D/FASTORE: Invalid (null) reference to an array"
 					exceptions.Throw(exceptions.NullPointerException, errMsg)
 					return errors.New("DASTORE/FASTORE: Invalid array reference")
 				}
 				fld := obj.FieldTable["value"]
 				if fld.Ftype != types.FloatArray {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("DASTORE/FASTORE: field type expected=[F, observed=%s", fld.Ftype)
+					errMsg := fmt.Sprintf("D/FASTORE: field type expected=[F, observed=%s", fld.Ftype)
 					exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 					return errors.New(errMsg)
 				}
@@ -650,7 +650,7 @@ frameInterpreter:
 				array = ref.([]float64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("DASTORE/FASTORE: unexpected reference type: %T", ref)
+				errMsg := fmt.Sprintf("D/FASTORE: unexpected reference type: %T", ref)
 				exceptions.Throw(exceptions.ArrayStoreException, errMsg)
 				return errors.New(errMsg)
 			}
@@ -658,7 +658,7 @@ frameInterpreter:
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("DASTORE: array size=%d but index=%d (too large)", size, index)
+				errMsg := fmt.Sprintf("D/FASTORE: array size=%d but index=%d (too large)", size, index)
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
