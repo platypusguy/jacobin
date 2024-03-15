@@ -32,6 +32,13 @@ func Load_Lang_String() map[string]GMeth {
 		}
 
 	// String(byte[] bytes) - instantiate a String from a byte array
+	MethodSignatures["java/lang/String.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  newEmptyString,
+		}
+
+	// String(byte[] bytes) - instantiate a String from a byte array
 	MethodSignatures["java/lang/String.<init>([B)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -366,6 +373,14 @@ func stringEquals(params []interface{}) interface{} {
 		return int64(1) // true
 	}
 	return int64(0) // false
+}
+
+// New empty string - "java/lang/String.<init>()V"
+func newEmptyString(params []interface{}) interface{} {
+	// params[0] = target object for string (updated)
+	str := ""
+	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
+	return nil
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
