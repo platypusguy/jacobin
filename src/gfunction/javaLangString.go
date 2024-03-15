@@ -315,7 +315,7 @@ func stringCharAt(params []interface{}) interface{} {
 	ptrObj := params[0].(*object.Object)
 	fld := ptrObj.FieldTable["value"]
 	if fld.Ftype != types.StringIndex {
-		errMsg := "stringEquals: reference object must be a String"
+		errMsg := "stringCharAt: reference object must be a String"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	str := object.GetGoStringFromObject(ptrObj)
@@ -333,30 +333,39 @@ func stringCharAt(params []interface{}) interface{} {
 func stringEquals(params []interface{}) interface{} {
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
+	var str1, str2 string
 
-	// Unpack the reference string.
-	ptrObj := params[0].(*object.Object)
-	fld := ptrObj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		errMsg := "stringEquals: reference object must be a String"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	switch params[0].(type) {
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: 1st reference object must hold an interned String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		str1 = object.GetGoStringFromObject(obj)
+	case string:
+		str1 = params[0].(string)
 	}
-	str1 := object.GetGoStringFromObject(ptrObj)
 
-	// Unpack the compare-to string
-	ptrObj = params[1].(*object.Object)
-	fld = ptrObj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		return int64(0) // Not a string, return false
+	switch params[1].(type) {
+	case *object.Object:
+		obj := params[1].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: 2nd reference object must hold an interned String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		str2 = object.GetGoStringFromObject(obj)
+	case string:
+		str2 = params[1].(string)
 	}
-	str2 := object.GetGoStringFromObject(ptrObj)
 
 	// Are they equal in value?
 	if str1 == str2 {
 		return int64(1) // true
-	} else {
-		return int64(0) // false
 	}
+	return int64(0) // false
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
@@ -544,14 +553,21 @@ func StringFormatter(params []interface{}) interface{} {
 }
 
 func stringLength(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	fld := obj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		errMsg := "stringLength: reference object must be a String"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	switch params[0].(type) {
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: reference object must be a String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		bytes := []byte(object.GetGoStringFromObject(obj))
+		return int64(len(bytes))
+	case string:
+		return len(params[0].(string))
 	}
-	bytes := []byte(object.GetGoStringFromObject(obj))
-	return int64(len(bytes))
+	errMsg := "stringLength: reference is neither an object nor a String"
+	return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 }
 
 func toLowerCase(params []interface{}) interface{} {
