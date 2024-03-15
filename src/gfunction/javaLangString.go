@@ -32,6 +32,13 @@ func Load_Lang_String() map[string]GMeth {
 		}
 
 	// String(byte[] bytes) - instantiate a String from a byte array
+	MethodSignatures["java/lang/String.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  newEmptyString,
+		}
+
+	// String(byte[] bytes) - instantiate a String from a byte array
 	MethodSignatures["java/lang/String.<init>([B)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -180,6 +187,20 @@ func Load_Lang_String() map[string]GMeth {
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.substring(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  substringToTheEnd,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.substring(II)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  substringStartEnd,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toLowerCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -315,7 +336,7 @@ func stringCharAt(params []interface{}) interface{} {
 	ptrObj := params[0].(*object.Object)
 	fld := ptrObj.FieldTable["value"]
 	if fld.Ftype != types.StringIndex {
-		errMsg := "stringEquals: reference object must be a String"
+		errMsg := "stringCharAt: reference object must be a String"
 		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 	}
 	str := object.GetGoStringFromObject(ptrObj)
@@ -333,30 +354,47 @@ func stringCharAt(params []interface{}) interface{} {
 func stringEquals(params []interface{}) interface{} {
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
+	var str1, str2 string
 
-	// Unpack the reference string.
-	ptrObj := params[0].(*object.Object)
-	fld := ptrObj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		errMsg := "stringEquals: reference object must be a String"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	switch params[0].(type) {
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: 1st reference object must hold an interned String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		str1 = object.GetGoStringFromObject(obj)
+	case string:
+		str1 = params[0].(string)
 	}
-	str1 := object.GetGoStringFromObject(ptrObj)
 
-	// Unpack the compare-to string
-	ptrObj = params[1].(*object.Object)
-	fld = ptrObj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		return int64(0) // Not a string, return false
+	switch params[1].(type) {
+	case *object.Object:
+		obj := params[1].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: 2nd reference object must hold an interned String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		str2 = object.GetGoStringFromObject(obj)
+	case string:
+		str2 = params[1].(string)
 	}
-	str2 := object.GetGoStringFromObject(ptrObj)
 
 	// Are they equal in value?
 	if str1 == str2 {
 		return int64(1) // true
-	} else {
-		return int64(0) // false
 	}
+	return int64(0) // false
+}
+
+// New empty string - "java/lang/String.<init>()V"
+func newEmptyString(params []interface{}) interface{} {
+	// params[0] = target object for string (updated)
+	str := ""
+	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
+	return nil
 }
 
 // Construct a compact string object (usable by Java) from a Go byte array.
@@ -489,16 +527,22 @@ func StringFormatter(params []interface{}) interface{} {
 		//fmt.Printf("DEBUG StringFormatter ii: %d of %d\n", ii+1, len(valuesIn))
 		//fmt.Printf("DEBUG StringFormatter valuesIn[ii] field type: %s, field value: %v\n",
 		//	valuesIn[ii].FieldTable["value"].Ftype, valuesIn[ii].FieldTable["value"].Fvalue)
-		if valuesIn[ii].FieldTable["value"].Ftype == types.StringIndex {
+		// Extract the field.
+		fld := valuesIn[ii].FieldTable["value"]
+
+		if fld.Ftype == types.StringIndex {
+			switch fld.Fvalue.(type) {
+			case uint32:
+			default:
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d Ftype=T but Fvalue not uint32 (%T)", ii+1, fld.Fvalue)
+				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+			}
 			str := object.GetGoStringFromObject(valuesIn[ii])
 			valuesOut = append(valuesOut, str)
 			//fmt.Printf("DEBUG StringFormatter got a string: %s\n", str)
 		} else {
 			//str := valuesIn[ii].FormatField("value")
 			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField: %s\n", ii, str)
-
-			// Extract the field.
-			fld := valuesIn[ii].FieldTable["value"]
 
 			// Process depending on field type
 			switch fld.Ftype {
@@ -531,7 +575,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 			}
 		}
 	}
@@ -544,14 +588,82 @@ func StringFormatter(params []interface{}) interface{} {
 }
 
 func stringLength(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	fld := obj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		errMsg := "stringLength: reference object must be a String"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	switch params[0].(type) {
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.StringIndex {
+			errMsg := "stringLength: reference object must be a String"
+			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+		}
+		bytes := []byte(object.GetGoStringFromObject(obj))
+		return int64(len(bytes))
+	case string:
+		return len(params[0].(string))
 	}
-	bytes := []byte(object.GetGoStringFromObject(obj))
-	return int64(len(bytes))
+	errMsg := "stringLength: reference is neither an object nor a String"
+	return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+}
+
+// "java/lang/String.substring(I)Ljava/lang/String;"
+func substringToTheEnd(params []interface{}) interface{} {
+	var str string
+	switch params[0].(type) {
+	case *object.Object:
+		str = object.GetGoStringFromObject(params[0].(*object.Object))
+	case []byte:
+		str = string(params[0].([]byte))
+	}
+
+	// Get substring offset and length
+	ssStart := params[1].(int64)
+	ssEnd := int64(len(str))
+
+	// Validate boundaries.
+	totalLength := int64(len(str))
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
+		errMsg1 := "substringToTheEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Compute substring.
+	str = str[ssStart:ssEnd]
+
+	// Return new string in an object.
+	obj := object.NewPoolStringFromGoString(str)
+	return obj
+
+}
+
+// "java/lang/String.substring(II)Ljava/lang/String;"
+func substringStartEnd(params []interface{}) interface{} {
+	var str string
+	switch params[0].(type) {
+	case *object.Object:
+		str = object.GetGoStringFromObject(params[0].(*object.Object))
+	case []byte:
+		str = string(params[0].([]byte))
+	}
+
+	// Get substring offset and length
+	ssStart := params[1].(int64)
+	ssEnd := params[2].(int64)
+
+	// Validate boundaries.
+	totalLength := int64(len(str))
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
+		errMsg1 := "substringStartEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Compute substring.
+	str = str[ssStart:ssEnd]
+
+	// Return new string in an object.
+	obj := object.NewPoolStringFromGoString(str)
+	return obj
 }
 
 func toLowerCase(params []interface{}) interface{} {
