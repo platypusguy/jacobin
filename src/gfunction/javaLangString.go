@@ -498,16 +498,22 @@ func StringFormatter(params []interface{}) interface{} {
 		//fmt.Printf("DEBUG StringFormatter ii: %d of %d\n", ii+1, len(valuesIn))
 		//fmt.Printf("DEBUG StringFormatter valuesIn[ii] field type: %s, field value: %v\n",
 		//	valuesIn[ii].FieldTable["value"].Ftype, valuesIn[ii].FieldTable["value"].Fvalue)
-		if valuesIn[ii].FieldTable["value"].Ftype == types.StringIndex {
+		// Extract the field.
+		fld := valuesIn[ii].FieldTable["value"]
+
+		if fld.Ftype == types.StringIndex {
+			switch fld.Fvalue.(type) {
+			case uint32:
+			default:
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d Ftype=T but Fvalue not uint32 (%T)", ii+1, fld.Fvalue)
+				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+			}
 			str := object.GetGoStringFromObject(valuesIn[ii])
 			valuesOut = append(valuesOut, str)
 			//fmt.Printf("DEBUG StringFormatter got a string: %s\n", str)
 		} else {
 			//str := valuesIn[ii].FormatField("value")
 			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField: %s\n", ii, str)
-
-			// Extract the field.
-			fld := valuesIn[ii].FieldTable["value"]
 
 			// Process depending on field type
 			switch fld.Ftype {
@@ -540,7 +546,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 			}
 		}
 	}

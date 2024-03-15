@@ -7,6 +7,8 @@
 package object
 
 import (
+	"fmt"
+	"jacobin/exceptions"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -165,7 +167,14 @@ func NewPoolStringFromGoString(str string) *Object {
 // GetGoStringFromObject : convenience method to extract a Go string from a Pool string
 func GetGoStringFromObject(strPtr *Object) string {
 	obj := *strPtr
-	index := obj.FieldTable["value"].Fvalue.(uint32)
+	fld := obj.FieldTable["value"]
+	switch fld.Ftype {
+	case types.StringIndex:
+	default:
+		errMsg := fmt.Sprintf("GetGoStringFromObject: Expected Ftype=T, observed Ftype=%s", fld.Ftype)
+		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+	}
+	index := fld.Fvalue.(uint32)
 	return *stringPool.GetStringPointer(index)
 }
 
