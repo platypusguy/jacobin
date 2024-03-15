@@ -209,6 +209,7 @@ func LoadBaseClasses() {
 }
 
 // walk the directory and load every file (which is known to be a class)
+// TODO: test work on JAR files to determine whether this function is still used
 func walk(s string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
@@ -454,7 +455,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 }
 
 // load the parsed class into a form suitable for posting to the method area (which is
-// exec.MethArea. This mostly involves copying the data, converting most indexes to uint16
+// exec.MethArea). This mostly involves copying the data, converting most indexes to uint16
 // and removing some fields we needed in parsing, but which are no longer required.
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 

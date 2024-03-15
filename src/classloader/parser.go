@@ -13,8 +13,6 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
-
-	// "jacobin/object"
 	"jacobin/types"
 	"os"
 	"strconv"
