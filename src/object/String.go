@@ -168,9 +168,7 @@ func NewPoolStringFromGoString(str string) *Object {
 func GetGoStringFromObject(strPtr *Object) string {
 	obj := *strPtr
 	fld := obj.FieldTable["value"]
-	switch fld.Ftype {
-	case types.StringIndex:
-	default:
+	if fld.Ftype != types.StringIndex {
 		errMsg := fmt.Sprintf("GetGoStringFromObject: Expected Ftype=T, observed Ftype=%s", fld.Ftype)
 		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 	}
