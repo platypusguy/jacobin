@@ -48,10 +48,6 @@ GetStringIndex(arg *string) uint32 -
   - Given a pointer to a Go string, add the string to the pool if the string is not already present.
   - Whether new or existing, return the index for the string for subsequent direct retrievals using stringList.
 
-GetStringPointer(index uint32) *string
-
-	Given an index to stringList, retrieve a direct pointer to the string.
-
 GetStringPoolSize() uint32
 
 	Get the current string Pool size.
@@ -90,8 +86,14 @@ func GetStringIndex(arg *string) uint32 {
 	return index
 }
 
+// GetStringPointer retrieves a pointer to the string at the index into the string pool slice
+// Returns nil on index out of range (which is the only possible error)
 func GetStringPointer(index uint32) *string {
-	return &globals.StringPoolList[index]
+	if index < uint32(len(globals.StringPoolList)) {
+		return &globals.StringPoolList[index]
+	} else {
+		return nil
+	}
 }
 
 func GetStringPoolSize() uint32 {
