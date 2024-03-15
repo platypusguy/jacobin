@@ -187,6 +187,20 @@ func Load_Lang_String() map[string]GMeth {
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.substring(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  substringToTheEnd,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.substring(II)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  substringStartEnd,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toLowerCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -589,6 +603,67 @@ func stringLength(params []interface{}) interface{} {
 	}
 	errMsg := "stringLength: reference is neither an object nor a String"
 	return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+}
+
+// "java/lang/String.substring(I)Ljava/lang/String;"
+func substringToTheEnd(params []interface{}) interface{} {
+	var str string
+	switch params[0].(type) {
+	case *object.Object:
+		str = object.GetGoStringFromObject(params[0].(*object.Object))
+	case []byte:
+		str = string(params[0].([]byte))
+	}
+
+	// Get substring offset and length
+	ssStart := params[1].(int64)
+	ssEnd := int64(len(str))
+
+	// Validate boundaries.
+	totalLength := int64(len(str))
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
+		errMsg1 := "substringToTheEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Compute substring.
+	str = str[ssStart:ssEnd]
+
+	// Return new string in an object.
+	obj := object.NewPoolStringFromGoString(str)
+	return obj
+
+}
+
+// "java/lang/String.substring(II)Ljava/lang/String;"
+func substringStartEnd(params []interface{}) interface{} {
+	var str string
+	switch params[0].(type) {
+	case *object.Object:
+		str = object.GetGoStringFromObject(params[0].(*object.Object))
+	case []byte:
+		str = string(params[0].([]byte))
+	}
+
+	// Get substring offset and length
+	ssStart := params[1].(int64)
+	ssEnd := params[2].(int64)
+
+	// Validate boundaries.
+	totalLength := int64(len(str))
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
+		errMsg1 := "substringStartEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Compute substring.
+	str = str[ssStart:ssEnd]
+
+	// Return new string in an object.
+	obj := object.NewPoolStringFromGoString(str)
+	return obj
 }
 
 func toLowerCase(params []interface{}) interface{} {
