@@ -158,8 +158,7 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 
 	me := meth.exceptions[0]
 	if me != 2 {
-		t.Error("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got:" +
-			strconv.Itoa(me))
+		t.Errorf("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got: %d", me)
 	}
 }
 
