@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"errors"
+	"jacobin/stringPool"
 	"strconv"
 )
 
@@ -162,8 +163,9 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	methRef := klass.methodRefs[cpEnt.slot]
 	pointedToClassRef := klass.cpIndex[methRef.classIndex]
 	nameIndex := klass.classRefs[pointedToClassRef.slot]
-	className, err := FetchUTF8string(klass, nameIndex)
-	if err != nil {
+	// className, err := FetchUTF8string(klass, nameIndex)
+	classNamePtr := stringPool.GetStringPointer(nameIndex)
+	if classNamePtr != nil {
 		return "", "", "", cfe("ClassRef entry in MethodRef CP entry #" + strconv.Itoa(index) +
 			" does not point to a valid string")
 	}
@@ -174,7 +176,7 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 		return "", "", "", errors.New("error occurred") // the error msg is displayed in the called func.
 	}
 
-	return className, methName, methType, nil
+	return *classNamePtr, methName, methType, nil
 }
 
 func ResolveCPnameAndType(klass *ParsedClass, index int) (string, string, error) {
