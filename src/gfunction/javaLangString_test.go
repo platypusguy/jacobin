@@ -25,6 +25,7 @@ func TestStringClinit(t *testing.T) {
 		case *GErrBlk:
 			gErr := retval.(*GErrBlk)
 			if !strings.Contains(gErr.ErrMsg, "TestStringClinit: Could not find java/lang/String") {
+				classloader.MethAreaDump()
 				t.Errorf("TestStringClinit: Unexpected error message. got %s", gErr.ErrMsg)
 			}
 			if gErr.ExceptionType != exceptions.ClassNotLoadedException {
