@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"errors"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
 	"strconv"
@@ -25,15 +26,18 @@ import (
 //  5. Fields must have valid names, classes, and descriptions. Partially done in
 //     the parsing, but entirely done in formatCheckFields() below
 func formatCheckClass(klass *ParsedClass) error {
-	if formatCheckConstantPool(klass) != nil {
+	err := formatCheckConstantPool(klass)
+	if err != nil {
 		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
-	if formatCheckFields(klass) != nil {
+	err = formatCheckFields(klass)
+	if err != nil {
 		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
-	if formatCheckClassAttributes(klass) != nil {
+	err = formatCheckClassAttributes(klass)
+	if err != nil {
 		return errors.New("") // whatever error occurs, the user will have been notified
 	}
 
@@ -124,12 +128,11 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 			j += 1
 		case ClassRef:
-			// the only field of a ClassRef points to a UTF8 entry holding the class name
-			// in the case of arrays, the UTF8 entry will describe the type and dimensions of the array
+			// the only field of a ClassRef is a uint32 index into the StringPoolTable
 			whichClassRef := entry.slot
-			if whichClassRef < 0 || whichClassRef >= len(klass.utf8Refs) {
+			if whichClassRef < 0 || whichClassRef >= len(globals.StringPoolTable) {
 				return cfe("ClassRef at CP entry #" + strconv.Itoa(j) +
-					" points to an invalid entry in CP utf8Refs")
+					" points to an invalid entry in CP the string pool")
 			}
 		case StringConst:
 			// a StringConst holds only an index into the utf8Refs. so we check this.
@@ -180,7 +183,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			classIndex := methodRef.classIndex
 			class := klass.cpIndex[classIndex]
 			if class.entryType != ClassRef ||
-				class.slot < 0 || class.slot >= len(klass.classRefs) {
+				class.slot < 0 || class.slot >= len(globals.StringPoolTable) {
 				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
 					" holds an invalid class index: " +
 					strconv.Itoa(class.slot))
