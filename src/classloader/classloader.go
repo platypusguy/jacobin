@@ -55,9 +55,9 @@ type ParsedClass struct {
 	superClassIndex uint32 // index of into StringPool
 	moduleName      string
 	packageName     string
-	interfaceCount  int   // number of interfaces this class implements
-	interfaces      []int // the interfaces this class implements, as indices into utf8Refs
-	fieldCount      int   // number of fields in this class
+	interfaceCount  int      // number of interfaces this class implements
+	interfaces      []uint32 // the interfaces this class implements, as indices into the string pool
+	fieldCount      int      // number of fields in this class
 	fields          []field
 	methodCount     int
 	methods         []method
@@ -70,9 +70,10 @@ type ParsedClass struct {
 	deprecated bool
 
 	// ---- constant pool data items ----
-	cpCount        int       // count of constant pool entries
-	cpIndex        []cpEntry // the constant pool index to entries
-	classRefs      []int     // points to a UTF8 entry in the CP bearing the class name
+	cpCount int       // count of constant pool entries
+	cpIndex []cpEntry // the constant pool index to entries
+	// classRefs      []int     // points to a UTF8 entry in the CP bearing the class name
+	classRefs      []uint32 // point to a stringPool index to a class name
 	doubles        []float64
 	dynamics       []dynamic
 	fieldRefs      []fieldRefEntry
@@ -121,9 +122,10 @@ type method struct {
 	description int // index of the UTF-8 entry in the CP
 	codeAttr    codeAttrib
 	attributes  []attr
-	exceptions  []int // indexes into Utf8Refs in the CP
-	parameters  []paramAttrib
-	deprecated  bool // is the method deprecated?
+	exceptions  []uint32 // indexes into constant pool,
+	// pointing to names of exception classes this method is knownto throw
+	parameters []paramAttrib
+	deprecated bool // is the method deprecated?
 }
 
 type codeAttrib struct {
