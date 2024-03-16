@@ -9,6 +9,7 @@ package classloader
 import (
 	"errors"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"strconv"
 	"strings"
 )
@@ -224,12 +225,12 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			}
 
 			clRef := klass.classRefs[class.slot]
-			// utfIndex, err := fetchUTF8slot(klass, clRef)
-			_, err := fetchUTF8slot(klass, clRef)
-			if err != nil {
+			clName := stringPool.GetStringPointer(clRef)
+			if clName == nil {
 				return cfe("Interface Ref at CP entry #" + strconv.Itoa(j) +
-					" holds an invalid UTF8 index to the interface name: " +
-					strconv.Itoa(clRef))
+					// " holds an invalid UTF8 index to the interface name: " +
+					"holds an invalid stringPool index for interface: " +
+					strconv.FormatUint(uint64(clRef), 10))
 			}
 
 			/* TODO: REVISIT: with java.lang.String the following code works OK

@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"math"
 	"os"
 )
@@ -56,7 +57,8 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 
 	klass.moduleName = ""
 
-	klass.classRefs = []int{}
+	var tempClassRefs = []int{}
+	klass.classRefs = []uint32{}
 	klass.fieldRefs = []fieldRefEntry{}
 	klass.intConsts = []int{}
 	klass.invokeDynamics = []invokeDynamic{}
@@ -132,7 +134,8 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 			i++
 		case ClassRef:
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
-			klass.classRefs = append(klass.classRefs, index)
+			tempClassRefs = append(tempClassRefs, index) // store for later the CP index of the UTF8 entry
+			// klass.classRefs = append(klass.classRefs, index)
 			klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
 			pos += 2
 			i += 1
@@ -254,6 +257,16 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 	if log.Level == log.FINEST {
 		printCP(klass)
 
+	}
+
+	// resolve the classRefs
+	// tempClassRefs = append(tempClassRefs, index) // store for later the CP index of the UTF8 entry
+	// klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
+	for i = 0; i < len(tempClassRefs); i++ {
+		stringRef := klass.utf8Refs[tempClassRefs[i]]
+		str := stringRef.content
+		strIndex := stringPool.GetStringIndex(&str)
+		klass.classRefs = append(klass.classRefs, strIndex)
 	}
 
 	return pos, nil
