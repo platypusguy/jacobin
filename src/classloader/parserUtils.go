@@ -165,7 +165,7 @@ func resolveCPmethodRef(index int, klass *ParsedClass) (string, string, string, 
 	nameIndex := klass.classRefs[pointedToClassRef.slot]
 	// className, err := FetchUTF8string(klass, nameIndex)
 	classNamePtr := stringPool.GetStringPointer(nameIndex)
-	if classNamePtr != nil {
+	if classNamePtr == nil {
 		return "", "", "", cfe("ClassRef entry in MethodRef CP entry #" + strconv.Itoa(index) +
 			" does not point to a valid string")
 	}
