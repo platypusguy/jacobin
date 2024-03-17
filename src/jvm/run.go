@@ -1466,11 +1466,7 @@ frameInterpreter:
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
 			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
-			// classNameEntry := CP.CpIndex[classNameIndex] // CURR: use classNameIndex to look up in StringPool cf. line 1971
-			// CURR: search for all instances of classNameIndex and update accordingly
-			// className := CP.Utf8Refs[classNameEntry.Slot]
 			className := *classNamePtr
-			// get the class entry from this method
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
