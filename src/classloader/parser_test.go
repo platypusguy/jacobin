@@ -469,8 +469,8 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
 		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
-		0x07, 0x00, 0x02, // entry #1, a ClassRef that should point to a UTF-8 entry
-		0x07, 0x00, 0x01, // entry #2, this should be a UTF-8 entry, but it's not
+		0x07, 0xFF, 0xFF, // a ClassRef that points to a known invalid stringPool entry
+		0x07, 0x00, 0x01, // an irrelevant ClassRef that has a valid string pool index
 	}
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
@@ -483,14 +483,8 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	os.Stdout = wout
 
 	_, err := parseConstantPool(bytes, &pc)
-	if err != nil {
-		t.Error("Error parsing test CP for setup in testing ClassName")
-	}
-
-	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
-	_, err = parseClassName(testBytes, 0, &pc)
 	if err == nil {
-		t.Error("Parse of class name field should have generated an error but it did not.")
+		t.Error("Parse of test CP for setup in testing ClassName should have generated an error, but did not")
 	}
 
 	// restore stderr and stdout to what they were before
