@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strconv"
 	"strings"
@@ -874,8 +875,11 @@ func TestInterfaceValid(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // the UTF-8 reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
-	klass.classRefs = append(klass.classRefs, 1) // -> cpIndex[1] -> UTF8 entry
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+
+	name := "gherkin"
+	nameIndex := stringPool.GetStringIndex(&name)
+	klass.classRefs = append(klass.classRefs, nameIndex)
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"}) // not used due to stringPool
 	klass.cpCount = 3
 	klass.interfaceCount = 1
 
@@ -887,9 +891,10 @@ func TestInterfaceValid(t *testing.T) {
 	}
 
 	i := klass.interfaces[0]
-	if klass.utf8Refs[i].content != "gherkin" {
-		t.Error("Expecting interface of 'gherkin' but got: " + klass.utf8Refs[i].content)
+	if *stringPool.GetStringPointer(i) != "gherkin" {
+		t.Error("Expecting interface of 'gherkin' but got: " + *stringPool.GetStringPointer(i))
 	}
+
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr
