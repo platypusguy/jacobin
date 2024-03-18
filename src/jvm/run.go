@@ -1465,8 +1465,8 @@ frameInterpreter:
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNameEntry := CP.CpIndex[classNameIndex]
-			className := CP.Utf8Refs[classNameEntry.Slot]
+			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			className := *classNamePtr
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
@@ -1549,8 +1549,10 @@ frameInterpreter:
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNameEntry := CP.CpIndex[classNameIndex]
-			className := CP.Utf8Refs[classNameEntry.Slot]
+			// classNameEntry := CP.CpIndex[classNameIndex]
+			// className := CP.Utf8Refs[classNameEntry.Slot]
+			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			className := *classNamePtr
 
 			// process the name and type entry for this field
 			nAndTindex := field.NameAndType
@@ -1821,8 +1823,9 @@ frameInterpreter:
 			// get the class entry from this method
 			classRef := method.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNameEntry := CP.CpIndex[classNameIndex]
-			className := CP.Utf8Refs[classNameEntry.Slot]
+			// classNameEntry := CP.CpIndex[classNameIndex]
+			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			className := *classNamePtr
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType
@@ -1967,8 +1970,10 @@ frameInterpreter:
 			// get the class entry from this method
 			classRef := method.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNameEntry := CP.CpIndex[classNameIndex]
-			className := CP.Utf8Refs[classNameEntry.Slot]
+			// classNameEntry := CP.CpIndex[classNameIndex]
+			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			// className := CP.Utf8Refs[classNameEntry.Slot]
+			className := *classNamePtr
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType

@@ -11,6 +11,7 @@ package classloader
 // here to avoid circular dependencies.
 
 import (
+	"jacobin/stringPool"
 	"unsafe"
 )
 
@@ -83,9 +84,11 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 		return CpType{EntryType: int(entry.Type), RetType: IS_FLOAT64, FloatVal: retFloat}
 
 	// addresses of strings
-	case ClassRef: // points to a CP entry, which is a UTF-8 holding the class name
+	case ClassRef: // points to a CP entry, which is a string pool entry
 		e := cp.ClassRefs[entry.Slot]
-		className := FetchUTF8stringFromCPEntryNumber(&cp, e)
+		// className := FetchUTF8stringFromCPEntryNumber(&cp, e)
+		classNamePtr := stringPool.GetStringPointer(uint32(e))
+		className := *classNamePtr
 		return CpType{EntryType: int(entry.Type),
 			RetType: IS_STRING_ADDR, StringVal: &className}
 
@@ -138,6 +141,8 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 	return CpType{EntryType: 0, RetType: IS_ERROR}
 }
 
+// GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
+// and returns the class name, method name and method signature
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) {
 		return "", "", ""
@@ -152,8 +157,10 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 
 	classRefIdx := CP.CpIndex[classIndex].Slot
 	classIdx := CP.ClassRefs[classRefIdx]
-	classNameIdx := CP.CpIndex[classIdx]
-	className := CP.Utf8Refs[classNameIdx.Slot]
+	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
+	className := *classNamePtr
+	// classNameIdx := CP.CpIndex[classIdx]
+	// className := CP.Utf8Refs[classNameIdx.Slot]
 
 	// now get the method signature
 	nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType

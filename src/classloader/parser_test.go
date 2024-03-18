@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strconv"
 	"strings"
@@ -469,8 +470,8 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	bytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, // the required first 10 bytes
 		0x00, 0x00, 0x37, 0x00, 0x03, // Java 8, CP with 3 entries (plus the dummy entry)
-		0x07, 0x00, 0x02, // entry #1, a ClassRef that should point to a UTF-8 entry
-		0x07, 0x00, 0x01, // entry #2, this should be a UTF-8 entry, but it's not
+		0x07, 0xFF, 0xFF, // a ClassRef that points to a known invalid stringPool entry
+		0x07, 0x00, 0x01, // an irrelevant ClassRef that has a valid string pool index
 	}
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
@@ -483,14 +484,8 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 	os.Stdout = wout
 
 	_, err := parseConstantPool(bytes, &pc)
-	if err != nil {
-		t.Error("Error parsing test CP for setup in testing ClassName")
-	}
-
-	testBytes := []byte{0x00, 0x00, 0x01} // 3 bytes b/c first byte is skipped. So, this points to entry 1
-	_, err = parseClassName(testBytes, 0, &pc)
 	if err == nil {
-		t.Error("Parse of class name field should have generated an error but it did not.")
+		t.Error("Parse of test CP for setup in testing ClassName should have generated an error, but did not")
 	}
 
 	// restore stderr and stdout to what they were before
@@ -880,8 +875,11 @@ func TestInterfaceValid(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0}) // the UTF-8 reference
 	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0})
-	klass.classRefs = append(klass.classRefs, 1) // -> cpIndex[1] -> UTF8 entry
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"})
+
+	name := "gherkin"
+	nameIndex := stringPool.GetStringIndex(&name)
+	klass.classRefs = append(klass.classRefs, nameIndex)
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"gherkin"}) // not used due to stringPool
 	klass.cpCount = 3
 	klass.interfaceCount = 1
 
@@ -893,9 +891,10 @@ func TestInterfaceValid(t *testing.T) {
 	}
 
 	i := klass.interfaces[0]
-	if klass.utf8Refs[i].content != "gherkin" {
-		t.Error("Expecting interface of 'gherkin' but got: " + klass.utf8Refs[i].content)
+	if *stringPool.GetStringPointer(i) != "gherkin" {
+		t.Error("Expecting interface of 'gherkin' but got: " + *stringPool.GetStringPointer(i))
 	}
+
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
 	os.Stderr = normalStderr

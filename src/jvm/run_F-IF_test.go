@@ -9,9 +9,11 @@ package jvm
 import (
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"math"
 	"strings"
@@ -716,6 +718,7 @@ func TestGetStaticInvalidFieldEntry(t *testing.T) {
 
 // GETSTATIC: Get a static field's value (here, a boolean in the String class, set to true)
 func TestGetStaticBoolean(t *testing.T) {
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.GETSTATIC)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -729,18 +732,18 @@ func TestGetStaticBoolean(t *testing.T) {
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 2}
 	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
-	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 2, 2)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 2, NameAndType: 4}
 
 	CP.Utf8Refs = make([]string, 5, 5)
-	CP.Utf8Refs[0] = "java/lang/String"
-	CP.Utf8Refs[1] = "COMPACT_STRINGS"
+	// class = "java/lang/String" in string pool
+	classNameIndex := stringPool.GetStringIndex(&object.StringClassName)
+	CP.Utf8Refs[0] = "COMPACT_STRINGS"
 
 	CP.ClassRefs = make([]uint16, 5, 5)
-	CP.ClassRefs[0] = 2 // point to CpIndex[2] -- need to validate this is right
-
+	CP.ClassRefs[0] = uint16(classNameIndex)
 	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 5, 5)
 	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
 		NameIndex: 5, // field name as UTF8 entry, here the CPindex index

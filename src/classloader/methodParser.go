@@ -8,6 +8,7 @@ package classloader
 
 import (
 	"jacobin/log"
+	"jacobin/stringPool"
 	"jacobin/util"
 	"sort"
 	"strconv"
@@ -304,7 +305,7 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 	}
 
 	for ex := 0; ex < exceptionCount; ex++ {
-		// exception is an index into CP that points to a classRef
+		// exception is an index into CP that points to a exceptionClassRef
 		cRefIndex, _ := intFrom2Bytes(attrib.attrContent, loc+1)
 		loc += 2
 		if klass.cpIndex[cRefIndex].entryType != ClassRef {
@@ -315,24 +316,28 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 
 		// whichClassRef is the entry # in the classRefs array
 		whichClassRef := klass.cpIndex[cRefIndex].slot
-		// get the classRef from the slice of classRefs in the ParsedClass
-		classRef := klass.classRefs[whichClassRef]
+		// get the exceptionClassRef from the slice of classRefs in the ParsedClass
+		exceptionClassRef := klass.classRefs[whichClassRef]
 
-		// the classRef should point to a UTF8 record with the name of the exception class
-		exceptionName, err2 := FetchUTF8string(klass, classRef)
-		if err2 != nil {
+		// the exceptionClassRef should point to a UTF8 record with the name of the exception class
+		// exceptionName, err2 := FetchUTF8string(klass, exceptionClassRef)
+		exceptionName := stringPool.GetStringPointer(exceptionClassRef)
+		if exceptionName == nil {
 			return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
 				" in method " + klass.utf8Refs[meth.name].content +
-				" has a ClassRef CP entry that does not point to a UTF8 string")
+				"  does not point to a valid stringPool entry")
+			// return cfe("Exception attribute #" + strconv.Itoa(ex+1) +
+			// 	" in method " + klass.utf8Refs[meth.name].content +
+			// 	" has a ClassRef CP entry that does not point to a UTF8 string")
 		}
-
-		// if the previous fetch of the UTF8 record succeeded, this one shouldn't fail
-		// so we don't check the error return
-		whichUtf8Rec, _ := fetchUTF8slot(klass, classRef)
+		//
+		// // if the previous fetch of the UTF8 record succeeded, this one shouldn't fail
+		// // so we don't check the error return
+		// whichUtf8Rec, _ := fetchUTF8slot(klass, exceptionClassRef)
 
 		// store the slot # of the utf8 entries into the method exceptions slice
-		meth.exceptions = append(meth.exceptions, whichUtf8Rec)
-		_ = log.Log("        "+exceptionName, log.FINEST)
+		meth.exceptions = append(meth.exceptions, exceptionClassRef)
+		_ = log.Log("        "+*exceptionName, log.FINEST)
 	}
 	return nil
 }

@@ -12,6 +12,7 @@ import (
 	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"sort"
 	"sync"
 	"time"
 )
@@ -126,4 +127,22 @@ func WaitForClassStatus(className string) error {
 		}
 	}
 	return nil
+}
+
+// MethAreaDump dumps the contents of the method area in a sorted list to stdout
+// used only for testing/debugging
+func MethAreaDump() {
+	var entries []string
+	_ = log.Log("MethAreaDump: ", log.CLASS)
+
+	MethArea.Range(func(key, value interface{}) bool {
+		entries = append(entries, key.(string))
+		return true
+	})
+	sort.Strings(entries)
+	fmt.Println("---- start of method area dump ----")
+	for _, str := range entries {
+		fmt.Println(str)
+	}
+	fmt.Println("---- end of method area dump ----")
 }

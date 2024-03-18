@@ -247,7 +247,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	index, err := intFrom2Bytes(bytes, pos+1)
-	var classNameIndex int
+	var classNameIndex uint32
 	pos += 2
 	if err != nil {
 		return pos, cfe("error obtaining index for class name")
@@ -263,22 +263,23 @@ func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		return pos, cfe("invalid entry for class name")
 	}
 
-	// the entry pointed to by pointedToClassRef holds an index to
-	// a UTF-8 string that holds the class name
+	// the entry pointed to by pointedToClassRef holds an index into
+	// the string pool
 	classNameIndex = klass.classRefs[pointedToClassRef.slot]
-	className, err := FetchUTF8string(klass, classNameIndex)
-	if err != nil {
+	classNamePtr := stringPool.GetStringPointer(classNameIndex)
+	// className, err := FetchUTF8string(klass, classNameIndex)
+	if classNamePtr == nil {
 		return pos, errors.New("") // the error msg has already been show to user
 	}
 
-	_ = log.Log("class name: "+className, log.FINEST)
+	_ = log.Log("class name: "+*classNamePtr, log.FINEST)
 
 	if len(klass.className) > 0 {
-		return pos, cfe("Class appears to have two names: " + klass.className + " and: " + className)
+		return pos, cfe("Class appears to have two names: " + klass.className + " and: " + *classNamePtr)
 	}
 
-	klass.className = className
-	klass.classNameIndex = stringPool.GetStringIndex(&className)
+	klass.className = *classNamePtr
+	klass.classNameIndex = classNameIndex
 	return pos, nil
 }
 
@@ -287,7 +288,7 @@ func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 	pos := loc
 	index, err := intFrom2Bytes(bytes, pos+1)
-	var classNameIndex int
+	var classNameIndex uint32
 	pos += 2
 	if err != nil {
 		return pos, cfe("error obtaining index for superclass name")
@@ -313,26 +314,31 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 		return pos, cfe("invalid entry for superclass name")
 	}
 
-	// the entry pointed to by pointedToClassRef holds an index to
-	// a UTF-8 string that holds the class name
+	// the entry pointed to by pointedToClassRef holds an index into
+	// the string pool
 	classNameIndex = klass.classRefs[pointedToClassRef.slot]
 
-	superClassName, err := FetchUTF8string(klass, classNameIndex)
-	if err != nil {
-		return pos, errors.New("") // error has already been reported to user
+	// superClassName, err := FetchUTF8string(klass, classNameIndex)
+	// if err != nil {
+	// 	return pos, errors.New("") // error has already been reported to user
+	// }
+	superclassNamePtr := stringPool.GetStringPointer(classNameIndex)
+	if superclassNamePtr == nil {
+		return pos, errors.New("") // the error msg has already been show to user
 	}
 
-	if superClassName == "" { // only Object.class can have an empty superclass and it's handled above
+	if *superclassNamePtr == "" { // only Object.class can have an empty superclass and it's handled above
 		return pos, cfe("invalid empty string for superclass name")
 	}
 
-	_ = log.Log("superclass name: "+superClassName, log.FINEST)
+	_ = log.Log("superclass name: "+*superclassNamePtr, log.FINEST)
 	if len(klass.superClass) > 0 {
-		return pos, cfe("Class can only have 1 superclass, found two: " + klass.superClass + " and: " + superClassName)
+		return pos, cfe("Class can only have 1 superclass, found two: " +
+			klass.superClass + " and: " + *superclassNamePtr)
 	}
 
-	klass.superClass = superClassName
-	klass.superClassIndex = stringPool.GetStringIndex(&superClassName)
+	klass.superClass = *superclassNamePtr
+	klass.superClassIndex = classNameIndex
 	return pos, nil
 }
 
@@ -377,19 +383,24 @@ func parseInterfaces(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		// get the class entry from classRefs slice
 		classEntry := klass.classRefs[classref.slot]
 
-		// use the class entry's index field to look up the UTF-8 string
-		interfaceName, err := FetchUTF8string(klass, classEntry)
-		if err != nil {
-			return pos, errors.New("") // error msg has already been shown
+		// // use the class entry's index field to look up the UTF-8 string
+		// interfaceName, err := FetchUTF8string(klass, classEntry)
+		// if err != nil {
+		// 	return pos, errors.New("") // error msg has already been shown
+		// }
+
+		interfaceNamePtr := stringPool.GetStringPointer(classEntry)
+		if interfaceNamePtr == nil {
+			return pos, errors.New("invalid interface name") // the error msg has already been show to user
 		}
 
-		_ = log.Log("Interface class: "+interfaceName, log.FINEST)
+		_ = log.Log("Interface class: "+*interfaceNamePtr, log.FINEST)
 
-		// klass.interfaces is a slice that holds the index into utf8Refs for
-		// each of the interface class names. This avoids duplicating the name
+		// klass.interfaces is a slice that holds the index into the stringpool
+		// for each of the interface class names. This avoids duplicating the name
 		// that's already in the CP and it allows the classloader to get the
 		// interface name in a single dereference.
-		klass.interfaces = append(klass.interfaces, klass.cpIndex[classEntry].slot)
+		klass.interfaces = append(klass.interfaces, classEntry)
 	}
 	return pos, nil
 }

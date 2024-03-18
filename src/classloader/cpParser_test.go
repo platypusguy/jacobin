@@ -270,19 +270,20 @@ func TestCPvalidClassRef(t *testing.T) {
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
 		0x00, 0xFF, 0xF0, 0x00, 0x00,
-		0x07, 0x02, 0x05,
+		0x07, 0x00, 0x02, // Class reference pointing to CP index 2
+		0x01, 0x00, 0x05, byte('h'), byte('e'), byte('l'), byte('l'), byte('o'),
 	}
 
 	pc := ParsedClass{}
-	pc.cpCount = 2
+	pc.cpCount = 3
 	loc, err := parseConstantPool(bytesToTest, &pc)
 
 	if err != nil {
 		t.Error("Parsing valid CP class reference (7) generated an unexpected error")
 	}
 
-	if loc != 12 {
-		t.Error("Was expecting a new position of 12, but got: " + strconv.Itoa(loc))
+	if loc != 20 {
+		t.Error("Was expecting a new position of 20, but got: " + strconv.Itoa(loc))
 	}
 
 	if len(pc.classRefs) != 1 {
@@ -290,12 +291,12 @@ func TestCPvalidClassRef(t *testing.T) {
 	}
 
 	cre := pc.classRefs[0]
-	if cre != 517 {
-		t.Error("Was expecting a class ref index of 517, but got: " + strconv.Itoa(cre))
+	if cre != 2 {
+		t.Errorf("Was expecting a class ref index of 2, but got: %v", cre)
 	}
 
-	if len(pc.cpIndex) != 2 {
-		t.Error("Was expecting pc.cpIndex to have 2 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
+	if len(pc.cpIndex) != 3 {
+		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
 }
 
@@ -695,7 +696,7 @@ func TestPrintOfCPpart1(t *testing.T) {
 		0x61, 0x63,
 
 		0x07,       // Classref
-		0x74, 0x75, // 		value consists of 2 bytes
+		0x00, 0x01, // 		value consists of 2 bytes points to UTF8 entry above
 
 		0x08,       // StringConst
 		0x84, 0x85, // 		value consists of 2 bytes

@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strconv"
 	"strings"
@@ -35,14 +36,16 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"}) // not used -- string pool instead
 
-	klass.classRefs = append(klass.classRefs, 3) // classRef[0] points to CP entry #4, which points to UTF #3
+	name := "java/io/IOException"
+	nameIndex := stringPool.GetStringIndex(&name)
+	klass.classRefs = append(klass.classRefs, nameIndex) // classRef[0]
 
 	klass.cpCount = 4
 
@@ -110,14 +113,17 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"}) // not used -- string pool instead
 
-	klass.classRefs = append(klass.classRefs, 3) // classRef[0] points to CP entry #4, which points to UTF #3
+	name := "java/io/IOException"
+	nameIndex := stringPool.GetStringIndex(&name)
+
+	klass.classRefs = append(klass.classRefs, nameIndex) // classRef[0] points to stringPool entry for "java/io/IOException"
 
 	klass.cpCount = 4
 
@@ -158,8 +164,7 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 
 	me := meth.exceptions[0]
 	if me != 2 {
-		t.Error("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got:" +
-			strconv.Itoa(me))
+		t.Errorf("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got: %d", me)
 	}
 }
 
@@ -188,12 +193,19 @@ func Test2ValidMethodExceptionAttributes(t *testing.T) {
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 3})
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Exceptions"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOError"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOError"})     // not used -- string pool instead
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"}) // not used -- string pool instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
 
-	klass.classRefs = append(klass.classRefs, 4) // classRef[0] -> CP[4] -> UTF8[2]
-	klass.classRefs = append(klass.classRefs, 3) // classRef[1] -> CP[3] -> UTF8[1]
+	name1 := "java/io/IOError"
+	nameIndex1 := stringPool.GetStringIndex(&name1)
+
+	name2 := "java/io/IOException"
+	nameIndex2 := stringPool.GetStringIndex(&name2)
+
+	klass.classRefs = append(klass.classRefs, nameIndex1)
+	klass.classRefs = append(klass.classRefs, nameIndex2)
+
 	klass.cpCount = 7
 
 	// method
@@ -205,8 +217,8 @@ func Test2ValidMethodExceptionAttributes(t *testing.T) {
 	attrib.attrSize = 6 // 2 (exc count) + 2x2bytes = 6 bytes
 	attrib.attrContent = []byte{
 		0x00, 0x02, // 2 exceptions to process
-		0x00, 0x02, // Exception1: CP[2] points to ClassRef[0] -> CP[4]->UTF[3]: name of exception
-		0x00, 0x05, // Exception2: CP[5] points to ClassRef[1] -> CP[3]->UTF[1]: name of exception
+		0x00, 0x02, // Exception1: CP[2] points to ClassRef[0] : name of exception
+		0x00, 0x05, // Exception2: CP[5] points to ClassRef[1] : name of exception
 	}
 
 	meth.accessFlags = 0x20
@@ -255,15 +267,17 @@ func TestValidMethodParameterAttribute(t *testing.T) {
 	klass := ParsedClass{}
 	klass.cpIndex = append(klass.cpIndex, cpEntry{})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 0})
-	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below, which points to the next CP entry
+	klass.cpIndex = append(klass.cpIndex, cpEntry{ClassRef, 0}) // points to classRef below
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 1})
 	klass.cpIndex = append(klass.cpIndex, cpEntry{UTF8, 2})
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"MethodParameters"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"param1"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"}) // not used -- string pool instead
 
-	klass.classRefs = append(klass.classRefs, 3) // classRef[0] points to CP entry #4, which points to UTF #3
+	name := "java/io/IOException"
+	nameIndex := stringPool.GetStringIndex(&name)
+	klass.classRefs = append(klass.classRefs, nameIndex) // classRef[0] points to CP entry #4, which points to UTF #3
 
 	klass.cpCount = 5
 

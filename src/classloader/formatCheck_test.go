@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strings"
 	"testing"
@@ -669,14 +670,18 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 	ire := interfaceRefEntry{classIndex: 2, nameAndTypeIndex: 3}
 	klass.interfaceRefs = append(klass.interfaceRefs, ire)
 
-	klass.classRefs = append(klass.classRefs, 4)
+	name1 := "interface"
+	name1index := stringPool.GetStringIndex(&name1)
+
+	// klass.classRefs = append(klass.classRefs, 4)
+	klass.classRefs = append(klass.classRefs, name1index)
 
 	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
 		nameIndex:       4, // points to cpIndex[4], which is UTF8
 		descriptorIndex: 5,
 	})
 
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"interface"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"interface"}) // not used -- string pool is used instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"B"})
 
 	klass.cpCount = 6
@@ -738,9 +743,11 @@ func TestValidMethodHandleEntry(t *testing.T) {
 		nameAndTypeIndex: 3,
 	})
 
-	klass.classRefs = append(klass.classRefs, 4)
+	name1 := "classname"
+	name1index := stringPool.GetStringIndex(&name1)
+	klass.classRefs = append(klass.classRefs, name1index)
 
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"classname"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"classname"}) // not used -- string pool is used instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
 
@@ -886,9 +893,11 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 		nameAndTypeIndex: 3,
 	})
 
-	klass.classRefs = append(klass.classRefs, 4)
+	name1 := "classname"
+	name1index := stringPool.GetStringIndex(&name1)
+	klass.classRefs = append(klass.classRefs, name1index)
 
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"classname"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"classname"}) // not used --- stringPool used instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"nAndType-methname"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"D"})
 
@@ -1160,7 +1169,7 @@ func TestDynamics(t *testing.T) {
 	klass.cpCount = 11
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"BootstrapMethods"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"}) // not used -- string pool used instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Z"})
 
 	klass.longConsts = append(klass.longConsts, int64(2200))
@@ -1177,8 +1186,11 @@ func TestDynamics(t *testing.T) {
 		classIndex:       7,
 		nameAndTypeIndex: 9,
 	})
-	klass.classRefs = append(klass.classRefs, 8)
-	klass.classRefs = append(klass.classRefs, 8)
+
+	name1 := "java/test"
+	name1index := stringPool.GetStringIndex(&name1)
+	klass.classRefs = append(klass.classRefs, name1index)
+	klass.classRefs = append(klass.classRefs, name1index)
 
 	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
 		nameIndex:       8,
@@ -1265,7 +1277,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 	klass.cpCount = 11
 
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"BootstrapMethods"})
-	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"})
+	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/test"}) // not used --- string pool instead
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"Z"})
 
 	klass.longConsts = append(klass.longConsts, int64(2200))
@@ -1282,8 +1294,11 @@ func TestValidInvokeDynamic(t *testing.T) {
 		classIndex:       7,
 		nameAndTypeIndex: 9,
 	})
-	klass.classRefs = append(klass.classRefs, 8)
-	klass.classRefs = append(klass.classRefs, 8)
+
+	name1 := "java/test"
+	name1index := stringPool.GetStringIndex(&name1)
+	klass.classRefs = append(klass.classRefs, name1index)
+	klass.classRefs = append(klass.classRefs, name1index)
 
 	klass.nameAndTypes = append(klass.nameAndTypes, nameAndTypeEntry{
 		nameIndex:       8,
