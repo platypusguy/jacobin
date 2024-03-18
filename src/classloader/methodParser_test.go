@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strconv"
 	"strings"
@@ -117,7 +118,10 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"testMethod"})
 	klass.utf8Refs = append(klass.utf8Refs, utf8Entry{"java/io/IOException"})
 
-	klass.classRefs = append(klass.classRefs, 3) // classRef[0] points to CP entry #4, which points to UTF #3
+	name := "java/io/IOException"
+	nameIndex := stringPool.GetStringIndex(&name)
+
+	klass.classRefs = append(klass.classRefs, nameIndex) // classRef[0] points to stringPool entry for "java/lang/IOException"
 
 	klass.cpCount = 4
 
