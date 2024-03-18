@@ -34,7 +34,7 @@ func TestStringMidLevel_2(t *testing.T) {
 
 	str1 := "The rain in Spain falls mainly on the plain"
 	objPtr := NewPoolStringFromGoString(str1)
-	objPtr.DumpObject("TestStringMidLevel_2", 0)
+	// objPtr.DumpObject("TestStringMidLevel_2", 0)
 	str2 := GetGoStringFromObject(objPtr)
 	if str1 != str2 {
 		t.Errorf("Expected GetGoStringFromObject to return %s but observed: %s", str1, str2)
