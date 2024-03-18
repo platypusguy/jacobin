@@ -71,9 +71,52 @@ func Load_Lang_Integer() map[string]GMeth {
 			GFunction:  integerValueOf,
 		}
 
+	MethodSignatures["java/lang/Integer.toBinaryString(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerToBinaryString,
+		}
+
+	MethodSignatures["java/lang/Integer.toHexString(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerToHexString,
+		}
+
+	MethodSignatures["java/lang/Integer.toOctalString(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerToOctalString,
+		}
+
+	MethodSignatures["java/lang/Integer.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerToString,
+		}
+
+	MethodSignatures["java/lang/Integer.toString(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerToStringI,
+		}
+
+	MethodSignatures["java/lang/Integer.toUnsignedString(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerToUnsignedString,
+		}
+
+	MethodSignatures["java/lang/Integer.toUnsignedString(II)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  integerToUnsignedStringRadix,
+		}
+
 	return MethodSignatures
 }
 
+// "java/lang/Integer.byteValue()B"
 func integerByteValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
@@ -81,6 +124,7 @@ func integerByteValue(params []interface{}) interface{} {
 	return ii
 }
 
+// "java/lang/Integer.decode(Ljava/lang/String;)Ljava/lang/Integer;"
 func integerDecode(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
@@ -105,6 +149,8 @@ func integerDecode(params []interface{}) interface{} {
 	return populator("java/lang/Integer", types.Int, int64Value)
 }
 
+// "java/lang/Integer.doubleValue()D"
+// "java/lang/Integer.floatValue()F"
 func integerFloatDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
@@ -112,6 +158,7 @@ func integerFloatDoubleValue(params []interface{}) interface{} {
 	return float64(ii)
 }
 
+// "java/lang/Integer.longValue()J"
 func integerIntLongValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
@@ -119,6 +166,7 @@ func integerIntLongValue(params []interface{}) interface{} {
 	return ii
 }
 
+// "java/lang/Integer.parseInt(Ljava/lang/String;I)I"
 func integerParseInt(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
@@ -162,8 +210,85 @@ func integerParseInt(params []interface{}) interface{} {
 	return output
 }
 
+// "java/lang/Integer.valueOf(I)Ljava/lang/Integer;"
 func integerValueOf(params []interface{}) interface{} {
 	// fmt.Printf("DEBUG integerValueOf at entry params[0]: (%T) %v\n", params[0], params[0])
 	int64Value := params[0].(int64)
 	return populator("java/lang/Integer", types.Int, int64Value)
+}
+
+// "java/lang/Integer.toString()Ljava/lang/String;"
+func integerToString(params []interface{}) interface{} {
+	obj1 := params[0].(*object.Object)
+	argInt64 := obj1.FieldTable["value"].Fvalue.(int64)
+	str := fmt.Sprintf("%d", argInt64)
+	obj2 := object.NewStringFromGoString(str)
+	return obj2
+}
+
+// "java/lang/Integer.toString(I)Ljava/lang/String;"
+func integerToStringI(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	str := fmt.Sprintf("%d", argInt64)
+	obj := object.NewStringFromGoString(str)
+	return obj
+}
+
+// "java/lang/Integer.toUnsignedString(I)Ljava/lang/String;"
+func integerToUnsignedString(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	if argInt64 < 0 {
+		argInt64 &= 0x00000000FFFFFFFF
+	}
+	str := fmt.Sprintf("%d", argInt64)
+	obj := object.NewStringFromGoString(str)
+	return obj
+}
+
+// "java/lang/Integer.toUnsignedString(II)Ljava/lang/String;"
+func integerToUnsignedStringRadix(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	if argInt64 < 0 {
+		argInt64 &= 0x00000000FFFFFFFF
+	}
+	//fmt.Printf("DEBUG integerToUnsignedStringRadix %d - %08x\n", argInt64, argInt64)
+
+	// Extract and validate the radix.
+	switch params[1].(type) {
+	case int64:
+	default:
+		return getGErrBlk(exceptions.NumberFormatException, "integerToUnsignedStringRadix: radix is not an integer")
+	}
+	rdx := params[1].(int64)
+	if rdx < MinRadix || rdx > MaxRadix {
+		return getGErrBlk(exceptions.NumberFormatException, "integerToUnsignedStringRadix: invalid radix")
+	}
+
+	str := strconv.FormatInt(argInt64, int(rdx))
+	obj := object.NewStringFromGoString(str)
+	return obj
+}
+
+// "java/lang/Integer.toBinaryString(I)Ljava/lang/String;"
+func integerToBinaryString(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	str := strconv.FormatInt(argInt64, 2)
+	obj := object.NewStringFromGoString(str)
+	return obj
+}
+
+// "java/lang/Integer.toOctalString(I)Ljava/lang/String;"
+func integerToOctalString(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	str := strconv.FormatInt(argInt64, 8)
+	obj := object.NewStringFromGoString(str)
+	return obj
+}
+
+// "java/lang/Integer.toHexString(I)Ljava/lang/String;"
+func integerToHexString(params []interface{}) interface{} {
+	argInt64 := params[0].(int64)
+	str := strconv.FormatInt(argInt64, 16)
+	obj := object.NewStringFromGoString(str)
+	return obj
 }
