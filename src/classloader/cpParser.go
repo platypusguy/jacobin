@@ -13,6 +13,7 @@ import (
 	"jacobin/stringPool"
 	"math"
 	"os"
+	"strconv"
 )
 
 // this file contains the parser for the constant pool and the verifier.
@@ -136,7 +137,7 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 			index, _ := intFrom2Bytes(rawBytes, pos+1)
 			tempClassRefs = append(tempClassRefs, index) // store for later the CP index of the UTF8 entry
 			// klass.classRefs = append(klass.classRefs, index)
-			klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
+			klass.cpIndex[i] = cpEntry{ClassRef, len(tempClassRefs) - 1}
 			pos += 2
 			i += 1
 		case StringConst:
@@ -254,19 +255,21 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 		}
 	}
 
-	if log.Level == log.FINEST {
-		printCP(klass)
-
-	}
-
-	// resolve the classRefs
-	// tempClassRefs = append(tempClassRefs, index) // store for later the CP index of the UTF8 entry
-	// klass.cpIndex[i] = cpEntry{ClassRef, len(klass.classRefs) - 1}
+	// resolve the classRefs to use indices into the string pool
 	for i = 0; i < len(tempClassRefs); i++ {
-		stringRef := klass.utf8Refs[tempClassRefs[i]]
-		str := stringRef.content
+		index := tempClassRefs[i]
+		if index == 0 || index > (len(klass.cpIndex)-1) {
+			return pos, cfe("invalid index into CP for class name: " + strconv.Itoa(index))
+		}
+
+		h := klass.cpIndex[index].slot
+		str := klass.utf8Refs[h].content
 		strIndex := stringPool.GetStringIndex(&str)
 		klass.classRefs = append(klass.classRefs, strIndex)
+	}
+
+	if log.Level == log.FINEST {
+		printCP(klass)
 	}
 
 	return pos, nil
@@ -301,7 +304,7 @@ func printCP(klass *ParsedClass) {
 		case ClassRef:
 			fmt.Fprintf(os.Stderr, "(class ref)        ")
 			c := entry.slot
-			fmt.Fprintf(os.Stderr, "index: %02d\n", klass.classRefs[c])
+			fmt.Fprintf(os.Stderr, "string pool index: %d\n", klass.classRefs[c])
 		case StringConst:
 			fmt.Fprintf(os.Stderr, "(string const ref) ")
 			s := entry.slot
