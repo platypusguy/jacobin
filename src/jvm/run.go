@@ -2121,8 +2121,10 @@ frameInterpreter:
 
 			var refTypeName = ""
 			if refType.Type == classloader.ClassRef {
-				utf8Index := CP.ClassRefs[refType.Slot]
-				refTypeName = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				// utf8Index := CP.ClassRefs[refType.Slot]
+				// refTypeName = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
+				refTypeName = *stringPool.GetStringPointer(uint32(refNameStringPoolIndex))
 			}
 
 			arrayPtr := object.Make1DimRefArray(&refTypeName, size)
