@@ -368,6 +368,12 @@ func TestInstanceofString(t *testing.T) {
 
 // INVOKEVIRTUAL : invoke method -- here testing for error
 func TestInvokevirtualInvalid(t *testing.T) {
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.INVOKEVIRTUAL)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -393,6 +399,10 @@ func TestInvokevirtualInvalid(t *testing.T) {
 			t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got: %s", errMsg)
 		}
 	}
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 // IOR: Logical OR of two ints

@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
@@ -55,14 +56,14 @@ func TestAaload(t *testing.T) {
 
 	// now create the CP. CP[0] is perforce 0
 	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// [2] is a ClassRef that points to string pool entry for the class name
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	// CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // use string pool
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -136,28 +137,22 @@ func TestAaloadWithNil(t *testing.T) {
 // ANEWARRAY: create an array of T_REF.
 // AASTORE: store a value in the array.
 //
-// Create an array of 30 elements and store ptr value in array[20].
+// Create an array of 30 String elements and store ptr value in array[20].
 func TestAastore(t *testing.T) {
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(30)) // make an array of 30 elements
 	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+	f.Meth = append(f.Meth, 0x01) // use the classRef at CP[2] as the type of reference
 
 	// now create the CP. CP[0] is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// [1] is a ClassRef that points to a string pool entry
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool
 	f.CP = &CP
-
-	// f := newFrame(opcodes.ANEWARRAY)
-	// push(&f, int64(30))                   // make the array 30 elements big
-	// f.Meth = append(f.Meth, object.T_REF) // make it an array of references
 
 	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
@@ -173,6 +168,8 @@ func TestAastore(t *testing.T) {
 		t.Errorf("TestAastore: Expecting array address list to have length 1, got %d",
 			g.ArrayAddressList.Len())
 	}
+
+	statics.LoadStaticsString()
 
 	// now, get the reference to the array
 	ptr := pop(&f).(*object.Object)
@@ -306,7 +303,7 @@ func TestAastoreInvalid3(t *testing.T) {
 	}
 }
 
-// ANEWARRAY: creation of array for references
+// ANEWARRAY: creation of array for references to strings
 func TestAnewrray(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(13)) // make an array of 13 elements
@@ -321,7 +318,7 @@ func TestAnewrray(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool entry
 	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
 	f.CP = &CP
 
@@ -359,14 +356,14 @@ func TestAnewrrayKlassField(t *testing.T) {
 	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
 
 	// now create the CP. First entry is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// [1] entry points to a UTF8 entry with the class name (should be "java/lang/String")
+	// [2] is a ClassRef that points to string pool entry for same
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool entry
 	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
 	f.CP = &CP
 
@@ -2225,7 +2222,9 @@ func Test3DimArray1(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 0)
+	arrayType := "[[[I"
+	nameIndex := stringPool.GetStringIndex(&arrayType)
+	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex))
 	CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
 
 	// create the frame
@@ -2306,7 +2305,9 @@ func Test3DimArray2(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 0)
+	arrayType := "[[[I"
+	nameIndex := stringPool.GetStringIndex(&arrayType)
+	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex))
 	CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
 
 	// create the frame

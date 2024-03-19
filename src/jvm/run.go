@@ -1549,8 +1549,6 @@ frameInterpreter:
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			// classNameEntry := CP.CpIndex[classNameIndex]
-			// className := CP.Utf8Refs[classNameEntry.Slot]
 			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
 			className := *classNamePtr
 
@@ -1823,7 +1821,6 @@ frameInterpreter:
 			// get the class entry from this method
 			classRef := method.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			// classNameEntry := CP.CpIndex[classNameIndex]
 			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
 			className := *classNamePtr
 
@@ -1970,9 +1967,7 @@ frameInterpreter:
 			// get the class entry from this method
 			classRef := method.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			// classNameEntry := CP.CpIndex[classNameIndex]
 			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
-			// className := CP.Utf8Refs[classNameEntry.Slot]
 			className := *classNamePtr
 
 			// get the method name for this method
@@ -2060,8 +2055,8 @@ frameInterpreter:
 			// the classref points to a UTF8 record with the name of the class to instantiate
 			var className string
 			if CPentry.Type == classloader.ClassRef {
-				utf8Index := CP.ClassRefs[CPentry.Slot]
-				className = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+				className = *stringPool.GetStringPointer(uint32(nameStringPoolIndex))
 			}
 
 			ref, err := InstantiateClass(className, fs)
@@ -2120,8 +2115,8 @@ frameInterpreter:
 
 			var refTypeName = ""
 			if refType.Type == classloader.ClassRef {
-				utf8Index := CP.ClassRefs[refType.Slot]
-				refTypeName = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
+				refTypeName = *stringPool.GetStringPointer(uint32(refNameStringPoolIndex))
 			}
 
 			arrayPtr := object.Make1DimRefArray(&refTypeName, size)
@@ -2434,7 +2429,7 @@ frameInterpreter:
 					CP := f.CP.(*classloader.CPool)
 					CPentry := CP.CpIndex[CPslot]
 					if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
-						// a CP entry for a UTF8 record w/ name of class
+						// a CP entry for a stringPool entry for name of class
 						var className string
 						classNamePtr := classloader.FetchCPentry(CP, CPslot)
 						if classNamePtr.RetType != classloader.IS_STRING_ADDR {
@@ -2491,8 +2486,10 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				return errors.New("MULTIANEWARRAY: multi-dimensional array presently supports classes only")
 			} else {
-				utf8Index := CP.ClassRefs[CPentry.Slot]
-				arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				// utf8Index := CP.ClassRefs[CPentry.Slot]
+				// arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+				arrayDesc = *stringPool.GetStringPointer(uint32(arrayDescStringPoolIndex))
 			}
 
 			var rawArrayType uint8

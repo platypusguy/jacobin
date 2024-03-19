@@ -67,7 +67,7 @@ func TestRunIREMexception(t *testing.T) {
 		t.Skip()
 	}
 
-	initErr := initVarsLDIVexception()
+	initErr := initVarsIREMexception()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
@@ -100,6 +100,7 @@ func TestRunIREMexception(t *testing.T) {
 	}
 
 	// run the command
+
 	if err = cmd.Start(); err != nil {
 		t.Errorf("Got error running Jacobin: %s", err.Error())
 	}
@@ -122,7 +123,7 @@ func TestRunIREMexceptionStrictJDK(t *testing.T) {
 		t.Skip()
 	}
 
-	initErr := initVarsLDIVexception()
+	initErr := initVarsIREMexception()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}

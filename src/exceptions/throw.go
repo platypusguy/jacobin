@@ -14,6 +14,7 @@ import (
 	"jacobin/log"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
+	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/util"
 	"runtime/debug"
@@ -108,7 +109,9 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
 	// then add a classref entry for the exception
-	CP.ClassRefs = append(CP.ClassRefs, uint16(len(CP.CpIndex)-1)) // point to the UTF8 entry
+	nameIndex := stringPool.GetStringIndex(&exceptionCPname)
+	// CP.ClassRefs = append(CP.ClassRefs, uint16(len(CP.CpIndex)-1)) // point to the UTF8 entry
+	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex)) // point to the string pool entry
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.ClassRef, Slot: uint16(len(CP.ClassRefs) - 1)})
 	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
