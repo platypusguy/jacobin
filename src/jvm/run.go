@@ -2060,8 +2060,9 @@ frameInterpreter:
 			// the classref points to a UTF8 record with the name of the class to instantiate
 			var className string
 			if CPentry.Type == classloader.ClassRef {
-				utf8Index := CP.ClassRefs[CPentry.Slot]
-				className = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+				// className = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+				className = *stringPool.GetStringPointer(uint32(nameStringPoolIndex))
 			}
 
 			ref, err := InstantiateClass(className, fs)

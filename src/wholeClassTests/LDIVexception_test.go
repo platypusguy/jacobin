@@ -169,7 +169,6 @@ func TestRunLDIVexceptionStrictJDK(t *testing.T) {
 
 	if !strings.Contains(string(slurp), "java.lang.ArithmeticException") &&
 		!strings.Contains(string(slurp), "/ by zero") { // JDK wording
-
 		t.Errorf("Did not get expected output to stderr. Got: %s", string(slurp))
 	}
 }
