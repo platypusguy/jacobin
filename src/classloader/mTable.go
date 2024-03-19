@@ -64,6 +64,7 @@ var MTmutex sync.Mutex
 func AddEntry(tbl *MT, key string, mte MTentry) {
 	mt := *tbl
 
+	//fmt.Printf("DEBUG mTable.go AddEntry key=%s, MType=%s\n", key, string(mte.MType))
 	MTmutex.Lock()
 	mt[key] = mte
 	MTmutex.Unlock()

@@ -227,6 +227,10 @@ func PrintlnDouble(params []interface{}) interface{} {
 
 // Println an Object's contents
 func PrintlnObject(params []interface{}) interface{} {
+	if params[1] == nil {
+		errMsg := fmt.Sprintf("PrintlnObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
 	if fld.Ftype == types.ByteArray {
@@ -310,6 +314,10 @@ func PrintString(params []interface{}) interface{} {
 
 // Print an Object's contents
 func PrintObject(params []interface{}) interface{} {
+	if params[1] == nil {
+		errMsg := fmt.Sprintf("PrintObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
 	switch fld.Ftype {

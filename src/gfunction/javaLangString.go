@@ -314,6 +314,7 @@ func Load_Lang_String() map[string]GMeth {
 
 }
 
+// "java/lang/String.<clinit>()V" -- String class initialisation
 func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(object.StringClassName)
 	if klass == nil {
@@ -331,6 +332,7 @@ func noSupportYetInString([]interface{}) interface{} {
 }
 
 // Get character at the given index.
+// "java/lang/String.charAt(I)C"
 func stringCharAt(params []interface{}) interface{} {
 	// Unpack the reference string and convert it to a rune array.
 	ptrObj := params[0].(*object.Object)
@@ -351,6 +353,7 @@ func stringCharAt(params []interface{}) interface{} {
 }
 
 // Are 2 strings equal?
+// "java/lang/String.equals(Ljava/lang/Object;)Z"
 func stringEquals(params []interface{}) interface{} {
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
@@ -361,7 +364,7 @@ func stringEquals(params []interface{}) interface{} {
 		obj := params[0].(*object.Object)
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.StringIndex {
-			errMsg := "stringLength: 1st reference object must hold an interned String"
+			errMsg := "stringEquals: 1st reference object must hold an interned String"
 			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 		}
 		str1 = object.GetGoStringFromObject(obj)
@@ -374,7 +377,7 @@ func stringEquals(params []interface{}) interface{} {
 		obj := params[1].(*object.Object)
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.StringIndex {
-			errMsg := "stringLength: 2nd reference object must hold an interned String"
+			errMsg := "stringEquals: 2nd reference object must hold an interned String"
 			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
 		}
 		str2 = object.GetGoStringFromObject(obj)
@@ -587,6 +590,7 @@ func StringFormatter(params []interface{}) interface{} {
 	return object.NewPoolStringFromGoString(str)
 }
 
+// "java/lang/String.length()I"
 func stringLength(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
@@ -666,6 +670,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.toLowerCase()Ljava/lang/String;"
 func toLowerCase(params []interface{}) interface{} {
 	// params[0]: input string
 	str := strings.ToLower(object.GetGoStringFromObject(params[0].(*object.Object)))
@@ -673,6 +678,7 @@ func toLowerCase(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.toUpperCase()Ljava/lang/String;"
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
 	str := strings.ToUpper(object.GetGoStringFromObject(params[0].(*object.Object)))
@@ -680,6 +686,7 @@ func toUpperCase(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.trim()Ljava/lang/String;"
 func trimString(params []interface{}) interface{} {
 	// params[0]: input string
 	str := strings.Trim(object.GetGoStringFromObject(params[0].(*object.Object)), " ")
@@ -687,6 +694,7 @@ func trimString(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(Z)Ljava/lang/String;"
 func valueOfBoolean(params []interface{}) interface{} {
 	// params[0]: input boolean
 	value := params[0].(int64)
@@ -700,6 +708,7 @@ func valueOfBoolean(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(C)Ljava/lang/String;"
 func valueOfChar(params []interface{}) interface{} {
 	// params[0]: input char
 	value := params[0].(int64)
@@ -708,6 +717,7 @@ func valueOfChar(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf([C)Ljava/lang/String;"
 func valueOfCharArray(params []interface{}) interface{} {
 	// params[0]: input char array
 	propObj := params[0].(*object.Object)
@@ -720,6 +730,7 @@ func valueOfCharArray(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf([CII)Ljava/lang/String;"
 func valueOfCharSubarray(params []interface{}) interface{} {
 	// params[0]: input char array
 	// params[1]: input offset
@@ -748,6 +759,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(D)Ljava/lang/String;"
 func valueOfDouble(params []interface{}) interface{} {
 	// params[0]: input double
 	value := params[0].(float64)
@@ -759,6 +771,7 @@ func valueOfDouble(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(F)Ljava/lang/String;"
 func valueOfFloat(params []interface{}) interface{} {
 	// params[0]: input double
 	value := params[0].(float64)
@@ -771,6 +784,7 @@ func valueOfFloat(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(I)Ljava/lang/String;"
 func valueOfInt(params []interface{}) interface{} {
 	// params[0]: input int
 	value := params[0].(int64)
@@ -779,6 +793,7 @@ func valueOfInt(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(J)Ljava/lang/String;"
 func valueOfLong(params []interface{}) interface{} {
 	// params[0]: input long
 	value := params[0].(int64)
@@ -787,6 +802,7 @@ func valueOfLong(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.valueOf(Ljava/lang/Object;)Ljava/lang/String;"
 func valueOfObject(params []interface{}) interface{} {
 	// params[0]: input Object
 	ptrObj := params[0].(*object.Object)
@@ -795,6 +811,7 @@ func valueOfObject(params []interface{}) interface{} {
 	return obj
 }
 
+// "java/lang/String.compareTo(Ljava/lang/String;)I"
 func compareToCaseSensitive(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str1 := object.GetGoStringFromObject(obj)
@@ -809,6 +826,7 @@ func compareToCaseSensitive(params []interface{}) interface{} {
 	return int64(1)
 }
 
+// "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
 func compareToIgnoreCase(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str1 := strings.ToLower(object.GetGoStringFromObject(obj))
@@ -823,12 +841,49 @@ func compareToIgnoreCase(params []interface{}) interface{} {
 	return int64(1)
 }
 
+// "java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"
 func stringConcat(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	strRef := object.GetGoStringFromObject(obj)
-	obj = params[1].(*object.Object)
-	strArg := object.GetGoStringFromObject(obj)
-	str := strRef + strArg
-	obj = object.NewPoolStringFromGoString(str)
+	var str1, str2 string
+
+	switch params[0].(type) {
+	case *object.Object:
+		fld := params[0].(*object.Object).FieldTable["value"]
+		switch fld.Ftype {
+		case types.ByteArray:
+			str1 = string(fld.Fvalue.([]byte))
+		case types.StringIndex:
+			str1 = object.GetGoStringFromObject(params[0].(*object.Object))
+		default:
+			errMsg := fmt.Sprintf("stringConcat: Object 1 has invalid field type: %s", fld.Ftype)
+			return getGErrBlk(exceptions.InvalidTypeException, errMsg)
+		}
+	case []byte:
+		str1 = string(params[0].([]byte))
+	default:
+		errMsg := fmt.Sprintf("stringConcat: Object 1 parameter type is invalid: %T", params[0])
+		return getGErrBlk(exceptions.InvalidTypeException, errMsg)
+	}
+
+	switch params[1].(type) {
+	case *object.Object:
+		fld := params[1].(*object.Object).FieldTable["value"]
+		switch fld.Ftype {
+		case types.ByteArray:
+			str2 = string(fld.Fvalue.([]byte))
+		case types.StringIndex:
+			str2 = object.GetGoStringFromObject(params[1].(*object.Object))
+		default:
+			errMsg := fmt.Sprintf("stringConcat: Object 2 has invalid field type: %s", fld.Ftype)
+			return getGErrBlk(exceptions.InvalidTypeException, errMsg)
+		}
+	case []byte:
+		str2 = string(params[0].([]byte))
+	default:
+		errMsg := fmt.Sprintf("stringConcat: Object 2 parameter type is invalid: %T", params[0])
+		return getGErrBlk(exceptions.InvalidTypeException, errMsg)
+	}
+
+	str := str1 + str2
+	obj := object.NewPoolStringFromGoString(str)
 	return obj
 }

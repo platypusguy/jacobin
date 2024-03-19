@@ -1914,7 +1914,7 @@ frameInterpreter:
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methName
+				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methName + methSig
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -1947,7 +1947,7 @@ frameInterpreter:
 				fram, err := createAndInitNewFrame(className, methName, methSig, &m, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methName
+					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methName + methSig
 					return errors.New(errMsg)
 				}
 
