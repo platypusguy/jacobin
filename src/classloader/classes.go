@@ -41,7 +41,7 @@ type ClData struct {
 
 type CPool struct {
 	CpIndex        []CpEntry // the constant pool index to entries
-	ClassRefs      []uint16  // points to a UTF8 entry in the CP bearing class name
+	ClassRefs      []uint32  // points to a string pool entry = class name
 	Doubles        []float64
 	Dynamics       []DynamicEntry
 	FieldRefs      []FieldRefEntry

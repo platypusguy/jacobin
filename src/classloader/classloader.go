@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -70,10 +70,9 @@ type ParsedClass struct {
 	deprecated bool
 
 	// ---- constant pool data items ----
-	cpCount int       // count of constant pool entries
-	cpIndex []cpEntry // the constant pool index to entries
-	// classRefs      []int     // points to a UTF8 entry in the CP bearing the class name
-	classRefs      []uint32 // point to a stringPool index to a class name
+	cpCount        int       // count of constant pool entries
+	cpIndex        []cpEntry // the constant pool index to entries
+	classRefs      []uint32  // point to a stringPool index to a class name
 	doubles        []float64
 	dynamics       []dynamic
 	fieldRefs      []fieldRefEntry
@@ -234,6 +233,7 @@ func walk(s string, d fs.DirEntry, err error) error {
 //
 // Note: per JACOBIN-327, this parallel processing has been temporarily
 // removed--it's not called by any function. It's likely to be reinstated later.
+/*
 func LoadReferencedClasses(clName string) {
 	err := WaitForClassStatus(clName)
 	if err != nil {
@@ -247,6 +247,7 @@ func LoadReferencedClasses(clName string) {
 
 	loaderChannel := make(chan string, len(classRefs))
 	for _, v := range classRefs {
+		// TODO: needs to be updated to use string pool, whenever we put this function back in service
 		refClassName := FetchUTF8stringFromCPEntryNumber(&cpClassCP, v)
 		name := normalizeClassReference(refClassName)
 		if name == "" {
@@ -258,6 +259,7 @@ func LoadReferencedClasses(clName string) {
 	go LoadFromLoaderChannel(loaderChannel)
 	close(loaderChannel)
 }
+*/
 
 // LoadFromLoaderChannel receives a name of a class to load in /java/lang/String format,
 // determines the classloader, checks if the class is already loaded, and loads it if not.
@@ -624,7 +626,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	if len(fullyParsedClass.classRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.classRefs); i++ {
-			kd.CP.ClassRefs = append(kd.CP.ClassRefs, uint16(fullyParsedClass.classRefs[i]))
+			kd.CP.ClassRefs = append(kd.CP.ClassRefs, fullyParsedClass.classRefs[i])
 		}
 	}
 

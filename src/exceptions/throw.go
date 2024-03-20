@@ -104,14 +104,12 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 	// Note that to do this, we need to twiddle with the constant pool as well
 
 	CP := f.CP.(*classloader.CPool)
-	// first add an entry to the UTF8 entries containing the exception class name
-	CP.Utf8Refs = append(CP.Utf8Refs, exceptionCPname)
+	CP.Utf8Refs = append(CP.Utf8Refs, exceptionCPname) // probably not needed due to use of string pool
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.UTF8, Slot: uint16(len(CP.Utf8Refs) - 1)})
 	// then add a classref entry for the exception
 	nameIndex := stringPool.GetStringIndex(&exceptionCPname)
-	// CP.ClassRefs = append(CP.ClassRefs, uint16(len(CP.CpIndex)-1)) // point to the UTF8 entry
-	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex)) // point to the string pool entry
+	CP.ClassRefs = append(CP.ClassRefs, nameIndex) // point to the string pool entry
 	CP.CpIndex = append(CP.CpIndex, classloader.CpEntry{
 		Type: classloader.ClassRef, Slot: uint16(len(CP.ClassRefs) - 1)})
 	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
