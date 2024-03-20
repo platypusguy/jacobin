@@ -29,6 +29,8 @@ const RuneArray = "[R" // used only in strings that are not compact
 
 // Jacobin-specific types
 const StringIndex = "T"
+const GolangString = "G"
+
 const Static = "X"
 const StaticDouble = "XD"
 const StaticLong = "XJ"
