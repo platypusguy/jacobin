@@ -1,12 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package experimental
-
-import "jacobin/object"
+package object
 
 // This experimental package is designed to codify the various kinds of strings and provide
 // convenience methods to create and manipulate them.
@@ -26,11 +24,11 @@ import (
 )
 
 // NewString creates an empty string.
-func NewStringObject() *object.Object {
-	s := new(object.Object)
+func NewStringObject() *Object {
+	s := new(Object)
 	s.Mark.Hash = 0
-	s.KlassName = object.StringPoolStringIndex // =  java/lang/String
-	s.FieldTable = make(map[string]object.Field)
+	s.KlassName = StringPoolStringIndex // =  java/lang/String
+	s.FieldTable = make(map[string]Field)
 
 	// ==== now the fields ====
 
@@ -39,20 +37,20 @@ func NewStringObject() *object.Object {
 	// enable compact strings.
 
 	value := make([]byte, 0)
-	valueField := object.Field{Ftype: types.ByteArray, Fvalue: value} // empty string
+	valueField := Field{Ftype: types.ByteArray, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
 	// coder has two possible values:
 	// LATIN(e.g., 0 = bytes for compact strings) or UTF16(e.g., 1 = UTF16)
-	coderField := object.Field{Ftype: types.Byte, Fvalue: byte(0)}
+	coderField := Field{Ftype: types.Byte, Fvalue: byte(0)}
 	s.FieldTable["coder"] = coderField
 
 	// the hash code, which is initialized to 0
-	hash := object.Field{Ftype: types.Int, Fvalue: uint32(0)}
+	hash := Field{Ftype: types.Int, Fvalue: uint32(0)}
 	s.FieldTable["hash"] = hash
 
 	// hashIsZero: only true in rare case where compute hash is 0
-	hashIsZero := object.Field{Ftype: types.Byte, Fvalue: byte(0)}
+	hashIsZero := Field{Ftype: types.Byte, Fvalue: byte(0)}
 	s.FieldTable["hashIsZero"] = hashIsZero
 
 	// The following static fields are preloaded in statics/LoadStaticsString()
@@ -68,15 +66,15 @@ func NewStringObject() *object.Object {
 }
 
 // StringObjectFromGoString: convenience method to create a string object from a Golang string
-func StringObjectFromGoString(str string) *object.Object {
+func StringObjectFromGoString(str string) *Object {
 	newStr := NewStringObject()
-	newStr.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte(str)}
+	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: []byte(str)}
 	return newStr
 }
 
 // GoStringFromStringObject: convenience method to extract a Go string from a String object (Java string)
-func GoStringFromStringObject(obj *object.Object) string {
-	if obj != nil && obj.KlassName == object.StringPoolStringIndex {
+func GoStringFromStringObject(obj *Object) string {
+	if obj != nil && obj.KlassName == StringPoolStringIndex {
 		if obj.FieldTable["value"].Fvalue != nil {
 			return string(obj.FieldTable["value"].Fvalue.([]byte))
 		}
@@ -85,8 +83,8 @@ func GoStringFromStringObject(obj *object.Object) string {
 }
 
 // ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
-func ByteArrayFromStringObject(obj *object.Object) []byte {
-	if obj != nil && obj.KlassName == object.StringPoolStringIndex {
+func ByteArrayFromStringObject(obj *Object) []byte {
+	if obj != nil && obj.KlassName == StringPoolStringIndex {
 		return obj.FieldTable["value"].Fvalue.([]byte)
 	} else {
 		return nil
@@ -94,15 +92,15 @@ func ByteArrayFromStringObject(obj *object.Object) []byte {
 }
 
 // StringObjectFromByteArray: convenience method to create a string object from a byte array
-func StringObjectFromByteArray(bytes []byte) *object.Object {
+func StringObjectFromByteArray(bytes []byte) *Object {
 	newStr := NewStringObject()
-	newStr.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
 	return newStr
 }
 
 // StringPoolIndexFromStringObject: convenience method to extract a string pool index from a String object
-func StringPoolIndexFromStringObject(obj *object.Object) uint32 {
-	if obj != nil && obj.KlassName == object.StringPoolStringIndex {
+func StringPoolIndexFromStringObject(obj *Object) uint32 {
+	if obj != nil && obj.KlassName == StringPoolStringIndex {
 		str := string(obj.FieldTable["value"].Fvalue.([]byte))
 		index := stringPool.GetStringIndex(&str)
 		return index
@@ -121,7 +119,7 @@ func GoStringFromStringPoolIndex(index uint32) string {
 }
 
 // StringObjectFromStringPoolIndex: convenience method to create a string object using a string pool index
-func StringObjectFromPoolIndex(index uint32) *object.Object {
+func StringObjectFromPoolIndex(index uint32) *Object {
 	if index < stringPool.GetStringPoolSize() {
 		return StringObjectFromGoString(*stringPool.GetStringPointer(index))
 	} else {
@@ -146,19 +144,19 @@ func IsStringObject(unknown any) bool {
 		return false
 	}
 
-	o, ok := unknown.(*object.Object)
+	o, ok := unknown.(*Object)
 	if !ok {
 		return false
 	}
 
-	if o.KlassName == object.StringPoolStringIndex {
+	if o.KlassName == StringPoolStringIndex {
 		return true
 	}
 	return false
 }
 
 // UpdateStringObjectFromBytes: Set the value field of the given object to the given byte array
-func UpdateStringObjectFromBytes(objPtr *object.Object, argBytes []byte) {
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: argBytes}
+func UpdateStringObjectFromBytes(objPtr *Object, argBytes []byte) {
+	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
 	objPtr.FieldTable["value"] = fld
 }
