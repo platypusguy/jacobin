@@ -43,7 +43,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	// strings are handled separately
 	if classname == object.StringClassName {
-		return object.NewString(), nil
+		return object.NewStringObject(), nil
 	}
 
 	// At this point, classname is ready

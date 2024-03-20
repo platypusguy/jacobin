@@ -19,10 +19,10 @@ import (
 // to have a means of creating them quickly, rather than building
 // them from scratch each time by walking through the constant pool.
 
-var StringClassName = "java/lang/String"
-var StringClassRef = "Ljava/lang/String;"
-var StringPoolStringIndex = uint32(1)
-var EmptyString = ""
+// var StringClassName = "java/lang/String"
+// var StringClassRef = "Ljava/lang/String;"
+// var StringPoolStringIndex = uint32(1)
+// var EmptyString = ""
 
 // NewString creates an empty string.
 func NewString() *Object {

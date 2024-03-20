@@ -605,7 +605,7 @@ func TestGetField(t *testing.T) {
 	f.CP = &CP
 
 	// push the string whose field[0] we'll be getting
-	str := object.NewString()
+	str := object.NewStringObject()
 	str.FieldTable["value"] = object.Field{
 		Ftype:  types.ByteArray,
 		Fvalue: "hello",
@@ -1663,9 +1663,9 @@ func TestIfneFallThrough(t *testing.T) {
 }
 
 // IFNONNULL: jump if TOS holds a non-null address
-func TestIfn0nnull(t *testing.T) {
+func TestIfnonnull(t *testing.T) {
 	f := newFrame(opcodes.IFNONNULL)
-	o := object.NewString()
+	o := object.NewStringObject()
 	push(&f, o) // pushed a valid address, so jump should be made.
 
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2

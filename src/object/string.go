@@ -23,6 +23,11 @@ import (
 	"jacobin/types"
 )
 
+var StringClassName = "java/lang/String"
+var StringClassRef = "Ljava/lang/String;"
+var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
+var EmptyString = ""
+
 // NewStringObject creates an empty string object (aka Java String)
 func NewStringObject() *Object {
 	s := new(Object)
