@@ -49,9 +49,9 @@ var ExtensionCL Classloader
 // ParsedClass contains all the parsed fields
 type ParsedClass struct {
 	javaVersion     int
-	className       string // name of class without path and without .class
+	className       string // name of class without path and without .class TODO: eventually remove
 	classNameIndex  uint32 // index into StringPool
-	superClass      string // name of superclass for this class
+	superClass      string // name of superclass for this class TODO: eventually remove in favor of stringPool
 	superClassIndex uint32 // index of into StringPool
 	moduleName      string
 	packageName     string
