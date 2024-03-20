@@ -82,16 +82,9 @@ type Globals struct {
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
 
-	// Defeat the golang cycle.
-	// To be set up in jvmStart.
-	// Let low-level functions (E.g. gfunctions) call InstantiateClass through a global function variable.
+	// Get around the golang circular dependency. To be set up in jvmStart.go
+	// Enables gfunctions to call InstantiateClass through a global function variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
-
-	// // ----- String Pool
-	// StringPoolTable map[string]uint32
-	// StringPoolList  []string
-	// StringPoolNext  uint32
-	// StringPoolLock  sync.Mutex
 }
 
 // ----- String Pool

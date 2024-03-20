@@ -23,7 +23,7 @@ import (
 	"jacobin/types"
 )
 
-// NewString creates an empty string.
+// NewStringObject creates an empty string object (aka Java String)
 func NewStringObject() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
