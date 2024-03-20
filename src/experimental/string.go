@@ -18,7 +18,7 @@ import "jacobin/object"
 //
 // Implementation details:
 // * the string pool stores only golang strings. This is done for performance reasons.
-// * string objects' "value" field contains a byte array, which is required by Java methods
+// * string objects' "value" field contains a byte array, which is required by Java methods and gfunctions.
 
 import (
 	"jacobin/stringPool"
@@ -38,9 +38,8 @@ func NewStringObject() *object.Object {
 	// Note: Post JDK9, this field is an array of bytes, so as to
 	// enable compact strings.
 
-	// value := make([]byte, 0) // presently empty // commented out due to JACOBIN-463
-	// valueField := Field{Ftype: types.ByteArray, Fvalue: value}
-	valueField := object.Field{Ftype: types.ByteArray, Fvalue: ""} // empty string
+	value := make([]byte, 0)
+	valueField := object.Field{Ftype: types.ByteArray, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
 	// coder has two possible values:
@@ -49,7 +48,7 @@ func NewStringObject() *object.Object {
 	s.FieldTable["coder"] = coderField
 
 	// the hash code, which is initialized to 0
-	hash := object.Field{Ftype: types.Int, Fvalue: int32(0)}
+	hash := object.Field{Ftype: types.Int, Fvalue: uint32(0)}
 	s.FieldTable["hash"] = hash
 
 	// hashIsZero: only true in rare case where compute hash is 0
@@ -79,7 +78,7 @@ func StringObjectFromGoString(str string) *object.Object {
 func GoStringFromStringObject(obj *object.Object) string {
 	if obj != nil && obj.KlassName == object.StringPoolStringIndex {
 		if obj.FieldTable["value"].Fvalue != nil {
-			return obj.FieldTable["value"].Fvalue.(string)
+			return string(obj.FieldTable["value"].Fvalue.([]byte))
 		}
 	}
 	return ""
@@ -156,4 +155,10 @@ func IsStringObject(unknown any) bool {
 		return true
 	}
 	return false
+}
+
+// UpdateStringObjectFromBytes: Set the value field of the given object to the given byte array
+func UpdateStringObjectFromBytes(objPtr *object.Object, argBytes []byte) {
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: argBytes}
+	objPtr.FieldTable["value"] = fld
 }
