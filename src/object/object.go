@@ -49,14 +49,12 @@ type Field struct {
 var Null *Object = nil
 
 // MakeEmptyObject() creates an empty basis Object. It is expected that other
-// code will fill in the fields and the Klass field.
+// code will fill in the Klass header field and the data fields.
 func MakeEmptyObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
 	o.KlassName = types.InvalidStringIndex // s/be filled in later, when class is filled in.
-	// o.Klass = &EmptyString // s/be filled in later, when class is filled in.
-	o.KlassName = stringPool.GetStringIndex(&EmptyString)
 
 	// initialize the map of this object's fields
 	o.FieldTable = make(map[string]Field)
