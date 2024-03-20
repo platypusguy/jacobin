@@ -36,8 +36,7 @@ func NewString() *Object {
 
 	// value: the content of the string as array of runes or bytes
 	// Note: Post JDK9, this field is an array of bytes, so as to
-	// enable compact strings. All string values are now interned,
-	// so the value field contains an index into the string pool.
+	// enable compact strings.
 
 	// value := make([]byte, 0) // presently empty // commented out due to JACOBIN-463
 	// valueField := Field{Ftype: types.ByteArray, Fvalue: value}
