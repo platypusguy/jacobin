@@ -591,7 +591,7 @@ func TestGetField(t *testing.T) {
 	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
 
-	CP.ClassRefs = make([]uint16, 1, 1)
+	CP.ClassRefs = make([]uint32, 1, 1)
 	CP.ClassRefs[0] = 0 // classRefs are not used to access a field
 
 	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
@@ -630,6 +630,8 @@ func TestGetField(t *testing.T) {
 
 // GETFIELD: Get a long field, make sure that it's value is pushed twice
 func TestGetFieldWithLong(t *testing.T) {
+	globals.InitGlobals("test")
+
 	f := newFrame(opcodes.GETFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -742,8 +744,8 @@ func TestGetStaticBoolean(t *testing.T) {
 	classNameIndex := stringPool.GetStringIndex(&object.StringClassName)
 	CP.Utf8Refs[0] = "COMPACT_STRINGS"
 
-	CP.ClassRefs = make([]uint16, 5, 5)
-	CP.ClassRefs[0] = uint16(classNameIndex)
+	CP.ClassRefs = make([]uint32, 5, 5)
+	CP.ClassRefs[0] = classNameIndex
 	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 5, 5)
 	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
 		NameIndex: 5, // field name as UTF8 entry, here the CPindex index

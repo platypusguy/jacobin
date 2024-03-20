@@ -63,7 +63,7 @@ func TestAaload(t *testing.T) {
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	// CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
-	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // use string pool
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // use string pool
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -151,7 +151,7 @@ func TestAastore(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -318,7 +318,7 @@ func TestAnewrray(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool entry
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
 	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
 	f.CP = &CP
 
@@ -363,7 +363,7 @@ func TestAnewrrayKlassField(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, uint16(object.StringPoolStringIndex)) // point to string pool entry
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
 	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
 	f.CP = &CP
 
@@ -2224,7 +2224,7 @@ func Test3DimArray1(t *testing.T) {
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	arrayType := "[[[I"
 	nameIndex := stringPool.GetStringIndex(&arrayType)
-	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex))
+	CP.ClassRefs = append(CP.ClassRefs, nameIndex)
 	CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
 
 	// create the frame
@@ -2307,7 +2307,7 @@ func Test3DimArray2(t *testing.T) {
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	arrayType := "[[[I"
 	nameIndex := stringPool.GetStringIndex(&arrayType)
-	CP.ClassRefs = append(CP.ClassRefs, uint16(nameIndex))
+	CP.ClassRefs = append(CP.ClassRefs, nameIndex)
 	CP.Utf8Refs = append(CP.Utf8Refs, "[[[I")
 
 	// create the frame
