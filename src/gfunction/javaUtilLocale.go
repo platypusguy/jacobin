@@ -8,7 +8,6 @@ package gfunction
 
 import (
 	"jacobin/object"
-	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 )
@@ -103,9 +102,8 @@ func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 func getDefaultLocale([]interface{}) interface{} {
 	langStr := os.Getenv("LANGUAGE")
 	classStr := "java/lang/Locale"
-	index := stringPool.GetStringIndex(&langStr)
 	obj := object.MakeEmptyObjectWithClassName(&classStr)
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: index}
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(langStr)}
 	obj.FieldTable["value"] = fld
 	return obj
 }
