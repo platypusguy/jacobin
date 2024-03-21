@@ -234,7 +234,6 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 				case classloader.StringConst:
 					str := k.Data.CP.Utf8Refs[valueSlot]
 					fieldToAdd.Fvalue = object.StringObjectFromGoString(str)
-					// fieldToAdd.Fvalue = object.NewStringFromGoString(str) // Depricated by JACOBIN-480
 				default:
 					errMsg := fmt.Sprintf(
 						"Unexpected ConstantValue type in instantiate: %d", valueType)
