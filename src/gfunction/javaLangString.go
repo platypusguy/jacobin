@@ -396,20 +396,6 @@ func newStringFromBytes(params []interface{}) interface{} {
 	return nil
 }
 
-// Instantiate a new string object from a Go int64 array (Java char array).
-// "java/lang/String.<init>([C)V"
-func newStringFromChars(params []interface{}) interface{} {
-	// params[0] = reference string (to be updated with byte array)
-	// params[1] = byte array object
-	ints := params[1].([]int64)
-	var bytes []byte
-	for _, ii := range ints {
-		bytes = append(bytes, byte(ii&0xFF))
-	}
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
-	return nil
-}
-
 // Construct a string object from a subset of a Go byte array.
 // "java/lang/String.<init>([BII)V"
 func newStringFromBytesSubset(params []interface{}) interface{} {
@@ -436,6 +422,20 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 
+}
+
+// Instantiate a new string object from a Go int64 array (Java char array).
+// "java/lang/String.<init>([C)V"
+func newStringFromChars(params []interface{}) interface{} {
+	// params[0] = reference string (to be updated with byte array)
+	// params[1] = byte array object
+	ints := params[1].([]int64)
+	var bytes []byte
+	for _, ii := range ints {
+		bytes = append(bytes, byte(ii&0xFF))
+	}
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	return nil
 }
 
 // "java/lang/String.getBytes()[B"
