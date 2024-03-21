@@ -344,18 +344,16 @@ func TestCheckcastOfString(t *testing.T) {
 
 	f := newFrame(opcodes.CHECKCAST)
 	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
-	f.Meth = append(f.Meth, 2) // " "
+	f.Meth = append(f.Meth, 1) // " "
 
-	// now create the CP. First entry is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// now create the CP.
+	// [0] First entry is perforce 0
+	// [1] is a ClassRef that points to the UTF8 string in [1]
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
 	f.CP = &CP
 
 	push(&f, s)
