@@ -106,7 +106,7 @@ func populator(classname string, fldtype string, fldvalue interface{}) interface
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	var objPtr *object.Object
 	if fldtype == types.StringIndex {
-		objPtr = object.NewPoolStringFromGoString(fldvalue.(string))
+		objPtr = object.StringObjectFromGoString(fldvalue.(string))
 	} else {
 		objPtr = object.MakePrimitiveObject(classname, fldtype, fldvalue)
 		(*objPtr).FieldTable["value"] = object.Field{fldtype, fldvalue}

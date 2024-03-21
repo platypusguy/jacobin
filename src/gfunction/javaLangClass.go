@@ -49,6 +49,7 @@ func Load_Lang_Class() map[string]GMeth {
 // getPrimitiveClass() takes a one-word descriptor of a primitive and
 // returns  apointer to the native primitive class that corresponds to it.
 // This duplicates the behavior of OpenJDK JVMs.
+// "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"
 func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
 	str := object.GetGoStringFromObject(primitive)
@@ -115,6 +116,8 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 }
 
 // returns boolean indicating whether assertions are enabled or not.
+// "java/lang/Class.desiredAssertionStatus()Z"
+// "java/lang/Class.desiredAssertionStatus0()Z"
 func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// note that statics have been preloaded before this function
 	// can be called, and CLI processing has also occurred. So, we

@@ -68,6 +68,7 @@ func Load_Lang_Double() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/lang/Double.byteValue()B"
 func doubleByteValue(params []interface{}) interface{} {
 	var dd float64
 	parmObj := params[0].(*object.Object)
@@ -75,6 +76,7 @@ func doubleByteValue(params []interface{}) interface{} {
 	return int64(byte(dd))
 }
 
+// "java/lang/Double.compare(DD)I"
 func doubleCompare(params []interface{}) interface{} {
 	dd1 := params[0].(float64)
 	dd2 := params[1].(float64)
@@ -87,6 +89,7 @@ func doubleCompare(params []interface{}) interface{} {
 	return int(1)
 }
 
+// "java/lang/Double.compareTo(Ljava/lang/Double;)I"
 func doubleCompareTo(params []interface{}) interface{} {
 	var dd1, dd2 float64
 
@@ -108,14 +111,13 @@ func doubleCompareTo(params []interface{}) interface{} {
 	return int64(1)
 }
 
+// "java/lang/Double.doubleValue()D"
 func doubleDoubleValue(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
-	if len(parmObj.FieldTable) > 0 {
-		return parmObj.FieldTable["value"].Fvalue.(float64)
-	}
 	return parmObj.FieldTable["value"].Fvalue.(float64)
 }
 
+// "java/lang/Double.equals(Ljava/lang/Object;)Z"
 func doubleEquals(params []interface{}) interface{} {
 	var dd1, dd2 float64
 
@@ -141,10 +143,11 @@ func doubleEquals(params []interface{}) interface{} {
 	return int64(0)
 }
 
+// "java/lang/Double.parseDouble(Ljava/lang/String;)D"
 func doubleParseDouble(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := object.GetGoStringFromObject(parmObj)
+	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "doubleParseDouble: string length < 1")
 	}
@@ -158,11 +161,12 @@ func doubleParseDouble(params []interface{}) interface{} {
 
 }
 
+// "java/lang/Double.toString()Ljava/lang/String;"
 func doubleToString(params []interface{}) interface{} {
 	var dd float64
 	parmObj := params[0].(*object.Object)
 	dd = parmObj.FieldTable["value"].Fvalue.(float64)
 	str := fmt.Sprintf("%f", dd)
-	objPtr := object.NewPoolStringFromGoString(str)
+	objPtr := object.StringObjectFromGoString(str)
 	return objPtr
 }

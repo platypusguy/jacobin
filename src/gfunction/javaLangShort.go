@@ -34,6 +34,7 @@ func Load_Lang_Short() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/lang/Short.doubleValue()D"
 func shortDoubleValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
@@ -41,6 +42,7 @@ func shortDoubleValue(params []interface{}) interface{} {
 	return float64(ii)
 }
 
+// "java/lang/Short.valueOf(S)Ljava/lang/Short;"
 func shortValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return populator("java/lang/Short", types.Short, int64Value)

@@ -336,12 +336,7 @@ func noSupportYetInString([]interface{}) interface{} {
 func stringCharAt(params []interface{}) interface{} {
 	// Unpack the reference string and convert it to a rune array.
 	ptrObj := params[0].(*object.Object)
-	fld := ptrObj.FieldTable["value"]
-	if fld.Ftype != types.StringIndex {
-		errMsg := "stringCharAt: reference object must be a String"
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
-	str := object.GetGoStringFromObject(ptrObj)
+	str := object.GoStringFromStringObject(ptrObj)
 	runeArray := []rune(str)
 
 	// Get index.
@@ -357,33 +352,10 @@ func stringCharAt(params []interface{}) interface{} {
 func stringEquals(params []interface{}) interface{} {
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
-	var str1, str2 string
-
-	switch params[0].(type) {
-	case *object.Object:
-		obj := params[0].(*object.Object)
-		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.StringIndex {
-			errMsg := "stringEquals: 1st reference object must hold an interned String"
-			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-		}
-		str1 = object.GetGoStringFromObject(obj)
-	case string:
-		str1 = params[0].(string)
-	}
-
-	switch params[1].(type) {
-	case *object.Object:
-		obj := params[1].(*object.Object)
-		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.StringIndex {
-			errMsg := "stringEquals: 2nd reference object must hold an interned String"
-			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-		}
-		str2 = object.GetGoStringFromObject(obj)
-	case string:
-		str2 = params[1].(string)
-	}
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -392,162 +364,126 @@ func stringEquals(params []interface{}) interface{} {
 	return int64(0) // false
 }
 
-// New empty string - "java/lang/String.<init>()V"
+// Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
-	str := ""
-	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
+	bytes := make([]byte, 0)
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
-// Construct a compact string object (usable by Java) from a Go byte array.
+// Instantiate a new string object from a Go byte array.
+// "java/lang/String.<init>([B)V"
 func newStringFromBytes(params []interface{}) interface{} {
+	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	// params[0] = target object for string (updated)
-	klass := classloader.MethAreaFetch(object.StringClassName)
-	if klass == nil {
-		errMsg := fmt.Sprintf("newStringFromBytes: Expected %s to be in the MethodArea, but it was not", object.StringClassName)
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
-
-	// Mark that String.<clinit>() has been run.
-	klass.Data.ClInit = types.ClInitRun
-
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-		str = string(bytes)
-	case []byte:
-		str = string(params[1].([]byte))
-	}
-	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
-// Construct a compact string object (usable by Java) from a Go byte array.
+// Construct a string object from a subset of a Go byte array.
+// "java/lang/String.<init>([BII)V"
 func newStringFromBytesSubset(params []interface{}) interface{} {
-	klass := classloader.MethAreaFetch(object.StringClassName)
-	if klass == nil {
-		errMsg := fmt.Sprintf("newStringFromBytes: Expected %s to be in the MethodArea, but it was not", object.StringClassName)
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
+	// params[0] = reference string (to be updated with byte array)
+	// params[1] = byte array object
+	// params[2] = start offset
+	// params[3] = end offset
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 
-	// Mark that String.<clinit>() has been run.
-	klass.Data.ClInit = types.ClInitRun
-
-	var bytes []byte
-	switch params[1].(type) {
-	case *object.Object:
-		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	case []byte:
-		bytes = params[1].([]byte)
-	}
-
-	// Get substring offset and length
-	ssOffset := params[2].(int64)
-	ssLength := params[3].(int64)
+	// Get substring start and end offset
+	ssStart := params[2].(int64)
+	ssEnd := params[3].(int64)
 
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
-	if totalLength < 1 || ssOffset < 0 || ssLength < 1 || ssOffset > (totalLength-1) || (ssOffset+ssLength) > totalLength {
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
 		errMsg1 := "newStringFromBytesSubset: Either: nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssOffset, ssLength)
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssStart, ssEnd)
 		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
-	// Compute substring.
-	bytes = bytes[ssOffset : ssOffset+ssLength]
-
-	// Copy subset of byte array from params[1] to the whole byte array in params[0].
-	str := string(bytes)
-	object.UpdateObjectFromGoString(params[0].(*object.Object), str)
+	// Compute subarray and update params[0].
+	bytes = bytes[ssStart : ssStart+ssEnd]
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 
 }
 
+// "java/lang/String.getBytes()[B"
 func getBytesFromString(params []interface{}) interface{} {
-	switch params[0].(type) {
-	case *object.Object:
-		str := object.GetGoStringFromObject(params[0].(*object.Object))
-		return []byte(str)
-	default:
-		errMsg := fmt.Sprintf("getBytesFromString: Unexpected params[0] type=%T, value=%v", params[0], params[0])
-		return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-	}
+	// params[0] = reference string with byte array to be returned
+	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
+	return []byte(bytes)
 }
 
+// "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
+// "java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"
 func sprintf(params []interface{}) interface{} {
 	// params[0]: format string
-	// params[1]: object slice
+	// params[1]: argument slice (array of object pointers)
 	return StringFormatter(params)
 }
 
+// String formatting given a format string and a slice of arguments.
+// Called by sprintf, javaIoConsole.go, and javaIoPrintStream.go.
 func StringFormatter(params []interface{}) interface{} {
+	// params[0]: format string
+	// params[1]: argument slice (array of object pointers)
+
+	// Check the parameter length. It should be 2.
 	lenParams := len(params)
-	//fmt.Printf("DEBUG StringFormatter lenParams=%d\n", lenParams)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	if lenParams == 1 { // No parameters beyond the format string
-		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
+		formatStringObj := params[0].(*object.Object)
 		return formatStringObj
 	}
 
+	// Check the format string.
 	var formatString string
 	switch params[0].(type) {
 	case *object.Object:
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
 		switch formatStringObj.FieldTable["value"].Ftype {
-		case types.StringIndex:
-			formatString = object.GetGoStringFromObject(formatStringObj)
 		case types.ByteArray:
-			formatString = string(formatStringObj.FieldTable["value"].Fvalue.([]byte))
+			formatString = object.GoStringFromStringObject(formatStringObj)
 		default:
-			errMsg := fmt.Sprintf("StringFormatter: Invalid Ftype in format string object: %s",
-				formatStringObj.FieldTable["value"].Ftype)
+			errMsg := fmt.Sprintf("StringFormatter: In the format string object, expected Ftype=%s but observed: %s",
+				types.ByteArray, formatStringObj.FieldTable["value"].Ftype)
 			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 		}
-		//fmt.Printf("DEBUG StringFormatter formatString=%s\n", formatString)
 	default:
-		errMsg := fmt.Sprintf("StringFormatter: Invalid variable type for format string: %T", params[0])
+		errMsg := fmt.Sprintf("StringFormatter: Expected a string object for the format string but observed: %T", params[0])
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 
+	// Make sure that the argument slice is a reference array.
 	valuesOut := []any{}
-	//fmt.Printf("DEBUG StringFormatter params[1]=%T\n", params[1])
 	fld := params[1].(*object.Object).FieldTable["value"]
-	//fmt.Printf("DEBUG StringFormatter fld.Ftype=%s, fld.Fvalue=%v\n", fld.Ftype, fld.Fvalue)
 	if !strings.HasPrefix(fld.Ftype, types.RefArray) {
 		errMsg := fmt.Sprintf("StringFormatter: Expected Ftype=%s for params[1]: fld.Ftype=%s, fld.Fvalue=%v",
 			types.RefArray, fld.Ftype, fld.Fvalue)
 		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
-	valuesIn := fld.Fvalue.([]*object.Object) // ptr to slice of pointers to 1 or more objects
 
+	// valuesIn = the reference array
+	valuesIn := fld.Fvalue.([]*object.Object)
+
+	//Main loop for reference array.
 	for ii := 0; ii < len(valuesIn); ii++ {
-		//fmt.Printf("DEBUG StringFormatter ii: %d of %d\n", ii+1, len(valuesIn))
-		//fmt.Printf("DEBUG StringFormatter valuesIn[ii] field type: %s, field value: %v\n",
-		//	valuesIn[ii].FieldTable["value"].Ftype, valuesIn[ii].FieldTable["value"].Fvalue)
-		// Extract the field.
+
+		// Get the current object's value field.
 		fld := valuesIn[ii].FieldTable["value"]
 
-		if fld.Ftype == types.StringIndex {
-			switch fld.Fvalue.(type) {
-			case uint32:
-			default:
-				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d Ftype=T but Fvalue not uint32 (%T)", ii+1, fld.Fvalue)
-				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
-			}
-			str := object.GetGoStringFromObject(valuesIn[ii])
+		// If type is string object, process it.
+		if fld.Ftype == types.ByteArray {
+			str := string(fld.Fvalue.([]byte))
 			valuesOut = append(valuesOut, str)
-			//fmt.Printf("DEBUG StringFormatter got a string: %s\n", str)
 		} else {
-			//str := valuesIn[ii].FormatField("value")
-			//fmt.Printf("DEBUG StringFormatter valuesIn[%d] FormatField: %s\n", ii, str)
-
-			// Process depending on field type
+			// Not a string object.
 			switch fld.Ftype {
 			case types.ByteArray:
 				str := string(fld.Fvalue.([]byte))
@@ -587,39 +523,24 @@ func StringFormatter(params []interface{}) interface{} {
 	str := fmt.Sprintf(formatString, valuesOut...)
 
 	// Return a pointer to an object.Object that wraps the string byte array.
-	return object.NewPoolStringFromGoString(str)
+	return object.StringObjectFromGoString(str)
 }
 
 // "java/lang/String.length()I"
 func stringLength(params []interface{}) interface{} {
-	switch params[0].(type) {
-	case *object.Object:
-		obj := params[0].(*object.Object)
-		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.StringIndex {
-			errMsg := "stringLength: reference object must be a String"
-			return getGErrBlk(exceptions.VirtualMachineError, errMsg)
-		}
-		bytes := []byte(object.GetGoStringFromObject(obj))
-		return int64(len(bytes))
-	case string:
-		return len(params[0].(string))
-	}
-	errMsg := "stringLength: reference is neither an object nor a String"
-	return getGErrBlk(exceptions.VirtualMachineError, errMsg)
+	// params[0] = string object whose string length is to be measured
+	obj := params[0].(*object.Object)
+	bytes := object.ByteArrayFromStringObject(obj)
+	return int64(len(bytes))
 }
 
 // "java/lang/String.substring(I)Ljava/lang/String;"
 func substringToTheEnd(params []interface{}) interface{} {
-	var str string
-	switch params[0].(type) {
-	case *object.Object:
-		str = object.GetGoStringFromObject(params[0].(*object.Object))
-	case []byte:
-		str = string(params[0].([]byte))
-	}
+	// params[0] = base string
+	// params[1] = start offset
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
 
-	// Get substring offset and length
+	// Get substring start offset and compute end offset
 	ssStart := params[1].(int64)
 	ssEnd := int64(len(str))
 
@@ -635,22 +556,19 @@ func substringToTheEnd(params []interface{}) interface{} {
 	str = str[ssStart:ssEnd]
 
 	// Return new string in an object.
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 
 }
 
 // "java/lang/String.substring(II)Ljava/lang/String;"
 func substringStartEnd(params []interface{}) interface{} {
-	var str string
-	switch params[0].(type) {
-	case *object.Object:
-		str = object.GetGoStringFromObject(params[0].(*object.Object))
-	case []byte:
-		str = string(params[0].([]byte))
-	}
+	// params[0] = base string
+	// params[1] = start offset
+	// params[2] = end offset
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
 
-	// Get substring offset and length
+	// Get substring start and end offset
 	ssStart := params[1].(int64)
 	ssEnd := params[2].(int64)
 
@@ -666,31 +584,31 @@ func substringStartEnd(params []interface{}) interface{} {
 	str = str[ssStart:ssEnd]
 
 	// Return new string in an object.
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
 // "java/lang/String.toLowerCase()Ljava/lang/String;"
 func toLowerCase(params []interface{}) interface{} {
 	// params[0]: input string
-	str := strings.ToLower(object.GetGoStringFromObject(params[0].(*object.Object)))
-	obj := object.NewPoolStringFromGoString(str)
+	str := strings.ToLower(object.GoStringFromStringObject(params[0].(*object.Object)))
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
 // "java/lang/String.toUpperCase()Ljava/lang/String;"
 func toUpperCase(params []interface{}) interface{} {
 	// params[0]: input string
-	str := strings.ToUpper(object.GetGoStringFromObject(params[0].(*object.Object)))
-	obj := object.NewPoolStringFromGoString(str)
+	str := strings.ToUpper(object.GoStringFromStringObject(params[0].(*object.Object)))
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
 // "java/lang/String.trim()Ljava/lang/String;"
 func trimString(params []interface{}) interface{} {
 	// params[0]: input string
-	str := strings.Trim(object.GetGoStringFromObject(params[0].(*object.Object)), " ")
-	obj := object.NewPoolStringFromGoString(str)
+	str := strings.Trim(object.GoStringFromStringObject(params[0].(*object.Object)), " ")
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -704,7 +622,7 @@ func valueOfBoolean(params []interface{}) interface{} {
 	} else {
 		str = "false"
 	}
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -713,7 +631,7 @@ func valueOfChar(params []interface{}) interface{} {
 	// params[0]: input char
 	value := params[0].(int64)
 	str := fmt.Sprintf("%c", value)
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -726,7 +644,7 @@ func valueOfCharArray(params []interface{}) interface{} {
 	for _, ch := range intArray {
 		str += fmt.Sprintf("%c", ch)
 	}
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -755,7 +673,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Compute substring.
 	str := wholeString[ssOffset : ssOffset+ssCount]
 
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -767,20 +685,19 @@ func valueOfDouble(params []interface{}) interface{} {
 	if !strings.Contains(str, ".") {
 		str += ".0"
 	}
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
 // "java/lang/String.valueOf(F)Ljava/lang/String;"
 func valueOfFloat(params []interface{}) interface{} {
-	// params[0]: input double
+	// params[0]: input float
 	value := params[0].(float64)
-	// str := fmt.Sprintf("%.0g", value)
 	str := strconv.FormatFloat(value, 'f', -1, 64)
 	if !strings.Contains(str, ".") {
 		str += ".0"
 	}
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -789,7 +706,7 @@ func valueOfInt(params []interface{}) interface{} {
 	// params[0]: input int
 	value := params[0].(int64)
 	str := fmt.Sprintf("%d", value)
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -798,7 +715,7 @@ func valueOfLong(params []interface{}) interface{} {
 	// params[0]: input long
 	value := params[0].(int64)
 	str := fmt.Sprintf("%d", value)
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -807,16 +724,16 @@ func valueOfObject(params []interface{}) interface{} {
 	// params[0]: input Object
 	ptrObj := params[0].(*object.Object)
 	str := ptrObj.FormatField("")
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
 // "java/lang/String.compareTo(Ljava/lang/String;)I"
 func compareToCaseSensitive(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	str1 := object.GetGoStringFromObject(obj)
+	str1 := object.GoStringFromStringObject(obj)
 	obj = params[1].(*object.Object)
-	str2 := object.GetGoStringFromObject(obj)
+	str2 := object.GoStringFromStringObject(obj)
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -829,9 +746,9 @@ func compareToCaseSensitive(params []interface{}) interface{} {
 // "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
 func compareToIgnoreCase(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	str1 := strings.ToLower(object.GetGoStringFromObject(obj))
+	str1 := strings.ToLower(object.GoStringFromStringObject(obj))
 	obj = params[1].(*object.Object)
-	str2 := strings.ToLower(object.GetGoStringFromObject(obj))
+	str2 := strings.ToLower(object.GoStringFromStringObject(obj))
 	if str2 == str1 {
 		return int64(0)
 	}
@@ -845,45 +762,11 @@ func compareToIgnoreCase(params []interface{}) interface{} {
 func stringConcat(params []interface{}) interface{} {
 	var str1, str2 string
 
-	switch params[0].(type) {
-	case *object.Object:
-		fld := params[0].(*object.Object).FieldTable["value"]
-		switch fld.Ftype {
-		case types.ByteArray:
-			str1 = string(fld.Fvalue.([]byte))
-		case types.StringIndex:
-			str1 = object.GetGoStringFromObject(params[0].(*object.Object))
-		default:
-			errMsg := fmt.Sprintf("stringConcat: Object 1 has invalid field type: %s", fld.Ftype)
-			return getGErrBlk(exceptions.InvalidTypeException, errMsg)
-		}
-	case []byte:
-		str1 = string(params[0].([]byte))
-	default:
-		errMsg := fmt.Sprintf("stringConcat: Object 1 parameter type is invalid: %T", params[0])
-		return getGErrBlk(exceptions.InvalidTypeException, errMsg)
-	}
-
-	switch params[1].(type) {
-	case *object.Object:
-		fld := params[1].(*object.Object).FieldTable["value"]
-		switch fld.Ftype {
-		case types.ByteArray:
-			str2 = string(fld.Fvalue.([]byte))
-		case types.StringIndex:
-			str2 = object.GetGoStringFromObject(params[1].(*object.Object))
-		default:
-			errMsg := fmt.Sprintf("stringConcat: Object 2 has invalid field type: %s", fld.Ftype)
-			return getGErrBlk(exceptions.InvalidTypeException, errMsg)
-		}
-	case []byte:
-		str2 = string(params[0].([]byte))
-	default:
-		errMsg := fmt.Sprintf("stringConcat: Object 2 parameter type is invalid: %T", params[0])
-		return getGErrBlk(exceptions.InvalidTypeException, errMsg)
-	}
-
+	fld := params[0].(*object.Object).FieldTable["value"]
+	str1 = string(fld.Fvalue.([]byte))
+	fld = params[1].(*object.Object).FieldTable["value"]
+	str2 = string(fld.Fvalue.([]byte))
 	str := str1 + str2
-	obj := object.NewPoolStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }

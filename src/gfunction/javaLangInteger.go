@@ -128,7 +128,7 @@ func integerByteValue(params []interface{}) interface{} {
 func integerDecode(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := object.GetGoStringFromObject(parmObj)
+	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "integerDecode: byte array length < 1")
 	}
@@ -170,7 +170,7 @@ func integerIntLongValue(params []interface{}) interface{} {
 func integerParseInt(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := object.GetGoStringFromObject(parmObj)
+	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "integerParseInt: string length < 1")
 	}
@@ -222,7 +222,7 @@ func integerToString(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
 	argInt64 := obj1.FieldTable["value"].Fvalue.(int64)
 	str := fmt.Sprintf("%d", argInt64)
-	obj2 := object.NewStringFromGoString(str)
+	obj2 := object.StringObjectFromGoString(str)
 	return obj2
 }
 
@@ -230,7 +230,7 @@ func integerToString(params []interface{}) interface{} {
 func integerToStringI(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
 	str := fmt.Sprintf("%d", argInt64)
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -241,7 +241,7 @@ func integerToUnsignedString(params []interface{}) interface{} {
 		argInt64 &= 0x00000000FFFFFFFF
 	}
 	str := fmt.Sprintf("%d", argInt64)
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -265,7 +265,7 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 	}
 
 	str := strconv.FormatInt(argInt64, int(rdx))
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -273,7 +273,7 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 func integerToBinaryString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
 	str := strconv.FormatInt(argInt64, 2)
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -281,7 +281,7 @@ func integerToBinaryString(params []interface{}) interface{} {
 func integerToOctalString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
 	str := strconv.FormatInt(argInt64, 8)
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }
 
@@ -289,6 +289,6 @@ func integerToOctalString(params []interface{}) interface{} {
 func integerToHexString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
 	str := strconv.FormatInt(argInt64, 16)
-	obj := object.NewStringFromGoString(str)
+	obj := object.StringObjectFromGoString(str)
 	return obj
 }

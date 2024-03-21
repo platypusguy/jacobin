@@ -50,15 +50,11 @@ func Load_Lang_Byte() map[string]GMeth {
 	return MethodSignatures
 }
 
-func byteValueOf(params []interface{}) interface{} {
-	int64Value := params[0].(int64)
-	return populator("java/lang/Byte", types.Byte, int64Value)
-}
-
+// "java/lang/Byte.decode(Ljava/lang/String;)Ljava/lang/Byte;"
 func byteDecode(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
-	strArg := object.GetGoStringFromObject(parmObj)
+	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
 		return getGErrBlk(exceptions.NumberFormatException, "javaPrimitives.byteDecode: byte array length < 1")
 	}
@@ -86,6 +82,7 @@ func byteDecode(params []interface{}) interface{} {
 	return populator("java/lang/Byte", types.Byte, int64Value)
 }
 
+// "java/lang/Byte.doubleValue()D"
 func byteDoubleValue(params []interface{}) interface{} {
 	var bb int64
 	parmObj := params[0].(*object.Object)
@@ -93,11 +90,18 @@ func byteDoubleValue(params []interface{}) interface{} {
 	return float64(bb)
 }
 
+// "java/lang/Byte.toString()Ljava/lang/String;"
 func byteToString(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
 	ii = parmObj.FieldTable["value"].Fvalue.(int64)
 	str := fmt.Sprintf("%d", ii)
-	outObjPtr := object.NewPoolStringFromGoString(str)
+	outObjPtr := object.StringObjectFromGoString(str)
 	return outObjPtr
+}
+
+// "java/lang/Byte.valueOf(B)Ljava/lang/Byte;"
+func byteValueOf(params []interface{}) interface{} {
+	int64Value := params[0].(int64)
+	return populator("java/lang/Byte", types.Byte, int64Value)
 }

@@ -51,6 +51,7 @@ func Load_Util_Locale() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/util/Locale.<init>(Ljava/lang/String;)V"
 func localeFromLanguage(params []interface{}) interface{} {
 	// params[0]: Locale object to update
 	// params[1]: input language string
@@ -60,54 +61,51 @@ func localeFromLanguage(params []interface{}) interface{} {
 	return nil
 }
 
+// "java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;)V"
 func localeFromLanguageCountry(params []interface{}) interface{} {
 	// params[0]: Locale object to update
 	// params[1]: input language string
 	// params[2]: input country string
 	langObj := params[1].(*object.Object) // string
-	langStr := object.GetGoStringFromObject(langObj)
+	langStr := object.GoStringFromStringObject(langObj)
 
 	countryObj := params[2].(*object.Object) // string
-	countryStr := object.GetGoStringFromObject(countryObj)
+	countryStr := object.GoStringFromStringObject(countryObj)
 
-	str := langStr + "_" + countryStr
-	fld := params[0].(*object.Object).FieldTable["value"]
-	fld.Ftype = types.StringIndex
-	fld.Fvalue = stringPool.GetStringIndex(&str)
-	params[0].(*object.Object).FieldTable["value"] = fld
+	bytes := []byte(langStr + "_" + countryStr)
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 
 	return nil
 }
 
+// "java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
 func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	// params[0]: Locale object to update
 	// params[1]: input language string
 	// params[2]: input country string
 	// params[3]: input variant string
 	langObj := params[1].(*object.Object)
-	langStr := object.GetGoStringFromObject(langObj)
+	langStr := object.GoStringFromStringObject(langObj)
 
 	countryObj := params[2].(*object.Object)
-	countryStr := object.GetGoStringFromObject(countryObj)
+	countryStr := object.GoStringFromStringObject(countryObj)
 
 	variantObj := params[3].(*object.Object)
-	variantStr := object.GetGoStringFromObject(variantObj)
+	variantStr := object.GoStringFromStringObject(variantObj)
 
-	str := langStr + "_" + countryStr + "_" + variantStr
-	fld := params[0].(*object.Object).FieldTable["value"]
-	fld.Ftype = types.StringIndex
-	fld.Fvalue = stringPool.GetStringIndex(&str)
-	params[0].(*object.Object).FieldTable["value"] = fld
+	bytes := []byte(langStr + "_" + countryStr + "_" + variantStr)
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 
 	return nil
 }
 
+// "java/util/Locale.getDefault()Ljava/util/Locale;"
 func getDefaultLocale([]interface{}) interface{} {
 	langStr := os.Getenv("LANGUAGE")
 	classStr := "java/lang/Locale"
 	index := stringPool.GetStringIndex(&langStr)
 	obj := object.MakeEmptyObjectWithClassName(&classStr)
-	fld := object.Field{Ftype: types.StringIndex, Fvalue: index}
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: index}
 	obj.FieldTable["value"] = fld
 	return obj
 }
