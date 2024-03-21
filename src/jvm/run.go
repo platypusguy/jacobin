@@ -283,9 +283,10 @@ frameInterpreter:
 				push(f, CPe.FloatVal)
 			case classloader.IS_STRUCT_ADDR:
 				push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
-			case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a string pool index
-				stringAddr := object.CreateStringPoolEntryFromGoString(CPe.StringVal)
-				stringAddr.KlassName = object.StringPoolStringIndex
+			case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
+				// stringAddr := object.CreateStringPoolEntryFromGoString(CPe.StringVal)
+				stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
+				// stringAddr.KlassName = stringPool.GetStringIndex(CPe.StringVal)
 				push(f, stringAddr)
 			}
 
