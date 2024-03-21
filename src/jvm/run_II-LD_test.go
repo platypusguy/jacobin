@@ -336,22 +336,20 @@ func TestInstanceofString(t *testing.T) {
 			Loader: "bootstrap",
 			Data:   nil,
 		}))
-	s := object.NewStringFromGoString("hello world")
+	s := object.StringObjectFromGoString("hello world")
 
 	f := newFrame(opcodes.INSTANCEOF)
-	f.Meth = append(f.Meth, 0) // point to entry [2] in CP
-	f.Meth = append(f.Meth, 2) // " "
+	f.Meth = append(f.Meth, 0) // point to entry [1] in CP
+	f.Meth = append(f.Meth, 1) // " "
 
-	// now create the CP. First entry is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// now create the CP.
+	// [0] First entry is perforce 0
+	// [1] is a ClassRef that points to string pool entry for java/lang/String
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP (UTF8 for class name)
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry for java/lang/String
 	f.CP = &CP
 
 	push(&f, s)
