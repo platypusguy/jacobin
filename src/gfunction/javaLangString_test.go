@@ -11,6 +11,7 @@ import (
 	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/types"
 	"strings"
 	"testing"
 )
@@ -150,6 +151,55 @@ func TestSprintf_2(t *testing.T) {
 	var bArray []*object.Object
 	bArray = append(bArray, bObj)
 	classStr := "[Ljava/lang/Object"
+	lsObj := object.MakeEmptyObjectWithClassName(&classStr)
+	lsObj.FieldTable["value"] = object.Field{Ftype: classStr, Fvalue: bArray}
+	lsObj.DumpObject("TestSprintf_2 lsObj", 0)
+
+	params := []interface{}{aObj, lsObj}
+	t.Logf("#params = %d\n", len(params))
+	result := sprintf(params)
+
+	switch result.(type) {
+	case *GErrBlk:
+		geptr := *(result.(*GErrBlk))
+		errMsg := geptr.ErrMsg
+		t.Errorf("TestSprintf_2: %s\n", errMsg)
+	case *object.Object:
+		obj := result.(*object.Object)
+		obj.DumpObject("TestSprintf_2 result", 0)
+		str := object.GoStringFromStringObject(obj)
+		if str != cString {
+			t.Errorf("TestSprintf_2: expected: %s, observed: %s", cString, str)
+		}
+	default:
+		t.Errorf("TestSprintf_2: result type %T makes no sense", result)
+	}
+}
+
+func TestSprintf_3(t *testing.T) {
+	globals.InitGlobals("test")
+	aString := "Mary had %d little lambs and her favorite number is %.4f"
+	bCount := int64(3)
+	bPi := float64(3.1416)
+	cString := "Mary had 3 little lambs and her favorite number is 3.1416"
+
+	aObj := object.StringObjectFromGoString(aString)
+	aObj.DumpObject("TestSprintf_2 aObj", 0)
+
+	classStr := "java/lang/Integer"
+	bCountObj := object.MakeEmptyObjectWithClassName(&classStr)
+	bCountObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: bCount}
+	bCountObj.DumpObject("TestSprintf_2 bCountObj", 0)
+
+	classStr = "java/lang/Double"
+	bPiObj := object.MakeEmptyObjectWithClassName(&classStr)
+	bPiObj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: bPi}
+	bPiObj.DumpObject("TestSprintf_2 bCountObj", 0)
+
+	var bArray []*object.Object
+	bArray = append(bArray, bCountObj)
+	bArray = append(bArray, bPiObj)
+	classStr = "[Ljava/lang/Object"
 	lsObj := object.MakeEmptyObjectWithClassName(&classStr)
 	lsObj.FieldTable["value"] = object.Field{Ftype: classStr, Fvalue: bArray}
 	lsObj.DumpObject("TestSprintf_2 lsObj", 0)
