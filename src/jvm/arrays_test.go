@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Jacobin Authors. All rights reserved.
+ * Copyright (c) 2023-4 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -52,17 +52,15 @@ func TestAaload(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(30)) // make an array of 30 elements
 	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+	f.Meth = append(f.Meth, 0x01) // use the classRef at CP[1] as the type of reference
 
-	// now create the CP. CP[0] is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to string pool entry for the class name
+	// now create the CP.
+	// CP[0] is perforce 0
+	// CP[1] is a ClassRef that points to string pool entry for the class name
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	// CP.ClassRefs = append(CP.ClassRefs, 1) // point to record 1 in CP: Utf8 for class name
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // use string pool
 	f.CP = &CP
 
@@ -145,7 +143,8 @@ func TestAastore(t *testing.T) {
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // use the classRef at CP[2] as the type of reference
 
-	// now create the CP. CP[0] is perforce 0
+	// now create the CP.
+	// CP[0] is perforce 0
 	// [1] is a ClassRef that points to a string pool entry
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -177,8 +176,10 @@ func TestAastore(t *testing.T) {
 
 	push(&f, ptr)       // push the reference to the array
 	push(&f, int64(20)) // index to array[20]
-	objRef := object.NewStringFromGoString("test")
+	// objRef := object.NewStringFromGoString("test")
+	objRef := object.StringObjectFromGoString("test")
 	push(&f, objRef) // store the address of a string
+
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs) // execute the bytecode
@@ -308,18 +309,16 @@ func TestAnewrray(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(13)) // make an array of 13 elements
 	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x02) // use the classRef at CP[2] as the type of reference
+	f.Meth = append(f.Meth, 0x01) // use the classRef at CP[1] as the type of reference
 
-	// now create the CP. First entry is perforce 0
-	// [1] entry points to a UTF8 entry with the class name
-	// [2] is a ClassRef that points to the UTF8 string in [1]
+	// now create the CP.
+	// [0] is First entry is perforce 0
+	// [1] is a ClassRef that points to a string pool entry for "java/lang/String"
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
 	f.CP = &CP
 
 	globals.InitGlobals("test")
