@@ -102,7 +102,7 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 		str := cp.Utf8Refs[e.Slot]
 		return CpType{EntryType: int(entry.Type),
 			RetType: IS_STRING_ADDR, StringVal: &str}
-	case UTF8: // same code as for ClassRef
+	case UTF8: // points to a UTF-8 string
 		v := &(cp.Utf8Refs[entry.Slot])
 		return CpType{EntryType: int(entry.Type), RetType: IS_STRING_ADDR, StringVal: v}
 
