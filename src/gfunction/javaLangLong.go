@@ -34,6 +34,7 @@ func Load_Lang_Long() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/lang/Long.doubleValue()D"
 func longDoubleValue(params []interface{}) interface{} {
 	var jj int64
 	parmObj := params[0].(*object.Object)
@@ -41,6 +42,7 @@ func longDoubleValue(params []interface{}) interface{} {
 	return float64(jj)
 }
 
+// "java/lang/Long.valueOf(J)Ljava/lang/Long;"
 func longValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return populator("java/lang/Long", types.Long, int64Value)

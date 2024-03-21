@@ -96,6 +96,12 @@ func justReturn([]interface{}) interface{} {
 	return nil
 }
 
+// deprecated functions end here
+func deprecated([]interface{}) interface{} {
+	errMsg := "The function requested is deprecated and will not be supported by jacobin"
+	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+}
+
 // Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
 func populator(classname string, fldtype string, fldvalue interface{}) interface{} {
 	klass := classloader.MethAreaFetch(classname)
@@ -106,7 +112,7 @@ func populator(classname string, fldtype string, fldvalue interface{}) interface
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	var objPtr *object.Object
 	if fldtype == types.StringIndex {
-		objPtr = object.NewPoolStringFromGoString(fldvalue.(string))
+		objPtr = object.StringObjectFromGoString(fldvalue.(string))
 	} else {
 		objPtr = object.MakePrimitiveObject(classname, fldtype, fldvalue)
 		(*objPtr).FieldTable["value"] = object.Field{fldtype, fldvalue}

@@ -161,7 +161,7 @@ func forceGC([]interface{}) interface{} {
 // Get a property
 func getProperty(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object) // string
-	propStr := object.GetGoStringFromObject(propObj)
+	propStr := object.GoStringFromStringObject(propObj)
 
 	var value string
 	g := globals.GetGlobalRef()
@@ -231,6 +231,6 @@ func getProperty(params []interface{}) interface{} {
 		return object.Null
 	}
 
-	obj := object.NewPoolStringFromGoString(value)
+	obj := object.StringObjectFromGoString(value)
 	return obj
 }

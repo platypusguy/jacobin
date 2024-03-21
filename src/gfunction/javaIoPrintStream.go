@@ -48,22 +48,22 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println(B)V"] = // println byte
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnI,
+			GFunction:  PrintlnBIS,
 		}
 	MethodSignatures["java/io/PrintStream.println(C)V"] = // println char
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnC,
+			GFunction:  PrintlnChar,
 		}
 	MethodSignatures["java/io/PrintStream.println(I)V"] = // println int
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnI,
+			GFunction:  PrintlnBIS,
 		}
 	MethodSignatures["java/io/PrintStream.println(S)V"] = // println short
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnI,
+			GFunction:  PrintlnBIS,
 		}
 	MethodSignatures["java/io/PrintStream.println(Z)V"] = // println boolean
 		GMeth{
@@ -79,13 +79,13 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
 		GMeth{
 			ParamSlots: 2, // 2 slots for the double
-			GFunction:  PrintlnDouble,
+			GFunction:  PrintlnDoubleFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
 		GMeth{
 			ParamSlots: 1, // 1 slot for the float
-			GFunction:  PrintlnDouble,
+			GFunction:  PrintlnDoubleFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
@@ -102,22 +102,22 @@ func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintI,
+			GFunction:  PrintBIS,
 		}
 	MethodSignatures["java/io/PrintStream.print(C)V"] = // print char
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintC,
+			GFunction:  PrintChar,
 		}
 	MethodSignatures["java/io/PrintStream.print(I)V"] = // print int
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintI,
+			GFunction:  PrintBIS,
 		}
 	MethodSignatures["java/io/PrintStream.print(S)V"] = // print short
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintI,
+			GFunction:  PrintBIS,
 		}
 	MethodSignatures["java/io/PrintStream.print(Z)V"] = // print boolean
 		GMeth{
@@ -157,46 +157,38 @@ func Load_Io_PrintStream() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/io/PrintStream.println(Ljava/lang/String;)V"
 func PrintlnString(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		obj := params[1].(*object.Object)
-		switch obj.FieldTable["value"].Ftype {
-		case types.StringIndex:
-			str = object.GetGoStringFromObject(obj)
-		case types.ByteArray:
-			str = string(obj.FieldTable["value"].Fvalue.([]byte))
-		}
-	default:
-		errMsg := fmt.Sprintf("PrintlnString: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
-	}
+	obj := params[1].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
 	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
 
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
+// "java/io/PrintStream.println()V"
 func PrintlnV(params []interface{}) interface{} {
 	fmt.Fprintln(params[0].(*os.File), "")
 	return nil
 }
 
-// PrintlnC = java/io/Prinstream.println(char)
-func PrintlnC(params []interface{}) interface{} {
+// "java/io/PrintStream.println(C)V"
+func PrintlnChar(params []interface{}) interface{} {
 	cc := fmt.Sprint(params[1].(int64))
 	fmt.Fprintln(params[0].(*os.File), cc)
 	return nil
 }
 
-// PrintlnI = java/io/Prinstream.println(int)
-func PrintlnI(params []interface{}) interface{} {
+// "java/io/PrintStream.println(B)V"
+// "java/io/PrintStream.println(I)V"
+// "java/io/PrintStream.println(S)V"
+func PrintlnBIS(params []interface{}) interface{} {
 	intToPrint := params[1].(int64) // contains an int
 	fmt.Fprintln(params[0].(*os.File), intToPrint)
 	return nil
 }
 
-// PrintlnBoolean = java/io/Prinstream.println(boolean)
+// "java/io/PrintStream.println(Z)V"
 func PrintlnBoolean(params []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := params[1].(int64) // contains an int64
@@ -209,23 +201,24 @@ func PrintlnBoolean(params []interface{}) interface{} {
 	return nil
 }
 
-// PrintlnLong = java/io/Prinstream.println(long)
-// Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
+// "java/io/PrintStream.println(J)V"
 func PrintlnLong(params []interface{}) interface{} {
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
 	fmt.Fprintln(params[0].(*os.File), longToPrint)
 	return nil
 }
 
-// PrintlnDouble = java/io/Prinstream.println(double) or java/io/Prinstream.println(float)
 // Doubles in Java are 64-bit FP. Like Hotspot, we print at least one decimal place of data.
-func PrintlnDouble(params []interface{}) interface{} {
+// "java/io/PrintStream.println(D)V"
+// "java/io/PrintStream.println(F)V"
+func PrintlnDoubleFloat(params []interface{}) interface{} {
 	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint)+"\n", doubleToPrint)
 	return nil
 }
 
 // Println an Object's contents
+// "java/io/PrintStream.println(Ljava/lang/Object;)V"
 func PrintlnObject(params []interface{}) interface{} {
 	if params[1] == nil {
 		errMsg := fmt.Sprintf("PrintlnObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
@@ -241,21 +234,24 @@ func PrintlnObject(params []interface{}) interface{} {
 	return nil
 }
 
-// PrintC = java/io/Prinstream.print(char)
-func PrintC(params []interface{}) interface{} {
+// "java/io/PrintStream.print(C)V"
+func PrintChar(params []interface{}) interface{} {
 	cc := fmt.Sprint(params[1].(int64))
 	fmt.Fprint(params[0].(*os.File), cc)
 	return nil
 }
 
-// PrintI = java/io/Prinstream.print(int)
-func PrintI(params []interface{}) interface{} {
+// "java/io/PrintStream.print(B)V"
+// "java/io/PrintStream.print(I)V"
+// "java/io/PrintStream.print(S)V"
+func PrintBIS(params []interface{}) interface{} {
 	intToPrint := params[1].(int64) // contains an int
 	fmt.Fprint(params[0].(*os.File), intToPrint)
 	return nil
 }
 
 // PrintBoolean = java/io/Prinstream.print(boolean)
+// "java/io/PrintStream.print(Z)V"
 func PrintBoolean(params []interface{}) interface{} {
 	var boolToPrint bool
 	boolAsInt64 := params[1].(int64) // contains an int64
@@ -270,14 +266,16 @@ func PrintBoolean(params []interface{}) interface{} {
 
 // PrintLong = java/io/Prinstream.print(long)
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
+// "java/io/PrintStream.print(J)V"
 func PrintLong(params []interface{}) interface{} {
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
 	fmt.Fprint(params[0].(*os.File), longToPrint)
 	return nil
 }
 
-// Printfloat = java/io/Prinstream.print(float)
+// PrintFloat = java/io/Prinstream.print(float)
 // Doubles in Java are 64-bit FP
+// "java/io/PrintStream.print(F)V"
 func PrintFloat(params []interface{}) interface{} {
 	floatToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(floatToPrint), floatToPrint)
@@ -286,6 +284,7 @@ func PrintFloat(params []interface{}) interface{} {
 
 // PrintDouble = java/io/Prinstream.print(double)
 // Doubles in Java are 64-bit FP
+// "java/io/PrintStream.print(D)V"
 func PrintDouble(params []interface{}) interface{} {
 	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint), doubleToPrint)
@@ -293,26 +292,16 @@ func PrintDouble(params []interface{}) interface{} {
 }
 
 // Print string
+// "java/io/PrintStream.print(Ljava/lang/String;)V"
 func PrintString(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		obj := params[1].(*object.Object)
-		switch obj.FieldTable["value"].Ftype {
-		case types.StringIndex:
-			str = object.GetGoStringFromObject(obj)
-		case types.ByteArray:
-			str = string(obj.FieldTable["value"].Fvalue.([]byte))
-		}
-	default:
-		errMsg := fmt.Sprintf("PrintString: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
-	}
+	obj := params[1].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
 	fmt.Fprint(params[0].(*os.File), str)
 	return nil
 }
 
 // Print an Object's contents
+// "java/io/PrintStream.print(Ljava/lang/Object;)V"
 func PrintObject(params []interface{}) interface{} {
 	if params[1] == nil {
 		errMsg := fmt.Sprintf("PrintObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
@@ -320,19 +309,16 @@ func PrintObject(params []interface{}) interface{} {
 	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
-	switch fld.Ftype {
-	case types.StringIndex:
-		str := object.GetGoStringFromObject(objPtr)
-		fmt.Fprintln(params[0].(*os.File), str)
-	case types.ByteArray:
+	if fld.Ftype == types.ByteArray {
 		fmt.Fprint(params[0].(*os.File), string(fld.Fvalue.([]byte)))
-	default:
-		fmt.Fprint(params[0].(*os.File), fld.Fvalue)
+		return nil
 	}
+	fmt.Fprint(params[0].(*os.File), fld.Fvalue)
 	return nil
 }
 
 // Printf -- handle the variable args and then call golang's own printf function
+// "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
 func Printf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
 	*intfSprintf = append(*intfSprintf, params[1])
@@ -344,7 +330,7 @@ func Printf(params []interface{}) interface{} {
 		return retval
 	}
 	objPtr := retval.(*object.Object)
-	str := object.GetGoStringFromObject(objPtr)
+	str := object.GoStringFromStringObject(objPtr)
 	fmt.Fprint(params[0].(*os.File), str)
 	return params[0] // Return the PrintStream object
 

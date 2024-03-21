@@ -38,8 +38,6 @@ func hashMapHash(params []interface{}) interface{} {
 		obj := params[0].(*object.Object) // force golang to treat it as the object we know it to be
 		fld := obj.FieldTable["value"]
 		switch fld.Ftype {
-		case types.StringIndex:
-			bytes = []byte(object.GetGoStringFromObject(obj))
 		case types.ByteArray:
 			bytes = obj.FieldTable["value"].Fvalue.([]byte)
 		case types.Bool, types.Byte, types.Char, types.Int, types.Long, types.Short:

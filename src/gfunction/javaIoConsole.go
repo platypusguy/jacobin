@@ -102,7 +102,7 @@ func Load_Io_Console() map[string]GMeth {
 	return MethodSignatures
 }
 
-// Initialise class Console.
+// "java/io/Console.<clinit>()V" - Initialise class Console.
 func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
 	if klass == nil {
@@ -120,6 +120,7 @@ func noSupportYetInConsole([]interface{}) interface{} {
 }
 
 // Flush java/lang/System.in/out/err.
+// "java/io/Console.flush()V"
 func consoleFlush([]interface{}) interface{} {
 	stdinout := statics.GetStaticValue("java/lang/System", "in").(*os.File)
 	_ = stdinout.Sync()
@@ -130,6 +131,7 @@ func consoleFlush([]interface{}) interface{} {
 }
 
 // Printf -- handle the variable args and then call golang's own printf function
+// "java/io/Console.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/Console;"
 func consolePrintf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
 	*intfSprintf = append(*intfSprintf, params[1])
@@ -141,7 +143,7 @@ func consolePrintf(params []interface{}) interface{} {
 		return retval
 	}
 	objPtr := retval.(*object.Object)
-	str := object.GetGoStringFromObject(objPtr)
+	str := object.GoStringFromStringObject(objPtr)
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
 	_, _ = fmt.Fprint(stdout, str)
 	return stdout // Return the *os.File
@@ -149,6 +151,7 @@ func consolePrintf(params []interface{}) interface{} {
 }
 
 // Reads a single line of text from the console.
+// "java/io/Console.readLine()Ljava/lang/String;"
 func consoleReadLine([]interface{}) interface{} {
 	var bytes []byte
 	var bite = []byte{0x00}
@@ -170,16 +173,19 @@ func consoleReadLine([]interface{}) interface{} {
 		bytes = append(bytes, bite[0])
 	}
 	str := string(bytes)
-	return object.NewPoolStringFromGoString(str)
+	return object.StringObjectFromGoString(str)
 }
 
 // Provides a formatted prompt, then reads a single line of text from the console.
+// "java/io/Console.readLine(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
 func consolePrintfReadLine(params []interface{}) interface{} {
 	_ = consolePrintf(params)
 	objPtr := consoleReadLine(params)
 	return objPtr
 }
 
+// Read a password from console.
+// "java/io/Console.readPassword()[C"
 func consoleReadPassword([]interface{}) interface{} {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
@@ -192,6 +198,7 @@ func consoleReadPassword([]interface{}) interface{} {
 }
 
 // Provides a formatted prompt, then reads a password or passphrase from the console.
+// "java/io/Console.readPassword(Ljava/lang/String;[Ljava/lang/Object;)[C"
 func consolePrintfReadPassword(params []interface{}) interface{} {
 	_ = consolePrintf(params)
 	return consoleReadPassword(params)

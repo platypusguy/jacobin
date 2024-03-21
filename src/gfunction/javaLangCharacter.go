@@ -59,6 +59,7 @@ func Load_Lang_Character() map[string]GMeth {
 	return MethodSignatures
 }
 
+// "java/lang/Character.isDigit(C)Z"
 func charIsDigit(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	if unicode.IsDigit(rune(ii)) {
@@ -67,6 +68,7 @@ func charIsDigit(params []interface{}) interface{} {
 	return int64(0)
 }
 
+// "java/lang/Character.isLetter(C)Z"
 func charIsLetter(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	if unicode.IsLetter(rune(ii)) {
@@ -75,23 +77,27 @@ func charIsLetter(params []interface{}) interface{} {
 	return int64(0)
 }
 
+// "java/lang/Character.toLowerCase(C)C"
 func charToLowerCase(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	rr := unicode.ToLower(rune(ii))
 	return int64(rr)
 }
 
+// "java/lang/Character.toUpperCase(C)C"
 func charToUpperCase(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	rr := unicode.ToUpper(rune(ii))
 	return int64(rr)
 }
 
+// "java/lang/Character.valueOf(C)Ljava/lang/Character;"
 func characterValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return populator("java/lang/Character", types.Char, int64Value)
 }
 
+// "java/lang/Character.charValue()C"
 func charValue(params []interface{}) interface{} {
 	var ch int64
 	parmObj := params[0].(*object.Object)
