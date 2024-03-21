@@ -12,7 +12,6 @@ import (
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
-	"unsafe"
 )
 
 // Strings are so commonly used in Java, that it makes sense
@@ -24,6 +23,7 @@ import (
 // var StringPoolStringIndex = uint32(1)
 // var EmptyString = ""
 
+/*
 // NewString creates an empty string.
 func NewString() *Object {
 	s := new(Object)
@@ -68,6 +68,7 @@ func NewString() *Object {
 
 	return s
 }
+*/
 
 // NewStringFromGoString converts a go string to a Java string-like
 // entity, in which the chars are stored as runes, rather than chars
@@ -75,7 +76,7 @@ func NewString() *Object {
 // to true for JDK >= 9). In the latter case, the string is interned in
 // the string pool and the field is set to the index in the pool.
 
-func NewStringFromGoString(in string) *Object {
+func NewStringFromGoString(in string) *Object { // 7 usages in gfunctions
 	s := NewStringObject()
 	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
 		s.FieldTable["value"] = Field{types.RuneArray, in}
@@ -94,7 +95,7 @@ func CreateCompactStringFromGoString(in *string) *Object {
 	s.FieldTable["value"] = Field{types.ByteArray, []byte(*in)}
 	return s
 }
-*/
+
 
 // CreateStringPoolEntryFromGoString creates an object that points to an interned string
 func CreateStringPoolEntryFromGoString(in *string) *Object {
@@ -102,14 +103,17 @@ func CreateStringPoolEntryFromGoString(in *string) *Object {
 	s.FieldTable["value"] = Field{types.StringIndex, stringPool.GetStringIndex(in)}
 	return s
 }
-
+*/
+/*
 // convenience method to extract a Go string from a Java string
 func GetGoStringFromJavaStringPtr(strPtr *Object) string {
 	s := *strPtr
 	bytes := s.FieldTable["value"].Fvalue.([]byte)
 	return string(bytes)
 }
+*/
 
+/*
 // determine whether an object is a Java string
 // assumes that any object whose Klass pointer points to java/lang/String
 // is an instance of a Java string
@@ -130,13 +134,13 @@ func IsJavaString(unknown any) bool {
 
 	return *stringPool.GetStringPointer(objPtr.KlassName) == StringClassName
 }
-
+*/
 /*
 ------------------------------------------
 The string pool mid-level functions follow
 ------------------------------------------
 */
-
+/*
 // MakeEmptyStringObject creates an empty object.Object.
 // It is expected that the caller will fill in the FieldTable.
 func MakeEmptyStringObject() *Object {
@@ -149,9 +153,11 @@ func MakeEmptyStringObject() *Object {
 	object.FieldTable = make(map[string]Field)
 	return &object
 }
+*/
 
-func NewPoolStringFromGoString(str string) *Object {
-	objPtr := MakeEmptyStringObject()
+func NewPoolStringFromGoString(str string) *Object { // 34 uses in gfunctions
+	// objPtr := MakeEmptyStringObject()
+	objPtr := NewStringObject()
 	/* TODO - Is ignoring the COMPACT_STRINGS flag valid?
 	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
 		objPtr.FieldTable["value"] = Field{types.RuneArray, in}
@@ -164,7 +170,7 @@ func NewPoolStringFromGoString(str string) *Object {
 }
 
 // GetGoStringFromObject : convenience method to extract a Go string from a Pool string
-func GetGoStringFromObject(strPtr *Object) string {
+func GetGoStringFromObject(strPtr *Object) string { // 39 uses in gfunctions.
 	obj := *strPtr
 	fld := obj.FieldTable["value"]
 	if fld.Ftype != types.StringIndex {
@@ -176,7 +182,7 @@ func GetGoStringFromObject(strPtr *Object) string {
 }
 
 // UpdateObjectFromGoString : Set the value field of the given object to the given string
-func UpdateObjectFromGoString(objPtr *Object, argString string) {
+func UpdateObjectFromGoString(objPtr *Object, argString string) { // 3 uses in gfunctions
 	index := stringPool.GetStringIndex(&argString)
 	fld := Field{Ftype: types.StringIndex, Fvalue: index}
 	objPtr.FieldTable["value"] = fld
