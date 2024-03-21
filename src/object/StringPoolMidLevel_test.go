@@ -17,14 +17,18 @@ import (
 func TestStringMidLevel_1(t *testing.T) {
 	_ = globals.InitGlobals("test") // Initialize the String Pool
 
-	objPtr := MakeEmptyStringObject()
+	// objPtr := MakeEmptyStringObject() JACOBIN-480
+	objPtr := NewStringObject()
 	if *(stringPool.GetStringPointer(objPtr.KlassName)) != StringClassName {
 		t.Errorf("Expected Klass to be %s but observed: %s",
 			StringClassName, *(stringPool.GetStringPointer(objPtr.KlassName)))
 	}
+
 	sz := len(objPtr.FieldTable)
-	if sz > 0 {
-		t.Errorf("Expected FieldTable size 0 but observed: %d", sz)
+	// if sz > 0 {
+	if sz != 4 {
+		t.Errorf("Expected FieldTable size 4 but observed: %d", sz)
+		// t.Errorf("Expected FieldTable size 0 but observed: %d", sz)  JACOBIN-480 (new API has field table size = 4
 	}
 }
 

@@ -950,8 +950,8 @@ func TestLdcTest2(t *testing.T) {
 	f.CP = &cp
 	CP := f.CP.(*classloader.CPool)
 	// now create a skeletal, two-entry CP
-	var strings = make([]string, 1)
-	CP.Utf8Refs = strings
+	var utf8s = make([]string, 1)
+	CP.Utf8Refs = utf8s
 	CP.Utf8Refs[0] = "hello"
 
 	CP.CpIndex = []classloader.CpEntry{}
@@ -962,8 +962,6 @@ func TestLdcTest2(t *testing.T) {
 	CP.CpIndex = append(CP.CpIndex, dummyEntry)
 	CP.CpIndex = append(CP.CpIndex, stringEntry)
 
-	emptyStringPoolSize := stringPool.GetStringPoolSize()
-
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -971,16 +969,12 @@ func TestLdcTest2(t *testing.T) {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 
-	if emptyStringPoolSize != stringPool.GetStringPoolSize()-1 {
-		t.Errorf("Expected string pool size to be %d, got: %d",
-			emptyStringPoolSize+1, stringPool.GetStringPoolSize())
-	}
-
 	strObj := pop(&f).(*object.Object)
-	index := strObj.FieldTable["value"].Fvalue.(uint32)
-	str := stringPool.GetStringPointer(index)
-	if *str != "hello" {
-		t.Errorf("LDC_W: Expected popped value to be index to 'hello', got %s", *str)
+	str := string(strObj.FieldTable["value"].Fvalue.([]byte))
+	index := stringPool.GetStringIndex(&str)
+	checkStrPtr := stringPool.GetStringPointer(index)
+	if *checkStrPtr != "hello" {
+		t.Errorf("LDC_W: Expected popped value to be 'hello', got %s", *checkStrPtr)
 	}
 }
 
