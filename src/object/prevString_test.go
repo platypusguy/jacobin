@@ -6,43 +6,36 @@
 
 package object
 
-import (
-	"jacobin/globals"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/types"
-	"testing"
-)
+/*
+	func TestNewString(t *testing.T) {
+		globals.InitGlobals("test")
 
-func TestNewString(t *testing.T) {
-	globals.InitGlobals("test")
+		str := *NewString()
+		if *(stringPool.GetStringPointer(str.KlassName)) != "java/lang/String" {
+			t.Errorf("Klass should be java/lang/String, got: %s", *(stringPool.GetStringPointer(str.KlassName)))
+		}
 
-	str := *NewString()
-	if *(stringPool.GetStringPointer(str.KlassName)) != "java/lang/String" {
-		t.Errorf("Klass should be java/lang/String, got: %s", *(stringPool.GetStringPointer(str.KlassName)))
+		value := str.FieldTable["value"].Fvalue.(uint32)
+		// valueStr := *stringPool.GetStringPointer(value)
+		if value != types.InvalidStringIndex {
+			t.Errorf("value field should be 0xFFFFFFFF, got: %X", value)
+		}
+
+		coder := str.FieldTable["coder"].Fvalue.(int64)
+		if coder != 0 && coder != 1 {
+			t.Errorf("coder field should be 0 or 1, got: %d", coder)
+		}
+
+		hash := str.FieldTable["hash"].Fvalue.(int64)
+		if hash != 0 {
+			t.Errorf("hash field should be 0, got: %d", hash)
+		}
+
+		hashIsZero := str.FieldTable["hashIsZero"].Fvalue.(int64)
+		if hash != types.JavaBoolFalse {
+			t.Errorf("hashIsZero field should be false, got: %d", hashIsZero)
+		}
 	}
-
-	value := str.FieldTable["value"].Fvalue.(uint32)
-	// valueStr := *stringPool.GetStringPointer(value)
-	if value != types.InvalidStringIndex {
-		t.Errorf("value field should be 0xFFFFFFFF, got: %X", value)
-	}
-
-	coder := str.FieldTable["coder"].Fvalue.(int64)
-	if coder != 0 && coder != 1 {
-		t.Errorf("coder field should be 0 or 1, got: %d", coder)
-	}
-
-	hash := str.FieldTable["hash"].Fvalue.(int64)
-	if hash != 0 {
-		t.Errorf("hash field should be 0, got: %d", hash)
-	}
-
-	hashIsZero := str.FieldTable["hashIsZero"].Fvalue.(int64)
-	if hash != types.JavaBoolFalse {
-		t.Errorf("hashIsZero field should be false, got: %d", hashIsZero)
-	}
-}
 
 func TestNewStringFromGoString(t *testing.T) {
 	globals.InitGlobals("test")
@@ -96,3 +89,4 @@ func TestIsJavaStringWithGoString(t *testing.T) {
 		t.Errorf("expected TestIsJavaString(nil) to be false, got true")
 	}
 }
+*/

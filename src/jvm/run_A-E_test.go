@@ -339,7 +339,8 @@ func TestCheckcastOfString(t *testing.T) {
 			Loader: "bootstrap",
 			Data:   nil,
 		}))
-	s := object.NewStringFromGoString("hello world")
+	// s := object.NewStringFromGoString("hello world") // deprecated by JACOBIN-480
+	s := object.StringObjectFromGoString("hello world")
 
 	f := newFrame(opcodes.CHECKCAST)
 	f.Meth = append(f.Meth, 0) // point to entry [2] in CP

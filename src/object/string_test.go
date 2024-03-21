@@ -76,13 +76,13 @@ func TestStringObjectMiscFuncs(t *testing.T) {
 	}
 
 	strValue = GoStringFromStringPoolIndex(index)
-	if strValue == "" {
-		t.Errorf("5) strValue from pool index %d is \"\"", index)
+	if strValue == EmptyString { // if ""
+		t.Errorf("5) strValue from string pool index %d is an empty string", index)
 	}
 
 	strObj = StringObjectFromPoolIndex(index)
 	if strObj == nil {
-		t.Errorf("6) strObj from pool index %d is nil", index)
+		t.Errorf("6) strObj from string pool index %d is nil", index)
 	}
 
 	index2 := StringPoolIndexFromStringObject(strObj)
@@ -93,7 +93,7 @@ func TestStringObjectMiscFuncs(t *testing.T) {
 
 	bb = ByteArrayFromStringPoolIndex(index)
 	if bb == nil {
-		t.Errorf("8) bb from pool index %d is nil", index)
+		t.Errorf("8) byte array from string pool index %d is nil", index)
 	}
 
 }
@@ -129,6 +129,6 @@ func TestIsStringObjectWithNil(t *testing.T) {
 
 func TestIsStringObjectWithGoString(t *testing.T) {
 	if IsStringObject("go string") {
-		t.Errorf("expected IsStringObject(go string) to be false, observed true\"")
+		t.Errorf("expected IsStringObject(go string) to be false, observed true")
 	}
 }

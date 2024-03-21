@@ -72,7 +72,8 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// Create an array of string objects in locals[0].
 	var objArray []*object.Object
 	for _, str := range globals.AppArgs {
-		sobj := object.NewStringFromGoString(str)
+		// sobj := object.NewStringFromGoString(str) // deprecated by JACOBIN-480
+		sobj := object.StringObjectFromGoString(str)
 		objArray = append(objArray, sobj)
 	}
 	f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)

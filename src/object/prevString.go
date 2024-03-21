@@ -76,7 +76,7 @@ func NewString() *Object {
 // the string pool and the field is set to the index in the pool.
 
 func NewStringFromGoString(in string) *Object {
-	s := NewString()
+	s := NewStringObject()
 	if statics.GetStaticValue("java/lang/String", "COMPACT_STRINGS") == types.JavaBoolFalse {
 		s.FieldTable["value"] = Field{types.RuneArray, in}
 	} else {
