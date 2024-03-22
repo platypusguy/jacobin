@@ -212,11 +212,18 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// Return the length of a String..
+	// Return the length of a String.
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  stringLength,
+		}
+
+	// Returns a string whose value is the concatenation of this string repeated the specified number of times.
+	MethodSignatures["java/lang/String.repeat(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringRepeat,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
@@ -391,7 +398,13 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	bytes := params[1].([]byte)
+	var bytes []byte
+	switch params[1].(type) {
+	case []byte:
+		bytes = params[1].([]byte)
+	default:
+		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	}
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
@@ -403,7 +416,13 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	var bytes []byte
+	switch params[1].(type) {
+	case []byte:
+		bytes = params[1].([]byte)
+	default:
+		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	}
 
 	// Get substring start and end offset
 	ssStart := params[2].(int64)
@@ -429,7 +448,14 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 func newStringFromChars(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	ints := params[1].([]int64)
+	var ints []int64
+	switch params[1].(type) {
+	case []int64:
+		ints = params[1].([]int64)
+	default:
+		ints = params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
+	}
+
 	var bytes []byte
 	for _, ii := range ints {
 		bytes = append(bytes, byte(ii&0xFF))
@@ -560,6 +586,23 @@ func stringLength(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	bytes := object.ByteArrayFromStringObject(obj)
 	return int64(len(bytes))
+}
+
+// "java/lang/String.(I)Ljava/lang/String;"
+func stringRepeat(params []interface{}) interface{} {
+	// params[0] = base string
+	// params[1] = int64 repetition factor
+	oldStr := object.GoStringFromStringObject(params[0].(*object.Object))
+	var newStr string
+	count := params[1].(int64)
+	for ii := int64(0); ii < count; ii++ {
+		newStr = newStr + oldStr
+	}
+
+	// Return new string in an object.
+	obj := object.StringObjectFromGoString(newStr)
+	return obj
+
 }
 
 // "java/lang/String.substring(I)Ljava/lang/String;"

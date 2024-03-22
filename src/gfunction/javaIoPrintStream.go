@@ -159,8 +159,14 @@ func Load_Io_PrintStream() map[string]GMeth {
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func PrintlnString(params []interface{}) interface{} {
-	obj := params[1].(*object.Object)
-	str := object.GoStringFromStringObject(obj)
+	var str string
+	switch params[1].(type) {
+	case []byte:
+		str = string(params[1].([]byte))
+	default:
+		str = string(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+	}
+
 	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
@@ -294,8 +300,14 @@ func PrintDouble(params []interface{}) interface{} {
 // Print string
 // "java/io/PrintStream.print(Ljava/lang/String;)V"
 func PrintString(params []interface{}) interface{} {
-	obj := params[1].(*object.Object)
-	str := object.GoStringFromStringObject(obj)
+	var str string
+	switch params[1].(type) {
+	case []byte:
+		str = string(params[1].([]byte))
+	default:
+		str = string(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+	}
+
 	fmt.Fprint(params[0].(*os.File), str)
 	return nil
 }
