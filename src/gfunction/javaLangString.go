@@ -94,6 +94,13 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
+	// String(byte[] bytes, Charset charset) ************************************** CHARSET
+	MethodSignatures["java/lang/String.<init>([C)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  newStringFromChars,
+		}
+
 	// String(char[] value) ****************************** works fine with JDK libraries
 	// String(char[] value, int offset, int count) ******* works fine with JDK libraries
 
@@ -156,6 +163,32 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  stringCharAt,
 		}
 
+	// Compare 2 strings lexicographically, case-sensitive (upper/lower).
+	// The return value is a negative integer, zero, or a positive integer
+	// as the String argument is greater than, equal to, or less than this String,
+	// case-sensitive.
+	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  compareToCaseSensitive,
+		}
+
+	// Compare 2 strings lexicographically, ignoring case (upper/lower).
+	// The return value is a negative integer, zero, or a positive integer
+	// as the String argument is greater than, equal to, or less than this String,
+	// ignoring case considerations.
+	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  compareToIgnoreCase,
+		}
+
+	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringConcat,
+		}
+
 	// Return a formatted string using the reference object string as the format string
 	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
@@ -198,6 +231,13 @@ func Load_Lang_String() map[string]GMeth {
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  substringStartEnd,
+		}
+
+	// Return a string in all lower case, using the reference object string as input.
+	MethodSignatures["java/lang/String.toCharArray()[C"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  toCharArray,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
@@ -284,32 +324,6 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  valueOfObject,
 		}
 
-	// Compare 2 strings lexicographically, case-sensitive (upper/lower).
-	// The return value is a negative integer, zero, or a positive integer
-	// as the String argument is greater than, equal to, or less than this String,
-	// case-sensitive.
-	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  compareToCaseSensitive,
-		}
-
-	// Compare 2 strings lexicographically, ignoring case (upper/lower).
-	// The return value is a negative integer, zero, or a positive integer
-	// as the String argument is greater than, equal to, or less than this String,
-	// ignoring case considerations.
-	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  compareToIgnoreCase,
-		}
-
-	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  stringConcat,
-		}
-
 	return MethodSignatures
 
 }
@@ -377,7 +391,7 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	bytes := params[1].([]byte)
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
@@ -408,6 +422,20 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 
+}
+
+// Instantiate a new string object from a Go int64 array (Java char array).
+// "java/lang/String.<init>([C)V"
+func newStringFromChars(params []interface{}) interface{} {
+	// params[0] = reference string (to be updated with byte array)
+	// params[1] = byte array object
+	ints := params[1].([]int64)
+	var bytes []byte
+	for _, ii := range ints {
+		bytes = append(bytes, byte(ii&0xFF))
+	}
+	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	return nil
 }
 
 // "java/lang/String.getBytes()[B"
@@ -586,6 +614,18 @@ func substringStartEnd(params []interface{}) interface{} {
 	// Return new string in an object.
 	obj := object.StringObjectFromGoString(str)
 	return obj
+}
+
+// "java/lang/String.toCharArray()[C"
+func toCharArray(params []interface{}) interface{} {
+	// params[0]: input string
+	obj := params[0].(*object.Object)
+	bytes := obj.FieldTable["value"].Fvalue.([]byte)
+	var iArray []int64
+	for _, bb := range bytes {
+		iArray = append(iArray, int64(bb))
+	}
+	return iArray
 }
 
 // "java/lang/String.toLowerCase()Ljava/lang/String;"
