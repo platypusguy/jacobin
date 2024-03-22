@@ -212,11 +212,18 @@ func Load_Lang_String() map[string]GMeth {
 			GFunction:  noSupportYetInString,
 		}
 
-	// Return the length of a String..
+	// Return the length of a String.
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  stringLength,
+		}
+
+	// Returns a string whose value is the concatenation of this string repeated the specified number of times.
+	MethodSignatures["java/lang/String.repeat(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringRepeat,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
@@ -579,6 +586,23 @@ func stringLength(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	bytes := object.ByteArrayFromStringObject(obj)
 	return int64(len(bytes))
+}
+
+// "java/lang/String.(I)Ljava/lang/String;"
+func stringRepeat(params []interface{}) interface{} {
+	// params[0] = base string
+	// params[1] = int64 repetition factor
+	oldStr := object.GoStringFromStringObject(params[0].(*object.Object))
+	var newStr string
+	count := params[1].(int64)
+	for ii := int64(0); ii < count; ii++ {
+		newStr = newStr + oldStr
+	}
+
+	// Return new string in an object.
+	obj := object.StringObjectFromGoString(newStr)
+	return obj
+
 }
 
 // "java/lang/String.substring(I)Ljava/lang/String;"
