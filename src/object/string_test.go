@@ -45,7 +45,20 @@ func TestNewStringObject(t *testing.T) {
 	}
 }
 
-func TestStringObjectMiscFuncs(t *testing.T) {
+func TestStringObjectFromGoString(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+
+	constStr := "Mary had a little lamb whose fleece was white as snow."
+
+	strObj := StringObjectFromGoString(constStr)
+	strValue := GoStringFromStringObject(strObj)
+	if strValue != constStr {
+		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, strValue)
+	}
+}
+
+func TestByteArrayFromStringObject(t *testing.T) {
 	globals.InitGlobals("test")
 	statics.LoadStaticsString()
 
@@ -53,49 +66,58 @@ func TestStringObjectMiscFuncs(t *testing.T) {
 	constBytes := []byte(constStr)
 
 	strObj := StringObjectFromGoString(constStr)
-	strValue := GoStringFromStringObject(strObj)
-	if strValue != constStr {
-		t.Errorf("1) expected string value to be '%s', observed: '%s'", constStr, strValue)
-	}
-
 	bb := ByteArrayFromStringObject(strObj)
 	if !bytes.Equal(bb, constBytes) {
-		t.Errorf("2) expected string value to be '%s', observed: '%s'", constStr, string(bb))
+		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, string(bb))
 	}
+}
 
-	strObj = StringObjectFromByteArray(constBytes)
-	strValue = GoStringFromStringObject(strObj)
+func TestStringObjectFromByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+
+	constStr := "Mary had a little lamb whose fleece was white as snow."
+	constBytes := []byte(constStr)
+
+	strObj := StringObjectFromByteArray(constBytes)
+	strValue := GoStringFromStringObject(strObj)
 	if strValue != constStr {
-		t.Errorf("3) expected string value to be '%s', observed: '%s'", constStr, strValue)
+		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, strValue)
 	}
+}
 
+func TestStringPoolStringOperations(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+
+	constStr := "Mary had a little lamb whose fleece was white as snow."
+	strObj := StringObjectFromGoString(constStr)
 	index := StringPoolIndexFromStringObject(strObj)
 	if index == types.InvalidStringIndex {
-		t.Errorf("4) string pool index is types.InvalidStringIndex")
+		t.Errorf("string pool index is types.InvalidStringIndex")
 		return
 	}
 
-	strValue = GoStringFromStringPoolIndex(index)
+	strValue := GoStringFromStringPoolIndex(index)
 	if strValue == EmptyString { // if ""
-		t.Errorf("5) strValue from string pool index %d is an empty string", index)
+		t.Errorf("strValue from string pool index %d is an empty string", index)
 	}
 
 	strObj = StringObjectFromPoolIndex(index)
 	if strObj == nil {
-		t.Errorf("6) strObj from string pool index %d is nil", index)
+		t.Errorf("strObj from string pool index %d is nil", index)
 	}
 
 	index2 := StringPoolIndexFromStringObject(strObj)
 	if index2 != index {
-		t.Errorf("7) string pool index=%d but index2=%d (expected equality)", index, index2)
+		t.Errorf("string pool index=%d but index2=%d (expected equality)", index, index2)
 		return
 	}
 
-	bb = ByteArrayFromStringPoolIndex(index)
+	bb := ByteArrayFromStringPoolIndex(index)
 	if bb == nil {
-		t.Errorf("8) byte array from string pool index %d is nil", index)
+		t.Errorf("byte array from string pool index %d is nil", index)
 	}
-
 }
 
 func TestUpdateStringObjectFromBytes(t *testing.T) {
