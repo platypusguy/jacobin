@@ -92,6 +92,7 @@ var StringPoolTable map[string]uint32
 var StringPoolList []string
 var StringPoolNext uint32
 var StringPoolLock sync.Mutex
+var StringIndexString uint32
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
@@ -281,7 +282,8 @@ func InitStringPool() {
 	StringPoolList = append(StringPoolList, "java/lang/Object")
 
 	// Add "java/lang/String"
-	StringPoolTable["java/lang/String"] = 1
+	StringIndexString = 1
+	StringPoolTable["java/lang/String"] = StringIndexString
 	StringPoolList = append(StringPoolList, "java/lang/String")
 
 	// Set up next available index

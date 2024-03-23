@@ -182,16 +182,23 @@ func traceObject(f *frames.Frame, opStr string, obj *object.Object) string {
 	}
 
 	// Not a nil pointer.
+	var fvalueFmt string
+	if obj.KlassName == globals.StringIndexString {
+		fvalueFmt = "String"
+	} else {
+		fvalueFmt = "[]byte"
+	}
+
 	// Field table non-empty?
 	if len(obj.FieldTable) > 0 {
 		// Assume that field 'value' is present.
 		fld := obj.FieldTable["value"]
 		if fld.Ftype == types.ByteArray {
 			if fld.Fvalue == nil {
-				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d []byte: <nil>", f.TOS)
+				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d %s: <nil>", f.TOS, fvalueFmt)
 			} else {
 				str := string((fld.Fvalue).([]byte))
-				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d []byte: %q", f.TOS, str)
+				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d %s: %q", f.TOS, fvalueFmt, str)
 			}
 		} else {
 			// Fvalue is not a byte array.
