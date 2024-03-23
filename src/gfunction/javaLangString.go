@@ -403,6 +403,7 @@ func newStringFromBytes(params []interface{}) interface{} {
 	case []byte:
 		bytes = params[1].([]byte)
 	default:
+		fmt.Printf("===========================DEBUG===newStringFromBytes params[1] type: %T\n", params[1])
 		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	}
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
