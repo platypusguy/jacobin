@@ -1823,7 +1823,7 @@ frameInterpreter:
 			// get the class entry from this method
 			classRef := method.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			classNamePtr := stringPool.GetStringPointer(classNameIndex)
 			className := *classNamePtr
 
 			// get the method name for this method
@@ -1837,6 +1837,10 @@ frameInterpreter:
 			// get the signature for this method
 			methodSigIndex := nAndT.DescIndex
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodSigIndex)
+
+			if strings.Contains(methodName, "println") && strings.Contains(methodType, "Ljava/lang/String;") {
+				err = nil // <<<<<<<<<<<<<<<<<< ignore this
+			}
 
 			mtEntry := classloader.MTable[className+"."+methodName+methodType]
 			if mtEntry.Meth == nil { // if the method is not in the method table, find it
