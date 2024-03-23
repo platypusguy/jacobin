@@ -172,6 +172,36 @@ func emitTraceData(f *frames.Frame) string {
 	return traceInfo
 }
 
+// traceObject : Used by push, pop, and peek in tracing an object.
+func traceObject(f *frames.Frame, opStr string, obj *object.Object) string {
+	prefix := fmt.Sprintf("%4s           TOS:", opStr)
+
+	// Nil pointer to object?
+	if obj == nil {
+		return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
+	}
+
+	// Not a nil pointer.
+	// Field table non-empty?
+	if len(obj.FieldTable) > 0 {
+		// Assume that field 'value' is present.
+		fld := obj.FieldTable["value"]
+		if fld.Ftype == types.ByteArray {
+			if fld.Fvalue == nil {
+				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d []byte: <nil>", f.TOS)
+			} else {
+				str := string((fld.Fvalue).([]byte))
+				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d []byte: %q", f.TOS, str)
+			}
+		} else {
+			// Fvalue is not a byte array.
+			return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d *Object: %v", f.TOS, fld.Fvalue)
+		}
+	}
+
+	return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d *Object: %v", f.TOS, obj)
+}
+
 // pop from the operand stack.
 func pop(f *frames.Frame) interface{} {
 	var value interface{}
@@ -199,30 +229,7 @@ func pop(f *frames.Frame) interface{} {
 				switch value.(type) {
 				case *object.Object:
 					obj := value.(*object.Object)
-					if obj == nil {
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d null", f.TOS)
-						break
-					}
-					if len(obj.FieldTable) > 0 {
-						if obj.FieldTable["value"].Ftype == types.ByteArray {
-							if obj.FieldTable["value"].Fvalue == nil {
-								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-									fmt.Sprintf("%3d []byte: <nil>", f.TOS)
-							} else {
-								bytes := (obj.FieldTable["value"].Fvalue).([]byte)
-								str := string(bytes)
-								traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-									fmt.Sprintf("%3d []byte: %q", f.TOS, str)
-							}
-						} else {
-							traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-								fmt.Sprintf("%3d *Object: %v", f.TOS, value)
-						}
-					} else {
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d *Object: %v", f.TOS, value)
-					}
+					traceInfo = traceObject(f, "POP", obj)
 				case *[]uint8:
 					strPtr := value.(*[]byte)
 					str := string(*strPtr)
@@ -268,25 +275,7 @@ func peek(f *frames.Frame) interface{} {
 			switch value.(type) {
 			case *object.Object:
 				obj := value.(*object.Object)
-				if len(obj.FieldTable) > 0 {
-					if obj.FieldTable["value"].Ftype == types.ByteArray {
-						if obj.FieldTable["value"].Fvalue == nil {
-							traceInfo = fmt.Sprintf("                                                  "+
-								"      PEEK          TOS:%3d []byte: <nil>", f.TOS)
-						} else {
-							bytes := (obj.FieldTable["value"].Fvalue).([]byte)
-							str := string(bytes)
-							traceInfo = fmt.Sprintf("                                                  "+
-								"      PEEK          TOS:%3d []byte]: %q", f.TOS, str)
-						}
-					} else {
-						traceInfo = fmt.Sprintf("                                                  "+
-							"      PEEK          TOS:%3d *Object: %v", f.TOS, value)
-					}
-				} else {
-					traceInfo = fmt.Sprintf("                                                  "+
-						"PEEK          TOS:%3d %T %v", f.TOS, value, value)
-				}
+				traceInfo = traceObject(f, "PEEK", obj)
 			default:
 				traceInfo = fmt.Sprintf("                                                  "+
 					"PEEK          TOS:%3d %T %v", f.TOS, value, value)
@@ -326,25 +315,7 @@ func push(f *frames.Frame, x interface{}) {
 					switch x.(type) {
 					case *object.Object:
 						obj := x.(*object.Object)
-						if len(obj.FieldTable) > 0 {
-							if obj.FieldTable["value"].Ftype == types.ByteArray {
-								if obj.FieldTable["value"].Fvalue == nil {
-									traceInfo = fmt.Sprintf("%56s", " ") +
-										fmt.Sprintf("PUSH          TOS:%3d []byte: <nil>", f.TOS)
-								} else {
-									bytes := (obj.FieldTable["value"].Fvalue).([]byte)
-									str := string(bytes)
-									traceInfo = fmt.Sprintf("%56s", " ") +
-										fmt.Sprintf("PUSH          TOS:%3d []byte: %q", f.TOS, str)
-								}
-							} else {
-								traceInfo = fmt.Sprintf("%56s", " ") +
-									fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
-							}
-						} else {
-							traceInfo = fmt.Sprintf("%56s", " ") +
-								fmt.Sprintf("PUSH          TOS:%3d *Object: %v", f.TOS, x)
-						}
+						traceInfo = traceObject(f, "PUSH", obj)
 					case *[]uint8:
 						strPtr := x.(*[]byte)
 						str := string(*strPtr)
