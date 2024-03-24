@@ -53,6 +53,7 @@ func JVMrun() int {
 	if globals.GetGlobalRef().JacobinName != "test" {
 		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
+		stringPool.PreloadArrayClassToStringPool()
 		log.Init()
 	}
 	globPtr = globals.GetGlobalRef()

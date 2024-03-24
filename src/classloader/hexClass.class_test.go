@@ -3084,8 +3084,8 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
 	MethArea = &sync.Map{}
-	if MethAreaSize() != 5 { // for the 5 synthetic array classes that are preloaded
-		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
+	if MethAreaSize() != 8 { // for the 8 synthetic array classes that are preloaded
+		t.Errorf("Expected MethArea to have 8 entries, but it had %d", MethAreaSize())
 	}
 
 	normalStderr := os.Stderr
@@ -3101,8 +3101,8 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if MethAreaSize() != 6 { // the 1 from here + 5 preloaded synthetic array classes
-		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+	if MethAreaSize() != 9 { // the 1 from here + 8 preloaded synthetic array classes
+		t.Errorf("Expected MethArea to have 9 entries, but it has %d",
 			MethAreaSize())
 	}
 
@@ -3121,8 +3121,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	_ = log.SetLogLevel(log.WARNING)
 	_ = Init()
 
-	if MethAreaSize() != 5 { // 5 synthetic array entries are preloaded to the methArea
-		t.Errorf("Unexpected error in initializing MethArea (which is the method area)")
+	if MethAreaSize() != 8 { // 8 synthetic array entries are preloaded to the methArea
+		t.Errorf("Expected MethArea to have 8 entries, but it had: %d", MethAreaSize())
 	}
 
 	normalStderr := os.Stderr
@@ -3138,9 +3138,9 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
 
-	if MethAreaSize() != 6 {
-		// 1 for this class + 5 for the preloaded array classes
-		t.Errorf("Expected MethArea to have 1 entry, but it has %d",
+	if MethAreaSize() != 9 {
+		// 1 for this class + 8 for the preloaded array classes
+		t.Errorf("Expected MethArea to have 9 entries, but it has %d",
 			MethAreaSize())
 	}
 
@@ -3154,8 +3154,8 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Got unexpected error looking up loaded class in MethArea: %s", err.Error())
 	}
 
-	if MethAreaSize() != 7 { // count should still be 2 (+5 preloaded array classes)
-		t.Errorf("Expected MethArea to have 2 entries, but it has %d",
+	if MethAreaSize() != 10 { // count should still be 2 (+8 preloaded array classes)
+		t.Errorf("Expected MethArea to have 10 entries, but it has %d",
 			MethAreaSize())
 	}
 
@@ -3165,9 +3165,9 @@ func TestLoadClassByNameOnly(t *testing.T) {
 		t.Errorf("Expected an error for attempt to load non-existent class")
 	}
 
-	if MethAreaSize() != 7 { // count should still be 7: one for Class.class,
+	if MethAreaSize() != 10 { // count should still be 10: one for Class.class,
 		// one entry for the unsuccessful SnoopDog, and 5 for the preloaded array classes
-		t.Errorf("Expected MethArea to have 2 entry, but it has %d",
+		t.Errorf("Expected MethArea to have 10 entries, but it has %d",
 			MethAreaSize())
 	}
 

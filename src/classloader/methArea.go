@@ -44,9 +44,16 @@ func MethAreaPreload() {
 		Loader: "bootstrap",
 		Data:   &ClData{Superclass: "java/lang/Object"}, // empty class info
 	}
+
 	classesToPreload := []string{
-		types.ByteArray, types.FloatArray, types.IntArray,
-		types.RefArray, types.RuneArray,
+		types.BoolArray,
+		types.ByteArray,
+		types.DoubleArray,
+		types.FloatArray,
+		types.IntArray,
+		types.LongArray,
+		types.RefArray,
+		types.RuneArray,
 	}
 
 	for _, x := range classesToPreload {
