@@ -194,7 +194,13 @@ func consoleReadPassword([]interface{}) interface{} {
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
 	_, _ = fmt.Fprint(stdout, "\n")
-	return password
+
+	// Convert password to int64 array, insert into an object, and return to caller
+	var iArray []int64
+	for _, bb := range password {
+		iArray = append(iArray, int64(bb))
+	}
+	return populator("[C", types.IntArray, iArray)
 }
 
 // Provides a formatted prompt, then reads a password or passphrase from the console.
