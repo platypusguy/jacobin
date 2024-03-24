@@ -62,6 +62,7 @@ DumpStringPool(context string) -
 import (
 	"fmt"
 	"jacobin/globals"
+	"jacobin/types"
 	"os"
 	"sort"
 )
@@ -126,4 +127,22 @@ func DumpStringPool(context string) {
 	}
 	_, _ = fmt.Fprintln(os.Stdout, "===== DumpStringPool END")
 	globals.StringPoolLock.Unlock()
+}
+
+func PreloadArrayClassToStringPool() {
+
+	arrayClassesToPreload := []string{
+		types.BoolArray,
+		types.ByteArray,
+		types.DoubleArray,
+		types.FloatArray,
+		types.IntArray,
+		types.LongArray,
+		types.RefArray,
+		types.RuneArray,
+	}
+
+	for _, className := range arrayClassesToPreload {
+		_ = GetStringIndex(&className)
+	}
 }

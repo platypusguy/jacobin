@@ -21,9 +21,13 @@ const Ref = "L"
 const Short = "S"
 
 const Array = "["
+const BoolArray = "[Z"
 const ByteArray = "[B"
+const CharArray = "[R" // char array is = rune array
+const DoubleArray = "[D"
 const IntArray = "[I"
 const FloatArray = "[F"
+const LongArray = "[J"
 const RefArray = "[L"
 const RuneArray = "[R" // used only in strings that are not compact
 
