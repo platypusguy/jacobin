@@ -398,6 +398,7 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
+	// TRAP fmt.Printf("===========================DEBUG===newStringFromBytes params[1] type: %T\n", params[1])
 	var bytes []byte
 	switch params[1].(type) {
 	case []byte:
@@ -416,6 +417,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
+	// TRAP fmt.Printf("===========================DEBUG===newStringFromBytesSubset params[1] type: %T\n", params[1])
 	var bytes []byte
 	switch params[1].(type) {
 	case []byte:
@@ -545,7 +547,6 @@ func StringFormatter(params []interface{}) interface{} {
 			case types.Byte:
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			case types.Bool:
-				// fmt.Printf("DEBUG %T %v\n", fvalue, fvalue)
 				var zz bool
 				if fld.Fvalue.(int64) == 0 {
 					zz = false

@@ -52,7 +52,7 @@ func Load_Lang_Class() map[string]GMeth {
 // "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"
 func getPrimitiveClass(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
-	str := object.GetGoStringFromObject(primitive)
+	str := object.GoStringFromStringObject(primitive)
 
 	var k *classloader.Klass
 	var err error
