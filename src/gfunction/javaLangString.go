@@ -398,14 +398,7 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	// TRAP fmt.Printf("===========================DEBUG===newStringFromBytes params[1] type: %T\n", params[1])
-	var bytes []byte
-	switch params[1].(type) {
-	case []byte:
-		bytes = params[1].([]byte)
-	default:
-		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	}
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
@@ -417,14 +410,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
-	// TRAP fmt.Printf("===========================DEBUG===newStringFromBytesSubset params[1] type: %T\n", params[1])
-	var bytes []byte
-	switch params[1].(type) {
-	case []byte:
-		bytes = params[1].([]byte)
-	default:
-		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	}
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 
 	// Get substring start and end offset
 	ssStart := params[2].(int64)
@@ -450,13 +436,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 func newStringFromChars(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	var ints []int64
-	switch params[1].(type) {
-	case []int64:
-		ints = params[1].([]int64)
-	default:
-		ints = params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
-	}
+	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 
 	var bytes []byte
 	for _, ii := range ints {
@@ -470,7 +450,7 @@ func newStringFromChars(params []interface{}) interface{} {
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
 	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
-	return []byte(bytes)
+	return populator("[B", types.ByteArray, bytes)
 }
 
 // "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
@@ -669,7 +649,7 @@ func toCharArray(params []interface{}) interface{} {
 	for _, bb := range bytes {
 		iArray = append(iArray, int64(bb))
 	}
-	return iArray
+	return populator("[C", types.IntArray, iArray)
 }
 
 // "java/lang/String.toLowerCase()Ljava/lang/String;"
