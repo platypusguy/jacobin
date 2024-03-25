@@ -161,8 +161,8 @@ func Load_Io_PrintStream() map[string]GMeth {
 func PrintlnString(params []interface{}) interface{} {
 	var str string
 	switch params[1].(type) {
-	case []byte:
-		str = string(params[1].([]byte))
+	// case []byte:
+	// 	str = string(params[1].([]byte))
 	default:
 		str = string(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
 	}
