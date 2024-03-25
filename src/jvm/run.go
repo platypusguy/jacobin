@@ -1709,7 +1709,13 @@ frameInterpreter:
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
 				fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
-			} else {
+			} else if fieldType == object.StringClassRef {
+				// if the field type is String pointer and value is a byte array, convert it to a string
+				valueType, ok := objField.Fvalue.([]byte)
+				if ok {
+					fieldValue = object.StringObjectFromByteArray(valueType)
+				}
+			} else { // not an index to the string pool, nor a String pointer with a byte array
 				fieldValue = objField.Fvalue
 			}
 			push(f, fieldValue)
