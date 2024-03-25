@@ -159,14 +159,13 @@ func Load_Io_PrintStream() map[string]GMeth {
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func PrintlnString(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	// case []byte:
-	// 	str = string(params[1].([]byte))
-	default:
-		str = string(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+	param1, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnString: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 	}
 
+	str := string(param1.FieldTable["value"].Fvalue.([]byte))
 	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
