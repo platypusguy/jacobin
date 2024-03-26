@@ -457,7 +457,8 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
-			array := (rAref.(*object.Object)).FieldTable["value"].Fvalue.([]*object.Object)
+			fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
+			array := fvalue.([]*object.Object)
 
 			size := int64(len(array))
 			if index >= size {
@@ -1217,42 +1218,22 @@ frameInterpreter:
 			}
 		case opcodes.IFEQ: // 0x99 pop int, if it's == 0, go to the jump location
 			// specified in the next two bytes
-			popValue := pop(f)
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
-			var value int64
-			switch popValue.(type) {
-			case bool:
-				if popValue == true {
-					value = int64(1)
-				} else {
-					value = int64(0)
-				}
-			default:
-				value = popValue.(int64)
-			}
+			popValue := pop(f)
+			value := xlateIfArg(popValue)
 			if value == 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
 				f.PC += 2
 			}
-		case opcodes.IFNE: // 0x9A pop int, it it's !=0, go to the jump location
+		case opcodes.IFNE: // 0x9A pop int, if it's !=0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
-			var value int64
-			switch popValue.(type) {
-			case bool:
-				if popValue == true {
-					value = int64(1)
-				} else {
-					value = int64(0)
-				}
-			default:
-				value = popValue.(int64)
-			}
+			value := xlateIfArg(popValue)
 			if value != 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1261,7 +1242,8 @@ frameInterpreter:
 			}
 		case opcodes.IFLT: // 0x9B pop int, if it's < 0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+			value := xlateIfArg(popValue)
 			if value < 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1270,7 +1252,8 @@ frameInterpreter:
 			}
 		case opcodes.IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+			value := xlateIfArg(popValue)
 			if value >= 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1279,7 +1262,8 @@ frameInterpreter:
 			}
 		case opcodes.IFGT: // 0x9D pop int, if it's > 0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+			value := xlateIfArg(popValue)
 			if value > 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1288,7 +1272,8 @@ frameInterpreter:
 			}
 		case opcodes.IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
 			// specified in the next two bytes
-			value := pop(f).(int64)
+			popValue := pop(f)
+			value := xlateIfArg(popValue)
 			if value <= 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1296,8 +1281,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1305,8 +1292,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			if int32(val1) != int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1314,8 +1303,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			val1a := val1
 			val2a := val2
 			if val1a < val2a { // if comp succeeds, next 2 bytes hold instruction index
@@ -1325,8 +1316,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1334,8 +1327,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPGT: //  0xA3    (jump if popped val1 > popped val2)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			if int32(val1) > int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1343,8 +1338,10 @@ frameInterpreter:
 				f.PC += 2
 			}
 		case opcodes.IF_ICMPLE: //	0xA4	(jump if popped val1 <= popped val2)
-			val2 := pop(f).(int64)
-			val1 := pop(f).(int64)
+			popValue := pop(f)
+			val2 := xlateIfArg(popValue)
+			popValue = pop(f)
+			val1 := xlateIfArg(popValue)
 			if val1 <= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -2843,4 +2840,26 @@ func createAndInitNewFrame(
 	fram.TOS = -1
 
 	return fram, nil
+}
+
+func xlateIfArg(arg interface{}) int64 {
+	var value int64
+	switch arg.(type) {
+	case bool:
+		if arg == true {
+			value = int64(1)
+		} else {
+			value = int64(0)
+		}
+	case uint8:
+		if arg == uint8(1) {
+			value = int64(1)
+		} else {
+			value = int64(0)
+		}
+	default:
+		value = arg.(int64)
+	}
+
+	return value
 }
