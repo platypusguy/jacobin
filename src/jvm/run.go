@@ -1221,7 +1221,7 @@ frameInterpreter:
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
 			popValue := pop(f)
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value == 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1233,7 +1233,7 @@ frameInterpreter:
 			popValue := pop(f)
 			// bools are treated in the JVM as ints, so convert here if bool;
 			// otherwise, values should be int64's
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value != 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1243,7 +1243,7 @@ frameInterpreter:
 		case opcodes.IFLT: // 0x9B pop int, if it's < 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value < 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1253,7 +1253,7 @@ frameInterpreter:
 		case opcodes.IFGE: // 0x9C pop int, if it's >= 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value >= 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1263,7 +1263,7 @@ frameInterpreter:
 		case opcodes.IFGT: // 0x9D pop int, if it's > 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value > 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1273,7 +1273,7 @@ frameInterpreter:
 		case opcodes.IFLE: // 0x9E pop int, if it's <= 0, go to the jump location
 			// specified in the next two bytes
 			popValue := pop(f)
-			value := convertByteOrBoolToInt64(popValue)
+			value := convertIntegralValueToInt64(popValue)
 			if value <= 0 {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
@@ -1282,9 +1282,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPEQ: //  0x9F 	(jump if top two ints are equal)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1293,9 +1293,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPNE: //  0xA0    (jump if top two ints are not equal)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			if int32(val1) != int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1304,9 +1304,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPLT: //  0xA1    (jump if popped val1 < popped val2)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			val1a := val1
 			val2a := val2
 			if val1a < val2a { // if comp succeeds, next 2 bytes hold instruction index
@@ -1317,9 +1317,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPGE: //  0xA2    (jump if popped val1 >= popped val2)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1328,9 +1328,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPGT: //  0xA3    (jump if popped val1 > popped val2)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			if int32(val1) > int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1
@@ -1339,9 +1339,9 @@ frameInterpreter:
 			}
 		case opcodes.IF_ICMPLE: //	0xA4	(jump if popped val1 <= popped val2)
 			popValue := pop(f)
-			val2 := convertByteOrBoolToInt64(popValue)
+			val2 := convertIntegralValueToInt64(popValue)
 			popValue = pop(f)
-			val1 := convertByteOrBoolToInt64(popValue)
+			val1 := convertIntegralValueToInt64(popValue)
 			if val1 <= val2 { // if comp succeeds, next 2 bytes hold instruction index
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1 // -1 b/c on the next iteration, pc is bumped by 1

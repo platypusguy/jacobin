@@ -90,10 +90,14 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	return 0
 }
 
-// converts an interface consisting of a byte or boolean to int64. Appears primarily in the IF* bytecodes
-func convertByteOrBoolToInt64(arg interface{}) int64 {
+// Convert an interface{} consisting of some integral value to int64.
+// Appears primarily in the runFrame{} IF* bytecodes.
+func convertIntegralValueToInt64(arg interface{}) int64 {
 	var value int64
+	//fmt.Printf("convertIntegralValueToInt64 *TRAP*: argument type: %T\n", arg)
 	switch arg.(type) {
+	case int64:
+		value = arg.(int64)
 	case bool:
 		if arg == true {
 			value = int64(1)
@@ -107,7 +111,8 @@ func convertByteOrBoolToInt64(arg interface{}) int64 {
 			value = int64(0)
 		}
 	default:
-		value = arg.(int64)
+		errMsg := fmt.Sprintf("convertIntegralValueToInt64 *TRAP*: Invalid argument type: %T", arg)
+		exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 	}
 
 	return value
