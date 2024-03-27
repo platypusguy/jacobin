@@ -1370,6 +1370,15 @@ frameInterpreter:
 			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
+		case opcodes.TABLESWITCH:
+			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
+			// basePC := f.PC // where we are when the processing begins
+
+			paddingBytes := 4 - ((f.PC + 1) % 4)
+			if paddingBytes == 4 {
+				paddingBytes = 0
+			}
+			f.PC += paddingBytes
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
 			basePC := f.PC // where we are when the processing begins
