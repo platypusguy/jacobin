@@ -1372,7 +1372,7 @@ frameInterpreter:
 
 		case opcodes.TABLESWITCH:
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
-			// basePC := f.PC // where we are when the processing begins
+			basePC := f.PC // where we are when the processing begins
 
 			paddingBytes := 4 - ((f.PC + 1) % 4)
 			if paddingBytes == 4 {
@@ -1380,14 +1380,14 @@ frameInterpreter:
 			}
 			f.PC += paddingBytes
 
-			defaultJump := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			defaultJump := int32(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
-			lowValue := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			lowValue := int32(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
-			highValue := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			highValue := int32(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
 
 			entries := highValue - lowValue + 1
@@ -1395,6 +1395,12 @@ frameInterpreter:
 			msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
 				defaultJump, lowValue, highValue, entries)
 			fmt.Println("TABLESWITCH " + msg)
+			index := int(pop(f).(int64))
+			if index < int(lowValue) || index > int(highValue) {
+				f.PC = basePC + int(defaultJump) - 1 // +1 will be added at end of the giant switch
+				break
+			}
+
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
 			basePC := f.PC // where we are when the processing begins
