@@ -1379,6 +1379,22 @@ frameInterpreter:
 				paddingBytes = 0
 			}
 			f.PC += paddingBytes
+
+			defaultJump := binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			f.PC += 4
+			lowValue := binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			f.PC += 4
+			highValue := binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			f.PC += 4
+
+			entries := highValue - lowValue + 1
+
+			msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
+				defaultJump, lowValue, highValue, entries)
+			fmt.Println("TABLESWITCH " + msg)
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
 			basePC := f.PC // where we are when the processing begins
