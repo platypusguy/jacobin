@@ -1380,7 +1380,7 @@ frameInterpreter:
 			}
 			f.PC += paddingBytes
 
-			defaultJump := int32(binary.BigEndian.Uint32(
+			defaultJump := int64(binary.BigEndian.Uint32(
 				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
 			lowValue := int32(binary.BigEndian.Uint32(
@@ -1390,16 +1390,30 @@ frameInterpreter:
 				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
 
-			entries := highValue - lowValue + 1
+			//entries := highValue - lowValue + 1
+			//msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
+			//	defaultJump, lowValue, highValue, entries)
+			//fmt.Println("TABLESWITCH " + msg)
+			index := pop(f).(int64)
+			// "The value low must be less than or equal to high"
+			// I did not check to see if lowValue > highValue? Exception?
 
-			msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
-				defaultJump, lowValue, highValue, entries)
-			fmt.Println("TABLESWITCH " + msg)
-			index := int(pop(f).(int64))
-			if index < int(lowValue) || index > int(highValue) {
-				f.PC = basePC + int(defaultJump) - 1 // +1 will be added at end of the giant switch
-				break
+			// Compute PC for jump.
+			jumpOffset := 0 //
+			for ii := int64(lowValue); ii < int64(highValue); ii++ {
+				if ii == index {
+					f.PC += jumpOffset
+					jumpPC := binary.BigEndian.Uint32(
+						[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+					f.PC = basePC + int(jumpPC)
+					goto frameInterpreter
+				}
+				jumpOffset += 4
 			}
+
+			// Default case.
+			f.PC = basePC + int(defaultJump)
+			goto frameInterpreter
 
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
