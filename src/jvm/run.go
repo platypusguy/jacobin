@@ -1412,8 +1412,7 @@ frameInterpreter:
 			}
 
 			// Default case.
-			f.PC = basePC + int(defaultJump)
-			goto frameInterpreter
+			f.PC = basePC + int(defaultJump) - 1 // One will be added to f.PC at the end of this yumongous switch.
 
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
