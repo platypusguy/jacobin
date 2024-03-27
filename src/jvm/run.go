@@ -1400,7 +1400,7 @@ frameInterpreter:
 
 			// Compute PC for jump.
 			jumpOffset := 0 //
-			for ii := int64(lowValue); ii < int64(highValue); ii++ {
+			for ii := int64(lowValue); ii <= int64(highValue); ii++ {
 				if ii == index {
 					f.PC += jumpOffset
 					jumpPC := binary.BigEndian.Uint32(
