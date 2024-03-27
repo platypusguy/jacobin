@@ -1372,7 +1372,7 @@ frameInterpreter:
 
 		case opcodes.TABLESWITCH:
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
-			// basePC := f.PC // where we are when the processing begins
+			basePC := f.PC // where we are when the processing begins
 
 			paddingBytes := 4 - ((f.PC + 1) % 4)
 			if paddingBytes == 4 {
@@ -1380,21 +1380,40 @@ frameInterpreter:
 			}
 			f.PC += paddingBytes
 
-			defaultJump := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			defaultJump := int64(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
-			lowValue := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			lowValue := int32(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
-			highValue := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			highValue := int32(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
 
-			entries := highValue - lowValue + 1
+			//entries := highValue - lowValue + 1
+			//msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
+			//	defaultJump, lowValue, highValue, entries)
+			//fmt.Println("TABLESWITCH " + msg)
+			index := pop(f).(int64)
+			// "The value low must be less than or equal to high"
+			// I did not check to see if lowValue > highValue? Exception?
 
-			msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
-				defaultJump, lowValue, highValue, entries)
-			fmt.Println("TABLESWITCH " + msg)
+			// Compute PC for jump.
+			jumpOffset := 0 //
+			for ii := int64(lowValue); ii <= int64(highValue); ii++ {
+				if ii == index {
+					f.PC += jumpOffset
+					jumpPC := binary.BigEndian.Uint32(
+						[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+					f.PC = basePC + int(jumpPC)
+					goto frameInterpreter
+				}
+				jumpOffset += 4
+			}
+
+			// Default case.
+			f.PC = basePC + int(defaultJump) - 1 // One will be added to f.PC at the end of this yumongous switch.
+
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
 			basePC := f.PC // where we are when the processing begins
