@@ -32,14 +32,14 @@ import (
  *   }
  * }
  *
- * This test checks the output with various options on the command line.
+ * This test checks the output with various options for verbosity and features set on the command line.
  */
 
 // To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
 // This test harness expects that environmental variable JACOBIN_EXE gives the full name and path of the executable
 // we're running the tests on. The folder which contains the test class should be specified in the environmental
 // variable JACOBIN_TESTDATA (without a terminating slash).
-func initVarsLookupswtch() error {
+func initVarsLookupswitch() error {
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		return fmt.Errorf("test not run due to -short")
 	}
@@ -71,7 +71,7 @@ func TestLookupSwitchNoArgs(t *testing.T) {
 		t.Skip()
 	}
 
-	initErr := initVarsLookupswtch()
+	initErr := initVarsLookupswitch()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}
@@ -125,7 +125,7 @@ func TestLookupSwitchOneArg(t *testing.T) {
 		t.Skip()
 	}
 
-	initErr := initVarsLookupswtch()
+	initErr := initVarsLookupswitch()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
 	}

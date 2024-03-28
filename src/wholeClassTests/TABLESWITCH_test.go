@@ -119,8 +119,8 @@ func TestTableSwitchNoArgs(t *testing.T) {
 	}
 }
 
-// same as previous test, but with one argument
-func TestTableSwitchOneArg(t *testing.T) {
+// same as previous test, but with more arguments that the table is set up for. Should output -1.
+func TestTableSwitchManyArgs(t *testing.T) {
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
