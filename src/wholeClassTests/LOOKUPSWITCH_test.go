@@ -32,7 +32,7 @@ import (
  *   }
  * }
  *
- * This test checks the output with various options for verbosity and features set on the command line.
+ * This test checks the output with various options on the command line.
  */
 
 // To run your class, enter its name in _TESTCLASS, any args in their respective variables and then run the tests.
