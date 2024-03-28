@@ -1380,31 +1380,27 @@ frameInterpreter:
 			}
 			f.PC += paddingBytes
 
-			defaultJump := int64(binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
+			defaultJump := fourBytesToInt64( // the jump if the value is not in the table
+				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 			f.PC += 4
-			lowValue := int32(binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
+			lowValue := fourBytesToInt64( // the lowest value in the table
+				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 			f.PC += 4
-			highValue := int32(binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
+			highValue := fourBytesToInt64( // the highest value in the table
+				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 			f.PC += 4
 
-			//entries := highValue - lowValue + 1
-			//msg := fmt.Sprintf("defaultJump: %d, lowValue: %d, highValue: %d, entries: %d",
-			//	defaultJump, lowValue, highValue, entries)
-			//fmt.Println("TABLESWITCH " + msg)
-			index := pop(f).(int64)
+			index := pop(f).(int64) // the value we're looking to match
 			// "The value low must be less than or equal to high"
-			// I did not check to see if lowValue > highValue? Exception?
+			// We did not check to see if lowValue > highValue? Exception?
 
 			// Compute PC for jump.
 			jumpOffset := 0 //
-			for ii := int64(lowValue); ii <= int64(highValue); ii++ {
-				if ii == index {
+			for value := lowValue; value <= highValue; value++ {
+				if value == index {
 					f.PC += jumpOffset
-					jumpPC := binary.BigEndian.Uint32(
-						[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+					jumpPC := fourBytesToInt64(
+						f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 					f.PC = basePC + int(jumpPC)
 					goto frameInterpreter
 				}
@@ -1412,7 +1408,7 @@ frameInterpreter:
 			}
 
 			// Default case.
-			f.PC = basePC + int(defaultJump) - 1 // One will be added to f.PC at the end of this yumongous switch.
+			f.PC = basePC + int(defaultJump) - 1 // 1 will be added to f.PC at the end of this loop.
 
 		case opcodes.LOOKUPSWITCH: // 0xAB (switch using lookup table)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.lookupswitch
@@ -1425,8 +1421,8 @@ frameInterpreter:
 			f.PC += paddingBytes
 
 			// get the jump size for the default branch
-			defaultJump := binary.BigEndian.Uint32(
-				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]})
+			defaultJump := int64(binary.BigEndian.Uint32(
+				[]byte{f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4]}))
 			f.PC += 4
 
 			// how many branches in this switch (other than default)
