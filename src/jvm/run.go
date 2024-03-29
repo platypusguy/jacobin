@@ -1791,8 +1791,19 @@ frameInterpreter:
 				// identical value types pushed twice. So pop once more to
 				// get the object reference.
 				ref = pop(f).(*object.Object)
+			case *object.Object:
+				// Handle the Object after this switch
+			default:
+				// *** unexpected type of ref ***
+				errMsg := fmt.Sprintf("PUTFIELD: Expected an object ref, but observed type %T in "+
+					"location %d in method %s of class %s, previously popped a value(type %T):\n%v\n",
+					ref, f.PC, f.MethName, f.ClName, value, value)
+				_ = log.Log(errMsg, log.SEVERE)
+				logTraceStack(f)
+				return errors.New(errMsg)
 			}
 
+			// Get Object struct.
 			obj := *(ref.(*object.Object))
 
 			// if the value we're inserting is a reference to an
