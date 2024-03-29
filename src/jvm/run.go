@@ -2517,15 +2517,13 @@ frameInterpreter:
 			var arrayDesc string
 			var arrayType uint8
 
-			// The first two chars after the bytecode point to a
-			// classref entry in the CP. In turn, it points to a
-			// string describing the array. Of the form [[L or
-			// similar, in which one [ is present for every dimension
-			// followed by a single letter describing the type of
-			// entry in the leaf dimension of the array. The letters
-			// are the usual ones used in the JVM for primitives, etc.
+			// The first two bytes after the bytecode point to a classref entry in the CP.
+			// In turn, it points to a string describing the array of the form [[L or
+			// similar, in which one [ is present for every array dimension, followed by a
+			// single letter describing the type of primitive in the leaf dimension of the array.
+			// The letters are the usual ones used in the JVM for primitives, etc.
 			// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
-			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
