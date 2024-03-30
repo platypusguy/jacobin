@@ -160,6 +160,7 @@ func runThread(t *thread.ExecThread) error {
 // place through a giant switch statement.
 func runFrame(fs *list.List) error {
 	glob := globals.GetGlobalRef()
+	wideInEffect := false
 
 frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
@@ -307,8 +308,18 @@ frameInterpreter:
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
-		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
-			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
+		case opcodes.ILOAD: // 0x15	(push int from local var, using next byte as index)
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
+			push(f, f.Locals[index])
+		case opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
 			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
 			f.PC += 1
@@ -2512,6 +2523,10 @@ frameInterpreter:
 
 		case opcodes.MONITORENTER, opcodes.MONITOREXIT: // OxC2 and OxC3. These  are not implemented in the JDK JVM
 			_ = pop(f) // so just pop off the reference on the stack
+
+		case opcodes.WIDE: // 0xC4 Make some bytecodes operate on larger sized operands
+			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.wide
+			wideInEffect = true
 
 		case opcodes.MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
