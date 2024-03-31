@@ -322,14 +322,28 @@ frameInterpreter:
 			}
 			push(f, f.Locals[index])
 		case opcodes.LLOAD: // 0x16 (push long from local var, using next byte as index)
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			val := f.Locals[index].(int64)
 			push(f, val)
 			push(f, val) // push twice due to item being 64 bits wide
 		case opcodes.DLOAD: // 0x18 (push double from local var, using next byte as index)
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			val := f.Locals[index].(float64)
 			push(f, val)
 			push(f, val) // push twice due to item being 64 bits wide
