@@ -532,26 +532,62 @@ frameInterpreter:
 
 		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			// index := int(f.Meth[f.PC+1])
+			// f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			f.Locals[index] = pop(f).(int64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			if opcode == opcodes.LSTORE {
 				f.Locals[index+1] = pop(f).(int64)
 			}
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			// index := int(f.Meth[f.PC+1])
+			// f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			f.Locals[index] = pop(f).(float64)
 		case opcodes.DSTORE: //  0x39 (store popped top of stack double into local[index])
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			// index := int(f.Meth[f.PC+1])
+			// f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			f.Locals[index] = pop(f).(float64)
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			f.Locals[index+1] = pop(f).(float64)
 		case opcodes.ASTORE: //  0x3A (store popped top of stack ref into localc[index])
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
+			// index := int(f.Meth[f.PC+1])
+			// f.PC += 1
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
 			f.Locals[index] = pop(f)
 		case opcodes.ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			f.Locals[0] = pop(f).(int64)
