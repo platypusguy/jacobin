@@ -1947,7 +1947,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName
+					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName + "." + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -2013,7 +2013,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName
+					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + "." + methSig
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -2101,7 +2101,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName
+					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + "." + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
