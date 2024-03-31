@@ -577,8 +577,6 @@ frameInterpreter:
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			f.Locals[index+1] = pop(f).(float64)
 		case opcodes.ASTORE: //  0x3A (store popped top of stack ref into localc[index])
-			// index := int(f.Meth[f.PC+1])
-			// f.PC += 1
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -1428,7 +1426,18 @@ frameInterpreter:
 			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
-		case opcodes.TABLESWITCH:
+		case opcodes.RET: // 0xA9     (return by jumping to a return address--used mostly with JSR)
+			var index int
+			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				f.PC += 1
+			}
+			f.PC = f.Locals[index].(int)
+		case opcodes.TABLESWITCH: // 0xAA (switch based on table of offsets)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
 			basePC := f.PC // where we are when the processing begins
 
