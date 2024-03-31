@@ -308,7 +308,9 @@ frameInterpreter:
 				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
 				return errors.New(errMsg)
 			}
-		case opcodes.ILOAD: // 0x15	(push int from local var, using next byte as index)
+		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
+			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
+			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -318,11 +320,6 @@ frameInterpreter:
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
 			}
-			push(f, f.Locals[index])
-		case opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
-			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
-			index := int(f.Meth[f.PC+1])
-			f.PC += 1
 			push(f, f.Locals[index])
 		case opcodes.LLOAD: // 0x16 (push long from local var, using next byte as index)
 			index := int(f.Meth[f.PC+1])
