@@ -1149,13 +1149,23 @@ frameInterpreter:
 			val3 := val1 ^ val2
 			push(f, val3)
 			push(f, val3)
-		case opcodes.IINC: // 	0x84    (increment local variable by a signed byte constant)
-			localVarIndex := int64(f.Meth[f.PC+1])
-			wbyte := f.Meth[f.PC+2]
-			increment := byteToInt64(wbyte)
-			orig := f.Locals[localVarIndex].(int64)
-			f.Locals[localVarIndex] = orig + increment
-			f.PC += 2
+		case opcodes.IINC: // 	0x84    (increment local variable by a signed constant)
+			var index int
+			var increment int64
+			if wideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
+				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
+				f.PC += 2
+				increment = int64(f.Meth[f.PC+1])*256 + int64(f.Meth[f.PC+2])
+				f.PC += 2
+				wideInEffect = false
+			} else {
+				index = int(f.Meth[f.PC+1])
+				increment = byteToInt64(f.Meth[f.PC+2])
+				f.PC += 2
+			}
+			orig := f.Locals[index].(int64)
+			f.Locals[index] = orig + increment
+
 		case opcodes.I2F: //	0x86 	( convert int to float)
 			intVal := pop(f).(int64)
 			push(f, float64(intVal))
