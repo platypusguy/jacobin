@@ -991,6 +991,7 @@ func TestSwap(t *testing.T) {
 	}
 }
 
+// WIDE version of IINC
 func TestWideIINC(t *testing.T) {
 	globals.InitGlobals("test")
 	_ = log.SetLogLevel(log.WARNING)
@@ -1010,6 +1011,7 @@ func TestWideIINC(t *testing.T) {
 	}
 }
 
+// WIDE version of ILOAD (covers FLOAD AND ALOAD as well b/c they use the same logic)
 func TestWideILOAD(t *testing.T) {
 	globals.InitGlobals("test")
 	_ = log.SetLogLevel(log.WARNING)
@@ -1028,6 +1030,7 @@ func TestWideILOAD(t *testing.T) {
 	}
 }
 
+// WIDE version of ISTORE
 func TestWideISTORE(t *testing.T) {
 	globals.InitGlobals("test")
 	_ = log.SetLogLevel(log.WARNING)
@@ -1045,10 +1048,65 @@ func TestWideISTORE(t *testing.T) {
 
 	ret := f.Locals[2]
 	if ret != int64(25) {
-		t.Errorf("WIDE,ILOAD: expected TOS value to be 25, got: %d", ret)
+		t.Errorf("WIDE,ILOAD: expected locals[2] value to be 25, got: %d", ret)
 	}
 }
 
+// WIDE version of DSTORE
+func TestWideDSTORE(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.DSTORE)
+	f.Meth = append(f.Meth, 0x00) // index pointing to local variable 1
+	f.Meth = append(f.Meth, 0x01)
+	f.TOS = 1                    // top of stack = 1 b/c two values are pushed for longs
+	f.OpStack[0] = float64(26.2) // double values are pushed twice
+	f.OpStack[1] = float64(26.2)
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, float64(0), float64(0), float64(0))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	ret := f.Locals[1]
+	if ret != float64(26.2) {
+		t.Errorf("WIDE,ILOAD: expected locals[1] value to be 26.2, got: %f", ret)
+	}
+
+	ret = f.Locals[2] // longs are stored in two consecutive local variables
+	if ret != float64(26.2) {
+		t.Errorf("WIDE,ILOAD: expected locals[2] value to be 26.2, got: %f", ret)
+	}
+}
+
+// WIDE version of LSTORE
+func TestWideLSTORE(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.LSTORE)
+	f.Meth = append(f.Meth, 0x00) // index pointing to local variable 1
+	f.Meth = append(f.Meth, 0x01)
+	f.TOS = 1                // top of stack = 1 b/c two values are pushed for longs
+	f.OpStack[0] = int64(25) // long values are pushed twice
+	f.OpStack[1] = int64(25)
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(0), int64(0), int64(0))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	ret := f.Locals[1]
+	if ret != int64(25) {
+		t.Errorf("WIDE,ILOAD: expected locals[1] value to be 25, got: %d", ret)
+	}
+
+	ret = f.Locals[2] // longs are stored in two consecutive local variables
+	if ret != int64(25) {
+		t.Errorf("WIDE,ILOAD: expected locals[2] value to be 25, got: %d", ret)
+	}
+}
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
