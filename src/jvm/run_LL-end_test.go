@@ -991,6 +991,24 @@ func TestSwap(t *testing.T) {
 	}
 }
 
+func TestWideIINC(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.IINC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x02)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x24)
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(10), int64(20), int64(30))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[2] != int64(66) {
+		t.Errorf("WIDE,IINC: expected result of 66, got: %d", f.Locals[2])
+	}
+}
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
