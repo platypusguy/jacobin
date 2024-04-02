@@ -1009,6 +1009,46 @@ func TestWideIINC(t *testing.T) {
 		t.Errorf("WIDE,IINC: expected result of 66, got: %d", f.Locals[2])
 	}
 }
+
+func TestWideILOAD(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.ILOAD)
+	f.Meth = append(f.Meth, 0x00) // index pointing to local variable 2
+	f.Meth = append(f.Meth, 0x02)
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(10), int64(20), int64(30))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	ret := pop(&f).(int64)
+	if ret != int64(30) {
+		t.Errorf("WIDE,ILOAD: expected return of 30, got: %d", ret)
+	}
+}
+
+func TestWideISTORE(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.ISTORE)
+	f.Meth = append(f.Meth, 0x00) // index pointing to local variable 2
+	f.Meth = append(f.Meth, 0x02)
+	f.TOS = 0
+	f.OpStack[0] = int64(25)
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(0), int64(0), int64(0))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	ret := f.Locals[2]
+	if ret != int64(25) {
+		t.Errorf("WIDE,ILOAD: expected TOS value to be 25, got: %d", ret)
+	}
+}
+
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
