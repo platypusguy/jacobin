@@ -355,6 +355,7 @@ frameInterpreter:
 			push(f, f.Locals[2].(int64))
 		case opcodes.ILOAD_3: //  	0x1D   	(push local variable 3)
 			push(f, f.Locals[3].(int64))
+
 		// LLOAD use two slots, so the same value is pushed twice
 		case opcodes.LLOAD_0: //	0x1E	(push local variable 0, as long)
 			push(f, f.Locals[0].(int64))
@@ -438,7 +439,7 @@ frameInterpreter:
 			opcodes.FALOAD: //		0x30	(push contents of a float array element):
 			var array []float64
 			index := pop(f).(int64)
-			ref := pop(f) // type is TBD
+			ref := pop(f)
 			switch ref.(type) {
 			case []float64:
 				array = ref.([]float64)
@@ -489,7 +490,7 @@ frameInterpreter:
 				exceptions.Throw(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 				return errors.New(errMsg)
 			}
-			// array := *(arrayPtr)
+
 			var value = array[index]
 			push(f, value)
 
@@ -532,8 +533,6 @@ frameInterpreter:
 
 		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
-			// index := int(f.Meth[f.PC+1])
-			// f.PC += 1
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -549,8 +548,6 @@ frameInterpreter:
 				f.Locals[index+1] = pop(f).(int64)
 			}
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
-			// index := int(f.Meth[f.PC+1])
-			// f.PC += 1
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -561,9 +558,8 @@ frameInterpreter:
 				f.PC += 1
 			}
 			f.Locals[index] = pop(f).(float64)
+
 		case opcodes.DSTORE: //  0x39 (store popped top of stack double into local[index])
-			// index := int(f.Meth[f.PC+1])
-			// f.PC += 1
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
