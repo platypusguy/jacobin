@@ -50,7 +50,8 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
-	loadlib(MTable, Load_Io_File_Native_Fakes())
+	loadlib(MTable, Load_Io_File())
+	loadlib(MTable, Load_Io_FileInputStream())
 	loadlib(MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
 	loadlib(MTable, Load_Lang_Boolean())
 	loadlib(MTable, Load_Lang_Byte())
