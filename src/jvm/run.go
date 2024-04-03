@@ -1442,7 +1442,8 @@ frameInterpreter:
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
 			}
-			f.PC = f.Locals[index].(int)
+			newPC := f.Locals[index].(int64)
+			f.PC = int(newPC)
 		case opcodes.TABLESWITCH: // 0xAA (switch based on table of offsets)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
 			basePC := f.PC // where we are when the processing begins
