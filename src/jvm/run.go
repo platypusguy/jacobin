@@ -2746,6 +2746,11 @@ frameInterpreter:
 				f.PC += 2
 			}
 
+		case opcodes.GOTO_W: // 0xC8 jump to a four-byte offset from the current PC
+			jumpTo := fourBytesToInt64(
+				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
+			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
+
 		case opcodes.IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
 			glob.ErrorGoStack = string(debug.Stack())
 			errCode := f.Meth[2]
