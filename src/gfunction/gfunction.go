@@ -72,6 +72,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Lang_Throwable())         // load the java.lang.Throwable golang functions (errors & exceptions)
 	loadlib(MTable, Load_Lang_UTF16())             // load the java.lang.UTF16 golang functions
 	loadlib(MTable, Load_Misc_Unsafe())            // load the jdk.internal/misc/Unsafe functions
+	loadlib(MTable, Load_Nio_Charset_Charset())    // Very minimal Charset support
 	loadlib(MTable, Load_Util_HashMap())           // load the java.util.HashMap golang functions
 	loadlib(MTable, Load_Util_Locale())            // load the java.util.Locale golang functions
 }
