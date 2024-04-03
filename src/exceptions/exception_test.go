@@ -5,7 +5,7 @@ import "testing"
 func details(t *testing.T, index int, expected string) {
 	observed := JVMexceptionNames[index]
 	if observed != expected {
-		t.Errorf("JVMexceptionNames[%d]: expected %s, but observed %s\n", index, expected, JVMexceptionNames[index])
+		t.Errorf("JVMexceptionNames[%d]: expected %s, but observed %s\n", index, expected, observed)
 	}
 }
 
