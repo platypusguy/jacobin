@@ -45,6 +45,7 @@ const (
 	EmptyStackException
 	EnumConstantNotPresentException
 	EventException
+	FileNotFoundException
 	FileSystemAlreadyExistsException
 	FileSystemNotFoundException
 	FindException
@@ -238,6 +239,7 @@ var JVMexceptionNames = []string{
 	"java.lang.EmptyStackException",
 	"java.lang.EnumConstantNotPresentException",
 	"java.lang.EventException",
+	"java.io.FileNotFoundException",
 	"java.lang.FileSystemAlreadyExistsException",
 	"java.lang.FileSystemNotFoundException",
 	"java.lang.FindException",
@@ -337,7 +339,7 @@ var JVMexceptionNames = []string{
 	"java.lang.InvalidTargetObjectTypeException",
 	"java.lang.InvalidTypeException",
 	"java.lang.InvocationException",
-	"java.lang.IOException",
+	"java.io.IOException",
 	"java.lang.JMException",
 	"java.lang.JShellException",
 	"java.lang.KeySelectorException",
