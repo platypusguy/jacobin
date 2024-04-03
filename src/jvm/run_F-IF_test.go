@@ -779,7 +779,7 @@ func TestGotoForward(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.Meth[f.PC] != opcodes.RETURN {
-		t.Errorf("GOTO forward: Expected pc to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
+		t.Errorf("GOTO forward: Expected PC to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
 	}
 }
 
@@ -795,7 +795,43 @@ func TestGotoBackward(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.Meth[f.PC] != opcodes.RETURN {
-		t.Errorf("GOTO backeard Expected pc to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
+		t.Errorf("GOTO backward: Expected PC to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
+	}
+}
+
+// GOTO_W: in forward direction (to a later bytecode)
+func TestGotowForward(t *testing.T) {
+	f := newFrame(opcodes.GOTO_W)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x05)
+	f.Meth = append(f.Meth, opcodes.RETURN)
+	f.Meth = append(f.Meth, opcodes.NOP)
+	f.Meth = append(f.Meth, opcodes.NOP)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC] != opcodes.RETURN {
+		t.Errorf("GOTO_W forward: Expected PC to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
+	}
+}
+
+// GOTO_W go to instruction in backward direction (to an earlier bytecode)
+func TestGotowBackward(t *testing.T) {
+	f := newFrame(opcodes.RETURN)
+	f.Meth = append(f.Meth, opcodes.GOTO_W)
+	f.Meth = append(f.Meth, 0xFF) // should be -1
+	f.Meth = append(f.Meth, 0xFF)
+	f.Meth = append(f.Meth, 0xFF)
+	f.Meth = append(f.Meth, 0xFF)
+	f.Meth = append(f.Meth, opcodes.BIPUSH)
+	f.PC = 1 // skip over the return instruction to start, catch it on the backward goto
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Meth[f.PC] != opcodes.RETURN {
+		t.Errorf("GOTO_W backward: Expected PC to point to RETURN, but instead it points to : %s", opcodes.BytecodeNames[f.Meth[f.PC]])
 	}
 }
 
