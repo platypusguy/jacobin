@@ -1157,6 +1157,26 @@ func TestWideLSTORE(t *testing.T) {
 		t.Errorf("WIDE,ILOAD: expected locals[2] value to be 25, got: %d", ret)
 	}
 }
+
+// WIDE version of RET
+func TestWideRET(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.WIDE)
+	f.Meth = append(f.Meth, opcodes.RET)
+	f.Meth = append(f.Meth, 0x00) // index pointing to local variable 2
+	f.Meth = append(f.Meth, 0x02)
+	f.PC = 0
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(0), int64(0), int64(123456))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.PC-1 != 123456 { // -1 because PC++ after processing RET
+		t.Errorf("WIDE,RET: expected frame PC value to be 123457, got: %d", f.PC)
+	}
+}
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
