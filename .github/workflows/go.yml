@@ -59,6 +59,8 @@ jobs:
       uses: actions/setup-go@main
       with:
         go-version: '1.21.x'
+        cache: true
+        cache-dependency-path: "**/go.sum"
       
     - name: Setup JDK
       uses: actions/setup-java@main
