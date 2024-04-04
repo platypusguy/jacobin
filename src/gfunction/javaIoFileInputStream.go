@@ -75,18 +75,6 @@ func Load_Io_FileInputStream() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	// ------------------
 	// initIDs justReturn
 	// ------------------
@@ -116,19 +104,31 @@ func Load_Io_FileInputStream() map[string]GMeth {
 	MethodSignatures["java/io/FileInputStream.<init>(Ljava/io/FileDescriptor;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapInitFileInputStreamFD,
+			GFunction:  trapFileDescriptor,
 		}
 
 	MethodSignatures["java/io/FileInputStream.getChannel()Ljava/nio/channels/FileChannel;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileInputStreamGetChannel,
+			GFunction:  trapFileChannel,
 		}
 
 	MethodSignatures["java/io/FileInputStream.getFD()Ljava/io/FileDescriptor;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileInputStreamGetFileDescriptor,
+			GFunction:  trapFileDescriptor,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileChannel,
+		}
+
+	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileDescriptor,
 		}
 
 	return MethodSignatures
@@ -293,20 +293,12 @@ func fisClose(params []interface{}) interface{} {
 
 // -------------------- Traps ----------------------------------
 
-// "java/io/FileInputStream.<init>(Ljava/io/FileDescriptor;)V"
-func trapInitFileInputStreamFD([]interface{}) interface{} {
-	errMsg := "trapInitFileInputStreamFD TRAP: not yet supported !!"
+func trapFileDescriptor([]interface{}) interface{} {
+	errMsg := "FileDescriptor class is not yet supported !!"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
-// "java/io/FileInputStream.getChannel()Ljava/nio/channels/FileChannel;"
-func trapFileInputStreamGetChannel([]interface{}) interface{} {
-	errMsg := "trapFileInputStreamGetChannel TRAP: not yet supported !!"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
-}
-
-// "java/io/FileInputStream.getFD()Ljava.io.FileDescriptor;"
-func trapFileInputStreamGetFileDescriptor([]interface{}) interface{} {
-	errMsg := "trapFileInputStreamGetFileDescriptor TRAP: not yet supported !!"
+func trapFileChannel([]interface{}) interface{} {
+	errMsg := "FileChannel class is not yet supported !!"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }

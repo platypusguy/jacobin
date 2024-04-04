@@ -116,6 +116,6 @@ func fileIsInvalid(params []interface{}) interface{} {
 
 // "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
 func trapGetDefaultFileSystem([]interface{}) interface{} {
-	errMsg := "trapGetDefaultFileSystem TRAP: should not have been called !!"
+	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
