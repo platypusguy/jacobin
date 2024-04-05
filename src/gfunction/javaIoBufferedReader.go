@@ -213,9 +213,9 @@ func bufrdrReadOneChar(params []interface{}) interface{} {
 }
 
 // "java/io/BufferedReader.read([CII)I"
-// Identical in function to isrReadCharBuffer in javaIoInputStreamReader.go
+// Identical in function to ReadCharBuffer in javaIoInputStreamReader.go
 func bufrdrReadCharBuffer(params []interface{}) interface{} {
-	return isrReadCharBuffer(params)
+	return ReadCharBuffer(params)
 }
 
 // "java/io/BufferedReader.readLine()Ljava/lang/String;"

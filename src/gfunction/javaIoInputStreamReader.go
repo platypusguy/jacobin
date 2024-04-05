@@ -44,7 +44,7 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 	MethodSignatures["java/io/InputStreamReader.read([CII)I"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  isrReadCharBuffer,
+			GFunction:  ReadCharBuffer,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.ready()Z"] =
@@ -174,7 +174,7 @@ func isrReadOneChar(params []interface{}) interface{} {
 }
 
 // "java/io/InputStreamReader.read([CII)I"
-func isrReadCharBuffer(params []interface{}) interface{} {
+func ReadCharBuffer(params []interface{}) interface{} {
 
 	// Get InputStream object.
 	obj := params[0].(*object.Object)
@@ -182,14 +182,14 @@ func isrReadCharBuffer(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "isrReadCharBuffer: InputStream object lacks a FileHandle field"
+		errMsg := "ReadCharBuffer: InputStream object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
-		errMsg := "isrReadCharBuffer: InputStream object trouble with value field ([]int64)"
+		errMsg := "ReadCharBuffer: InputStream object trouble with value field ([]int64)"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -200,7 +200,7 @@ func isrReadCharBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(intArray))-offset) {
-		errMsg := fmt.Sprintf("isrReadCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("ReadCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(intArray))
 		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
 	}
@@ -213,7 +213,7 @@ func isrReadCharBuffer(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("isrReadCharBuffer osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("ReadCharBuffer osFile.Read failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
