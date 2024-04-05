@@ -165,8 +165,15 @@ func PrintlnString(params []interface{}) interface{} {
 		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 	}
 
-	str := string(param1.FieldTable["value"].Fvalue.([]byte))
-	fmt.Fprintln(params[0].(*os.File), str)
+	// Handle null strings as well as []byte.
+	fld := param1.FieldTable["value"]
+	if fld.Fvalue == nil {
+		fmt.Fprintln(params[0].(*os.File), "")
+	} else {
+		str := string(fld.Fvalue.([]byte))
+		fmt.Fprintln(params[0].(*os.File), str)
+	}
+
 	return nil
 }
 

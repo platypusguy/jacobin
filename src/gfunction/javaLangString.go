@@ -49,7 +49,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.<init>([BI)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  deprecated,
+			GFunction:  trapDeprecated,
 		}
 
 	// String(byte[] bytes, int offset, int length)	- instantiate a String from a byte array SUBSET
@@ -63,7 +63,7 @@ func Load_Lang_String() map[string]GMeth {
 	MethodSignatures["java/lang/String.<init>([BIII)V"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  deprecated,
+			GFunction:  trapDeprecated,
 		}
 
 	// String(byte[] bytes, int offset, int length, String charsetName) *********** CHARSET

@@ -17,6 +17,12 @@ import (
 
 func Load_Io_File() map[string]GMeth {
 
+	MethodSignatures["java/io/File.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["java/io/File.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -35,87 +41,76 @@ func Load_Io_File() map[string]GMeth {
 			GFunction:  fileIsInvalid,
 		}
 
-	// -------------------
-	// <clinit> justReturn
-	// -------------------
-
-	MethodSignatures["java/io/File.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	// -----------------------------------------
-	// Traps that do nothing but return an error
-	// -----------------------------------------
-
-	MethodSignatures["java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapGetDefaultFileSystem,
-		}
-
 	return MethodSignatures
 }
 
 // "java/io/File.<init>(Ljava/lang/String;)V"
 // File file = new File(path);
 func fileInit(params []interface{}) interface{} {
-	inPathStr := object.GoStringFromStringObject(params[1].(*object.Object))
-	if inPathStr == "" {
+
+	// Initialise the status as "invalid".
+	fld := object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	params[0].(*object.Object).FieldTable[FileStatus] = fld
+
+	// Get the argument path string.
+	argPathStr := object.GoStringFromStringObject(params[1].(*object.Object))
+	if argPathStr == "" {
 		errMsg := "fileInit: String argument for path is null"
 		return getGErrBlk(exceptions.NullPointerException, errMsg)
 	}
-	absPathStr, err := filepath.Abs(inPathStr)
+
+	// Create an absolute path string.
+	absPathStr, err := filepath.Abs(argPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) returned: %s", inPathStr, err.Error())
-		return getGErrBlk(exceptions.FileSystemNotFoundException, errMsg)
+		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) returned: %s", argPathStr, err.Error())
+		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(absPathStr)}
-	params[0].(*object.Object).FieldTable["filePath"] = fld
+	// Fill in File attributes that might get accessed by OpenJDK library member functions.
 
-	fld.Ftype = types.Int // char
-	fld.Fvalue = os.PathSeparator
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(absPathStr)}
+	params[0].(*object.Object).FieldTable[FilePath] = fld
+
+	fld = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
 	params[0].(*object.Object).FieldTable["separatorChar"] = fld
 
-	fld.Ftype = types.ByteArray // string version of separatorChar
-	fld.Fvalue = []byte{os.PathSeparator}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathSeparator}}
 	params[0].(*object.Object).FieldTable["separator"] = fld
 
-	fld.Ftype = types.Int // char
-	fld.Fvalue = os.PathListSeparator
+	fld = object.Field{Ftype: types.Int, Fvalue: os.PathListSeparator}
 	params[0].(*object.Object).FieldTable["pathSeparatorChar"] = fld
 
-	fld.Ftype = types.ByteArray // string version of separatorChar
-	fld.Fvalue = []byte{os.PathListSeparator}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathListSeparator}}
 	params[0].(*object.Object).FieldTable["pathSeparator"] = fld
 
-	fld.Ftype = types.Int // status: "checked" (1) as opposed to "invalid" (0)
-	fld.Fvalue = int64(1)
-	params[0].(*object.Object).FieldTable["status"] = fld
+	// Set status to "checked" (=1).
+	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
+	params[0].(*object.Object).FieldTable[FileStatus] = fld
 
 	return nil
 }
 
 // "java/io/File.getPath()Ljava/lang/String;"
 func fileGetPath(params []interface{}) interface{} {
-	fld := params[0].(*object.Object).FieldTable["filePath"]
+	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
+	if !ok {
+		errMsg := "fileGetPath: File object lacks a FileHandle field"
+		return getGErrBlk(exceptions.IOException, errMsg)
+	}
 	bytes := fld.Fvalue.([]byte)
 	return object.StringObjectFromByteArray(bytes)
 }
 
 // "java/io/File.isInvalid()Ljava/lang/String;"
 func fileIsInvalid(params []interface{}) interface{} {
-	status := params[0].(*object.Object).FieldTable["status"].Fvalue.(int64)
-	result := status == 0
-	return result
-}
-
-// -------------------- Traps ----------------------------------
-
-// "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
-func trapGetDefaultFileSystem([]interface{}) interface{} {
-	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	status, ok := params[0].(*object.Object).FieldTable[FileStatus].Fvalue.(int64)
+	if !ok {
+		errMsg := "fileIsInvalid: File object lacks a FileStatus field"
+		return getGErrBlk(exceptions.IOException, errMsg)
+	}
+	if status == 0 {
+		return int64(1)
+	} else {
+		return int64(0)
+	}
 }

@@ -8,10 +8,16 @@ package gfunction
 
 import (
 	"jacobin/classloader"
-	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
 )
+
+// File I/O and stream Field keys:
+var FileStatus string = "status"     // using this value in case some member function is looking at it
+var FilePath string = "FilePath"     // full absolute path of a file aka canonical path
+var FileHandle string = "FileHandle" // *os.File
+var FileMark string = "FileMark"     // file position relative to beginning (0)
+var FileAtEOF string = "FileAtEOF"   // file at EOF
 
 // Radix boundaries:
 var MinRadix int64 = 2
@@ -50,8 +56,11 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
+	loadlib(MTable, Load_Io_BufferedReader())
 	loadlib(MTable, Load_Io_File())
 	loadlib(MTable, Load_Io_FileInputStream())
+	loadlib(MTable, Load_Io_InputStreamReader())
+	loadlib(MTable, Load_Io_FileReader())
 	loadlib(MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
 	loadlib(MTable, Load_Lang_Boolean())
 	loadlib(MTable, Load_Lang_Byte())
@@ -72,7 +81,8 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Lang_Throwable())         // load the java.lang.Throwable golang functions (errors & exceptions)
 	loadlib(MTable, Load_Lang_UTF16())             // load the java.lang.UTF16 golang functions
 	loadlib(MTable, Load_Misc_Unsafe())            // load the jdk.internal/misc/Unsafe functions
-	loadlib(MTable, Load_Nio_Charset_Charset())    // Very minimal Charset support
+	loadlib(MTable, Load_Nio_Charset_Charset())    // Zero Charset support
+	loadlib(MTable, Load_Traps())                  // Load traps
 	loadlib(MTable, Load_Util_HashMap())           // load the java.util.HashMap golang functions
 	loadlib(MTable, Load_Util_Locale())            // load the java.util.Locale golang functions
 }
@@ -98,12 +108,6 @@ func justReturn([]interface{}) interface{} {
 	return nil
 }
 
-// deprecated functions end here
-func deprecated([]interface{}) interface{} {
-	errMsg := "The function requested is deprecated and will not be supported by jacobin"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
-}
-
 // Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
 func populator(classname string, fldtype string, fldvalue interface{}) interface{} {
 	var objPtr *object.Object
@@ -114,4 +118,18 @@ func populator(classname string, fldtype string, fldvalue interface{}) interface
 		(*objPtr).FieldTable["value"] = object.Field{fldtype, fldvalue}
 	}
 	return objPtr
+}
+
+// File set EOF condition.
+func eofSet(obj *object.Object, value bool) {
+	obj.FieldTable[FileAtEOF] = object.Field{Ftype: types.Bool, Fvalue: value}
+}
+
+// File get EOF boolean.
+func eofGet(obj *object.Object) bool {
+	value, ok := obj.FieldTable[FileAtEOF].Fvalue.(bool)
+	if !ok {
+		return false
+	}
+	return value
 }

@@ -6,10 +6,6 @@
 
 package gfunction
 
-import (
-	"jacobin/exceptions"
-)
-
 // Implementation of some of the functions in Java/nio/charset/Charset.
 
 func Load_Nio_Charset_Charset() map[string]GMeth {
@@ -18,21 +14,15 @@ func Load_Nio_Charset_Charset() map[string]GMeth {
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  trapCharset,
 		}
 
 	// Get the default character set.
 	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapDefaultCharset,
+			GFunction:  trapCharset,
 		}
 
 	return MethodSignatures
-}
-
-// Trap "java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"
-func trapDefaultCharset([]interface{}) interface{} {
-	errMsg := "java/nio/charset/Charset.defaultCharset TRAP: not yet supported !!"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
