@@ -34,6 +34,7 @@ const RuneArray = "[R" // used only in strings that are not compact
 // Jacobin-specific types
 const StringIndex = "T"
 const GolangString = "G"
+const FileHandle = "FH" // The related Fvalue is a Golang *os.File
 
 const Static = "X"
 const StaticDouble = "XD"

@@ -337,7 +337,7 @@ var JVMexceptionNames = []string{
 	"java.lang.InvalidMidiDataException",
 	"java.lang.InvalidPreferencesFormatException",
 	"java.lang.InvalidTargetObjectTypeException",
-	"java.lang.InvalidTypeException",
+	"com.sun.jdi.InvalidTypeException",
 	"java.lang.InvocationException",
 	"java.io.IOException",
 	"java.lang.JMException",
