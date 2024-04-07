@@ -263,15 +263,15 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
+	// Note of 6-Apr-2024: I don't think this is needed. Not sure why it is here.
+	// if k.Loader == "" { // if className is not found, the zero value struct is returned
+	// 	// TODO: check superclasses if method not found
+	// 	errMsg := "FetchMethodAndCP: Null Loader in className: " + className
+	// 	_ = log.Log(errMsg, log.SEVERE)
+	// 	return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+	// }
 
-	if k.Loader == "" { // if className is not found, the zero value struct is returned
-		// TODO: check superclasses if method not found
-		errMsg := "FetchMethodAndCP: Null Loader in className: " + className
-		_ = log.Log(errMsg, log.SEVERE)
-		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
-	}
-
-	// the className has been found (k) so check the method table. Then return the
+	// the class, k, has been found  so check the method table for the method. Then return the
 	// method along with a pointer to the CP
 	var m Method
 	searchName := methName + methType
@@ -282,7 +282,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// create a Java method struct for this method. We know it's a Java method
 		// because if it were a native method it would have been found in the initial
 		// lookup in the MTable (as all native methods are loaded there before
-		// program execution begins.
+		// program execution begins).
 		jme := JmEntry{
 			AccessFlags: m.AccessFlags,
 			MaxStack:    m.CodeAttr.MaxStack,
