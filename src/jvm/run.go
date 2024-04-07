@@ -1972,7 +1972,7 @@ frameInterpreter:
 			if mtEntry.Meth == nil { // if the method is not in the method table, find it
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
-					// TODO: search the classpath and retry
+					// TODO: search the superclasses, then the classpath and retry
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
 					_ = log.Log(errMsg, log.SEVERE)
