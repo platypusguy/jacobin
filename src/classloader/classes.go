@@ -228,6 +228,9 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		}
 	}
 
+	// --- at this point we know the class exists and has been loaded ---
+
+	// look for the method in the MTable
 	methFQN := className + "." + methName + methType // FQN = fully qualified name
 	methEntry := MTable[methFQN]
 
@@ -239,7 +242,12 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		}
 	}
 
-	// method is not in the MTable, so find it and put it there
+	// --- at this point, the method is not in the MTable ---
+
+	// While the class has been loaded, it might not have been initialized.
+	// The method is not in the MTable, so find it and insert it there:
+	// this is done by making sure the class has been initialized,
+	// then fetching it from the MethArea, then searching its methodTable
 	err := WaitForClassStatus(className)
 	if err != nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
