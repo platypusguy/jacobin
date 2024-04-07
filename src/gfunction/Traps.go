@@ -12,22 +12,10 @@ import (
 
 func Load_Traps() map[string]GMeth {
 
-	MethodSignatures["java/nio/charset/Charset.<clinit>()"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapCharset,
-		}
-
 	MethodSignatures["java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapGetDefaultFileSystem,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.<clinit>()"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFileChannel,
 		}
 
 	MethodSignatures["java/io/FileDescriptor.<clinit>()"] =
@@ -40,6 +28,44 @@ func Load_Traps() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFileSystem,
+		}
+
+	MethodSignatures["java/nio/charset/Charset.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapCharset,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileChannel,
+		}
+
+	// Unsupported readers
+
+	MethodSignatures["java/io/CharArrayReader.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapReader,
+		}
+
+	MethodSignatures["java/io/FilterReader.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapReader,
+		}
+
+	MethodSignatures["java/io/PipedReader.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapReader,
+		}
+
+	MethodSignatures["java/io/StringReader.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapReader,
 		}
 
 	return MethodSignatures
@@ -80,5 +106,11 @@ func trapFileSystem([]interface{}) interface{} {
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
 	errMsg := "The function requested is deprecated and will not be supported by jacobin"
+	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+}
+
+// Trap for unsupported readers
+func trapReader([]interface{}) interface{} {
+	errMsg := "The requested reader is not yet supported"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
