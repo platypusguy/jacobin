@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -213,18 +213,18 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		if err != nil {
 			if methName == "main" {
 				// the starting className is always loaded, so if main() isn't found
-				// right away, just bail.
-				shutdown.Exit(shutdown.APP_EXCEPTION)
+				// something is seriously wrong, so show the specificerror and shutdown.
 				noMainError(origClassName)
 				// noMainError() calls shutdown.Exit(). However, in test mode, shutdown.Exit() doesn't exit,
-				// so the following error return is needed
+				// so the following error return is needed to cover the test cases.
 				return MTentry{}, errors.New("Error: main() method not found in class " + origClassName + "\n")
+			} else {
+				errMsg := fmt.Sprintf("FetchMethodAndCP: LoadClassFromNameOnly for %s failed: %s",
+					className, err.Error())
+				_ = log.Log(errMsg, log.SEVERE)
+				shutdown.Exit(shutdown.JVM_EXCEPTION)
+				return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 			}
-			errMsg := fmt.Sprintf("FetchMethodAndCP: LoadClassFromNameOnly for %s failed: %s",
-				className, err.Error())
-			_ = log.Log(errMsg, log.SEVERE)
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
-			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
 	}
 
@@ -263,6 +263,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
+
 	// Note of 6-Apr-2024: I don't think this is needed. Not sure why it is here.
 	// if k.Loader == "" { // if className is not found, the zero value struct is returned
 	// 	// TODO: check superclasses if method not found
@@ -271,7 +272,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	// 	return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	// }
 
-	// the class, k, has been found  so check the method table for the method. Then return the
+	// the class, k, has been found, so check the method table for the method. Then return the
 	// method along with a pointer to the CP
 	var m Method
 	searchName := methName + methType
@@ -308,6 +309,8 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// even though noMainError() exits, in testing the exit is disabled,
 		// so we add this return statement to test for correct operation
 		return MTentry{}, errors.New("main() not found")
+	} else {
+
 	}
 
 	// if we got this far, something went wrong with locating the method
