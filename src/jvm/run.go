@@ -2797,8 +2797,8 @@ frameInterpreter:
 			}
 
 			glob.ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in method %s() of class %s\n",
-				missingOpCode, f.PC, f.MethName, f.ClName)
+			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in class %s() method %s%s\n",
+				missingOpCode, f.PC, f.ClName, f.MethName, f.MethType)
 			_ = log.Log(errMsg, log.SEVERE)
 			return errors.New("invalid bytecode encountered")
 		}

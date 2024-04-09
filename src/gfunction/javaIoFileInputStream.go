@@ -220,7 +220,7 @@ func fisReadOne(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadOne osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadOne: osFile.Read failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -251,7 +251,7 @@ func fisReadByteArray(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadByteArray osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadByteArray: osFile.Read failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -301,7 +301,7 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadByteArrayOffset osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadByteArrayOffset: osFile.Read failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -332,7 +332,7 @@ func fisSkip(params []interface{}) interface{} {
 	// Skip.
 	_, err := osFile.Seek(count, 1)
 	if err != nil {
-		errMsg := fmt.Sprintf("fisSkip osFile.Seek(%d) failed, reason: %s", count, err.Error())
+		errMsg := fmt.Sprintf("fisSkip: osFile.Seek(%d) failed, reason: %s", count, err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -353,7 +353,7 @@ func fisClose(params []interface{}) interface{} {
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("fisSkip osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisClose: osFile.Close() failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	return nil

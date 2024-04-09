@@ -59,6 +59,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Io_BufferedReader())
 	loadlib(MTable, Load_Io_File())
 	loadlib(MTable, Load_Io_FileInputStream())
+	loadlib(MTable, Load_Io_FileOutputStream())
 	loadlib(MTable, Load_Io_InputStreamReader())
 	loadlib(MTable, Load_Io_FileReader())
 	loadlib(MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
