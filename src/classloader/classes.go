@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/stringPool"
 )
 
 // the definition of the class as it's stored in the method area
@@ -311,9 +312,51 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		return MTentry{}, errors.New("main() not found")
 	} else {
 		// CURR: go up the list of superclasses
+	superclassLoop:
+		className = *stringPool.GetStringPointer(k.Data.SuperclassIndex)
+		k = MethAreaFetch(className)
+		if k == nil {
+			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find superclass %s", className)
+			_ = log.Log(errMsg, log.SEVERE)
+			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+		}
+		methRef, ok = k.Data.MethodTable[searchName]
+		if ok {
+			m = *methRef
+
+			// create a Java method struct for this method. We know it's a Java method
+			// because if it were a native method it would have been found in the initial
+			// lookup in the MTable (as all native methods are loaded there before
+			// program execution begins).
+			jme := JmEntry{
+				AccessFlags: m.AccessFlags,
+				MaxStack:    m.CodeAttr.MaxStack,
+				MaxLocals:   m.CodeAttr.MaxLocals,
+				Code:        m.CodeAttr.Code,
+				Exceptions:  m.CodeAttr.Exceptions,
+				Attribs:     m.CodeAttr.Attributes,
+				params:      m.Parameters,
+				deprecated:  m.Deprecated,
+				Cp:          &k.Data.CP,
+			}
+
+			// add the method to the MTable and return it
+			methodEntry := MTentry{Meth: jme, MType: 'J'}
+			AddEntry(&MTable, methFQN, methodEntry)
+			return methodEntry, nil
+		} else {
+			if className != "java/lang/Object" { // if we've ascended to Object and don't have the method, it ain't here
+				goto superclassLoop
+			} else {
+				errMsg := fmt.Sprintf("FetchMethodAndCP: Neither %s nor its superclasses contain method %s",
+					origClassName, methName)
+				return MTentry{}, errors.New(errMsg)
+			}
+		}
 	}
 
-	// if we got this far, something went wrong with locating the method
+	// if we got this far, something went wrong with locating the method << is this still true?
 	errMsg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
 	return MTentry{}, errors.New(errMsg)
 }
