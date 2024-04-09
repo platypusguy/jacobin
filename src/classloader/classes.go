@@ -267,7 +267,6 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 	// Note of 6-Apr-2024: I don't think this is needed. Not sure why it is here.
 	// if k.Loader == "" { // if className is not found, the zero value struct is returned
-	// 	// TODO: check superclasses if method not found
 	// 	errMsg := "FetchMethodAndCP: Null Loader in className: " + className
 	// 	_ = log.Log(errMsg, log.SEVERE)
 	// 	return MTentry{}, errors.New(errMsg) // dummy return needed for tests
@@ -311,7 +310,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// so we add this return statement to test for correct operation
 		return MTentry{}, errors.New("main() not found")
 	} else {
-		// CURR: go up the list of superclasses
+		// go up the list of superclasses
 	superclassLoop:
 		className = *stringPool.GetStringPointer(k.Data.SuperclassIndex)
 		k = MethAreaFetch(className)
@@ -355,10 +354,6 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			}
 		}
 	}
-
-	// if we got this far, something went wrong with locating the method << is this still true?
-	errMsg := "FetchMethodAndCP: Found class " + className + ", but it did not contain method: " + methName
-	return MTentry{}, errors.New(errMsg)
 }
 
 // error message when main() can't be found. Syntax mirrors OpenJDK HotSpot
