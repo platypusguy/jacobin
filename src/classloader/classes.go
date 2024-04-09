@@ -245,8 +245,8 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	// --- at this point, the method is not in the MTable ---
 
 	// While the class has been loaded, it might not have been initialized.
-	// The method is not in the MTable, so find it and insert it there:
-	// this is done by making sure the class has been initialized,
+	// The method is not in the MTable, so, find it, and insert it there:
+	// This is done by making sure the class has been initialized,
 	// then fetching it from the MethArea, then searching its methodTable
 	err := WaitForClassStatus(className)
 	if err != nil {
@@ -310,7 +310,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		// so we add this return statement to test for correct operation
 		return MTentry{}, errors.New("main() not found")
 	} else {
-
+		// CURR: go up the list of superclasses
 	}
 
 	// if we got this far, something went wrong with locating the method
