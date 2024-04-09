@@ -6,6 +6,7 @@
 package classloader
 
 import (
+	"fmt"
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
@@ -217,8 +218,10 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	}
 
 	msg := err.Error()
-	if !strings.Contains(msg, "did not contain method") {
-		t.Errorf("TestInvalidLookupOfMethod_Test2: Expecting error of 'did not contain method: gherkin', got %s", err.Error())
+	if !strings.Contains(msg, "Neither TestEntry nor its superclasses contain method gherkin") {
+		fmt.Fprintf(os.Stderr, "TestInvalidLookupOfMethod_Test2: ")
+		t.Errorf("Expecting error of 'Neither TestEntry nor its superclasses contain method gherkin', got %s",
+			err.Error())
 	}
 
 	// restore stderr and stdout to what they were before
