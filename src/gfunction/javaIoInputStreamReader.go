@@ -87,18 +87,14 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 // "java/io/InputStreamReader.<init>(Ljava/io/InputStream;)V"
 func initInputStreamReader(params []interface{}) interface{} {
 
-	// Get file path.
+	// Get file path field.
 	fldPath, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "initInputStreamReader: InputStream argument lacks a FilePath field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
-	// Copy java/io/File path field into the InputStreamReader object.
-	fld := fldPath
-	params[0].(*object.Object).FieldTable[FilePath] = fld
-
-	// Get file handle.
+	// Get file handle field.
 	fldHandle, ok := params[1].(*object.Object).FieldTable[FileHandle]
 	if !ok {
 		errMsg := "initInputStreamReader: InputStream argument lacks a FileHandle field"
@@ -114,16 +110,16 @@ func initInputStreamReader(params []interface{}) interface{} {
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
-	// Copy FilePath field to the InputStreamReader object.
+	// Copy file path into the InputStreamReader object.
 	params[0].(*object.Object).FieldTable[FilePath] = fldPath
 
-	// Copy FileHandle field to the InputStreamReader object.
-	fld = object.Field{Ftype: types.FileHandle, Fvalue: osFile}
-	params[0].(*object.Object).FieldTable[FileHandle] = fld
+	// Copy file handle into the InputStreamReader object.
+	params[0].(*object.Object).FieldTable[FileHandle] = fldHandle
 
 	return nil
 }
 
+// "java/io/InputStreamReader.close()V"
 func isrClose(params []interface{}) interface{} {
 
 	// Get file handle.
@@ -143,6 +139,7 @@ func isrClose(params []interface{}) interface{} {
 }
 
 // Almost a duplicate of fisReadOne in fileInputStream.go
+// "java/io/InputStreamReader.read()I"
 func isrReadOneChar(params []interface{}) interface{} {
 
 	// Get InputStream object.

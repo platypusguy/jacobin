@@ -137,7 +137,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	var osFile *os.File
 	var err error
 	if boolarg != 0 { // append: true
-		osFile, err = os.OpenFile(pathStr, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		osFile, err = os.OpenFile(pathStr, os.O_APPEND|os.O_CREATE|os.O_WRONLY, CreateFilePermissions)
 	} else {
 		osFile, err = os.Create(pathStr)
 	}
@@ -306,7 +306,7 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
 	}
 
-	// Try write.
+	// Write the byte buffer.
 	_, err := osFile.Write(buf1[offset : offset+length])
 	if err != nil {
 		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: osFile.Write failed, reason: %s", err.Error())
