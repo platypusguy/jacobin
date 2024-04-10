@@ -128,7 +128,7 @@ func InitGlobals(progName string) Globals {
 		FuncInstantiateClass: fakeInstantiateClass,
 	}
 
-	// ----- String Pool
+	// ----- String Pool and other values
 	InitStringPool()
 
 	InitJavaHome()
@@ -274,20 +274,25 @@ func InitStringPool() {
 	StringPoolTable = make(map[string]uint32)
 	StringPoolList = nil
 
+	// Changed on 9-Apr-2024: 0 = nil, 1 = String, 2 = Object
 	// Preload two values. java/lang/Object is always 0
 	// and java/lang/String is always 1.
 
-	// Add "java/lang/Object"
-	StringPoolTable["java/lang/Object"] = 0
-	StringPoolList = append(StringPoolList, "java/lang/Object")
+	// Add empty string (for when an index field has not been use, and so = 0
+	StringPoolTable[""] = 0
+	StringPoolList = append(StringPoolList, "")
 
 	// Add "java/lang/String"
 	StringIndexString = 1
 	StringPoolTable["java/lang/String"] = StringIndexString
 	StringPoolList = append(StringPoolList, "java/lang/String")
 
+	// Add "java/lang/Object"
+	StringPoolTable["java/lang/Object"] = 2
+	StringPoolList = append(StringPoolList, "java/lang/Object")
+
 	// Set up next available index
-	StringPoolNext = uint32(2)
+	StringPoolNext = uint32(3)
 
 	StringPoolLock.Unlock()
 }
