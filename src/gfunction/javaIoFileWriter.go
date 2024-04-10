@@ -41,31 +41,31 @@ func Load_Io_FileWriter() map[string]GMeth {
 	MethodSignatures["java/io/FileWriter.close()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  osrClose,
+			GFunction:  oswClose,
 		}
 
 	MethodSignatures["java/io/FileWriter.flush()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  osrFlush,
+			GFunction:  oswFlush,
 		}
 
 	MethodSignatures["java/io/FileWriter.write(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  osrWriteOneChar,
+			GFunction:  oswWriteOneChar,
 		}
 
 	MethodSignatures["java/io/FileWriter.write([CII)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  WriteCharBuffer,
+			GFunction:  oswWriteCharBuffer,
 		}
 
 	MethodSignatures["java/io/FileWriter.write(Ljava/lang/String;II)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  WriteStringBuffer,
+			GFunction:  oswWriteStringBuffer,
 		}
 
 	// -----------------------------------------

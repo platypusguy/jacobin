@@ -30,31 +30,31 @@ func Load_Io_OutputStreamWriter() map[string]GMeth {
 	MethodSignatures["java/io/OutputStreamWriter.close()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  osrClose,
+			GFunction:  oswClose,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.flush()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  osrFlush,
+			GFunction:  oswFlush,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.write(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  osrWriteOneChar,
+			GFunction:  oswWriteOneChar,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.write([CII)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  WriteCharBuffer,
+			GFunction:  oswWriteCharBuffer,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.write(Ljava/lang/String;II)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  WriteStringBuffer,
+			GFunction:  oswWriteStringBuffer,
 		}
 
 	// -----------------------------------------
@@ -123,44 +123,44 @@ func initOutputStreamWriter(params []interface{}) interface{} {
 	return nil
 }
 
-func osrClose(params []interface{}) interface{} {
+func oswClose(params []interface{}) interface{} {
 
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "osrClose: OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswClose: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("osrClose osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswClose: osFile.Close() failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	return nil
 }
 
-func osrFlush(params []interface{}) interface{} {
+func oswFlush(params []interface{}) interface{} {
 
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "osrFlush: OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswFlush: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Flush the file's buffers.
 	err := osFile.Sync()
 	if err != nil {
-		errMsg := fmt.Sprintf("osrFlush osFile.Sync() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswFlush osFile.Sync() failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	return nil
 }
 
 // "java/io/OutputStreamWriter.write(I)"
-func osrWriteOneChar(params []interface{}) interface{} {
+func oswWriteOneChar(params []interface{}) interface{} {
 
 	// Get OutputStream object.
 	obj := params[0].(*object.Object)
@@ -168,7 +168,7 @@ func osrWriteOneChar(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "osrWriteOneChar: OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswWriteOneChar: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -194,19 +194,19 @@ func osrWriteOneChar(params []interface{}) interface{} {
 }
 
 // "java/io/OutputStreamWriter.write([CII)I"
-func WriteCharBuffer(params []interface{}) interface{} {
+func oswWriteCharBuffer(params []interface{}) interface{} {
 
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "WriteCharBuffer: OutputStream object lacks a FileHandle field"
+		errMsg := "oswWriteCharBuffer: OutputStream object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
-		errMsg := "WriteCharBuffer: OutputStream object trouble with value field ([]int64)"
+		errMsg := "oswWriteCharBuffer: OutputStream object trouble with value field ([]int64)"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -217,7 +217,7 @@ func WriteCharBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(intArray))-offset) {
-		errMsg := fmt.Sprintf("WriteCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("oswWriteCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(intArray))
 		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
 	}
@@ -231,7 +231,7 @@ func WriteCharBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("osrWriteCharBuffer: osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteCharBuffer: osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -239,19 +239,19 @@ func WriteCharBuffer(params []interface{}) interface{} {
 }
 
 // "java/io/OutputStreamWriter.write(Ljava/lang/String;II)I"
-func WriteStringBuffer(params []interface{}) interface{} {
+func oswWriteStringBuffer(params []interface{}) interface{} {
 
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "WriteStringBuffer: OutputStream object lacks a FileHandle field"
+		errMsg := "oswWriteStringBuffer: OutputStream object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Get the parameter string byte array, offset, and length.
 	paramBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
-		errMsg := "WriteStringBuffer: OutputStream object trouble with value field ([]int64)"
+		errMsg := "oswWriteStringBuffer: OutputStream object trouble with value field ([]int64)"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -262,7 +262,7 @@ func WriteStringBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(paramBytes))-offset) {
-		errMsg := fmt.Sprintf("WriteStringBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("oswWriteStringBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(paramBytes))
 		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
 	}

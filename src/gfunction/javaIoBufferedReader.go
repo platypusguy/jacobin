@@ -62,7 +62,7 @@ func Load_Io_BufferedReader() map[string]GMeth {
 	MethodSignatures["java/io/BufferedReader.read([CII)I"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  bufrdrReadCharBuffer,
+			GFunction:  ReadCharBuffer,
 		}
 
 	MethodSignatures["java/io/BufferedReader.readLine()Ljava/lang/String;"] =
@@ -210,12 +210,6 @@ func bufrdrReadOneChar(params []interface{}) interface{} {
 
 	// Return the byte as an integer.
 	return int64(buffer[0])
-}
-
-// "java/io/BufferedReader.read([CII)I"
-// Identical in function to ReadCharBuffer in javaIoInputStreamReader.go
-func bufrdrReadCharBuffer(params []interface{}) interface{} {
-	return ReadCharBuffer(params)
 }
 
 // "java/io/BufferedReader.readLine()Ljava/lang/String;"
