@@ -619,16 +619,16 @@ func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
 		slot:      1,
 	})
 	pc.className = "java/lang/Object"
-	pc.superClass = "this will be set to empty"
+	pc.superClassIndex = stringPool.GetStringIndex(nil)
 
 	_, err := parseSuperClassName(testBytes, 0, &pc)
 	if err != nil {
 		t.Error("Got unexpected error")
 	}
 
-	if pc.superClass != "" {
+	if *(stringPool.GetStringPointer(pc.superClassIndex)) != "" {
 		t.Errorf("Expected java/lang/Object's superclass to be empty, got %s",
-			pc.superClass)
+			*(stringPool.GetStringPointer(pc.superClassIndex)))
 	}
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

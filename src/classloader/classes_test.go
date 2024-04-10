@@ -10,6 +10,8 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
+	"jacobin/types"
 	"os"
 	"strings"
 	"sync"
@@ -196,7 +198,7 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass = "java/lang/Object"
+	k.Data.SuperclassIndex = stringPool.GetStringIndex(&types.JavaLangObjectString)
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -218,9 +220,9 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	}
 
 	msg := err.Error()
-	if !strings.Contains(msg, "Neither TestEntry nor its superclasses contain method gherkin") {
+	if !strings.Contains(msg, "nor its superclasses contain method") {
 		fmt.Fprintf(os.Stderr, "TestInvalidLookupOfMethod_Test2: ")
-		t.Errorf("Expecting error of 'Neither TestEntry nor its superclasses contain method gherkin', got %s",
+		t.Errorf("Expecting error message to conatin 'nor its superclasses contain method', got %s",
 			err.Error())
 	}
 

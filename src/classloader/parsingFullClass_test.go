@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"strconv"
 	"testing"
 )
@@ -145,8 +146,9 @@ func TestASimpleValidClass(t *testing.T) {
 		t.Error("Expected class to be named 'HaveInterface'. Got: " + klass.className)
 	}
 
-	if klass.superClass != "java/lang/Object" {
-		t.Error("Expected superclass to be 'java/lang/Object'. Got: " + klass.superClass)
+	superClass := stringPool.GetStringPointer(klass.superClassIndex)
+	if *superClass != "java/lang/Object" {
+		t.Error("Expected superclass to be 'java/lang/Object'. Got: " + *superClass)
 	}
 
 	if klass.interfaceCount != 2 {

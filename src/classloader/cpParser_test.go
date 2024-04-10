@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"os"
 	"strconv"
 	"strings"
@@ -291,8 +292,9 @@ func TestCPvalidClassRef(t *testing.T) {
 	}
 
 	cre := pc.classRefs[0]
-	if cre != 2 {
-		t.Errorf("Was expecting a class ref index of 2, but got: %v", cre)
+	className := stringPool.GetStringPointer(cre)
+	if *className != "hello" {
+		t.Errorf("Was expecting a class ref to point to 'hello', but got: %s", *className)
 	}
 
 	if len(pc.cpIndex) != 3 {

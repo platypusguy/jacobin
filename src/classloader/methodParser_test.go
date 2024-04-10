@@ -163,8 +163,10 @@ func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	}
 
 	me := meth.exceptions[0]
-	if me != 2 {
-		t.Errorf("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got: %d", me)
+	excName := stringPool.GetStringPointer(me)
+	if *excName != "java/io/IOException" {
+		t.Errorf("The wrong value for the UTF8 record on Exceptions method attribute was stored. Got: %s",
+			*excName)
 	}
 }
 
