@@ -16,3 +16,7 @@ const ClInitRun byte = 0x03
 
 // ---- invalid index into string pool ----
 const InvalidStringIndex uint32 = 0xffffffff
+
+// ---- default superclass ----
+var JavaLangObjectString string = "java/lang/Object"
+var PtrToJavaLangObjecct = &JavaLangObjectString

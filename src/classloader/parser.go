@@ -300,7 +300,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 				" but class is not java/lang/Object")
 		} else {
 			_ = log.Log("superclass name: [none]", log.FINEST)
-			klass.superClass = ""
+			klass.superClassIndex = stringPool.GetStringIndex(nil)
 			return pos, nil
 		}
 	}
@@ -332,12 +332,12 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 	}
 
 	_ = log.Log("superclass name: "+*superclassNamePtr, log.FINEST)
-	if len(klass.superClass) > 0 {
+	if klass.superClassIndex != stringPool.GetStringIndex(nil) {
 		return pos, cfe("Class can only have 1 superclass, found two: " +
-			klass.superClass + " and: " + *superclassNamePtr)
+			*stringPool.GetStringPointer(klass.superClassIndex) + " and: " + *superclassNamePtr)
 	}
 
-	klass.superClass = *superclassNamePtr
+	// klass.superClass = *superclassNamePtr
 	klass.superClassIndex = classNameIndex
 	return pos, nil
 }

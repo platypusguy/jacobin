@@ -42,7 +42,8 @@ func MethAreaPreload() {
 	emptyKlass := Klass{
 		Status: 'N', // N = instantiated
 		Loader: "bootstrap",
-		Data:   &ClData{Superclass: "java/lang/Object"}, // empty class info
+		Data: &ClData{Superclass: "java/lang/Object",
+			SuperclassIndex: stringPool.GetStringIndex(types.PtrToJavaLangObjecct)}, // empty class info
 	}
 
 	classesToPreload := []string{

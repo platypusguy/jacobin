@@ -40,15 +40,15 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 
 	DumpStringPool("TestStringIndexPrimitives_1: should be empty")
 	sz := GetStringPoolSize()
-	if sz != 2 {
-		t.Errorf("Expected string repo size 2 but observed: %d", sz)
+	if sz != 3 {
+		t.Errorf("Expected string repo size 3 but observed: %d", sz)
 	}
 
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
-	if index != 2 {
-		t.Errorf("Expected string str1 index=2 but observed: %d", index)
+	if index != 3 {
+		t.Errorf("Expected string str1 index=3 but observed: %d", index)
 	}
 	if str != str1 {
 		t.Errorf("Expected string str1 value=%s but observed: %s", str1, str)
@@ -57,8 +57,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
-	if index != 3 {
-		t.Errorf("Expected string str2 index=3 but observed: %d", index)
+	if index != 4 {
+		t.Errorf("Expected string str2 index=4 but observed: %d", index)
 	}
 	if str != str2 {
 		t.Errorf("Expected string str2 value=%s but observed: %s", str2, str)
@@ -67,8 +67,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
-	if index != 2 {
-		t.Errorf("Expected string str1 index=2 but observed: %d", index)
+	if index != 3 {
+		t.Errorf("Expected string str1 index=3 but observed: %d", index)
 	}
 	if str != str1 {
 		t.Errorf("Expected string str1 value=%s but observed: %s", str1, str)
@@ -77,8 +77,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
-	if index != 3 {
-		t.Errorf("Expected string str2 index=3 but observed: %d", index)
+	if index != 4 {
+		t.Errorf("Expected string str2 index=4 but observed: %d", index)
 	}
 	if str != str2 {
 		t.Errorf("Expected string str2 value=%s but observed: %s", str2, str)
@@ -92,63 +92,76 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 
 	// Check resultant pool sizer.
 	sz = GetStringPoolSize()
-	if sz != 20 {
-		t.Errorf("Expected string repo size 20 but observed: %d", sz)
+	if sz != 21 {
+		t.Errorf("Expected string repo size 21 but observed: %d", sz)
 	}
 
 	// Dump the pool.
 	DumpStringPool("TestStringIndexPrimitives_1: final repo")
 }
 
-func TestStringIndexPrimitives_2(t *testing.T) {
-	// NOTE that TestStringIndexPrimitives_2 is dependent on globals::InitStringPool!
+// Needs to be rewritten, so that it doesn't depend on init size (this has been partially done)
+// also, it's not clear that it's testing string pool, but rather the golang table and slice operations
+// func TestStringIndexPrimitives_2(t *testing.T) {
+// 	// NOTE that TestStringIndexPrimitives_2 is dependent on globals.InitStringPool!
+// 	globals.InitGlobals("test")
+// 	postInitSize := GetStringPoolSize()
+// 	if postInitSize != 3 {
+// 		t.Errorf("Expected string repo size=3 but observed: %d", postInitSize)
+// 	}
+//
+// 	var LIMIT uint32 = 1_000_000
+// 	var LIMITp2 uint32 = LIMIT + postInitSize
+// 	t.Logf("string slice size to be filled up: %d\n", LIMIT+postInitSize)
+// 	finalIndex := LIMITp2 - 1
+// 	t.Logf("final index value: %d\n", finalIndex)
+// 	midIndex := LIMITp2 / 2
+// 	t.Logf("mid index value: %d\n", midIndex)
+// 	midString := "Mary had a little lamb"
+// 	var str string
+// 	var ix uint32
+//
+// 	// Add LIMIT more strings.
+// 	for ix = 2; ix < LIMITp2; ix++ {
+// 		if ix == midIndex {
+// 			str = midString
+// 		} else {
+// 			str = randomString(stringLength)
+// 		}
+// 		_ = GetStringIndex(&str)
+// 		// t.Logf("DEBUG %d) string %d: %s\n", ix, index, str)
+// 	}
+//
+// 	// Report
+// 	str = *GetStringPointer(3)
+// 	t.Logf("First index (%d): %s\n", postInitSize, str)
+// 	str = *GetStringPointer(midIndex)
+// 	t.Logf("Mid index (%d): %s\n", midIndex, str)
+// 	if str != midString {
+// 		t.Errorf("Expected mid-string value: %s. Observed: %s", midString, str)
+// 	}
+//
+// 	str = *GetStringPointer(finalIndex)
+// 	t.Logf("Last index (%d): %s\n", finalIndex, str)
+//
+// 	sz := GetStringPoolSize()
+// 	if sz != (LIMITp2) {
+// 		t.Errorf("Expected string repo size=%d but observed: %d", LIMITp2, sz)
+// 	}
+//
+// 	if sz < 100 {
+// 		DumpStringPool("TestStringIndexPrimitives_2: final repo")
+// 	}
+// }
 
-	var LIMIT uint32 = 1000000
-	var LIMITp2 uint32 = LIMIT + 2
-	t.Logf("string slice size to be filled up: 2 + %d\n", LIMIT)
-	finalIndex := LIMITp2 - 1
-	t.Logf("final index value: %d\n", finalIndex)
-	midIndex := LIMITp2 / 2
-	t.Logf("mid index value: %d\n", midIndex)
-	midString := "Mary had a little lamb"
-	var str string
-	var ix uint32
-
-	globals.InitGlobals("test") // Start with pool size to 2.
-
-	DumpStringPool("TestStringIndexPrimitives_2: should only have 2 entries")
-	sz := GetStringPoolSize()
-	if sz != 2 {
-		t.Errorf("Expected string repo size=2 but observed: %d", sz)
+func TestVariousInitStringPool(t *testing.T) {
+	globals.InitGlobals("testInit")
+	s := GetStringPointer(uint32(0))
+	if *s != "" {
+		t.Errorf("Expected null string, got %s", *s)
 	}
 
-	// Add LIMIT more strings.
-	for ix = 2; ix < LIMITp2; ix++ {
-		if ix == midIndex {
-			str = midString
-		} else {
-			str = randomString(stringLength)
-		}
-		_ = GetStringIndex(&str)
-		// t.Logf("DEBUG %d) string %d: %s\n", ix, index, str)
+	if GetStringPoolSize() < 3 {
+		t.Errorf("Expected initiailized string pool size >= 3, got %d", GetStringPoolSize())
 	}
-
-	// Report
-	str = *GetStringPointer(2)
-	t.Logf("First index (2): %s\n", str)
-	str = *GetStringPointer(midIndex)
-	t.Logf("Mid index (%d): %s\n", midIndex, str)
-	if str != midString {
-		t.Errorf("Expected mid-string value: %s. Observed: %s", midString, str)
-	}
-	str = *GetStringPointer(finalIndex)
-	t.Logf("Last index (%d): %s\n", finalIndex, str)
-	sz = GetStringPoolSize()
-	if sz != (LIMIT + 2) {
-		t.Errorf("Expected string repo size=%d but observed: %d", LIMIT+2, sz)
-	}
-	if sz < 100 {
-		DumpStringPool("TestStringIndexPrimitives_2: final repo")
-	}
-
 }

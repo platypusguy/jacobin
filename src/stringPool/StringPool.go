@@ -74,6 +74,11 @@ The string pool primitive functions
 */
 
 func GetStringIndex(arg *string) uint32 {
+	if arg == nil {
+		nilString := ""
+		arg = &nilString
+	}
+
 	index, ok := globals.StringPoolTable[*arg]
 	if ok {
 		return index
@@ -129,8 +134,7 @@ func DumpStringPool(context string) {
 	globals.StringPoolLock.Unlock()
 }
 
-func PreloadArrayClassToStringPool() {
-
+func PreloadArrayClassesToStringPool() {
 	arrayClassesToPreload := []string{
 		types.BoolArray,
 		types.ByteArray,
