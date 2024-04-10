@@ -48,10 +48,10 @@ var ExtensionCL Classloader
 
 // ParsedClass contains all the parsed fields
 type ParsedClass struct {
-	javaVersion     int
-	className       string // name of class without path and without .class TODO: eventually remove
-	classNameIndex  uint32 // index into StringPool
-	superClass      string // name of superclass for this class TODO: eventually remove in favor of stringPool
+	javaVersion    int
+	className      string // name of class without path and without .class TODO: eventually remove
+	classNameIndex uint32 // index into StringPool
+	// superClass      string // name of superclass for this class TODO: eventually remove in favor of stringPool
 	superClassIndex uint32 // index of into StringPool
 	moduleName      string
 	packageName     string
@@ -467,7 +467,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd.Name = fullyParsedClass.className // eventually to be deleted in favor of class index
 	kd.NameIndex = fullyParsedClass.classNameIndex
-	kd.Superclass = fullyParsedClass.superClass // eventually to be delete in favor of class index
+	// kd.Superclass = fullyParsedClass.superClass // eventually to be delete in favor of class index
 	kd.SuperclassIndex = fullyParsedClass.superClassIndex
 
 	kd.Module = fullyParsedClass.moduleName
