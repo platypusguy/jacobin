@@ -10,6 +10,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/object"
 	"jacobin/types"
+	"os"
 )
 
 // File I/O and stream Field keys:
@@ -18,6 +19,9 @@ var FilePath string = "FilePath"     // full absolute path of a file aka canonic
 var FileHandle string = "FileHandle" // *os.File
 var FileMark string = "FileMark"     // file position relative to beginning (0)
 var FileAtEOF string = "FileAtEOF"   // file at EOF
+
+// File I/O constants:
+var CreateFilePermissions os.FileMode = 0664 // When creating, read and write for user and group, others read-only
 
 // Radix boundaries:
 var MinRadix int64 = 2
@@ -56,13 +60,17 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
-	loadlib(MTable, Load_Io_BufferedReader())
-	loadlib(MTable, Load_Io_File())
+
+	loadlib(MTable, Load_Io_File()) // File I/O
 	loadlib(MTable, Load_Io_FileInputStream())
 	loadlib(MTable, Load_Io_FileOutputStream())
-	loadlib(MTable, Load_Io_InputStreamReader())
 	loadlib(MTable, Load_Io_FileReader())
+	loadlib(MTable, Load_Io_FileWriter())
+	loadlib(MTable, Load_Io_InputStreamReader())
+	loadlib(MTable, Load_Io_OutputStreamWriter())
+
 	loadlib(MTable, Load_Io_PrintStream()) // load the java.io.prinstream golang functions
+
 	loadlib(MTable, Load_Lang_Boolean())
 	loadlib(MTable, Load_Lang_Byte())
 	loadlib(MTable, Load_Lang_Character())
@@ -81,11 +89,13 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Lang_Thread())            // load the java.lang.Thread golang functions
 	loadlib(MTable, Load_Lang_Throwable())         // load the java.lang.Throwable golang functions (errors & exceptions)
 	loadlib(MTable, Load_Lang_UTF16())             // load the java.lang.UTF16 golang functions
-	loadlib(MTable, Load_Misc_Unsafe())            // load the jdk.internal/misc/Unsafe functions
-	loadlib(MTable, Load_Nio_Charset_Charset())    // Zero Charset support
-	loadlib(MTable, Load_Traps())                  // Load traps
-	loadlib(MTable, Load_Util_HashMap())           // load the java.util.HashMap golang functions
-	loadlib(MTable, Load_Util_Locale())            // load the java.util.Locale golang functions
+
+	loadlib(MTable, Load_Misc_Unsafe())         // load the jdk.internal/misc/Unsafe functions
+	loadlib(MTable, Load_Nio_Charset_Charset()) // Zero Charset support
+	loadlib(MTable, Load_Traps())               // Load traps
+
+	loadlib(MTable, Load_Util_HashMap()) // load the java.util.HashMap golang functions
+	loadlib(MTable, Load_Util_Locale())  // load the java.util.Locale golang functions
 }
 
 func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
