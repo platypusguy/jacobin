@@ -88,6 +88,12 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapWriter,
 		}
 
+	MethodSignatures["java/io/FileSystem.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileSystem,
+		}
+
 	MethodSignatures["java/io/FilterWriter.<clinit>()"] =
 		GMeth{
 			ParamSlots: 0,
