@@ -96,63 +96,45 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 		t.Errorf("Expected string repo size 21 but observed: %d", sz)
 	}
 
-	// Dump the pool.
-	DumpStringPool("TestStringIndexPrimitives_1: final repo")
+	// Dump the pool--if needed in case of test failure
+	// DumpStringPool("TestStringIndexPrimitives_1: final repo")
 }
 
-// Needs to be rewritten, so that it doesn't depend on init size (this has been partially done)
-// also, it's not clear that it's testing string pool, but rather the golang table and slice operations
-// func TestStringIndexPrimitives_2(t *testing.T) {
-// 	// NOTE that TestStringIndexPrimitives_2 is dependent on globals.InitStringPool!
-// 	globals.InitGlobals("test")
-// 	postInitSize := GetStringPoolSize()
-// 	if postInitSize != 3 {
-// 		t.Errorf("Expected string repo size=3 but observed: %d", postInitSize)
-// 	}
-//
-// 	var LIMIT uint32 = 1_000_000
-// 	var LIMITp2 uint32 = LIMIT + postInitSize
-// 	t.Logf("string slice size to be filled up: %d\n", LIMIT+postInitSize)
-// 	finalIndex := LIMITp2 - 1
-// 	t.Logf("final index value: %d\n", finalIndex)
-// 	midIndex := LIMITp2 / 2
-// 	t.Logf("mid index value: %d\n", midIndex)
-// 	midString := "Mary had a little lamb"
-// 	var str string
-// 	var ix uint32
-//
-// 	// Add LIMIT more strings.
-// 	for ix = 2; ix < LIMITp2; ix++ {
-// 		if ix == midIndex {
-// 			str = midString
-// 		} else {
-// 			str = randomString(stringLength)
-// 		}
-// 		_ = GetStringIndex(&str)
-// 		// t.Logf("DEBUG %d) string %d: %s\n", ix, index, str)
-// 	}
-//
-// 	// Report
-// 	str = *GetStringPointer(3)
-// 	t.Logf("First index (%d): %s\n", postInitSize, str)
-// 	str = *GetStringPointer(midIndex)
-// 	t.Logf("Mid index (%d): %s\n", midIndex, str)
-// 	if str != midString {
-// 		t.Errorf("Expected mid-string value: %s. Observed: %s", midString, str)
-// 	}
-//
-// 	str = *GetStringPointer(finalIndex)
-// 	t.Logf("Last index (%d): %s\n", finalIndex, str)
-//
-// 	sz := GetStringPoolSize()
-// 	if sz != (LIMITp2) {
-// 		t.Errorf("Expected string repo size=%d but observed: %d", LIMITp2, sz)
-// 	}
-//
-// 	if sz < 100 {
-// 		DumpStringPool("TestStringIndexPrimitives_2: final repo")
-// 	}
-// }
+func TestStringIndexPrimitives_2(t *testing.T) {
+	// NOTE that TestStringIndexPrimitives_2 is dependent on globals.InitStringPool!
+	globals.InitGlobals("test")
+	postInitSize := GetStringPoolSize()
+	if postInitSize != 3 {
+		t.Errorf("Expected string repo size=3 but observed: %d", postInitSize)
+	}
+
+	var LIMIT uint32 = 1_000
+	var LIMITp2 uint32 = LIMIT + postInitSize
+	t.Logf("string slice size to be filled up: %d\n", LIMITp2)
+	finalIndex := LIMITp2 - 1
+	// 	t.Logf("final index value: %d\n", finalIndex)
+	midIndex := finalIndex / 2
+	t.Logf("mid index value: %d\n", midIndex)
+	midString := "Mary had a little lamb"
+	var str string
+	var ix uint32
+	var i uint32
+	// Add LIMIT more strings.
+	for ix = 2; ix < LIMITp2; ix++ {
+		if ix == midIndex {
+			str = midString
+			i = GetStringIndex(&str)
+		} else {
+			str = randomString(stringLength)
+			_ = GetStringIndex(&str)
+		}
+	}
+
+	str = *GetStringPointer(i)
+	if str != midString {
+		t.Errorf("Expected mid-string value: %s. Observed: %s", midString, str)
+	}
+}
 
 func TestVariousInitStringPool(t *testing.T) {
 	globals.InitGlobals("testInit")
