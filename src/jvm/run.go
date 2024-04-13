@@ -1964,10 +1964,6 @@ frameInterpreter:
 			methodSigIndex := nAndT.DescIndex
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodSigIndex)
 
-			if strings.Contains(methodName, "println") && strings.Contains(methodType, "Ljava/lang/String;") {
-				err = nil // <<<<<<<<<<<<<<<<<< ignore this
-			}
-
 			mtEntry := classloader.MTable[className+"."+methodName+methodType]
 			if mtEntry.Meth == nil { // if the method is not in the method table, find it
 				mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
