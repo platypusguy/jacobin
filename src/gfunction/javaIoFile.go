@@ -41,6 +41,12 @@ func Load_Io_File() map[string]GMeth {
 			GFunction:  fileDelete,
 		}
 
+	MethodSignatures["java/io/File.createNewFile()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  fileCreate,
+		}
+
 	MethodSignatures["java/io/File.isInvalid()Z"] =
 		GMeth{
 			ParamSlots: 0,
@@ -130,6 +136,21 @@ func fileDelete(params []interface{}) interface{} {
 	}
 	path := string(bytes)
 	err := os.Remove(path)
+	if err != nil {
+		return int64(0)
+	}
+	return int64(1)
+}
+
+// "java/io/File.createNewFile()Ljava/lang/String;"
+func fileCreate(params []interface{}) interface{} {
+	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
+	if !ok {
+		errMsg := "fileCreate: File object lacks a FilePath field"
+		return getGErrBlk(exceptions.IOException, errMsg)
+	}
+	path := string(bytes)
+	_, err := os.Create(path)
 	if err != nil {
 		return int64(0)
 	}
