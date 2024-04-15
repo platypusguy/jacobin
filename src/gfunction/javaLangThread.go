@@ -6,6 +6,11 @@
 
 package gfunction
 
+import (
+	"jacobin/exceptions"
+	"time"
+)
+
 /*
  Each object or library that has Go methods contains a reference to MethodSignatures,
  which contain data needed to insert the go method into the MTable of the currently
@@ -30,5 +35,22 @@ func Load_Lang_Thread() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/Thread.sleep(J)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  threadSleep,
+		}
+
 	return MethodSignatures
+}
+
+// "java/lang/Thread.sleep(J)V"
+func threadSleep(params []interface{}) interface{} {
+	sleepTime, ok := params[0].(int64)
+	if !ok {
+		errMsg := "threadSleep: Parameter must be an int64 (long)"
+		return getGErrBlk(exceptions.IOException, errMsg)
+	}
+	time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+	return nil
 }

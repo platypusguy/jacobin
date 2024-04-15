@@ -88,6 +88,12 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapWriter,
 		}
 
+	MethodSignatures["java/io/FileSystem.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileSystem,
+		}
+
 	MethodSignatures["java/io/FilterWriter.<clinit>()"] =
 		GMeth{
 			ParamSlots: 0,
@@ -115,12 +121,6 @@ func Load_Traps() map[string]GMeth {
 	return MethodSignatures
 }
 
-// "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
-func trapGetDefaultFileSystem([]interface{}) interface{} {
-	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
-}
-
 // Trap for Charset references
 func trapCharset([]interface{}) interface{} {
 	errMsg := "Class java/nio/charset/Charset is not yet supported"
@@ -129,7 +129,7 @@ func trapCharset([]interface{}) interface{} {
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The function requested is deprecated and will not be supported by jacobin"
+	errMsg := "The function requested is deprecated and is not supported by jacobin"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
@@ -148,6 +148,12 @@ func trapFileDescriptor([]interface{}) interface{} {
 // Trap for FileSystem references
 func trapFileSystem([]interface{}) interface{} {
 	errMsg := "Class java.io.FileSystem is not yet supported"
+	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+}
+
+// "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
+func trapGetDefaultFileSystem([]interface{}) interface{} {
+	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
