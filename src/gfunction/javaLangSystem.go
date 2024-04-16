@@ -15,11 +15,13 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 	"os/user"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -127,6 +129,35 @@ func clinit([]interface{}) interface{} {
 	return nil
 }
 
+func arrayCopy(params []interface{}) interface{} {
+	src := params[0].(*object.Object)
+	srcPos := params[1].(int64)
+	dest := params[2].(*object.Object)
+	destPos := params[3].(int64)
+	length := params[4].(int64)
+
+	if src == nil || dest == nil {
+		errMsg := fmt.Sprintf("java/lang/System.arraycopy: null src or dest")
+		return getGErrBlk(exceptions.NullPointerException, errMsg)
+	}
+
+	if srcPos < 0 || destPos < 0 || length < 0 {
+		errMsg := fmt.Sprintf(
+			"java/lang/System.arraycopy: Negative value in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+	}
+
+	srcType := *(stringPool.GetStringPointer(src.KlassName))
+	destType := *(stringPool.GetStringPointer(dest.KlassName))
+
+	if !strings.HasPrefix(srcType, "[") || !strings.HasPrefix(destType, "[") || srcType != destType {
+		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
+		return getGErrBlk(exceptions.ArrayStoreException, errMsg)
+	}
+
+	return nil
+}
+
 // Return the system input console as a *os.File.
 func getConsole([]interface{}) interface{} {
 	return statics.GetStaticValue("java/lang/System", "in")
@@ -189,7 +220,7 @@ func getProperty(params []interface{}) interface{} {
 	case "java.version":
 		value = strconv.Itoa(g.MaxJavaVersion)
 	// case "java.version.date":
-	// 	value = // need to get this
+	// 	need to get this
 	case "java.vm.name":
 		value = fmt.Sprintf(
 			"Jacobin VM v. %s (Java %d) 64-bit VM", g.Version, g.MaxJavaVersion)
