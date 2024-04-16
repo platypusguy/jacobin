@@ -2308,25 +2308,6 @@ frameInterpreter:
 					return errors.New(errMsg)
 				}
 				size = object.ArrayLength(r)
-				// o := r.FieldTable["value"]
-				// arrayType := o.Ftype
-				// switch arrayType {
-				// case types.ByteArray:
-				// 	array := o.Fvalue.([]byte)
-				// 	size = int64(len(array))
-				// case types.RefArray:
-				// 	array := o.Fvalue.([]*object.Object)
-				// 	size = int64(len(array))
-				// case types.FloatArray:
-				// 	array := o.Fvalue.([]float64)
-				// 	size = int64(len(array))
-				// case types.IntArray:
-				// 	array := o.Fvalue.([]int64)
-				// 	size = int64(len(array))
-				// default:
-				// 	array := o.Fvalue.([]*object.Object)
-				// 	size = int64(len(array))
-				// }
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)

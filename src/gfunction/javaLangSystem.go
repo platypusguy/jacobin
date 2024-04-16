@@ -158,7 +158,7 @@ func arrayCopy(params []interface{}) interface{} {
 	srcType := *(stringPool.GetStringPointer(src.KlassName))
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
-	if !strings.HasPrefix(srcType, "[") || !strings.HasPrefix(destType, "[") || srcType != destType {
+	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
 		return getGErrBlk(exceptions.ArrayStoreException, errMsg)
 	}
