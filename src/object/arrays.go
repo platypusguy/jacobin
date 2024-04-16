@@ -161,3 +161,28 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	}
 	return nil
 }
+
+// ArrayLength returns the length of an array object, when passed a pointer to it
+func ArrayLength(arrayRef *Object) int64 {
+	var size int64
+	o := arrayRef.FieldTable["value"]
+	arrayType := o.Ftype
+	switch arrayType {
+	case types.ByteArray:
+		array := o.Fvalue.([]byte)
+		size = int64(len(array))
+	case types.RefArray:
+		array := o.Fvalue.([]*Object)
+		size = int64(len(array))
+	case types.FloatArray:
+		array := o.Fvalue.([]float64)
+		size = int64(len(array))
+	case types.IntArray:
+		array := o.Fvalue.([]int64)
+		size = int64(len(array))
+	default:
+		array := o.Fvalue.([]*Object)
+		size = int64(len(array))
+	}
+	return size
+}
