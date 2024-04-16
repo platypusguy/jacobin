@@ -129,7 +129,15 @@ func clinit([]interface{}) interface{} {
 	return nil
 }
 
+// arrayCopy copies an array or subarray from one array to another, both of which must exist.
+// It is a complex native function in the JDK. Javadoc here:
+// docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
 func arrayCopy(params []interface{}) interface{} {
+	if len(params) != 5 {
+		errMsg := fmt.Sprintf("java/lang/System.arraycopy: Expected 5 parameters, got %d", len(params))
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+	}
+
 	src := params[0].(*object.Object)
 	srcPos := params[1].(int64)
 	dest := params[2].(*object.Object)
@@ -153,6 +161,14 @@ func arrayCopy(params []interface{}) interface{} {
 	if !strings.HasPrefix(srcType, "[") || !strings.HasPrefix(destType, "[") || srcType != destType {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
 		return getGErrBlk(exceptions.ArrayStoreException, errMsg)
+	}
+
+	srcLen := object.ArrayLength(src)
+	destLen := object.ArrayLength(dest)
+
+	if srcPos+length > srcLen || destPos+length > destLen {
+		errMsg := fmt.Sprintf("java/lang/System.arraycopy: array + length exceeds array size")
+		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	return nil
