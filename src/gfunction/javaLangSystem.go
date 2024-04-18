@@ -171,6 +171,12 @@ func arrayCopy(params []interface{}) interface{} {
 		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
+	if (src != dest) || ((src == dest) && (srcPos+length < destPos)) {
+		// CURR: do the non-overlapping copy
+	} else {
+		// TODO: do overlapping copy
+	}
+
 	return nil
 }
 
