@@ -171,8 +171,45 @@ func arrayCopy(params []interface{}) interface{} {
 		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
+	s := srcPos
+	d := destPos
+
 	if (src != dest) || ((src == dest) && (srcPos+length < destPos)) {
-		// CURR: do the non-overlapping copy
+		// non-overlapping copy of identical items
+		switch srcType {
+		case types.ByteArray:
+			sArr := src.FieldTable["value"].Fvalue.([]byte)
+			dArr := dest.FieldTable["value"].Fvalue.([]byte)
+			for i := int64(0); i < length; i++ {
+				dArr[d] = sArr[s]
+				d += 1
+				s += 1
+			}
+		case types.RefArray: // TODO: make sure refs are to the same object types
+			sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
+			dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
+			for i := int64(0); i < length; i++ {
+				dArr[d] = sArr[s]
+				d += 1
+				s += 1
+			}
+		case types.FloatArray:
+			sArr := src.FieldTable["value"].Fvalue.([]float64)
+			dArr := dest.FieldTable["value"].Fvalue.([]float64)
+			for i := int64(0); i < length; i++ {
+				dArr[d] = sArr[s]
+				d += 1
+				s += 1
+			}
+		case types.IntArray:
+			sArr := src.FieldTable["value"].Fvalue.([]int64)
+			dArr := dest.FieldTable["value"].Fvalue.([]int64)
+			for i := int64(0); i < length; i++ {
+				dArr[d] = sArr[s]
+				d += 1
+				s += 1
+			}
+		}
 	} else {
 		// TODO: do overlapping copy
 	}
