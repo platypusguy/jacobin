@@ -53,7 +53,7 @@ A more-than-minimal JVM written in Go.
 
 ### Execution
 * Execution of bytecodes :pencil2: The primary focus of current coding work<br>
-  191 bytecodes fully operational, including one- and multi-dimensional arrays
+  198 bytecodes fully operational, including one- and multi-dimensional arrays
 * Static initialization blocks
 * Throwing exceptions
 * Running native functions (written in go). [Details here.](https://github.com/platypusguy/jacobin/wiki/Native-golang-functions-methods )
