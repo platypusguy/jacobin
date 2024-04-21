@@ -118,6 +118,12 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapWriter,
 		}
 
+	MethodSignatures["java/lang/SecurityManager.<clinit>()"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
 	return MethodSignatures
 }
 
@@ -129,7 +135,7 @@ func trapCharset([]interface{}) interface{} {
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The function requested is deprecated and is not supported by jacobin"
+	errMsg := "The class or function requested is deprecated and is not supported by jacobin"
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 

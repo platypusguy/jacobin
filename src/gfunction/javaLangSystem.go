@@ -97,6 +97,12 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  clinit,
 		}
 
+	MethodSignatures["java/lang/System.arraycopy.(Ljava/lang/Object;ILjava/lang/Object;II)V"] =
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  arrayCopy,
+		}
+
 	return MethodSignatures
 }
 
