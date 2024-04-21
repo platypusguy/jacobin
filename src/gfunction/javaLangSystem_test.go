@@ -55,6 +55,43 @@ func TestArrayCopyNonOverlapping(t *testing.T) {
 	}
 }
 
+func TestArrayCopyOverlappingSameArray(t *testing.T) {
+	globals.InitGlobals("test")
+
+	src := object.Make1DimArray(object.BYTE, 10)
+	// dest := object.Make1DimArray(object.BYTE, 10)
+
+	rawSrcArray := src.FieldTable["value"].Fvalue.([]byte)
+	for i := 0; i < 10; i++ {
+		rawSrcArray[i] = byte(i)
+	}
+
+	params := make([]interface{}, 5)
+	params[0] = src
+	params[1] = int64(2)
+	params[2] = src
+	params[3] = int64(0)
+	params[4] = int64(5)
+
+	// result should be 2,3,4,5,6,5,6,7,8,9 (which totals 55)
+
+	err := arrayCopy(params)
+
+	if err != nil {
+		e := err.(error)
+		t.Errorf("Unexpected error in test of arrayCopy(): %s", error.Error(e))
+	}
+
+	j := byte(0)
+	for i := 0; i < 10; i++ {
+		j += rawSrcArray[i]
+	}
+
+	if j != 55 {
+		t.Errorf("Expected total to be 55, got %d", j)
+	}
+}
+
 func TestArrayInvalidParmCount(t *testing.T) {
 	globals.InitGlobals("test")
 
