@@ -151,7 +151,7 @@ func arrayCopy(params []interface{}) interface{} {
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
-			"java/lang/System.arraycopy: Negative value in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+			"java/lang/System.arraycopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
 		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
