@@ -177,3 +177,33 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 		t.Errorf("Expected error re invalid array type, got %s", errMsg)
 	}
 }
+
+func TestArrayCopyInvalidLength(t *testing.T) {
+	globals.InitGlobals("test")
+
+	src := object.Make1DimArray(object.INT, 10)
+	dest := object.Make1DimArray(object.INT, 10)
+
+	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
+	for i := 0; i < 10; i++ {
+		rawSrcArray[i] = int64(1)
+	}
+
+	params := make([]interface{}, 5)
+	params[0] = src
+	params[1] = int64(2)
+	params[2] = dest
+	params[3] = int64(0)
+	params[4] = int64(200) // the invalid length
+
+	err := arrayCopy(params)
+
+	if err == nil {
+		t.Errorf("Exoected an error message, but got none")
+	}
+
+	errMsg := err.(*GErrBlk).ErrMsg
+	if !strings.Contains(errMsg, "array + length exceeds array size") {
+		t.Errorf("Expected error re invalid length, got %s", errMsg)
+	}
+}
