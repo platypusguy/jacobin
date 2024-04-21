@@ -9,6 +9,7 @@ package gfunction
 import (
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/stringPool"
 	"strings"
 	"testing"
 )
@@ -141,5 +142,38 @@ func TestArrayCopyNullArray(t *testing.T) {
 	errMsg := err.(*GErrBlk).ErrMsg
 	if !strings.Contains(errMsg, "null src or dest") {
 		t.Errorf("Expected error re null array, got %s", errMsg)
+	}
+}
+
+func TestArrayCopyInvalidObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	src := object.Make1DimArray(object.INT, 10)
+	dest := object.Make1DimArray(object.INT, 10)
+
+	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
+	for i := 0; i < 10; i++ {
+		rawSrcArray[i] = int64(1)
+	}
+
+	params := make([]interface{}, 5)
+	o := object.MakeEmptyObject()
+	objType := "invalid object"
+	o.KlassName = stringPool.GetStringIndex(&objType)
+	params[0] = o
+	params[1] = int64(2)
+	params[2] = dest
+	params[3] = int64(0)
+	params[4] = int64(5)
+
+	err := arrayCopy(params)
+
+	if err == nil {
+		t.Errorf("Exoected an error message, but got none")
+	}
+
+	errMsg := err.(*GErrBlk).ErrMsg
+	if !strings.Contains(errMsg, "invalid src or dest array") {
+		t.Errorf("Expected error re invalid array type, got %s", errMsg)
 	}
 }
