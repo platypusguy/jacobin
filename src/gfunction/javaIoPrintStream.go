@@ -308,8 +308,6 @@ func PrintDouble(params []interface{}) interface{} {
 func PrintString(params []interface{}) interface{} {
 	var str string
 	switch params[1].(type) {
-	case []byte:
-		str = string(params[1].([]byte))
 	case *object.Object:
 		str = object.GoStringFromStringObject(params[1].(*object.Object))
 	default:
