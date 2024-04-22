@@ -43,6 +43,12 @@ import (
 
 func Load_Lang_System() map[string]GMeth {
 
+	MethodSignatures["java/lang/System.arrayCopy(Ljava.lang.Object;ILjava.lang.Object;II)V"] = // copy array (full or partial)
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  arrayCopy,
+		}
+
 	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
 		GMeth{
 			ParamSlots: 0,
@@ -231,30 +237,43 @@ func arrayCopy(params []interface{}) interface{} {
 				dArr[d] = tempArray[i].(byte)
 				d += 1
 			}
+
 		case types.RefArray: // TODO: make sure refs are to the same object types
 			sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
 			dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
 			for i := int64(0); i < length; i++ {
-				dArr[d] = sArr[s]
-				d += 1
+				tempArray[i] = sArr[s]
 				s += 1
 			}
+			for i := int64(0); i < length; i++ {
+				dArr[d] = tempArray[i].(*object.Object)
+				d += 1
+			}
+
 		case types.FloatArray:
 			sArr := src.FieldTable["value"].Fvalue.([]float64)
 			dArr := dest.FieldTable["value"].Fvalue.([]float64)
 			for i := int64(0); i < length; i++ {
-				dArr[d] = sArr[s]
-				d += 1
+				tempArray[i] = sArr[s]
 				s += 1
 			}
+			for i := int64(0); i < length; i++ {
+				dArr[d] = tempArray[i].(float64)
+				d += 1
+			}
+
 		case types.IntArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
-				dArr[d] = sArr[s]
-				d += 1
+				tempArray[i] = sArr[s]
 				s += 1
 			}
+			for i := int64(0); i < length; i++ {
+				dArr[d] = tempArray[i].(int64)
+				d += 1
+			}
+
 		}
 	}
 
