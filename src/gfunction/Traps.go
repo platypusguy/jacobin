@@ -144,59 +144,125 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapStringBuilder,
 		}
 
+	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
+		}
+
+	// String Buffer
+
+	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.<init>(I)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuffer,
+		}
+
 	return MethodSignatures
 }
 
 // Trap for Charset references
 func trapCharset([]interface{}) interface{} {
 	errMsg := "Class java/nio/charset/Charset is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
 	errMsg := "The class or function requested is deprecated and is not supported by jacobin"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileChannel references
 func trapFileChannel([]interface{}) interface{} {
 	errMsg := "Class java.nio.channels.FileChannel is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileDescriptor references
 func trapFileDescriptor([]interface{}) interface{} {
 	errMsg := "Class java/io/FileDescriptor is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileSystem references
 func trapFileSystem([]interface{}) interface{} {
 	errMsg := "Class java.io.FileSystem is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
 func trapGetDefaultFileSystem([]interface{}) interface{} {
 	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for unsupported readers
 func trapReader([]interface{}) interface{} {
 	errMsg := "The requested reader is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for unsupported writers
 func trapWriter([]interface{}) interface{} {
 	errMsg := "The requested writer is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
 
 // Trap for StringBuilder
 func trapStringBuilder([]interface{}) interface{} {
 	errMsg := "Class StringBuilder is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+}
+
+// Trap for StringBuilder
+func trapStringBuffer([]interface{}) interface{} {
+	errMsg := "Class StringBuffer is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
 }
