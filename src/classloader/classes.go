@@ -238,9 +238,16 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	if methEntry.Meth != nil { // we found the entry in the MTable
 		if methEntry.MType == 'J' {
 			return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
-		} else if methEntry.MType == 'G' {
+		}
+		if methEntry.MType == 'G' {
+
 			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
 		}
+		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Meth != nil BUT methEntry.MType is neither J nor G for %s", methFQN)
+		_ = log.Log(errMsg, log.SEVERE)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
+
 	}
 
 	// --- at this point, the method is not in the MTable ---
