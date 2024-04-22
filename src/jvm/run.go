@@ -2122,7 +2122,7 @@ frameInterpreter:
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName
+				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -2163,7 +2163,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + "." + methodType
+					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
