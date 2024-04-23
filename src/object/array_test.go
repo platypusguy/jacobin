@@ -91,6 +91,24 @@ func TestMakde1DimIntArray(t *testing.T) {
 	}
 }
 
+func TestMake2DimByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	b2arr, ok := Make2DimArray(10, 15, BYTE)
+	if ok != nil {
+		t.Errorf("Unexpected error in Make2DimArray: %s", ok.Error())
+	}
+
+	arrType := *(stringPool.GetStringPointer(b2arr.KlassName))
+	if arrType != "[B" {
+		t.Errorf("Did not get expected Jacobin type for byte array, got %s", arrType)
+	}
+
+	topArray := b2arr.FieldTable["value"]
+	if topArray.Ftype != "[[B" {
+		t.Errorf("Expecting top array type to be [[B, got %s)", topArray.Ftype)
+	}
+}
+
 func TestArrayLength(t *testing.T) {
 	globals.InitGlobals("test")
 	iArr := Make1DimArray(INT, 256)
