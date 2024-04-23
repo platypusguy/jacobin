@@ -156,8 +156,9 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	case []uint8: // an array of bytes
 		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
 		return objPtr
+	default:
+		return nil
 	}
-	return nil
 }
 
 // ArrayLength returns the length of an array object, when passed a pointer to it
