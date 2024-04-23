@@ -57,13 +57,13 @@ func TestMakde1DimByteArray(t *testing.T) {
 
 func TestMakde1DimRefArray(t *testing.T) {
 	globals.InitGlobals("test")
-	bArr := Make1DimArray(REF, 10)
-	bArrType := stringPool.GetStringPointer(bArr.KlassName)
-	if *bArrType != "[L" {
-		t.Errorf("did not get expected Jacobin type for ref array, got %s", *bArrType)
+	rArr := Make1DimArray(REF, 10)
+	rArrType := stringPool.GetStringPointer(rArr.KlassName)
+	if *rArrType != "[L" {
+		t.Errorf("did not get expected Jacobin type for ref array, got %s", *rArrType)
 	}
 
-	rawArray := bArr.FieldTable["value"].Fvalue.([]*Object)
+	rawArray := rArr.FieldTable["value"].Fvalue.([]*Object)
 	if len(rawArray) != 10 {
 		t.Errorf("Expecting 10 elements in ref array, got %d", len(rawArray))
 	}
@@ -75,18 +75,45 @@ func TestMakde1DimRefArray(t *testing.T) {
 
 func TestMakde1DimIntArray(t *testing.T) {
 	globals.InitGlobals("test")
-	bArr := Make1DimArray(INT, 10)
-	bArrType := stringPool.GetStringPointer(bArr.KlassName)
-	if *bArrType != "[I" {
-		t.Errorf("did not get expected Jacobin type for int array, got %s", *bArrType)
+	iArr := Make1DimArray(INT, 10)
+	iArrType := stringPool.GetStringPointer(iArr.KlassName)
+	if *iArrType != "[I" {
+		t.Errorf("did not get expected Jacobin type for int array, got %s", *iArrType)
 	}
 
-	rawArray := bArr.FieldTable["value"].Fvalue.([]int64)
+	rawArray := iArr.FieldTable["value"].Fvalue.([]int64)
 	if len(rawArray) != 10 {
 		t.Errorf("Expecting 10 elements in int array, got %d", len(rawArray))
 	}
 
 	if rawArray[0] != int64(0) {
 		t.Errorf("Expecting int[0] ==  0, got %d", rawArray[0])
+	}
+}
+
+func TestArrayLength(t *testing.T) {
+	globals.InitGlobals("test")
+	iArr := Make1DimArray(INT, 256)
+	length := ArrayLength(iArr)
+	if length != 256 {
+		t.Errorf("Expecting 256 elements in int array, got %d", length)
+	}
+
+	bArr := Make1DimArray(BYTE, 200)
+	length = ArrayLength(bArr)
+	if length != 200 {
+		t.Errorf("Expecting 200 elements in byte array, got %d", length)
+	}
+
+	fArr := Make1DimArray(FLOAT, 222)
+	length = ArrayLength(fArr)
+	if length != 222 {
+		t.Errorf("Expecting 222 elements in float array, got %d", length)
+	}
+
+	rArr := Make1DimArray(REF, 256)
+	length = ArrayLength(rArr)
+	if length != 256 {
+		t.Errorf("Expecting 256 elements in ref array, got %d", length)
 	}
 }
