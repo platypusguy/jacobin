@@ -60,7 +60,7 @@ func TestMakde1DimRefArray(t *testing.T) {
 	bArr := Make1DimArray(REF, 10)
 	bArrType := stringPool.GetStringPointer(bArr.KlassName)
 	if *bArrType != "[L" {
-		t.Errorf("did not get expected Jacobin type for byte array, got %s", *bArrType)
+		t.Errorf("did not get expected Jacobin type for ref array, got %s", *bArrType)
 	}
 
 	rawArray := bArr.FieldTable["value"].Fvalue.([]*Object)
@@ -70,5 +70,23 @@ func TestMakde1DimRefArray(t *testing.T) {
 
 	if rawArray[0] != nil {
 		t.Errorf("Expecting ref[0] ==  nil, got %v", rawArray[0])
+	}
+}
+
+func TestMakde1DimIntArray(t *testing.T) {
+	globals.InitGlobals("test")
+	bArr := Make1DimArray(INT, 10)
+	bArrType := stringPool.GetStringPointer(bArr.KlassName)
+	if *bArrType != "[I" {
+		t.Errorf("did not get expected Jacobin type for int array, got %s", *bArrType)
+	}
+
+	rawArray := bArr.FieldTable["value"].Fvalue.([]int64)
+	if len(rawArray) != 10 {
+		t.Errorf("Expecting 10 elements in int array, got %d", len(rawArray))
+	}
+
+	if rawArray[0] != int64(0) {
+		t.Errorf("Expecting int[0] ==  0, got %d", rawArray[0])
 	}
 }
