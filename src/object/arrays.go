@@ -11,8 +11,8 @@ import (
 	"jacobin/types"
 )
 
-/*  This file contains some data structures and some functions
- 	for array handling in Jacobin
+/*  This file contains some data structures and some primitive
+    functions for array handling in Jacobin
 
     An array is implemented as a struct with two fields:
 	a value indicating the type of elements in the array and
@@ -28,7 +28,7 @@ import (
 
     The official JVM docs suggest that bit arrays (so booleans)
     can be implemented as individual byte elements or aggregated
-    eight a time into a single byte. Like the Oracle JVM,
+    eight a time into a single byte. Like the HotSpot JVM,
     we opted for the former option due to performance and simplicity,
     even though it uses more RAM.
 */
