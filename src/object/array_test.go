@@ -107,6 +107,13 @@ func TestMake2DimByteArray(t *testing.T) {
 	if topArray.Ftype != "[[B" {
 		t.Errorf("Expecting top array type to be [[B, got %s)", topArray.Ftype)
 	}
+
+	// now test the size of the leaf arrays
+	leafArray := topArray.Fvalue.([]*Object)[0]
+	length := ArrayLength(leafArray)
+	if length != 15 {
+		t.Errorf("Expecting length 15, got %d", length)
+	}
 }
 
 func TestArrayLength(t *testing.T) {
