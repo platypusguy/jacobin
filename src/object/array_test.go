@@ -126,6 +126,26 @@ func TestMake2DimByteArray(t *testing.T) {
 	}
 }
 
+func TestMakeArrayFromRawArray(t *testing.T) {
+	globals.InitGlobals("test")
+	rawArray := make([]byte, 10)
+	newArr := MakeArrayFromRawArray(rawArray)
+	size := ArrayLength(newArr)
+	if size != 10 {
+		t.Errorf("Expecting length 10, got %d", size)
+	}
+}
+
+func TestMakeArrayFromRawArrayPtr(t *testing.T) {
+	globals.InitGlobals("test")
+	rawArray := make([]byte, 10)
+	newArr := MakeArrayFromRawArray(&rawArray)
+	size := ArrayLength(newArr)
+	if size != 10 {
+		t.Errorf("Expecting length 10, got %d", size)
+	}
+}
+
 func TestArrayLength(t *testing.T) {
 	globals.InitGlobals("test")
 	iArr := Make1DimArray(INT, 256)
