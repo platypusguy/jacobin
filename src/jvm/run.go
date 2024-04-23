@@ -1970,7 +1970,7 @@ frameInterpreter:
 				if err != nil || mtEntry.Meth == nil {
 					// TODO: search the superclasses, then the classpath and retry
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName
+					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -1998,7 +1998,7 @@ frameInterpreter:
 					// any exception message will already have been displayed to the user
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
-						className, methodName)
+						className, methodName+methodType)
 					return errors.New(errMsg)
 				}
 				break
@@ -2009,7 +2009,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName + "." + methodType
+					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -2017,7 +2017,7 @@ frameInterpreter:
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName
+					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName + methodType
 					return errors.New(errMsg)
 				}
 				f.PC += 1                            // move to next bytecode before exiting
@@ -2075,7 +2075,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + "." + methSig
+					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methSig
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -2122,7 +2122,7 @@ frameInterpreter:
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName
+				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -2163,7 +2163,7 @@ frameInterpreter:
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + "." + methodType
+					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
@@ -2172,7 +2172,7 @@ frameInterpreter:
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					return errors.New("INVOKESTATIC: Error creating frame in: " +
-						className + "." + methodName)
+						className + "." + methodName + methodType)
 				}
 
 				f.PC += 1                            // point to the next bytecode before exiting

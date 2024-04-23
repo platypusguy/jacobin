@@ -43,7 +43,7 @@ import (
 
 func Load_Lang_System() map[string]GMeth {
 
-	MethodSignatures["java/lang/System.arrayCopy(Ljava.lang.Object;ILjava.lang.Object;II)V"] = // copy array (full or partial)
+	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
 			ParamSlots: 5,
 			GFunction:  arrayCopy,

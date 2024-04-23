@@ -308,10 +308,11 @@ func PrintDouble(params []interface{}) interface{} {
 func PrintString(params []interface{}) interface{} {
 	var str string
 	switch params[1].(type) {
-	case []byte:
-		str = string(params[1].([]byte))
+	case *object.Object:
+		str = object.GoStringFromStringObject(params[1].(*object.Object))
 	default:
-		str = string(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		errMsg := fmt.Sprintf("PrintString: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
 	}
 
 	fmt.Fprint(params[0].(*os.File), str)
