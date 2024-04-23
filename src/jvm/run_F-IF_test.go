@@ -24,7 +24,7 @@ import (
 // here in alphabetical order of the instruction name.
 // THIS FILE CONTAINS TESTS FOR ALL BYTECODES FROM F2D THROUGH IFNULL.
 // All other bytecodes are in run_*_test.go files except
-// for array bytecodes, which are located in arrays_test.go
+// for array bytecodes, which are located in arrayBytecodes_test.go
 
 // F2D: test convert float to double
 func TestF2d(t *testing.T) {

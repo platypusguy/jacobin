@@ -22,6 +22,9 @@ import (
 	"testing"
 )
 
+// This file contains unit tests for the array bytecodes. Array operation primitives
+// are tested in object.arrays_test.go
+
 func TestJdkArrayTypeToJacobinType(t *testing.T) {
 
 	a := object.JdkArrayTypeToJacobinType(object.T_BOOLEAN)

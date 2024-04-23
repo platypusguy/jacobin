@@ -24,7 +24,7 @@ import (
 // here in alphabetical order of the instruction name.
 // THIS FILE CONTAINS TESTS FOR ALL BYTECODES UP TO DUP2_X1.
 // All other bytecodes are in run_*_test.go files except
-// for array bytecodes, which are located in arrays_test.go
+// for array bytecodes, which are located in arrayBytecodes_test.go
 
 // set up function to create a frame with a method with the single instruction
 // that's being tested
@@ -288,7 +288,7 @@ func TestAstore3(t *testing.T) {
 	}
 }
 
-// BASTORE is tested in arrays_test.go
+// BASTORE is tested in arrayBytecodes_test.go
 
 // BIPUSH
 func TestBipush(t *testing.T) {
