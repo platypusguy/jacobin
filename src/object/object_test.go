@@ -24,6 +24,21 @@ func TestIsNull(t *testing.T) {
 	}
 }
 
+func TestMakeEmptyObjectWithClassName(t *testing.T) {
+	globals.InitGlobals("test")
+	clName := "genericClass"
+	o := MakeEmptyObjectWithClassName(&clName)
+	fieldSize := len(o.FieldTable)
+	if fieldSize != 0 {
+		t.Errorf("fieldSize should be zero, got %d", fieldSize)
+	}
+
+	namePter := stringPool.GetStringPointer(o.KlassName)
+	if *namePter != clName {
+		t.Errorf("Did not get 'generic' class type, got %s", *namePter)
+	}
+}
+
 func TestMakeValidPrimitiveByte(t *testing.T) {
 	globals.InitGlobals("test")
 	objPtr := MakePrimitiveObject("java/lang/Byte", types.Byte, uint8(0x61))
