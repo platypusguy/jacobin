@@ -146,6 +146,23 @@ func TestMakeArrayFromRawArrayPtr(t *testing.T) {
 	}
 }
 
+func TestMakeArrayFromObjectPtr(t *testing.T) {
+	globals.InitGlobals("test")
+	o := MakeEmptyObject()
+	newArr := MakeArrayFromRawArray(o)
+	if newArr != o {
+		t.Errorf("Expecting length output = input, got %v", newArr)
+	}
+}
+
+func TestMakeArrayFromRawArrayNil(t *testing.T) {
+	globals.InitGlobals("test")
+	newArr := MakeArrayFromRawArray(nil)
+	if newArr != nil {
+		t.Errorf("Expecting nil, got %v", newArr)
+	}
+}
+
 func TestArrayLength(t *testing.T) {
 	globals.InitGlobals("test")
 	iArr := Make1DimArray(INT, 256)
