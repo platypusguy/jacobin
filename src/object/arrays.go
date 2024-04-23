@@ -127,7 +127,6 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	}
 	value := o.FieldTable["value"]
 	o.KlassName = stringPool.GetStringIndex(&value.Ftype) // in arrays, Klass field is a pointer to the array type string
-	// o.Klass = &value.Ftype // in arrays, Klass field is a pointer to the array type string
 	return o
 }
 
