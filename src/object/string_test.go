@@ -169,3 +169,16 @@ func TestIsStringObjectWithGoString(t *testing.T) {
 		t.Errorf("expected IsStringObject(go string) to be false, observed true")
 	}
 }
+
+func TestGetStringFromStringPoolIndex(t *testing.T) {
+	globals.InitGlobals("test")
+	goStr := GoStringFromStringPoolIndex(StringPoolStringIndex)
+	if goStr != "java/lang/String" {
+		t.Errorf("Got unexpected string value: %s", goStr)
+	}
+
+	goStr = GoStringFromStringPoolIndex(200_000)
+	if goStr != "" {
+		t.Errorf("Expected empty string, got %s", goStr)
+	}
+}

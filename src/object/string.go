@@ -6,7 +6,7 @@
 
 package object
 
-// This experimental package is designed to codify the various kinds of strings and provide
+// This code attempts to codify the various kinds of strings and provide
 // convenience methods to create and manipulate them.
 // There exist only the following kinds of strings:
 // 1) golang string -- this is commonly used inside the JVM
