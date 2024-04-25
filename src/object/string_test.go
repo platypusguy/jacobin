@@ -196,3 +196,17 @@ func TestGetStringObjectFromStringPoolIndex(t *testing.T) {
 		t.Errorf("Expected nil, got %s", GoStringFromStringObject(stObj))
 	}
 }
+
+func TestIsStringObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	strObj := StringObjectFromGoString("test object")
+	if !IsStringObject(strObj) {
+		t.Errorf("expected IsStringObject(valid string object) to be true, got false")
+	}
+
+	emptyObj := Make1DimArray(BYTE, 10)
+	if IsStringObject(emptyObj) {
+		t.Errorf("expected IsStringObject(emptyObj) to be false, got true")
+	}
+}

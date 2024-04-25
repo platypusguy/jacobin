@@ -141,9 +141,9 @@ func ByteArrayFromStringPoolIndex(index uint32) []byte {
 	}
 }
 
-// determine whether an object is a string object (i.e., a Java string)
-// assumes that any object whose Klass pointer points to java/lang/String
-// is an instance of a Java string
+// IsStringObject determines whether an object is a string object
+// (i.e., a Java string). It // assumes that any object whose
+// KlassName is java/lang/String is an instance of a Java string
 func IsStringObject(unknown any) bool {
 	if unknown == nil {
 		return false
