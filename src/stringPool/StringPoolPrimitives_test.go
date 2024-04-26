@@ -147,3 +147,27 @@ func TestVariousInitStringPool(t *testing.T) {
 		t.Errorf("Expected initiailized string pool size >= 3, got %d", GetStringPoolSize())
 	}
 }
+
+func TestEmptyStringPool(t *testing.T) {
+	globals.InitGlobals("testInit")
+	globals.InitStringPool()
+	initialSize := GetStringPoolSize()
+
+	str1 := "test1"
+	GetStringIndex(&str1)
+
+	str2 := "test2"
+	GetStringIndex(&str2)
+
+	newSize := GetStringPoolSize()
+	if newSize != initialSize+2 {
+		t.Errorf("Expected string pool size = init size + 2 but observed: %d", newSize)
+	}
+
+	EmptyStringPool()
+	emptySize := GetStringPoolSize()
+	if emptySize != initialSize {
+		t.Errorf("Expected string pool size = init size, observed: %d", emptySize)
+	}
+
+}
