@@ -33,7 +33,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 
 	// If tracing, announce.
 	helloMsg := fmt.Sprintf("[ThrowEx] Arrived, which: %d, msg: %s", which, msg)
-	log.Log(helloMsg, log.TRACE_INST)
+	//log.Log(helloMsg, log.TRACE_INST)
+	log.Log(helloMsg, log.SEVERE)
 
 	// If in a unit test, log a severe message and return.
 	glob := globals.GetGlobalRef()
