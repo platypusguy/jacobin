@@ -13,6 +13,7 @@ import (
 	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/native"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
@@ -129,6 +130,9 @@ func JVMrun() int {
 	// initialize the MTable (table caching methods)
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadNatives(&classloader.MTable)
+
+	// initialize the table of unsupported native functions
+	native.LoadUnsupportedNativeMethods()
 
 	// create the main thread
 	MainThread = thread.CreateThread()
