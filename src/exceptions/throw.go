@@ -73,7 +73,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 		// 1. creating a new objRef for the exception
 		// 2. pushing the objRef on the stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
-		caughtMsg := fmt.Sprintf("[ThrowEx] Caught exception, which: %d, msg: %s", which, msg)
+		caughtMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
 		log.Log(caughtMsg, log.TRACE_INST)
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack
@@ -85,7 +85,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	}
 
 	// if the exception was not caught...
-	errMsg := fmt.Sprintf("[ThrowEx] Uncaught exception, which: %d, msg: %s", which, msg)
+	errMsg := fmt.Sprintf("[ThrowEx] uncaught %s, msg: %s", exceptionCPname, msg)
 	log.Log(errMsg, log.SEVERE)
 
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
