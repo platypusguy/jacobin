@@ -6,9 +6,9 @@
 
 package native
 
-// In this file we handle how we flag native methods that Jacobin does not
-// or cannot run. Eventually, many of these will be replaced by functions
-// written in golang.
+// In this file, we handle identifying native methods that Jacobin does not
+// or cannot run. Eventually, many of these methods will be replaced by
+// functions written in golang.
 
 // list where we add unsupported native methods and delete them as we implement them
 var unsupportedNativeMethodsList = []string{
