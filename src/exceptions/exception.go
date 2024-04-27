@@ -7,6 +7,7 @@
 package exceptions
 
 import (
+	"fmt"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
@@ -419,7 +420,8 @@ func Throw(exceptionType int, msg string) {
 	   	msg := fmt.Sprintf(
 	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
 	*/
-	_ = log.Log(msg, log.SEVERE)
+	helloMsg := fmt.Sprintf("[Throw] Arrived, which: %d, msg: %s", exceptionType, msg)
+	log.Log(helloMsg, log.SEVERE)
 
 	// TODO: Temporary until error/exception processing is complete.
 	glob := globals.GetGlobalRef()
