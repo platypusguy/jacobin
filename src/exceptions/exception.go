@@ -420,7 +420,7 @@ func Throw(exceptionType int, msg string) {
 	   	msg := fmt.Sprintf(
 	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
 	*/
-	helloMsg := fmt.Sprintf("[Throw] Arrived, which: %d, msg: %s", exceptionType, msg)
+	helloMsg := fmt.Sprintf("[Throw] %s, msg: %s", JVMexceptionNames[exceptionType], msg)
 	log.Log(helloMsg, log.SEVERE)
 
 	// TODO: Temporary until error/exception processing is complete.
