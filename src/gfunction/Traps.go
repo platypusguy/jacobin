@@ -201,68 +201,68 @@ func Load_Traps() map[string]GMeth {
 func trapCharset([]interface{}) interface{} {
 	errMsg := "Class java/nio/charset/Charset is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
 	errMsg := "The class or function requested is deprecated and is not supported by jacobin"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for FileChannel references
 func trapFileChannel([]interface{}) interface{} {
 	errMsg := "Class java.nio.channels.FileChannel is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for FileDescriptor references
 func trapFileDescriptor([]interface{}) interface{} {
 	errMsg := "Class java/io/FileDescriptor is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for FileSystem references
 func trapFileSystem([]interface{}) interface{} {
 	errMsg := "Class java.io.FileSystem is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
 func trapGetDefaultFileSystem([]interface{}) interface{} {
 	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for unsupported readers
 func trapReader([]interface{}) interface{} {
 	errMsg := "The requested reader is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for unsupported writers
 func trapWriter([]interface{}) interface{} {
 	errMsg := "The requested writer is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
 // Trap for StringBuilder
 func trapStringBuilder([]interface{}) interface{} {
 	errMsg := "Class StringBuilder is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
 
-// Trap for StringBuilder
+// Trap for StringBuffer
 func trapStringBuffer([]interface{}) interface{} {
 	errMsg := "Class StringBuffer is not yet supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return nil
 }
