@@ -87,7 +87,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// if the exception was not caught...
 	errMsg := fmt.Sprintf("[ThrowEx] uncaught %s, msg: %s", exceptionCPname, msg)
 	log.Log(errMsg, log.SEVERE)
-
+	// CURR: exit here after doing the ATHROW diagnostic info. Put that code in exceptions package
+	//  and show all the information
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
 
 	// append the genCode to the bytecode of the current method in the frame
