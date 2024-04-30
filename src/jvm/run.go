@@ -1941,6 +1941,7 @@ frameInterpreter:
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.ThrowEx(exceptions.WrongMethodTypeException, errMsg, f)
 				return errors.New(errMsg)
 			}
 
