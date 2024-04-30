@@ -25,13 +25,13 @@ import (
 // rather than the application. Typically, this is for errors/exceptions in the
 // operation of the JVM, and for a few occasional user errors, such as
 // divide by zero.
-//
-// We are here duplicating how in-application throws/catches are handled. To
+
+// ThrowEx duplicates how in-application throws/catches are handled. To
 // accomplish this, we generate bytecodes which are then placed in the frame of
 // the current thread.
 func ThrowEx(which int, msg string, f *frames.Frame) {
 
-	helloMsg := fmt.Sprintf("[ThrowEx] Arrived, which: %d, msg: %s", which, msg)
+	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", JVMexceptionNames[which], msg)
 	log.Log(helloMsg, log.TRACE_INST)
 
 	// If in a unit test, log a severe message and return.
