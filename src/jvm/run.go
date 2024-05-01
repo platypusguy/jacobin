@@ -2190,6 +2190,17 @@ frameInterpreter:
 				goto frameInterpreter // changed from return line above. Need to analyze which is better/safer
 			}
 
+		case opcodes.INVOKEINTERFACE: // 0xB9 invoke an interface
+			// CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			count := uint8(f.Meth[f.PC+3])
+			zeroByte := uint8(f.Meth[f.PC+4])
+			f.PC += 4
+
+			if count < 1 || zeroByte != 0x00 {
+				errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
+				exceptions.ThrowEx(exceptions.IllegalClassFormatException, errMsg, f)
+			}
+
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
