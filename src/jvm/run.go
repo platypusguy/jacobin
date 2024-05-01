@@ -2191,14 +2191,29 @@ frameInterpreter:
 			}
 
 		case opcodes.INVOKEINTERFACE: // 0xB9 invoke an interface
-			// CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			count := uint8(f.Meth[f.PC+3])
 			zeroByte := uint8(f.Meth[f.PC+4])
 			f.PC += 4
 
-			if count < 1 || zeroByte != 0x00 {
+			CP := f.CP.(*classloader.CPool)
+			if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
 				errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
 				exceptions.ThrowEx(exceptions.IllegalClassFormatException, errMsg, f)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
+			}
+
+			CPentry := CP.CpIndex[CPslot]
+			if CPentry.Type != classloader.MethodRef {
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry did not point to an interface method")
+				exceptions.ThrowEx(exceptions.WrongMethodTypeException, errMsg, f)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+
+				}
 			}
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
