@@ -91,7 +91,7 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] = // get nanoseconds time, returned as long
+	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  getConsole,

@@ -585,13 +585,53 @@ frameInterpreter:
 			}
 			f.Locals[index] = pop(f)
 		case opcodes.ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
-			f.Locals[0] = pop(f).(int64)
+			popped := pop(f)
+			switch popped.(type) {
+			case int64:
+				f.Locals[0] = popped.(int64)
+			case uint8:
+				f.Locals[0] = int64(popped.(uint8))
+			default:
+				errMsg := fmt.Sprintf("ISTORE_0: Invalid operand type: %T", popped)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+				return errors.New(errMsg)
+			}
 		case opcodes.ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
-			f.Locals[1] = pop(f).(int64)
+			popped := pop(f)
+			switch popped.(type) {
+			case int64:
+				f.Locals[1] = popped.(int64)
+			case uint8:
+				f.Locals[1] = int64(popped.(uint8))
+			default:
+				errMsg := fmt.Sprintf("ISTORE_1: Invalid operand type: %T", popped)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+				return errors.New(errMsg)
+			}
 		case opcodes.ISTORE_2: //   0x3D   	(store popped top of stack int into local 2)
-			f.Locals[2] = pop(f).(int64)
+			popped := pop(f)
+			switch popped.(type) {
+			case int64:
+				f.Locals[2] = popped.(int64)
+			case uint8:
+				f.Locals[2] = int64(popped.(uint8))
+			default:
+				errMsg := fmt.Sprintf("ISTORE_2: Invalid operand type: %T", popped)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+				return errors.New(errMsg)
+			}
 		case opcodes.ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
-			f.Locals[3] = pop(f).(int64)
+			popped := pop(f)
+			switch popped.(type) {
+			case int64:
+				f.Locals[3] = popped.(int64)
+			case uint8:
+				f.Locals[3] = int64(popped.(uint8))
+			default:
+				errMsg := fmt.Sprintf("ISTORE_3: Invalid operand type: %T", popped)
+				exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+				return errors.New(errMsg)
+			}
 		case opcodes.LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
 			var v = pop(f).(int64)
 			f.Locals[0] = v
@@ -2206,9 +2246,10 @@ frameInterpreter:
 			}
 
 			CPentry := CP.CpIndex[CPslot]
-			if CPentry.Type != classloader.MethodRef {
+			if CPentry.Type != classloader.Interface {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry did not point to an interface method")
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
+					CPentry.Type, classloader.MethodRef)
 				exceptions.ThrowEx(exceptions.WrongMethodTypeException, errMsg, f)
 				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
