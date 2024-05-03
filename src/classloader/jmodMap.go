@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2023-4 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -25,7 +25,7 @@ import (
 // JMODMAP contains class-to-Jmod-File relationships for all installed jmod files.
 // No class information is stored.
 // The key to the map is the class name in String format.
-// The value associated with the key is the file name (not the full path) of the jmod file where the class is stored.
+// The value is the file name (not the full path) of the jmod file where the class is stored.
 var JMODMAP map[string]string
 
 // Counting the map size (# of entries) since Go map has no such facility
@@ -60,21 +60,20 @@ func JmodMapFetch(className string) string {
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	jmodFile := JMODMAP[className+".class"]
-	// fmt.Printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$ DEBUG key={%s}, jmod={%s}\n", className, jmodFile)
 	return jmodFile
 }
 
-// This function returns the number of entries in JMODMAP.
+// JmodMapSize returns the number of entries in JMODMAP.
 func JmodMapSize() int {
 	return jmodMapSize
 }
 
-// This function returns the number of entries in JMODMAP.
+// JmodMapFoundGob returns the number of entries in JMODMAP.
 func JmodMapFoundGob() bool {
 	return jmodMapFoundGob
 }
 
-// This function initializes JMODMAP and jmodMapSize.
+// JmodMapInit initializes JMODMAP and jmodMapSize.
 // Look for an existing gob file that matches global.JavaVersion value.
 // If found, load the map from the gob file using buildMapFromGob.
 // Otherwise,
@@ -143,7 +142,6 @@ func JmodMapInit() {
 		return
 	}
 	saveMapToGob()
-
 }
 
 // This is the case where the map must be built from a gob file in global.JacobinHome.
@@ -193,7 +191,6 @@ func buildMapFromGob(gobFilePath string) bool {
 
 	// Success!
 	return true
-
 }
 
 // This is the case where the map must be built from the jmod files of the Java installation
@@ -246,7 +243,6 @@ func buildMapFromJmods() {
 	JMODMAP[counterElementName] = fmt.Sprint(jmodMapSize)
 	msg := fmt.Sprintf("buildMapFromJmods: Map built from %d jmod files", count)
 	_ = log.Log(msg, logLevel)
-
 }
 
 // Given a jmod file, process all of the embedded class files.
@@ -323,10 +319,9 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 	_ = log.Log(msg, logLevel)
 
 	return true
-
 }
 
-// Save the map to a gob file.
+// Save the map to a gob (that is, a binary go object file).
 // No map locking is necessary.
 func saveMapToGob() {
 
@@ -365,5 +360,4 @@ func saveMapToGob() {
 
 	msg := fmt.Sprintf("saveMapToGob: Saved gob file %s", gobFile)
 	_ = log.Log(msg, logLevel)
-
 }
