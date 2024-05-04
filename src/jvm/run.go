@@ -2171,7 +2171,7 @@ frameInterpreter:
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
-				_ = log.Log(errMsg, log.SEVERE)
+				exceptions.ThrowEx(exceptions.ClassNotLoadedException, errMsg, f)
 				return errors.New(errMsg)
 			}
 
