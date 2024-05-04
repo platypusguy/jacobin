@@ -6,6 +6,10 @@
 
 package gfunction
 
+import (
+	"jacobin/object"
+)
+
 // Implementation of some of the functions in Java/lang/Class.
 
 func Load_Lang_Object() map[string]GMeth {
@@ -15,5 +19,20 @@ func Load_Lang_Object() map[string]GMeth {
 			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
+
+	MethodSignatures["java/lang/Object.getClass()Ljava/lang/Class;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  objectGetClass,
+		}
+
 	return MethodSignatures
+}
+
+// "java/lang/Object.getClass()Ljava/lang/Class;"
+func objectGetClass(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	wint := obj.KlassName
+	name := object.GoStringFromStringPoolIndex(wint)
+	return object.StringObjectFromGoString("class " + name)
 }

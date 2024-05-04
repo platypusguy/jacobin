@@ -12,7 +12,9 @@ import (
 	"jacobin/object"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"math"
 	"strconv"
+	"unsafe"
 )
 
 func Load_Lang_Double() map[string]GMeth {
@@ -63,6 +65,26 @@ func Load_Lang_Double() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  doubleToString,
+		}
+
+	// Native functions or caller to native functions
+
+	MethodSignatures["java/lang/Double.doubleToLongBits(D)J"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  doubleToLongBits,
+		}
+
+	MethodSignatures["java/lang/Double.doubleToRawLongBits(D)J"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  doubleToRawLongBits,
+		}
+
+	MethodSignatures["java/lang/Double.longBitsToDouble(J)D"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  longBitsToDouble,
 		}
 
 	return MethodSignatures
@@ -169,4 +191,28 @@ func doubleToString(params []interface{}) interface{} {
 	str := fmt.Sprintf("%f", dd)
 	objPtr := object.StringObjectFromGoString(str)
 	return objPtr
+}
+
+// Simulating doubleToRawLongBits in Go
+// "java/lang/Double.doubleToRawLongBits(D)J"
+func doubleToRawLongBits(params []interface{}) interface{} {
+	value := params[0].(float64)
+	return *(*int64)(unsafe.Pointer(&value))
+}
+
+// Simulating doubleToLongBits in Go
+// "java/lang/Double.doubleToLongBits(D)J"
+func doubleToLongBits(params []interface{}) interface{} {
+	value := params[0].(float64)
+	if !math.IsNaN(value) {
+		return *(*int64)(unsafe.Pointer(&value))
+	}
+	return 0x7ff8000000000000 // equivalent to Java's 0x7ff8000000000000L
+}
+
+// Simulating longBitsToDouble in Go
+// "java/lang/Double.longBitsToDouble(J)D"
+func longBitsToDouble(params []interface{}) interface{} {
+	bits := params[0].(int64)
+	return math.Float64frombits(uint64(bits))
 }
