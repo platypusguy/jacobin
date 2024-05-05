@@ -79,6 +79,12 @@ func Load_Util_Random() map[string]GMeth {
 			GFunction:  randomNextLong,
 		}
 
+	MethodSignatures["java/util/Random.nextLong(J)J"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  randomNextLongBound,
+		}
+
 	MethodSignatures["java/util/Random.setSeed(J)V"] =
 		GMeth{
 			ParamSlots: 2,
@@ -181,7 +187,7 @@ func randomNextIntBound(params []interface{}) interface{} {
 	bound := params[1].(int64)
 	if bound < 1 {
 		errMsg := fmt.Sprintf("Random.NextIntBound: bound must be positive, observed: %d", bound)
-		return getGErrBlk(exceptions.ClassNotLoadedException, errMsg)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)
 	return output
@@ -193,6 +199,19 @@ func randomNextLong(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(obj)
 	output := r.rand.Int63()
+	return output
+}
+
+// randomNextLongBound returns a pseudorandom, uniformly distributed long value between 0 (inclusive) and bound (exclusive).
+func randomNextLongBound(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	bound := params[1].(int64)
+	if bound < 1 {
+		errMsg := fmt.Sprintf("Random.NextLongBound: bound must be positive, observed: %d", bound)
+		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+	}
+	output := r.rand.Int63n(bound)
 	return output
 }
 
