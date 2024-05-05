@@ -27,13 +27,7 @@ import (
  could mean an empty slice).
 */
 
-func Load_Misc_Unsafe() map[string]GMeth {
-
-	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  arrayBaseOffset,
-		}
+func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 
 	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] = // offset to start of first item in an array
 		GMeth{
@@ -41,11 +35,18 @@ func Load_Misc_Unsafe() map[string]GMeth {
 			GFunction:  justReturn, // Unsafe <clinit>
 		}
 
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  arrayBaseOffset,
+		}
+
 	return MethodSignatures
 }
 
 // Return the number of bytes between the beginning of the object and the first element.
 // This is used in computing the pointer to a given element
+// "jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"
 func arrayBaseOffset(param []interface{}) interface{} {
 	p := param[0]
 	if p == nil || p == object.Null {

@@ -43,6 +43,13 @@ func Load_Lang_Class() map[string]GMeth {
 			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
+
+	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getName,
+		}
+
 	return MethodSignatures
 }
 
@@ -124,4 +131,11 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// know we have the latest assertion-enabled status.
 	x := statics.Statics["main.$assertionsDisabled"].Value.(int64)
 	return 1 - x // return the 0 if disabled, 1 if not.
+}
+
+// "java/lang/Class.getName()Ljava/lang/String;"
+func getName(params []interface{}) interface{} {
+	primitive := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(primitive)
+	return str
 }
