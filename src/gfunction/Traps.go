@@ -194,6 +194,12 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapStringBuffer,
 		}
 
+	MethodSignatures["java/util/Random.next(I)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapRandomNext,
+		}
+
 	return MethodSignatures
 }
 
@@ -263,6 +269,13 @@ func trapStringBuilder([]interface{}) interface{} {
 // Trap for StringBuffer
 func trapStringBuffer([]interface{}) interface{} {
 	errMsg := "Class StringBuffer is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return nil
+}
+
+// Trap for StringBuffer
+func trapRandomNext([]interface{}) interface{} {
+	errMsg := "Protected method Random.next should never be reached unless done by reflection"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return nil
 }
