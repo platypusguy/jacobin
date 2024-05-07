@@ -95,6 +95,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Util_HashMap())
 	loadlib(MTable, Load_Util_Locale())
 	loadlib(MTable, Load_Util_Concurrent_Atomic_Atomic_Long())
+	loadlib(MTable, Load_Util_Random())
 
 	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
 

@@ -79,6 +79,9 @@ type Globals struct {
 	JvmFrameStackShown bool
 	GoStackShown       bool
 
+	// Random object mutex
+	RandomLock sync.Mutex
+
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
 
