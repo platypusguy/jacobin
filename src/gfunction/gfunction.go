@@ -93,6 +93,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Nio_Charset_Charset()) // Zero Charset support
 
 	loadlib(MTable, Load_Util_HashMap())
+	loadlib(MTable, Load_Util_HexFormat())
 	loadlib(MTable, Load_Util_Locale())
 	loadlib(MTable, Load_Util_Concurrent_Atomic_Atomic_Long())
 	loadlib(MTable, Load_Util_Random())
