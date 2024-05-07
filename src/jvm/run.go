@@ -2131,6 +2131,7 @@ frameInterpreter:
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methSig
+					exceptions.ThrowEx(exceptions.InvalidStackFrameException, errMsg, f)
 					return errors.New(errMsg)
 				}
 
