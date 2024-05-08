@@ -113,6 +113,9 @@ func checkKey(key string) bool {
 	if strings.Index(key, ".") == -1 || strings.Index(key, "(") == -1 || strings.Index(key, ")") == -1 {
 		return false
 	}
+	if strings.HasSuffix(key, ")") {
+		return false
+	}
 	return true
 }
 
