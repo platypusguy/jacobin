@@ -242,6 +242,12 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapRandomNext,
 		}
 
+	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapSharedSecrets,
+		}
+
 	return MethodSignatures
 }
 
@@ -332,6 +338,13 @@ func trapFilterOutputStream([]interface{}) interface{} {
 // Trap for Random.next()
 func trapRandomNext([]interface{}) interface{} {
 	errMsg := "Protected method Random.next should never be reached unless done by reflection"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return nil
+}
+
+// Trap for Random.next()
+func trapSharedSecrets([]interface{}) interface{} {
+	errMsg := "Class jdk/internal/access/SharedSecrets is not supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return nil
 }

@@ -41,17 +41,74 @@ func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 			GFunction:  arrayBaseOffset,
 		}
 
+	MethodSignatures["jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  unsafeGetIntVolatile,
+		}
+
+	MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  unsafeCompareAndSetInt,
+		}
+
+	MethodSignatures["jdk/internal/misc/Unsafe.getAndAddInt(Ljava/lang/Object;JI)I"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  unsafeCompareAndSetInt,
+		}
+
 	return MethodSignatures
 }
 
 // Return the number of bytes between the beginning of the object and the first element.
 // This is used in computing the pointer to a given element
 // "jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"
-func arrayBaseOffset(param []interface{}) interface{} {
-	p := param[0]
+func arrayBaseOffset(params []interface{}) interface{} {
+	p := params[0]
 	if p == nil || p == object.Null {
 		errMsg := "jdk.internal.misc.Unsafe::arrayBaseOffset() was passed a null pointer"
 		return getGErrBlk(exceptions.NullPointerException, errMsg)
 	}
 	return int64(0) // this should work...
+}
+
+// SWAG
+// "jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"
+func unsafeGetIntVolatile(params []interface{}) interface{} {
+	var hash int64
+	switch params[1].(type) {
+	case nil:
+		hash = 0
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		hash = int64(obj.Mark.Hash)
+	}
+	offset := params[2].(int64)
+	wint := hash + offset
+	return wint
+}
+
+// SWAG
+// "jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"
+func unsafeCompareAndSetInt(params []interface{}) interface{} {
+	return int64(1) // SWAG
+}
+
+// SWAG
+// "jdk/internal/misc/Unsafe.getAndAddInt(Ljava/lang/Object;JI)I"
+func unsafeGetAndAddInt(params []interface{}) interface{} {
+	var hash int64
+	switch params[1].(type) {
+	case nil:
+		hash = 0
+	case *object.Object:
+		obj := params[0].(*object.Object)
+		hash = int64(obj.Mark.Hash)
+	}
+	offset := params[2].(int64)
+	delta := params[4].(int64)
+	wint := hash + offset + delta
+	return wint
 }
