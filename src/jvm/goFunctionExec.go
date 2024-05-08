@@ -21,13 +21,24 @@ import (
 // Similar to global tracing but just for this source file.
 var localDebugging bool = false
 
-// This function is called from run(). It executes a frame whose method is
+// runGframe is called from run(). It executes a frame whose method is
 // a native method implemented in golang. It copies the parameters from the
 // operand stack and passes them to the golang function, called GFunction,
 // as an array of interface{}, which can be nil if there are no arguments.
 // Any return value from the method is returned to run() as an interface{}
 // (which is nil in the case of a void function), where it is placed
 // by run() on the operand stack of the calling function.
+/*
+=========================================================
+Return values table
+			ret		slotCount	err
+---------------------------------------------------------
+Failure		nil		0			error
+Success		nil		0			nil		E.g. <clinit>
+Success		J/D		2			nil		long or double
+Success		~ J/D	1			nil		E.g. int
+=========================================================
+*/
 func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, error) {
 	if localDebugging || MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGframe %s.%s, f.OpStack:", fr.ClName, fr.MethName)
