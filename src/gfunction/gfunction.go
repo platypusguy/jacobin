@@ -7,10 +7,14 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/classloader"
+	"jacobin/exceptions"
+	"jacobin/log"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
+	"strings"
 )
 
 // File I/O and stream Field keys:
@@ -105,8 +109,21 @@ func MTableLoadNatives(MTable *classloader.MT) {
 
 }
 
+func checkKey(key string) bool {
+	if strings.Index(key, ".") == -1 || strings.Index(key, "(") == -1 || strings.Index(key, ")") == -1 {
+		return false
+	}
+	return true
+}
+
 func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
+	ok := true
 	for key, val := range libMeths {
+		if !checkKey(key) {
+			errMsg := fmt.Sprintf("loadlib: Invalid key=%s", key)
+			log.Log(errMsg, log.SEVERE)
+			ok = false
+		}
 		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
 		gme.GFunction = val.GFunction
@@ -118,6 +135,9 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		}
 
 		classloader.AddEntry(tbl, key, tableEntry)
+	}
+	if !ok {
+		exceptions.Throw(exceptions.InternalException, "loadlib: at least one key was invalid")
 	}
 }
 
