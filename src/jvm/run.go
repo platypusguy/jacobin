@@ -2047,6 +2047,7 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
 						className, methodName+methodType)
+					exceptions.ThrowEx(exceptions.NativeMethodException, errMsg, f)
 					return errors.New(errMsg)
 				}
 				break
