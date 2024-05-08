@@ -10,7 +10,7 @@ var atomicIntegerClassName = "java/util/concurrent/atomic/AtomicInteger"
 
 func Load_Util_Concurrent_Atomic_AtomicInteger() map[string]GMeth {
 
-	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>V"] =
+	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  justReturn,

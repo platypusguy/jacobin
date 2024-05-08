@@ -49,7 +49,7 @@ func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 
 	MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 5,
 			GFunction:  unsafeCompareAndSetInt,
 		}
 
@@ -59,8 +59,16 @@ func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 			GFunction:  unsafeCompareAndSetInt,
 		}
 
+	MethodSignatures["jdk/internal/misc/Unsafe.getUnsafe()Ljdk/internal/misc/Unsafe;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  unsafeGetUnsafe,
+		}
+
 	return MethodSignatures
 }
+
+var classUnsafeName = "jdk/internal/misc/Unsafe"
 
 // Return the number of bytes between the beginning of the object and the first element.
 // This is used in computing the pointer to a given element
@@ -111,4 +119,9 @@ func unsafeGetAndAddInt(params []interface{}) interface{} {
 	delta := params[4].(int64)
 	wint := hash + offset + delta
 	return wint
+}
+
+func unsafeGetUnsafe([]interface{}) interface{} {
+	obj := object.MakeEmptyObjectWithClassName(&classUnsafeName)
+	return obj
 }

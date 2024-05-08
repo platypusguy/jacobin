@@ -176,7 +176,7 @@ frameInterpreter:
 		retval, slotCount, err := runGframe(fs, f)
 
 		if retval != nil {
-			f = fs.Front().Next().Value.(*frames.Frame)
+			f := fs.Front().Next().Value.(*frames.Frame)
 			push(f, retval) // if slotCount = 1
 
 			if slotCount == 2 {

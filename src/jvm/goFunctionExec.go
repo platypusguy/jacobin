@@ -68,13 +68,16 @@ func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, error) {
 		// Get the G error block
 		ge := *ret.(*gfunction.GErrBlk)
 		// Pop the G frame off the frame stack.
-		fs.Remove(fs.Front())
+		err := frames.PopFrame(fs)
+		if err != nil {
+			return nil, 0, err
+		}
 		// Get a pointer to the previous frame.
 		fprev := fs.Front().Value.(*frames.Frame)
 		// Throw an exception in the previous frame.
 		exceptions.ThrowEx(ge.ExceptionType, ge.ErrMsg, fprev)
 		// Create an error object to return to caller.
-		var err = errors.New(ge.ErrMsg)
+		err = errors.New(ge.ErrMsg)
 		// Return to caller a nil G function result, 0 slots, and an error object.
 		return nil, 0, err
 	}
