@@ -37,25 +37,25 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() map[string]GMeth {
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.set(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  atomicIntegerInitInt,
+			GFunction:  atomicIntegerInitInt, // same as <init>(I)V
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.lazySet(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  atomicIntegerInitInt,
+			GFunction:  atomicIntegerInitInt, // same as <init>(I)V
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndSet(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  atomicIntegerInitInt,
+			GFunction:  atomicIntegerGetAndSet,
 		}
 
-	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.compareAndSet(II)I"] =
+	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.compareAndSet(II)Z"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  atomicIntegerInitInt,
+			GFunction:  atomicIntegerCompareAndSet,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.weakCompareAndSet(II)I"] =
@@ -79,25 +79,25 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() map[string]GMeth {
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.getAndAdd(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  atomicIntegerGetAndDecrement,
+			GFunction:  atomicIntegerGetAndAdd,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.incrementAndGet()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicIntegerGetAndIncrement,
+			GFunction:  atomicIntegerIncrementAndGet,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.decrementAndGet()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  atomicIntegerGetAndDecrement,
+			GFunction:  atomicIntegerDecrementAndGet,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.addAndGet(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  atomicIntegerGetAndDecrement,
+			GFunction:  atomicIntegerAddAndGet,
 		}
 
 	return MethodSignatures
