@@ -29,10 +29,10 @@ import (
 
 func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 
-	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] = // offset to start of first item in an array
+	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn, // Unsafe <clinit>
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
@@ -63,6 +63,12 @@ func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  unsafeGetUnsafe,
+		}
+
+	MethodSignatures["jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  unsafeObjectFieldOffset1,
 		}
 
 	return MethodSignatures
@@ -124,4 +130,8 @@ func unsafeGetAndAddInt(params []interface{}) interface{} {
 func unsafeGetUnsafe([]interface{}) interface{} {
 	obj := object.MakeEmptyObjectWithClassName(&classUnsafeName)
 	return obj
+}
+
+func unsafeObjectFieldOffset1([]interface{}) interface{} {
+	return int64(0)
 }

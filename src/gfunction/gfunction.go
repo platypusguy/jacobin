@@ -104,6 +104,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Util_Random())
 
 	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
+	loadlib(MTable, Load_Jdk_Internal_Misc_ScopedMemoryAccess())
 
 	loadlib(MTable, Load_Traps()) // Load traps
 
