@@ -26,7 +26,7 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  initInputStreamReader,
+			GFunction:  inputStreamReaderInit,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.close()V"] =
@@ -44,7 +44,7 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 	MethodSignatures["java/io/InputStreamReader.read([CII)I"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  ReadCharBuffer,
+			GFunction:  isrReadCharBufferSubset,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.ready()Z"] =
@@ -85,19 +85,19 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 }
 
 // "java/io/InputStreamReader.<init>(Ljava/io/InputStream;)V"
-func initInputStreamReader(params []interface{}) interface{} {
+func inputStreamReaderInit(params []interface{}) interface{} {
 
 	// Get file path field.
 	fldPath, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "initInputStreamReader: InputStream argument lacks a FilePath field"
+		errMsg := "inputStreamReaderInit: InputStream argument lacks a FilePath field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Get file handle field.
 	fldHandle, ok := params[1].(*object.Object).FieldTable[FileHandle]
 	if !ok {
-		errMsg := "initInputStreamReader: InputStream argument lacks a FileHandle field"
+		errMsg := "inputStreamReaderInit: InputStream argument lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	osFile := fldHandle.Fvalue.(*os.File)
@@ -106,7 +106,7 @@ func initInputStreamReader(params []interface{}) interface{} {
 	_, err := osFile.Stat()
 	if err != nil {
 		pathStr := string(fldPath.Fvalue.([]byte))
-		errMsg := fmt.Sprintf("initInputStreamReader: os.Stat(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("inputStreamReaderInit: os.Stat(%s) returned: %s", pathStr, err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
@@ -171,7 +171,7 @@ func isrReadOneChar(params []interface{}) interface{} {
 }
 
 // "java/io/InputStreamReader.read([CII)I"
-func ReadCharBuffer(params []interface{}) interface{} {
+func isrReadCharBufferSubset(params []interface{}) interface{} {
 
 	// Get InputStream object.
 	obj := params[0].(*object.Object)
@@ -179,14 +179,14 @@ func ReadCharBuffer(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "ReadCharBuffer: InputStream object lacks a FileHandle field"
+		errMsg := "isrReadCharBufferSubset: InputStream object lacks a FileHandle field"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
-		errMsg := "ReadCharBuffer: InputStream object trouble with value field ([]int64)"
+		errMsg := "isrReadCharBufferSubset: InputStream object trouble with value field ([]int64)"
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -197,7 +197,7 @@ func ReadCharBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(intArray))-offset) {
-		errMsg := fmt.Sprintf("ReadCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("isrReadCharBufferSubset: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(intArray))
 		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
 	}
@@ -210,7 +210,7 @@ func ReadCharBuffer(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("ReadCharBuffer osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("isrReadCharBufferSubset osFile.Read failed, reason: %s", err.Error())
 		return getGErrBlk(exceptions.IOException, errMsg)
 	}
 

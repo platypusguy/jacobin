@@ -65,6 +65,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
 
+	loadlib(MTable, Load_Io_BufferedReader())
 	loadlib(MTable, Load_Io_File())
 	loadlib(MTable, Load_Io_FileInputStream())
 	loadlib(MTable, Load_Io_FileOutputStream())
@@ -104,6 +105,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Util_Random())
 
 	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
+	loadlib(MTable, Load_Jdk_Internal_Misc_ScopedMemoryAccess())
 
 	loadlib(MTable, Load_Traps()) // Load traps
 
