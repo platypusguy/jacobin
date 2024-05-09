@@ -18,6 +18,8 @@ type StackValue interface {
 	int64 | float64 | unsafe.Pointer
 }
 
+//var debugging bool = true
+
 type Number interface {
 	int64 | float64
 }
@@ -73,6 +75,9 @@ func CreateFrame(opStackSize int) *Frame {
 
 // PushFrame pushes a frame. This simply adds a frame to the head of the list.
 func PushFrame(fs *list.List, f *Frame) error {
+	/*if debugging {
+		fmt.Printf("DEBUG PushFrame ClName=%s, MethName=%s TOS=%d, PC=%d\n", f.ClName, f.MethName, f.TOS, f.PC)
+	}*/
 	fs.PushFront(f)
 	// TODO: move this to instrumentation system
 	if log.Level == log.FINEST {
@@ -91,6 +96,11 @@ func PopFrame(fs *list.List) error {
 	if fs.Len() == 0 {
 		return fmt.Errorf("invalid PopFrame of empty JVM frame stack")
 	}
+
+	/*if debugging {
+		f := PeekFrame(fs, 0)
+		fmt.Printf("DEBUG PopFrame ClName=%s, MethName=%s TOS=%d, PC=%d\n", f.ClName, f.MethName, f.TOS, f.PC)
+	}*/
 
 	fs.Remove(fs.Front())
 	return nil

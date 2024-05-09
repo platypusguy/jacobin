@@ -130,7 +130,19 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapDeprecated,
 		}
 
-	// String Builder
+	MethodSignatures["java/security/AccessController.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/security/AccessController.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	// StringBuilder
 
 	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
 		GMeth{
@@ -162,7 +174,7 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapStringBuilder,
 		}
 
-	// String Buffer
+	// StringBuffer
 
 	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
 		GMeth{
@@ -194,10 +206,46 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapStringBuffer,
 		}
 
+	// FilterInputStream
+
+	MethodSignatures["java/lang/FilterInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFilterInputStream,
+		}
+
+	MethodSignatures["java/lang/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFilterInputStream,
+		}
+
+	// FilterOutputStream
+
+	MethodSignatures["java/lang/FilterOutputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFilterOutputStream,
+		}
+
+	MethodSignatures["java/lang/FilterOutputStream.<init>(Ljava/io/OutputStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFilterOutputStream,
+		}
+
+	// Miscellaneous
+
 	MethodSignatures["java/util/Random.next(I)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapRandomNext,
+		}
+
+	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapSharedSecrets,
 		}
 
 	return MethodSignatures
@@ -273,9 +321,30 @@ func trapStringBuffer([]interface{}) interface{} {
 	return nil
 }
 
-// Trap for StringBuffer
+// Trap for FilterInputStream
+func trapFilterInputStream([]interface{}) interface{} {
+	errMsg := "Class FilterInputStream is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return nil
+}
+
+// Trap for FilterOutputStream
+func trapFilterOutputStream([]interface{}) interface{} {
+	errMsg := "Class FilterOutputStream is not yet supported"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return nil
+}
+
+// Trap for Random.next()
 func trapRandomNext([]interface{}) interface{} {
 	errMsg := "Protected method Random.next should never be reached unless done by reflection"
+	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	return nil
+}
+
+// Trap for Random.next()
+func trapSharedSecrets([]interface{}) interface{} {
+	errMsg := "Class jdk/internal/access/SharedSecrets is not supported"
 	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
 	return nil
 }

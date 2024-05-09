@@ -7,10 +7,14 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/classloader"
+	"jacobin/exceptions"
+	"jacobin/log"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
+	"strings"
 )
 
 // File I/O and stream Field keys:
@@ -92,9 +96,11 @@ func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Nio_Charset_Charset()) // Zero Charset support
 
-	loadlib(MTable, Load_Util_HashMap())
-	loadlib(MTable, Load_Util_Locale())
+	loadlib(MTable, Load_Util_Concurrent_Atomic_AtomicInteger())
 	loadlib(MTable, Load_Util_Concurrent_Atomic_Atomic_Long())
+	loadlib(MTable, Load_Util_HashMap())
+	loadlib(MTable, Load_Util_HexFormat())
+	loadlib(MTable, Load_Util_Locale())
 	loadlib(MTable, Load_Util_Random())
 
 	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
@@ -103,8 +109,24 @@ func MTableLoadNatives(MTable *classloader.MT) {
 
 }
 
+func checkKey(key string) bool {
+	if strings.Index(key, ".") == -1 || strings.Index(key, "(") == -1 || strings.Index(key, ")") == -1 {
+		return false
+	}
+	if strings.HasSuffix(key, ")") {
+		return false
+	}
+	return true
+}
+
 func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
+	ok := true
 	for key, val := range libMeths {
+		if !checkKey(key) {
+			errMsg := fmt.Sprintf("loadlib: Invalid key=%s", key)
+			log.Log(errMsg, log.SEVERE)
+			ok = false
+		}
 		gme := GMeth{}
 		gme.ParamSlots = val.ParamSlots
 		gme.GFunction = val.GFunction
@@ -116,6 +138,9 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		}
 
 		classloader.AddEntry(tbl, key, tableEntry)
+	}
+	if !ok {
+		exceptions.Throw(exceptions.InternalException, "loadlib: at least one key was invalid")
 	}
 }
 

@@ -8,27 +8,45 @@ package gfunction
 
 import (
 	"jacobin/classloader"
+	"jacobin/globals"
+	"jacobin/log"
 	"testing"
 )
 
+func f1([]interface{}) interface{} { return nil }
+func f2([]interface{}) interface{} { return nil }
+func f3([]interface{}) interface{} { return nil }
+
 func TestMTableLoadLib(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
 	libMeths := make(map[string]GMeth)
-	libMeths["testG1"] = GMeth{ParamSlots: 1, GFunction: nil}
-	libMeths["testG2"] = GMeth{ParamSlots: 2, GFunction: nil}
-	libMeths["testG3"] = GMeth{ParamSlots: 3, GFunction: nil}
+	libMeths["test.f1()V"] = GMeth{ParamSlots: 0, GFunction: f1}
+	libMeths["test.f2(I)V"] = GMeth{ParamSlots: 1, GFunction: f2}
+	libMeths["test.f3(Ljava/lang/String;JZ)D"] = GMeth{ParamSlots: 3, GFunction: f3}
 	mtbl := make(classloader.MT)
 	loadlib(&mtbl, libMeths)
 	if len(mtbl) != 3 {
-		t.Errorf("Expecting MTable with 3 entries, got: %d", len(mtbl))
+		t.Errorf("ERROR, Expecting MTable with 3 entries, got: %d\n", len(mtbl))
 	}
-	mte := libMeths["testG2"]
-	if mte.ParamSlots != 2 {
-		t.Errorf("Expecting MTable entry to have 2 param slots, got: %d",
+	mte := libMeths["test.f1()V"]
+	if mte.ParamSlots != 0 {
+		t.Errorf("ERROR, Expecting f1 MTable entry to have 0 param slots, got: %d\n",
+			mte.ParamSlots)
+	}
+	mte = libMeths["test.f2(I)V"]
+	if mte.ParamSlots != 1 {
+		t.Errorf("ERROR, Expecting f2 MTable entry to have 1 param slots, got: %d\n",
+			mte.ParamSlots)
+	}
+	mte = libMeths["test.f3(Ljava/lang/String;JZ)D"]
+	if mte.ParamSlots != 3 {
+		t.Errorf("ERROR, Expecting f3 MTable entry to have 3 param slots, got: %d\n",
 			mte.ParamSlots)
 	}
 
-	if mte.NeedsContext != false {
-		t.Errorf("Expecting MTable entry's NeedContext to be false")
+	if mte.NeedsContext {
+		t.Errorf("ERROR, Expecting MTable entry's NeedContext to be false\n")
 	}
 }
 
