@@ -65,6 +65,7 @@ func MTableLoadNatives(MTable *classloader.MT) {
 
 	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
 
+	loadlib(MTable, Load_Io_BufferedReader())
 	loadlib(MTable, Load_Io_File())
 	loadlib(MTable, Load_Io_FileInputStream())
 	loadlib(MTable, Load_Io_FileOutputStream())

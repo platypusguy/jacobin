@@ -44,12 +44,6 @@ func Load_Traps() map[string]GMeth {
 
 	// Unsupported readers
 
-	MethodSignatures["java/io/BufferedReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapReader,
-		}
-
 	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
