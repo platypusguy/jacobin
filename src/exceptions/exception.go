@@ -36,6 +36,7 @@ const (
 	CannotUndoException
 	CatalogException
 	ClassCastException
+	ClassNotFoundException
 	ClassNotPreparedException
 	CMMException
 	CompletionException
@@ -230,6 +231,7 @@ var JVMexceptionNames = []string{
 	"java.lang.CannotUndoException",
 	"java.lang.CatalogException",
 	"java.lang.ClassCastException",
+	"java.lang.ClassNotFoundException", // verified
 	"java.lang.ClassNotPreparedException",
 	"java.lang.CMMException",
 	"java.lang.CompletionException",
