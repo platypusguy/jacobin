@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/log"
 	"math"
@@ -222,7 +223,7 @@ func mathClinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "mathClinit, expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.ThrowEx(exceptions.VirtualMachineError, errMsg, nil)
+		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
 	}
 	return nil
 }
@@ -324,7 +325,7 @@ func floorFloat64(params []interface{}) interface{} {
 // to the algebraic quotient.
 func floorDivInt64(dividend int64, divisor int64) interface{} {
 	if divisor == 0 {
-		return getGErrBlk(exceptions.ArithmeticException, "floorDivInt64: Divide by zero attempted")
+		return getGErrBlk(excNames.ArithmeticException, "floorDivInt64: Divide by zero attempted")
 	}
 	if dividend <= math.MinInt64 && divisor == -1 {
 		return math.MinInt64

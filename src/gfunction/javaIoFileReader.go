@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -64,13 +64,13 @@ func initFileReader(params []interface{}) interface{} {
 	fld1, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "initFileReader: File argument lacks a FilePath field"
-		return getGErrBlk(exceptions.InvalidTypeException, errMsg)
+		return getGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
 	inPathStr := string(fld1.Fvalue.([]byte))
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileReader: os.Open(%s) returned: %s", inPathStr, err.Error())
-		return getGErrBlk(exceptions.FileNotFoundException, errMsg)
+		return getGErrBlk(excNames.FileNotFoundException, errMsg)
 	}
 
 	// Copy java/io/File path
@@ -90,7 +90,7 @@ func initFileReaderString(params []interface{}) interface{} {
 	osFile, err := os.Open(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileReaderString: os.Open(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.FileNotFoundException, errMsg)
+		return getGErrBlk(excNames.FileNotFoundException, errMsg)
 	}
 
 	// Copy java/io/File path

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"jacobin/excNames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
@@ -363,8 +364,8 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, error) {
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
-		_ = log.Log(errMsg, log.SEVERE)
-		return types.InvalidStringIndex, errors.New(errMsg)
+		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+		return types.InvalidStringIndex, errors.New(errMsg) // return for tests only
 	}
 	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
 

@@ -89,8 +89,9 @@ type Globals struct {
 	FileEncoding string // what file encoding are we using?
 
 	// Get around the golang circular dependency. To be set up in jvmStart.go
-	// Enables gfunctions to call InstantiateClass through a global function variable.
+	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
+	FuncThrowException   func(int, string)
 }
 
 // ----- String Pool
@@ -132,6 +133,7 @@ func InitGlobals(progName string) Globals {
 		JvmFrameStackShown:   false,
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
+		FuncThrowException:   fakeThrowEx,
 	}
 
 	// ----- String Pool and other values
@@ -267,9 +269,15 @@ func InitArrayAddressList() *list.List {
 
 // Fake InstantiateClass
 func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
-	errMsg := fmt.Sprintf("\n*Attempt to acess uninitialized InstantiateClass pointer func: classname=%s\n", classname)
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized InstantiateClass pointer func: classname=%s\n", classname)
 	fmt.Fprintf(os.Stderr, errMsg)
 	return nil, errors.New(errMsg)
+}
+
+// Fake ThrowEx() in exceptions.go
+func fakeThrowEx(whichEx int, msg string) {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
 }
 
 func InitStringPool() {

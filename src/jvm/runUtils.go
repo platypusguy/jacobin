@@ -9,6 +9,7 @@ package jvm
 import (
 	"encoding/binary"
 	"fmt"
+	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
@@ -94,7 +95,7 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 // Appears primarily in the runFrame{} IF* bytecodes.
 func convertIntegralValueToInt64(arg interface{}) int64 {
 	var value int64
-	//fmt.Printf("convertIntegralValueToInt64 *TRAP*: argument type: %T\n", arg)
+	// fmt.Printf("convertIntegralValueToInt64 *TRAP*: argument type: %T\n", arg)
 	switch arg.(type) {
 	case int64:
 		value = arg.(int64)
@@ -112,7 +113,7 @@ func convertIntegralValueToInt64(arg interface{}) int64 {
 		}
 	default:
 		errMsg := fmt.Sprintf("convertIntegralValueToInt64 *TRAP*: Invalid argument type: %T", arg)
-		exceptions.Throw(exceptions.InvalidTypeException, errMsg)
+		exceptions.Throw(excNames.InvalidTypeException, errMsg)
 	}
 
 	return value

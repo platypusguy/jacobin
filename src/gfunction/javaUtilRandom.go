@@ -2,7 +2,7 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/types"
@@ -187,7 +187,7 @@ func randomNextIntBound(params []interface{}) interface{} {
 	bound := params[1].(int64)
 	if bound < 1 {
 		errMsg := fmt.Sprintf("Random.NextIntBound: bound must be positive, observed: %d", bound)
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)
 	return output
@@ -209,7 +209,7 @@ func randomNextLongBound(params []interface{}) interface{} {
 	bound := params[1].(int64)
 	if bound < 1 {
 		errMsg := fmt.Sprintf("Random.NextLongBound: bound must be positive, observed: %d", bound)
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)
 	return output

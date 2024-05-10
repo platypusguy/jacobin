@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
@@ -340,7 +341,7 @@ func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(object.StringClassName)
 	if klass == nil {
 		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", object.StringClassName)
-		return getGErrBlk(exceptions.ClassNotLoadedException, errMsg)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
@@ -349,7 +350,7 @@ func stringClinit([]interface{}) interface{} {
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInString([]interface{}) interface{} {
 	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", object.StringClassName)
-	return getGErrBlk(exceptions.UnsupportedEncodingException, errMsg)
+	return getGErrBlk(excNames.UnsupportedEncodingException, errMsg)
 }
 
 // Get character at the given index.
@@ -421,7 +422,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
 		errMsg1 := "newStringFromBytesSubset: Either: nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssStart, ssEnd)
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
@@ -471,7 +472,7 @@ func StringFormatter(params []interface{}) interface{} {
 	lenParams := len(params)
 	if lenParams < 1 || lenParams > 2 {
 		errMsg := fmt.Sprintf("StringFormatter: Invalid parameter count: %d", lenParams)
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	if lenParams == 1 { // No parameters beyond the format string
 		formatStringObj := params[0].(*object.Object)
@@ -489,11 +490,11 @@ func StringFormatter(params []interface{}) interface{} {
 		default:
 			errMsg := fmt.Sprintf("StringFormatter: In the format string object, expected Ftype=%s but observed: %s",
 				types.ByteArray, formatStringObj.FieldTable["value"].Ftype)
-			return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	default:
 		errMsg := fmt.Sprintf("StringFormatter: Expected a string object for the format string but observed: %T", params[0])
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Make sure that the argument slice is a reference array.
@@ -502,13 +503,13 @@ func StringFormatter(params []interface{}) interface{} {
 	if !strings.HasPrefix(fld.Ftype, types.RefArray) {
 		errMsg := fmt.Sprintf("StringFormatter: Expected Ftype=%s for params[1]: fld.Ftype=%s, fld.Fvalue=%v",
 			types.RefArray, fld.Ftype, fld.Fvalue)
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// valuesIn = the reference array
 	valuesIn := fld.Fvalue.([]*object.Object)
 
-	//Main loop for reference array.
+	// Main loop for reference array.
 	for ii := 0; ii < len(valuesIn); ii++ {
 
 		// Get the current object's value field.
@@ -549,7 +550,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				exceptions.Throw(exceptions.IllegalArgumentException, errMsg)
+				exceptions.Throw(excNames.IllegalArgumentException, errMsg)
 			}
 		}
 	}
@@ -601,7 +602,7 @@ func substringToTheEnd(params []interface{}) interface{} {
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
 		errMsg1 := "substringToTheEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute substring.
@@ -629,7 +630,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
 		errMsg1 := "substringStartEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute substring.
@@ -731,7 +732,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
 		errMsg := "valueOfCharSubarray: Either: nil input byte array, invalid substring offset, or invalid substring length"
-		return getGErrBlk(exceptions.StringIndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Compute substring.

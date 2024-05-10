@@ -1,12 +1,13 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2024 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
 package gfunction
 
 import (
+	"jacobin/excNames"
 	"jacobin/exceptions"
 )
 
@@ -248,97 +249,97 @@ func Load_Traps() map[string]GMeth {
 // Trap for Charset references
 func trapCharset([]interface{}) interface{} {
 	errMsg := "Class java/nio/charset/Charset is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
 	errMsg := "The class or function requested is deprecated and is not supported by jacobin"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for FileChannel references
 func trapFileChannel([]interface{}) interface{} {
 	errMsg := "Class java.nio.channels.FileChannel is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for FileDescriptor references
 func trapFileDescriptor([]interface{}) interface{} {
 	errMsg := "Class java/io/FileDescriptor is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for FileSystem references
 func trapFileSystem([]interface{}) interface{} {
 	errMsg := "Class java.io.FileSystem is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
 func trapGetDefaultFileSystem([]interface{}) interface{} {
 	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for unsupported readers
 func trapReader([]interface{}) interface{} {
 	errMsg := "The requested reader is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for unsupported writers
 func trapWriter([]interface{}) interface{} {
 	errMsg := "The requested writer is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for StringBuilder
 func trapStringBuilder([]interface{}) interface{} {
 	errMsg := "Class StringBuilder is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for StringBuffer
 func trapStringBuffer([]interface{}) interface{} {
 	errMsg := "Class StringBuffer is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for FilterInputStream
 func trapFilterInputStream([]interface{}) interface{} {
 	errMsg := "Class FilterInputStream is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for FilterOutputStream
 func trapFilterOutputStream([]interface{}) interface{} {
 	errMsg := "Class FilterOutputStream is not yet supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for Random.next()
 func trapRandomNext([]interface{}) interface{} {
 	errMsg := "Protected method Random.next should never be reached unless done by reflection"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 // Trap for Random.next()
 func trapSharedSecrets([]interface{}) interface{} {
 	errMsg := "Class jdk/internal/access/SharedSecrets is not supported"
-	exceptions.Throw(exceptions.UnsupportedOperationException, errMsg)
+	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
