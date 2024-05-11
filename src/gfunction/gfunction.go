@@ -108,7 +108,8 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
 	loadlib(MTable, Load_Jdk_Internal_Misc_ScopedMemoryAccess())
 
-	loadlib(MTable, Load_Traps()) // Load traps
+	loadlib(MTable, Load_Nil_Clinit()) // Load <clinit> functions that invoke justReturn()
+	loadlib(MTable, Load_Traps())      // Load traps that lead to unconditional error returns
 
 }
 
