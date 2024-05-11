@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -68,14 +68,14 @@ func fileInit(params []interface{}) interface{} {
 	argPathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	if argPathStr == "" {
 		errMsg := "fileInit: String argument for path is null"
-		return getGErrBlk(exceptions.NullPointerException, errMsg)
+		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	// Create an absolute path string.
 	absPathStr, err := filepath.Abs(argPathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) returned: %s", argPathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Fill in File attributes that might get accessed by OpenJDK library member functions.
@@ -107,7 +107,7 @@ func fileGetPath(params []interface{}) interface{} {
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "fileGetPath: File object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	bytes := fld.Fvalue.([]byte)
 	return object.StringObjectFromByteArray(bytes)
@@ -118,7 +118,7 @@ func fileIsInvalid(params []interface{}) interface{} {
 	status, ok := params[0].(*object.Object).FieldTable[FileStatus].Fvalue.(int64)
 	if !ok {
 		errMsg := "fileIsInvalid: File object lacks a FileStatus field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	if status == 0 {
 		return int64(1)
@@ -132,7 +132,7 @@ func fileDelete(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fileDelete: File object lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	path := string(bytes)
 	err := os.Remove(path)
@@ -147,7 +147,7 @@ func fileCreate(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fileCreate: File object lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	path := string(bytes)
 	_, err := os.Create(path)

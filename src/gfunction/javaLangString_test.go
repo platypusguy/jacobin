@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"jacobin/classloader"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/types"
@@ -29,7 +29,7 @@ func TestStringClinit(t *testing.T) {
 				classloader.MethAreaDump()
 				t.Errorf("TestStringClinit: Unexpected error message. got %s", gErr.ErrMsg)
 			}
-			if gErr.ExceptionType != exceptions.ClassNotLoadedException {
+			if gErr.ExceptionType != excNames.ClassNotLoadedException {
 				t.Errorf("TestStringClinit: Unexpected exception type. got %d", gErr.ExceptionType)
 			}
 		default:

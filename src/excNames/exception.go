@@ -1,20 +1,10 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package exceptions
-
-import (
-	"fmt"
-	"jacobin/globals"
-	"jacobin/log"
-	"jacobin/shutdown"
-	"jacobin/statics"
-	"jacobin/thread"
-	"runtime/debug"
-)
+package excNames
 
 // List of Java exceptions (as of Java 17)
 
@@ -36,6 +26,7 @@ const (
 	CannotUndoException
 	CatalogException
 	ClassCastException
+	ClassNotFoundException
 	ClassNotPreparedException
 	CMMException
 	CompletionException
@@ -230,6 +221,7 @@ var JVMexceptionNames = []string{
 	"java.lang.CannotUndoException",
 	"java.lang.CatalogException",
 	"java.lang.ClassCastException",
+	"java.lang.ClassNotFoundException", // verified
 	"java.lang.ClassNotPreparedException",
 	"java.lang.CMMException",
 	"java.lang.CompletionException",
@@ -405,50 +397,4 @@ var JVMexceptionNames = []string{
 	"java.lang.CharConversionException",
 	"java.lang.UnsupportedEncodingException",
 	"java.lang.UTFDataFormatException",
-}
-
-// Throw duplicates the exception mechanism in Java. Right now, it displays the
-// exceptions message. Will add: catch logic, stack trace, and halt of execution
-// TODO: use ThreadNum to find the right thread
-func Throw(exceptionType int, msg string) {
-	/* // This code should be moved to the interpreter and the info pushed to this function.
-	   func Throw(excType int, clName string, threadNum int, methName string, cp int) {
-	   	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
-	   	frameStack := thd.Stack
-	   	f := frames.PeekFrame(frameStack, 0)
-	   	fmt.Println("class name: " + f.ClName)
-	   	msg := fmt.Sprintf(
-	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
-	*/
-	helloMsg := fmt.Sprintf("[Throw] %s, msg: %s", JVMexceptionNames[exceptionType], msg)
-	log.Log(helloMsg, log.SEVERE)
-
-	// TODO: Temporary until error/exception processing is complete.
-	glob := globals.GetGlobalRef()
-	if glob.JacobinName == "test" {
-		return
-	}
-	var stack string
-	bytes := debug.Stack()
-	if len(bytes) > 0 {
-		stack = string(bytes)
-	} else {
-		stack = ""
-	}
-	glob.ErrorGoStack = stack
-	ShowPanicCause(msg)
-	ShowFrameStack(&thread.ExecThread{})
-	ShowGoStackTrace(nil)
-	statics.DumpStatics()
-	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-}
-
-// JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
-// such as invalid JAR files, and the like. For the moment, it prints out the exceptions msg
-// only. Eventually, it will print out considerably more info depending on the setting of
-// globals.JVMstrict. NOTE: this function calls Shutdown(), as all JVM runtime exceptions
-// are fatal.
-func JVMexception(excType int, msg string) {
-	_ = log.Log(msg, log.SEVERE)
-	shutdown.Exit(shutdown.JVM_EXCEPTION)
 }

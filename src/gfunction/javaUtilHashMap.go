@@ -10,7 +10,7 @@ import (
 	"crypto/md5"
 	"encoding/binary"
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 )
@@ -48,7 +48,7 @@ func hashMapHash(params []interface{}) interface{} {
 			binary.BigEndian.PutUint64(bytes, uint64(fld.Fvalue.(float64)))
 		default:
 			str := fmt.Sprintf("hashMapHash: unrecognized object field type: %T", fld.Ftype)
-			return getGErrBlk(exceptions.VirtualMachineError, str)
+			return getGErrBlk(excNames.VirtualMachineError, str)
 		}
 		roughHash := md5.Sum(bytes)            // md5.sum returns an array of bytes
 		hash := roughHash[:]                   // convert the array to a slice
@@ -56,7 +56,7 @@ func hashMapHash(params []interface{}) interface{} {
 		return int64(uHash)                    // return an int64
 	default:
 		str := fmt.Sprintf("hashMapHash: unrecognized parameter type: %T", params[0])
-		return getGErrBlk(exceptions.VirtualMachineError, str)
+		return getGErrBlk(excNames.VirtualMachineError, str)
 	}
 	return hashValue
 }

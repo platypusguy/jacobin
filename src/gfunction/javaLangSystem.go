@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/log"
@@ -124,7 +125,7 @@ func clinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "System <clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.ThrowEx(exceptions.ClassNotLoadedException, errMsg, nil)
+		exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, nil)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
 		_ = statics.AddStatic("java/lang/System.in", statics.Static{Type: "GS", Value: os.Stdin})
@@ -141,7 +142,7 @@ func clinit([]interface{}) interface{} {
 func arrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: Expected 5 parameters, got %d", len(params))
-		return getGErrBlk(exceptions.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	src := params[0].(*object.Object)
@@ -152,13 +153,13 @@ func arrayCopy(params []interface{}) interface{} {
 
 	if src == nil || dest == nil {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: null src or dest")
-		return getGErrBlk(exceptions.NullPointerException, errMsg)
+		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
 			"java/lang/System.arraycopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
-		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	srcType := *(stringPool.GetStringPointer(src.KlassName))
@@ -166,7 +167,7 @@ func arrayCopy(params []interface{}) interface{} {
 
 	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
-		return getGErrBlk(exceptions.ArrayStoreException, errMsg)
+		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 
 	srcLen := object.ArrayLength(src)
@@ -174,7 +175,7 @@ func arrayCopy(params []interface{}) interface{} {
 
 	if srcPos+length > srcLen || destPos+length > destLen {
 		errMsg := fmt.Sprintf("java/lang/System.arraycopy: array + length exceeds array size")
-		return getGErrBlk(exceptions.ArrayIndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	s := srcPos

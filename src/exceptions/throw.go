@@ -9,14 +9,17 @@ package exceptions
 import (
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
+	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/util"
+	"os"
 	"runtime/debug"
 )
 
@@ -26,12 +29,17 @@ import (
 // operation of the JVM, and for a few occasional user errors, such as
 // divide by zero.
 
+// ThrowExNil simply calls ThrowEx with a nil pointer for the frame.
+func ThrowExNil(which int, msg string) {
+	ThrowEx(which, msg, nil)
+}
+
 // ThrowEx duplicates how in-application throws/catches are handled. To
 // accomplish this, we generate bytecodes which are then placed in the frame of
 // the current thread.
 func ThrowEx(which int, msg string, f *frames.Frame) {
 
-	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", JVMexceptionNames[which], msg)
+	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
 	log.Log(helloMsg, log.TRACE_INST)
 
 	// If in a unit test, log a severe message and return.
@@ -44,11 +52,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 
 	// Frame pointer provided?
 	if f == nil {
-		minimalAbort(msg)
+		minimalAbort(which, msg)
 	}
 
 	// the name of the exception as shown to the user
-	exceptionNameForUser := JVMexceptionNames[which]
+	exceptionNameForUser := excNames.JVMexceptionNames[which]
 
 	// // the name of the class that implements this exception
 	// exceptionClassName := util.ConvertInternalClassNameToFilename(exceptionNameForUser)
@@ -188,7 +196,9 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 	return genCode
 }
 
-func minimalAbort(msg string) {
+// minimalAbort is the exception thrown when the frame info is not available,
+// such as during start-up, when the main class can't be found, etc.
+func minimalAbort(whichException int, msg string) {
 	var stack string
 	bytes := debug.Stack()
 	if len(bytes) > 0 {
@@ -198,9 +208,57 @@ func minimalAbort(msg string) {
 	}
 	glob := globals.GetGlobalRef()
 	glob.ErrorGoStack = stack
-	errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
-	ShowPanicCause(errMsg)
-	ShowFrameStack(&thread.ExecThread{})
+	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
+	fmt.Fprintln(os.Stderr, errMsg)
+	// errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
+	// ShowPanicCause(errMsg)
+	// ShowFrameStack(&thread.ExecThread{})
 	ShowGoStackTrace(nil)
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+}
+
+// Throw duplicates the exception mechanism in Java. Right now, it displays the
+// exceptions message. Will add: catch logic, stack trace, and halt of execution
+// TODO: use ThreadNum to find the right thread
+func Throw(exceptionType int, msg string) {
+	/* // This code should be moved to the interpreter and the info pushed to this function.
+	   func Throw(excType int, clName string, threadNum int, methName string, cp int) {
+	   	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
+	   	frameStack := thd.Stack
+	   	f := frames.PeekFrame(frameStack, 0)
+	   	fmt.Println("class name: " + f.ClName)
+	   	msg := fmt.Sprintf(
+	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
+	*/
+	helloMsg := fmt.Sprintf("[Throw] %s, msg: %s", excNames.JVMexceptionNames[exceptionType], msg)
+	log.Log(helloMsg, log.SEVERE)
+
+	// TODO: Temporary until error/exception processing is complete.
+	glob := globals.GetGlobalRef()
+	if glob.JacobinName == "test" {
+		return
+	}
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
+	glob.ErrorGoStack = stack
+	ShowPanicCause(msg)
+	ShowFrameStack(&thread.ExecThread{})
+	ShowGoStackTrace(nil)
+	statics.DumpStatics()
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+}
+
+// JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
+// such as invalid JAR files, and the like. For the moment, it prints out the exceptions msg
+// only. Eventually, it will print out considerably more info depending on the setting of
+// globals.JVMstrict. NOTE: this function calls Shutdown(), as all JVM runtime exceptions
+// are fatal.
+func JVMexception(excType int, msg string) {
+	_ = log.Log(msg, log.SEVERE)
+	shutdown.Exit(shutdown.JVM_EXCEPTION)
 }

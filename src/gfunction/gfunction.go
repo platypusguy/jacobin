@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/log"
 	"jacobin/object"
@@ -143,7 +144,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		classloader.AddEntry(tbl, key, tableEntry)
 	}
 	if !ok {
-		exceptions.Throw(exceptions.InternalException, "loadlib: at least one key was invalid")
+		exceptions.Throw(excNames.InternalException, "loadlib: at least one key was invalid")
 	}
 }
 

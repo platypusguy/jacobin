@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -171,13 +171,13 @@ func doubleParseDouble(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(exceptions.NumberFormatException, "doubleParseDouble: string length < 1")
+		return getGErrBlk(excNames.NumberFormatException, "doubleParseDouble: string length < 1")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		return getGErrBlk(exceptions.NumberFormatException, "doubleParseDouble Error(): "+err.Error())
+		return getGErrBlk(excNames.NumberFormatException, "doubleParseDouble Error(): "+err.Error())
 	}
 	return output
 

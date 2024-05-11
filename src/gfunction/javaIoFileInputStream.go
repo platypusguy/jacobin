@@ -9,7 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"io"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -126,7 +126,7 @@ func initFileInputStreamFile(params []interface{}) interface{} {
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "initFileInputStreamFile: File argument lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the file path.
@@ -136,7 +136,7 @@ func initFileInputStreamFile(params []interface{}) interface{} {
 	osFile, err := os.Open(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileInputStreamFile: os.Open(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileInputStream object.
@@ -157,7 +157,7 @@ func initFileInputStreamString(params []interface{}) interface{} {
 	osFile, err := os.Open(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileInputStreamString: os.Open(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileInputStream object.
@@ -178,7 +178,7 @@ func fisAvailable(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisAvailable: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Compute total file size.
@@ -186,7 +186,7 @@ func fisAvailable(params []interface{}) interface{} {
 	if err != nil {
 		path := string(params[0].(*object.Object).FieldTable["path"].Fvalue.([]byte))
 		errMsg := fmt.Sprintf("fisAvailable: osFile.Stat(%s) returned: %s", path, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	fsize := fileInfo.Size()
 
@@ -194,7 +194,7 @@ func fisAvailable(params []interface{}) interface{} {
 	posn, err := osFile.Seek(0, io.SeekCurrent)
 	if err != nil {
 		errMsg := fmt.Sprintf("fisAvailable: osFile.Seek() failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Compute and return the number of bytes remaining.
@@ -208,7 +208,7 @@ func fisReadOne(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisReadOne: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Create a one-byte buffer.
@@ -221,7 +221,7 @@ func fisReadOne(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("fisReadOne: osFile.Read failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Return the read byte as an integer.
@@ -235,14 +235,14 @@ func fisReadByteArray(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisReadByteArray: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer to the byte array parameter.
 	buffer, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fisReadByteArray: Byte array parameter lacks a \"value\" field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Fill the buffer.
@@ -252,7 +252,7 @@ func fisReadByteArray(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("fisReadByteArray: osFile.Read failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// All is well - update the supplied buffer.
@@ -270,14 +270,14 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisReadByteArrayOffset: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer (buf1) to the byte array parameter.
 	buf1, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fisReadByteArrayOffset: Byte array parameter lacks a \"value\" field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Collect the offset and length parameter values.
@@ -291,7 +291,7 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 	if length < 0 || offset < 0 || length > (int64(len(buf1))-offset) {
 		errMsg := fmt.Sprintf("fisReadByteArrayOffset: error in parameters offset=%d length=%d bytes.length=%d",
 			offset, length, len(buf1))
-		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 
 	// Try read with a second buffer.
@@ -302,7 +302,7 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("fisReadByteArrayOffset: osFile.Read failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// All is well - Copy the bytes read into the original buffer, beginning at the offset.
@@ -323,7 +323,7 @@ func fisSkip(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisSkip: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get skip count.
@@ -333,7 +333,7 @@ func fisSkip(params []interface{}) interface{} {
 	_, err := osFile.Seek(count, 1)
 	if err != nil {
 		errMsg := fmt.Sprintf("fisSkip: osFile.Seek(%d) failed, reason: %s", count, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Return skip count.
@@ -347,14 +347,14 @@ func fisClose(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fisClose: FileInputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
 		errMsg := fmt.Sprintf("fisClose: osFile.Close() failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
 }

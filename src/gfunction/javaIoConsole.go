@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"golang.org/x/term"
 	"jacobin/classloader"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
@@ -107,7 +107,7 @@ func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
 	if klass == nil {
 		errMsg := "consoleClinit: Could not find java/io/Console in the MethodArea"
-		return getGErrBlk(exceptions.ClassNotLoadedException, errMsg)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
@@ -116,7 +116,7 @@ func consoleClinit([]interface{}) interface{} {
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInConsole([]interface{}) interface{} {
 	errMsg := "No support yet for Reader/PrintWriter/Charset in class Console"
-	return getGErrBlk(exceptions.UnsupportedOperationException, errMsg)
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Flush java/lang/System.in/out/err.
@@ -165,7 +165,7 @@ func consoleReadLine([]interface{}) interface{} {
 		}
 		if err != nil {
 			errMsg := fmt.Sprintf("consoleReadLine stdin.Read: %s", err.Error())
-			return getGErrBlk(exceptions.IOException, errMsg)
+			return getGErrBlk(excNames.IOException, errMsg)
 		}
 		if bite[0] == '\n' {
 			break
@@ -190,7 +190,7 @@ func consoleReadPassword([]interface{}) interface{} {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		errMsg := fmt.Sprintf("consoleReadPassword term.ReadPassword: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)
 	_, _ = fmt.Fprint(stdout, "\n")

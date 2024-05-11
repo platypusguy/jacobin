@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -92,7 +92,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "initFileOutputStreamFile: File argument lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	pathStr := string(fld.Fvalue.([]byte))
 
@@ -100,7 +100,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 	osFile, err := os.Create(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileOutputStreamFile: os.Create(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileOutputStream object.
@@ -120,7 +120,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "initFileOutputStreamFile: File argument lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the file path.
@@ -130,7 +130,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	boolarg, ok := params[2].(int64)
 	if !ok {
 		errMsg := "initFileOutputStreamFile: Error in append argument"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Open the file for write-only, yielding a file handle.
@@ -143,7 +143,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileOutputStreamFileBoolean: os.Create(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileOutputStream object.
@@ -166,7 +166,7 @@ func initFileOutputStreamString(params []interface{}) interface{} {
 	osFile, err := os.Create(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileOutputStream object.
@@ -190,7 +190,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	boolarg, ok := params[2].(int64)
 	if !ok {
 		errMsg := "initFileOutputStreamFileBoolean: Error in append argument"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Open the file for write-only, yielding a file handle.
@@ -203,7 +203,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy the file path field into the FileOutputStream object.
@@ -224,14 +224,14 @@ func fosWriteOne(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fosWriteOne: FileOutputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the integer argument.
 	wint, ok := params[1].(int64)
 	if !ok {
 		errMsg := "fosWriteOne: Error in integer argument"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Create a one-byte buffer.
@@ -242,7 +242,7 @@ func fosWriteOne(params []interface{}) interface{} {
 	_, err := osFile.Write(buffer)
 	if err != nil {
 		errMsg := fmt.Sprintf("fosWriteOne osFile.Write failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	return nil
@@ -255,21 +255,21 @@ func fosWriteByteArray(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fosWriteByteArray: FileOutputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer to the byte array parameter.
 	buffer, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fosWriteByteArray: Byte array parameter lacks a \"value\" field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Write the buffer.
 	_, err := osFile.Write(buffer)
 	if err != nil {
 		errMsg := fmt.Sprintf("fosWriteByteArray osFile.Write failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	return nil
@@ -282,14 +282,14 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fosWriteByteArrayOffset: FileOutputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer (buf1) to the byte array parameter.
 	buf1, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
 		errMsg := "fosWriteByteArrayOffset: Byte array parameter lacks a \"value\" field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Collect the offset and length parameter values.
@@ -303,14 +303,14 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	if length < 0 || offset < 0 || length > (int64(len(buf1))-offset) {
 		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: error in parameters offset=%d length=%d bytes.length=%d",
 			offset, length, len(buf1))
-		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 
 	// Write the byte buffer.
 	_, err := osFile.Write(buf1[offset : offset+length])
 	if err != nil {
 		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: osFile.Write failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	return nil
@@ -323,14 +323,14 @@ func fosClose(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "fosClose: FileOutputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
 		errMsg := fmt.Sprintf("fosClose: osFile.Close() failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	return nil

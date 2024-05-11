@@ -9,7 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"io"
-	"jacobin/exceptions"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -91,14 +91,14 @@ func inputStreamReaderInit(params []interface{}) interface{} {
 	fldPath, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "inputStreamReaderInit: InputStream argument lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get file handle field.
 	fldHandle, ok := params[1].(*object.Object).FieldTable[FileHandle]
 	if !ok {
 		errMsg := "inputStreamReaderInit: InputStream argument lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	osFile := fldHandle.Fvalue.(*os.File)
 
@@ -107,7 +107,7 @@ func inputStreamReaderInit(params []interface{}) interface{} {
 	if err != nil {
 		pathStr := string(fldPath.Fvalue.([]byte))
 		errMsg := fmt.Sprintf("inputStreamReaderInit: os.Stat(%s) returned: %s", pathStr, err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy file path into the InputStreamReader object.
@@ -126,14 +126,14 @@ func isrClose(params []interface{}) interface{} {
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "isrClose: InputStreamReader object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
 		errMsg := fmt.Sprintf("isrClose osFile.Close() failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
 }
@@ -149,7 +149,7 @@ func isrReadOneChar(params []interface{}) interface{} {
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "isrReadOneChar: InputStreamReader object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Need a one-byte buffer.
@@ -163,7 +163,7 @@ func isrReadOneChar(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("isrReadOneChar: osFile.Read failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Return the byte as an integer.
@@ -180,14 +180,14 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
 		errMsg := "isrReadCharBufferSubset: InputStream object lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
 		errMsg := "isrReadCharBufferSubset: InputStream object trouble with value field ([]int64)"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	offset := params[2].(int64)
 	length := params[3].(int64)
@@ -199,7 +199,7 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 	if length < 0 || offset < 0 || length > (int64(len(intArray))-offset) {
 		errMsg := fmt.Sprintf("isrReadCharBufferSubset: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(intArray))
-		return getGErrBlk(exceptions.IndexOutOfBoundsException, errMsg)
+		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 
 	// Fill the replacement byte buffer.
@@ -211,7 +211,7 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 	}
 	if err != nil {
 		errMsg := fmt.Sprintf("isrReadCharBufferSubset osFile.Read failed, reason: %s", err.Error())
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Update the parameter buffer, beginning at the offset.
@@ -235,14 +235,14 @@ func isrReady(params []interface{}) interface{} {
 	fldPath, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "isrReady: InputStream argument lacks a FilePath field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get file handle.
 	fldHandle, ok := params[1].(*object.Object).FieldTable[FileHandle]
 	if !ok {
 		errMsg := "isrReady: InputStream argument lacks a FileHandle field"
-		return getGErrBlk(exceptions.IOException, errMsg)
+		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Copy java/io/File path field into the InputStreamReader object.
