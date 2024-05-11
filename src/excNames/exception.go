@@ -392,6 +392,7 @@ var JVMexceptionNames = []string{
 	"java.lang.TransformerFactoryConfigurationError",
 	"java.lang.VirtualMachineError",
 
+	// charset exceptions
 	"java.lang.ChangedCharSetException",
 	"java.lang.CharacterCodingException",
 	"java.lang.CharConversionException",

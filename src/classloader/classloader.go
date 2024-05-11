@@ -340,8 +340,9 @@ func LoadClassFromNameOnly(className string) error {
 	_ = log.Log("LoadClassFromNameOnly: Loaded class from file "+validName, log.CLASS)
 	_, err = LoadClassFromFile(AppCL, validName)
 	if err != nil {
-		_ = log.Log("LoadClassFromNameOnly: LoadClassFromFile "+validName+" failed", log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("LoadClassFromNameOnly for %s failed", className)
+		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+		return errors.New(errMsg) // return for tests only
 	}
 	return err
 }
