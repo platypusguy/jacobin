@@ -995,6 +995,7 @@ frameInterpreter:
 					errMsg = "/ by zero"
 				}
 				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				return errors.New("IDIV error") // returns in tests only
 			} else {
 				push(f, val2/val1)
 			}

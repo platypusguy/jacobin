@@ -93,13 +93,9 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	}
 
 	// if the exception was not caught...
-	if glob.StrictJDK {
-		errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
-		log.Log(errMsg, log.SEVERE)
-	} else {
-		errMsg := fmt.Sprintf("[ThrowEx] uncaught %s, msg: %s", exceptionCPname, msg)
-		log.Log(errMsg, log.SEVERE)
-	}
+	errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
+	log.Log(errMsg, log.SEVERE)
+
 	ShowFrameStack(fs)
 
 	if !glob.StrictJDK {
