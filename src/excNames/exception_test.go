@@ -18,7 +18,7 @@ func details(t *testing.T, index int, expected string) {
 func TestExceptionTableAlignment(t *testing.T) {
 	details(t, IllegalArgumentException, "java.lang.IllegalArgumentException")
 	details(t, NoSuchDynamicMethodException, "java.lang.NoSuchDynamicMethodException")
-	details(t, WrongMethodTypeException, "java.lang.WrongMethodTypeException")
+	details(t, WrongMethodTypeException, "java.lang.invoke.WrongMethodTypeException")
 	details(t, ClassNotLoadedException, "java.lang.ClassNotLoadedException")
 	details(t, InvalidTypeException, "com.sun.jdi.InvalidTypeException")
 	details(t, PrintException, "java.lang.PrintException")
