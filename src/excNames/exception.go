@@ -321,7 +321,7 @@ var JVMexceptionNames = []string{
 	"java.lang.FontFormatException",
 	"java.lang.GeneralSecurityException",
 	"java.lang.GSSException",
-	"java.lang.IllegalClassFormatException",
+	"java.lang.instrument.IllegalClassFormatException", // verified
 	"java.lang.IllegalConnectorArgumentsException",
 	"java.lang.IncompatibleThreadStateException",
 	"java.lang.InterruptedException",
