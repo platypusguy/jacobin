@@ -29,6 +29,11 @@ func ConvertClassFilenameToInternalFormat(fName string) string {
 	return name
 }
 
+func ConvertInternalClassNameToUserFormat(fName string) string {
+	name := strings.ReplaceAll(fName, "/", ".")
+	return name
+}
+
 // ConvertToPlatformPathSeparators accepts a file path and,
 // if necessary, converts the filepath separator characters
 // to those used on the runtime platform

@@ -93,17 +93,29 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	}
 
 	// if the exception was not caught...
-	errMsg := fmt.Sprintf("[ThrowEx] uncaught %s, msg: %s", exceptionCPname, msg)
-	log.Log(errMsg, log.SEVERE)
+	if glob.StrictJDK {
+		errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
+		log.Log(errMsg, log.SEVERE)
+	} else {
+		errMsg := fmt.Sprintf("[ThrowEx] uncaught %s, msg: %s", exceptionCPname, msg)
+		log.Log(errMsg, log.SEVERE)
+	}
+	ShowFrameStack(fs)
+
+	if !glob.StrictJDK {
+		ShowGoStackTrace(nil)
+	}
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+
 	// CURR: exit here after doing the ATHROW diagnostic info. Put that code in exceptions package
 	//  and show all the information
-	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
-
-	// append the genCode to the bytecode of the current method in the frame
-	// and set the PC to point to it.
-	endPoint := len(f.Meth)
-	f.Meth = append(f.Meth, genCode...)
-	f.PC = endPoint
+	// genCode := generateThrowBytecodes(f, exceptionCPname, msg)
+	//
+	// // append the genCode to the bytecode of the current method in the frame
+	// // and set the PC to point to it.
+	// endPoint := len(f.Meth)
+	// f.Meth = append(f.Meth, genCode...)
+	// f.PC = endPoint
 }
 
 func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string) []byte {
@@ -127,7 +139,7 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 		Type: classloader.ClassRef, Slot: uint16(len(CP.ClassRefs) - 1)})
 	exceptionClassCPindex := uint16(len(CP.CpIndex) - 1)
 
-	// start converting previous work into bytecode
+	// start converting previous work into bytecodes
 	var genCode []byte
 	genCode = append(genCode, opcodes.NOP) // the first bytecode is skipped by the JVM
 	genCode = append(genCode, opcodes.NEW)
@@ -251,14 +263,4 @@ func Throw(exceptionType int, msg string) {
 	ShowGoStackTrace(nil)
 	statics.DumpStatics()
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-}
-
-// JVMexception reports runtime exceptions occurring in the JVM (rather than in the app)
-// such as invalid JAR files, and the like. For the moment, it prints out the exceptions msg
-// only. Eventually, it will print out considerably more info depending on the setting of
-// globals.JVMstrict. NOTE: this function calls Shutdown(), as all JVM runtime exceptions
-// are fatal.
-func JVMexception(excType int, msg string) {
-	_ = log.Log(msg, log.SEVERE)
-	shutdown.Exit(shutdown.JVM_EXCEPTION)
 }

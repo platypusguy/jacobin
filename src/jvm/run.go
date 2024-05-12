@@ -2249,7 +2249,8 @@ frameInterpreter:
 			}
 
 			CPentry := CP.CpIndex[CPslot]
-			if CPentry.Type != classloader.Interface {
+			// if CPentry.Type != classloader.Interface {
+			if CPentry.Type != classloader.MethodRef {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.MethodRef)

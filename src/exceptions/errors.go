@@ -68,9 +68,17 @@ func FormatStackUnderflowError(f *frames.Frame) {
 }
 
 // Prints out the frame stack
-func ShowFrameStack(t *thread.ExecThread) {
+func ShowFrameStack(source interface{}) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
-		entries := GrabFrameStack(t.Stack)
+		var entries *[]string
+		switch source.(type) {
+		case *thread.ExecThread:
+			t := source.(*thread.ExecThread)
+			entries = GrabFrameStack(t.Stack)
+		case *list.List:
+			entries = GrabFrameStack(source.(*list.List))
+		}
+
 		if len(*entries) == 0 {
 			_ = log.Log("no further data available", log.SEVERE)
 			return
