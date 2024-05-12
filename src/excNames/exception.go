@@ -290,7 +290,7 @@ var JVMexceptionNames = []string{
 	"java.lang.VMDisconnectedException",
 	"java.lang.VMMismatchException",
 	"java.lang.VMOutOfMemoryException",
-	"java.lang.WrongMethodTypeException",
+	"java.lang.invoke.WrongMethodTypeException", // verified
 	"java.lang.XPathException",
 
 	// non-runtime exceptions
