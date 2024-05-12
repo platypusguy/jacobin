@@ -79,6 +79,7 @@ func TestHexIDIVException(t *testing.T) {
 
 	// Initialize global, logging, classloader
 	globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
+	// globals.InitGlobals("TestHexIDIVException")
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
 	globPtr = globals.GetGlobalRef()
@@ -122,8 +123,8 @@ func TestHexIDIVException(t *testing.T) {
 	mainThread := thread.CreateThread()
 	mainThread.AddThreadToTable(globPtr)
 	err = StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
-	if err != nil {
-		t.Errorf("Got error from StartExec(): %s", error.Error(err))
+	if err.Error() != "IDIV error" {
+		t.Errorf("Got unexpected error from StartExec(): %s", error.Error(err))
 		return
 	}
 
