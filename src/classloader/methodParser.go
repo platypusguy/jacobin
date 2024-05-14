@@ -172,6 +172,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 			ex.endPc, _ = intFrom2Bytes(att.attrContent, pos+3)
 			ex.handlerPc, _ = intFrom2Bytes(att.attrContent, pos+5)
 			ex.catchType, err = intFrom2Bytes(att.attrContent, pos+7)
+			//fmt.Printf("DEBUG parseCodeAttribute methodName=%s, ex = %v\n", methodName, ex)
 			pos += 8
 
 			if err != nil {
