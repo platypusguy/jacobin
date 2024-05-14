@@ -15,7 +15,6 @@ import (
 	"jacobin/log"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
-	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/util"
@@ -225,19 +224,20 @@ func minimalAbort(whichException int, msg string) {
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
 
+/* This function has been replaced by ThrowEx(). Kept here temporarily for reference purposes.
 // Throw duplicates the exception mechanism in Java. Right now, it displays the
 // exceptions message. Will add: catch logic, stack trace, and halt of execution
 // TODO: use ThreadNum to find the right thread
 func Throw(exceptionType int, msg string) {
-	/* // This code should be moved to the interpreter and the info pushed to this function.
-	   func Throw(excType int, clName string, threadNum int, methName string, cp int) {
-	   	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
-	   	frameStack := thd.Stack
-	   	f := frames.PeekFrame(frameStack, 0)
-	   	fmt.Println("class name: " + f.ClName)
-	   	msg := fmt.Sprintf(
-	   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
-	*/
+	 // This code should be moved to the interpreter and the info pushed to this function.
+	 //   func Throw(excType int, clName string, threadNum int, methName string, cp int) {
+	 //   	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
+	 //   	frameStack := thd.Stack
+	 //   	f := frames.PeekFrame(frameStack, 0)
+	 //   	fmt.Println("class name: " + f.ClName)
+	 //   	msg := fmt.Sprintf(
+	 //   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
+	 //
 	helloMsg := fmt.Sprintf("[Throw] %s, msg: %s", excNames.JVMexceptionNames[exceptionType], msg)
 	log.Log(helloMsg, log.SEVERE)
 
@@ -260,3 +260,4 @@ func Throw(exceptionType int, msg string) {
 	statics.DumpStatics()
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
+*/
