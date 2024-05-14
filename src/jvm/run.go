@@ -2251,10 +2251,10 @@ frameInterpreter:
 
 			CPentry := CP.CpIndex[CPslot]
 			// if CPentry.Type != classloader.Interface {
-			if CPentry.Type != classloader.MethodRef {
+			if CPentry.Type != classloader.Interface {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
-					CPentry.Type, classloader.MethodRef)
+					CPentry.Type, classloader.Interface)
 				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
