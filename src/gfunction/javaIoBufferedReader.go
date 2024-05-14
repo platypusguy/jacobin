@@ -120,19 +120,19 @@ func bufferedReaderInit(params []interface{}) interface{} {
 
 func bufferedReaderInitSz(params []interface{}) interface{} {
 	errMsg := "Instantiating BufferedReader with a size is not yet supported by jacobin"
-	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
+	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 func bufferedReaderLines(params []interface{}) interface{} {
 	errMsg := "Instantiating BufferedReader with a size is not yet supported by jacobin"
-	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
+	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 
 func bufferedReaderMarkAndReset(params []interface{}) interface{} {
 	errMsg := "BufferedReader mark() & reset() are not yet supported by jacobin"
-	exceptions.Throw(excNames.UnsupportedOperationException, errMsg)
+	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }
 

@@ -550,7 +550,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				exceptions.Throw(excNames.IllegalArgumentException, errMsg)
+				exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
 			}
 		}
 	}

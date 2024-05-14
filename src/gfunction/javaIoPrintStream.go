@@ -163,7 +163,7 @@ func PrintlnString(params []interface{}) interface{} {
 	param1, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := fmt.Sprintf("PrintlnString: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		exceptions.Throw(excNames.IllegalArgumentException, errMsg)
+		exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Handle null strings as well as []byte.
@@ -235,7 +235,7 @@ func PrintlnDoubleFloat(params []interface{}) interface{} {
 func PrintlnObject(params []interface{}) interface{} {
 	if params[1] == nil {
 		errMsg := fmt.Sprintf("PrintlnObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		exceptions.Throw(excNames.IllegalArgumentException, errMsg)
+		exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
 	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
@@ -313,7 +313,7 @@ func PrintString(params []interface{}) interface{} {
 		str = object.GoStringFromStringObject(params[1].(*object.Object))
 	default:
 		errMsg := fmt.Sprintf("PrintString: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		exceptions.Throw(excNames.IllegalArgumentException, errMsg)
+		exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
 	}
 
 	fmt.Fprint(params[0].(*os.File), str)
@@ -325,7 +325,7 @@ func PrintString(params []interface{}) interface{} {
 func PrintObject(params []interface{}) interface{} {
 	if params[1] == nil {
 		errMsg := fmt.Sprintf("PrintObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
-		exceptions.Throw(excNames.IllegalArgumentException, errMsg)
+		exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
 	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]

@@ -144,7 +144,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		classloader.AddEntry(tbl, key, tableEntry)
 	}
 	if !ok {
-		exceptions.Throw(excNames.InternalException, "loadlib: at least one key was invalid")
+		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")
 	}
 }
 
