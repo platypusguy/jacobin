@@ -113,7 +113,7 @@ func convertIntegralValueToInt64(arg interface{}) int64 {
 		}
 	default:
 		errMsg := fmt.Sprintf("convertIntegralValueToInt64 *TRAP*: Invalid argument type: %T", arg)
-		exceptions.Throw(excNames.InvalidTypeException, errMsg)
+		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
 	}
 
 	return value
