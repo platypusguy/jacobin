@@ -2903,7 +2903,7 @@ func createAndInitNewFrame(
 	if stackSize < 1 {
 		stackSize = 2
 	}
-	// we increase the stack size by 2 because in some methods that might use IMDEP2 bytecode,
+	// we increase the stack size by 2 because in some methods that might use IMPDEP2 bytecode,
 	// the stack must be increased. The value of 2 is chosen arbitrarily, but appears to be the
 	// smallest viable increase.
 	stackSize += 2
