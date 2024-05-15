@@ -237,12 +237,12 @@ var JVMexceptionNames = []string{
 	"java.lang.FileSystemAlreadyExistsException",
 	"java.lang.FileSystemNotFoundException",
 	"java.lang.FindException",
-	"java.lang.IllegalAccessException",   // VERIFIED
-	"java.lang.IllegalArgumentException", // VERIFIED
-	"java.lang.IllegalCallerException",
-	"java.lang.IllegalMonitorStateException",
+	"java.lang.IllegalAccessException",       // VERIFIED
+	"java.lang.IllegalArgumentException",     // VERIFIED
+	"java.lang.IllegalCallerException",       // VERIFIED
+	"java.lang.IllegalMonitorStateException", // VERIFIED
 	"java.lang.IllegalPathStateException",
-	"java.lang.IllegalStateException",
+	"java.lang.IllegalStateException", // VERIFIED
 	"java.lang.IllformedLocaleException",
 	"java.lang.ImagingOpException",
 	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
