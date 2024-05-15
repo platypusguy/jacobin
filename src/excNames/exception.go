@@ -53,6 +53,7 @@ const (
 	IncompleteAnnotationException
 	InconsistentDebugInfoException
 	IndexOutOfBoundsException
+	InstantiationException
 	InternalException
 	InvalidCodeIndexException
 	InvalidLineNumberException
@@ -129,6 +130,7 @@ const (
 	GSSException
 	IllegalClassFormatException
 	IllegalConnectorArgumentsException
+	IllegalThreadStateException
 	IncompatibleThreadStateException
 	InterruptedException
 	IntrospectionException
@@ -190,6 +192,7 @@ const (
 	AWTError
 	CoderMalfunctionError
 	FactoryConfigurationError
+	InternalError
 	IOError
 	LinkageError
 	SchemaFactoryConfigurationError
@@ -248,7 +251,8 @@ var JVMexceptionNames = []string{
 	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
 	"java.lang.annotaion.IncompleteAnnotationException", // VERIFIED
 	"java.lang.InconsistentDebugInfoException",
-	"java.lang.IndexOutOfBoundsException",
+	"java.lang.IndexOutOfBoundsException", // VERIFIED
+	"java.lang.InstantiationException",    // VERIFIED
 	"java.lang.InternalException",
 	"java.lang.InvalidCodeIndexException",
 	"java.lang.InvalidLineNumberException",
@@ -259,19 +263,19 @@ var JVMexceptionNames = []string{
 	"java.lang.JarSignerException",
 	"java.lang.JMRuntimeException",
 	"java.lang.JSException",
-	"java.lang.LayerInstantiationException",
+	"java.lang.LayerInstantiationException", // VERIFIED
 	"java.lang.LSException",
 	"java.lang.reflect.MalformedParameterizedTypeException", // VERIFIED
 	"java.lang.reflect.MalformedParametersException",        // VERIFIED
 	"java.lang.MirroredTypesException",
 	"java.lang.MissingResourceException",
 	"java.lang.NativeMethodException",
-	"java.lang.NegativeArraySizeException",
+	"java.lang.NegativeArraySizeException", // VERIFIED
 	"java.lang.NoSuchDynamicMethodException",
 	"java.lang.NoSuchElementException",
 	"java.lang.NoSuchMechanismException",
-	"java.lang.NullPointerException",
-	"java.lang.NumberFormatException",
+	"java.lang.NullPointerException",  // VERIFIED
+	"java.lang.NumberFormatException", // VERIFIED
 	"java.lang.ObjectCollectedException",
 	"java.lang.ProfileDataException",
 	"java.lang.ProviderException",
@@ -280,15 +284,15 @@ var JVMexceptionNames = []string{
 	"java.lang.RasterFormatException",
 	"java.lang.RejectedExecutionException",
 	"java.lang.module.ResolutionException", // VERIFIED
-	"java.lang.SecurityException",
+	"java.lang.SecurityException",          // VERIFIED
 	"java.lang.SPIResolutionException",
-	"java.lang.TypeNotPresentException",
+	"java.lang.TypeNotPresentException", // VERIFIED
 	"java.lang.UncheckedIOException",
 	"java.lang.reflect.UndeclaredThrowableException", // VERIFIED
 	"java.lang.UnknownEntityException",
 	"java.lang.UnmodifiableModuleException",
 	"java.lang.UnmodifiableSetException",
-	"java.lang.UnsupportedOperationException",
+	"java.lang.UnsupportedOperationException", // VERIFIED
 	"java.lang.VMDisconnectedException",
 	"java.lang.VMMismatchException",
 	"java.lang.VMOutOfMemoryException",
@@ -325,8 +329,9 @@ var JVMexceptionNames = []string{
 	"java.lang.GSSException",
 	"java.lang.instrument.IllegalClassFormatException", // verified
 	"java.lang.IllegalConnectorArgumentsException",
+	"java.lang.IllegalThreadStateException", // VERIFIED
 	"java.lang.IncompatibleThreadStateException",
-	"java.lang.InterruptedException",
+	"java.lang.InterruptedException", // VERIFIED
 	"java.lang.IntrospectionException",
 	"java.lang.InvalidApplicationException",
 	"java.lang.InvalidMidiDataException",
@@ -354,15 +359,15 @@ var JVMexceptionNames = []string{
 	"java.lang.PrintException",
 	"java.lang.PrivilegedActionException",
 	"java.lang.PropertyVetoException",
-	"java.lang.ReflectiveOperationException",
+	"java.lang.ReflectiveOperationException", // VERIFIED
 	"java.lang.RefreshFailedException",
-	"java.lang.RuntimeException",
+	"java.lang.RuntimeException", // VERIFIED
 	"java.lang.SAXException",
 	"java.lang.ScriptException",
 	"java.lang.ServerNotActiveException",
 	"java.lang.SQLException",
 	"java.lang.StringConcatException",
-	"java.lang.StringIndexOutOfBoundsException",
+	"java.lang.StringIndexOutOfBoundsException", // VERIFIED
 	"java.lang.TimeoutException",
 	"java.lang.TooManyListenersException",
 	"java.lang.TransformerException",
@@ -386,13 +391,14 @@ var JVMexceptionNames = []string{
 	"java.lang.AWTError",
 	"java.lang.CoderMalfunctionError",
 	"java.lang.FactoryConfigurationError",
+	"java.lang.InternalError", // VERIFIED
 	"java.lang.IOError",
-	"java.lang.LinkageError",
+	"java.lang.LinkageError", // VERIFIED
 	"java.lang.SchemaFactoryConfigurationError",
 	"java.lang.ServiceConfigurationError",
-	"java.lang.ThreadDeath",
+	"java.lang.ThreadDeath", // VERIFIED --verify that this is an error/exception
 	"java.lang.TransformerFactoryConfigurationError",
-	"java.lang.VirtualMachineError",
+	"java.lang.VirtualMachineError", // VERIFIED
 
 	// charset exceptions
 	"java.lang.ChangedCharSetException",
