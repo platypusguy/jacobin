@@ -222,7 +222,12 @@ func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
 	if len(obj.FieldTable) > 0 {
 		for fieldName := range obj.FieldTable {
 			fld := obj.FieldTable[fieldName]
-			traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
+			if klass == "java/lang/String" && fieldName == "value" {
+				str := string(fld.Fvalue.([]byte))
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v %s", fieldName, fld.Ftype, fld.Fvalue, str)
+			} else {
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
+			}
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
 	} else { // nil FieldTable
