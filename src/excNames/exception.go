@@ -211,9 +211,9 @@ const (
 // This table and that list must be kept strictly in sync.
 var JVMexceptionNames = []string{
 	"", // no exception (present because list of consts begins at 1)
-	"java.lang.AnnotationTypeMismatchException",
+	"java.lang.annotation.AnnotationTypeMismatchException", // VERIFIED
 	"java.lang.ArithmeticException",
-	"java.lang.ArrayIndexOutOfBoundsException", // added (from Java 8 iastore spec)
+	"java.lang.ArrayIndexOutOfBoundsException", // VERIFIED
 	"java.lang.ArrayStoreException",
 	"java.lang.BufferOverflowException",
 	"java.lang.BufferUnderflowException",
@@ -243,14 +243,14 @@ var JVMexceptionNames = []string{
 	"java.lang.IllegalStateException",
 	"java.lang.IllformedLocaleException",
 	"java.lang.ImagingOpException",
-	"java.lang.InaccessibleObjectException",
-	"java.lang.IncompleteAnnotationException",
+	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
+	"java.lang.annotaion.IncompleteAnnotationException", // VERIFIED
 	"java.lang.InconsistentDebugInfoException",
 	"java.lang.IndexOutOfBoundsException",
 	"java.lang.InternalException",
 	"java.lang.InvalidCodeIndexException",
 	"java.lang.InvalidLineNumberException",
-	"java.lang.InvalidModuleDescriptorException",
+	"java.lang.module.InvalidModuleDescriptorException", // VERIFIED
 	"java.lang.InvalidModuleException",
 	"java.lang.InvalidRequestStateException",
 	"java.lang.InvalidStackFrameException",
@@ -259,8 +259,8 @@ var JVMexceptionNames = []string{
 	"java.lang.JSException",
 	"java.lang.LayerInstantiationException",
 	"java.lang.LSException",
-	"java.lang.MalformedParameterizedTypeException",
-	"java.lang.MalformedParametersException",
+	"java.lang.reflect.MalformedParameterizedTypeException", // VERIFIED
+	"java.lang.reflect.MalformedParametersException",        // VERIFIED
 	"java.lang.MirroredTypesException",
 	"java.lang.MissingResourceException",
 	"java.lang.NativeMethodException",
@@ -277,12 +277,12 @@ var JVMexceptionNames = []string{
 	"java.lang.RangeException",
 	"java.lang.RasterFormatException",
 	"java.lang.RejectedExecutionException",
-	"java.lang.ResolutionException",
+	"java.lang.module.ResolutionException", // VERIFIED
 	"java.lang.SecurityException",
 	"java.lang.SPIResolutionException",
 	"java.lang.TypeNotPresentException",
 	"java.lang.UncheckedIOException",
-	"java.lang.UndeclaredThrowableException",
+	"java.lang.reflect.UndeclaredThrowableException", // VERIFIED
 	"java.lang.UnknownEntityException",
 	"java.lang.UnmodifiableModuleException",
 	"java.lang.UnmodifiableSetException",
@@ -336,7 +336,7 @@ var JVMexceptionNames = []string{
 	"java.lang.JMException",
 	"java.lang.JShellException",
 	"java.lang.KeySelectorException",
-	"java.lang.LambdaConversionException",
+	"java.lang.invoke.LambdaConversionException", // VERIFIED
 	"java.lang.LastOwnerException",
 	"java.lang.LineUnavailableException",
 	"java.lang.MarshalException",
