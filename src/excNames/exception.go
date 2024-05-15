@@ -53,6 +53,7 @@ const (
 	IncompleteAnnotationException
 	InconsistentDebugInfoException
 	IndexOutOfBoundsException
+	InstantiationException
 	InternalException
 	InvalidCodeIndexException
 	InvalidLineNumberException
@@ -129,6 +130,7 @@ const (
 	GSSException
 	IllegalClassFormatException
 	IllegalConnectorArgumentsException
+	IllegalThreadStateException
 	IncompatibleThreadStateException
 	InterruptedException
 	IntrospectionException
@@ -248,7 +250,8 @@ var JVMexceptionNames = []string{
 	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
 	"java.lang.annotaion.IncompleteAnnotationException", // VERIFIED
 	"java.lang.InconsistentDebugInfoException",
-	"java.lang.IndexOutOfBoundsException",
+	"java.lang.IndexOutOfBoundsException", // VERIFIED
+	"java.lang.InstantiationException",    // VERIFIED
 	"java.lang.InternalException",
 	"java.lang.InvalidCodeIndexException",
 	"java.lang.InvalidLineNumberException",
@@ -325,6 +328,7 @@ var JVMexceptionNames = []string{
 	"java.lang.GSSException",
 	"java.lang.instrument.IllegalClassFormatException", // verified
 	"java.lang.IllegalConnectorArgumentsException",
+	"java.lang.IllegalThreadStateException", // VERIFIED
 	"java.lang.IncompatibleThreadStateException",
 	"java.lang.InterruptedException",
 	"java.lang.IntrospectionException",
