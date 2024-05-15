@@ -41,6 +41,7 @@ const (
 	FileSystemAlreadyExistsException
 	FileSystemNotFoundException
 	FindException
+	IllegalAccessException
 	IllegalArgumentException
 	IllegalCallerException
 	IllegalMonitorStateException
@@ -230,13 +231,14 @@ var JVMexceptionNames = []string{
 	"java.lang.DOMException",
 	"java.lang.DuplicateRequestException",
 	"java.lang.EmptyStackException",
-	"java.lang.EnumConstantNotPresentException",
+	"java.lang.EnumConstantNotPresentException", // VERIFIED
 	"java.lang.EventException",
 	"java.io.FileNotFoundException",
 	"java.lang.FileSystemAlreadyExistsException",
 	"java.lang.FileSystemNotFoundException",
 	"java.lang.FindException",
-	"java.lang.IllegalArgumentException",
+	"java.lang.IllegalAccessException",   // VERIFIED
+	"java.lang.IllegalArgumentException", // VERIFIED
 	"java.lang.IllegalCallerException",
 	"java.lang.IllegalMonitorStateException",
 	"java.lang.IllegalPathStateException",
@@ -313,7 +315,7 @@ var JVMexceptionNames = []string{
 	"java.lang.ClassNotLoadedException",
 	"java.lang.CloneNotSupportedException",
 	"java.lang.DataFormatException",
-	"java.lang.DatatypeConfigurationException",
+	"java.lang.DatatypeConfigurationException", // VERIFIED
 	"java.lang.DestroyFailedException",
 	"java.lang.ExecutionControlException",
 	"java.lang.ExecutionException",
