@@ -244,34 +244,34 @@ var JVMexceptionNames = []string{
 	"java.nio.BufferUnderflowException",                    // VERIFIED
 	"javax.swing.undo.CannotRedoException",                 // VERIFIED
 	"javax.swing.undo.CannotUndoException",                 // VERIFIED
-	"java.lang.CatalogException",
-	"java.lang.ClassCastException",
-	"java.lang.ClassNotFoundException", // verified
-	"java.lang.ClassNotPreparedException",
-	"java.lang.CMMException",
-	"java.lang.CompletionException",
-	"java.util.ConcurrentModificationException", // VERIFIED
-	"java.lang.DateTimeException",
-	"java.lang.DOMException",
-	"java.util.DuplicateFormatFlagsException", // VERIFIED
-	"java.lang.DuplicateRequestException",
-	"java.util.EmptyStackException",             // VERIFIED
-	"java.lang.EnumConstantNotPresentException", // VERIFIED
-	"java.lang.EventException",
-	"java.io.FileNotFoundException",
-	"java.lang.FileSystemAlreadyExistsException",
-	"java.lang.FileSystemNotFoundException",
-	"java.lang.FindException",
-	"java.util.FormatFlagsConversionMismatchException", // VERIFIED
-	"java.util.FormatterClosedException",               // VERIFIED
-	"java.lang.IllegalAccessException",                 // VERIFIED
-	"java.lang.IllegalArgumentException",               // VERIFIED
-	"java.lang.IllegalCallerException",                 // VERIFIED
-	"java.util.IllegalFormatCodePointException",        // VERIFIED
-	"java.util.IllegalFormatConversionException",       // VERIFIED **
-	"java.lang.IllegalMonitorStateException",           // VERIFIED
-	"java.lang.IllegalPathStateException",
-	"java.lang.IllegalStateException", // VERIFIED
+	"javax.xml.catalog.CatalogException",                   // VERIFIED
+	"java.lang.ClassCastException",                         // VERIFIED
+	"java.lang.ClassNotFoundException",                     // VERIFIED
+	"com.sun.jdi.ClassNotPreparedException",                // VERIFIED
+	"java.awt.color.CMMException",                          // VERIFIED
+	"java.util.concurrent.CompletionException",             // VERIFIED
+	"java.util.ConcurrentModificationException",            // VERIFIED
+	"java.time.DateTimeException",                          // VERIFIED
+	"org.w3c.dom.DOMException",                             // VERIFIED
+	"java.util.DuplicateFormatFlagsException",              // VERIFIED
+	"com.sun.jdi.request.DuplicateRequestException",        // VERIFIED
+	"java.util.EmptyStackException",                        // VERIFIED
+	"java.lang.EnumConstantNotPresentException",            // VERIFIED
+	"org.w3c.dom.events.EventException",                    // VERIFIED
+	"java.io.FileNotFoundException",                        // VERiFIED
+	"java.nio.file.FileSystemAlreadyExistsException",       // VERIFIED
+	"java.nio.file.FileSystemNotFoundException",            // VERIFIED
+	"java.lang.module.FindException",                       // VERIFIED
+	"java.util.FormatFlagsConversionMismatchException",     // VERIFIED
+	"java.util.FormatterClosedException",                   // VERIFIED
+	"java.lang.IllegalAccessException",                     // VERIFIED
+	"java.lang.IllegalArgumentException",                   // VERIFIED
+	"java.lang.IllegalCallerException",                     // VERIFIED
+	"java.util.IllegalFormatCodePointException",            // VERIFIED
+	"java.util.IllegalFormatConversionException",           // VERIFIED ** got this far in java.util
+	"java.lang.IllegalMonitorStateException",               // VERIFIED
+	"java.awt.geom.IllegalPathStateException",              // VERIFIED
+	"java.lang.IllegalStateException",                      // VERIFIED
 	"java.lang.IllformedLocaleException",
 	"java.lang.ImagingOpException",
 	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
@@ -417,31 +417,31 @@ var JVMexceptionNames = []string{
 	"java.lang.XMLStreamException",
 
 	// Java errors
-	"java.lang.AnnotationFormatError",
-	"java.lang.AssertionError",
-	"java.lang.AWTError",
-	"java.lang.CoderMalfunctionError",
-	"java.lang.FactoryConfigurationError",
-	"java.lang.InternalError", // VERIFIED
-	"java.lang.IOError",
-	"java.lang.LinkageError",         // VERIFIED
-	"java.lang.NoClassDefFoundError", // VERIFIED
-	"java.lang.NoSuchFieldError",     // VERIFIED
-	"java.lang.NoSuchMethodError",    // VERIFIED
-	"java.lang.OutOfMemoryError",     // VERIFIED
-	"java.lang.SchemaFactoryConfigurationError",
-	"java.lang.ServiceConfigurationError",
-	"java.lang.ThreadDeath", // VERIFIED --verify that this is an error/exception
-	"java.lang.TransformerFactoryConfigurationError",
-	"java.lang.UnsatisfiedLinkError",         // VERIFIED
-	"java.lang.UnsupportedClassVersionError", // VERIFIED
-	"java.lang.VerifyError",                  // VERIFIED
-	"java.lang.VirtualMachineError",          // VERIFIED
+	"java.lang.annotation.AnnotationFormatError",               // VERIFIED
+	"java.lang.AssertionError",                                 // VERIFIED
+	"java.awt.AWTError",                                        // VERIFIED
+	"java.nio.charset.CoderMalfunctionError",                   // VERIFIED
+	"javax.xml.parsers.FactoryConfigurationError",              // VERIFIED
+	"java.lang.InternalError",                                  // VERIFIED
+	"java.io.IOError",                                          // VERIFIED
+	"java.lang.LinkageError",                                   // VERIFIED
+	"java.lang.NoClassDefFoundError",                           // VERIFIED
+	"java.lang.NoSuchFieldError",                               // VERIFIED
+	"java.lang.NoSuchMethodError",                              // VERIFIED
+	"java.lang.OutOfMemoryError",                               // VERIFIED
+	"javax.xml.validation.SchemaFactoryConfigurationError",     // VERIFIED
+	"java.util.ServiceConfigurationError",                      // VERIFIED
+	"java.lang.ThreadDeath",                                    // VERIFIED -- this really is a Java error
+	"javax.xml.transform.TransformerFactoryConfigurationError", // VERIFIED
+	"java.lang.UnsatisfiedLinkError",                           // VERIFIED
+	"java.lang.UnsupportedClassVersionError",                   // VERIFIED
+	"java.lang.VerifyError",                                    // VERIFIED
+	"java.lang.VirtualMachineError",                            // VERIFIED
 
-	// charset exceptions
-	"java.lang.ChangedCharSetException",
-	"java.lang.CharacterCodingException",
-	"java.lang.CharConversionException",
-	"java.lang.UnsupportedEncodingException",
-	"java.lang.UTFDataFormatException",
+	// charset exceptions (but note java.nio.charset.CoderMalfunctionError in the error section above)
+	"javax.swing.text.ChangedCharSetException",  // VERIFIED
+	"java.nio.charset.CharacterCodingException", // VERIFIED
+	"java.io.CharConversionException",           // VERIFIED
+	"java.io.UnsupportedEncodingException",      // VERIFIED
+	"java.io.UTFDataFormatException",            // VERIFIED
 }
