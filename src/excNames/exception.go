@@ -16,10 +16,12 @@ const (
 	Unknown = iota
 
 	// runtime exceptions
+	AccessDeniedException
 	AnnotationTypeMismatchException
 	ArithmeticException
 	ArrayIndexOutOfBoundsException // added (from Java 8 iastore spec)
 	ArrayStoreException
+	AtomicMoveNotSupportedException
 	BufferOverflowException
 	BufferUnderflowException
 	CannotRedoException
@@ -62,6 +64,7 @@ const (
 	InternalException
 	InvalidCodeIndexException
 	InvalidLineNumberException
+	InvalidMarkException
 	InvalidModuleDescriptorException
 	InvalidModuleException
 	InvalidRequestStateException
@@ -99,6 +102,7 @@ const (
 	UnmodifiableModuleException
 	UnmodifiableSetException
 	UnsupportedOperationException
+	UserPrincipalNotFoundException
 	VMDisconnectedException
 	VMMismatchException
 	VMOutOfMemoryException
@@ -167,6 +171,7 @@ const (
 	PrintException
 	PrivilegedActionException
 	PropertyVetoException
+	ReadOnlyBufferException
 	ReflectiveOperationException
 	RefreshFailedException
 	RuntimeException
@@ -228,15 +233,17 @@ const (
 // entries in the preceding list of constants in exactly the same way.
 // This table and that list must be kept strictly in sync.
 var JVMexceptionNames = []string{
-	"", // no exception (present because list of consts begins at 1)
+	"",                                    // no exception (present because list of consts begins at 1)
+	"java.nio.file.AccessDeniedException", // VERIFIED
 	"java.lang.annotation.AnnotationTypeMismatchException", // VERIFIED
-	"java.lang.ArithmeticException",
-	"java.lang.ArrayIndexOutOfBoundsException", // VERIFIED
-	"java.lang.ArrayStoreException",
-	"java.lang.BufferOverflowException",
-	"java.lang.BufferUnderflowException",
-	"java.lang.CannotRedoException",
-	"java.lang.CannotUndoException",
+	"java.lang.ArithmeticException",                        // VERIFIED
+	"java.lang.ArrayIndexOutOfBoundsException",             // VERIFIED
+	"java.lang.ArrayStoreException",                        // VERIFIED
+	"java.nio.file.AtomicMoveNotSupportedException",        // VERIFIED
+	"java.nio.BufferOverflowException",                     // VERIFIED
+	"java.nio.BufferUnderflowException",                    // VERIFIED
+	"javax.swing.undo.CannotRedoException",                 // VERIFIED
+	"javax.swing.undo.CannotUndoException",                 // VERIFIED
 	"java.lang.CatalogException",
 	"java.lang.ClassCastException",
 	"java.lang.ClassNotFoundException", // verified
@@ -261,7 +268,7 @@ var JVMexceptionNames = []string{
 	"java.lang.IllegalArgumentException",               // VERIFIED
 	"java.lang.IllegalCallerException",                 // VERIFIED
 	"java.util.IllegalFormatCodePointException",        // VERIFIED
-	"java.util.IllegalFormatConversionException",       // VERIFIED
+	"java.util.IllegalFormatConversionException",       // VERIFIED **
 	"java.lang.IllegalMonitorStateException",           // VERIFIED
 	"java.lang.IllegalPathStateException",
 	"java.lang.IllegalStateException", // VERIFIED
@@ -275,6 +282,7 @@ var JVMexceptionNames = []string{
 	"java.lang.InternalException",
 	"java.lang.InvalidCodeIndexException",
 	"java.lang.InvalidLineNumberException",
+	"java.nio.InvalidMarkException",                     // VERIFIED
 	"java.lang.module.InvalidModuleDescriptorException", // VERIFIED
 	"java.lang.InvalidModuleException",
 	"java.lang.InvalidRequestStateException",
@@ -311,7 +319,8 @@ var JVMexceptionNames = []string{
 	"java.lang.UnknownEntityException",
 	"java.lang.UnmodifiableModuleException",
 	"java.lang.UnmodifiableSetException",
-	"java.lang.UnsupportedOperationException", // VERIFIED
+	"java.lang.UnsupportedOperationException",                // VERIFIED
+	"java.nio.file.attribute.UserPrincipalNotFoundException", // VERIFIED
 	"java.lang.VMDisconnectedException",
 	"java.lang.VMMismatchException",
 	"java.lang.VMOutOfMemoryException",
@@ -380,6 +389,7 @@ var JVMexceptionNames = []string{
 	"java.lang.PrintException",
 	"java.lang.PrivilegedActionException",
 	"java.lang.PropertyVetoException",
+	"java.nio.ReadOnlyBufferException",       // VERIFIED
 	"java.lang.ReflectiveOperationException", // VERIFIED
 	"java.lang.RefreshFailedException",
 	"java.lang.RuntimeException", // VERIFIED
