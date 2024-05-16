@@ -16,7 +16,6 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
-	"jacobin/types"
 	"math"
 	"runtime/debug"
 	"unsafe"
@@ -202,40 +201,39 @@ func emitTraceData(f *frames.Frame) string {
 }
 
 // traceObject : Used by push, pop, and peek in tracing an object.
-func traceObject(f *frames.Frame, opStr string, obj *object.Object) string {
-	prefix := fmt.Sprintf("%4s           TOS:", opStr)
+func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
+	var traceInfo string
+	prefix := fmt.Sprintf(" %4s          TOS:", opStr)
 
 	// Nil pointer to object?
 	if obj == nil {
-		return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
+		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
+		_ = log.Log(traceInfo, log.TRACE_INST)
+		return
 	}
 
-	// Not a nil pointer.
-	var fvalueFmt string
-	if obj.KlassName == globals.StringIndexString {
-		fvalueFmt = "String"
-	} else {
-		fvalueFmt = "[]byte"
-	}
+	// The object pointer is not nil.
+	klass := object.GoStringFromStringPoolIndex(obj.KlassName)
+	traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d, class: %s", f.TOS, klass)
+	_ = log.Log(traceInfo, log.TRACE_INST)
 
-	// Field table non-empty?
+	// Trace field table.
+	prefix = " "
 	if len(obj.FieldTable) > 0 {
-		// Assume that field 'value' is present.
-		fld := obj.FieldTable["value"]
-		if fld.Ftype == types.ByteArray {
-			if fld.Fvalue == nil {
-				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d %s: <nil>", f.TOS, fvalueFmt)
+		for fieldName := range obj.FieldTable {
+			fld := obj.FieldTable[fieldName]
+			if klass == "java/lang/String" && fieldName == "value" {
+				str := string(fld.Fvalue.([]byte))
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
 			} else {
-				str := string((fld.Fvalue).([]byte))
-				return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d %s: %q", f.TOS, fvalueFmt, str)
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
 			}
-		} else {
-			// Fvalue is not a byte array.
-			return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d *Object: %v", f.TOS, fld.Fvalue)
+			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
+	} else { // nil FieldTable
+		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("no fields")
+		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
-
-	return fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d *Object: %v", f.TOS, obj)
 }
 
 // pop from the operand stack.
@@ -257,32 +255,36 @@ func pop(f *frames.Frame) interface{} {
 		var traceInfo string
 		if f.TOS == -1 {
 			traceInfo = fmt.Sprintf("%74s", "POP           TOS:  -")
+			_ = log.Log(traceInfo, log.TRACE_INST)
 		} else {
 			if value == nil {
 				traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 					fmt.Sprintf("%3d <nil>", f.TOS)
+				_ = log.Log(traceInfo, log.TRACE_INST)
 			} else {
 				switch value.(type) {
 				case *object.Object:
 					obj := value.(*object.Object)
-					traceInfo = traceObject(f, "POP", obj)
+					traceObject(f, "POP", obj)
 				case *[]uint8:
 					strPtr := value.(*[]byte)
 					str := string(*strPtr)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
+					_ = log.Log(traceInfo, log.TRACE_INST)
 				case []uint8:
 					bytes := value.([]byte)
 					str := string(bytes)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+					_ = log.Log(traceInfo, log.TRACE_INST)
 				default:
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d %T %v", f.TOS, value, value)
+					_ = log.Log(traceInfo, log.TRACE_INST)
 				}
 			}
 		}
-		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
 	f.TOS -= 1 // adjust TOS
@@ -304,20 +306,15 @@ func peek(f *frames.Frame) interface{} {
 	if MainThread.Trace {
 		var traceInfo string
 		value := f.OpStack[f.TOS]
-		if f.TOS == -1 {
-			traceInfo = fmt.Sprintf("                                                          " +
-				"PEEK TOS:  - ")
-		} else {
-			switch value.(type) {
-			case *object.Object:
-				obj := value.(*object.Object)
-				traceInfo = traceObject(f, "PEEK", obj)
-			default:
-				traceInfo = fmt.Sprintf("                                                  "+
-					"PEEK          TOS:%3d %T %v", f.TOS, value, value)
-			}
+		switch value.(type) {
+		case *object.Object:
+			obj := value.(*object.Object)
+			traceObject(f, "PEEK", obj)
+		default:
+			traceInfo = fmt.Sprintf("                                                  "+
+				"PEEK          TOS:%3d %T %v", f.TOS, value, value)
+			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
-		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 	if MainThread.Trace {
 		logTraceStack(f)
@@ -339,37 +336,42 @@ func push(f *frames.Frame, x interface{}) {
 
 		if f.TOS == -1 {
 			traceInfo = fmt.Sprintf("%77s", "PUSH          TOS:  -")
+			_ = log.Log(traceInfo, log.TRACE_INST)
 		} else {
 			if x == nil {
 				traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 					fmt.Sprintf("%3d <nil>", f.TOS)
+				_ = log.Log(traceInfo, log.TRACE_INST)
 			} else {
 				if x == object.Null {
 					traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 						fmt.Sprintf("%3d null", f.TOS)
+					_ = log.Log(traceInfo, log.TRACE_INST)
 				} else {
 					switch x.(type) {
 					case *object.Object:
 						obj := x.(*object.Object)
-						traceInfo = traceObject(f, "PUSH", obj)
+						traceObject(f, "PUSH", obj)
 					case *[]uint8:
 						strPtr := x.(*[]byte)
 						str := string(*strPtr)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 							fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
+						_ = log.Log(traceInfo, log.TRACE_INST)
 					case []uint8:
 						bytes := x.([]byte)
 						str := string(bytes)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+						_ = log.Log(traceInfo, log.TRACE_INST)
 					default:
 						traceInfo = fmt.Sprintf("%56s", " ") +
 							fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
+						_ = log.Log(traceInfo, log.TRACE_INST)
 					}
 				}
 			}
 		}
-		_ = log.Log(traceInfo, log.TRACE_INST)
 	}
 
 	// the actual push
