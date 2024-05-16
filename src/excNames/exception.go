@@ -33,6 +33,7 @@ const (
 	ConcurrentModificationException
 	DateTimeException
 	DOMException
+	DuplicateFormatFlagsException
 	DuplicateRequestException
 	EmptyStackException
 	EnumConstantNotPresentException
@@ -41,9 +42,13 @@ const (
 	FileSystemAlreadyExistsException
 	FileSystemNotFoundException
 	FindException
+	FormatFlagsConversionMismatchException
+	FormatterClosedException
 	IllegalAccessException
 	IllegalArgumentException
 	IllegalCallerException
+	IllegalFormatCodePointException
+	IllegalFormatConversionException
 	IllegalMonitorStateException
 	IllegalPathStateException
 	IllegalStateException
@@ -238,21 +243,26 @@ var JVMexceptionNames = []string{
 	"java.lang.ClassNotPreparedException",
 	"java.lang.CMMException",
 	"java.lang.CompletionException",
-	"java.lang.ConcurrentModificationException",
+	"java.util.ConcurrentModificationException", // VERIFIED
 	"java.lang.DateTimeException",
 	"java.lang.DOMException",
+	"java.util.DuplicateFormatFlagsException", // VERIFIED
 	"java.lang.DuplicateRequestException",
-	"java.lang.EmptyStackException",
+	"java.util.EmptyStackException",             // VERIFIED
 	"java.lang.EnumConstantNotPresentException", // VERIFIED
 	"java.lang.EventException",
 	"java.io.FileNotFoundException",
 	"java.lang.FileSystemAlreadyExistsException",
 	"java.lang.FileSystemNotFoundException",
 	"java.lang.FindException",
-	"java.lang.IllegalAccessException",       // VERIFIED
-	"java.lang.IllegalArgumentException",     // VERIFIED
-	"java.lang.IllegalCallerException",       // VERIFIED
-	"java.lang.IllegalMonitorStateException", // VERIFIED
+	"java.util.FormatFlagsConversionMismatchException", // VERIFIED
+	"java.util.FormatterClosedException",               // VERIFIED
+	"java.lang.IllegalAccessException",                 // VERIFIED
+	"java.lang.IllegalArgumentException",               // VERIFIED
+	"java.lang.IllegalCallerException",                 // VERIFIED
+	"java.util.IllegalFormatCodePointException",        // VERIFIED
+	"java.util.IllegalFormatConversionException",       // VERIFIED
+	"java.lang.IllegalMonitorStateException",           // VERIFIED
 	"java.lang.IllegalPathStateException",
 	"java.lang.IllegalStateException", // VERIFIED
 	"java.lang.IllformedLocaleException",
