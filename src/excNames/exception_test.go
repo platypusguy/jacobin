@@ -17,13 +17,13 @@ func details(t *testing.T, index int, expected string) {
 
 func TestExceptionTableAlignment(t *testing.T) {
 	details(t, IllegalArgumentException, "java.lang.IllegalArgumentException")
-	details(t, NoSuchDynamicMethodException, "java.lang.NoSuchDynamicMethodException")
+	details(t, NoSuchDynamicMethodException, "jdk.dynalink.NoSuchDynamicMethodException")
 	details(t, WrongMethodTypeException, "java.lang.invoke.WrongMethodTypeException")
-	details(t, ClassNotLoadedException, "java.lang.ClassNotLoadedException")
+	details(t, ClassNotLoadedException, "com.sun.jdi.ClassNotLoadedException")
 	details(t, InvalidTypeException, "com.sun.jdi.InvalidTypeException")
-	details(t, PrintException, "java.lang.PrintException")
-	details(t, UnmodifiableClassException, "java.lang.UnmodifiableClassException")
+	details(t, PrintException, "javax.print.PrintException")
+	details(t, UnmodifiableClassException, "java.lang.instrument.UnmodifiableClassException")
 	details(t, XMLParseException, "java.lang.XMLParseException")
 	details(t, VirtualMachineError, "java.lang.VirtualMachineError")
-	details(t, UTFDataFormatException, "java.lang.UTFDataFormatException")
+	details(t, UTFDataFormatException, "java.io.UTFDataFormatException")
 }
