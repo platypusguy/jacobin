@@ -297,8 +297,8 @@ var JVMexceptionNames = []string{
 	"java.lang.MirroredTypesException",
 	"java.lang.MissingResourceException",
 	"java.lang.NativeMethodException",
-	"java.lang.NegativeArraySizeException", // VERIFIED
-	"java.lang.NoSuchDynamicMethodException",
+	"java.lang.NegativeArraySizeException",      // VERIFIED
+	"jdk.dynalink.NoSuchDynamicMethodException", // VERIFIED
 	"java.lang.NoSuchElementException",
 	"java.lang.NoSuchMechanismException",
 	"java.lang.NullPointerException",  // VERIFIED
@@ -344,7 +344,7 @@ var JVMexceptionNames = []string{
 	"java.lang.BrokenBarrierException",
 	"java.lang.CardException",
 	"java.lang.CertificateException",
-	"java.lang.ClassNotLoadedException",
+	"com.sun.jdi.ClassNotLoadedException", // VERIFIED
 	"java.lang.CloneNotSupportedException",
 	"java.lang.DataFormatException",
 	"java.lang.DatatypeConfigurationException", // VERIFIED
@@ -386,7 +386,7 @@ var JVMexceptionNames = []string{
 	"java.lang.ParseException",
 	"java.lang.ParserConfigurationException",
 	"java.lang.PrinterException",
-	"java.lang.PrintException",
+	"javax.print.PrintException", // VERIFIED
 	"java.lang.PrivilegedActionException",
 	"java.lang.PropertyVetoException",
 	"java.nio.ReadOnlyBufferException",       // VERIFIED
@@ -403,7 +403,7 @@ var JVMexceptionNames = []string{
 	"java.lang.TooManyListenersException",
 	"java.lang.TransformerException",
 	"java.lang.TransformException",
-	"java.lang.UnmodifiableClassException",
+	"java.lang.instrument.UnmodifiableClassException", // VERIFIED
 	"java.lang.UnsupportedAudioFileException",
 	"java.lang.UnsupportedCallbackException",
 	"java.lang.UnsupportedFlavorException",
