@@ -152,6 +152,8 @@ const (
 	MimeTypeParseException
 	NamingException
 	NoninvertibleTransformException
+	NoSuchFieldException
+	NoSuchMethodException
 	NotBoundException
 	NotOwnerException
 	ParseException
@@ -186,7 +188,7 @@ const (
 	XMLSignatureException
 	XMLStreamException
 
-	// Java exceptions
+	// Java errors
 	AnnotationFormatError
 	AssertionError
 	AWTError
@@ -195,10 +197,17 @@ const (
 	InternalError
 	IOError
 	LinkageError
+	NoClassDefFoundError
+	NoSuchFieldError
+	NoSuchMethodError
+	OutOfMemoryError
 	SchemaFactoryConfigurationError
 	ServiceConfigurationError
 	ThreadDeath
 	TransformerFactoryConfigurationError
+	UnsatisfiedLinkError
+	UnsupportedClassVersionError
+	VerifyError
 	VirtualMachineError
 
 	// Character set exceptions
@@ -351,6 +360,8 @@ var JVMexceptionNames = []string{
 	"java.lang.MimeTypeParseException",
 	"java.lang.NamingException",
 	"java.lang.NoninvertibleTransformException",
+	"java.lang.NoSuchFieldException",  // VERIFIED
+	"java.lang.NoSuchMethodException", // VERIFIED
 	"java.lang.NotBoundException",
 	"java.lang.NotOwnerException",
 	"java.lang.ParseException",
@@ -385,7 +396,7 @@ var JVMexceptionNames = []string{
 	"java.lang.XMLSignatureException",
 	"java.lang.XMLStreamException",
 
-	// Java exceptions
+	// Java errors
 	"java.lang.AnnotationFormatError",
 	"java.lang.AssertionError",
 	"java.lang.AWTError",
@@ -393,12 +404,19 @@ var JVMexceptionNames = []string{
 	"java.lang.FactoryConfigurationError",
 	"java.lang.InternalError", // VERIFIED
 	"java.lang.IOError",
-	"java.lang.LinkageError", // VERIFIED
+	"java.lang.LinkageError",         // VERIFIED
+	"java.lang.NoClassDefFoundError", // VERIFIED
+	"java.lang.NoSuchFieldError",     // VERIFIED
+	"java.lang.NoSuchMethodError",    // VERIFIED
+	"java.lang.OutOfMemoryError",     // VERIFIED
 	"java.lang.SchemaFactoryConfigurationError",
 	"java.lang.ServiceConfigurationError",
 	"java.lang.ThreadDeath", // VERIFIED --verify that this is an error/exception
 	"java.lang.TransformerFactoryConfigurationError",
-	"java.lang.VirtualMachineError", // VERIFIED
+	"java.lang.UnsatisfiedLinkError",         // VERIFIED
+	"java.lang.UnsupportedClassVersionError", // VERIFIED
+	"java.lang.VerifyError",                  // VERIFIED
+	"java.lang.VirtualMachineError",          // VERIFIED
 
 	// charset exceptions
 	"java.lang.ChangedCharSetException",
