@@ -276,7 +276,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC: Invalid type for instruction"
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			// if no error
 			switch CPe.RetType {
@@ -308,7 +310,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
 			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
@@ -413,7 +417,9 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "I/C/S/LALOAD: Invalid (null) reference to an array"
 					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				array = obj.FieldTable["value"].Fvalue.([]int64)
 			case []int64:
@@ -422,14 +428,18 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("I/C/S/LALOAD: Invalid reference type of an array: %T", ref)
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "I/C/S/LALOAD: Invalid array subscript"
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			var value = array[index]
 			push(f, value)
@@ -451,20 +461,26 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "D/FALOAD: Invalid object pointer (nil)"
 					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				array = (*obj).FieldTable["value"].Fvalue.([]float64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("D/FALOAD: Invalid reference type of an array: %T", ref)
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "D/FALOAD: Invalid array subscript"
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			var value = array[index]
 			push(f, value)
@@ -479,7 +495,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid (null) reference to an array"
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
@@ -490,7 +508,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "AALOAD: Invalid array subscript"
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			var value = array[index]
@@ -503,7 +523,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid (null) reference to an array"
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			var bAref *object.Object
@@ -520,7 +542,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			size := int64(len(array))
 
@@ -528,7 +552,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BALOAD: Invalid array subscript"
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			var value = array[index]
 			push(f, int64(value))
@@ -595,7 +621,9 @@ frameInterpreter:
 			default:
 				errMsg := fmt.Sprintf("ISTORE_0: Invalid operand type: %T", popped)
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 		case opcodes.ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
 			popped := pop(f)
@@ -607,7 +635,9 @@ frameInterpreter:
 			default:
 				errMsg := fmt.Sprintf("ISTORE_1: Invalid operand type: %T", popped)
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 		case opcodes.ISTORE_2: //   0x3D   	(store popped top of stack int into local 2)
 			popped := pop(f)
@@ -619,7 +649,9 @@ frameInterpreter:
 			default:
 				errMsg := fmt.Sprintf("ISTORE_2: Invalid operand type: %T", popped)
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 		case opcodes.ISTORE_3: //   0x3E    (store popped top of stack int into local 3)
 			popped := pop(f)
@@ -631,7 +663,9 @@ frameInterpreter:
 			default:
 				errMsg := fmt.Sprintf("ISTORE_3: Invalid operand type: %T", popped)
 				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 		case opcodes.LSTORE_0: //   0x3F    (store long from top of stack into locals 0 and 1)
 			var v = pop(f).(int64)
@@ -699,14 +733,18 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "I/C/S/LASTORE: Invalid (null) reference to an array"
 					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				fld := obj.FieldTable["value"]
 				if fld.Ftype != types.IntArray {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("I/C/S/LASTORE: field type expected=[I, observed=%s", fld.Ftype)
 					exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				array = fld.Fvalue.([]int64)
 			case []int64:
@@ -715,7 +753,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("I/C/S/LASTORE: unexpected reference type: %T", ref)
 				exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			size := int64(len(array))
@@ -723,7 +763,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("I/C/S/LASTORE: array size= %d but array index= %d (too large)", size, index)
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			array[index] = value
 
@@ -743,14 +785,18 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "D/FASTORE: Invalid (null) reference to an array"
 					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					return errors.New("DASTORE/FASTORE: Invalid array reference")
+					if glob.JacobinName == "test" {
+						return errors.New("DASTORE/FASTORE: Invalid array reference")
+					}
 				}
 				fld := obj.FieldTable["value"]
 				if fld.Ftype != types.FloatArray {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("D/FASTORE: field type expected=[F, observed=%s", fld.Ftype)
 					exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				array = fld.Fvalue.([]float64)
 			case []float64:
@@ -759,7 +805,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("D/FASTORE: unexpected reference type: %T", ref)
 				exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			size := int64(len(array))
@@ -767,7 +815,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("D/FASTORE: array size=%d but index=%d (too large)", size, index)
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			array[index] = value
@@ -781,7 +831,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				exceptions.ThrowEx(excNames.NullPointerException,
 					"AASTORE: Invalid (null) reference to an array", f)
-				return errors.New("AASTORE: Invalid array address")
+				if glob.JacobinName == "test" {
+					return errors.New("AASTORE: Invalid array address")
+				}
 			}
 
 			arrayObj := *arrayRef
@@ -793,7 +845,9 @@ frameInterpreter:
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.ThrowEx(excNames.ArrayStoreException,
 					"AASTORE: Attempt to access array of incorrect type", f)
-				return errors.New("AASTORE: Invalid array type")
+				if glob.JacobinName == "test" {
+					return errors.New("AASTORE: Invalid array type")
+				}
 			}
 
 			// get pointer to the actual array
@@ -805,7 +859,9 @@ frameInterpreter:
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException,
 					"AASTORE: Invalid array subscript", f)
-				return errors.New("AASTORE: Invalid array index")
+				if glob.JacobinName == "test" {
+					return errors.New("AASTORE: Invalid array index")
+				}
 			}
 
 			rawArray[index] = value
@@ -818,7 +874,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "BASTORE: Invalid (null) reference to an array"
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 
 			o := arrayRef.FieldTable["value"]
@@ -828,7 +886,9 @@ frameInterpreter:
 					o.Ftype)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 
 			rawArray := o.Fvalue.([]byte)
@@ -838,7 +898,9 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 			rawArray[index] = value
 
@@ -995,7 +1057,9 @@ frameInterpreter:
 					errMsg = "/ by zero"
 				}
 				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				return errors.New("IDIV error") // returns in tests only
+				if glob.JacobinName == "test" {
+					return errors.New("IDIV error")
+				}
 			} else {
 				push(f, val2/val1)
 			}
@@ -1011,6 +1075,9 @@ frameInterpreter:
 					errMsg = "/ by zero"
 				}
 				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			} else {
 				res := val2 / val1
 				push(f, res)
@@ -1060,6 +1127,9 @@ frameInterpreter:
 					errMsg = "/ by zero"
 				}
 				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			} else {
 				res := val1 % val2
 				push(f, res)
@@ -1071,7 +1141,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "LREM: Arithmetic Exception: divide by zero"
 				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			} else {
 				val1 := pop(f).(int64)
 				pop(f)
@@ -1984,7 +2056,9 @@ frameInterpreter:
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
 				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 
 			// get the methodRef entry
@@ -2012,6 +2086,9 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("%s() in %s is an unsupported native function",
 					methodName, className)
 				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 
 			mtEntry := classloader.MTable[className+"."+methodName+methodType]
@@ -2050,7 +2127,9 @@ frameInterpreter:
 					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
 						className, methodName+methodType)
 					exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg)
+					}
 				}
 				break
 			}
@@ -2135,7 +2214,9 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methSig
 					exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg)
+					}
 				}
 
 				f.PC += 1
@@ -2176,7 +2257,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
 				exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg)
+				}
 			}
 
 			// before we can run the method, we need to either instantiate the class and/or
@@ -2188,9 +2271,11 @@ frameInterpreter:
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
-						className)
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+						className+"."+methodName+methodType)
+					exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg)
+					}
 				}
 			}
 
@@ -2207,8 +2292,11 @@ frameInterpreter:
 				if err != nil {
 					// any exceptions message will already have been displayed to the user
 					glob.ErrorGoStack = string(debug.Stack())
-					return errors.New("INVOKESTATIC: Error encountered in: " +
-						className + "." + methodName)
+					errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
+					exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg)
+					}
 				}
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
@@ -2223,8 +2311,9 @@ frameInterpreter:
 					className, methodName, methodType, &m, false, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
-					return errors.New("INVOKESTATIC: Error creating frame in: " +
-						className + "." + methodName + methodType)
+					errMsg := "INVOKESTATIC: Error creating frame in: " + className + "." + methodName + methodType
+					_ = log.Log(errMsg, log.SEVERE)
+					return errors.New(errMsg)
 				}
 
 				f.PC += 1                            // point to the next bytecode before exiting
@@ -2296,7 +2385,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid size for array"
 				exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			arrayType := int(f.Meth[f.PC+1])
@@ -2321,7 +2412,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ANEWARRAY: Invalid size for array"
 				exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			refTypeSlot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
@@ -2353,7 +2446,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			var size int64
@@ -2385,14 +2480,18 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
 					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					return errors.New(errMsg)
+					if glob.JacobinName == "test" {
+						return errors.New(errMsg) // return should happen only in testing
+					}
 				}
 				size = object.ArrayLength(r)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
 				exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 			push(f, size)
 		case opcodes.ATHROW: // 0xBF throw an exception
@@ -2401,7 +2500,9 @@ frameInterpreter:
 			if object.IsNull(objectRef) {
 				errMsg := "ATHROW: Invalid (null) reference to a exception/error class to throw"
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			// capture the golang stack
@@ -2537,7 +2638,9 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "CHECKCAST: Invalid class reference"
 				exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-				return errors.New(errMsg)
+				if glob.JacobinName == "test" {
+					return errors.New(errMsg) // return should happen only in testing
+				}
 			}
 
 			// at this point, we know we have a valid non-nil, non-null pointer to an object
@@ -2578,7 +2681,9 @@ frameInterpreter:
 							/*** TODO: bypass this Throw action. Right thing to do?
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
 							exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
-							return errors.New(errMsg)
+							if glob.JacobinName == "test" {
+								return errors.New(errMsg) // return should happen only in testing
+							}
 							***/
 							warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
 							_ = log.Log(warnMsg, log.WARNING)
@@ -2587,7 +2692,9 @@ frameInterpreter:
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
 						exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						return errors.New(errMsg)
+						if glob.JacobinName == "test" {
+							return errors.New(errMsg) // return should happen only in testing
+						}
 					}
 				} else { // the object being checked is a class
 					classPtr := classloader.MethAreaFetch(className)
@@ -2603,7 +2710,9 @@ frameInterpreter:
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						return errors.New(errMsg)
+						if glob.JacobinName == "test" {
+							return errors.New(errMsg) // return should happen only in testing
+						}
 					}
 					// note that if the classPtr == obj.Klass, which is the desired outcome,
 					// do nothing. That is, the incoming stack should remain the same.
