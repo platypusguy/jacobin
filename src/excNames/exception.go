@@ -217,8 +217,10 @@ const (
 	OutOfMemoryError
 	SchemaFactoryConfigurationError
 	ServiceConfigurationError
+	StackOverflowError
 	ThreadDeath
 	TransformerFactoryConfigurationError
+	UnknownError
 	UnsatisfiedLinkError
 	UnsupportedClassVersionError
 	VerifyError
@@ -439,8 +441,10 @@ var JVMexceptionNames = []string{
 	"java.lang.OutOfMemoryError",                               // VERIFIED
 	"javax.xml.validation.SchemaFactoryConfigurationError",     // VERIFIED
 	"java.util.ServiceConfigurationError",                      // VERIFIED
+	"java.lang.StackOverflowError",                             // VERIFIED
 	"java.lang.ThreadDeath",                                    // VERIFIED -- this really is a Java error
 	"javax.xml.transform.TransformerFactoryConfigurationError", // VERIFIED
+	"java.lang.UnknownError",                                   // VERIFIED
 	"java.lang.UnsatisfiedLinkError",                           // VERIFIED
 	"java.lang.UnsupportedClassVersionError",                   // VERIFIED
 	"java.lang.VerifyError",                                    // VERIFIED
