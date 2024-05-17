@@ -272,14 +272,14 @@ var JVMexceptionNames = []string{
 	"java.lang.IllegalMonitorStateException",               // VERIFIED
 	"java.awt.geom.IllegalPathStateException",              // VERIFIED
 	"java.lang.IllegalStateException",                      // VERIFIED
-	"java.lang.IllformedLocaleException",
-	"java.lang.ImagingOpException",
-	"java.lang.reflect.InaccessibleObjectException",     // VERIFIED
-	"java.lang.annotaion.IncompleteAnnotationException", // VERIFIED
-	"java.lang.InconsistentDebugInfoException",
-	"java.lang.IndexOutOfBoundsException", // VERIFIED
-	"java.lang.InstantiationException",    // VERIFIED
-	"java.lang.InternalException",
+	"java.util.IllformedLocaleException",                   // VERIFIED
+	"java.awt.image.ImagingOpException",                    // VERIFIED
+	"java.lang.reflect.InaccessibleObjectException",        // VERIFIED
+	"java.lang.annotaion.IncompleteAnnotationException",    // VERIFIED
+	"com.sun.jdi.InconsistentDebugInfoException",           // VERIFIED
+	"java.lang.IndexOutOfBoundsException",                  // VERIFIED
+	"java.lang.InstantiationException",                     // VERIFIED
+	"com.sun.jdi.InternalException",                        // VERIFIED
 	"java.lang.InvalidCodeIndexException",
 	"java.lang.InvalidLineNumberException",
 	"java.nio.InvalidMarkException",                     // VERIFIED
