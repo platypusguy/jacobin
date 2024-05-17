@@ -71,7 +71,6 @@ const (
 	InvalidStackFrameException
 	JarSignerException
 	JMRuntimeException
-	JSException
 	LayerInstantiationException
 	LSException
 	MalformedParameterizedTypeException
@@ -280,17 +279,16 @@ var JVMexceptionNames = []string{
 	"java.lang.IndexOutOfBoundsException",                  // VERIFIED
 	"java.lang.InstantiationException",                     // VERIFIED
 	"com.sun.jdi.InternalException",                        // VERIFIED
-	"java.lang.InvalidCodeIndexException",
-	"java.lang.InvalidLineNumberException",
-	"java.nio.InvalidMarkException",                     // VERIFIED
-	"java.lang.module.InvalidModuleDescriptorException", // VERIFIED
-	"java.lang.InvalidModuleException",
-	"java.lang.InvalidRequestStateException",
-	"java.lang.InvalidStackFrameException",
-	"java.lang.JarSignerException",
-	"java.lang.JMRuntimeException",
-	"java.lang.JSException",
-	"java.lang.LayerInstantiationException", // VERIFIED
+	"com.sun.jdi.InvalidCodeIndexException",                // VERIFIED
+	"com.sun.jdi.InvalidLineNumberException",               // VERIFIED
+	"java.nio.InvalidMarkException",                        // VERIFIED
+	"java.lang.module.InvalidModuleDescriptorException",    // VERIFIED
+	"com.sun.jdi.InvalidModuleException",                   // VERIFIED
+	"com.sun.jdi.request.InvalidRequestStateException",     // VERIFIED
+	"com.sun.jdi.InvalidStackFrameException",               // VERIFIED
+	"jdk.security.jarsigner.JarSignerException",            // VERIFIED
+	"jjavax.management.JMRuntimeException",                 // VERIFIED
+	"java.lang.LayerInstantiationException",                // VERIFIED
 	"java.lang.LSException",
 	"java.lang.reflect.MalformedParameterizedTypeException", // VERIFIED
 	"java.lang.reflect.MalformedParametersException",        // VERIFIED
