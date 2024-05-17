@@ -319,11 +319,11 @@ var JVMexceptionNames = []string{
 	"javax.print.attribute.UnmodifiableSetException",         // VERIFIED
 	"java.lang.UnsupportedOperationException",                // VERIFIED
 	"java.nio.file.attribute.UserPrincipalNotFoundException", // VERIFIED
-	"java.lang.VMDisconnectedException",
-	"java.lang.VMMismatchException",
-	"java.lang.VMOutOfMemoryException",
-	"java.lang.invoke.WrongMethodTypeException", // verified
-	"java.lang.XPathException",
+	"com.sun.jdi.VMDisconnectedException",                    // VERIFIED
+	"com.sun.jdi.VMMismatchException",                        // VERIFIED
+	"com.sun.jdi.VMOutOfMemoryException",                     // VERIFIED
+	"java.lang.invoke.WrongMethodTypeException",              // VERIFIED
+	"javax.xml.xpath.XPathException",                         // VERIFIED
 
 	// non-runtime exceptions
 	"java.lang.AbsentInformationException",
@@ -342,13 +342,13 @@ var JVMexceptionNames = []string{
 	"java.lang.BrokenBarrierException",
 	"java.lang.CardException",
 	"java.lang.CertificateException",
-	"com.sun.jdi.ClassNotLoadedException", // VERIFIED
-	"java.lang.CloneNotSupportedException",
-	"java.lang.DataFormatException",
-	"java.lang.DatatypeConfigurationException", // VERIFIED
-	"java.lang.DestroyFailedException",
-	"java.lang.ExecutionControlException",
-	"java.lang.ExecutionException",
+	"com.sun.jdi.ClassNotLoadedException",                      // VERIFIED
+	"java.lang.CloneNotSupportedException",                     // VERIFIED
+	"java.util.zip.DataFormatException",                        // VERIFIED
+	"java.lang.DatatypeConfigurationException",                 // VERIFIED
+	"javax.security.auth.DestroyFailedException",               // VERIFIED
+	"dk.jshell.spi.ExecutionControl.ExecutionControlException", // VERIFIED
+	"java.util.concurrent.ExecutionException",                  // VERIFIED
 	"java.lang.ExpandVetoException",
 	"java.lang.FontFormatException",
 	"java.lang.GeneralSecurityException",
