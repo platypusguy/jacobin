@@ -234,89 +234,89 @@ const (
 var JVMexceptionNames = []string{
 	"",                                    // no exception (present because list of consts begins at 1)
 	"java.nio.file.AccessDeniedException", // VERIFIED
-	"java.lang.annotation.AnnotationTypeMismatchException",  // VERIFIED
-	"java.lang.ArithmeticException",                         // VERIFIED
-	"java.lang.ArrayIndexOutOfBoundsException",              // VERIFIED
-	"java.lang.ArrayStoreException",                         // VERIFIED
-	"java.nio.file.AtomicMoveNotSupportedException",         // VERIFIED
-	"java.nio.BufferOverflowException",                      // VERIFIED
-	"java.nio.BufferUnderflowException",                     // VERIFIED
-	"javax.swing.undo.CannotRedoException",                  // VERIFIED
-	"javax.swing.undo.CannotUndoException",                  // VERIFIED
-	"javax.xml.catalog.CatalogException",                    // VERIFIED
-	"java.lang.ClassCastException",                          // VERIFIED
-	"java.lang.ClassNotFoundException",                      // VERIFIED
-	"com.sun.jdi.ClassNotPreparedException",                 // VERIFIED
-	"java.awt.color.CMMException",                           // VERIFIED
-	"java.util.concurrent.CompletionException",              // VERIFIED
-	"java.util.ConcurrentModificationException",             // VERIFIED
-	"java.time.DateTimeException",                           // VERIFIED
-	"org.w3c.dom.DOMException",                              // VERIFIED
-	"java.util.DuplicateFormatFlagsException",               // VERIFIED
-	"com.sun.jdi.request.DuplicateRequestException",         // VERIFIED
-	"java.util.EmptyStackException",                         // VERIFIED
-	"java.lang.EnumConstantNotPresentException",             // VERIFIED
-	"org.w3c.dom.events.EventException",                     // VERIFIED
-	"java.io.FileNotFoundException",                         // VERiFIED
-	"java.nio.file.FileSystemAlreadyExistsException",        // VERIFIED
-	"java.nio.file.FileSystemNotFoundException",             // VERIFIED
-	"java.lang.module.FindException",                        // VERIFIED
-	"java.util.FormatFlagsConversionMismatchException",      // VERIFIED
-	"java.util.FormatterClosedException",                    // VERIFIED
-	"java.lang.IllegalAccessException",                      // VERIFIED
-	"java.lang.IllegalArgumentException",                    // VERIFIED
-	"java.lang.IllegalCallerException",                      // VERIFIED
-	"java.util.IllegalFormatCodePointException",             // VERIFIED
-	"java.util.IllegalFormatConversionException",            // VERIFIED ** got this far in java.util
-	"java.lang.IllegalMonitorStateException",                // VERIFIED
-	"java.awt.geom.IllegalPathStateException",               // VERIFIED
-	"java.lang.IllegalStateException",                       // VERIFIED
-	"java.util.IllformedLocaleException",                    // VERIFIED
-	"java.awt.image.ImagingOpException",                     // VERIFIED
-	"java.lang.reflect.InaccessibleObjectException",         // VERIFIED
-	"java.lang.annotaion.IncompleteAnnotationException",     // VERIFIED
-	"com.sun.jdi.InconsistentDebugInfoException",            // VERIFIED
-	"java.lang.IndexOutOfBoundsException",                   // VERIFIED
-	"java.lang.InstantiationException",                      // VERIFIED
-	"com.sun.jdi.InternalException",                         // VERIFIED
-	"com.sun.jdi.InvalidCodeIndexException",                 // VERIFIED
-	"com.sun.jdi.InvalidLineNumberException",                // VERIFIED
-	"java.nio.InvalidMarkException",                         // VERIFIED
-	"java.lang.module.InvalidModuleDescriptorException",     // VERIFIED
-	"com.sun.jdi.InvalidModuleException",                    // VERIFIED
-	"com.sun.jdi.request.InvalidRequestStateException",      // VERIFIED
-	"com.sun.jdi.InvalidStackFrameException",                // VERIFIED
-	"jdk.security.jarsigner.JarSignerException",             // VERIFIED
-	"jjavax.management.JMRuntimeException",                  // VERIFIED
-	"java.lang.LayerInstantiationException",                 // VERIFIED
-	"org.w3c.dom.ls.LSException",                            // VERIFIED
-	"java.lang.reflect.MalformedParameterizedTypeException", // VERIFIED
-	"java.lang.reflect.MalformedParametersException",        // VERIFIED
-	"javax.lang.model.type.MirroredTypesException",          // VERIFIED
-	"java.util.MissingResourceException",                    // VERIFIED
-	"com.sun.jdi.NativeMethodException",                     // VERIFIED
-	"java.lang.NegativeArraySizeException",                  // VERIFIED
-	"jdk.dynalink.NoSuchDynamicMethodException",             // VERIFIED
-	"java.lang.NoSuchElementException",
-	"java.lang.NoSuchMechanismException",
-	"java.lang.NullPointerException",  // VERIFIED
-	"java.lang.NumberFormatException", // VERIFIED
-	"java.lang.ObjectCollectedException",
-	"java.lang.ProfileDataException",
-	"java.lang.ProviderException",
-	"java.lang.ProviderNotFoundException",
-	"java.lang.RangeException",
-	"java.lang.RasterFormatException",
-	"java.lang.RejectedExecutionException",
-	"java.lang.module.ResolutionException", // VERIFIED
-	"java.lang.SecurityException",          // VERIFIED
-	"java.lang.SPIResolutionException",
-	"java.lang.TypeNotPresentException", // VERIFIED
-	"java.lang.UncheckedIOException",
-	"java.lang.reflect.UndeclaredThrowableException", // VERIFIED
-	"java.lang.UnknownEntityException",
-	"java.lang.UnmodifiableModuleException",
-	"java.lang.UnmodifiableSetException",
+	"java.lang.annotation.AnnotationTypeMismatchException",   // VERIFIED
+	"java.lang.ArithmeticException",                          // VERIFIED
+	"java.lang.ArrayIndexOutOfBoundsException",               // VERIFIED
+	"java.lang.ArrayStoreException",                          // VERIFIED
+	"java.nio.file.AtomicMoveNotSupportedException",          // VERIFIED
+	"java.nio.BufferOverflowException",                       // VERIFIED
+	"java.nio.BufferUnderflowException",                      // VERIFIED
+	"javax.swing.undo.CannotRedoException",                   // VERIFIED
+	"javax.swing.undo.CannotUndoException",                   // VERIFIED
+	"javax.xml.catalog.CatalogException",                     // VERIFIED
+	"java.lang.ClassCastException",                           // VERIFIED
+	"java.lang.ClassNotFoundException",                       // VERIFIED
+	"com.sun.jdi.ClassNotPreparedException",                  // VERIFIED
+	"java.awt.color.CMMException",                            // VERIFIED
+	"java.util.concurrent.CompletionException",               // VERIFIED
+	"java.util.ConcurrentModificationException",              // VERIFIED
+	"java.time.DateTimeException",                            // VERIFIED
+	"org.w3c.dom.DOMException",                               // VERIFIED
+	"java.util.DuplicateFormatFlagsException",                // VERIFIED
+	"com.sun.jdi.request.DuplicateRequestException",          // VERIFIED
+	"java.util.EmptyStackException",                          // VERIFIED
+	"java.lang.EnumConstantNotPresentException",              // VERIFIED
+	"org.w3c.dom.events.EventException",                      // VERIFIED
+	"java.io.FileNotFoundException",                          // VERiFIED
+	"java.nio.file.FileSystemAlreadyExistsException",         // VERIFIED
+	"java.nio.file.FileSystemNotFoundException",              // VERIFIED
+	"java.lang.module.FindException",                         // VERIFIED
+	"java.util.FormatFlagsConversionMismatchException",       // VERIFIED
+	"java.util.FormatterClosedException",                     // VERIFIED
+	"java.lang.IllegalAccessException",                       // VERIFIED
+	"java.lang.IllegalArgumentException",                     // VERIFIED
+	"java.lang.IllegalCallerException",                       // VERIFIED
+	"java.util.IllegalFormatCodePointException",              // VERIFIED
+	"java.util.IllegalFormatConversionException",             // VERIFIED ** got this far in java.util
+	"java.lang.IllegalMonitorStateException",                 // VERIFIED
+	"java.awt.geom.IllegalPathStateException",                // VERIFIED
+	"java.lang.IllegalStateException",                        // VERIFIED
+	"java.util.IllformedLocaleException",                     // VERIFIED
+	"java.awt.image.ImagingOpException",                      // VERIFIED
+	"java.lang.reflect.InaccessibleObjectException",          // VERIFIED
+	"java.lang.annotaion.IncompleteAnnotationException",      // VERIFIED
+	"com.sun.jdi.InconsistentDebugInfoException",             // VERIFIED
+	"java.lang.IndexOutOfBoundsException",                    // VERIFIED
+	"java.lang.InstantiationException",                       // VERIFIED
+	"com.sun.jdi.InternalException",                          // VERIFIED
+	"com.sun.jdi.InvalidCodeIndexException",                  // VERIFIED
+	"com.sun.jdi.InvalidLineNumberException",                 // VERIFIED
+	"java.nio.InvalidMarkException",                          // VERIFIED
+	"java.lang.module.InvalidModuleDescriptorException",      // VERIFIED
+	"com.sun.jdi.InvalidModuleException",                     // VERIFIED
+	"com.sun.jdi.request.InvalidRequestStateException",       // VERIFIED
+	"com.sun.jdi.InvalidStackFrameException",                 // VERIFIED
+	"jdk.security.jarsigner.JarSignerException",              // VERIFIED
+	"jjavax.management.JMRuntimeException",                   // VERIFIED
+	"java.lang.LayerInstantiationException",                  // VERIFIED
+	"org.w3c.dom.ls.LSException",                             // VERIFIED
+	"java.lang.reflect.MalformedParameterizedTypeException",  // VERIFIED
+	"java.lang.reflect.MalformedParametersException",         // VERIFIED
+	"javax.lang.model.type.MirroredTypesException",           // VERIFIED
+	"java.util.MissingResourceException",                     // VERIFIED
+	"com.sun.jdi.NativeMethodException",                      // VERIFIED
+	"java.lang.NegativeArraySizeException",                   // VERIFIED
+	"jdk.dynalink.NoSuchDynamicMethodException",              // VERIFIED
+	"java.util.NoSuchElementException",                       // VERIFIED
+	"javax.xml.crypto.NoSuchMechanismException",              // VERIFIED
+	"java.lang.NullPointerException",                         // VERIFIED
+	"java.lang.NumberFormatException",                        // VERIFIED
+	"com.sun.jdi.ObjectCollectedException",                   // VERIFIED
+	"java.awt.color.ProfileDataException",                    // VERIFIED
+	"java.security.ProviderException",                        // VERIFIED
+	"java.nio.file.ProviderNotFoundException",                // VERIFIED
+	"org.w3c.dom.ranges.RangeException",                      // VERIFIED
+	"java.awt.image.RasterFormatException",                   // VERIFIED
+	"java.util.concurrent.RejectedExecutionException",        // VERIFIED
+	"java.lang.module.ResolutionException",                   // VERIFIED
+	"java.lang.SecurityException",                            // VERIFIED
+	"jdk.jshell.spi.SPIResolutionException",                  // VERIFIED
+	"java.lang.TypeNotPresentException",                      // VERIFIED
+	"java.io.UncheckedIOException",                           // VERIFIED
+	"java.lang.reflect.UndeclaredThrowableException",         // VERIFIED
+	"javax.lang.model.UnknownEntityException",                // VERIFIED
+	"java.lang.instrument.UnmodifiableModuleException",       // VERIFIED
+	"javax.print.attribute.UnmodifiableSetException",         // VERIFIED
 	"java.lang.UnsupportedOperationException",                // VERIFIED
 	"java.nio.file.attribute.UserPrincipalNotFoundException", // VERIFIED
 	"java.lang.VMDisconnectedException",
