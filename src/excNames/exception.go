@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -201,8 +201,13 @@ const (
 	AnnotationFormatError
 	AssertionError
 	AWTError
+	BootstrapMethodError  // invokedynamic
+	ClassCircularityError // for circularity in superclass hierarchy
+	ClassFormatError
 	CoderMalfunctionError
+	ExceptionInInitializerError // for exceptions in static initalizers
 	FactoryConfigurationError
+	IncompatibleClassChangeError // if class has changed unexpectedly
 	InternalError
 	IOError
 	LinkageError
@@ -418,8 +423,13 @@ var JVMexceptionNames = []string{
 	"java.lang.annotation.AnnotationFormatError",               // VERIFIED
 	"java.lang.AssertionError",                                 // VERIFIED
 	"java.awt.AWTError",                                        // VERIFIED
+	"java.lang.BootstrapMethodError",                           // VERIFIED
+	"java.lang.ClassCircularityError",                          // VERIFIED
+	"java.lang.ClassFormatError",                               // VERIFIED
 	"java.nio.charset.CoderMalfunctionError",                   // VERIFIED
+	"java.lang.ExceptionInInitializerError",                    // VERIFIED
 	"javax.xml.parsers.FactoryConfigurationError",              // VERIFIED
+	"java.lang.IncompatibleClassChangeError",                   // VERIFIED
 	"java.lang.InternalError",                                  // VERIFIED
 	"java.io.IOError",                                          // VERIFIED
 	"java.lang.LinkageError",                                   // VERIFIED
