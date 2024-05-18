@@ -43,7 +43,7 @@ Math constant references:
 const MAX_DOUBLE_EXPONENT = 1023
 const PI = 3.14159265358979323846
 
-func Load_Lang_Math() map[string]GMeth {
+func Load_Lang_Math() {
 
 	MethodSignatures["java/lang/Math.abs(D)D"] = GMeth{ParamSlots: 2, GFunction: absFloat64}
 	MethodSignatures["java/lang/Math.abs(F)F"] = GMeth{ParamSlots: 1, GFunction: absFloat64}
@@ -215,7 +215,6 @@ func Load_Lang_Math() map[string]GMeth {
 			GFunction:  mathClinit,
 		}
 
-	return MethodSignatures
 }
 
 func mathClinit([]interface{}) interface{} {

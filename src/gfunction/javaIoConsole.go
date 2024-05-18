@@ -20,7 +20,7 @@ import (
 
 // Implementation of some of the functions in Java/lang/Class.
 
-func Load_Io_Console() map[string]GMeth {
+func Load_Io_Console() {
 
 	// Class initialisation for Console.
 	MethodSignatures["java/io/Console.<clinit>()V"] =
@@ -99,7 +99,6 @@ func Load_Io_Console() map[string]GMeth {
 			GFunction:  noSupportYetInConsole,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/Console.<clinit>()V" - Initialise class Console.

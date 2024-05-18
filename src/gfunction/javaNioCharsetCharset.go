@@ -8,7 +8,7 @@ package gfunction
 
 // Implementation of some of the functions in Java/nio/charset/Charset.
 
-func Load_Nio_Charset_Charset() map[string]GMeth {
+func Load_Nio_Charset_Charset() {
 
 	// Class initialisation for Console.
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
@@ -24,5 +24,4 @@ func Load_Nio_Charset_Charset() map[string]GMeth {
 			GFunction:  trapCharset,
 		}
 
-	return MethodSignatures
 }

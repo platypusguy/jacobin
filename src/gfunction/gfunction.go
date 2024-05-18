@@ -67,52 +67,54 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 // they make available.
 func MTableLoadNatives(MTable *classloader.MT) {
 
-	loadlib(MTable, Load_Io_Console()) // load the java.io.Console golang functions
+	Load_Io_Console() // load the java.io.Console golang functions
 
-	loadlib(MTable, Load_Io_BufferedReader())
-	loadlib(MTable, Load_Io_File())
-	loadlib(MTable, Load_Io_FileInputStream())
-	loadlib(MTable, Load_Io_FileOutputStream())
-	loadlib(MTable, Load_Io_FileReader())
-	loadlib(MTable, Load_Io_FileWriter())
-	loadlib(MTable, Load_Io_InputStreamReader())
-	loadlib(MTable, Load_Io_OutputStreamWriter())
-	loadlib(MTable, Load_Io_PrintStream())
-	loadlib(MTable, Load_Io_RandomAccessFile())
+	Load_Io_BufferedReader()
+	Load_Io_File()
+	Load_Io_FileInputStream()
+	Load_Io_FileOutputStream()
+	Load_Io_FileReader()
+	Load_Io_FileWriter()
+	Load_Io_InputStreamReader()
+	Load_Io_OutputStreamWriter()
+	Load_Io_PrintStream()
+	Load_Io_RandomAccessFile()
 
-	loadlib(MTable, Load_Lang_Boolean())
-	loadlib(MTable, Load_Lang_Byte())
-	loadlib(MTable, Load_Lang_Character())
-	loadlib(MTable, Load_Lang_Class()) // load the java.lang.Class golang functions
-	loadlib(MTable, Load_Lang_Double())
-	loadlib(MTable, Load_Lang_Float())
-	loadlib(MTable, Load_Lang_Integer())
-	loadlib(MTable, Load_Lang_Long())
-	loadlib(MTable, Load_Lang_Math())   // load the java.lang.Math & StrictMath golang functions
-	loadlib(MTable, Load_Lang_Object()) // load the java.lang.Class golang functions
-	loadlib(MTable, Load_Lang_Short())
-	loadlib(MTable, Load_Lang_String())            // load the java.lang.String golang functions
-	loadlib(MTable, Load_Lang_StringBuilder())     // load the java.lang.StringBuilder golang functions
-	loadlib(MTable, Load_Lang_System())            // load the java.lang.System golang functions
-	loadlib(MTable, Load_Lang_StackTraceELement()) //  java.lang.StackTraceElement golang functions
-	loadlib(MTable, Load_Lang_Thread())            // load the java.lang.Thread golang functions
-	loadlib(MTable, Load_Lang_Throwable())         // load the java.lang.Throwable golang functions (errors & exceptions)
-	loadlib(MTable, Load_Lang_UTF16())             // load the java.lang.UTF16 golang functions
+	Load_Lang_Boolean()
+	Load_Lang_Byte()
+	Load_Lang_Character()
+	Load_Lang_Class() // load the java.lang.Class golang functions
+	Load_Lang_Double()
+	Load_Lang_Float()
+	Load_Lang_Integer()
+	Load_Lang_Long()
+	Load_Lang_Math()   // load the java.lang.Math & StrictMath golang functions
+	Load_Lang_Object() // load the java.lang.Class golang functions
+	Load_Lang_Short()
+	Load_Lang_String()            // load the java.lang.String golang functions
+	Load_Lang_StringBuilder()     // load the java.lang.StringBuilder golang functions
+	Load_Lang_System()            // load the java.lang.System golang functions
+	Load_Lang_StackTraceELement() //  java.lang.StackTraceElement golang functions
+	Load_Lang_Thread()            // load the java.lang.Thread golang functions
+	Load_Lang_Throwable()         // load the java.lang.Throwable golang functions (errors & exceptions)
+	Load_Lang_UTF16()             // load the java.lang.UTF16 golang functions
 
-	loadlib(MTable, Load_Nio_Charset_Charset()) // Zero Charset support
+	Load_Nio_Charset_Charset() // Zero Charset support
 
-	loadlib(MTable, Load_Util_Concurrent_Atomic_AtomicInteger())
-	loadlib(MTable, Load_Util_Concurrent_Atomic_Atomic_Long())
-	loadlib(MTable, Load_Util_HashMap())
-	loadlib(MTable, Load_Util_HexFormat())
-	loadlib(MTable, Load_Util_Locale())
-	loadlib(MTable, Load_Util_Random())
+	Load_Util_Concurrent_Atomic_AtomicInteger()
+	Load_Util_Concurrent_Atomic_Atomic_Long()
+	Load_Util_HashMap()
+	Load_Util_HexFormat()
+	Load_Util_Locale()
+	Load_Util_Random()
 
-	loadlib(MTable, Load_Jdk_Internal_Misc_Unsafe())
-	loadlib(MTable, Load_Jdk_Internal_Misc_ScopedMemoryAccess())
+	Load_Jdk_Internal_Misc_Unsafe()
+	Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
-	loadlib(MTable, Load_Nil_Clinit()) // Load <clinit> functions that invoke justReturn()
-	loadlib(MTable, Load_Traps())      // Load traps that lead to unconditional error returns
+	Load_Nil_Clinit() // Load <clinit> functions that invoke justReturn()
+	Load_Traps()      // Load traps that lead to unconditional error returns
+
+	loadlib(MTable, MethodSignatures)
 
 }
 

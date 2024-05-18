@@ -18,7 +18,7 @@ import (
 
 // Implementation of some of the functions in Java/lang/Class.
 
-func Load_Lang_Class() map[string]GMeth {
+func Load_Lang_Class() {
 
 	MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
 		GMeth{
@@ -50,7 +50,6 @@ func Load_Lang_Class() map[string]GMeth {
 			GFunction:  getName,
 		}
 
-	return MethodSignatures
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and

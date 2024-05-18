@@ -17,7 +17,7 @@ import (
 	"jacobin/types"
 )
 
-func Load_Lang_Throwable() map[string]GMeth {
+func Load_Lang_Throwable() {
 
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
@@ -39,7 +39,6 @@ func Load_Lang_Throwable() map[string]GMeth {
 			NeedsContext: true,
 		}
 
-	return MethodSignatures
 }
 
 // This method duplicates the following bytecode, with these exceptions:

@@ -15,7 +15,7 @@ import (
 // Implementation of some of the functions in Java/util/Locale.
 // Strategy: Locale = jacobin Object wrapping a Go string.
 
-func Load_Util_Locale() map[string]GMeth {
+func Load_Util_Locale() {
 
 	MethodSignatures["java/util/Locale.<clinit>()V"] =
 		GMeth{
@@ -47,7 +47,6 @@ func Load_Util_Locale() map[string]GMeth {
 			GFunction:  getDefaultLocale,
 		}
 
-	return MethodSignatures
 }
 
 // "java/util/Locale.<init>(Ljava/lang/String;)V"

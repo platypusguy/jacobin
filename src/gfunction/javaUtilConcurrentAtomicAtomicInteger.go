@@ -8,7 +8,7 @@ import (
 
 var atomicIntegerClassName = "java/util/concurrent/atomic/AtomicInteger"
 
-func Load_Util_Concurrent_Atomic_AtomicInteger() map[string]GMeth {
+func Load_Util_Concurrent_Atomic_AtomicInteger() {
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>()V"] =
 		GMeth{
@@ -100,7 +100,6 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() map[string]GMeth {
 			GFunction:  atomicIntegerAddAndGet,
 		}
 
-	return MethodSignatures
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.<init>()V"

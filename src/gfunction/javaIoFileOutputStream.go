@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-func Load_Io_FileOutputStream() map[string]GMeth {
+func Load_Io_FileOutputStream() {
 
 	MethodSignatures["java/io/FileOutputStream.<clinit>()V"] =
 		GMeth{
@@ -82,7 +82,6 @@ func Load_Io_FileOutputStream() map[string]GMeth {
 			GFunction:  trapFileDescriptor,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/FileOutputStream.<init>(Ljava/io/File;])V"

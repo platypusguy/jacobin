@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func Load_Lang_Byte() map[string]GMeth {
+func Load_Lang_Byte() {
 
 	MethodSignatures["java/lang/Byte.<clinit>()V"] =
 		GMeth{
@@ -47,7 +47,6 @@ func Load_Lang_Byte() map[string]GMeth {
 			GFunction:  byteValueOf,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Byte.decode(Ljava/lang/String;)Ljava/lang/Byte;"

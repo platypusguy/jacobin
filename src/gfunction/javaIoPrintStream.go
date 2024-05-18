@@ -33,7 +33,7 @@ import (
  return value on the operand stack of the calling function.
 */
 
-func Load_Io_PrintStream() map[string]GMeth {
+func Load_Io_PrintStream() {
 	MethodSignatures["java/io/PrintStream.println()V"] = // println void
 		GMeth{
 			ParamSlots: 0,
@@ -153,7 +153,6 @@ func Load_Io_PrintStream() map[string]GMeth {
 			GFunction:  Printf,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"

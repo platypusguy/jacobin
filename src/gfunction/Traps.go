@@ -11,7 +11,7 @@ import (
 	"jacobin/exceptions"
 )
 
-func Load_Traps() map[string]GMeth {
+func Load_Traps() {
 
 	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
 		GMeth{
@@ -241,7 +241,6 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapSharedSecrets,
 		}
 
-	return MethodSignatures
 }
 
 // Trap for Charset references

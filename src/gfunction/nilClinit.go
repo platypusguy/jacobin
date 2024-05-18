@@ -6,7 +6,7 @@
 
 package gfunction
 
-func Load_Nil_Clinit() map[string]GMeth {
+func Load_Nil_Clinit() {
 
 	MethodSignatures["java/math/BigDecimal.<clinit>()V"] =
 		GMeth{
@@ -32,5 +32,4 @@ func Load_Nil_Clinit() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	return MethodSignatures
 }

@@ -6,7 +6,7 @@
 
 package gfunction
 
-func Load_Io_RandomAccessFile() map[string]GMeth {
+func Load_Io_RandomAccessFile() {
 
 	MethodSignatures["java/io/RandomAccessFile.<clinit>()V"] =
 		GMeth{
@@ -24,7 +24,5 @@ func Load_Io_RandomAccessFile() map[string]GMeth {
 			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
-
-	return MethodSignatures
 
 }

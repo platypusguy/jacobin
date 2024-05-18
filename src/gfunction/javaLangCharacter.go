@@ -12,7 +12,7 @@ import (
 	"unicode"
 )
 
-func Load_Lang_Character() map[string]GMeth {
+func Load_Lang_Character() {
 
 	MethodSignatures["java/lang/Character.<clinit>()V"] =
 		GMeth{
@@ -56,7 +56,6 @@ func Load_Lang_Character() map[string]GMeth {
 			GFunction:  characterValueOf,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Character.isDigit(C)Z"

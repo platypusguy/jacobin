@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func Load_Util_Random() map[string]GMeth {
+func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.<clinit>()V"] =
 		GMeth{
@@ -91,7 +91,6 @@ func Load_Util_Random() map[string]GMeth {
 			GFunction:  randomSetSeed,
 		}
 
-	return MethodSignatures
 }
 
 /*

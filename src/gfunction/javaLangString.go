@@ -20,7 +20,7 @@ import (
 // We don't run String's static initializer block because the initialization
 // is already handled in String creation
 
-func Load_Lang_String() map[string]GMeth {
+func Load_Lang_String() {
 
 	// === OBJECT INSTANTIATION ===
 
@@ -331,8 +331,6 @@ func Load_Lang_String() map[string]GMeth {
 			ParamSlots: 1,
 			GFunction:  valueOfObject,
 		}
-
-	return MethodSignatures
 
 }
 

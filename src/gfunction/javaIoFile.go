@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 )
 
-func Load_Io_File() map[string]GMeth {
+func Load_Io_File() {
 
 	MethodSignatures["java/io/File.<clinit>()V"] =
 		GMeth{
@@ -53,7 +53,6 @@ func Load_Io_File() map[string]GMeth {
 			GFunction:  fileIsInvalid,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/File.<init>(Ljava/lang/String;)V"

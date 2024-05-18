@@ -22,7 +22,7 @@ package gfunction
  could mean an empty slice).
 */
 
-func Load_Jdk_Internal_Misc_ScopedMemoryAccess() map[string]GMeth {
+func Load_Jdk_Internal_Misc_ScopedMemoryAccess() {
 
 	MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.<clinit>()V"] =
 		GMeth{
@@ -36,5 +36,4 @@ func Load_Jdk_Internal_Misc_ScopedMemoryAccess() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	return MethodSignatures
 }

@@ -26,7 +26,7 @@ import (
  could mean an empty slice).
 */
 
-func Load_Lang_UTF16() map[string]GMeth {
+func Load_Lang_UTF16() {
 
 	MethodSignatures["java/lang/StringUTF16.isBigEndian()Z"] = // is the current platform big-endian?
 		GMeth{
@@ -34,7 +34,6 @@ func Load_Lang_UTF16() map[string]GMeth {
 			GFunction:  isBigEndian,
 		}
 
-	return MethodSignatures
 }
 
 // Return whether the current platform is big-endian.
