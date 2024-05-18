@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-func Load_Io_OutputStreamWriter() map[string]GMeth {
+func Load_Io_OutputStreamWriter() {
 
 	MethodSignatures["java/io/OutputStreamWriter.<clinit>()V"] =
 		GMeth{
@@ -85,7 +85,6 @@ func Load_Io_OutputStreamWriter() map[string]GMeth {
 			GFunction:  trapCharset,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;)V"

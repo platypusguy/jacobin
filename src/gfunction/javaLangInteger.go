@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func Load_Lang_Integer() map[string]GMeth {
+func Load_Lang_Integer() {
 
 	MethodSignatures["java/lang/Integer.<clinit>()V"] =
 		GMeth{
@@ -113,7 +113,6 @@ func Load_Lang_Integer() map[string]GMeth {
 			GFunction:  integerToUnsignedStringRadix,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Integer.byteValue()B"

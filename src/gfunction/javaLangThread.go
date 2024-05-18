@@ -27,7 +27,7 @@ import (
  could mean an empty slice).
 */
 
-func Load_Lang_Thread() map[string]GMeth {
+func Load_Lang_Thread() {
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
@@ -41,7 +41,6 @@ func Load_Lang_Thread() map[string]GMeth {
 			GFunction:  threadSleep,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Thread.sleep(J)V"

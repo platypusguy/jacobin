@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-func Load_Io_InputStreamReader() map[string]GMeth {
+func Load_Io_InputStreamReader() {
 
 	MethodSignatures["java/io/InputStreamReader.<clinit>()V"] =
 		GMeth{
@@ -81,7 +81,6 @@ func Load_Io_InputStreamReader() map[string]GMeth {
 			GFunction:  trapCharset,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/InputStreamReader.<init>(Ljava/io/InputStream;)V"

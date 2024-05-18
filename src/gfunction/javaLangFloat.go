@@ -11,7 +11,7 @@ import (
 	"unsafe"
 )
 
-func Load_Lang_Float() map[string]GMeth {
+func Load_Lang_Float() {
 
 	MethodSignatures["java/lang/Float.<clinit>()V"] =
 		GMeth{
@@ -39,7 +39,6 @@ func Load_Lang_Float() map[string]GMeth {
 			GFunction:  intBitsToFloat,
 		}
 
-	return MethodSignatures
 }
 
 // Simulating intBitsToFloat in Go

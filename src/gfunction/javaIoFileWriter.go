@@ -6,7 +6,7 @@
 
 package gfunction
 
-func Load_Io_FileWriter() map[string]GMeth {
+func Load_Io_FileWriter() {
 
 	MethodSignatures["java/io/FileWriter.<clinit>()V"] =
 		GMeth{
@@ -108,5 +108,4 @@ func Load_Io_FileWriter() map[string]GMeth {
 			GFunction:  trapCharset,
 		}
 
-	return MethodSignatures
 }

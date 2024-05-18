@@ -92,7 +92,7 @@ func TestInstantiateNonExistentClass(t *testing.T) {
 		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
 	}
 	classloader.LoadBaseClasses()
-	gfunction.MTableLoadNatives(&classloader.MTable)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	statics.PreloadStatics()
 
 	myobj, err := InstantiateClass("$nosuchclass", nil)

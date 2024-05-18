@@ -27,7 +27,7 @@ import (
  could mean an empty slice).
 */
 
-func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
+func Load_Jdk_Internal_Misc_Unsafe() {
 
 	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] =
 		GMeth{
@@ -71,7 +71,6 @@ func Load_Jdk_Internal_Misc_Unsafe() map[string]GMeth {
 			GFunction:  unsafeObjectFieldOffset1,
 		}
 
-	return MethodSignatures
 }
 
 var classUnsafeName = "jdk/internal/misc/Unsafe"

@@ -26,7 +26,7 @@ import (
 // methods in this file. Consult:
 // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackTraceElement.html
 
-func Load_Lang_StackTraceELement() map[string]GMeth {
+func Load_Lang_StackTraceELement() {
 
 	MethodSignatures["java/lang/StackTraceElement.of(Ljava/lang/Throwable;I)[Ljava/lang/StackTraceElement;"] =
 		GMeth{
@@ -41,7 +41,6 @@ func Load_Lang_StackTraceELement() map[string]GMeth {
 			GFunction:  initStackTraceElements,
 		}
 
-	return MethodSignatures
 }
 
 /*

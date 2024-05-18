@@ -12,7 +12,7 @@ import (
 
 // Implementation of some of the functions in Java/lang/Class.
 
-func Load_Lang_Object() map[string]GMeth {
+func Load_Lang_Object() {
 
 	MethodSignatures["java/lang/Object.<init>()V"] =
 		GMeth{
@@ -26,7 +26,6 @@ func Load_Lang_Object() map[string]GMeth {
 			GFunction:  objectGetClass,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Object.getClass()Ljava/lang/Class;"

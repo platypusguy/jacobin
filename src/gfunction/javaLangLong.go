@@ -11,7 +11,7 @@ import (
 	"jacobin/types"
 )
 
-func Load_Lang_Long() map[string]GMeth {
+func Load_Lang_Long() {
 
 	MethodSignatures["java/lang/Long.<clinit>()V"] =
 		GMeth{
@@ -31,7 +31,6 @@ func Load_Lang_Long() map[string]GMeth {
 			GFunction:  longValueOf,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Long.doubleValue()D"

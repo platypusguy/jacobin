@@ -17,7 +17,7 @@ import (
 	"unsafe"
 )
 
-func Load_Lang_Double() map[string]GMeth {
+func Load_Lang_Double() {
 
 	MethodSignatures["java/lang/Double.<clinit>()V"] =
 		GMeth{
@@ -87,7 +87,6 @@ func Load_Lang_Double() map[string]GMeth {
 			GFunction:  longBitsToDouble,
 		}
 
-	return MethodSignatures
 }
 
 // "java/lang/Double.byteValue()B"

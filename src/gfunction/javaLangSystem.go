@@ -42,7 +42,7 @@ import (
  could mean an empty slice). Longs and doubles use two parameter entries.
 */
 
-func Load_Lang_System() map[string]GMeth {
+func Load_Lang_System() {
 
 	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
@@ -104,7 +104,6 @@ func Load_Lang_System() map[string]GMeth {
 			GFunction:  clinit,
 		}
 
-	return MethodSignatures
 }
 
 /*

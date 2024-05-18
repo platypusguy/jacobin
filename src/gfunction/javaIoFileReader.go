@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-func Load_Io_FileReader() map[string]GMeth {
+func Load_Io_FileReader() {
 
 	MethodSignatures["java/io/FileReader.<clinit>()V"] =
 		GMeth{
@@ -56,7 +56,6 @@ func Load_Io_FileReader() map[string]GMeth {
 			GFunction:  trapCharset,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/FileReader.<init>(Ljava/io/File;])V"

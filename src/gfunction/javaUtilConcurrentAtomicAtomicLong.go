@@ -10,7 +10,7 @@ import (
 	"runtime"
 )
 
-func Load_Util_Concurrent_Atomic_Atomic_Long() map[string]GMeth {
+func Load_Util_Concurrent_Atomic_Atomic_Long() {
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicLong.<clinit>()V"] =
 		GMeth{
@@ -26,7 +26,6 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() map[string]GMeth {
 			GFunction:  atomicLongVMSupportsCS8,
 		}
 
-	return MethodSignatures
 }
 
 // atomicLongVMSupportsCS8 simulates the behavior of the native VMSupportsCS8() method

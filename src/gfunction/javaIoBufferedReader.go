@@ -16,7 +16,7 @@ import (
 	"os"
 )
 
-func Load_Io_BufferedReader() map[string]GMeth {
+func Load_Io_BufferedReader() {
 
 	MethodSignatures["java/io/BufferedReader.<clinit>()V"] =
 		GMeth{
@@ -90,7 +90,6 @@ func Load_Io_BufferedReader() map[string]GMeth {
 			GFunction:  bufferedReaderMarkAndReset,
 		}
 
-	return MethodSignatures
 }
 
 // "java/io/BufferedReader.<init>(Ljava/io/Reader;])V"

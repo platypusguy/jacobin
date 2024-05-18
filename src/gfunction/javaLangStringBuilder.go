@@ -8,14 +8,14 @@ package gfunction
 
 // Implementation of some of the functions in Java/lang/Class.
 
-func Load_Lang_StringBuilder() map[string]GMeth {
+func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.isLatin1()Z"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  isLatin1,
 		}
-	return MethodSignatures
+
 }
 
 func isLatin1([]interface{}) interface{} {

@@ -11,7 +11,7 @@ import (
 	"jacobin/types"
 )
 
-func Load_Lang_Boolean() map[string]GMeth {
+func Load_Lang_Boolean() {
 
 	MethodSignatures["java/lang/Boolean.<clinit>()V"] =
 		GMeth{
@@ -25,7 +25,6 @@ func Load_Lang_Boolean() map[string]GMeth {
 			GFunction:  booleanValueOf,
 		}
 
-	return MethodSignatures
 }
 
 // java/lang/Boolean.valueOf(Z)Ljava/lang/Boolean;

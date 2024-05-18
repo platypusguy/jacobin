@@ -130,7 +130,7 @@ func JVMrun() int {
 
 	// initialize the MTable (table caching methods)
 	classloader.MTable = make(map[string]classloader.MTentry)
-	gfunction.MTableLoadNatives(&classloader.MTable)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	// initialize the table of unsupported native functions
 	native.LoadUnsupportedNativeMethods()

@@ -17,7 +17,7 @@ import (
 
 // Implementation of some of the functions in in Java/lang/Class.
 
-func Load_Util_HashMap() map[string]GMeth {
+func Load_Util_HashMap() {
 
 	MethodSignatures["java/util/HashMap.hash(Ljava/lang/Object;)I"] =
 		GMeth{
@@ -25,7 +25,6 @@ func Load_Util_HashMap() map[string]GMeth {
 			GFunction:  hashMapHash,
 		}
 
-	return MethodSignatures
 }
 
 // hashMapHash accepts a pointer to an object and returns

@@ -10,7 +10,7 @@ package gfunction
 
 var JavaUtilHexFormat string = "java/util/HexFormat"
 
-func Load_Util_HexFormat() map[string]GMeth {
+func Load_Util_HexFormat() {
 
 	MethodSignatures["java/util/HexFormat.<clinit>()V"] =
 		GMeth{
@@ -18,5 +18,4 @@ func Load_Util_HexFormat() map[string]GMeth {
 			GFunction:  justReturn,
 		}
 
-	return MethodSignatures
 }
