@@ -52,9 +52,9 @@ func TestMTableLoadLib(t *testing.T) {
 
 // test loading of native functions
 
-func TestMTableLoadNatives(t *testing.T) {
+func TestMTableLoadGFunctions(t *testing.T) {
 	classloader.MTable = make(map[string]classloader.MTentry)
-	MTableLoadNatives(&classloader.MTable)
+	MTableLoadGFunctions(&classloader.MTable)
 	mte, exists := classloader.MTable["java/lang/Object.<init>()V"]
 	if !exists {
 		t.Errorf("Expecting MTable entry for java/lang/Object.<init>()V, but it does not exist")

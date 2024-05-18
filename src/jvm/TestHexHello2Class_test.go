@@ -141,7 +141,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 
 	// Run class Hello2
 	classloader.MTable = make(map[string]classloader.MTentry)
-	gfunction.MTableLoadNatives(&classloader.MTable)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	mainThread := thread.CreateThread()
 	err = StartExec("Hello2", &mainThread, globals.GetGlobalRef())
 	if err != nil {

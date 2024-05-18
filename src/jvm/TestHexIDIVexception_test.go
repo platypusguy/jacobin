@@ -120,7 +120,7 @@ func TestHexIDIVException(t *testing.T) {
 
 	// Run class ThrowIDIVexception
 	classloader.MTable = make(map[string]classloader.MTentry)
-	gfunction.MTableLoadNatives(&classloader.MTable)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	mainThread := thread.CreateThread()
 	mainThread.AddThreadToTable(globPtr)
 	err = StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())

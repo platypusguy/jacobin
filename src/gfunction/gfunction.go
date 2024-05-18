@@ -62,10 +62,10 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 	return &gErrBlk
 }
 
-// MTableLoadNatives loads the Go methods from files that contain them. It does this
+// MTableLoadGFunctions loads the Go methods from files that contain them. It does this
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
-func MTableLoadNatives(MTable *classloader.MT) {
+func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	Load_Io_Console() // load the java.io.Console golang functions
 
