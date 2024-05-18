@@ -146,14 +146,14 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass = "java/lang/Object"
+	k.Data.Superclass = types.ObjectClassName
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
 
 	// we need a java/lang/Object instance, so just duplicate the entry
 	// in the MethArea. It's only a placeholder
-	MethAreaInsert("java/lang/Object", &k)
+	MethAreaInsert(types.ObjectClassName, &k)
 
 	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
 	if err == nil {
@@ -198,14 +198,14 @@ func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.SuperclassIndex = stringPool.GetStringIndex(&types.JavaLangObjectString)
+	k.Data.SuperclassIndex = stringPool.GetStringIndex(&types.ObjectClassName)
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
 
 	// we need a java/lang/Object instance, so just duplicate the entry
 	// in the MethArea. It's only a placeholder
-	MethAreaInsert("java/lang/Object", &k)
+	MethAreaInsert(types.ObjectClassName, &k)
 
 	newLen := MethAreaSize()
 	if newLen != currLen+2 {
@@ -298,14 +298,14 @@ func TestInvalidMainMethod(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass = "java/lang/Object"
+	k.Data.Superclass = types.ObjectClassName
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
 
 	// we need a java/lang/Object instance, so just duplicate the entry
 	// in the MethArea. It's only a placeholder
-	MethAreaInsert("java/lang/Object", &k)
+	MethAreaInsert(types.ObjectClassName, &k)
 
 	// fetch a non-existent main() method
 	_, err := FetchMethodAndCP("java/lan/Object", "main", "([LString;)V")

@@ -92,7 +92,7 @@ func TestStatics1(t *testing.T) {
 	Check statics values.
 	*/
 	tCheckStatic(t, "main", "$assertionsDisabled", int64(1))
-	tCheckStatic(t, "java/lang/String", "COMPACT_STRINGS", true)
+	tCheckStatic(t, types.StringClassName, "COMPACT_STRINGS", true)
 	tCheckStatic(t, "AlphaBetaGamma", "ONE", int64(0x31))
 	tCheckStatic(t, "AlphaBetaGamma", "QM", int64('?'))
 	tCheckStatic(t, "AlphaBetaGamma", "PI", float64(3.14159265))
@@ -196,7 +196,7 @@ func TestStaticsPreload(t *testing.T) {
 	Statics = make(map[string]Static)
 
 	PreloadStatics()
-	s1 := GetStaticValue("java/lang/String", "COMPACT_STRINGS")
+	s1 := GetStaticValue(types.StringClassName, "COMPACT_STRINGS")
 	switch s1.(type) {
 	case int64:
 		if s1.(int64) != types.JavaBoolTrue {

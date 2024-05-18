@@ -42,7 +42,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// strings are handled separately
-	if classname == object.StringClassName {
+	if classname == types.StringClassName {
 		return object.NewStringObject(), nil
 	}
 
@@ -71,7 +71,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		// if the present class is Object, it has no superclass. If the present
 		// class's superclass is Object, we've reached the top of the superclass
 		// hierarchy. Otherwise, keep looping up the superclasses.
-		if classname == "java/lang/Object" || *superclassNamePtr == "java/lang/Object" {
+		if classname == types.ObjectClassName || *superclassNamePtr == types.ObjectClassName {
 			break
 		}
 

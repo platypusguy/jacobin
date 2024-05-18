@@ -130,8 +130,8 @@ func TestNormalizingClassReference(t *testing.T) {
 		t.Error("Unexpected normalized class reference: " + s)
 	}
 
-	s = normalizeClassReference("java/lang/Object")
-	if s != "java/lang/Object" {
+	s = normalizeClassReference(types.ObjectClassName)
+	if s != types.ObjectClassName {
 		t.Error("Unexpected normalized class reference: " + s)
 	}
 }

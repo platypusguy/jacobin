@@ -54,14 +54,14 @@ func TestInstantiateString1(t *testing.T) {
 	}
 	classloader.LoadBaseClasses()
 
-	myobj, err := InstantiateClass("java/lang/String", nil)
+	myobj, err := InstantiateClass(types.StringClassName, nil)
 	if err != nil {
 		t.Errorf("Got unexpected error from instantiating string: %s", err.Error())
 	}
 
 	obj := myobj.(*object.Object)
 	klassType := stringPool.GetStringPointer(obj.KlassName)
-	if *klassType != "java/lang/String" {
+	if *klassType != types.StringClassName {
 		t.Errorf("Expected 'java/lang/String', got %s", *klassType)
 	}
 
@@ -221,7 +221,7 @@ func TestLoadClassJavaLangObject(t *testing.T) {
 	}
 	classloader.LoadBaseClasses()
 
-	err = loadThisClass("java/lang/Object")
+	err = loadThisClass(types.ObjectClassName)
 
 	// this should always work. java/lang/Object contains no instance or static fields,
 	// so this is about as simple a class instantiation as possible

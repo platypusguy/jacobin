@@ -16,6 +16,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/types"
 	"math"
 	"runtime/debug"
 	"unsafe"
@@ -222,7 +223,7 @@ func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
 	if len(obj.FieldTable) > 0 {
 		for fieldName := range obj.FieldTable {
 			fld := obj.FieldTable[fieldName]
-			if klass == "java/lang/String" && fieldName == "value" {
+			if klass == types.StringClassName && fieldName == "value" {
 				str := string(fld.Fvalue.([]byte))
 				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
 			} else {

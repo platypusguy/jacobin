@@ -12,6 +12,7 @@ import (
 	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/stringPool"
+	"jacobin/types"
 )
 
 // the definition of the class as it's stored in the method area
@@ -352,7 +353,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			AddEntry(&MTable, methFQN, methodEntry)
 			return methodEntry, nil
 		} else {
-			if className != "java/lang/Object" { // if we've ascended to Object and don't have the method, it ain't here
+			if className != types.ObjectClassName { // if we've ascended to Object and don't have the method, it ain't here
 				goto superclassLoop
 			} else {
 				errMsg := fmt.Sprintf("FetchMethodAndCP: Neither %s nor its superclasses contain method %s",

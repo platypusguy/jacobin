@@ -23,16 +23,11 @@ import (
 	"jacobin/types"
 )
 
-var StringClassName = "java/lang/String"
-var StringClassRef = "Ljava/lang/String;"
-var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
-var EmptyString = ""
-
 // NewStringObject creates an empty string object (aka Java String)
 func NewStringObject() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
-	s.KlassName = StringPoolStringIndex // =  java/lang/String
+	s.KlassName = types.StringPoolStringIndex // =  java/lang/String
 	s.FieldTable = make(map[string]Field)
 
 	// ==== now the fields ====
@@ -79,7 +74,7 @@ func StringObjectFromGoString(str string) *Object {
 
 // GoStringFromStringObject: convenience method to extract a Go string from a String object (Java string)
 func GoStringFromStringObject(obj *Object) string {
-	if obj != nil && obj.KlassName == StringPoolStringIndex {
+	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		if obj.FieldTable["value"].Fvalue != nil {
 			return string(obj.FieldTable["value"].Fvalue.([]byte))
 		}
@@ -89,7 +84,7 @@ func GoStringFromStringObject(obj *Object) string {
 
 // ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []byte {
-	if obj != nil && obj.KlassName == StringPoolStringIndex {
+	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		return obj.FieldTable["value"].Fvalue.([]byte)
 	} else {
 		return nil
@@ -105,7 +100,7 @@ func StringObjectFromByteArray(bytes []byte) *Object {
 
 // StringPoolIndexFromStringObject: convenience method to extract a string pool index from a String object
 func StringPoolIndexFromStringObject(obj *Object) uint32 {
-	if obj != nil && obj.KlassName == StringPoolStringIndex {
+	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		str := string(obj.FieldTable["value"].Fvalue.([]byte))
 		index := stringPool.GetStringIndex(&str)
 		return index
@@ -154,7 +149,7 @@ func IsStringObject(unknown any) bool {
 		return false
 	}
 
-	if o.KlassName == StringPoolStringIndex {
+	if o.KlassName == types.StringPoolStringIndex {
 		return true
 	}
 	return false

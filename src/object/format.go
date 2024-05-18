@@ -37,7 +37,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	flagStatic := strings.HasPrefix(ftype, types.Static)
 
 	// Process Java String class reference.
-	if ftype == StringClassRef {
+	if ftype == types.StringClassRef {
 		// Special handling for String.
 		if flagStatic {
 			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))

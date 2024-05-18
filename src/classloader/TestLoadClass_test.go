@@ -8,6 +8,7 @@ package classloader
 import (
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"testing"
 )
 
@@ -68,6 +69,6 @@ func TestJmodToClass(t *testing.T) {
 	t.Logf("classloader.Init ok\n")
 
 	_ = checkClass(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
-	_ = checkClass(t, "java/lang/String", "java.base.jmod")
+	_ = checkClass(t, types.StringClassName, "java.base.jmod")
 
 }

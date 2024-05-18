@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/types"
 	"os"
 	"strconv"
 	"strings"
@@ -618,7 +619,7 @@ func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
 		entryType: 1,
 		slot:      1,
 	})
-	pc.className = "java/lang/Object"
+	pc.className = types.ObjectClassName
 	pc.superClassIndex = stringPool.GetStringIndex(nil)
 
 	_, err := parseSuperClassName(testBytes, 0, &pc)

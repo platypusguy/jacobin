@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/types"
 	"strconv"
 	"testing"
 )
@@ -147,7 +148,7 @@ func TestASimpleValidClass(t *testing.T) {
 	}
 
 	superClass := stringPool.GetStringPointer(klass.superClassIndex)
-	if *superClass != "java/lang/Object" {
+	if *superClass != types.ObjectClassName {
 		t.Error("Expected superclass to be 'java/lang/Object'. Got: " + *superClass)
 	}
 

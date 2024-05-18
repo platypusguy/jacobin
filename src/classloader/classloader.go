@@ -795,7 +795,7 @@ func Init() error {
 
 	// Load the base jmod
 	GetBaseJmodBytes()
-	_, err := GetClassBytes("java.base.jmod", "java/lang/String")
+	_, err := GetClassBytes("java.base.jmod", types.StringClassName)
 	if err != nil {
 		msg := fmt.Sprintf("classloader.Init: GetClassBytes failed for java/lang/String in java.base.jmod")
 		_ = log.Log(msg, log.SEVERE)

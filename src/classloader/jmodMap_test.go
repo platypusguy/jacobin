@@ -8,6 +8,7 @@ package classloader
 import (
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/types"
 	"os"
 	"testing"
 	"time"
@@ -62,7 +63,7 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 		t.Logf("Gob not found as expected")
 	}
 
-	checkMap(t, "java/lang/String", "java.base.jmod")
+	checkMap(t, types.StringClassName, "java.base.jmod")
 	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
 
 }
@@ -96,7 +97,7 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	}
 	t.Logf("Map size is %d\n", mapSize)
 
-	checkMap(t, "java/lang/String", "java.base.jmod")
+	checkMap(t, types.StringClassName, "java.base.jmod")
 	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
 
 }
