@@ -333,22 +333,22 @@ var JVMexceptionNames = []string{
 	"javax.xml.xpath.XPathException",                         // VERIFIED
 
 	// non-runtime exceptions
-	"java.lang.AbsentInformationException",
-	"java.lang.AclNotFoundException",
-	"java.lang.ActivationException",
-	"java.lang.AgentInitializationException",
-	"java.lang.AgentLoadException",
-	"java.lang.AlreadyBoundException",
-	"java.lang.AttachNotSupportedException",
-	"java.lang.AWTException",
-	"java.lang.BackingStoreException",
-	"java.lang.BadAttributeValueExpException",
-	"java.lang.BadBinaryOpValueExpException",
-	"java.lang.BadLocationException",
-	"java.lang.BadStringOperationException",
-	"java.lang.BrokenBarrierException",
-	"java.lang.CardException",
-	"java.lang.CertificateException",
+	"com.sun.jdi.AbsentInformationException",                   // VERIFIED
+	"java.security.acl.AclNotFoundException",                   // VERIFIED might not be part of JDK 17
+	"java.rmi.activation.ActivationException",                  // VERIFIED might not be part of JDK 17
+	"com.sun.tools.attach.AgentInitializationException",        // VERIFIED
+	"com.sun.tools.attach.AgentLoadException",                  // VERIFIED
+	"java.rmi.AlreadyBoundException",                           // VERIFIED
+	"com.sun.tools.attach.AttachNotSupportedException",         // VERIFIED
+	"java.awt.AWTException",                                    // VERIFIED
+	"java.util.prefs.BackingStoreException",                    // VERIFIED
+	"javax.management.BadAttributeValueExpException",           // VERIFIED
+	"javax.management.BadBinaryOpValueExpException",            // VERIFIED
+	"javax.swing.text.BadLocationException",                    // VERIFIED
+	"javax.management.BadStringOperationException",             // VERIFIED
+	"java.util.concurrent.BrokenBarrierException",              // VERIFIED
+	"javax.smartcardio.CardException",                          // VERIFIED
+	"java.security.cert.CertificateException",                  // VERIFIED
 	"com.sun.jdi.ClassNotLoadedException",                      // VERIFIED
 	"java.lang.CloneNotSupportedException",                     // VERIFIED
 	"java.util.zip.DataFormatException",                        // VERIFIED
