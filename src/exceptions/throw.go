@@ -66,7 +66,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	// capture the PC where the exception was thrown (saved b/c later we modify the value of f.PC)
 	f.ExceptionPC = f.PC
 
-	th := glob.Threads[f.Thread].(*thread.ExecThread)
+	th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
+	if !ok {
+		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d", f.Thread)
+		minimalAbort(excNames.InternalException, errMsg)
+	}
 	fs := th.Stack
 
 	// find out if the exception is caught and if so point to the catch code

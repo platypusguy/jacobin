@@ -78,7 +78,8 @@ func TestHexIDIVException(t *testing.T) {
 	os.Stdout = wout
 
 	// Initialize global, logging, classloader
-	globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
+	// globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
+	globals.InitGlobals("test")
 	// globals.InitGlobals("TestHexIDIVException")
 	log.Init()
 	_ = log.SetLogLevel(log.WARNING)
@@ -123,8 +124,12 @@ func TestHexIDIVException(t *testing.T) {
 	mainThread := thread.CreateThread()
 	mainThread.AddThreadToTable(globPtr)
 	err = StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
+	if err == nil {
+		t.Errorf("No error returned from StartExec()")
+		return
+	}
 	if err.Error() != "IDIV error" {
-		t.Errorf("Got unexpected error from StartExec(): %s", error.Error(err))
+		t.Errorf("Got unexpected error from StartExec(). Expected: \"%s\", observed: \"%s\" !!!", "IDIV error", err.Error())
 		return
 	}
 
@@ -134,9 +139,9 @@ func TestHexIDIVException(t *testing.T) {
 
 	os.Stderr = normalStderr
 	os.Stdout = normalStdout
-	msgExpected := "java.lang.ArithmeticException"
+	msgExpected := "IDIV: division by zero"
 	if !strings.Contains(string(msgStderr), msgExpected) {
-		t.Errorf("Error expected error message to contain ' java.lang.ArithmeticException', got: %s\n",
-			string(msgStderr))
+		t.Errorf("Error expected error message to contain \"%s\", got: \"%s\"\n",
+			msgExpected, string(msgStderr))
 	}
 }

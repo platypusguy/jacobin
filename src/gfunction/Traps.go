@@ -13,6 +13,24 @@ import (
 
 func Load_Traps() map[string]GMeth {
 
+	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapWriter,
+		}
+
+	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapReader,
+		}
+
+	MethodSignatures["java/io/CharArrayWriter.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapWriter,
+		}
+
 	MethodSignatures["java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -29,26 +47,6 @@ func Load_Traps() map[string]GMeth {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFileSystem,
-		}
-
-	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapCharset,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFileChannel,
-		}
-
-	// Unsupported readers
-
-	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapReader,
 		}
 
 	MethodSignatures["java/io/FilterReader.<clinit>()V"] =
@@ -69,24 +67,28 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapReader,
 		}
 
-	// Unsupported writers
-
-	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
+	MethodSignatures["java/io/FilterInputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapWriter,
+			GFunction:  trapFilterInputStream,
 		}
 
-	MethodSignatures["java/io/CharArrayWriter.<clinit>()V"] =
+	MethodSignatures["java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapWriter,
+			ParamSlots: 1,
+			GFunction:  trapFilterInputStream,
 		}
 
-	MethodSignatures["java/io/FileSystem.<clinit>()V"] =
+	MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileSystem,
+			GFunction:  trapFilterOutputStream,
+		}
+
+	MethodSignatures["java/io/FilterOutputStream.<init>(Ljava/io/OutputStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFilterOutputStream,
 		}
 
 	MethodSignatures["java/io/FilterWriter.<clinit>()V"] =
@@ -125,51 +127,17 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/security/AccessController.<clinit>()V"] =
+	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/security/AccessController.<init>()V"] =
+	MethodSignatures["java/rmi/RMISecurityManager.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapDeprecated,
 		}
-
-	// StringBuilder
-
-	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapStringBuilder,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapStringBuilder,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapStringBuilder,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapStringBuilder,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapStringBuilder,
-		}
-
-	// StringBuffer
 
 	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
 		GMeth{
@@ -201,35 +169,65 @@ func Load_Traps() map[string]GMeth {
 			GFunction:  trapStringBuffer,
 		}
 
-	// FilterInputStream
-
-	MethodSignatures["java/lang/FilterInputStream.<clinit>()V"] =
+	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFilterInputStream,
+			GFunction:  trapStringBuilder,
 		}
 
-	MethodSignatures["java/lang/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFilterInputStream,
-		}
-
-	// FilterOutputStream
-
-	MethodSignatures["java/lang/FilterOutputStream.<clinit>()V"] =
+	MethodSignatures["java/lang/StringBuilder.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFilterOutputStream,
+			GFunction:  trapStringBuilder,
 		}
 
-	MethodSignatures["java/lang/FilterOutputStream.<init>(Ljava/io/OutputStream;)V"] =
+	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
 		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFilterOutputStream,
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
 		}
 
-	// Miscellaneous
+	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapStringBuilder,
+		}
+
+	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapCharset,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileChannel,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFileChannel,
+		}
+
+	MethodSignatures["java/security/AccessController.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/security/AccessController.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
 
 	MethodSignatures["java/util/Random.next(I)V"] =
 		GMeth{
@@ -262,7 +260,7 @@ func trapDeprecated([]interface{}) interface{} {
 
 // Trap for FileChannel references
 func trapFileChannel([]interface{}) interface{} {
-	errMsg := "Class java.nio.channels.FileChannel is not yet supported"
+	errMsg := "File Channels are not yet supported"
 	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
 	return nil
 }

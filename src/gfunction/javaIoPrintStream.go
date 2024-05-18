@@ -33,8 +33,6 @@ import (
  return value on the operand stack of the calling function.
 */
 
-var MethodSignatures = make(map[string]GMeth)
-
 func Load_Io_PrintStream() map[string]GMeth {
 	MethodSignatures["java/io/PrintStream.println()V"] = // println void
 		GMeth{
