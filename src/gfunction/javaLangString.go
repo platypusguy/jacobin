@@ -338,9 +338,9 @@ func Load_Lang_String() map[string]GMeth {
 
 // "java/lang/String.<clinit>()V" -- String class initialisation
 func stringClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(object.StringClassName)
+	klass := classloader.MethAreaFetch(types.StringClassName)
 	if klass == nil {
-		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", object.StringClassName)
+		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", types.StringClassName)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
@@ -349,7 +349,7 @@ func stringClinit([]interface{}) interface{} {
 
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInString([]interface{}) interface{} {
-	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", object.StringClassName)
+	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", types.StringClassName)
 	return getGErrBlk(excNames.UnsupportedEncodingException, errMsg)
 }
 

@@ -20,7 +20,7 @@ func TestNewStringObject(t *testing.T) {
 
 	str := *NewStringObject()
 	klassStr := *(stringPool.GetStringPointer(str.KlassName))
-	if klassStr != "java/lang/String" {
+	if klassStr != types.StringClassName {
 		t.Errorf("Klass should be java/lang/String, observed: %s", klassStr)
 	}
 
@@ -114,7 +114,7 @@ func TestStringPoolStringOperations(t *testing.T) {
 	}
 
 	strValue := GoStringFromStringPoolIndex(index)
-	if strValue == EmptyString { // if ""
+	if strValue == types.EmptyString { // if ""
 		t.Errorf("strValue from string pool index %d is an empty string", index)
 	}
 
@@ -172,8 +172,8 @@ func TestIsStringObjectWithGoString(t *testing.T) {
 
 func TestGetStringFromStringPoolIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	goStr := GoStringFromStringPoolIndex(StringPoolStringIndex)
-	if goStr != "java/lang/String" {
+	goStr := GoStringFromStringPoolIndex(types.StringPoolStringIndex)
+	if goStr != types.StringClassName {
 		t.Errorf("Got unexpected string value: %s", goStr)
 	}
 
@@ -185,9 +185,9 @@ func TestGetStringFromStringPoolIndex(t *testing.T) {
 
 func TestGetStringObjectFromStringPoolIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	stObj := StringObjectFromPoolIndex(StringPoolStringIndex)
+	stObj := StringObjectFromPoolIndex(types.StringPoolStringIndex)
 	goStr := GoStringFromStringObject(stObj)
-	if goStr != "java/lang/String" {
+	if goStr != types.StringClassName {
 		t.Errorf("Got unexpected string value: %s", goStr)
 	}
 

@@ -11,6 +11,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"jacobin/types"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -294,16 +295,15 @@ func InitStringPool() {
 
 	// Add empty string (for when an index field has not been use, and so = 0
 	StringPoolTable[""] = 0
-	StringPoolList = append(StringPoolList, "")
+	StringPoolList = append(StringPoolList, types.EmptyString)
 
 	// Add "java/lang/String"
-	StringIndexString = 1
-	StringPoolTable["java/lang/String"] = StringIndexString
-	StringPoolList = append(StringPoolList, "java/lang/String")
+	StringPoolTable[types.StringClassName] = types.StringPoolStringIndex
+	StringPoolList = append(StringPoolList, types.StringClassName)
 
 	// Add "java/lang/Object"
-	StringPoolTable["java/lang/Object"] = 2
-	StringPoolList = append(StringPoolList, "java/lang/Object")
+	StringPoolTable[types.ObjectClassName] = types.ObjectPoolStringIndex
+	StringPoolList = append(StringPoolList, types.ObjectClassName)
 
 	// Set up next available index
 	StringPoolNext = uint32(3)

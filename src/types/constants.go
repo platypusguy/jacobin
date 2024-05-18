@@ -18,5 +18,12 @@ const ClInitRun byte = 0x03
 const InvalidStringIndex uint32 = 0xffffffff
 
 // ---- default superclass ----
-var JavaLangObjectString string = "java/lang/Object"
-var PtrToJavaLangObjecct = &JavaLangObjectString
+var ObjectClassName = "java/lang/Object"
+var PtrToJavaLangObject = &ObjectClassName
+var ObjectPoolStringIndex = uint32(2) // points to the string pool slice for "java/lang/Object"
+
+// Constants related to "java/lang/String":
+var StringClassName = "java/lang/String"
+var StringClassRef = "Ljava/lang/String;"
+var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
+var EmptyString = ""

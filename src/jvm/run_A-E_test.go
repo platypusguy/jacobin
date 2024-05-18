@@ -13,6 +13,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/types"
 	"math"
 	"os"
 	"strings"
@@ -333,7 +334,7 @@ func TestCheckcastOfString(t *testing.T) {
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
-	classloader.MethAreaInsert("java/lang/String",
+	classloader.MethAreaInsert(types.StringClassName,
 		&(classloader.Klass{
 			Status: 'X', // use a status that's not subsequently tested for.
 			Loader: "bootstrap",
@@ -352,7 +353,7 @@ func TestCheckcastOfString(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
+	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // point to string pool entry
 	f.CP = &CP
 
 	push(&f, s)
@@ -376,7 +377,7 @@ func TestCheckcastOfNil(t *testing.T) {
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
-	classloader.MethAreaInsert("java/lang/String",
+	classloader.MethAreaInsert(types.StringClassName,
 		&(classloader.Klass{
 			Status: 'X', // use a status that's not subsequently tested for.
 			Loader: "bootstrap",

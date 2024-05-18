@@ -1933,7 +1933,7 @@ frameInterpreter:
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
 				fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
-			} else if fieldType == object.StringClassRef {
+			} else if fieldType == types.StringClassRef {
 				// if the field type is String pointer and value is a byte array, convert it to a string
 				valueType, ok := objField.Fvalue.([]byte)
 				if ok {

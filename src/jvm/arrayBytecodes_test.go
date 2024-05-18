@@ -64,7 +64,7 @@ func TestAaload(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // use string pool
+	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // use string pool
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -153,7 +153,7 @@ func TestAastore(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool
+	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // point to string pool
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -271,7 +271,7 @@ func TestAastoreInvalid2(t *testing.T) {
 
 // AASTORE: Test error conditions: index out of range
 func TestAastoreInvalid3(t *testing.T) {
-	objType := "java/lang/Object"
+	objType := types.ObjectClassName
 	o := object.Make1DimRefArray(&objType, 10)
 	f := newFrame(opcodes.AASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
@@ -321,7 +321,7 @@ func TestAnewrray(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
+	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // point to string pool entry
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -365,8 +365,8 @@ func TestAnewrrayKlassField(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.ClassRefs = append(CP.ClassRefs, object.StringPoolStringIndex) // point to string pool entry
-	CP.Utf8Refs = append(CP.Utf8Refs, "java/lang/String")
+	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // point to string pool entry
+	CP.Utf8Refs = append(CP.Utf8Refs, types.StringClassName)
 	f.CP = &CP
 
 	globals.InitGlobals("test")
@@ -393,7 +393,7 @@ func TestAnewrrayKlassField(t *testing.T) {
 		t.Errorf("ANEWARRAY: Expecting class to start with '[L', got %s", *klassString)
 	}
 
-	if !strings.HasSuffix(*klassString, "java/lang/String") {
+	if !strings.HasSuffix(*klassString, types.StringClassName) {
 		t.Errorf("ANEWARRAY: Expecting class to end with 'java/lang/String', got %s", *klassString)
 	}
 }

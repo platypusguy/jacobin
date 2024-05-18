@@ -295,7 +295,7 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 	}
 
 	if index == 0 {
-		if klass.className != "java/lang/Object" {
+		if klass.className != types.ObjectClassName {
 			return pos, cfe("invaild index for superclass name. Got: 0," +
 				" but class is not java/lang/Object")
 		} else {

@@ -741,7 +741,7 @@ func TestGetStaticBoolean(t *testing.T) {
 
 	CP.Utf8Refs = make([]string, 5, 5)
 	// class = "java/lang/String" in string pool
-	classNameIndex := stringPool.GetStringIndex(&object.StringClassName)
+	classNameIndex := stringPool.GetStringIndex(&types.StringClassName)
 	CP.Utf8Refs[0] = "COMPACT_STRINGS"
 
 	CP.ClassRefs = make([]uint32, 5, 5)

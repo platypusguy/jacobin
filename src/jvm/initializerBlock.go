@@ -38,7 +38,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 
 		superclass := *stringPool.GetStringPointer(k.Data.SuperclassIndex)
 		for {
-			if superclass == "java/lang/Object" {
+			if superclass == types.ObjectClassName {
 				break
 			}
 
