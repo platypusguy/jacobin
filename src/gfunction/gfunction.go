@@ -114,6 +114,9 @@ func MTableLoadNatives(MTable *classloader.MT) {
 	Load_Nil_Clinit() // Load <clinit> functions that invoke justReturn()
 	Load_Traps()      // Load traps that lead to unconditional error returns
 
+	/*
+		With the accumulated MethodSignatures maps, load MTable.
+	*/
 	loadlib(MTable, MethodSignatures)
 
 }
