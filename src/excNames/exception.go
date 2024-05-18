@@ -37,8 +37,8 @@ const (
 	DOMException
 	DuplicateFormatFlagsException
 	DuplicateRequestException
-	EmptyStackException
-	EnumConstantNotPresentException
+	EmptyStackException             // in HotSpot, used by Stack class; in Jacobin, for all stack underflows
+	EnumConstantNotPresentException // typically, used in annotation processing
 	EventException
 	FileNotFoundException
 	FileSystemAlreadyExistsException
@@ -74,7 +74,7 @@ const (
 	LayerInstantiationException
 	LSException
 	MalformedParameterizedTypeException
-	MalformedParametersException
+	MalformedParametersException // for HotSpot reflection: param count wrong, CP index invalid, illegal flag combo
 	MirroredTypesException
 	MissingResourceException
 	NativeMethodException
@@ -105,7 +105,7 @@ const (
 	VMDisconnectedException
 	VMMismatchException
 	VMOutOfMemoryException
-	WrongMethodTypeException
+	WrongMethodTypeException // used here in many places; in HotSpot, it's mostly for method handles
 	XPathException
 
 	// non-runtime exceptions
@@ -142,7 +142,7 @@ const (
 	IncompatibleThreadStateException
 	InterruptedException
 	IntrospectionException
-	InvalidApplicationException
+	InvalidApplicationException // MBean exception in JMX, rarely shown to user
 	InvalidMidiDataException
 	InvalidPreferencesFormatException
 	InvalidTargetObjectTypeException
@@ -333,22 +333,22 @@ var JVMexceptionNames = []string{
 	"javax.xml.xpath.XPathException",                         // VERIFIED
 
 	// non-runtime exceptions
-	"java.lang.AbsentInformationException",
-	"java.lang.AclNotFoundException",
-	"java.lang.ActivationException",
-	"java.lang.AgentInitializationException",
-	"java.lang.AgentLoadException",
-	"java.lang.AlreadyBoundException",
-	"java.lang.AttachNotSupportedException",
-	"java.lang.AWTException",
-	"java.lang.BackingStoreException",
-	"java.lang.BadAttributeValueExpException",
-	"java.lang.BadBinaryOpValueExpException",
-	"java.lang.BadLocationException",
-	"java.lang.BadStringOperationException",
-	"java.lang.BrokenBarrierException",
-	"java.lang.CardException",
-	"java.lang.CertificateException",
+	"com.sun.jdi.AbsentInformationException",                   // VERIFIED
+	"java.security.acl.AclNotFoundException",                   // VERIFIED might not be part of JDK 17
+	"java.rmi.activation.ActivationException",                  // VERIFIED might not be part of JDK 17
+	"com.sun.tools.attach.AgentInitializationException",        // VERIFIED
+	"com.sun.tools.attach.AgentLoadException",                  // VERIFIED
+	"java.rmi.AlreadyBoundException",                           // VERIFIED
+	"com.sun.tools.attach.AttachNotSupportedException",         // VERIFIED
+	"java.awt.AWTException",                                    // VERIFIED
+	"java.util.prefs.BackingStoreException",                    // VERIFIED
+	"javax.management.BadAttributeValueExpException",           // VERIFIED
+	"javax.management.BadBinaryOpValueExpException",            // VERIFIED
+	"javax.swing.text.BadLocationException",                    // VERIFIED
+	"javax.management.BadStringOperationException",             // VERIFIED
+	"java.util.concurrent.BrokenBarrierException",              // VERIFIED
+	"javax.smartcardio.CardException",                          // VERIFIED
+	"java.security.cert.CertificateException",                  // VERIFIED
 	"com.sun.jdi.ClassNotLoadedException",                      // VERIFIED
 	"java.lang.CloneNotSupportedException",                     // VERIFIED
 	"java.util.zip.DataFormatException",                        // VERIFIED
@@ -356,17 +356,17 @@ var JVMexceptionNames = []string{
 	"javax.security.auth.DestroyFailedException",               // VERIFIED
 	"dk.jshell.spi.ExecutionControl.ExecutionControlException", // VERIFIED
 	"java.util.concurrent.ExecutionException",                  // VERIFIED
-	"java.lang.ExpandVetoException",
-	"java.lang.FontFormatException",
-	"java.lang.GeneralSecurityException",
-	"java.lang.GSSException",
-	"java.lang.instrument.IllegalClassFormatException", // verified
-	"java.lang.IllegalConnectorArgumentsException",
-	"java.lang.IllegalThreadStateException", // VERIFIED
-	"java.lang.IncompatibleThreadStateException",
-	"java.lang.InterruptedException", // VERIFIED
-	"java.lang.IntrospectionException",
-	"java.lang.InvalidApplicationException",
+	"javax.swing.tree.ExpandVetoException",                     // VERIFIED
+	"java.awt.FontFormatException",                             // VERIFIED
+	"java.security.GeneralSecurityException",                   // VERIFIED
+	"org.ietf.jgss.GSSException",                               // VERIFIED
+	"java.lang.instrument.IllegalClassFormatException",         // VERIFIED
+	"com.sun.jdi.connect.IllegalConnectorArgumentsException",   // VERIFIED
+	"java.lang.IllegalThreadStateException",                    // VERIFIED
+	"com.sun.jdi.IncompatibleThreadStateException",             // VERIFIED
+	"java.lang.InterruptedException",                           // VERIFIED
+	"javax.management.IntrospectionException",                  // VERIFIED
+	"javax.management.InvalidApplicationException",             // VERIFIED
 	"java.lang.InvalidMidiDataException",
 	"java.lang.InvalidPreferencesFormatException",
 	"java.lang.InvalidTargetObjectTypeException",
