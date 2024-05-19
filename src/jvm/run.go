@@ -2341,11 +2341,11 @@ frameInterpreter:
 			}
 
 			CPentry := CP.CpIndex[CPslot]
-			// if CPentry.Type != classloader.Interface {
 			if CPentry.Type != classloader.Dummy { // intended to force an error, for the nonce
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
+				errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
 				err := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 				if err == exceptions.NotCaught {
 					goto frameInterpreter
