@@ -2351,7 +2351,6 @@ frameInterpreter:
 					goto frameInterpreter
 				} else if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
-
 				}
 			}
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object

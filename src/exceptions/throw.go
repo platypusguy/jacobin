@@ -28,8 +28,10 @@ import (
 // operation of the JVM, and for a few occasional user errors, such as
 // divide by zero.
 
-var Caught = true
-var NotCaught = false
+const (
+	Caught    = true
+	NotCaught = false
+)
 
 // ThrowExNil simply calls ThrowEx with a nil pointer for the frame.
 func ThrowExNil(which int, msg string) {
@@ -42,13 +44,13 @@ func ThrowExNil(which int, msg string) {
 func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
-	log.Log(helloMsg, log.TRACE_INST)
+	_ = log.Log(helloMsg, log.TRACE_INST)
 
 	// If in a unit test, log a severe message and return.
 	glob := globals.GetGlobalRef()
 	if glob.JacobinName == "test" {
 		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
-		log.Log(errMsg, log.SEVERE)
+		_ = log.Log(errMsg, log.SEVERE)
 		return Caught // in a test, we don't want to exit, which would be the case if uncaught
 	}
 
@@ -99,10 +101,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	// if the exception was not caught...generate exception code and return so that ATHROW handles it
-
-	// errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
-	// log.Log(errMsg, log.SEVERE)
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
+
 	// append the genCode to the bytecode of the current method in the frame
 	// and set the PC to point to it.
 	endPoint := len(f.Meth)
