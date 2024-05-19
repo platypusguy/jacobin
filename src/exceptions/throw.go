@@ -95,10 +95,10 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 		return
 	}
 
-	// if the exception was not caught...
+	// if the exception was not caught...generate exception code and return so that ATHROW handles it
 
-	errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
-	log.Log(errMsg, log.SEVERE)
+	// errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
+	// log.Log(errMsg, log.SEVERE)
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
 	// append the genCode to the bytecode of the current method in the frame
 	// and set the PC to point to it.
