@@ -2332,11 +2332,12 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
 				errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
-				exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
-				if glob.JacobinName == "test" {
+				err := exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
+				if err == exceptions.NotCaught {
+					goto frameInterpreter
+				} else if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
 				}
-
 			}
 
 			CPentry := CP.CpIndex[CPslot]
@@ -2345,13 +2346,14 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
-				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
+				err := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+				if err == exceptions.NotCaught {
+					goto frameInterpreter
+				} else if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
-				}
-				goto frameInterpreter
-			}
 
+				}
+			}
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2

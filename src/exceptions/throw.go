@@ -22,11 +22,14 @@ import (
 	"runtime/debug"
 )
 
-// This file contains support functions for throwing exceptions from within
+// This file contains the functions for throwing exceptions from within
 // Jacobin. That is, situations in which Jacobin itself is throwing the error,
 // rather than the application. Typically, this is for errors/exceptions in the
 // operation of the JVM, and for a few occasional user errors, such as
 // divide by zero.
+
+var Caught = true
+var NotCaught = false
 
 // ThrowExNil simply calls ThrowEx with a nil pointer for the frame.
 func ThrowExNil(which int, msg string) {
@@ -36,7 +39,7 @@ func ThrowExNil(which int, msg string) {
 // ThrowEx duplicates how in-application throws/catches are handled. To
 // accomplish this, we generate bytecodes which are then placed in the frame of
 // the current thread.
-func ThrowEx(which int, msg string, f *frames.Frame) {
+func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
 	log.Log(helloMsg, log.TRACE_INST)
@@ -46,12 +49,12 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	if glob.JacobinName == "test" {
 		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
 		log.Log(errMsg, log.SEVERE)
-		return
+		return Caught // in a test, we don't want to exit, which would be the case if uncaught
 	}
 
 	// Frame pointer provided?
 	if f == nil {
-		minimalAbort(which, msg)
+		minimalAbort(which, msg) // this calls exit()
 	}
 
 	// the name of the exception as shown to the user
@@ -92,7 +95,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
 		catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
-		return
+		return Caught
 	}
 
 	// if the exception was not caught...generate exception code and return so that ATHROW handles it
@@ -106,7 +109,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	f.Meth = append(f.Meth, genCode...)
 	f.PC = endPoint // the first byte of the gen'd code is a NOP
 	f.TOS = -1      // reset the op stack
-	return
+	return NotCaught
 	/*
 		ShowFrameStack(fs)
 
