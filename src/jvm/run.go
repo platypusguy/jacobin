@@ -2336,19 +2336,20 @@ frameInterpreter:
 				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
 				}
+
 			}
 
 			CPentry := CP.CpIndex[CPslot]
 			// if CPentry.Type != classloader.Interface {
-			if CPentry.Type != classloader.Interface {
+			if CPentry.Type != classloader.Dummy { // intended to force an error, for the nonce
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
 				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
-
 				}
+				goto frameInterpreter
 			}
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
@@ -2498,7 +2499,7 @@ frameInterpreter:
 			// objRef points to an instance of the error/exception class that's being thrown
 			objectRef := pop(f).(*object.Object)
 			if object.IsNull(objectRef) {
-				errMsg := "ATHROW: Invalid (null) reference to a exception/error class to throw"
+				errMsg := "ATHROW: Invalid (null) reference to an exception/error class to throw"
 				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
 				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing

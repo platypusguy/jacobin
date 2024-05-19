@@ -96,15 +96,25 @@ func ThrowEx(which int, msg string, f *frames.Frame) {
 	}
 
 	// if the exception was not caught...
+
 	errMsg := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
 	log.Log(errMsg, log.SEVERE)
+	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
+	// append the genCode to the bytecode of the current method in the frame
+	// and set the PC to point to it.
+	endPoint := len(f.Meth)
+	f.Meth = append(f.Meth, genCode...)
+	f.PC = endPoint // the first byte of the gen'd code is a NOP
+	f.TOS = -1      // reset the op stack
+	return
+	/*
+		ShowFrameStack(fs)
 
-	ShowFrameStack(fs)
-
-	if !glob.StrictJDK {
-		ShowGoStackTrace(nil)
-	}
-	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+		if !glob.StrictJDK {
+			ShowGoStackTrace(nil)
+		}
+		_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+	*/
 
 	// CURR: exit here after doing the ATHROW diagnostic info. Put that code in exceptions package
 	//  and show all the information
