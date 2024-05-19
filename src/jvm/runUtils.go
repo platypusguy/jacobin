@@ -327,7 +327,10 @@ func peek(f *frames.Frame) interface{} {
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
 		// next step will set up error reporting and dump of frame stack
-		exceptions.FormatStackOverflowError(f)
+		// exceptions.FormatStackOverflowError(f)
+		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
+			f.ClName, f.MethName, len(f.OpStack))
+		_ = exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
 		return
 	}
 	// we show trace info of the TOS *before* we change its value--
