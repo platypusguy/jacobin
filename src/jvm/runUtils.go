@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"container/list"
 	"encoding/binary"
 	"fmt"
 	"jacobin/excNames"
@@ -16,6 +17,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/shutdown"
 	"jacobin/types"
 	"math"
 	"runtime/debug"
@@ -326,13 +328,22 @@ func peek(f *frames.Frame) interface{} {
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
-		// next step will set up error reporting and dump of frame stack
-		// exceptions.FormatStackOverflowError(f)
+		// on stack overflow, we throw the error, then if it's uncaught (more than likely),
+		// we force execution of the frame with the generated code. We cannot simply return
+		// to the interpreter loop because subsequent instructions might change the value of
+		// the PC or expect the stack to contain specific values; so we have to force execution
+		// of the generated code with runFrame() and then exit the program.
 		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
 			f.ClName, f.MethName, len(f.OpStack))
-		_ = exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
-		return
+		exc := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
+		if exc == exceptions.NotCaught {
+			fs := list.New()
+			fs.Front().Value = f
+			_ = runFrame(fs)
+			_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
 	}
+
 	// we show trace info of the TOS *before* we change its value--
 	// all traces show TOS before the instruction is executed.
 	if MainThread.Trace {
