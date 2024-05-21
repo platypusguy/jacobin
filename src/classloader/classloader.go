@@ -289,6 +289,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	globals.LoaderWg.Done()
 }
 
+// Load a class from name in java/lang/Class format
 func LoadClassFromNameOnly(className string) error {
 	var err error
 
