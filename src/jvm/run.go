@@ -2936,8 +2936,10 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
 
-				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
-				// return errors.New(rootCause)
+				err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
+				if err != nil {
+					_ = log.Log(err.Error(), log.SEVERE)
+				}
 				return errors.New(string(debug.Stack()))
 
 			case 0x02: // stack underflow
@@ -2950,8 +2952,10 @@ frameInterpreter:
 				exceptions.ShowPanicCause(rootCause)
 				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
 				_ = log.Log(errMsg, log.SEVERE)
-
-				fs.Remove(fs.Front()) // having reported on this frame's error, pop the frame off
+				err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
+				if err != nil {
+					_ = log.Log(err.Error(), log.SEVERE)
+				}
 				return errors.New(string(debug.Stack()))
 
 			default:

@@ -18,10 +18,16 @@ type StackValue interface {
 	int64 | float64 | unsafe.Pointer
 }
 
-//var debugging bool = true
+var debugging bool = false
 
 type Number interface {
 	int64 | float64
+}
+
+func ftag(f *Frame) string {
+	pp := fmt.Sprintf("%p\n", f)
+	jj := len(pp) - 5 // show last 4 hex digits
+	return pp[jj:]
 }
 
 // Frame is the fundamental execution environment for a single function/method call.
@@ -75,9 +81,9 @@ func CreateFrame(opStackSize int) *Frame {
 
 // PushFrame pushes a frame. This simply adds a frame to the head of the list.
 func PushFrame(fs *list.List, f *Frame) error {
-	/*if debugging {
-		fmt.Printf("DEBUG PushFrame ClName=%s, MethName=%s TOS=%d, PC=%d\n", f.ClName, f.MethName, f.TOS, f.PC)
-	}*/
+	if debugging {
+		fmt.Printf("DEBUG PushFrame %s ClName=%s, MethName=%s TOS=%d, PC=%d\n", ftag(f), f.ClName, f.MethName, f.TOS, f.PC)
+	}
 	fs.PushFront(f)
 	// TODO: move this to instrumentation system
 	if log.Level == log.FINEST {
@@ -97,10 +103,10 @@ func PopFrame(fs *list.List) error {
 		return fmt.Errorf("invalid PopFrame of empty JVM frame stack")
 	}
 
-	/*if debugging {
+	if debugging {
 		f := PeekFrame(fs, 0)
-		fmt.Printf("DEBUG PopFrame ClName=%s, MethName=%s TOS=%d, PC=%d\n", f.ClName, f.MethName, f.TOS, f.PC)
-	}*/
+		fmt.Printf("DEBUG PopFrame %s ClName=%s, MethName=%s TOS=%d, PC=%d\n", ftag(f), f.ClName, f.MethName, f.TOS, f.PC)
+	}
 
 	fs.Remove(fs.Front())
 	return nil
