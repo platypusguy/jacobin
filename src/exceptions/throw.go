@@ -109,6 +109,12 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	f.Meth = append(f.Meth, genCode...)
 	f.PC = endPoint // the first byte of the gen'd code is a NOP
 	f.TOS = -1      // reset the op stack
+	los := len(f.OpStack)
+	if los < 5 { // size 5 is chosen as workable, exact number should be researched
+		for i := 0; i > 5-los; i++ {
+			f.OpStack = append(f.OpStack, int64(0))
+		}
+	}
 	return NotCaught
 	/*
 		ShowFrameStack(fs)
