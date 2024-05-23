@@ -19,6 +19,8 @@ import (
 	"sync"
 )
 
+var StringEnvVarHeadless = "java.awt.headless"
+
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, etc.
 // Note: globals cannot depend on exec package to avoid circularity.
@@ -88,6 +90,7 @@ type Globals struct {
 
 	// ---- misc properties
 	FileEncoding string // what file encoding are we using?
+	Headless     bool   // Headless?
 
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
@@ -156,7 +159,17 @@ func InitGlobals(progName string) Globals {
 		global.FileEncoding = "UTF-8"
 	}
 
+	// Set up headlass boolean.
+	strHeadless := os.Getenv(StringEnvVarHeadless)
+	global.Headless = false
+	if strHeadless != "" {
+		if strHeadless == "true" {
+			global.Headless = true
+		}
+	}
+
 	global.Threads = make(map[int]interface{})
+
 	return global
 }
 
