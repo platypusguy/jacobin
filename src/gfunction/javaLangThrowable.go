@@ -19,10 +19,10 @@ import (
 
 func Load_Lang_Throwable() {
 
-	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
+	MethodSignatures["java/lang/Throwable.FillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
 			ParamSlots:   0,
-			GFunction:    fillInStackTrace,
+			GFunction:    FillInStackTrace,
 			NeedsContext: true,
 		}
 
@@ -117,10 +117,10 @@ func throwableClinit([]interface{}) interface{} {
  * @return an array of stack trace elements representing the stack trace
  *         pertaining to this throwable.
  */
-func fillInStackTrace(params []interface{}) interface{} {
+func FillInStackTrace(params []interface{}) interface{} {
 	// get our parameters vetted and ready for use, then call getOurStackTrace()
 	if len(params) != 2 {
-		errMsg := fmt.Sprintf("fillInStackTrace() expected two parameters, got: %d", len(params))
+		errMsg := fmt.Sprintf("FillInStackTrace() expected two parameters, got: %d", len(params))
 		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return errors.New(errMsg) // needed only for testing b/c shutdown.Exit() doesn't exit in tests
