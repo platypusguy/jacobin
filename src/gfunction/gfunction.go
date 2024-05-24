@@ -67,7 +67,7 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 // they make available.
 func MTableLoadGFunctions(MTable *classloader.MT) {
 
-	// java/lang/*
+	// java/awt/*
 	Load_Awt_Graphics_Environment()
 
 	// java/io/*
