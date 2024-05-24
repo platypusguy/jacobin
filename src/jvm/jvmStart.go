@@ -62,6 +62,7 @@ func JVMrun() int {
 	// Enable functions call InstantiateClass through a global function variable. (This avoids circularity issues.)
 	globPtr.FuncInstantiateClass = InstantiateClass
 	globPtr.FuncThrowException = exceptions.ThrowExNil
+	globPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 
 	_ = log.Log("running program: "+globPtr.JacobinName, log.FINE)
 

@@ -93,6 +93,7 @@ type Globals struct {
 	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
 	FuncThrowException   func(int, string)
+	FuncFillInStackTrace func([]any) any
 }
 
 // ----- String Pool
