@@ -45,7 +45,7 @@ func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 	_ = log.SetLogLevel(log.SEVERE)
 
 	params := []interface{}{1}
-	err := fillInStackTrace(params)
+	err := FillInStackTrace(params)
 
 	var retVal error
 	switch err.(type) {
@@ -58,7 +58,7 @@ func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 	}
 
 	errMsg := retVal.Error()
-	expPrefix := "fillInStackTrace() expected two parameters"
+	expPrefix := "FillInStackTrace() expected two parameters"
 	if !strings.HasPrefix(errMsg, expPrefix) {
 		t.Errorf("did not get expected error message: %s, observed: %s", expPrefix, errMsg)
 	}
@@ -112,7 +112,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	globPtr.FuncInstantiateClass = InstantiateFillIn
 
 	params := []interface{}{jvmStack, throw}
-	retVal := fillInStackTrace(params)
+	retVal := FillInStackTrace(params)
 
 	// var retVal error
 	switch retVal.(type) {
@@ -145,6 +145,46 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	}
 }
 
+/*
+	func TestMinimalThrowEx(t *testing.T) {
+		globals.InitGlobals("test")
+		log.Init()
+		_ = log.SetLogLevel(log.SEVERE)
+
+		classloader.InitMethodArea()
+
+		// we need to pass in a pointer to a valid JVM stack, so put one together here
+		f := frames.CreateFrame(2) // create a new frame
+		f.Thread = 1
+		f.MethName = "main"
+		f.MethType = "([Ljava/lang/String;)V"
+
+		clData := classloader.ClData{
+			Name:        "",
+			Superclass:  "",
+			Module:      "test module",
+			Pkg:         "",
+			Interfaces:  nil,
+			Fields:      nil,
+			MethodTable: nil,
+			Methods:     nil,
+			Attributes:  nil,
+			SourceFile:  "testClass.java",
+			Bootstraps:  nil,
+			CP:          classloader.CPool{},
+			Access:      classloader.AccessFlags{},
+			ClInit:      0,
+		}
+		klass := classloader.Klass{Loader: "testLoader", Data: &clData}
+		classloader.MethAreaInsert("java/testClass", &klass)
+		f.ClName = "java/testClass"
+		f.MethName = "java/testClass.test"
+
+		jvmStack := frames.CreateFrameStack()
+		_ = frames.PushFrame(jvmStack, f)
+		exceptions.ThrowEx(excNames.NullPointerException, "test of NPE", f)
+	}
+*/
 func InstantiateFillIn(name string, _ *list.List) (any, error) {
 	o := object.MakeEmptyObject()
 	o.KlassName = stringPool.GetStringIndex(&name)
