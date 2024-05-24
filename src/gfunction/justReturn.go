@@ -6,7 +6,30 @@
 
 package gfunction
 
-func Load_Nil_Clinit() {
+// do-nothing Go function shared by several source files
+func justReturn([]interface{}) interface{} {
+	return nil
+}
+
+func Load_Just_Return() {
+
+	MethodSignatures["java/awt/Color.initIDs()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/awt/Toolkit.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/awt/Toolkit.loadLibraries()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
 
 	MethodSignatures["java/math/BigDecimal.<clinit>()V"] =
 		GMeth{
