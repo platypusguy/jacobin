@@ -7,7 +7,6 @@
 package jvm
 
 import (
-	"container/list"
 	"encoding/binary"
 	"fmt"
 	"jacobin/excNames"
@@ -328,20 +327,16 @@ func peek(f *frames.Frame) interface{} {
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
-		// on stack overflow, we throw the error, then if it's uncaught (more than likely),
-		// we force execution of the frame with the generated code. We cannot simply return
-		// to the interpreter loop because subsequent instructions might change the value of
-		// the PC or expect the stack to contain specific values; so we have to force execution
-		// of the generated code with runFrame() and then exit the program.
 		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
 			f.ClName, f.MethName, len(f.OpStack))
-		exc := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
-		if exc == exceptions.NotCaught {
-			fs := list.New()
-			fs.Front().Value = f
-			_ = runFrame(fs)
-			_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
-		}
+		_ = exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
+		// if exc == exceptions.NotCaught {
+		// 	fs := list.New()
+		// 	fs.Front().Value = f
+		// 	_ = runFrame(fs)
+		_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return // applies only if in test
+		// }
 	}
 
 	// we show trace info of the TOS *before* we change its value--
