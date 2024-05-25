@@ -13,6 +13,7 @@ import (
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/stringPool"
@@ -100,6 +101,43 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		return Caught
 	}
 
+	// ---- if exception is not caught ----
+
+	// throwObject, err := glob.FuncInstantiateClass("java/lang/Throwable", fs)
+	throwObject, err := glob.FuncInstantiateClass(exceptionCPname, fs)
+	if err != nil {
+		println(err.Error())
+		if throwObject != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%v\n", throwObject)
+			_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
+		}
+	}
+
+	throwObj := throwObject.(*object.Object)
+	params := []any{fs, throwObj}
+	glob.FuncFillInStackTrace(params)
+
+	excInfo := fmt.Sprintf("%s%s\n", exceptionNameForUser, msg)
+	fmt.Fprintln(os.Stderr, excInfo)
+
+	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)
+	traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
+	for _, traceEntry := range traceEntries {
+		traceInfo := fmt.Sprintf("  at %s.%s(%s:%s)\n",
+			traceEntry.FieldTable["declaringClass"].Fvalue.(string),
+			traceEntry.FieldTable["methodName"].Fvalue.(string),
+			traceEntry.FieldTable["fileName"].Fvalue.(string),
+			traceEntry.FieldTable["sourceLine"].Fvalue.(string))
+		fmt.Fprintln(os.Stderr, traceInfo)
+	}
+
+	if !glob.StrictJDK {
+		ShowGoStackTrace("")
+	}
+
+	_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
+
+	/* JACOBIN-495 Convert this to direct calls to Throwable
 	// if the exception was not caught...generate exception code and return so that ATHROW handles it
 	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
 
@@ -115,6 +153,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			f.OpStack = append(f.OpStack, int64(0))
 		}
 	}
+	*/
+
 	return NotCaught
 	/*
 		ShowFrameStack(fs)
@@ -124,16 +164,6 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		}
 		_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 	*/
-
-	// CURR: exit here after doing the ATHROW diagnostic info. Put that code in exceptions package
-	//  and show all the information
-	// genCode := generateThrowBytecodes(f, exceptionCPname, msg)
-	//
-	// // append the genCode to the bytecode of the current method in the frame
-	// // and set the PC to point to it.
-	// endPoint := len(f.Meth)
-	// f.Meth = append(f.Meth, genCode...)
-	// f.PC = endPoint
 }
 
 func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string) []byte {

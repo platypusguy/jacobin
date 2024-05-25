@@ -2332,10 +2332,8 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
 				errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
-				err := exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
-				if err == exceptions.NotCaught {
-					goto frameInterpreter
-				} else if glob.JacobinName == "test" {
+				exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
+				if glob.JacobinName == "test" {
 					return errors.New(errMsg) // return should happen only in testing
 				}
 			}
