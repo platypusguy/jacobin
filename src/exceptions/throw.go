@@ -117,13 +117,13 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	params := []any{fs, throwObj}
 	glob.FuncFillInStackTrace(params)
 
-	excInfo := fmt.Sprintf("%s%s\n", exceptionNameForUser, msg)
+	excInfo := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
 	fmt.Fprintln(os.Stderr, excInfo)
 
 	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
 	for _, traceEntry := range traceEntries {
-		traceInfo := fmt.Sprintf("  at %s.%s(%s:%s)\n",
+		traceInfo := fmt.Sprintf("  at %s.%s(%s:%s)",
 			traceEntry.FieldTable["declaringClass"].Fvalue.(string),
 			traceEntry.FieldTable["methodName"].Fvalue.(string),
 			traceEntry.FieldTable["fileName"].Fvalue.(string),
