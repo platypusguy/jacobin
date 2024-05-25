@@ -39,9 +39,9 @@ func ThrowExNil(which int, msg string) {
 	ThrowEx(which, msg, nil)
 }
 
-// ThrowEx duplicates how in-application throws/catches are handled. To
-// accomplish this, we generate bytecodes which are then placed in the frame of
-// the current thread.
+// ThrowEx throws an exception. It is used primarily for exceptions and
+// errors thrown by Jacobin, rather than by the application. (The latter
+// would generally use the ATHROW bytecode.)
 func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
@@ -62,9 +62,6 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	// the name of the exception as shown to the user
 	exceptionNameForUser := excNames.JVMexceptionNames[which]
-
-	// // the name of the class that implements this exception
-	// exceptionClassName := util.ConvertInternalClassNameToFilename(exceptionNameForUser)
 
 	// the internal format used in the constant pool
 	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
@@ -103,7 +100,6 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	// ---- if exception is not caught ----
 
-	// throwObject, err := glob.FuncInstantiateClass("java/lang/Throwable", fs)
 	throwObject, err := glob.FuncInstantiateClass(exceptionCPname, fs)
 	if err != nil {
 		println(err.Error())
@@ -249,41 +245,3 @@ func minimalAbort(whichException int, msg string) {
 	ShowGoStackTrace(nil)
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
 }
-
-/* This function has been replaced by ThrowEx(). Kept here temporarily for reference purposes.
-// Throw duplicates the exception mechanism in Java. Right now, it displays the
-// exceptions message. Will add: catch logic, stack trace, and halt of execution
-// TODO: use ThreadNum to find the right thread
-func Throw(exceptionType int, msg string) {
-	 // This code should be moved to the interpreter and the info pushed to this function.
-	 //   func Throw(excType int, clName string, threadNum int, methName string, cp int) {
-	 //   	thd := globals.GetGlobalRef().Threads.ThreadsList.Front().Value.(*thread.ExecThread)
-	 //   	frameStack := thd.Stack
-	 //   	f := frames.PeekFrame(frameStack, 0)
-	 //   	fmt.Println("class name: " + f.ClName)
-	 //   	msg := fmt.Sprintf(
-	 //   		"%s%sin %s, in%s, at bytecode[]: %d", JacobinRuntimeErrLiterals[excType], ": ", clName, methName, cp)
-	 //
-	helloMsg := fmt.Sprintf("[Throw] %s, msg: %s", excNames.JVMexceptionNames[exceptionType], msg)
-	log.Log(helloMsg, log.SEVERE)
-
-	// TODO: Temporary until error/exception processing is complete.
-	glob := globals.GetGlobalRef()
-	if glob.JacobinName == "test" {
-		return
-	}
-	var stack string
-	bytes := debug.Stack()
-	if len(bytes) > 0 {
-		stack = string(bytes)
-	} else {
-		stack = ""
-	}
-	glob.ErrorGoStack = stack
-	ShowPanicCause(msg)
-	ShowFrameStack(&thread.ExecThread{})
-	ShowGoStackTrace(nil)
-	statics.DumpStatics()
-	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-}
-*/
