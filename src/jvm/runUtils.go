@@ -16,7 +16,6 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
-	"jacobin/shutdown"
 	"jacobin/types"
 	"math"
 	"runtime/debug"
@@ -329,14 +328,10 @@ func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
 		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
 			f.ClName, f.MethName, len(f.OpStack))
-		_ = exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
-		// if exc == exceptions.NotCaught {
-		// 	fs := list.New()
-		// 	fs.Front().Value = f
-		// 	_ = runFrame(fs)
-		_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
-		return // applies only if in test
-		// }
+		status := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
+		if status != exceptions.Caught {
+			return // applies only if in test
+		}
 	}
 
 	// we show trace info of the TOS *before* we change its value--
