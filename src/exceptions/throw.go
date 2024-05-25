@@ -135,35 +135,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		ShowGoStackTrace("")
 	}
 
-	_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
-
-	/* JACOBIN-495 Convert this to direct calls to Throwable
-	// if the exception was not caught...generate exception code and return so that ATHROW handles it
-	genCode := generateThrowBytecodes(f, exceptionCPname, msg)
-
-	// append the genCode to the bytecode of the current method in the frame
-	// and set the PC to point to it.
-	endPoint := len(f.Meth)
-	f.Meth = append(f.Meth, genCode...)
-	f.PC = endPoint // the first byte of the gen'd code is a NOP
-	f.TOS = -1      // reset the op stack
-	los := len(f.OpStack)
-	if los < 5 { // size 5 is chosen as workable, exact number should be researched
-		for i := 0; i > 5-los; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-	}
-	*/
-
+	_ = shutdown.Exit(shutdown.JVM_EXCEPTION) // in test mode, this call returns
 	return NotCaught
-	/*
-		ShowFrameStack(fs)
-
-		if !glob.StrictJDK {
-			ShowGoStackTrace(nil)
-		}
-		_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-	*/
 }
 
 func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string) []byte {
