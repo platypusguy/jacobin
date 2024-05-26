@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-4 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -19,109 +19,6 @@ import (
 	"strings"
 	"testing"
 )
-
-//
-// func TestFormatOverflowError(t *testing.T) {
-// 	fs := frames.CreateFrameStack() // create a frame stack
-// 	fr := frames.CreateFrame(3)     // create a new frame
-// 	fr.MethName = "main"
-// 	fr.ClName = "error_test"
-// 	fr.CP = nil
-// 	fr.PC = 4 // set hypothetical program counter to 4
-// 	fr.Meth = make([]byte, 6)
-// 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
-//
-// 	FormatStackOverflowError(fr)
-//
-// 	if fr.PC != 0 {
-// 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
-// 	}
-//
-// 	if fr.Meth[1] != opcodes.IMPDEP2 {
-// 		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
-// 	}
-//
-// 	if fr.Meth[2] != 0x01 {
-// 		t.Errorf("Expecting error code to be 0x01, got: %X", fr.Meth[2])
-// 	}
-//
-// 	bytes := make([]byte, 2)
-// 	bytes[0] = fr.Meth[3]
-// 	bytes[1] = fr.Meth[4]
-// 	location := int16(binary.BigEndian.Uint16(bytes))
-// 	if location != 4 {
-// 		t.Errorf("Expecting saved PC to be 4, got %d", location)
-// 	}
-// }
-//
-// // the error code uses 5 bytes to store the info. This tests whether
-// // the error code is stored correctly on methods shorter than 5 bytes
-// func TestFormatOverflowErrorOnVeryShortMethod(t *testing.T) {
-// 	fs := frames.CreateFrameStack() // create a frame stack
-// 	fr := frames.CreateFrame(3)     // create a new frame
-// 	fr.MethName = "main"
-// 	fr.ClName = "error_test"
-// 	fr.CP = nil
-// 	fr.PC = 1                    // set hypothetical program counter to 4
-// 	fr.Meth = make([]byte, 2)    // make sure the replacement error code works correctly
-// 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
-//
-// 	FormatStackOverflowError(fr)
-//
-// 	if fr.PC != 0 {
-// 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
-// 	}
-//
-// 	if fr.Meth[1] != opcodes.IMPDEP2 {
-// 		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
-// 	}
-//
-// 	if fr.Meth[2] != 0x01 {
-// 		t.Errorf("Expecting error code to be 0x01, got: %X", fr.Meth[2])
-// 	}
-//
-// 	bytes := make([]byte, 2)
-// 	bytes[0] = fr.Meth[3]
-// 	bytes[1] = fr.Meth[4]
-// 	location := int16(binary.BigEndian.Uint16(bytes))
-// 	if location != 1 {
-// 		t.Errorf("Expecting saved PC to be 1, got %d", location)
-// 	}
-// }
-//
-// // same as TestFormatOverflowError except the error code here is 0x02, rather than 0x01
-// func TestFormatUnderflowError(t *testing.T) {
-// 	fs := frames.CreateFrameStack() // create a frame stack
-// 	fr := frames.CreateFrame(3)     // create a new frame
-// 	fr.MethName = "main"
-// 	fr.ClName = "error_test"
-// 	fr.CP = nil
-// 	fr.PC = 4 // set hypothetical program counter to 4
-// 	fr.Meth = make([]byte, 6)
-// 	_ = frames.PushFrame(fs, fr) // push the minimal frame on to the frame stack
-//
-// 	FormatStackUnderflowError(fr)
-//
-// 	if fr.PC != 0 {
-// 		t.Errorf("Expecting PC to be 0, got: %d", fr.PC)
-// 	}
-//
-// 	if fr.Meth[1] != opcodes.IMPDEP2 {
-// 		t.Errorf("Expecting bytecode to be IMDEP2 (%X), got: %X", opcodes.IMPDEP2, fr.Meth[1])
-// 	}
-//
-// 	if fr.Meth[2] != 0x02 {
-// 		t.Errorf("Expecting error code to be 0x02, got: %X", fr.Meth[2])
-// 	}
-//
-// 	bytes := make([]byte, 2)
-// 	bytes[0] = fr.Meth[3]
-// 	bytes[1] = fr.Meth[4]
-// 	location := int16(binary.BigEndian.Uint16(bytes))
-// 	if location != 4 {
-// 		t.Errorf("Expecting saved PC to be 4, got %d", location)
-// 	}
-// }
 
 // if the JVM frame stack has already been displayed, then
 // don't display it again.
