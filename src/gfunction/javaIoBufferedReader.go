@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"jacobin/excNames"
-	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -119,20 +118,17 @@ func bufferedReaderInit(params []interface{}) interface{} {
 
 func bufferedReaderInitSz(params []interface{}) interface{} {
 	errMsg := "Instantiating BufferedReader with a size is not yet supported by jacobin"
-	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
-	return nil
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 func bufferedReaderLines(params []interface{}) interface{} {
 	errMsg := "Instantiating BufferedReader with a size is not yet supported by jacobin"
-	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
-	return nil
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 func bufferedReaderMarkAndReset(params []interface{}) interface{} {
 	errMsg := "BufferedReader mark() & reset() are not yet supported by jacobin"
-	exceptions.ThrowExNil(excNames.UnsupportedOperationException, errMsg)
-	return nil
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 func bufferedReaderMarkSupported(params []interface{}) interface{} {

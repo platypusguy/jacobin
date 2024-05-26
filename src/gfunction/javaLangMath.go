@@ -9,7 +9,6 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/exceptions"
 	"jacobin/log"
 	"math"
 	"math/big"
@@ -222,7 +221,7 @@ func mathClinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "mathClinit, expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 	return nil
 }
