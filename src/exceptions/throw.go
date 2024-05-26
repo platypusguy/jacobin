@@ -118,9 +118,22 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
+
+	// now print out the JVM stack
 	for _, traceEntry := range traceEntries {
+		// HotSpot uses a slightly different format for method names:
+		// package.class.method, we prefer package/class.method, so we format
+		// method name according to whether -strictJDK is in force
+		var declaringClass string
+		if glob.StrictJDK {
+			declaringClass = util.ConvertInternalClassNameToUserFormat(
+				traceEntry.FieldTable["declaringClass"].Fvalue.(string))
+		} else {
+			declaringClass = traceEntry.FieldTable["declaringClass"].Fvalue.(string)
+		}
+
 		traceInfo := fmt.Sprintf("  at %s.%s(%s:%s)",
-			traceEntry.FieldTable["declaringClass"].Fvalue.(string),
+			declaringClass,
 			traceEntry.FieldTable["methodName"].Fvalue.(string),
 			traceEntry.FieldTable["fileName"].Fvalue.(string),
 			traceEntry.FieldTable["sourceLine"].Fvalue.(string))

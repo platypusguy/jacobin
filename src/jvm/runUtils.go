@@ -17,6 +17,7 @@ import (
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/types"
+	"jacobin/util"
 	"math"
 	"runtime/debug"
 	"unsafe"
@@ -327,7 +328,7 @@ func peek(f *frames.Frame) interface{} {
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
 		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
-			f.ClName, f.MethName, len(f.OpStack))
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, len(f.OpStack))
 		status := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
 		if status != exceptions.Caught {
 			return // applies only if in test
