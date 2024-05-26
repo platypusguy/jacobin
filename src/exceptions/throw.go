@@ -42,6 +42,9 @@ func ThrowExNil(which int, msg string) {
 // ThrowEx throws an exception. It is used primarily for exceptions and
 // errors thrown by Jacobin, rather than by the application. (The latter
 // would generally use the ATHROW bytecode.)
+//
+// Important: if you change the name of this function, you need to update
+// exceptions.ShowGoStackTrace(), which explicitly tests for this function name.
 func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
