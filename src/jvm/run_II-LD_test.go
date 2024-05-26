@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Jacobin authors. All rights reserved.
+ * Copyright (c) 2023-4 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -159,104 +159,6 @@ func TestIload3(t *testing.T) {
 		t.Errorf("ILOAD_3: Expected popped value to be 27, got: %d", value)
 	}
 }
-
-// IMPDEP2: bytecode for discretionary use, here for certain error conditions
-// Note: this is a quick unit test. More thorough testing of this bytecode is
-// done in errors_test.go
-// func TestImpdep2StackOverflow(t *testing.T) {
-// 	g := globals.GetGlobalRef()
-// 	globals.InitGlobals("test")
-// 	g.JacobinName = "test"
-// 	g.StrictJDK = false
-//
-// 	log.Init()
-// 	_ = log.SetLogLevel(log.INFO)
-//
-// 	// redirect stderr & stdout to capture results from stderr
-// 	normalStderr := os.Stderr
-// 	r, w, _ := os.Pipe()
-// 	os.Stderr = w
-//
-// 	normalStdout := os.Stdout
-// 	_, wout, _ := os.Pipe()
-// 	os.Stdout = wout
-//
-// 	f := newFrame(opcodes.NOP)               // see errors.go for why this is necessary
-// 	f.Meth = append(f.Meth, opcodes.IMPDEP2) //
-// 	f.Meth = append(f.Meth, 0x01)            // stack overflow error
-// 	f.Meth = append(f.Meth, 0x00)            // store current PC to be 04
-// 	f.Meth = append(f.Meth, 0x04)
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs)
-//
-// 	// restore stderr and stdout to what they were before
-// 	_ = w.Close()
-// 	os.Stderr = normalStderr
-// 	msg, _ := io.ReadAll(r)
-//
-// 	_ = wout.Close()
-// 	os.Stdout = normalStdout
-//
-// 	errMsg := string(msg)
-//
-// 	if !strings.Contains(errMsg, "stack overflow") {
-// 		t.Errorf("IMPDEP2: Got unexpected message re stack overflow error: %s", errMsg)
-// 	}
-//
-// 	if !strings.Contains(errMsg, "004") { // should show the stored CP value
-// 		t.Errorf("IMPDEP2: Got unexpected message re stack overflow error: %s", errMsg)
-// 	}
-// }
-//
-// // IMPDEP2: bytecode for discretionary use, here for certain error conditions
-// // Note: this is a quick unit test. More thorough testing of this bytecode is
-// // done in errors_test.go
-// func TestImpdep2StackUnderflow(t *testing.T) {
-// 	g := globals.GetGlobalRef()
-// 	globals.InitGlobals("test")
-// 	g.JacobinName = "test"
-// 	g.StrictJDK = false
-//
-// 	log.Init()
-// 	_ = log.SetLogLevel(log.INFO)
-//
-// 	// redirect stderr & stdout to capture results from stderr
-// 	normalStderr := os.Stderr
-// 	r, w, _ := os.Pipe()
-// 	os.Stderr = w
-//
-// 	normalStdout := os.Stdout
-// 	_, wout, _ := os.Pipe()
-// 	os.Stdout = wout
-//
-// 	f := newFrame(opcodes.NOP)               // see errors.go for why this is necessary
-// 	f.Meth = append(f.Meth, opcodes.IMPDEP2) //
-// 	f.Meth = append(f.Meth, 0x02)            // stack underflow error
-// 	f.Meth = append(f.Meth, 0x00)            // store current PC to be 04
-// 	f.Meth = append(f.Meth, 0x05)
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f) // push the new frame
-// 	_ = runFrame(fs)
-//
-// 	// restore stderr and stdout to what they were before
-// 	_ = w.Close()
-// 	os.Stderr = normalStderr
-// 	msg, _ := io.ReadAll(r)
-//
-// 	_ = wout.Close()
-// 	os.Stdout = normalStdout
-//
-// 	errMsg := string(msg)
-//
-// 	if !strings.Contains(errMsg, "stack underflow") {
-// 		t.Errorf("IMPDEP2: Got unexpected message re stack overflow error: %s", errMsg)
-// 	}
-//
-// 	if !strings.Contains(errMsg, "005") { // should show the stored CP value
-// 		t.Errorf("IMPDEP2: Got unexpected message re stack overflow error: %s", errMsg)
-// 	}
-// }
 
 // Test IMUL (pop 2 values, multiply them, push result)
 func TestImul(t *testing.T) {
