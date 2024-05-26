@@ -243,10 +243,16 @@ func pop(f *frames.Frame) interface{} {
 	var value interface{}
 
 	if f.TOS == -1 {
-		glob := globals.GetGlobalRef()
-		glob.ErrorGoStack = string(debug.Stack())
-		exceptions.FormatStackUnderflowError(f)
-		value = nil
+		errMsg := fmt.Sprintf("stack underflow in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+		if status != exceptions.Caught {
+			return nil // applies only if in test
+		}
+		// glob := globals.GetGlobalRef()
+		// glob.ErrorGoStack = string(debug.Stack())
+		// exceptions.FormatStackUnderflowError(f)
+		// value = nil
 	} else {
 		value = f.OpStack[f.TOS]
 	}
