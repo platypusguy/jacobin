@@ -601,6 +601,79 @@ func TestNewWithError(t *testing.T) {
 	}
 }
 
+// PEEK: test peek, stack underflow
+func TestPeekWithStackUnderflow(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	globals.InitGlobals("testWithoutShutdown")
+	gl := globals.GetGlobalRef()
+
+	gl.FuncInstantiateClass = InstantiateClass
+	gl.FuncThrowException = exceptions.ThrowExNil
+	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
+
+	stringPool.PreloadArrayClassesToStringPool()
+	log.Init()
+
+	err := classloader.Init()
+	if err != nil {
+		t.Fail()
+	}
+	classloader.LoadBaseClasses()
+
+	// initialize the MTable (table caching methods)
+	classloader.MTable = make(map[string]classloader.MTentry)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	classloader.LoadBaseClasses()
+	_ = classloader.LoadClassFromNameOnly("java/lang/Object")
+	classloader.FetchMethodAndCP("java/lang/Object", "wait", "(JI)V")
+
+	th := thread.CreateThread()
+	th.AddThreadToTable(gl)
+
+	f := frames.CreateFrame(1)
+	f.ClName = "java/lang/Object"
+	f.MethName = "wait"
+	f.MethType = "(JI)V"
+	for i := 0; i < 4; i++ {
+		f.OpStack = append(f.OpStack, int64(0))
+	}
+	f.TOS = -1
+	f.Thread = gl.ThreadNumber
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(f)
+	th.Stack = fs
+
+	_ = peek(f)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+
+	_ = wout.Close()
+	// txt, _ := io.ReadAll(rout)
+
+	os.Stderr = normalStderr
+	os.Stdout = normalStdout
+
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "stack underflow") {
+		t.Errorf("got unexpected error message: %s", msg)
+	}
+}
+
 // POP: pop item off stack and discard it
 func TestPop(t *testing.T) {
 	f := newFrame(opcodes.POP)
