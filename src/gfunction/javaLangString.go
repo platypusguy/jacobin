@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/exceptions"
 	"jacobin/object"
 	"jacobin/types"
 	"strconv"
@@ -548,7 +547,7 @@ func StringFormatter(params []interface{}) interface{} {
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
 				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
-				exceptions.ThrowExNil(excNames.IllegalArgumentException, errMsg)
+				return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 			}
 		}
 	}
