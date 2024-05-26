@@ -55,7 +55,7 @@ func byteDecode(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(excNames.NumberFormatException, "javaPrimitives.byteDecode: byte array length < 1")
+		return getGErrBlk(excNames.NumberFormatException, "byteDecode: byte array length < 1")
 	}
 
 	// Strip off a leading "#" or "0x" in strArg.
@@ -69,11 +69,11 @@ func byteDecode(params []interface{}) interface{} {
 	// Parse the input integer.
 	int64Value, err := strconv.ParseInt(strArg, 16, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("javaPrimitives.byteDecode: arg=%s, err: %s", strArg, err.Error())
+		errMsg := fmt.Sprintf("byteDecode: arg=%s, err: %s", strArg, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	if int64Value > 255 {
-		errMsg := fmt.Sprintf("javaPrimitives.byteDecode: value too large: %d", int64Value)
+		errMsg := fmt.Sprintf("byteDecode: value too large: %d", int64Value)
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 

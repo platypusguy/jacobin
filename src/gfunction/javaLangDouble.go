@@ -176,7 +176,8 @@ func doubleParseDouble(params []interface{}) interface{} {
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		return getGErrBlk(excNames.NumberFormatException, "doubleParseDouble Error(): "+err.Error())
+		errMsg := fmt.Sprintf("doubleParseDouble: strconv.ParseFloat(%s) error: %s", strArg, err.Error())
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	return output
 

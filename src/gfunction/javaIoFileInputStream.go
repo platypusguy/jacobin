@@ -134,7 +134,7 @@ func initFileInputStreamFile(params []interface{}) interface{} {
 	// Open the file for read-only, yielding a file handle.
 	osFile, err := os.Open(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileInputStreamFile: os.Open(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileInputStreamFile: os.Open(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -155,7 +155,7 @@ func initFileInputStreamString(params []interface{}) interface{} {
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	osFile, err := os.Open(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileInputStreamString: os.Open(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileInputStreamString: os.Open(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -184,7 +184,7 @@ func fisAvailable(params []interface{}) interface{} {
 	fileInfo, err := osFile.Stat()
 	if err != nil {
 		path := string(params[0].(*object.Object).FieldTable["path"].Fvalue.([]byte))
-		errMsg := fmt.Sprintf("fisAvailable: osFile.Stat(%s) returned: %s", path, err.Error())
+		errMsg := fmt.Sprintf("fisAvailable: osFile.Stat(%s) error: %s", path, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	fsize := fileInfo.Size()
@@ -192,7 +192,7 @@ func fisAvailable(params []interface{}) interface{} {
 	// Get current file offset.
 	posn, err := osFile.Seek(0, io.SeekCurrent)
 	if err != nil {
-		errMsg := fmt.Sprintf("fisAvailable: osFile.Seek() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisAvailable: osFile.Seek() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -219,7 +219,7 @@ func fisReadOne(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadOne: osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadOne: osFile.Read error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -250,7 +250,7 @@ func fisReadByteArray(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadByteArray: osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadByteArray: osFile.Read error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -300,7 +300,7 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("fisReadByteArrayOffset: osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisReadByteArrayOffset: osFile.Read error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -331,7 +331,7 @@ func fisSkip(params []interface{}) interface{} {
 	// Skip.
 	_, err := osFile.Seek(count, 1)
 	if err != nil {
-		errMsg := fmt.Sprintf("fisSkip: osFile.Seek(%d) failed, reason: %s", count, err.Error())
+		errMsg := fmt.Sprintf("fisSkip: osFile.Seek(%d) error: %s", count, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -352,7 +352,7 @@ func fisClose(params []interface{}) interface{} {
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("fisClose: osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fisClose: osFile.Close() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil

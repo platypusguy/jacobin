@@ -244,84 +244,84 @@ func Load_Traps() {
 
 // Trap for Charset references
 func trapCharset([]interface{}) interface{} {
-	errMsg := "Class java/nio/charset/Charset is not yet supported"
+	errMsg := "trapCharset: Class java/nio/charset/Charset is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for deprecated functions
 func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The class or function requested is deprecated and is not supported by jacobin"
+	errMsg := "trapDeprecated: The class or function requested is deprecated and is not supported by jacobin"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileChannel references
 func trapFileChannel([]interface{}) interface{} {
-	errMsg := "File Channels are not yet supported"
+	errMsg := "trapFileChannel: File Channels are not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileDescriptor references
 func trapFileDescriptor([]interface{}) interface{} {
-	errMsg := "Class java/io/FileDescriptor is not yet supported"
+	errMsg := "trapFileDescriptor: Class java/io/FileDescriptor is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FileSystem references
 func trapFileSystem([]interface{}) interface{} {
-	errMsg := "Class java.io.FileSystem is not yet supported"
+	errMsg := "trapFileSystem: Class java.io.FileSystem is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // "java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"
 func trapGetDefaultFileSystem([]interface{}) interface{} {
-	errMsg := "DefaultFileSystem.getFileSystem() is not yet supported"
+	errMsg := "trapGetDefaultFileSystem: DefaultFileSystem.getFileSystem() is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for unsupported readers
 func trapReader([]interface{}) interface{} {
-	errMsg := "The requested reader is not yet supported"
+	errMsg := "trapReader: The requested reader is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for unsupported writers
 func trapWriter([]interface{}) interface{} {
-	errMsg := "The requested writer is not yet supported"
+	errMsg := "trapWriter: The requested writer is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for StringBuilder
 func trapStringBuilder([]interface{}) interface{} {
-	errMsg := "Class StringBuilder is not yet supported"
+	errMsg := "trapStringBuilder: Class StringBuilder is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for StringBuffer
 func trapStringBuffer([]interface{}) interface{} {
-	errMsg := "Class StringBuffer is not yet supported"
+	errMsg := "trapStringBuffer: Class StringBuffer is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FilterInputStream
 func trapFilterInputStream([]interface{}) interface{} {
-	errMsg := "Class FilterInputStream is not yet supported"
+	errMsg := "trapFilterInputStream: Class FilterInputStream is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for FilterOutputStream
 func trapFilterOutputStream([]interface{}) interface{} {
-	errMsg := "Class FilterOutputStream is not yet supported"
+	errMsg := "trapFilterOutputStream: Class FilterOutputStream is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for Random.next()
 func trapRandomNext([]interface{}) interface{} {
-	errMsg := "Protected method Random.next should never be reached unless done by reflection"
+	errMsg := "trapRandomNext: Protected method Random.next should never be reached unless done by reflection"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for Random.next()
 func trapSharedSecrets([]interface{}) interface{} {
-	errMsg := "Class jdk/internal/access/SharedSecrets is not supported"
+	errMsg := "trapSharedSecrets: Class jdk/internal/access/SharedSecrets is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }

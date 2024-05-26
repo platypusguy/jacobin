@@ -114,7 +114,7 @@ func consoleClinit([]interface{}) interface{} {
 
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInConsole([]interface{}) interface{} {
-	errMsg := "No support yet for Reader/PrintWriter/Charset in class Console"
+	errMsg := "noSupportYetInConsole: No support yet for Reader/PrintWriter/Charset in class Console"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
@@ -163,7 +163,7 @@ func consoleReadLine([]interface{}) interface{} {
 			break
 		}
 		if err != nil {
-			errMsg := fmt.Sprintf("consoleReadLine stdin.Read: %s", err.Error())
+			errMsg := fmt.Sprintf("consoleReadLine: stdin.Read error: %s", err.Error())
 			return getGErrBlk(excNames.IOException, errMsg)
 		}
 		if bite[0] == '\n' {
@@ -188,7 +188,7 @@ func consolePrintfReadLine(params []interface{}) interface{} {
 func consoleReadPassword([]interface{}) interface{} {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		errMsg := fmt.Sprintf("consoleReadPassword term.ReadPassword: %s", err.Error())
+		errMsg := fmt.Sprintf("consoleReadPassword: stdin.ReadPassword error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)

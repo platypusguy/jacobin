@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -90,8 +91,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 		return k
 	} else {
 		errMsg := fmt.Sprintf("getPrimitiveClass: does not handle: %s", str)
-		_ = log.Log(errMsg, log.SEVERE)
-		return errors.New(errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 }
 
@@ -111,9 +111,8 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 		if className == "" {
 			errClassName = "<empty string>"
 		}
-		errMsg := "instantiateClass()-getPrimitivelass(): Failed to load class " + errClassName
+		errMsg := fmt.Sprintf("simpleClassLoadByName: Failed to load class %s, error: %s", errClassName, err.Error())
 		_ = log.Log(errMsg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
 	} else {

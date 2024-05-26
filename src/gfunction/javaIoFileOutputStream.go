@@ -98,7 +98,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 	// Open the file for write-only, yielding a file handle.
 	osFile, err := os.Create(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamFile: os.Create(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileOutputStreamFile: os.Create(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -128,7 +128,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	// Get the boolean argument.
 	boolarg, ok := params[2].(int64)
 	if !ok {
-		errMsg := "initFileOutputStreamFile: Error in append argument"
+		errMsg := "initFileOutputStreamFile: Missing append-boolean argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -141,7 +141,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 		osFile, err = os.Create(pathStr)
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamFileBoolean: os.Create(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileOutputStreamFileBoolean: os.Create(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -164,7 +164,7 @@ func initFileOutputStreamString(params []interface{}) interface{} {
 	// Open the file for write-only, yielding a file handle.
 	osFile, err := os.Create(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -188,7 +188,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	// Get the boolean argument.
 	boolarg, ok := params[2].(int64)
 	if !ok {
-		errMsg := "initFileOutputStreamFileBoolean: Error in append argument"
+		errMsg := "initFileOutputStreamFileBoolean: Missing append-boolean argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -201,7 +201,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 		osFile, err = os.Create(pathStr)
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -229,7 +229,7 @@ func fosWriteOne(params []interface{}) interface{} {
 	// Get the integer argument.
 	wint, ok := params[1].(int64)
 	if !ok {
-		errMsg := "fosWriteOne: Error in integer argument"
+		errMsg := "fosWriteOne: Missing integer argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -240,7 +240,7 @@ func fosWriteOne(params []interface{}) interface{} {
 	// Write one byte.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteOne osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fosWriteOne osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -267,7 +267,7 @@ func fosWriteByteArray(params []interface{}) interface{} {
 	// Write the buffer.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteByteArray osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fosWriteByteArray osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -308,7 +308,7 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(buf1[offset : offset+length])
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -328,7 +328,7 @@ func fosClose(params []interface{}) interface{} {
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("fosClose: osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("fosClose: osFile.Close() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
