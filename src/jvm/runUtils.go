@@ -305,10 +305,6 @@ func peek(f *frames.Frame) interface{} {
 		if status != exceptions.Caught {
 			return nil // applies only if in test
 		}
-		// glob := globals.GetGlobalRef()
-		// glob.ErrorGoStack = string(debug.Stack())
-		// exceptions.FormatStackUnderflowError(f)
-		// return nil
 	}
 
 	if MainThread.Trace {
