@@ -12,14 +12,12 @@ import (
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
-	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
-	"runtime/debug"
 	"unsafe"
 )
 
@@ -243,16 +241,12 @@ func pop(f *frames.Frame) interface{} {
 	var value interface{}
 
 	if f.TOS == -1 {
-		errMsg := fmt.Sprintf("stack underflow in %s.%s",
+		errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
 		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 		if status != exceptions.Caught {
 			return nil // applies only if in test
 		}
-		// glob := globals.GetGlobalRef()
-		// glob.ErrorGoStack = string(debug.Stack())
-		// exceptions.FormatStackUnderflowError(f)
-		// value = nil
 	} else {
 		value = f.OpStack[f.TOS]
 	}
@@ -305,10 +299,16 @@ func pop(f *frames.Frame) interface{} {
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
-		glob := globals.GetGlobalRef()
-		glob.ErrorGoStack = string(debug.Stack())
-		exceptions.FormatStackUnderflowError(f)
-		return nil
+		errMsg := fmt.Sprintf("stack underflow in peek() in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+		if status != exceptions.Caught {
+			return nil // applies only if in test
+		}
+		// glob := globals.GetGlobalRef()
+		// glob.ErrorGoStack = string(debug.Stack())
+		// exceptions.FormatStackUnderflowError(f)
+		// return nil
 	}
 
 	if MainThread.Trace {
