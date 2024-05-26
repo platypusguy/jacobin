@@ -270,14 +270,15 @@ frameInterpreter:
 			if CPe.EntryType == 0 || // 0 = error
 				// Note: an invalid CP entry causes a java.lang.Verify error and
 				//       is caught before execution of the program begins.
-				// This instruction does not load longs or doubles
+				// This bytecode does not load longs or doubles
 				CPe.EntryType == classloader.DoubleConst ||
 				CPe.EntryType == classloader.LongConst {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LDC: Invalid type for instruction"
-				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, LDC: Invalid type for bytecode operand",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			// if no error
@@ -308,10 +309,11 @@ frameInterpreter:
 				push(f, CPe.FloatVal)
 			} else {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LDC2_W: Invalid type for LDC2_W instruction"
-				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, LDC2_W: Invalid type for bytecode operand",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
