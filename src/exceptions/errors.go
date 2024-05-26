@@ -136,9 +136,13 @@ func ShowPanicCause(reason any) {
 	globals.GetGlobalRef().PanicCauseShown = true
 }
 
-// in the event of a panic, this routine explains that a panic occurred and
+// ShowGoStackTrace explains that a panic has occurred and
 // (to a limited extent why) and then prints the golang stack trace.
-// stackInfo is the error returned when the panic occurred
+// Param stackInfo is the error returned when the panic occurred.
+//
+// Important: if you change the name of this function, you need to update
+// exceptions.ShowGoStackTrace()--this function--which explicitly tests
+// for this function name.
 func ShowGoStackTrace(stackInfo any) {
 	var stack string
 
