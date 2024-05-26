@@ -128,6 +128,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	if !glob.StrictJDK {
+		// the next statement disables showing the line that identifies
+		// the cause of a golang panic, because if we got here, there
+		// was no panic, rather just an uncaught exception. So we show
+		// the golang stack without implying there was a panic.
+		glob.PanicCauseShown = true
 		ShowGoStackTrace("")
 	}
 

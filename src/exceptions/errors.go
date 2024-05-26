@@ -165,8 +165,11 @@ func ShowGoStackTrace(stackInfo any) {
 	var i = 0
 	for {
 		if i < len(entries) {
-			if strings.HasPrefix(entries[i], "runtime") {
+			if strings.HasPrefix(entries[i], "runtime") ||
+				strings.HasPrefix(entries[i], "jacobin/exceptions.ShowGoStackTrace") ||
+				strings.HasPrefix(entries[i], "jacobin/exceptions.ThrowEx") {
 				i += 2 // skip over runtime traces, we just want app data
+				continue
 			}
 			_ = log.Log(entries[i], log.SEVERE)
 			i += 1

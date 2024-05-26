@@ -2345,6 +2345,7 @@ frameInterpreter:
 					CPentry.Type, classloader.Interface)
 				errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
 				err := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+				// err := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 				if err == exceptions.NotCaught {
 					goto frameInterpreter
 				} else if glob.JacobinName == "test" {
