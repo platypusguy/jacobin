@@ -190,7 +190,7 @@ frameInterpreter:
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
-		if MainThread.Trace && f.Meth[f.PC] != opcodes.IMPDEP2 {
+		if MainThread.Trace {
 			traceInfo := emitTraceData(f)
 			_ = log.Log(traceInfo, log.TRACE_INST)
 		}
@@ -906,25 +906,28 @@ frameInterpreter:
 
 		case opcodes.POP: // 0x57 	(pop an item off the stack and discard it)
 			if f.TOS < 0 {
-				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.FormatStackUnderflowError(f)
-				break // the error will be picked up on the next instruction
+				errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				if status != exceptions.Caught {
+					return nil // applies only if in test
+				}
 			}
 			f.TOS -= 1
 
 		case opcodes.POP2: // 0x58	(pop 2 items from stack and discard them)
 			if f.TOS < 1 {
-				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.FormatStackUnderflowError(f)
-				break // the error will be picked up on the next instruction
+				errMsg := fmt.Sprintf("stack underflow in POP2 in %s.%s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				if status != exceptions.Caught {
+					return nil // applies only if in test
+				}
 			}
 			f.TOS -= 2
 
 		case opcodes.DUP: // 0x59 			(push an item equal to the current top of the stack
 			tosItem := peek(f)
-			if len(f.Meth) > 1 && f.Meth[f.PC+1] == opcodes.IMPDEP2 {
-				break
-			} // if invalid peek break now
 			push(f, tosItem)
 		case opcodes.DUP_X1: // 0x5A		(Duplicate the top stack value and insert two values down)
 			top := pop(f)
@@ -2918,49 +2921,49 @@ frameInterpreter:
 			jumpTo := fourBytesToInt64(
 				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
+			/*
+				case opcodes.IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
+					glob.ErrorGoStack = string(debug.Stack())
+					errCode := f.Meth[2]
+					switch errCode {
+					case 0x01: // stack overflow
+						bytes := make([]byte, 2)
+						bytes[0] = f.Meth[3]
+						bytes[1] = f.Meth[4]
+						location := int16(binary.BigEndian.Uint16(bytes))
 
-		case opcodes.IMPDEP2: // 0xFF private bytecode to flag an error. Next byte shows error type.
-			glob.ErrorGoStack = string(debug.Stack())
-			errCode := f.Meth[2]
-			switch errCode {
-			case 0x01: // stack overflow
-				bytes := make([]byte, 2)
-				bytes[0] = f.Meth[3]
-				bytes[1] = f.Meth[4]
-				location := int16(binary.BigEndian.Uint16(bytes))
+						methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
+						rootCause := "stack overflow"
+						exceptions.ShowPanicCause(rootCause)
+						errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
+						_ = log.Log(errMsg, log.SEVERE)
 
-				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
-				rootCause := "stack overflow"
-				exceptions.ShowPanicCause(rootCause)
-				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
-				_ = log.Log(errMsg, log.SEVERE)
+						err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
+						if err != nil {
+							_ = log.Log(err.Error(), log.SEVERE)
+						}
+						return errors.New(string(debug.Stack()))
 
-				err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
-				if err != nil {
-					_ = log.Log(err.Error(), log.SEVERE)
-				}
-				return errors.New(string(debug.Stack()))
+					case 0x02: // stack underflow
+						bytes := make([]byte, 2)
+						bytes[0] = f.Meth[3]
+						bytes[1] = f.Meth[4]
+						location := int16(binary.BigEndian.Uint16(bytes))
+						methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
+						rootCause := "stack underflow"
+						exceptions.ShowPanicCause(rootCause)
+						errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
+						_ = log.Log(errMsg, log.SEVERE)
+						err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
+						if err != nil {
+							_ = log.Log(err.Error(), log.SEVERE)
+						}
+						return errors.New(string(debug.Stack()))
 
-			case 0x02: // stack underflow
-				bytes := make([]byte, 2)
-				bytes[0] = f.Meth[3]
-				bytes[1] = f.Meth[4]
-				location := int16(binary.BigEndian.Uint16(bytes))
-				methName := fmt.Sprintf("%s.%s", f.ClName, f.MethName)
-				rootCause := "stack underflow"
-				exceptions.ShowPanicCause(rootCause)
-				errMsg := fmt.Sprintf("Method: %-40s PC: %03d", methName, location)
-				_ = log.Log(errMsg, log.SEVERE)
-				err := frames.PopFrame(fs) // having reported on this frame's error, pop the frame off
-				if err != nil {
-					_ = log.Log(err.Error(), log.SEVERE)
-				}
-				return errors.New(string(debug.Stack()))
-
-			default:
-				return errors.New("unknown error encountered")
-			}
-
+					default:
+						return errors.New("unknown error encountered")
+					}
+			*/
 		default:
 			missingOpCode := fmt.Sprintf("%d (0x%X)", opcode, opcode)
 
