@@ -84,6 +84,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Io_RandomAccessFile()
 
 	// java/lang/*
+	Load_Lang_Big_Integer()
 	Load_Lang_Boolean()
 	Load_Lang_Byte()
 	Load_Lang_Character()
