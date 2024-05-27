@@ -439,7 +439,7 @@ frameInterpreter:
 
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid array subscript",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
 				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
 				if status != exceptions.Caught {
