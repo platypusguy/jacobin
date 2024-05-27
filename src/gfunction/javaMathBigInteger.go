@@ -24,6 +24,12 @@ func Load_Math_Big_Integer() {
 			GFunction:  bigIntegerClinit,
 		}
 
+	MethodSignatures["java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  bigIntegerValueOf,
+		}
+
 }
 
 var bigIntegerClassName = "java/math/BigInteger"
@@ -55,4 +61,18 @@ func bigIntegerClinit(params []interface{}) interface{} {
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil
+}
+
+// "java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"
+func bigIntegerValueOf(params []interface{}) interface{} {
+	// params[0] holds the class object
+	argValue := params[1].(int64)
+
+	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
+	fld := object.Field{Ftype: types.IntArray, Fvalue: []int64{int64(argValue)}}
+	obj.FieldTable["mag"] = fld
+	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
+	obj.FieldTable["signum"] = fld
+
+	return obj
 }
