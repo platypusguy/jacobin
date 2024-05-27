@@ -346,7 +346,7 @@ func stringClinit([]interface{}) interface{} {
 
 // No support YET for references to Charset objects nor for Unicode code point arrays
 func noSupportYetInString([]interface{}) interface{} {
-	errMsg := fmt.Sprintf("%s: No support yet for user-specified character sets and Unicode code point arrays", types.StringClassName)
+	errMsg := "noSupportYetInString: No support yet for user-specified character sets and Unicode code point arrays"
 	return getGErrBlk(excNames.UnsupportedEncodingException, errMsg)
 }
 
@@ -546,7 +546,7 @@ func StringFormatter(params []interface{}) interface{} {
 			case types.Short:
 				valuesOut = append(valuesOut, fld.Fvalue.(int64))
 			default:
-				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d type %s", ii+1, fld.Ftype)
+				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d is of type %s", ii+1, fld.Ftype)
 				return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 			}
 		}

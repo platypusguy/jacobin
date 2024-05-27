@@ -109,7 +109,7 @@ func initOutputStreamWriter(params []interface{}) interface{} {
 	_, err := osFile.Stat()
 	if err != nil {
 		pathStr := string(fldPath.Fvalue.([]byte))
-		errMsg := fmt.Sprintf("initOutputStreamWriter: os.Stat(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initOutputStreamWriter: os.Stat(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -134,7 +134,7 @@ func oswClose(params []interface{}) interface{} {
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("oswClose: osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswClose: osFile.Close() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
@@ -152,7 +152,7 @@ func oswFlush(params []interface{}) interface{} {
 	// Flush the file's buffers.
 	err := osFile.Sync()
 	if err != nil {
-		errMsg := fmt.Sprintf("oswFlush osFile.Sync() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswFlush osFile.Sync() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
@@ -185,7 +185,7 @@ func oswWriteOneChar(params []interface{}) interface{} {
 	// Write one byte.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("osrWriteOne osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("osrWriteOne osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -230,7 +230,7 @@ func oswWriteCharBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("oswWriteCharBuffer: osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteCharBuffer: osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -275,7 +275,7 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("osrWriteStringBuffer: osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("osrWriteStringBuffer: osFile.Write error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 

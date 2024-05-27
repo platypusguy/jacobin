@@ -58,7 +58,7 @@ func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 	}
 
 	errMsg := retVal.Error()
-	expPrefix := "FillInStackTrace() expected two parameters"
+	expPrefix := "FillInStackTrace: expected two parameters"
 	if !strings.HasPrefix(errMsg, expPrefix) {
 		t.Errorf("did not get expected error message: %s, observed: %s", expPrefix, errMsg)
 	}
