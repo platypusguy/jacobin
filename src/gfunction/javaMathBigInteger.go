@@ -34,14 +34,24 @@ func Load_Math_Big_Integer() {
 
 var bigIntegerClassName = "java/math/BigInteger"
 
-// addStaticBigInteger: Form a BigInteger object based on the parameter value.
-func addStaticBigInteger(argName string, argValue int) {
-	name := fmt.Sprintf("java/math/BigInteger.%s", argName)
-	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
-	fld := object.Field{Ftype: types.IntArray, Fvalue: []int64{int64(argValue)}}
+// initBigIntegerFields: Initiaalise the object fields.
+func initBigInteger(obj *object.Object, argValue int64) {
+	fld := object.Field{Ftype: types.IntArray, Fvalue: []int64{argValue}}
 	obj.FieldTable["mag"] = fld
 	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
 	obj.FieldTable["signum"] = fld
+	fld = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	obj.FieldTable["bitCountPlusOne"] = fld
+	obj.FieldTable["bitLengthPlusOne"] = fld
+	obj.FieldTable["lowestSetBitPlusTwo"] = fld
+	obj.FieldTable["firstNonzeroIntNumPlusTwo"] = fld
+}
+
+// addStaticBigInteger: Form a BigInteger object based on the parameter value.
+func addStaticBigInteger(argName string, argValue int64) {
+	name := fmt.Sprintf("java/math/BigInteger.%s", argName)
+	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
+	initBigInteger(obj, argValue)
 	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/math/BigInteger;", Value: obj})
 }
 
@@ -54,10 +64,10 @@ func bigIntegerClinit(params []interface{}) interface{} {
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
-		addStaticBigInteger("ONE", 1)
-		addStaticBigInteger("TEN", 10)
-		addStaticBigInteger("TWO", 2)
-		addStaticBigInteger("ZERO", 0)
+		addStaticBigInteger("ONE", int64(1))
+		addStaticBigInteger("TEN", int64(10))
+		addStaticBigInteger("TWO", int64(2))
+		addStaticBigInteger("ZERO", int64(0))
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil
@@ -69,10 +79,7 @@ func bigIntegerValueOf(params []interface{}) interface{} {
 	argValue := params[1].(int64)
 
 	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
-	fld := object.Field{Ftype: types.IntArray, Fvalue: []int64{int64(argValue)}}
-	obj.FieldTable["mag"] = fld
-	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
-	obj.FieldTable["signum"] = fld
+	initBigInteger(obj, argValue)
 
 	return obj
 }
