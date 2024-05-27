@@ -73,7 +73,7 @@ func fileInit(params []interface{}) interface{} {
 	// Create an absolute path string.
 	absPathStr, err := filepath.Abs(argPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) returned: %s", argPathStr, err.Error())
+		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) error: %s", argPathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 

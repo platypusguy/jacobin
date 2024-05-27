@@ -105,7 +105,7 @@ func inputStreamReaderInit(params []interface{}) interface{} {
 	_, err := osFile.Stat()
 	if err != nil {
 		pathStr := string(fldPath.Fvalue.([]byte))
-		errMsg := fmt.Sprintf("inputStreamReaderInit: os.Stat(%s) returned: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("inputStreamReaderInit: os.Stat(%s) error: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -131,7 +131,7 @@ func isrClose(params []interface{}) interface{} {
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("isrClose osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("isrClose osFile.Close() error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
@@ -161,7 +161,7 @@ func isrReadOneChar(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("isrReadOneChar: osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("isrReadOneChar: osFile.Read error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -185,7 +185,7 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
-		errMsg := "isrReadCharBufferSubset: InputStream object trouble with value field ([]int64)"
+		errMsg := "isrReadCharBufferSubset: InputStream object trouble with character array buffer"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -209,7 +209,7 @@ func isrReadCharBufferSubset(params []interface{}) interface{} {
 		return int64(-1) // return -1 on EOF
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("isrReadCharBufferSubset osFile.Read failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("isrReadCharBufferSubset osFile.Read error: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 

@@ -140,7 +140,7 @@ func integerDecode(params []interface{}) interface{} {
 	// Parse the input integer.
 	int64Value, err := strconv.ParseInt(strArg, 10, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("integerDecode: arg=%s, err: %s", strArg, err.Error())
+		errMsg := fmt.Sprintf("integerDecode: arg=%s, error: %s", strArg, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
@@ -187,13 +187,14 @@ func integerParseInt(params []interface{}) interface{} {
 	}
 	rdx := params[1].(int64)
 	if rdx < MinRadix || rdx > MaxRadix {
-		return getGErrBlk(excNames.NumberFormatException, "integerParseInt: invalid radix")
+		errMsg := fmt.Sprintf("integerParseInt: invalid radix value (%d)", rdx)
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
 	// Compute output.
 	output, err := strconv.ParseInt(strArg, int(rdx), 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("integerParseInt: arg=%s, radix=%d, err: %s", strArg, rdx, err.Error())
+		errMsg := fmt.Sprintf("integerParseInt: arg=%s, radix=%d, strconv.ParseInt error: %s", strArg, rdx, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
@@ -256,11 +257,13 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case int64:
 	default:
-		return getGErrBlk(excNames.NumberFormatException, "integerToUnsignedStringRadix: radix is not an integer")
+		errMsg := fmt.Sprintf("integerToUnsignedStringRadix: invalid radix (%v) format", params[1])
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	rdx := params[1].(int64)
 	if rdx < MinRadix || rdx > MaxRadix {
-		return getGErrBlk(excNames.NumberFormatException, "integerToUnsignedStringRadix: invalid radix")
+		errMsg := fmt.Sprintf("integerToUnsignedStringRadix: invalid radix value (%d)", rdx)
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
 	str := strconv.FormatInt(argInt64, int(rdx))

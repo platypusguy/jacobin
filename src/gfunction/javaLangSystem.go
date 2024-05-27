@@ -85,12 +85,6 @@ func Load_Lang_System() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/Thread.registerNatives()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -121,7 +115,7 @@ func Load_Lang_System() {
 func clinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
-		errMsg := "System <clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
+		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
