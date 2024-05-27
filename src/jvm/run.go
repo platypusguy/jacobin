@@ -502,11 +502,11 @@ frameInterpreter:
 			index := pop(f).(int64)
 			rAref := pop(f) // the array object. Can't be cast to *Object b/c might be nil
 			if rAref == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "AALOAD: Invalid (null) reference to an array"
-				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, AALOAD: Invalid (null) reference to an array",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -516,10 +516,11 @@ frameInterpreter:
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "AALOAD: Invalid array subscript"
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, AALOAD: Invalid array subscript: %d",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, index)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -531,10 +532,11 @@ frameInterpreter:
 			ref := pop(f) // the array object
 			if ref == nil || ref == object.Null {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "BALOAD: Invalid (null) reference to an array"
-				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid (null) reference to an array",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -550,20 +552,22 @@ frameInterpreter:
 				array = ref.([]uint8)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("BALOAD: Invalid type of object ref: %T", ref)
-				exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid  type of object ref: %T",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, ref)
+				status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			size := int64(len(array))
 
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "BALOAD: Invalid array subscript"
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, index)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			var value = array[index]
