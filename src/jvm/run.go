@@ -464,29 +464,34 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "D/FALOAD: Invalid object pointer (nil)"
-					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg) // return should happen only in testing
+					errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid object pointer (nil)",
+						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 				array = (*obj).FieldTable["value"].Fvalue.([]float64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("D/FALOAD: Invalid reference type of an array: %T", ref)
-				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid reference type of an array: %T",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, ref)
+				status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
+
 			if index >= int64(len(array)) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "D/FALOAD: Invalid array subscript"
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid array subscript",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
+
 			var value = array[index]
 			push(f, value)
 			if opcode == opcodes.DALOAD {
