@@ -26,10 +26,16 @@ func Load_Math_Big_Integer() {
 
 }
 
+var bigIntegerClassName = "java/math/BigInteger"
+
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
 func addStaticBigInteger(argName string, argValue int) {
 	name := fmt.Sprintf("java/math/BigInteger.%s", argName)
-	obj := object.MakePrimitiveObject("java/math/BigInteger", types.Int, int64(argValue))
+	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
+	fld := object.Field{Ftype: types.IntArray, Fvalue: []int64{int64(argValue)}}
+	obj.FieldTable["mag"] = fld
+	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
+	obj.FieldTable["signum"] = fld
 	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/math/BigInteger;", Value: obj})
 }
 
