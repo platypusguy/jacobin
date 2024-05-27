@@ -46,16 +46,17 @@ func ThrowExNil(which int, msg string) {
 // Important: if you change the name of this function, you need to update
 // exceptions.ShowGoStackTrace(), which explicitly tests for this function name.
 func ThrowEx(which int, msg string, f *frames.Frame) bool {
-
-	helloMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
-	_ = log.Log(helloMsg, log.TRACE_INST)
+	traceMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
+	_ = log.Log(traceMsg, log.TRACE_INST)
 
 	// If in a unit test, log a severe message and return.
 	glob := globals.GetGlobalRef()
 	if glob.JacobinName == "test" {
-		errMsg := fmt.Sprintf("[ThrowEx][test] %s", msg)
-		_ = log.Log(errMsg, log.SEVERE)
-		return Caught // in a test, we don't want to exit, which would be the case if uncaught
+		errMsg := fmt.Sprintf("%s in %s.%s, %s",
+			excNames.JVMexceptionNames[which],
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, msg)
+		fmt.Fprintln(os.Stderr, errMsg)
+		return NotCaught
 	}
 
 	// Frame pointer provided?
