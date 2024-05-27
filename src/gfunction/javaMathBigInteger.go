@@ -14,6 +14,7 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"math/bits"
 )
 
 func Load_Math_Big_Integer() {
@@ -52,11 +53,26 @@ func initBigInteger(obj *object.Object, argValue int64) {
 	obj.FieldTable["mag"] = fld
 	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
 	obj.FieldTable["signum"] = fld
+
+	// Some zeros:
 	fld = object.Field{Ftype: types.Int, Fvalue: int64(0)}
-	obj.FieldTable["bitCountPlusOne"] = fld
 	obj.FieldTable["bitLengthPlusOne"] = fld
 	obj.FieldTable["lowestSetBitPlusTwo"] = fld
 	obj.FieldTable["firstNonzeroIntNumPlusTwo"] = fld
+
+	// Compute the Java BigInteger.bitCount value = actual bit count + 1.
+	// Reference: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigInteger.html#bitCount()
+	var wvalue uint64
+	if argValue < 0 {
+		wvalue = uint64(^argValue)
+	} else {
+		wvalue = uint64(argValue)
+	}
+	counter := bits.OnesCount64(wvalue) + 1
+	fld = object.Field{Ftype: types.Int, Fvalue: int64(counter)}
+	obj.FieldTable["bitCountPlusOne"] = fld
+	//fmt.Printf("===================== DEBUG initBigInteger argValue=%d, bitCountPlusOne=%d\n", argValue, counter)
+
 }
 
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
