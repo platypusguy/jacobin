@@ -24,6 +24,18 @@ func Load_Math_Big_Integer() {
 			GFunction:  bigIntegerClinit,
 		}
 
+	MethodSignatures["java/math/BigInteger.abs()Ljava/math/BigInteger;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  bigIntegerAbs,
+		}
+
+	MethodSignatures["java/math/BigInteger.negate()Ljava/math/BigInteger;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  bigIntegerNegate,
+		}
+
 	MethodSignatures["java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"] =
 		GMeth{
 			ParamSlots: 2,
@@ -71,6 +83,26 @@ func bigIntegerClinit(params []interface{}) interface{} {
 		klass.Data.ClInit = types.ClInitRun
 	}
 	return nil
+}
+
+// "java/math/BigInteger.abs()Ljava/math/BigInteger;"
+func bigIntegerAbs(params []interface{}) interface{} {
+	// params[0] holds the argument object
+	obj := params[0].(*object.Object)
+	fld := object.Field{Ftype: types.Int, Fvalue: int64(1)}
+	obj.FieldTable["signum"] = fld
+
+	return obj
+}
+
+// "java/math/BigInteger.negate()Ljava/math/BigInteger;"
+func bigIntegerNegate(params []interface{}) interface{} {
+	// params[0] holds the argument object
+	obj := params[0].(*object.Object)
+	fld := object.Field{Ftype: types.Int, Fvalue: int64(-1)}
+	obj.FieldTable["signum"] = fld
+
+	return obj
 }
 
 // "java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"
