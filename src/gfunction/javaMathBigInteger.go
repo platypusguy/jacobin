@@ -16,9 +16,9 @@ import (
 	"jacobin/types"
 )
 
-func Load_Lang_Big_Integer() {
+func Load_Math_Big_Integer() {
 
-	MethodSignatures["java/lang/BigInteger.<clinit>()V"] =
+	MethodSignatures["java/math/BigInteger.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  bigIntegerClinit,
@@ -28,16 +28,16 @@ func Load_Lang_Big_Integer() {
 
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
 func addStaticBigInteger(argName string, argValue int) {
-	name := fmt.Sprintf("java/lang/BigInteger.%s", argName)
-	obj := object.MakePrimitiveObject("java/lang/BigInteger", types.Int, int64(argValue))
-	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/lang/BigInteger;", Value: obj})
+	name := fmt.Sprintf("java/math/BigInteger.%s", argName)
+	obj := object.MakePrimitiveObject("java/math/BigInteger", types.Int, int64(argValue))
+	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/math/BigInteger;", Value: obj})
 }
 
-// "java/lang/BigInteger.<clinit>()V"
+// "java/math/BigInteger.<clinit>()V"
 func bigIntegerClinit(params []interface{}) interface{} {
-	klass := classloader.MethAreaFetch("java/lang/BigInteger")
+	klass := classloader.MethAreaFetch("java/math/BigInteger")
 	if klass == nil {
-		errMsg := "bigIntegerClinit: Expected java/lang/BigInteger to be in the MethodArea, but it was not"
+		errMsg := "bigIntegerClinit: Expected java/math/BigInteger to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
