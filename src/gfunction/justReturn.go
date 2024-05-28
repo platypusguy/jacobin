@@ -37,12 +37,6 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/math/BigInteger.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	MethodSignatures["java/math/MathContext.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

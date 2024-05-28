@@ -103,6 +103,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Lang_Throwable()
 	Load_Lang_UTF16()
 
+	// java/math/*
+	Load_Math_Big_Integer()
+
 	// java/nio/*
 	Load_Nio_Charset_Charset()
 

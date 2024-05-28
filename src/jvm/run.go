@@ -1922,6 +1922,19 @@ frameInterpreter:
 				return errors.New(errMsg)
 			}
 
+			// Get field name.
+			fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+			nameAndTypeCPIndex := fullFieldEntry.NameAndType
+			nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+			nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+			nameCPIndex := nameAndType.NameIndex
+			nameCPentry := CP.CpIndex[nameCPIndex]
+			fieldName := CP.Utf8Refs[nameCPentry.Slot]
+			if MainThread.Trace {
+				traceInfo := fmt.Sprintf("GETFIELD: fieldName = %s", fieldName)
+				_ = log.Log(traceInfo, log.TRACE_INST)
+			}
+
 			// Get object reference from stack.
 			ref := pop(f)
 			switch ref.(type) {
@@ -1929,7 +1942,7 @@ frameInterpreter:
 				break
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T", ref)
+				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -1939,13 +1952,6 @@ frameInterpreter:
 			var fieldType string
 			var fieldValue interface{}
 
-			fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-			nameAndTypeCPIndex := fullFieldEntry.NameAndType
-			nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-			nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-			nameCPIndex := nameAndType.NameIndex
-			nameCPentry := CP.CpIndex[nameCPIndex]
-			fieldName := CP.Utf8Refs[nameCPentry.Slot]
 			objField := obj.FieldTable[fieldName]
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
