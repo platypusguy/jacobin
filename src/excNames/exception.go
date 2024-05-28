@@ -145,7 +145,6 @@ const (
 	InvalidApplicationException // MBean exception in JMX, rarely shown to user
 	InvalidMidiDataException
 	InvalidPreferencesFormatException
-	InvalidTargetObjectTypeException
 	InvalidTypeException
 	InvocationException
 	IOException
@@ -153,7 +152,6 @@ const (
 	JShellException
 	KeySelectorException
 	LambdaConversionException
-	LastOwnerException
 	LineUnavailableException
 	MarshalException
 	MidiUnavailableException
@@ -191,7 +189,7 @@ const (
 	UnsupportedLookAndFeelException
 	URIReferenceException
 	URISyntaxException
-	VMStartException
+	VMStartException // used by HotSpot when connecting to another JVM
 	XAException
 	XMLParseException
 	XMLSignatureException
@@ -367,18 +365,16 @@ var JVMexceptionNames = []string{
 	"java.lang.InterruptedException",                           // VERIFIED
 	"javax.management.IntrospectionException",                  // VERIFIED
 	"javax.management.InvalidApplicationException",             // VERIFIED
-	"java.lang.InvalidMidiDataException",
-	"java.lang.InvalidPreferencesFormatException",
-	"java.lang.InvalidTargetObjectTypeException",
-	"com.sun.jdi.InvalidTypeException",
-	"java.lang.InvocationException",
-	"java.io.IOException",
-	"java.lang.JMException",
-	"java.lang.JShellException",
-	"java.lang.KeySelectorException",
-	"java.lang.invoke.LambdaConversionException", // VERIFIED
-	"java.lang.LastOwnerException",
-	"java.lang.LineUnavailableException",
+	"javax.sound.InvalidMidiDataException",                     // VERIFIED
+	"java.util.prefs.InvalidPreferencesFormatException",        // VERIFIED
+	"com.sun.jdi.InvalidTypeException",                         // VERIFIED
+	"com.sun.jdi.InvocationException",                          // VERIFIED
+	"java.io.IOException",                                      // VERIFIED
+	"javax.management.JMException",                             // VERIFIED
+	"jdk.jshell.JShellException",                               // VERIFIED
+	"javax.xml.crypto.KeySelectorException",                    // VERIFIED
+	"java.lang.invoke.LambdaConversionException",               // VERIFIED
+	"javax.sound.sampled.LineUnavailableException",             // VERIFIED
 	"java.lang.MarshalException",
 	"java.lang.MidiUnavailableException",
 	"java.lang.MimeTypeParseException",
