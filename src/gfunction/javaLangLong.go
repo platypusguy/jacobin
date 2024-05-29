@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/object"
 	"jacobin/types"
 )
@@ -23,6 +24,12 @@ func Load_Lang_Long() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  longDoubleValue,
+		}
+
+	MethodSignatures["java/lang/Long.toHexString(J)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  longToHexString,
 		}
 
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
@@ -45,4 +52,13 @@ func longDoubleValue(params []interface{}) interface{} {
 func longValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	return populator("java/lang/Long", types.Long, int64Value)
+}
+
+// "java/lang/Long.toHexString(J)Ljava/lang/String;"
+func longToHexString(params []interface{}) interface{} {
+	int64Value := params[0].(int64)
+	uint64Value := uint64(int64Value)
+	str := fmt.Sprintf("%016x", uint64Value)
+	obj := object.StringObjectFromGoString(str)
+	return obj
 }
