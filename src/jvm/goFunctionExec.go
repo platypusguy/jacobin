@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
-	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/log"
@@ -39,7 +38,7 @@ Success		J/D		2			nil		long or double
 Success		~ J/D	1			nil		E.g. int
 =========================================================
 */
-func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, error) {
+func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, any) {
 	if localDebugging || MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGframe %s.%s, f.OpStack:", fr.ClName, fr.MethName)
 		_ = log.Log(traceInfo, log.WARNING)
@@ -66,20 +65,24 @@ func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, error) {
 	switch ret.(type) {
 	case *gfunction.GErrBlk:
 		// Get the G error block
-		ge := *ret.(*gfunction.GErrBlk)
+		//  ge := *ret.(*gfunction.GErrBlk)
 		// Pop the G frame off the frame stack.
 		err := frames.PopFrame(fs)
 		if err != nil {
 			return nil, 0, err
 		}
-		// Get a pointer to the previous frame.
-		fprev := fs.Front().Value.(*frames.Frame)
-		// Throw an exception in the previous frame.
-		exceptions.ThrowEx(ge.ExceptionType, ge.ErrMsg, fprev)
-		// Create an error object to return to caller.
-		err = errors.New(ge.ErrMsg)
-		// Return to caller a nil G function result, 0 slots, and an error object.
-		return nil, 0, err
+		return nil, 0, ret
+		/*
+			// Get a pointer to the previous frame.
+			fprev := fs.Front().Value.(*frames.Frame)
+			// Throw an exception in the previous frame.
+			exceptions.ThrowEx(ge.ExceptionType, ge.ErrMsg, fprev)
+			// Create an error object to return to caller.
+			err = errors.New(ge.ErrMsg)
+			// Return to caller a nil G function result, 0 slots, and an error object.
+			return nil, 0, err
+
+		*/
 	}
 
 	// how many slots does the return value consume on the op stack?

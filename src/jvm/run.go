@@ -28,6 +28,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -175,6 +176,33 @@ frameInterpreter:
 	// of the calling frame.
 	if f.Ftype == 'G' {
 		retval, slotCount, err := runGframe(fs, f)
+		if err != nil {
+			switch err.(type) {
+			case *gfunction.GErrBlk:
+				var funcName, errorDetails string
+				errBlk := *err.(*gfunction.GErrBlk)
+				parts := strings.SplitN(errBlk.ErrMsg, ",", 2)
+				if len(parts) > 0 {
+					funcName = parts[0]
+					errorDetails = parts[1]
+				}
+
+				var threadName string
+				if f.Thread == 1 {
+					threadName = "main"
+				} else {
+					threadName = fmt.Sprintf("%d", f.Thread)
+				}
+				errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():",
+					threadName, funcName)
+				_, _ = fmt.Fprintln(os.Stderr, errMsg)
+				exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
+
+			case error:
+				errMsg := (err.(error)).Error()
+				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+			}
+		}
 
 		if retval != nil {
 			f := fs.Front().Next().Value.(*frames.Frame)
@@ -184,7 +212,7 @@ frameInterpreter:
 				push(f, retval) // push a second time, if a long, double, etc.
 			}
 		}
-		return err
+		return nil
 	}
 
 	// the frame's method is not a golang method, so it's Java bytecode, which
