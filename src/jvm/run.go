@@ -181,10 +181,13 @@ frameInterpreter:
 			case *gfunction.GErrBlk:
 				var funcName, errorDetails string
 				errBlk := *err.(*gfunction.GErrBlk)
-				parts := strings.SplitN(errBlk.ErrMsg, ",", 2)
-				if len(parts) > 0 {
+				parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
+				if len(parts) == 2 {
 					funcName = parts[0]
 					errorDetails = parts[1]
+				} else {
+					funcName = "{MISSINGCOLON}"
+					errorDetails = errBlk.ErrMsg
 				}
 
 				var threadName string

@@ -213,6 +213,13 @@ func Load_Lang_String() {
 		}
 
 	// Return the length of a String.
+	MethodSignatures["java/lang/String.isLatin1()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  stringIsLatin1,
+		}
+
+	// Return the length of a String.
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
 			ParamSlots: 0,
@@ -557,6 +564,12 @@ func StringFormatter(params []interface{}) interface{} {
 
 	// Return a pointer to an object.Object that wraps the string byte array.
 	return object.StringObjectFromGoString(str)
+}
+
+// "java/lang/String.isLatin1()Z"
+func stringIsLatin1(params []interface{}) interface{} {
+	// TODO: Someday, the answer might be false.
+	return int64(1) // true
 }
 
 // "java/lang/String.length()I"
