@@ -65,24 +65,12 @@ func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, any) {
 	switch ret.(type) {
 	case *gfunction.GErrBlk:
 		// Get the G error block
-		//  ge := *ret.(*gfunction.GErrBlk)
 		// Pop the G frame off the frame stack.
 		err := frames.PopFrame(fs)
 		if err != nil {
 			return nil, 0, err
 		}
 		return nil, 0, ret
-		/*
-			// Get a pointer to the previous frame.
-			fprev := fs.Front().Value.(*frames.Frame)
-			// Throw an exception in the previous frame.
-			exceptions.ThrowEx(ge.ExceptionType, ge.ErrMsg, fprev)
-			// Create an error object to return to caller.
-			err = errors.New(ge.ErrMsg)
-			// Return to caller a nil G function result, 0 slots, and an error object.
-			return nil, 0, err
-
-		*/
 	}
 
 	// how many slots does the return value consume on the op stack?
@@ -184,11 +172,9 @@ func runGmethod(mt classloader.MTentry, fs *list.List, className, methodName,
 	// then run the frame, which will call run(), which will eventually call runGFrame()
 	err := runFrame(fs)
 
-	// If an error object is returned from runFrame,
+	// If an error object is returned from runFrame:
 	// * The G frame has already been popped off,
 	//   ensuring that the previous frame is at the head of the frame stack.
-	// * ThrowEx has already executed, setting up the next op code to be ATHROW
-	//   which will take care of catching and exception reporting.
 	// * Return a pointer to the previous frame and a nil error object.
 	if err != nil {
 		f = fs.Front().Value.(*frames.Frame) // point f the head again
