@@ -1882,7 +1882,7 @@ func TestIastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, " but array index=") {
+	if !strings.Contains(errMsg, " but array index is") {
 		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -2167,7 +2167,7 @@ func TestLastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, " but array index=") {
+	if !strings.Contains(errMsg, " but array index is") {
 		t.Errorf("LASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
