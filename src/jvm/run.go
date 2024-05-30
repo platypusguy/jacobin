@@ -890,10 +890,11 @@ frameInterpreter:
 
 			if arrayRef == nil {
 				glob.ErrorGoStack = string(debug.Stack())
-				exceptions.ThrowEx(excNames.NullPointerException,
-					"AASTORE: Invalid (null) reference to an array", f)
-				if glob.JacobinName == "test" {
-					return errors.New("AASTORE: Invalid array address")
+				errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference to an array",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New("AASTORE: null array reference") // applies only if in test
 				}
 			}
 
@@ -902,12 +903,11 @@ frameInterpreter:
 
 			if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("AASTORE: field type must start with '[L', got %s", rawArrayObj.Ftype)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.ThrowEx(excNames.ArrayStoreException,
-					"AASTORE: Attempt to access array of incorrect type", f)
-				if glob.JacobinName == "test" {
-					return errors.New("AASTORE: Invalid array type")
+				errMsg := fmt.Sprintf("in %s.%s, AASTORE: field type must start with '[L', got %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, rawArrayObj.Ftype)
+				status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -916,12 +916,11 @@ frameInterpreter:
 			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("AASTORE: array size=%d but index=%d (too large)", size, index)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException,
-					"AASTORE: Invalid array subscript", f)
-				if glob.JacobinName == "test" {
-					return errors.New("AASTORE: Invalid array index")
+				errMsg := fmt.Sprintf("in %s.%s, AASTORE: array size is %d but array index is %d (too large)",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
