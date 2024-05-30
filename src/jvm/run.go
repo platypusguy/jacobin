@@ -784,19 +784,21 @@ frameInterpreter:
 				obj := ref.(*object.Object)
 				if obj == object.Null {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "I/C/S/LASTORE: Invalid (null) reference to an array"
-					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg) // return should happen only in testing
+					errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: Invalid (null) reference to an array",
+						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 				fld := obj.FieldTable["value"]
 				if fld.Ftype != types.IntArray {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("I/C/S/LASTORE: field type expected=[I, observed=%s", fld.Ftype)
-					exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg) // return should happen only in testing
+					errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: field type expected=[I, observed=%s",
+						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, fld.Ftype)
+					status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 				array = fld.Fvalue.([]int64)
@@ -804,20 +806,22 @@ frameInterpreter:
 				array = ref.([]int64)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("I/C/S/LASTORE: unexpected reference type: %T", ref)
-				exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: unexpected reference type: %T",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, ref)
+				status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("I/C/S/LASTORE: array size= %d but array index= %d (too large)", size, index)
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: array size is %d but array index is %d (too large)",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			array[index] = value
