@@ -264,7 +264,7 @@ func TestAastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "field type must start with '[L',") {
 		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -302,7 +302,7 @@ func TestAastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "AASTORE: Invalid array subscript") {
+	if !strings.Contains(errMsg, "but array index is") {
 		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -941,7 +941,7 @@ func TestBastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Attempt to access array of incorrect type") {
+	if !strings.Contains(errMsg, "field type must start with '[B',") {
 		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -979,7 +979,7 @@ func TestBastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "BASTORE: Invalid array subscript") {
+	if !strings.Contains(errMsg, "but array index is") {
 		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
