@@ -817,7 +817,7 @@ frameInterpreter:
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: array size is %d but array index is %d (too large)",
+				errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: array size is %d but array index is %d",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
 				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
 				if status != exceptions.Caught {
@@ -844,7 +844,7 @@ frameInterpreter:
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
 					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
 					if status != exceptions.Caught {
-						return errors.New("DASTORE/FASTORE: Invalid array reference") // applies only if in test
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 				fld := obj.FieldTable["value"]
@@ -873,7 +873,7 @@ frameInterpreter:
 			size := int64(len(array))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: array size is %d but array index is %d (too large)",
+				errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: array size is %d but array index is %d",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
 				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
 				if status != exceptions.Caught {
@@ -894,7 +894,7 @@ frameInterpreter:
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
 				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
 				if status != exceptions.Caught {
-					return errors.New("AASTORE: null array reference") // applies only if in test
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -916,7 +916,7 @@ frameInterpreter:
 			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, AASTORE: array size is %d but array index is %d (too large)",
+				errMsg := fmt.Sprintf("in %s.%s, AASTORE: array size is %d but array index is %d",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
 				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
 				if status != exceptions.Caught {
@@ -932,22 +932,22 @@ frameInterpreter:
 			arrayRef := pop(f).(*object.Object) // ptr to array object
 			if arrayRef == nil {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "BASTORE: Invalid (null) reference to an array"
-				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errMsg := fmt.Sprintf("in %s.%s, BASTORE: Invalid (null) reference to an array",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New("AASTORE: null array reference") // applies only if in test
 				}
 			}
 
 			o := arrayRef.FieldTable["value"]
 			if o.Ftype != "[B" {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("BASTORE: Attempt to access array of incorrect type, expected=[B, observed=%s",
-					o.Ftype)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type must start with '[B', got %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, o.Ftype)
+				status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -955,11 +955,11 @@ frameInterpreter:
 			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("BASTORE: Invalid array subscript: %d (size=%d) ", index, size)
-				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errMsg := fmt.Sprintf("in %s.%s, BASTORE: array size is %d but array index is %d",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, size, index)
+				status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			rawArray[index] = value
