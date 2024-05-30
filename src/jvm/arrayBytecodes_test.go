@@ -1314,7 +1314,7 @@ func TestDastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, " but index=") {
+	if !strings.Contains(errMsg, " but array index is") {
 		t.Errorf("DASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1590,7 +1590,7 @@ func TestFastoreInvalid3(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, " but index=") {
+	if !strings.Contains(errMsg, " but array index is") {
 		t.Errorf("FASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
