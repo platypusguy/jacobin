@@ -1120,13 +1120,15 @@ frameInterpreter:
 			val2 := pop(f).(int64)
 			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IDIV: division by zero -- %d/0", val2)
+				errInfo := fmt.Sprintf("IDIV: division by zero -- %d/0", val2)
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
-					errMsg = "/ by zero"
+					errInfo = "/ by zero"
 				}
-				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New("IDIV error")
+				errMsg := fmt.Sprintf("in %s.%s %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
+				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			} else {
 				push(f, val2/val1)
@@ -1138,13 +1140,15 @@ frameInterpreter:
 			pop(f)
 			if val1 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("LDIV: division by zero -- %d/0", val2)
+				errInfo := fmt.Sprintf("LDIV: division by zero -- %d/0", val2)
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
-					errMsg = "/ by zero"
+					errInfo = "/ by zero"
 				}
-				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errMsg := fmt.Sprintf("in %s.%s %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
+				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			} else {
 				res := val2 / val1
@@ -1190,13 +1194,15 @@ frameInterpreter:
 			val1 := pop(f).(int64)
 			if val2 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("IREM: division by zero -- %d/0", val2)
+				errInfo := fmt.Sprintf("IREM: division by zero -- %d/0", val2)
 				if glob.StrictJDK { // use the HotSpot JDK's error message instead of ours
-					errMsg = "/ by zero"
+					errInfo = "/ by zero"
 				}
-				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errMsg := fmt.Sprintf("in %s.%s %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
+				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			} else {
 				res := val1 % val2
@@ -1207,10 +1213,12 @@ frameInterpreter:
 			pop(f) //    longs occupy two slots, hence double pushes and pops
 			if val2 == 0 {
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "LREM: Arithmetic Exception: divide by zero"
-				exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				errInfo := "LREM: Arithmetic Exception: divide by zero"
+				errMsg := fmt.Sprintf("in %s.%s %s",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
+				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			} else {
 				val1 := pop(f).(int64)
