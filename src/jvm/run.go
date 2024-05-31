@@ -198,18 +198,18 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
 					threadName, funcName)
 				errMsg = errMsg + errorDetails
-				// _, _ = fmt.Fprintln(os.Stderr, errMsg)
-				exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
-
-				return errors.New(errMsg) // non-nil
+				status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 
 			case error:
 				errMsg := (err.(error)).Error()
-				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-
-				return err.(error) // non-nil
+				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				if status != exceptions.Caught {
+					return err.(error) // applies only if in test
+				}
 			}
-
 		}
 
 		if retval != nil {
