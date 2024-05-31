@@ -194,7 +194,7 @@ frameInterpreter:
 					threadName = "main"
 				} else {
 					threadName = fmt.Sprintf("%d", f.Thread)
-				} // FIXME handle JACOBIN-518 here. Move errMsg with CR/LF to errorDetails.
+				}
 				errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
 					threadName, funcName)
 				errMsg = errMsg + errorDetails
