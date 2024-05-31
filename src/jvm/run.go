@@ -201,10 +201,15 @@ frameInterpreter:
 				// _, _ = fmt.Fprintln(os.Stderr, errMsg)
 				exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
 
+				return errors.New(errMsg) // non-nil
+
 			case error:
 				errMsg := (err.(error)).Error()
 				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+
+				return err.(error) // non-nil
 			}
+
 		}
 
 		if retval != nil {
