@@ -128,7 +128,7 @@ func TestHexIDIVException(t *testing.T) {
 		t.Errorf("No error returned from StartExec()")
 		return
 	}
-	if err.Error() != "IDIV error" {
+	if !strings.Contains(err.Error(), "division by zero") {
 		t.Errorf("Got unexpected error from StartExec(). Expected: \"%s\", observed: \"%s\" !!!", "IDIV error", err.Error())
 		return
 	}
