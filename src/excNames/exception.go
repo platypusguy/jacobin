@@ -375,13 +375,13 @@ var JVMexceptionNames = []string{
 	"javax.xml.crypto.KeySelectorException",                    // VERIFIED
 	"java.lang.invoke.LambdaConversionException",               // VERIFIED
 	"javax.sound.sampled.LineUnavailableException",             // VERIFIED
-	"java.lang.MarshalException",
-	"java.lang.MidiUnavailableException",
-	"java.lang.MimeTypeParseException",
-	"java.lang.NamingException",
-	"java.lang.NoninvertibleTransformException",
-	"java.lang.NoSuchFieldException",  // VERIFIED
-	"java.lang.NoSuchMethodException", // VERIFIED
+	"java.rmi.MarshalException",                                // VERIFIED
+	"javax.sound.midi.MidiUnavailableException",                // VERIFIED
+	"java.awt.datatransfer.MimeTypeParseException",             // VERIFIED
+	"javax.naming.NamingException",                             // VERIFIED
+	"java.awt.geom.NoninvertibleTransformException",            // VERIFIED
+	"java.lang.NoSuchFieldException",                           // VERIFIED
+	"java.lang.NoSuchMethodException",                          // VERIFIED
 	"java.lang.NotBoundException",
 	"java.lang.NotOwnerException",
 	"java.lang.ParseException",
