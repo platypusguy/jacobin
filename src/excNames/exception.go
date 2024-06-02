@@ -161,7 +161,6 @@ const (
 	NoSuchFieldException
 	NoSuchMethodException
 	NotBoundException
-	NotOwnerException
 	ParseException
 	ParserConfigurationException
 	PrinterException
@@ -382,16 +381,15 @@ var JVMexceptionNames = []string{
 	"java.awt.geom.NoninvertibleTransformException",            // VERIFIED
 	"java.lang.NoSuchFieldException",                           // VERIFIED
 	"java.lang.NoSuchMethodException",                          // VERIFIED
-	"java.lang.NotBoundException",
-	"java.lang.NotOwnerException",
-	"java.lang.ParseException",
-	"java.lang.ParserConfigurationException",
-	"java.lang.PrinterException",
-	"javax.print.PrintException", // VERIFIED
-	"java.lang.PrivilegedActionException",
-	"java.lang.PropertyVetoException",
-	"java.nio.ReadOnlyBufferException",       // VERIFIED
-	"java.lang.ReflectiveOperationException", // VERIFIED
+	"java.rmi.NotBoundException",                               // VERIFIED
+	"java.text.ParseException",                                 // VERIFIED
+	"javax.xml.parsers.ParserConfigurationException",           // VERIFIED
+	"java.awt.print.PrinterException",                          // VERIFIED
+	"javax.print.PrintException",                               // VERIFIED
+	"java.security.PrivilegedActionException",                  // VERIFIED
+	"java.beans.PropertyVetoException",                         // VERIFIED
+	"java.nio.ReadOnlyBufferException",                         // VERIFIED
+	"java.lang.ReflectiveOperationException",                   // VERIFIED
 	"java.lang.RefreshFailedException",
 	"java.lang.RuntimeException", // VERIFIED
 	"java.lang.SAXException",
