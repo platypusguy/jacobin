@@ -199,16 +199,20 @@ frameInterpreter:
 					threadName, funcName)
 				errMsg = errMsg + errorDetails
 				status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
+				if status == exceptions.Caught {
+					// Unit test or not, runGmethod needs a non-nil return when an exception is caught.
+					return errors.New(errMsg)
 				}
+				// Unit testing only: Arrive here for uncaught exception.
 
 			case error:
 				errMsg := (err.(error)).Error()
 				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-				if status != exceptions.Caught {
-					return err.(error) // applies only if in test
+				if status == exceptions.Caught {
+					// Unit test or not, runGmethod needs a non-nil return when an exception is caught.
+					return err.(error)
 				}
+				// Unit testing only: Arrive here for uncaught exception.
 			}
 		}
 
