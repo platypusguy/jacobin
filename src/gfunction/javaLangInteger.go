@@ -188,7 +188,7 @@ func integerParseInt(params []interface{}) interface{} {
 	rdx := params[1].(int64)
 	if rdx < MinRadix || rdx > MaxRadix {
 		errMsg := fmt.Sprintf("integerParseInt: invalid radix value (%d)", rdx)
-		return getGErrBlk(excNames.NumberFormatException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Compute output.
@@ -263,7 +263,7 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 	rdx := params[1].(int64)
 	if rdx < MinRadix || rdx > MaxRadix {
 		errMsg := fmt.Sprintf("integerToUnsignedStringRadix: invalid radix value (%d)", rdx)
-		return getGErrBlk(excNames.NumberFormatException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	str := strconv.FormatInt(argInt64, int(rdx))
