@@ -94,7 +94,6 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 // Appears primarily in the runFrame{} IF* bytecodes.
 func convertIntegralValueToInt64(arg interface{}) int64 {
 	var value int64
-	// fmt.Printf("convertIntegralValueToInt64 *TRAP*: argument type: %T\n", arg)
 	switch arg.(type) {
 	case int64:
 		value = arg.(int64)
@@ -111,7 +110,7 @@ func convertIntegralValueToInt64(arg interface{}) int64 {
 			value = int64(0)
 		}
 	default:
-		errMsg := fmt.Sprintf("convertIntegralValueToInt64 *TRAP*: Invalid argument type: %T", arg)
+		errMsg := fmt.Sprintf("convertIntegralValueToInt64: Invalid argument type: %T", arg)
 		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
 	}
 

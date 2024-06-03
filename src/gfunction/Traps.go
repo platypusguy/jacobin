@@ -12,6 +12,18 @@ import (
 
 func Load_Traps() {
 
+	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapBufferedInputStream,
+		}
+
+	MethodSignatures["java/io/BufferedOutputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapBufferedOutputStream,
+		}
+
 	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -228,6 +240,30 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
+	MethodSignatures["java/security/SecureRandom.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapSecureRandom,
+		}
+
+	MethodSignatures["java/security/SecureRandom.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapSecureRandom,
+		}
+
+	MethodSignatures["java/security/SecureRandom.<init>([B)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapSecureRandom,
+		}
+
+	MethodSignatures["java/security/SecureRandom.<init>(Ljava.security.SecureRandomSpi;Ljava.security.Provider;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapSecureRandom,
+		}
+
 	MethodSignatures["java/util/Random.next(I)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -240,6 +276,18 @@ func Load_Traps() {
 			GFunction:  trapSharedSecrets,
 		}
 
+}
+
+// Trap for BufferedInputStream references
+func trapBufferedInputStream([]interface{}) interface{} {
+	errMsg := "trapBufferedInputStream: Class java/io/BufferedInputStream is not yet supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
+
+// Trap for BufferedOutputStream references
+func trapBufferedOutputStream([]interface{}) interface{} {
+	errMsg := "trapBufferedOutputStream: Class java/io/BufferedOutputStream is not yet supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Trap for Charset references
@@ -323,5 +371,11 @@ func trapRandomNext([]interface{}) interface{} {
 // Trap for Random.next()
 func trapSharedSecrets([]interface{}) interface{} {
 	errMsg := "trapSharedSecrets: Class jdk/internal/access/SharedSecrets is not yet supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
+
+// Trap for SecureRandom
+func trapSecureRandom([]interface{}) interface{} {
+	errMsg := "trapSecureRandom: Class java.security.SecureRandom is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
