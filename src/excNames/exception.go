@@ -407,13 +407,13 @@ var JVMexceptionNames = []string{
 	"javax.security.auth.callback.UnsupportedCallbackException", // VERIFIED
 	"java.awt.datatransfer.UnsupportedFlavorException",          // VERIFIED
 	"javax.swing.UnsupportedLookAndFeelException",               // VERIFIED
-	"java.lang.URIReferenceException",
-	"java.lang.URISyntaxException",
-	"java.lang.VMStartException",
-	"java.lang.XAException",
-	"java.lang.XMLParseException",
-	"java.lang.XMLSignatureException",
-	"java.lang.XMLStreamException",
+	"javax.xml.crypto.URIReferenceException",                    // VERIFIED
+	"java.net.URISyntaxException",                               // VERIFIED
+	"com.sun.jdi.connect.VMStartException",                      // VERIFIED
+	"javax.transaction.xa.XAException",                          // VERIFIED
+	"javax.management.modelmbean.XMLParseException",             // VERIFIED
+	"javax.xml.crypto.dsig.XMLSignatureException",               // VERIFIED
+	"javax.xml.stream.XMLStreamException",                       // VERIFIED
 
 	// Java errors
 	"java.lang.annotation.AnnotationFormatError",               // VERIFIED
