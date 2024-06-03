@@ -330,83 +330,83 @@ var JVMexceptionNames = []string{
 	"javax.xml.xpath.XPathException",                         // VERIFIED
 
 	// non-runtime exceptions
-	"com.sun.jdi.AbsentInformationException",                   // VERIFIED
-	"java.security.acl.AclNotFoundException",                   // VERIFIED might not be part of JDK 17
-	"java.rmi.activation.ActivationException",                  // VERIFIED might not be part of JDK 17
-	"com.sun.tools.attach.AgentInitializationException",        // VERIFIED
-	"com.sun.tools.attach.AgentLoadException",                  // VERIFIED
-	"java.rmi.AlreadyBoundException",                           // VERIFIED
-	"com.sun.tools.attach.AttachNotSupportedException",         // VERIFIED
-	"java.awt.AWTException",                                    // VERIFIED
-	"java.util.prefs.BackingStoreException",                    // VERIFIED
-	"javax.management.BadAttributeValueExpException",           // VERIFIED
-	"javax.management.BadBinaryOpValueExpException",            // VERIFIED
-	"javax.swing.text.BadLocationException",                    // VERIFIED
-	"javax.management.BadStringOperationException",             // VERIFIED
-	"java.util.concurrent.BrokenBarrierException",              // VERIFIED
-	"javax.smartcardio.CardException",                          // VERIFIED
-	"java.security.cert.CertificateException",                  // VERIFIED
-	"com.sun.jdi.ClassNotLoadedException",                      // VERIFIED
-	"java.lang.CloneNotSupportedException",                     // VERIFIED
-	"java.util.zip.DataFormatException",                        // VERIFIED
-	"java.lang.DatatypeConfigurationException",                 // VERIFIED
-	"javax.security.auth.DestroyFailedException",               // VERIFIED
-	"dk.jshell.spi.ExecutionControl.ExecutionControlException", // VERIFIED
-	"java.util.concurrent.ExecutionException",                  // VERIFIED
-	"javax.swing.tree.ExpandVetoException",                     // VERIFIED
-	"java.awt.FontFormatException",                             // VERIFIED
-	"java.security.GeneralSecurityException",                   // VERIFIED
-	"org.ietf.jgss.GSSException",                               // VERIFIED
-	"java.lang.instrument.IllegalClassFormatException",         // VERIFIED
-	"com.sun.jdi.connect.IllegalConnectorArgumentsException",   // VERIFIED
-	"java.lang.IllegalThreadStateException",                    // VERIFIED
-	"com.sun.jdi.IncompatibleThreadStateException",             // VERIFIED
-	"java.lang.InterruptedException",                           // VERIFIED
-	"javax.management.IntrospectionException",                  // VERIFIED
-	"javax.management.InvalidApplicationException",             // VERIFIED
-	"javax.sound.InvalidMidiDataException",                     // VERIFIED
-	"java.util.prefs.InvalidPreferencesFormatException",        // VERIFIED
-	"com.sun.jdi.InvalidTypeException",                         // VERIFIED
-	"com.sun.jdi.InvocationException",                          // VERIFIED
-	"java.io.IOException",                                      // VERIFIED
-	"javax.management.JMException",                             // VERIFIED
-	"jdk.jshell.JShellException",                               // VERIFIED
-	"javax.xml.crypto.KeySelectorException",                    // VERIFIED
-	"java.lang.invoke.LambdaConversionException",               // VERIFIED
-	"javax.sound.sampled.LineUnavailableException",             // VERIFIED
-	"java.rmi.MarshalException",                                // VERIFIED
-	"javax.sound.midi.MidiUnavailableException",                // VERIFIED
-	"java.awt.datatransfer.MimeTypeParseException",             // VERIFIED
-	"javax.naming.NamingException",                             // VERIFIED
-	"java.awt.geom.NoninvertibleTransformException",            // VERIFIED
-	"java.lang.NoSuchFieldException",                           // VERIFIED
-	"java.lang.NoSuchMethodException",                          // VERIFIED
-	"java.rmi.NotBoundException",                               // VERIFIED
-	"java.text.ParseException",                                 // VERIFIED
-	"javax.xml.parsers.ParserConfigurationException",           // VERIFIED
-	"java.awt.print.PrinterException",                          // VERIFIED
-	"javax.print.PrintException",                               // VERIFIED
-	"java.security.PrivilegedActionException",                  // VERIFIED
-	"java.beans.PropertyVetoException",                         // VERIFIED
-	"java.nio.ReadOnlyBufferException",                         // VERIFIED
-	"java.lang.ReflectiveOperationException",                   // VERIFIED
-	"java.lang.RefreshFailedException",
-	"java.lang.RuntimeException", // VERIFIED
-	"java.lang.SAXException",
-	"java.lang.ScriptException",
-	"java.lang.ServerNotActiveException",
-	"java.lang.SQLException",
-	"java.lang.StringConcatException",
-	"java.lang.StringIndexOutOfBoundsException", // VERIFIED
-	"java.lang.TimeoutException",
-	"java.lang.TooManyListenersException",
-	"java.lang.TransformerException",
-	"java.lang.TransformException",
-	"java.lang.instrument.UnmodifiableClassException", // VERIFIED
-	"java.lang.UnsupportedAudioFileException",
-	"java.lang.UnsupportedCallbackException",
-	"java.lang.UnsupportedFlavorException",
-	"java.lang.UnsupportedLookAndFeelException",
+	"com.sun.jdi.AbsentInformationException",                    // VERIFIED
+	"java.security.acl.AclNotFoundException",                    // VERIFIED might not be part of JDK 17
+	"java.rmi.activation.ActivationException",                   // VERIFIED might not be part of JDK 17
+	"com.sun.tools.attach.AgentInitializationException",         // VERIFIED
+	"com.sun.tools.attach.AgentLoadException",                   // VERIFIED
+	"java.rmi.AlreadyBoundException",                            // VERIFIED
+	"com.sun.tools.attach.AttachNotSupportedException",          // VERIFIED
+	"java.awt.AWTException",                                     // VERIFIED
+	"java.util.prefs.BackingStoreException",                     // VERIFIED
+	"javax.management.BadAttributeValueExpException",            // VERIFIED
+	"javax.management.BadBinaryOpValueExpException",             // VERIFIED
+	"javax.swing.text.BadLocationException",                     // VERIFIED
+	"javax.management.BadStringOperationException",              // VERIFIED
+	"java.util.concurrent.BrokenBarrierException",               // VERIFIED
+	"javax.smartcardio.CardException",                           // VERIFIED
+	"java.security.cert.CertificateException",                   // VERIFIED
+	"com.sun.jdi.ClassNotLoadedException",                       // VERIFIED
+	"java.lang.CloneNotSupportedException",                      // VERIFIED
+	"java.util.zip.DataFormatException",                         // VERIFIED
+	"java.lang.DatatypeConfigurationException",                  // VERIFIED
+	"javax.security.auth.DestroyFailedException",                // VERIFIED
+	"dk.jshell.spi.ExecutionControl.ExecutionControlException",  // VERIFIED
+	"java.util.concurrent.ExecutionException",                   // VERIFIED
+	"javax.swing.tree.ExpandVetoException",                      // VERIFIED
+	"java.awt.FontFormatException",                              // VERIFIED
+	"java.security.GeneralSecurityException",                    // VERIFIED
+	"org.ietf.jgss.GSSException",                                // VERIFIED
+	"java.lang.instrument.IllegalClassFormatException",          // VERIFIED
+	"com.sun.jdi.connect.IllegalConnectorArgumentsException",    // VERIFIED
+	"java.lang.IllegalThreadStateException",                     // VERIFIED
+	"com.sun.jdi.IncompatibleThreadStateException",              // VERIFIED
+	"java.lang.InterruptedException",                            // VERIFIED
+	"javax.management.IntrospectionException",                   // VERIFIED
+	"javax.management.InvalidApplicationException",              // VERIFIED
+	"javax.sound.InvalidMidiDataException",                      // VERIFIED
+	"java.util.prefs.InvalidPreferencesFormatException",         // VERIFIED
+	"com.sun.jdi.InvalidTypeException",                          // VERIFIED
+	"com.sun.jdi.InvocationException",                           // VERIFIED
+	"java.io.IOException",                                       // VERIFIED
+	"javax.management.JMException",                              // VERIFIED
+	"jdk.jshell.JShellException",                                // VERIFIED
+	"javax.xml.crypto.KeySelectorException",                     // VERIFIED
+	"java.lang.invoke.LambdaConversionException",                // VERIFIED
+	"javax.sound.sampled.LineUnavailableException",              // VERIFIED
+	"java.rmi.MarshalException",                                 // VERIFIED
+	"javax.sound.midi.MidiUnavailableException",                 // VERIFIED
+	"java.awt.datatransfer.MimeTypeParseException",              // VERIFIED
+	"javax.naming.NamingException",                              // VERIFIED
+	"java.awt.geom.NoninvertibleTransformException",             // VERIFIED
+	"java.lang.NoSuchFieldException",                            // VERIFIED
+	"java.lang.NoSuchMethodException",                           // VERIFIED
+	"java.rmi.NotBoundException",                                // VERIFIED
+	"java.text.ParseException",                                  // VERIFIED
+	"javax.xml.parsers.ParserConfigurationException",            // VERIFIED
+	"java.awt.print.PrinterException",                           // VERIFIED
+	"javax.print.PrintException",                                // VERIFIED
+	"java.security.PrivilegedActionException",                   // VERIFIED
+	"java.beans.PropertyVetoException",                          // VERIFIED
+	"java.nio.ReadOnlyBufferException",                          // VERIFIED
+	"java.lang.ReflectiveOperationException",                    // VERIFIED
+	"javax.security.auth.RefreshFailedException",                // VERIFIED
+	"java.lang.RuntimeException",                                // VERIFIED
+	"org.xml.sax.SAXException",                                  // VERIFIED
+	"javax.script.ScriptException",                              // VERIFIED
+	"java.rmi.server.ServerNotActiveException",                  // VERIFIED
+	"java.sql.SQLException",                                     // VERIFIED
+	"java.lang.invoke.StringConcatException",                    // VERIFIED
+	"java.lang.StringIndexOutOfBoundsException",                 // VERIFIED
+	"java.util.concurrent.TimeoutException",                     // VERIFIED
+	"java.util.TooManyListenersException",                       // VERIFIED
+	"javax.xml.transform.TransformerException",                  // VERIFIED
+	"javax.xml.crypto.dsig.TransformException",                  // VERIFIED
+	"java.lang.instrument.UnmodifiableClassException",           // VERIFIED
+	"javax.sound.sampled.UnsupportedAudioFileException",         // VERIFIED
+	"javax.security.auth.callback.UnsupportedCallbackException", // VERIFIED
+	"java.awt.datatransfer.UnsupportedFlavorException",          // VERIFIED
+	"javax.swing.UnsupportedLookAndFeelException",               // VERIFIED
 	"java.lang.URIReferenceException",
 	"java.lang.URISyntaxException",
 	"java.lang.VMStartException",
