@@ -23,7 +23,7 @@ func TestExceptionTableAlignment(t *testing.T) {
 	details(t, InvalidTypeException, "com.sun.jdi.InvalidTypeException")
 	details(t, PrintException, "javax.print.PrintException")
 	details(t, UnmodifiableClassException, "java.lang.instrument.UnmodifiableClassException")
-	details(t, XMLParseException, "java.lang.XMLParseException")
+	details(t, XMLParseException, "javax.management.modelmbean.XMLParseException")
 	details(t, VirtualMachineError, "java.lang.VirtualMachineError")
 	details(t, UTFDataFormatException, "java.io.UTFDataFormatException")
 }
