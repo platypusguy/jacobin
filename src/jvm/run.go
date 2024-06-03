@@ -198,7 +198,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
 					threadName, funcName)
 				errMsg = errMsg + errorDetails
-				status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
+				status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}

@@ -67,7 +67,7 @@ func runGframe(fs *list.List, fr *frames.Frame) (interface{}, int, any) {
 		// Get the G error block
 		// Pop the G frame off the frame stack.
 		err := frames.PopFrame(fs)
-		if err != nil {
+		if err != nil { // only if an error occurred in the pop operation
 			return nil, 0, err
 		}
 		return nil, 0, ret

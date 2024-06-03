@@ -93,6 +93,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
 		caughtMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
 		log.Log(caughtMsg, log.TRACE_INST)
+
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
