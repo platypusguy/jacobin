@@ -58,22 +58,21 @@ func FindExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Frame,
 	fullMethName := f.ClName + "." + f.MethName + f.MethType
 	methEntry, found := classloader.MTable[fullMethName]
 	if !found {
-		errMsg := fmt.Sprintf("ATHROW: Method %s not found in MTable", fullMethName)
+		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s not found in MTable", fullMethName)
 		_ = log.Log(errMsg, log.SEVERE)
 		return nil, -1
 	}
 
 	if methEntry.MType != 'J' {
-		errMsg := fmt.Sprintf("ATHROW: Method %s is a native method", fullMethName)
+		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s is a native method", fullMethName)
 		_ = log.Log(errMsg, log.SEVERE)
 		return nil, -1
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
 	if method.Exceptions == nil {
-		errMsg := fmt.Sprintf("ATHROW: Method %s has no exception table", fullMethName)
+		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s has no exception table", fullMethName)
 		_ = log.Log(errMsg, log.INFO)
-		// continue // loop to the next frame
 		return nil, -1
 	}
 
