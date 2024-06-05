@@ -2202,18 +2202,17 @@ frameInterpreter:
 				popped := pop(f)
 				params = append(params, popped)
 
-				_, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
-				if err != nil {
-					// any exception message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
-						className, methodName+methodType)
-					exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
-					}
+				err := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				if err == nil {
+					break
 				}
-				break
+
+				// unit test
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
+					className, methodName+methodType)
+				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				return errors.New(errMsg)
 			}
 
 			if mtEntry.MType == 'J' { // it's a Java or Native function
@@ -2241,20 +2240,20 @@ frameInterpreter:
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
-			className, methodName, methSig := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
-			fullConstructorName := className + "." + methodName + methSig
+			fullConstructorName := className + "." + methodName + methodType
 			if fullConstructorName == "java/lang/Object.<init>()V" {
 				break
 			}
 
-			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methSig)
+			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methSig
+				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
@@ -2273,28 +2272,32 @@ frameInterpreter:
 				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
-				_, err = runGmethod(mtEntry, fs, className, methodName, methSig, &params, true)
-				if err != nil {
-					// any exception message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methodName)
-					return errors.New(errMsg)
+				err := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				if err == nil {
+					break
 				}
-				break
+
+				// unit test
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s"+
+					className, methodName+methodType)
+				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				return errors.New(errMsg)
+
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methSig
+					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
-				fram, err := createAndInitNewFrame(className, methodName, methSig, &m, true, f)
+				fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methSig
+					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
 					exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
 					if glob.JacobinName == "test" {
 						return errors.New(errMsg)
@@ -2369,17 +2372,18 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				f, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, false)
-
-				if err != nil {
-					// any exceptions message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
-					exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
-					}
+				err := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				if err == nil {
+					break
 				}
+
+				// unit test
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
+					className, methodName+methodType)
+				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				return errors.New(errMsg)
+
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
