@@ -35,6 +35,7 @@ const RuneArray = "[R" // used only in strings that are not compact
 const StringIndex = "T"
 const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
+const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
 
 const Static = "X"
 const StaticDouble = "XD"
