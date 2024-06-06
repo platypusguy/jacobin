@@ -75,7 +75,7 @@ func Load_Io_FileWriter() {
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Ljava/lang.String;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/FileDescriptor;)V"] =

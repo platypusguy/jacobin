@@ -64,7 +64,7 @@ func Load_Io_OutputStreamWriter() {
 	MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/lang.String;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/nio/charset/Charset;)V"] =
