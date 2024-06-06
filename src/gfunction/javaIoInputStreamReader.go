@@ -60,7 +60,7 @@ func Load_Io_InputStreamReader() {
 	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/lang.String;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/nio/charset/Charset;)V"] =
