@@ -24,13 +24,20 @@ import (
 // As part of JACOBIN-519, this code seeks to replace the previous set of
 // functions (e.g., runGframe() and runGmethod()) with a simpler streamlined
 // function.
+//
+// Parameters: mt is the gmethod we're about to run, fs is the frame stack
+// className, methodName, methodType should be self-explanatory, params is
+// a slice of parameters/arguments being passed to the gmethod, and objRef
+// is a boolean indicating whether a pointer to the object whose method is
+// being called was pushed on to the stack (true) or not (false)
+//
+// Returns an errorBlock if an exception occured, an error if the gfunction
+// returned an error but did not throw an exception, or a value if the
+// gfunction returned a value.
 
-func runGfunction(
-	mt classloader.MTentry,                   // the method we're about to run
-	fs *list.List,                            // the frame stack
-	className, methodName, methodType string, // self-explanatory
-	params *[]interface{},                    // the parameters, including the object reference
-	objRef bool) /* flag indicating the object reference is/is not included */ any {
+func runGfunction(mt classloader.MTentry, fs *list.List,
+	className, methodName, methodType string,
+	params *[]interface{}, objRef bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
 	var paramCount int
