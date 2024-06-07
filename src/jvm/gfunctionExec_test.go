@@ -45,7 +45,8 @@ func TestGfunctionExecValid(t *testing.T) {
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
 	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
 	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
-	CP.CpIndex[6] = classloader.CpEntry{Type: classloader.StringConst, Slot: 2} // point to UTF8[2]
+	CP.CpIndex[6] = classloader.CpEntry{Type: classloader.StringConst, Slot: 7}
+	CP.CpIndex[7] = classloader.CpEntry{Type: classloader.UTF8, Slot: 2} // point to UTF8[2]
 
 	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	methRef := classloader.MethodRefEntry{
@@ -78,8 +79,8 @@ func TestGfunctionExecValid(t *testing.T) {
 	for j := 0; j < 10; j++ {
 		f.OpStack = append(f.OpStack, 0)
 	}
-
-	f.TOS = 0 // opStack[0] in theory contains a pointer to stdout, however, here we just use a zero value
+	f.OpStack[0] = os.Stdout
+	f.TOS = 0
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
