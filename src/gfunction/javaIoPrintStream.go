@@ -158,7 +158,7 @@ func Load_Io_PrintStream() {
 func PrintlnString(params []interface{}) interface{} {
 	param1, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("PrintlnString: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -230,7 +230,7 @@ func PrintlnDoubleFloat(params []interface{}) interface{} {
 // "java/io/PrintStream.println(Ljava/lang/Object;)V"
 func PrintlnObject(params []interface{}) interface{} {
 	if params[1] == nil {
-		errMsg := fmt.Sprintf("PrintlnObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	objPtr := params[1].(*object.Object)
@@ -308,7 +308,7 @@ func PrintString(params []interface{}) interface{} {
 	case *object.Object:
 		str = object.GoStringFromStringObject(params[1].(*object.Object))
 	default:
-		errMsg := fmt.Sprintf("PrintString: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -320,7 +320,7 @@ func PrintString(params []interface{}) interface{} {
 // "java/io/PrintStream.print(Ljava/lang/Object;)V"
 func PrintObject(params []interface{}) interface{} {
 	if params[1] == nil {
-		errMsg := fmt.Sprintf("PrintObject: expected params[1] of type *object.Object but observed type %T\n", params[1])
+		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	objPtr := params[1].(*object.Object)

@@ -32,7 +32,7 @@ func Load_Io_BufferedReader() {
 	MethodSignatures["java/io/BufferedReader.<init>(Ljava/io/Reader;I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  bufferedReaderInitSz,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/BufferedReader.close()V"] =
@@ -44,13 +44,13 @@ func Load_Io_BufferedReader() {
 	MethodSignatures["java/io/BufferedReader.lines()Ljava/util/stream/Stream;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  bufferedReaderLines,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/BufferedReader.mark(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  bufferedReaderMarkAndReset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/BufferedReader.markSupported()Z"] =
@@ -86,7 +86,7 @@ func Load_Io_BufferedReader() {
 	MethodSignatures["java/io/BufferedReader.reset()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  bufferedReaderMarkAndReset,
+			GFunction:  trapFunction,
 		}
 
 }
@@ -95,13 +95,13 @@ func Load_Io_BufferedReader() {
 func bufferedReaderInit(params []interface{}) interface{} {
 	fld1, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "bufferedReaderInit: File argument lacks a FilePath field"
+		errMsg := "Reader object lacks a FilePath field"
 		return getGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
 	inPathStr := string(fld1.Fvalue.([]byte))
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("bufferedReaderInit: os.Open(%s) returned: %s", inPathStr, err.Error())
+		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", inPathStr, err.Error())
 		return getGErrBlk(excNames.FileNotFoundException, errMsg)
 	}
 
@@ -116,25 +116,12 @@ func bufferedReaderInit(params []interface{}) interface{} {
 	return nil
 }
 
-func bufferedReaderInitSz(params []interface{}) interface{} {
-	errMsg := "bufferedReaderInitSz: Instantiating BufferedReader with a size is not yet supported by jacobin"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-func bufferedReaderLines(params []interface{}) interface{} {
-	errMsg := "bufferedReaderLines: Function lines() is not yet supported by jacobin"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-func bufferedReaderMarkAndReset(params []interface{}) interface{} {
-	errMsg := "bufferedReaderMarkAndReset: BufferedReader mark() & reset() are not yet supported by jacobin"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
+// "java/io/BufferedReader.markSupported()Z"
 func bufferedReaderMarkSupported(params []interface{}) interface{} {
 	return int64(0) // false
 }
 
+// "java/io/BufferedReader.readLine()Ljava/lang/String;"
 func bufferedReaderReadLine(params []interface{}) interface{} {
 	// Get BufferedReader object.
 	obj := params[0].(*object.Object)
@@ -147,7 +134,7 @@ func bufferedReaderReadLine(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "bufferedReaderReadLine: BufferedReader object lacks a FileHandle field"
+		errMsg := "Reader object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -165,7 +152,7 @@ func bufferedReaderReadLine(params []interface{}) interface{} {
 			return object.Null
 		}
 		if err != nil {
-			errMsg := fmt.Sprintf("bufferedReaderReadLine: osFile.Read failed, reason: %s", err.Error())
+			errMsg := fmt.Sprintf("osFile.Read failed, reason: %s", err.Error())
 			return getGErrBlk(excNames.IOException, errMsg)
 		}
 		if byteBuf[0] == '\r' {

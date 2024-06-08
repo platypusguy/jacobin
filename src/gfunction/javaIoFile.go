@@ -66,14 +66,14 @@ func fileInit(params []interface{}) interface{} {
 	// Get the argument path string.
 	argPathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	if argPathStr == "" {
-		errMsg := "fileInit: String argument for path is null"
+		errMsg := "String argument for path is null"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	// Create an absolute path string.
 	absPathStr, err := filepath.Abs(argPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) error: %s", argPathStr, err.Error())
+		errMsg := fmt.Sprintf("filepath.Abs(%s) failed, reason: %s", argPathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -105,7 +105,7 @@ func fileInit(params []interface{}) interface{} {
 func fileGetPath(params []interface{}) interface{} {
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "fileGetPath: File object lacks a FileHandle field"
+		errMsg := "File object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	bytes := fld.Fvalue.([]byte)
@@ -116,7 +116,7 @@ func fileGetPath(params []interface{}) interface{} {
 func fileIsInvalid(params []interface{}) interface{} {
 	status, ok := params[0].(*object.Object).FieldTable[FileStatus].Fvalue.(int64)
 	if !ok {
-		errMsg := "fileIsInvalid: File object lacks a FileStatus field"
+		errMsg := "File object lacks a FileStatus field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	if status == 0 {
@@ -130,7 +130,7 @@ func fileIsInvalid(params []interface{}) interface{} {
 func fileDelete(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
-		errMsg := "fileDelete: File object lacks a FilePath field"
+		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	path := string(bytes)
@@ -145,7 +145,7 @@ func fileDelete(params []interface{}) interface{} {
 func fileCreate(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
-		errMsg := "fileCreate: File object lacks a FilePath field"
+		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	path := string(bytes)

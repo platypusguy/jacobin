@@ -73,7 +73,7 @@ func of(params []interface{}) interface{} {
 	// get a pointer to the JVM stack
 	jvmStackRef := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
 	if jvmStackRef == nil {
-		errMsg := "nil parameter for 'frameStackRef' in Throwable, found in StackTraceElement.of()"
+		errMsg := "java/lang/StackTraceElement.of: Nil parameter for 'frameStackRef' in Throwable, found in StackTraceElement.of()"
 		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}

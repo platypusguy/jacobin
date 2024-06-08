@@ -185,7 +185,7 @@ func randomNextIntBound(params []interface{}) interface{} {
 	r := GetStructFromRandomObject(obj)
 	bound := params[1].(int64)
 	if bound < 1 {
-		errMsg := fmt.Sprintf("randomNextIntBound: bound must be positive, observed: %d", bound)
+		errMsg := fmt.Sprintf("Bound must be positive, observed: %d", bound)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)
@@ -207,7 +207,7 @@ func randomNextLongBound(params []interface{}) interface{} {
 	r := GetStructFromRandomObject(obj)
 	bound := params[1].(int64)
 	if bound < 1 {
-		errMsg := fmt.Sprintf("randomNextLongBound: bound must be positive, observed: %d", bound)
+		errMsg := fmt.Sprintf("Bound must be positive, observed: %d", bound)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)

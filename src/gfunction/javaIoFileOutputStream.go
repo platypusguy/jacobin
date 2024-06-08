@@ -73,13 +73,13 @@ func Load_Io_FileOutputStream() {
 	MethodSignatures["java/io/FileOutputStream.<init>(Ljava/io/FileDescriptor;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFileDescriptor,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileOutputStream.getFD()Ljava/io/FileDescriptor;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileDescriptor,
+			GFunction:  trapFunction,
 		}
 
 }
@@ -90,7 +90,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 	// Get the file path.
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "initFileOutputStreamFile: File argument lacks a FilePath field"
+		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	pathStr := string(fld.Fvalue.([]byte))
@@ -98,7 +98,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 	// Open the file for write-only, yielding a file handle.
 	osFile, err := os.Create(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamFile: os.Create(%s) error: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("os.Create(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -118,7 +118,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	// Get file path field from the File argument.
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "initFileOutputStreamFile: File argument lacks a FilePath field"
+		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -128,7 +128,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	// Get the boolean argument.
 	boolarg, ok := params[2].(int64)
 	if !ok {
-		errMsg := "initFileOutputStreamFile: Missing append-boolean argument"
+		errMsg := "Missing append-boolean argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -141,7 +141,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 		osFile, err = os.Create(pathStr)
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamFileBoolean: os.Create(%s) error: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("os.Create(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -164,7 +164,7 @@ func initFileOutputStreamString(params []interface{}) interface{} {
 	// Open the file for write-only, yielding a file handle.
 	osFile, err := os.Create(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) error: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("os.Create(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -188,7 +188,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	// Get the boolean argument.
 	boolarg, ok := params[2].(int64)
 	if !ok {
-		errMsg := "initFileOutputStreamFileBoolean: Missing append-boolean argument"
+		errMsg := "Missing append-boolean argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -201,7 +201,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 		osFile, err = os.Create(pathStr)
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("initFileOutputStreamString: os.Create(%s) error: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("os.Create(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -222,14 +222,14 @@ func fosWriteOne(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "fosWriteOne: FileOutputStream object lacks a FileHandle field"
+		errMsg := "FileOutputStream object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the integer argument.
 	wint, ok := params[1].(int64)
 	if !ok {
-		errMsg := "fosWriteOne: Missing integer argument"
+		errMsg := "Missing integer argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -240,7 +240,7 @@ func fosWriteOne(params []interface{}) interface{} {
 	// Write one byte.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteOne osFile.Write error: %s", err.Error())
+		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -253,21 +253,21 @@ func fosWriteByteArray(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "fosWriteByteArray: FileOutputStream object lacks a FileHandle field"
+		errMsg := "FileOutputStream object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer to the byte array parameter.
 	buffer, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
-		errMsg := "fosWriteByteArray: Byte array parameter lacks a \"value\" field"
+		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Write the buffer.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteByteArray osFile.Write error: %s", err.Error())
+		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -280,14 +280,14 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	// Get the file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "fosWriteByteArrayOffset: FileOutputStream object lacks a FileHandle field"
+		errMsg := "FileOutputStream object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Set buffer (buf1) to the byte array parameter.
 	buf1, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	if !ok {
-		errMsg := "fosWriteByteArrayOffset: Byte array parameter lacks a \"value\" field"
+		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -300,7 +300,7 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(buf1))-offset) {
-		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: error in parameters offset=%d length=%d bytes.length=%d",
+		errMsg := fmt.Sprintf("Error in parameters offset=%d length=%d bytes.length=%d",
 			offset, length, len(buf1))
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
@@ -308,7 +308,7 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(buf1[offset : offset+length])
 	if err != nil {
-		errMsg := fmt.Sprintf("fosWriteByteArrayOffset: osFile.Write error: %s", err.Error())
+		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -321,14 +321,14 @@ func fosClose(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "fosClose: FileOutputStream object lacks a FileHandle field"
+		errMsg := "FileOutputStream object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("fosClose: osFile.Close() error: %s", err.Error())
+		errMsg := fmt.Sprintf("osFile.Close() failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 

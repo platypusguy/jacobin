@@ -70,28 +70,28 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.<init>([BIILjava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(byte[] bytes, int offset, int length, Charset charset) ************** CHARSET
 	MethodSignatures["java/lang/String.<init>([BIILjava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(byte[] bytes, String charsetName) *********************************** CHARSET
 	MethodSignatures["java/lang/String.<init>([BLjava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(byte[] bytes, Charset charset) ************************************** CHARSET
 	MethodSignatures["java/lang/String.<init>([BLjava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(byte[] bytes, Charset charset) ************************************** CHARSET
@@ -108,7 +108,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.<init>([III)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(String original) - works fine in Java
@@ -117,14 +117,14 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuffer;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// String(StringBuilder builder) ******************************************* StringBuilder
 	MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuilder;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// === METHOD FUNCTIONS ===
@@ -147,14 +147,14 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// get the bytes from a string, given the specified Charset object ******************* CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/String.charAt(I)C"] =
@@ -209,7 +209,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  noSupportYetInString,
+			GFunction:  trapFunction,
 		}
 
 	// Return the length of a String.
@@ -344,17 +344,11 @@ func Load_Lang_String() {
 func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(types.StringClassName)
 	if klass == nil {
-		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", types.StringClassName)
+		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
-}
-
-// No support YET for references to Charset objects nor for Unicode code point arrays
-func noSupportYetInString([]interface{}) interface{} {
-	errMsg := "noSupportYetInString: No support yet for user-specified character sets and Unicode code point arrays"
-	return getGErrBlk(excNames.UnsupportedEncodingException, errMsg)
 }
 
 // Get character at the given index.
@@ -424,7 +418,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "newStringFromBytesSubset: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -610,7 +604,7 @@ func substringToTheEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringToTheEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -638,7 +632,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringStartEnd: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -741,7 +735,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
-		errMsg := "valueOfCharSubarray: Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg := "Either: nil input byte array, invalid substring offset, or invalid substring length"
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
