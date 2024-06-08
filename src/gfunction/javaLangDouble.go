@@ -170,13 +170,13 @@ func doubleParseDouble(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(excNames.NumberFormatException, "doubleParseDouble: string length < 1")
+		return getGErrBlk(excNames.NumberFormatException, "String length is zero")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("doubleParseDouble: strconv.ParseFloat(%s) error: %s", strArg, err.Error())
+		errMsg := fmt.Sprintf("strconv.ParseFloat(%s) failed, reason: %s", strArg, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	return output

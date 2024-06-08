@@ -18,6 +18,7 @@ func Load_Lang_StringBuilder() {
 
 }
 
+// "java/lang/StringBuilder.isLatin1()Z"
 func isLatin1([]interface{}) interface{} {
 	// TODO: Someday, jacobin will need to discern between StringLatin1 and StringUTF16.
 	return int64(1)

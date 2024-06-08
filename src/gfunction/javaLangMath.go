@@ -219,7 +219,7 @@ func Load_Lang_Math() {
 func mathClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
-		errMsg := "mathClinit, expected java/lang/Math to be in the MethodArea, but it was not"
+		errMsg := "Math<clinit>: Expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
@@ -323,7 +323,7 @@ func floorFloat64(params []interface{}) interface{} {
 // to the algebraic quotient.
 func floorDivInt64(dividend int64, divisor int64) interface{} {
 	if divisor == 0 {
-		return getGErrBlk(excNames.ArithmeticException, "floorDivInt64: Divide by zero attempted")
+		return getGErrBlk(excNames.ArithmeticException, "Divide by zero")
 	}
 	if dividend <= math.MinInt64 && divisor == -1 {
 		return math.MinInt64

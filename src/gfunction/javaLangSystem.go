@@ -133,7 +133,7 @@ func clinit([]interface{}) interface{} {
 // docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
 func arrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
-		errMsg := fmt.Sprintf("java/lang/System.arraycopy: Expected 5 parameters, got %d", len(params))
+		errMsg := fmt.Sprintf("Expected 5 parameters, got %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -144,13 +144,13 @@ func arrayCopy(params []interface{}) interface{} {
 	length := params[4].(int64)
 
 	if src == nil || dest == nil {
-		errMsg := fmt.Sprintf("java/lang/System.arraycopy: null src or dest")
+		errMsg := fmt.Sprintf("null src or dest")
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
-			"java/lang/System.arraycopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+			"Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -166,7 +166,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destLen := object.ArrayLength(dest)
 
 	if srcPos+length > srcLen || destPos+length > destLen {
-		errMsg := fmt.Sprintf("java/lang/System.arraycopy: array + length exceeds array size")
+		errMsg := fmt.Sprintf("Array position + length exceeds array size")
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 

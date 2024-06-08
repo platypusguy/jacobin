@@ -14,14 +14,14 @@ func Load_Nio_Charset_Charset() {
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	// Get the default character set.
 	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 }

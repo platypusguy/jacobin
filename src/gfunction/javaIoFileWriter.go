@@ -81,31 +81,31 @@ func Load_Io_FileWriter() {
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/FileDescriptor;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFileDescriptor,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Ljava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Ljava/nio/charset/Charset;Z)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/lang/String;Ljava/nio/charset/Charset;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/lang/String;Ljava/nio/charset/Charset;Z)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapCharset,
+			GFunction:  trapFunction,
 		}
 
 }

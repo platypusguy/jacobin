@@ -240,7 +240,7 @@ func TestArrayCopyInvalidLength(t *testing.T) {
 	}
 
 	errMsg := err.(*GErrBlk).ErrMsg
-	if !strings.Contains(errMsg, "array + length exceeds array size") {
+	if !strings.Contains(errMsg, "Array position + length exceeds array size") {
 		t.Errorf("Expected error re invalid length, got %s", errMsg)
 	}
 }

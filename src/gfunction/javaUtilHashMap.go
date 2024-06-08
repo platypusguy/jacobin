@@ -46,7 +46,7 @@ func hashMapHash(params []interface{}) interface{} {
 			bytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(bytes, uint64(fld.Fvalue.(float64)))
 		default:
-			str := fmt.Sprintf("hashMapHash: unrecognized object field type: %T", fld.Ftype)
+			str := fmt.Sprintf("Unrecognized object field type: %T", fld.Ftype)
 			return getGErrBlk(excNames.VirtualMachineError, str)
 		}
 		roughHash := md5.Sum(bytes)            // md5.sum returns an array of bytes

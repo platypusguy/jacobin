@@ -87,7 +87,7 @@ func Load_Traps() {
 	MethodSignatures["java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
@@ -99,7 +99,7 @@ func Load_Traps() {
 	MethodSignatures["java/io/FilterOutputStream.<init>(Ljava/io/OutputStream;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FilterWriter.<clinit>()V"] =
@@ -159,25 +159,25 @@ func Load_Traps() {
 	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.<init>(I)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/CharSequence;)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
@@ -195,19 +195,19 @@ func Load_Traps() {
 	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
@@ -219,13 +219,13 @@ func Load_Traps() {
 	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileChannel,
+			GFunction:  trapClass,
 		}
 
 	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFileChannel,
+			GFunction:  trapClass,
 		}
 
 	MethodSignatures["java/security/AccessController.<clinit>()V"] =
@@ -249,19 +249,19 @@ func Load_Traps() {
 	MethodSignatures["java/security/SecureRandom.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>([B)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>(Ljava.security.SecureRandomSpi;Ljava.security.Provider;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapClass,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.next(I)V"] =
@@ -278,38 +278,20 @@ func Load_Traps() {
 
 }
 
-// Generic trap for deprecated classes and functions
-func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The requested class or function is deprecated and, therefore, not supported"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
 // Generic trap for classes
 func trapClass([]interface{}) interface{} {
 	errMsg := "The requested class is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
+// Generic trap for deprecated classes and functions
+func trapDeprecated([]interface{}) interface{} {
+	errMsg := "The requested class or function is deprecated and, therefore, not supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
+
 // Generic trap for functions
 func trapFunction([]interface{}) interface{} {
 	errMsg := "The requested function is not yet supported"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// Trap for Charset references
-func trapCharset([]interface{}) interface{} {
-	errMsg := "Class java.nio.charset/Charset is not yet supported"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// Trap for FileDescriptor references
-func trapFileDescriptor([]interface{}) interface{} {
-	errMsg := "Class java.io.FileDescriptor is not yet supported"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
-}
-
-// Trap for FileChannel references
-func trapFileChannel([]interface{}) interface{} {
-	errMsg := "Class java.nio.channels.FileChannel is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
