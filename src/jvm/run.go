@@ -2202,16 +2202,20 @@ frameInterpreter:
 				popped := pop(f)
 				params = append(params, popped)
 
-				_, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
-				if err != nil {
-					// any exception message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("INVOKEVIRTUAL: Error encountered in: %s.%s"+
-						className, methodName+methodType)
-					exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
+				// _, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
+				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				// if err != nil {
+				if ret != nil {
+					switch ret.(type) {
+					case error: // only occurs in testing
+						if glob.JacobinName == "test" {
+							errRet := ret.(error)
+							return errRet
+						}
+					default: // if it's not an error, then it's a legitimate return value, which we simply push
+						push(f, ret)
 					}
+					// any exception will already have been handled.
 				}
 				break
 			}
