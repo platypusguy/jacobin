@@ -2214,6 +2214,9 @@ frameInterpreter:
 						}
 					default: // if it's not an error, then it's a legitimate return value, which we simply push
 						push(f, ret)
+						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
+							push(f, ret) // push twice if long or double
+						}
 					}
 					// any exception will already have been handled.
 				}
