@@ -2167,9 +2167,9 @@ frameInterpreter:
 			if native.IsUnsupportedNativeMethod(className + "." + methodName) {
 				errMsg := fmt.Sprintf("%s() in %s is an unsupported native function",
 					methodName, className)
-				exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
