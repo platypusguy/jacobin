@@ -36,6 +36,7 @@ func Load_Lang_UTF16() {
 
 }
 
+// "java/lang/StringUTF16.isBigEndian()Z"
 // Return whether the current platform is big-endian.
 func isBigEndian([]interface{}) interface{} {
 	return types.JavaBoolFalse // Jacobin runs on no big-endian platform at present

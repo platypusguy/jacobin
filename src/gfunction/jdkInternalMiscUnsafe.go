@@ -81,7 +81,7 @@ var classUnsafeName = "jdk/internal/misc/Unsafe"
 func arrayBaseOffset(params []interface{}) interface{} {
 	p := params[0]
 	if p == nil || p == object.Null {
-		errMsg := "arrayBaseOffset: passed a null pointer"
+		errMsg := "Object is a null pointer"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 	return int64(0) // this should work...

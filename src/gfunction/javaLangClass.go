@@ -90,7 +90,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	if err == nil {
 		return k
 	} else {
-		errMsg := fmt.Sprintf("getPrimitiveClass: does not handle: %s", str)
+		errMsg := fmt.Sprintf("Does not handle: %s", str)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 }
@@ -111,7 +111,7 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 		if className == "" {
 			errClassName = "<empty string>"
 		}
-		errMsg := fmt.Sprintf("simpleClassLoadByName: Failed to load class %s, error: %s", errClassName, err.Error())
+		errMsg := fmt.Sprintf("Failed to load class %s by name, reason: %s", errClassName, err.Error())
 		_ = log.Log(errMsg, log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure

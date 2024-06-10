@@ -33,7 +33,7 @@ func Load_Io_Console() {
 	MethodSignatures["java/io/Console.charset()Ljava/nio/charset/Charset;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  noSupportYetInConsole,
+			GFunction:  trapFunction,
 		}
 
 	// Flush java/lang/System.in/out/err.
@@ -61,7 +61,7 @@ func Load_Io_Console() {
 	MethodSignatures["java/io/Console.reader()Ljava/io/Reader;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  noSupportYetInConsole,
+			GFunction:  trapFunction,
 		}
 
 	// Reads a single line of text from the console.
@@ -96,7 +96,7 @@ func Load_Io_Console() {
 	MethodSignatures["java/io/Console.writer()Ljava/io/PrintWriter;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  noSupportYetInConsole,
+			GFunction:  trapFunction,
 		}
 
 }
@@ -105,17 +105,11 @@ func Load_Io_Console() {
 func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
 	if klass == nil {
-		errMsg := "consoleClinit: Could not find java/io/Console in the MethodArea"
+		errMsg := "Console <clinit>: Could not find java/io/Console in the MethodArea"
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
-}
-
-// No support YET for references to Charset objects nor for Unicode code point arrays
-func noSupportYetInConsole([]interface{}) interface{} {
-	errMsg := "noSupportYetInConsole: No support yet for Reader/PrintWriter/Charset in class Console"
-	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Flush java/lang/System.in/out/err.
@@ -153,23 +147,23 @@ func consolePrintf(params []interface{}) interface{} {
 // "java/io/Console.readLine()Ljava/lang/String;"
 func consoleReadLine([]interface{}) interface{} {
 	var bytes []byte
-	var bite = []byte{0x00}
+	var bb = []byte{0x00}
 	var nbytes int
 	var err error
 	stdin := statics.GetStaticValue("java/lang/System", "in").(*os.File)
 	for {
-		nbytes, err = stdin.Read(bite)
+		nbytes, err = stdin.Read(bb)
 		if nbytes == 0 {
 			break
 		}
 		if err != nil {
-			errMsg := fmt.Sprintf("consoleReadLine: stdin.Read error: %s", err.Error())
+			errMsg := fmt.Sprintf("stdin.Read error: %s", err.Error())
 			return getGErrBlk(excNames.IOException, errMsg)
 		}
-		if bite[0] == '\n' {
+		if bb[0] == '\n' {
 			break
 		}
-		bytes = append(bytes, bite[0])
+		bytes = append(bytes, bb[0])
 	}
 	str := string(bytes)
 	return object.StringObjectFromGoString(str)
@@ -188,7 +182,7 @@ func consolePrintfReadLine(params []interface{}) interface{} {
 func consoleReadPassword([]interface{}) interface{} {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		errMsg := fmt.Sprintf("consoleReadPassword: stdin.ReadPassword error: %s", err.Error())
+		errMsg := fmt.Sprintf("stdin.ReadPassword failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)

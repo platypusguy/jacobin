@@ -8,8 +8,11 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
+	"math/bits"
+	"strconv"
 )
 
 func Load_Lang_Long() {
@@ -24,6 +27,24 @@ func Load_Lang_Long() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  longDoubleValue,
+		}
+
+	MethodSignatures["java/lang/Long.parseLong(Ljava/lang/String;)J"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  longParseLong,
+		}
+
+	MethodSignatures["java/lang/Long.rotateLeft(JI)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  longRotateLeft,
+		}
+
+	MethodSignatures["java/lang/Long.rotateRight(JI)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  longRotateRight,
 		}
 
 	MethodSignatures["java/lang/Long.toHexString(J)Ljava/lang/String;"] =
@@ -46,6 +67,34 @@ func longDoubleValue(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	jj = parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(jj)
+}
+
+// "java/lang/Long.parseLong(Ljava/lang/String;)J"
+func longParseLong(params []interface{}) interface{} {
+	obj := params[1].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
+	jj, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("strconv.ParseInt(%s,10,64), failed, reason: %s", str, err.Error())
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return jj
+}
+
+// "java/lang/Long.rotateLeft(JI)J"
+func longRotateLeft(params []interface{}) interface{} {
+	jj := uint64(params[0].(int64))
+	shiftLength := int(params[2].(int64))
+	value := bits.RotateLeft64(jj, shiftLength)
+	return int64(value)
+}
+
+// "java/lang/Long.rotateRight(JI)J"
+func longRotateRight(params []interface{}) interface{} {
+	jj := uint64(params[0].(int64))
+	shiftLength := int(params[2].(int64))
+	value := bits.RotateLeft64(jj, -shiftLength)
+	return int64(value)
 }
 
 // "java/lang/Long.valueOf(J)Ljava/lang/Long;"
