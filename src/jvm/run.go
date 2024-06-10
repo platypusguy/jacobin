@@ -2535,9 +2535,9 @@ frameInterpreter:
 			if ref == nil {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
-				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2569,18 +2569,18 @@ frameInterpreter:
 				if r == nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
-					exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg) // return should happen only in testing
+					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 				size = object.ArrayLength(r)
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
-				exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			push(f, size)
@@ -2589,9 +2589,9 @@ frameInterpreter:
 			objectRef := pop(f).(*object.Object)
 			if object.IsNull(objectRef) {
 				errMsg := "ATHROW: Invalid (null) reference to an exception/error class to throw"
-				exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2727,9 +2727,9 @@ frameInterpreter:
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "CHECKCAST: Invalid class reference"
-				exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2770,9 +2770,9 @@ frameInterpreter:
 						} else {
 							/*** TODO: bypass this Throw action. Right thing to do?
 							errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
-							exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
-							if glob.JacobinName == "test" {
-								return errors.New(errMsg) // return should happen only in testing
+							status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
+							if status != exceptions.Caught {
+								return errors.New(errMsg) // applies only if in test
 							}
 							***/
 							warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
@@ -2781,9 +2781,9 @@ frameInterpreter:
 					} else {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
-						exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						if glob.JacobinName == "test" {
-							return errors.New(errMsg) // return should happen only in testing
+						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
 						}
 					}
 				} else { // the object being checked is a class
@@ -2799,9 +2799,9 @@ frameInterpreter:
 					if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
-						exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						if glob.JacobinName == "test" {
-							return errors.New(errMsg) // return should happen only in testing
+						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
 						}
 					}
 					// note that if the classPtr == obj.Klass, which is the desired outcome,
