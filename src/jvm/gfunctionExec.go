@@ -86,10 +86,9 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		} else {
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
-		errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s:\n",
+		errMsg := fmt.Sprintf("Exception in thread: %s, %s:\n",
 			threadName, fullMethName)
-		// errMsg = errMsg + errorDetails
-		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
+		status := exceptions.ThrowEx(errBlk.ExceptionType, errBlk.ErrMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg) // applies only if in test
 		} else {
