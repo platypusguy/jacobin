@@ -2382,9 +2382,9 @@ frameInterpreter:
 					// any exceptions message will already have been displayed to the user
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
-					exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 			} else if mtEntry.MType == 'J' {
@@ -2421,9 +2421,9 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
 				errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
-				exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2474,9 +2474,9 @@ frameInterpreter:
 			if size < 0 {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid size for array"
-				exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2501,9 +2501,9 @@ frameInterpreter:
 			if size < 0 {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "ANEWARRAY: Invalid size for array"
-				exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
