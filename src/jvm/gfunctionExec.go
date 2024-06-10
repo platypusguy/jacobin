@@ -17,7 +17,6 @@ import (
 	"jacobin/gfunction"
 	"jacobin/log"
 	"slices"
-	"strings"
 )
 
 // Execution of gfunctions (that is, Java functions ported to golang).
@@ -47,10 +46,11 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		paramCount = len(*params)
 	}
 
+	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
 	if localDebugging || MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGfunction: %s.%s%s, objectRef: %v, paramSlots: %d",
-			className, methodName, methodType, objRef, paramCount)
-		_ = log.Log(traceInfo, log.WARNING)
+		traceInfo := fmt.Sprintf("runGfunction: %s, objectRef: %v, paramSlots: %d",
+			fullMethName, objRef, paramCount)
+		_ = log.Log(traceInfo, log.FINE)
 		logTraceStack(f)
 	}
 
@@ -59,7 +59,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	}
 
 	var ret any
-	// call the function passing a pointer to the slice of arguments
+	// call the function, passing it a pointer to the slice of arguments
 	if paramCount == 0 {
 		ret = mt.Meth.(gfunction.GMeth).GFunction(nil)
 	} else {
@@ -69,16 +69,16 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	// if an error occured
 	switch ret.(type) {
 	case *gfunction.GErrBlk:
-		var funcName, errorDetails string
+		// var errorDetails string
 		errBlk := *ret.(*gfunction.GErrBlk)
-		parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
-		if len(parts) == 2 {
-			funcName = parts[0]
-			errorDetails = parts[1]
-		} else {
-			funcName = "{MISSINGCOLON}"
-			errorDetails = errBlk.ErrMsg
-		}
+		// parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
+		// if len(parts) == 2 {
+		// 	funcName = parts[0]
+		// 	errorDetails = parts[1]
+		// } else {
+		// 	funcName = "{MISSINGCOLON}"
+		// 	errorDetails = errBlk.ErrMsg
+		// }
 
 		var threadName string
 		if f.Thread == 1 {
@@ -86,10 +86,10 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		} else {
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
-		errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
-			threadName, funcName)
-		errMsg = errMsg + errorDetails
-		status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
+		errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s:\n",
+			threadName, fullMethName)
+		// errMsg = errMsg + errorDetails
+		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg) // applies only if in test
 		} else {
@@ -106,6 +106,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		}
 	}
 
-	// if it's not an errBlk or an error, then return whatever it is
+	// if it's not an errBlk or an error, then it's a legitimate
+	// return value, so return it.
 	return ret
 }
