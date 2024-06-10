@@ -90,7 +90,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 			threadName, fullMethName)
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errBlk.ErrMsg, f)
 		if status != exceptions.Caught {
-			return errors.New(errMsg) // applies only if in test
+			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
 		} else {
 			return nil // return nothing if the exception was caught
 		}
@@ -105,7 +105,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		}
 	}
 
-	// if it's not an errBlk or an error, then it's a legitimate
+	// if return is not an errBlk or an error, then it's a legitimate
 	// return value, so return it.
 	return ret
 }
