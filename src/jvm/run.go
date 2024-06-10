@@ -2302,9 +2302,9 @@ frameInterpreter:
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methSig
-					exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 
@@ -2345,9 +2345,9 @@ frameInterpreter:
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
-				exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
@@ -2361,9 +2361,9 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
 						className+"."+methodName+methodType)
-					exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-					if glob.JacobinName == "test" {
-						return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
 				}
 			}
