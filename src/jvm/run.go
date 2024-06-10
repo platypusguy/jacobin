@@ -2137,9 +2137,9 @@ frameInterpreter:
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
-				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
-				if glob.JacobinName == "test" {
-					return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
