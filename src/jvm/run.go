@@ -2248,26 +2248,25 @@ frameInterpreter:
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
-			className, methodName, methSig := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
-			fullConstructorName := className + "." + methodName + methSig
+			fullConstructorName := className + "." + methodName + methodType
 			if fullConstructorName == "java/lang/Object.<init>()V" {
 				break
 			}
 
-			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methSig)
+			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methSig
+				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
 				_ = log.Log(errMsg, log.SEVERE)
 				return errors.New(errMsg)
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
-
 				// get the parameters/args, if any, off the stack
 				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
@@ -2280,28 +2279,47 @@ frameInterpreter:
 				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
-				_, err = runGmethod(mtEntry, fs, className, methodName, methSig, &params, true)
-				if err != nil {
-					// any exception message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methodName)
-					return errors.New(errMsg)
+				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				// if err != nil {
+				if ret != nil {
+					switch ret.(type) {
+					case error: // only occurs in testing
+						if glob.JacobinName == "test" {
+							errRet := ret.(error)
+							return errRet
+						}
+					default: // if it's not an error, then it's a legitimate return value, which we simply push
+						push(f, ret)
+						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
+							push(f, ret) // push twice if long or double
+						}
+					}
+					// any exception will already have been handled.
 				}
-				break
+
+				// PRIOR TO JACOBIN-519
+				// _, err = runGmethod(mtEntry, fs, className, methodName, methSig, &params, true)
+				// if err != nil {
+				// 	// any exception message will already have been displayed to the user
+				// 	glob.ErrorGoStack = string(debug.Stack())
+				// 	errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methodName)
+				// 	return errors.New(errMsg)
+				// }
+				// break
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methSig
+					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
-				fram, err := createAndInitNewFrame(className, methodName, methSig, &m, true, f)
+				fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methSig
+					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
 					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
 					if status != exceptions.Caught {
 						return errors.New(errMsg) // applies only if in test
@@ -2312,7 +2330,8 @@ frameInterpreter:
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
-			}
+			} // end of if method is 'J'
+
 		case opcodes.INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
