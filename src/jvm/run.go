@@ -168,61 +168,61 @@ frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
+	/*
+		// if the frame contains a golang method, execute it using runGframe(),
+		// which returns a value (possibly nil) and an exceptions code. Presuming no exceptions,
+		// if the return value (here, retval) is not nil, it is placed on the stack
+		// of the calling frame.
+		if f.Ftype == 'G' {
+			retval, slotCount, err := runGframe(fs, f)
+			if err != nil {
+				switch err.(type) {
+				case *gfunction.GErrBlk:
+					var funcName, errorDetails string
+					errBlk := *err.(*gfunction.GErrBlk)
+					parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
+					if len(parts) == 2 {
+						funcName = parts[0]
+						errorDetails = parts[1]
+					} else {
+						funcName = "{MISSINGCOLON}"
+						errorDetails = errBlk.ErrMsg
+					}
 
-	// if the frame contains a golang method, execute it using runGframe(),
-	// which returns a value (possibly nil) and an exceptions code. Presuming no exceptions,
-	// if the return value (here, retval) is not nil, it is placed on the stack
-	// of the calling frame.
-	if f.Ftype == 'G' {
-		retval, slotCount, err := runGframe(fs, f)
-		if err != nil {
-			switch err.(type) {
-			case *gfunction.GErrBlk:
-				var funcName, errorDetails string
-				errBlk := *err.(*gfunction.GErrBlk)
-				parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
-				if len(parts) == 2 {
-					funcName = parts[0]
-					errorDetails = parts[1]
-				} else {
-					funcName = "{MISSINGCOLON}"
-					errorDetails = errBlk.ErrMsg
-				}
+					var threadName string
+					if f.Thread == 1 {
+						threadName = "main"
+					} else {
+						threadName = fmt.Sprintf("%d", f.Thread)
+					}
+					errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
+						threadName, funcName)
+					errMsg = errMsg + errorDetails
+					status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 
-				var threadName string
-				if f.Thread == 1 {
-					threadName = "main"
-				} else {
-					threadName = fmt.Sprintf("%d", f.Thread)
-				}
-				errMsg := fmt.Sprintf("com.sun.jdi.NativeMethodException in thread: %s, %s():\n",
-					threadName, funcName)
-				errMsg = errMsg + errorDetails
-				status := exceptions.ThrowEx(errBlk.ExceptionType, errorDetails, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-
-			case error:
-				errMsg := (err.(error)).Error()
-				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-				if status != exceptions.Caught {
-					return err.(error) // applies only if in test
+				case error:
+					errMsg := (err.(error)).Error()
+					status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+					if status != exceptions.Caught {
+						return err.(error) // applies only if in test
+					}
 				}
 			}
-		}
 
-		if retval != nil {
-			f := fs.Front().Next().Value.(*frames.Frame)
-			push(f, retval) // if slotCount = 1
+			if retval != nil {
+				f := fs.Front().Next().Value.(*frames.Frame)
+				push(f, retval) // if slotCount = 1
 
-			if slotCount == 2 {
-				push(f, retval) // push a second time, if a long, double, etc.
+				if slotCount == 2 {
+					push(f, retval) // push a second time, if a long, double, etc.
+				}
 			}
+			return nil
 		}
-		return nil
-	}
-
+	*/
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
