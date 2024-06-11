@@ -2395,17 +2395,36 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				f, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, false)
-
-				if err != nil {
-					// any exceptions message will already have been displayed to the user
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
-					status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-					if status != exceptions.Caught {
-						return errors.New(errMsg) // applies only if in test
+				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
+				// if err != nil {
+				if ret != nil {
+					switch ret.(type) {
+					case error: // only occurs in testing
+						if glob.JacobinName == "test" {
+							errRet := ret.(error)
+							return errRet
+						}
+					default: // if it's not an error, then it's a legitimate return value, which we simply push
+						push(f, ret)
+						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
+							push(f, ret) // push twice if long or double
+						}
 					}
+					// any exception will already have been handled.
 				}
+
+				// Code prior to JACOBIN-519
+				//
+				// f, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, false)
+				// if err != nil {
+				// 	// any exceptions message will already have been displayed to the user
+				// 	glob.ErrorGoStack = string(debug.Stack())
+				// 	errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
+				// 	status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				// 	if status != exceptions.Caught {
+				// 		return errors.New(errMsg) // applies only if in test
+				// 	}
+				// }
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
