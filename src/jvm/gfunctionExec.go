@@ -47,7 +47,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	}
 
 	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
-	if localDebugging || MainThread.Trace {
+	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("runGfunction: %s, objectRef: %v, paramSlots: %d",
 			fullMethName, objRef, paramCount)
 		_ = log.Log(traceInfo, log.FINE)
