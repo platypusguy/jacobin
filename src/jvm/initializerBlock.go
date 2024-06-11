@@ -122,7 +122,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 }
 
 func runNativeInitializer(mt classloader.MTentry, k *classloader.Klass, fs *list.List) error {
-	runGmethod(mt, fs, k.Data.Name, "<clinit>", "()V", nil, false)
+	_ = runGfunction(mt, fs, k.Data.Name, "<clinit>", "()V", nil, false)
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	return nil
 }
