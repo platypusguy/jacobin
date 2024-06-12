@@ -32,7 +32,12 @@ import (
 //     specify what text either or both must contain for the test to pass.
 func TestGfunWith0or1StringsTable(t *testing.T) {
 	type testVars struct {
-		objName, methName, methType, stringParam, stderrText, stdoutText string
+		objName, // the name of the object whose method we're invoking
+		methName, // the name of the method, without the class name or the type
+		methType, // the type of the method
+		stringParam, // an optional string parameter to pass to the method under test
+		stderrText, // the expected output text to stderr, if any. "" = no output expected
+		stdoutText string // the expected text to stdout, if any. "" = no output expected
 	}
 
 	// the map holding out tests. The key is the name of the test, the value is a struct of testVars, shown next
@@ -50,22 +55,16 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 	tests["testPrintlnWith1validString"] = tv
 
 	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			var objClassName string // e.g. "java/io/PrintStream"
-			var methName string     // e.g. "println"
-			var methType string     // e.g. "(Ljava/lang/String;)V"
-			var stringParam string  // e.g. "test string"
-			var stderrExpected string
-			var stdoutExpected string
+		t.Run(name, func(t *testing.T) { // from here to the end, we define the function that is the test
 
-			// ---------------------------------
-			objClassName = test.objName
-			methName = test.methName
-			methType = test.methType
-			stringParam = test.stringParam
-			stderrExpected = test.stderrText
-			stdoutExpected = test.stdoutText
-			// ---------------------------------
+			var objClassName = test.objName
+			var methName = test.methName
+			var methType = test.methType
+			var stringParam = test.stringParam
+			var stderrExpected = test.stderrText
+			var stdoutExpected = test.stdoutText
+
+			// set up the environment
 
 			globals.InitGlobals("test")
 			log.Init()
@@ -79,9 +78,11 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			rout, wout, _ := os.Pipe()
 			os.Stdout = wout
 
+			// load the classes into MTable
 			classloader.MTable = make(map[string]classloader.MTentry)
 			gfunction.MTableLoadGFunctions(&classloader.MTable)
 
+			// build up the CP and the various frame fields
 			CP := classloader.CPool{}
 			CP.CpIndex = make([]classloader.CpEntry, 10)
 			CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
@@ -112,7 +113,7 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			CP.NameAndTypes = append(CP.NameAndTypes, nAndT)
 
 			var f frames.Frame
-			if stringParam != "" {
+			if stringParam != "" { // if there is a string param, load it with LDC before calling INVOKEVIRTUAL
 				f = newFrame(opcodes.LDC)
 				f.Meth = append(f.Meth, uint8(6)) // point to the string constant parameter indexed by CPindex[6]
 				f.Meth = append(f.Meth, opcodes.INVOKEVIRTUAL)
@@ -148,10 +149,12 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			f.TOS = 0
 
 			fs.PushFront(&f) // push the new frame
+
+			// run the method (by running the frame)
 			_ = runFrame(fs)
 
-			// get contents written by stderr and stdout, then
-			// restore stderr and stdout to what they were before the test
+			// get contents written by stderr and stdout, then restore
+			// stderr and stdout to what they were before the test
 			_ = werr.Close()
 			rawStderrMsg, _ := io.ReadAll(rerr)
 			os.Stderr = normalStderr
