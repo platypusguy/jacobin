@@ -7,12 +7,14 @@
 package jvm
 
 import (
+	"fmt"
 	"io"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/stringPool"
 	"os"
@@ -104,11 +106,20 @@ func TestGfunctionExecValid(t *testing.T) {
 	}
 }
 
+// TestGfunWith0or!StringsTable() is a table-driven test that exercises the INVOKEVIRTUAL bytecode. To use it:
+// fill in an instance of the testVars structure and add it to the tests map, as illustrated below.
+// Several requirements:
+//   - The method being invoked must be in the MTable, with the same name and type as stated in testVars;
+//     if the method is a gfunction, that gfunction must be loaded in the MTable (via LoadLib).
+//   - At present, you can pass only 0 or 1 strings to the invoked method.
+//   - The test result must appear either on stdout or stderr (or both). Both are captured here and you can
+//     specify what text either or both must contain for the test to pass.
 func TestGfunWith0or1StringsTable(t *testing.T) {
 	type testVars struct {
 		objName, methName, methType, stringParam, stderrText, stdoutText string
 	}
 
+	// the map holding out tests. The key is the name of the test, the value is a struct of testVars, shown next
 	tests := make(map[string]testVars)
 
 	tv := testVars{
@@ -120,7 +131,7 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 		stdoutText:  "hello from table test",
 	}
 
-	tests["testPrintlnWith1string"] = tv
+	tests["testPrintlnWith1validString"] = tv
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -201,10 +212,25 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			for j := 0; j < 10; j++ {
 				f.OpStack = append(f.OpStack, 0)
 			}
-			f.OpStack[0] = os.Stdout // <<<<<<<<<<< need to determine what to do here
-			f.TOS = 0
 
 			fs := frames.CreateFrameStack()
+
+			// now push a reference to the object whose method we're calling. In the event, it's a prinstream,
+			// we force it to be stdout. Otherwise, we instantiate the class.
+			if objClassName == "java/io/PrintStream" { // if we're working with a printstream, force-set it to stdout
+				f.OpStack[0] = os.Stdout
+			} else {
+				objPtr, err := InstantiateClass(objClassName, fs)
+				if err != nil {
+					errMsg := fmt.Sprintf("in test %s, could not instantiate class object: %s  %v",
+						name, objClassName, err)
+					t.Skip(errMsg)
+				} else {
+					f.OpStack[0] = objPtr.(*object.Object)
+				}
+			}
+			f.TOS = 0
+
 			fs.PushFront(&f) // push the new frame
 			_ = runFrame(fs)
 
