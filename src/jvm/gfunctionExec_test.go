@@ -104,6 +104,31 @@ func TestGfunctionExecValid(t *testing.T) {
 	}
 }
 
+func TestGfunWith0or1StringsTable(t *testing.T) {
+	type testVars struct {
+		objName, methName, methType, stringParam, stderrText, stdoutText string
+	}
+
+	tests := make(map[string]testVars)
+
+	tv := testVars{
+		objName:     "java/io/PrintStream",
+		methName:    "println",
+		methType:    "(Ljava/lang/String;)V",
+		stringParam: "hello from table test",
+		stderrText:  "",
+		stdoutText:  "hello from table test",
+	}
+
+	tests["testPrintlnWith1string"] = tv
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+
+		})
+	}
+}
+
 // TestGfunctionExecTemplate is a way to test gfunctions that accept a string
 // parameter via calls from the INVOKEVIRTUAL bytecode. It sets up the frame,
 // the CP, and the environment so that the INVOKEVIRTUAL call is correctly simulated.
