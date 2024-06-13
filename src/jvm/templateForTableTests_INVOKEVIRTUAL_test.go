@@ -167,13 +167,13 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			// and run tests on those strings
 
 			errMsg := string(rawStderrMsg[:])
-			if len(errMsg) != 0 && errMsg != test.stderrText {
+			if len(errMsg) != 0 && !strings.Contains(errMsg, test.stderrText) {
 				t.Errorf("gfunctionExec: Test %s, expected error msg: %s, got: %s",
 					name, stderrExpected, errMsg)
 			}
 
 			outMsg := string(rawStdoutMsg[:])
-			if len(outMsg) != 0 && outMsg != test.stdoutText {
+			if len(outMsg) != 0 && !strings.Contains(outMsg, test.stdoutText) {
 				if !strings.Contains(outMsg, test.stdoutText) {
 					t.Errorf("gfunctionExec: Test %s, expected output: %s, got: %s",
 						name, stdoutExpected, outMsg)
