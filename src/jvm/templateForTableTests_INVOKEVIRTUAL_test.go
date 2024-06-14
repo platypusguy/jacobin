@@ -23,7 +23,7 @@ import (
 	"testing"
 )
 
-type testVars struct {
+type TestVars struct {
 	objName, // the name of the object whose method we're invoking
 	methName, // the name of the method, without the class name or the type
 	methType, // the type of the method
@@ -34,21 +34,23 @@ type testVars struct {
 
 func TestPrintln(t *testing.T) {
 	testName := "TestPrintln"
-	var params testVars
+
+	var params TestVars
 	params.objName = "java/io/PrintStream"
 	params.methName = "println"
 	params.methType = "(Ljava/lang/String;)V"
 	params.stringParam = "hello from table test"
 	params.stderrText = ""
 	params.stdoutText = "hello"
-	err := RunTestFuncWith0or1Strings(testName, params)
+	err := RunTestFuncWith0or1Strings(params)
 	if err != nil {
 		t.Errorf("Error in %s: %s", testName, err)
 	}
 }
 
-func RunTestFuncWith0or1Strings(testName string, params testVars) error {
-	// t.Run(testName, func(t *testing.T) { // from here to the end, we define the function that is the test
+// RunTestFuncWith0or1Strings runs the test and reports any errors via its return value.
+// Unit tests should test this value to determine whether the unit test has passed/failed.
+func RunTestFuncWith0or1Strings(params TestVars) error {
 
 	var objClassName = params.objName
 	var methName = params.methName
@@ -132,8 +134,8 @@ func RunTestFuncWith0or1Strings(testName string, params testVars) error {
 	} else {
 		objPtr, err := InstantiateClass(objClassName, fs)
 		if err != nil {
-			errMsg := fmt.Sprintf("in test %s, could not instantiate class object: %s  %v",
-				testName, objClassName, err)
+			errMsg := fmt.Sprintf("could not instantiate class object: %s  %v",
+				objClassName, err)
 			return errors.New(errMsg)
 		} else {
 			f.OpStack[0] = objPtr.(*object.Object)
@@ -161,20 +163,17 @@ func RunTestFuncWith0or1Strings(testName string, params testVars) error {
 
 	errMsg := string(rawStderrMsg[:])
 	if len(errMsg) != 0 && !strings.Contains(errMsg, params.stderrText) {
-		failureMsg := fmt.Sprintf("gfunctionExec: Test %s, expected error msg: %s, got: %s",
-			testName, stderrExpected, errMsg)
+		failureMsg := fmt.Sprintf("expected error msg: %s, got: %s",
+			stderrExpected, errMsg)
 		return errors.New(failureMsg)
 	}
 
 	outMsg := string(rawStdoutMsg[:])
-	if len(outMsg) != 0 && !strings.Contains(outMsg, "frog poodle") {
-		if !strings.Contains(outMsg, params.stdoutText) {
-			failureMsg := fmt.Sprintf("gfunctionExec: Test %s, expected output: %s, got: %s",
-				testName, stdoutExpected, outMsg)
-			return errors.New(failureMsg)
-		}
+	if len(outMsg) != 0 && !strings.Contains(outMsg, params.stdoutText) {
+		failureMsg := fmt.Sprintf("expected output: %s, got: %s",
+			stdoutExpected, outMsg)
+		return errors.New(failureMsg)
 	}
-	// })
 	return nil
 }
 
@@ -197,9 +196,9 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 	// }
 
 	// the map holding out tests. The key is the name of the test, the value is a struct of testVars, shown next
-	tests := make(map[string]testVars)
+	tests := make(map[string]TestVars)
 
-	tv := testVars{
+	tv := TestVars{
 		objName:     "java/io/PrintStream",
 		methName:    "println",
 		methType:    "(Ljava/lang/String;)V",
