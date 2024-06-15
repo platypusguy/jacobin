@@ -44,7 +44,7 @@ func TestPrintln(t *testing.T) {
 	params.stdoutText = "hello"
 	err := RunTestFuncWith0or1Strings(params)
 	if err != nil {
-		t.Errorf("Error in %s: %s", testName, err)
+		t.Errorf("Error in %s: %s", testName, err.Error())
 	}
 }
 
