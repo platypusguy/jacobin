@@ -524,7 +524,7 @@ func StringFormatter(params []interface{}) interface{} {
 				str := string(fld.Fvalue.([]byte))
 				valuesOut = append(valuesOut, str)
 			case types.Byte:
-				valuesOut = append(valuesOut, fld.Fvalue.(int64))
+				valuesOut = append(valuesOut, uint8(fld.Fvalue.(int64)))
 			case types.Bool:
 				var zz bool
 				if fld.Fvalue.(int64) == 0 {
