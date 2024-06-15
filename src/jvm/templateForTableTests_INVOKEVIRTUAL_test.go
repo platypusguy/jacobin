@@ -32,6 +32,7 @@ type TestVars struct {
 	stdoutText string // the expected text to stdout, if any. "" = no output expected
 }
 
+// TestPrintln() is a demonstration of how to use RunTestFuncWith0or1Strings()
 func TestPrintln(t *testing.T) {
 	testName := "TestPrintln"
 
