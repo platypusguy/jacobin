@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"crypto/rand"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -65,7 +66,7 @@ func Load_Math_Big_Integer() {
 	MethodSignatures["java/math/BigInteger.<init>(ILjava/util/Random;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerInitRandom,
 		}
 
 	MethodSignatures["java/math/BigInteger.<init>(Ljava/lang/String;)V"] =
@@ -470,6 +471,33 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	return nil
 }
 
+// "java/math/BigInteger.<init>(ILjava/util/Random;)V"
+func bigIntegerInitRandom(params []interface{}) interface{} {
+	// params[0]: base object
+	// params[1]: int64 holding numbits such that the base object value field
+	//            will be set to a random value in the rang given by [0 : 2**(numbits) - 1].
+	// params[2]: Random object
+	objBase := params[0].(*object.Object)
+	fldBase := objBase.FieldTable["value"]
+	numBits := params[1].(int64)
+	// TODO: Ignore for now: objRandom := params[2].(*object.Object)
+
+	// Compute upperBound = 2**(numBits) based on numBits.
+	upperBound := new(big.Int).Lsh(big.NewInt(1), uint(numBits))
+
+	// Get a big.Int in the randge of [0, upperBound].
+	zz, err := rand.Int(rand.Reader, upperBound)
+	if err != nil {
+		errMsg := fmt.Sprintf("rand.Int(numBits=%d) failed, reason: %s", numBits, err.Error())
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+
+	// Update base object and return nil
+	fldBase.Fvalue = zz
+	objBase.FieldTable["value"] = fldBase
+	return nil
+}
+
 // "java/math/BigInteger.<init>(Ljava/lang/String;)V"
 func bigIntegerInitString(params []interface{}) interface{} {
 	// params[0]: base object
@@ -672,7 +700,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 	// params[0]: base object (xx)
 	// params[1]: argument object (yy)
-	// zz = xx / yy; rr = xx % y
+	// zz = xx / yy; rr = xx % yy
 
 	objBase := params[0].(*object.Object)
 	objArg := params[1].(*object.Object)
@@ -686,12 +714,13 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 
 	// BigInteger operation
 	var zz = new(big.Int)
-	var mm = new(big.Int)
-	zz.DivMod(xx, yy, mm)
+	var rr = new(big.Int)
+	zz.Div(xx, yy)
+	rr.Rem(xx, yy)
 
 	// Create xx / yy and xx % yy objects
 	obj1 := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
-	obj2 := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, mm)
+	obj2 := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, rr)
 
 	// Create the return object with the object-array
 	var objectArray = []*object.Object{obj1, obj2}
@@ -837,7 +866,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := fmt.Sprintf("Modulus (%d) negative", yy.Int64())
+		errMsg := "BigInteger: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -851,7 +880,9 @@ func bigIntegerMod(params []interface{}) interface{} {
 }
 
 // "java/math/BigInteger.modInverse(Ljava/math/BigInteger;)Ljava/math/BigInteger;"
-// The modInverse() method returns modular multiplicative inverse of the base object, modulo the argument.
+// The modInverse() method returns the modular multiplicative inverse of the base object, modulo the argument.
+// Note that zz = the modular multiplicative inverse of (xx % mm) is such that
+// (xx * zz) % mm = 1.
 //
 // This method throws an ArithmeticException if modulus <= 0
 // or this has no multiplicative inverse modulo the modulus.
@@ -865,13 +896,17 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	mm := objModulus.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if mm.Cmp(zero) <= 0 {
-		errMsg := fmt.Sprintf("Modulus (%d) is negative", mm.Int64())
+		errMsg := "BigInteger: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
 	// BigInteger operation
 	var zz = new(big.Int)
-	zz.ModInverse(xx, mm)
+	ret := zz.ModInverse(xx, mm)
+	if ret == nil {
+		errMsg := "BigInteger not invertible"
+		return getGErrBlk(excNames.ArithmeticException, errMsg)
+	}
 
 	// Create return object
 	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
@@ -1023,11 +1058,10 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 
 	// BigInteger operation
 	var zz = new(big.Int)
-	var mm = new(big.Int)
-	zz.DivMod(xx, yy, mm)
+	zz.Rem(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, mm)
+	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
 	return obj
 }
 
