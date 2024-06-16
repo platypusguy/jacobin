@@ -425,7 +425,7 @@ var JVMexceptionNames = []string{
 	"java.nio.charset.CoderMalfunctionError",                   // VERIFIED
 	"java.lang.ExceptionInInitializerError",                    // VERIFIED
 	"javax.xml.parsers.FactoryConfigurationError",              // VERIFIED
-	"java.lang.IncompatibleClassChangeError",                   // VERIFIED
+	"java.lang.IncompatibleClassChangeError",                   // VERIFIED used in interface lookups, among otherd
 	"java.lang.InternalError",                                  // VERIFIED
 	"java.io.IOError",                                          // VERIFIED
 	"java.lang.LinkageError",                                   // VERIFIED

@@ -2358,19 +2358,6 @@ frameInterpreter:
 					}
 					// any exception will already have been handled.
 				}
-
-				// Code prior to JACOBIN-519
-				//
-				// f, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, false)
-				// if err != nil {
-				// 	// any exceptions message will already have been displayed to the user
-				// 	glob.ErrorGoStack = string(debug.Stack())
-				// 	errMsg := "INVOKESTATIC: Error encountered in: " + className + "." + methodName + methodType
-				// 	status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-				// 	if status != exceptions.Caught {
-				// 		return errors.New(errMsg) // applies only if in test
-				// 	}
-				// }
 			} else if mtEntry.MType == 'J' {
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
@@ -2412,12 +2399,12 @@ frameInterpreter:
 			}
 
 			CPentry := CP.CpIndex[CPslot]
-			if CPentry.Type != classloader.Dummy { // intended to force an error, for the nonce
+			if CPentry.Type != classloader.Interface { // intended to force an error, for the nonce
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
-				errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
-				err := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+				// errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
+				err := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
 				// err := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 				if err == exceptions.NotCaught {
 					goto frameInterpreter
@@ -2425,6 +2412,7 @@ frameInterpreter:
 					return errors.New(errMsg) // return should happen only in testing
 				}
 			}
+
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
