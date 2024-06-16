@@ -2404,12 +2404,41 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
 				// errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
-				err := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
+				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
 				// err := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
-				if err == exceptions.NotCaught {
-					goto frameInterpreter
-				} else if glob.JacobinName == "test" {
-					return errors.New(errMsg) // return should happen only in testing
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			method := CP.InterfaceRefs[CPentry.Slot]
+
+			// get the class entry from this method
+			classRef := method.ClassIndex
+			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			className := *classNamePtr
+
+			// get the method name for this method
+			nAndTindex := method.NameAndType
+			nAndTentry := CP.CpIndex[nAndTindex]
+			nAndTslot := nAndTentry.Slot
+			nAndT := CP.NameAndTypes[nAndTslot]
+			methodNameIndex := nAndT.NameIndex
+			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
+
+			// get the signature for this method
+			methodSigIndex := nAndT.DescIndex
+			methodType := classloader.FetchUTF8stringFromCPEntryNumber(
+				CP, methodSigIndex)
+
+			objRef := pop(f)
+			if objRef == nil {
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
+					className+methodName+methodType)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
