@@ -2463,7 +2463,7 @@ frameInterpreter:
 			// CURR: execute the function in the G and J variants
 
 			// for the nonce
-			errMsg := "INVOKEINTERFACE: WIP, forcing \nan error, for the nonce"
+			errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
 			exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
