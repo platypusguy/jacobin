@@ -109,6 +109,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/nio/*
 	Load_Nio_Charset_Charset()
 
+	// java/security/*
+	Load_Security_SecureRandom()
+
 	// java/util/*
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()

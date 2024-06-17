@@ -60,7 +60,7 @@ func Load_Math_Big_Integer() {
 	MethodSignatures["java/math/BigInteger.<init>(IILjava/util/Random;)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerInitProbablyPrime,
 		}
 
 	MethodSignatures["java/math/BigInteger.<init>(ILjava/util/Random;)V"] =
@@ -290,7 +290,7 @@ func Load_Math_Big_Integer() {
 	MethodSignatures["java/math/BigInteger.probablePrime(ILjava/util/Random;)Ljava/math/BigInteger;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerProbablyPrime,
 		}
 
 	MethodSignatures["java/math/BigInteger.remainder(Ljava/math/BigInteger;)Ljava/math/BigInteger;"] =
@@ -387,6 +387,23 @@ func Load_Math_Big_Integer() {
 
 var bigIntegerClassName = "java/math/BigInteger"
 
+// Get a prime number formatted as a big.Int.
+func getPrime(bitLength int) (*big.Int, string) {
+	for { // TODO: Infinite loop ok?
+		// Generate a random number given the bit length.
+		zz, err := rand.Prime(rand.Reader, bitLength)
+		if err != nil {
+			errMsg := fmt.Sprintf("rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
+			return nil, errMsg
+		}
+
+		// Check if the number is probably prime
+		if zz.ProbablyPrime(20) { // 20 is the number of Miller-Rabin tests
+			return zz, ""
+		}
+	}
+}
+
 // initBigIntegerField: Initialise the object field.
 // Fvalue holds *big.Int (pointer).
 func initBigIntegerField(obj *object.Object, argValue int64) {
@@ -472,6 +489,27 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 }
 
 // "java/math/BigInteger.<init>(ILjava/util/Random;)V"
+func bigIntegerInitProbablyPrime(params []interface{}) interface{} {
+	// params[0]: base object (to be updated).
+	// params[1]: int64 holding bit length.
+	// params[2]: int64 holding certainty (TODO: currently ignored).
+	// params[3]: Random object (TODO: currently ignored).
+
+	obj := params[0].(*object.Object)
+	fld := obj.FieldTable["value"]
+	bitLength := params[1].(int64)
+
+	zz, errMsg := getPrime(int(bitLength))
+	if zz != nil {
+		// Update base object and return nil
+		fld.Fvalue = zz
+		obj.FieldTable["value"] = fld
+		return nil
+	}
+	return getGErrBlk(excNames.ArithmeticException, errMsg)
+}
+
+// "java/math/BigInteger.<init>(IILjava/util/Random;)V"
 func bigIntegerInitRandom(params []interface{}) interface{} {
 	// params[0]: base object
 	// params[1]: int64 holding numbits such that the base object value field
@@ -480,7 +518,7 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	objBase := params[0].(*object.Object)
 	fldBase := objBase.FieldTable["value"]
 	numBits := params[1].(int64)
-	// TODO: Ignore for now: objRandom := params[2].(*object.Object)
+	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
 
 	// Compute upperBound = 2**(numBits) based on numBits.
 	upperBound := new(big.Int).Lsh(big.NewInt(1), uint(numBits))
@@ -1063,6 +1101,23 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 	// Create return object
 	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
 	return obj
+}
+
+// "java/math/BigInteger.probablyPrime(ILjava/util/Random;)Ljava/math/BigInteger;"
+func bigIntegerProbablyPrime(params []interface{}) interface{} {
+	// params[1]: number of bits (bitLength)
+	// params[2]: Random object (yy)
+
+	bitLength := params[1].(int64)
+	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
+
+	zz, errMsg := getPrime(int(bitLength))
+	if zz != nil {
+		// Create return object.
+		obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+		return obj
+	}
+	return getGErrBlk(excNames.ArithmeticException, errMsg)
 }
 
 // "java/math/BigInteger.signum()I"
