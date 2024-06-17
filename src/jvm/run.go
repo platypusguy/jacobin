@@ -2448,6 +2448,20 @@ frameInterpreter:
 				}
 			}
 
+			// get the name of the objectRef's class, and make sure it's loaded
+			objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
+			if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
+				// in this case, LoadClassFromNameOnly() will have already thrown the exception
+				if globals.JacobinHome() == "test" {
+					return err // applies only if in test
+				}
+			}
+
+			// CURR: make sure class implements the interface or a superinterface
+			// CURR: get a pointer to the method area
+			// CURR: extract the parameters to the function
+			// CURR: execute the function in the G and J variants
+
 			// for the nonce
 			errMsg := "INVOKEINTERFACE: WIP, forcing \nan error, for the nonce"
 			exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
