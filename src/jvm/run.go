@@ -2432,6 +2432,12 @@ frameInterpreter:
 			methodType := classloader.FetchUTF8stringFromCPEntryNumber(
 				CP, methodSigIndex)
 
+			var args []any
+			for i := 0; i < int(count)-1; i++ {
+				args = append(args, pop(f))
+			}
+			// now get the objRef pointing to the class containing the method described just previously
+			// The objRef object has previously been instantiated and its constructor called.
 			objRef := pop(f)
 			if objRef == nil {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
@@ -2441,6 +2447,24 @@ frameInterpreter:
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
+
+			// get the name of the objectRef's class, and make sure it's loaded
+			objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
+			if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
+				// in this case, LoadClassFromNameOnly() will have already thrown the exception
+				if globals.JacobinHome() == "test" {
+					return err // applies only if in test
+				}
+			}
+
+			// CURR: make sure class implements the interface or a superinterface
+			// CURR: get a pointer to the method area
+			// CURR: extract the parameters to the function
+			// CURR: execute the function in the G and J variants
+
+			// for the nonce
+			errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
+			exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
