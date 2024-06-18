@@ -64,7 +64,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.nextInt()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  randomNextInt,
+			GFunction:  randomNextIntLong,
 		}
 
 	MethodSignatures["java/util/Random.nextInt(I)I"] =
@@ -76,13 +76,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.nextLong()J"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  randomNextLong,
-		}
-
-	MethodSignatures["java/util/Random.nextLong(J)J"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  randomNextLongBound,
+			GFunction:  randomNextIntLong,
 		}
 
 	MethodSignatures["java/util/Random.setSeed(J)V"] =
@@ -169,9 +163,9 @@ func randomSetSeed(params []interface{}) interface{} {
 	return nil
 }
 
-// randomNextInt returns the next pseudorandom, uniformly distributed int64 value.
+// randomNextIntLong returns the next pseudorandom, uniformly distributed int64 value.
 // ChatGPT: func (r *Random) NextInt() int {
-func randomNextInt(params []interface{}) interface{} {
+func randomNextIntLong(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(obj)
 	output := r.rand.Int63()
@@ -181,28 +175,6 @@ func randomNextInt(params []interface{}) interface{} {
 // randomNextIntBound returns a pseudorandom, uniformly distributed int value between 0 (inclusive) and bound (exclusive).
 // ChatGPT: func (r *Random) NextIntBound(bound int) int, error {
 func randomNextIntBound(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	r := GetStructFromRandomObject(obj)
-	bound := params[1].(int64)
-	if bound < 1 {
-		errMsg := fmt.Sprintf("Bound must be positive, observed: %d", bound)
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	output := r.rand.Int63n(bound)
-	return output
-}
-
-// randomNextLong is identical to randomNextInt.
-// ChatGPT: func (r *Random) NextLong() int64 {
-func randomNextLong(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	r := GetStructFromRandomObject(obj)
-	output := r.rand.Int63()
-	return output
-}
-
-// randomNextLongBound returns a pseudorandom, uniformly distributed long value between 0 (inclusive) and bound (exclusive).
-func randomNextLongBound(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(obj)
 	bound := params[1].(int64)

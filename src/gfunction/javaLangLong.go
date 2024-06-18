@@ -53,6 +53,12 @@ func Load_Lang_Long() {
 			GFunction:  longToHexString,
 		}
 
+	MethodSignatures["java/lang/Long.toString(J)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  longToString,
+		}
+
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
 		GMeth{
 			ParamSlots: 2,
@@ -108,6 +114,14 @@ func longToHexString(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
 	uint64Value := uint64(int64Value)
 	str := fmt.Sprintf("%016x", uint64Value)
+	obj := object.StringObjectFromGoString(str)
+	return obj
+}
+
+// "java/lang/Long.toString(J)Ljava/lang/String;"
+func longToString(params []interface{}) interface{} {
+	int64Value := params[0].(int64)
+	str := fmt.Sprintf("%d", int64Value)
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
