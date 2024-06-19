@@ -2403,7 +2403,6 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
-				// errMsg = "INVOKEINTERFACE: WIP, forcing an error, for the nonce" /* TODO Remove this temporary error message */
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
 				// err := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 				if status != exceptions.Caught {
@@ -2454,6 +2453,26 @@ frameInterpreter:
 				// in this case, LoadClassFromNameOnly() will have already thrown the exception
 				if globals.JacobinHome() == "test" {
 					return err // applies only if in test
+				}
+			}
+
+			class := classloader.MethAreaFetch(objRefClassName)
+			if class == nil {
+				// in theory, this can't happen due to immediately previous loading, but making sure
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
+				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			clData := *class.Data
+			if len(clData.Interfaces) == 0 {
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+					objRefClassName, className)
+				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
