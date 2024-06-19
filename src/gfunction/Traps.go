@@ -240,30 +240,6 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/security/SecureRandom.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/security/SecureRandom.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/security/SecureRandom.<init>([B)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/security/SecureRandom.<init>(Ljava.security.SecureRandomSpi;Ljava.security.Provider;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/util/Random.next(I)V"] =
 		GMeth{
 			ParamSlots: 1,
