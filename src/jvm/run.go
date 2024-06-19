@@ -2476,6 +2476,25 @@ frameInterpreter:
 				}
 			}
 
+			var intfaceName = ""
+			for i := 0; i < len(clData.Interfaces); i++ {
+				index := uint32(clData.Interfaces[i])
+				intfaceName = *stringPool.GetStringPointer(index)
+				if intfaceName == className {
+					break
+				} else {
+					intfaceName = ""
+				}
+				if intfaceName == "" {
+					errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+						objRefClassName, className)
+					status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+			}
+
 			// CURR: make sure class implements the interface or a superinterface
 			// CURR: get a pointer to the method area
 			// CURR: extract the parameters to the function
