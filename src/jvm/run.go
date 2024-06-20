@@ -2466,6 +2466,30 @@ frameInterpreter:
 				}
 			}
 
+			// Now find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
+			// the steps are taken, where C is the interface:
+			//
+			// 1) If C is not an interface, interface method resolution throws an IncompatibleClassChangeError.
+			//
+			// 2) Otherwise, if C declares a method with the name and descriptor specified by the interface method reference,
+			// method lookup succeeds.
+			//
+			// 3) Otherwise, if the class Object declares a method with the name and descriptor specified by the
+			// interface method reference, which has its ACC_PUBLIC flag set and does not have its ACC_STATIC flag set,
+			// method lookup succeeds.
+			//
+			// 4) Otherwise, if the maximally-specific superinterface methods (§5.4.3.3) of C for the name and descriptor
+			// specified by the method reference include exactly one method that does not have its ACC_ABSTRACT flag set,
+			// then this method is chosen and method lookup succeeds.
+			//
+			// 5) Otherwise, if any superinterface of C declares a method with the name and descriptor specified by the
+			// method reference that has neither its ACC_PRIVATE flag nor its ACC_STATIC flag set, one of these is
+			// arbitrarily chosen and method lookup succeeds.
+			//
+			// 6) Otherwise, method lookup fails.
+			//
+			// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
+
 			clData := *class.Data
 			if len(clData.Interfaces) == 0 {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
