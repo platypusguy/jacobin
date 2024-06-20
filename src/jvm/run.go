@@ -2471,8 +2471,8 @@ frameInterpreter:
 			//
 			// 1) If C is not an interface, interface method resolution throws an IncompatibleClassChangeError.
 			//
-			// 2) Otherwise, if C declares a method with the name and descriptor specified by the interface method reference,
-			// method lookup succeeds.
+			// 2) Otherwise, if C declares a method with the name and descriptor specified by the
+			// interface method reference, method lookup succeeds.
 			//
 			// 3) Otherwise, if the class Object declares a method with the name and descriptor specified by the
 			// interface method reference, which has its ACC_PUBLIC flag set and does not have its ACC_STATIC flag set,
@@ -2500,18 +2500,35 @@ frameInterpreter:
 				}
 			}
 
-			var intfaceName = ""
+			var foundIntfaceName = ""
 			for i := 0; i < len(clData.Interfaces); i++ {
 				index := uint32(clData.Interfaces[i])
-				intfaceName = *stringPool.GetStringPointer(index)
-				if intfaceName == interfaceName { // TODO: check for superclasses
-					break
-				} else {
-					intfaceName = ""
+				foundIntfaceName = *stringPool.GetStringPointer(index)
+				if foundIntfaceName == interfaceName {
+					if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+						// in this case, LoadClassFromNameOnly() will have already thrown the exception
+						if globals.JacobinHome() == "test" {
+							return err // applies only if in test
+						}
+					}
+					mtEntry, err := classloader.FetchMethodAndCP(
+						interfaceName, interfaceMethodName, interfaceMethodType)
+					if err != nil || mtEntry.Meth == nil {
+						glob.ErrorGoStack = string(debug.Stack())
+						errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+							interfaceName, interfaceMethodName, interfaceMethodType)
+						status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
+						}
+					}
+					goto executeInterfaceMethod // method found, move on to execution
+				} else { // TODO: check for superclasses, after checking Object
+					foundIntfaceName = ""
 				}
 			}
 
-			if intfaceName == "" {
+			if foundIntfaceName == "" { // no interface was found, check java.lang.Object()
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
 					objRefClassName, interfaceName)
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
@@ -2524,6 +2541,7 @@ frameInterpreter:
 			// CURR: extract the parameters to the function
 			// CURR: execute the function in the G and J variants
 
+		executeInterfaceMethod:
 			// for the nonce
 			errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
 			exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
