@@ -2413,34 +2413,34 @@ frameInterpreter:
 			method := CP.InterfaceRefs[CPentry.Slot]
 
 			// get the class entry from this method
-			classRef := method.ClassIndex
-			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
-			className := *classNamePtr
+			interfaceRef := method.ClassIndex
+			interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
+			interfaceNamePtr := stringPool.GetStringPointer(uint32(interfaceNameIndex))
+			interfaceName := *interfaceNamePtr
 
 			// get the method name for this method
 			nAndTindex := method.NameAndType
 			nAndTentry := CP.CpIndex[nAndTindex]
 			nAndTslot := nAndTentry.Slot
 			nAndT := CP.NameAndTypes[nAndTslot]
-			methodNameIndex := nAndT.NameIndex
-			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
+			interfaceMethodNameIndex := nAndT.NameIndex
+			interfaceMethodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, interfaceMethodNameIndex)
 
 			// get the signature for this method
-			methodSigIndex := nAndT.DescIndex
-			methodType := classloader.FetchUTF8stringFromCPEntryNumber(
-				CP, methodSigIndex)
+			interfaceMethodSigIndex := nAndT.DescIndex
+			interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
+				CP, interfaceMethodSigIndex)
 
 			var args []any
 			for i := 0; i < int(count)-1; i++ {
 				args = append(args, pop(f))
 			}
-			// now get the objRef pointing to the class containing the method described just previously
+			// now get the objRef pointing to the class containing the call to the method described just previously
 			// The objRef object has previously been instantiated and its constructor called.
 			objRef := pop(f)
 			if objRef == nil {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
-					className+methodName+methodType)
+					interfaceName+interfaceMethodName+interfaceMethodType)
 				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
@@ -2493,7 +2493,7 @@ frameInterpreter:
 			clData := *class.Data
 			if len(clData.Interfaces) == 0 {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-					objRefClassName, className)
+					objRefClassName, interfaceName)
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
@@ -2504,7 +2504,7 @@ frameInterpreter:
 			for i := 0; i < len(clData.Interfaces); i++ {
 				index := uint32(clData.Interfaces[i])
 				intfaceName = *stringPool.GetStringPointer(index)
-				if intfaceName == className { // TODO: check for superclasses
+				if intfaceName == interfaceName { // TODO: check for superclasses
 					break
 				} else {
 					intfaceName = ""
@@ -2513,7 +2513,7 @@ frameInterpreter:
 
 			if intfaceName == "" {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-					objRefClassName, className)
+					objRefClassName, interfaceName)
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
