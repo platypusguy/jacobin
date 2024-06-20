@@ -2789,7 +2789,7 @@ frameInterpreter:
 				}
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "CHECKCAST: Invalid class reference"
+				errMsg := fmt.Sprintf("CHECKCAST: Invalid class reference, type=%T", ref)
 				status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
@@ -2807,7 +2807,7 @@ frameInterpreter:
 				classNamePtr := classloader.FetchCPentry(CP, CPslot)
 				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "CHECKCAST: Invalid classRef found"
+					errMsg := fmt.Sprintf("CHECKCAST: Invalid classRef found, classNamePtr.RetType=%d", classNamePtr.RetType)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
 				}
