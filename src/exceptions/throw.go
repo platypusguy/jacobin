@@ -100,7 +100,9 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		fs = th.Stack
 		for fs.Len() > 0 {
 			fr := fs.Front().Value
-			if fr != catchFrame {
+			if fr == catchFrame {
+				break
+			} else {
 				fs.Remove(fs.Front())
 			}
 		}
