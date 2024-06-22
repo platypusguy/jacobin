@@ -98,7 +98,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack
-		for fs.Len() > 0 {
+		for fs.Len() > 0 { // remove the frames we examined that did not have the catch logic
 			fr := fs.Front().Value
 			if fr == catchFrame {
 				break
@@ -106,6 +106,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 				fs.Remove(fs.Front())
 			}
 		}
+
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef

@@ -43,9 +43,7 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 				return nil, -1
 			}
 
-			// frWithoutHanlder := fr
 			fr = fr.Next()
-			// fs.Remove(frWithoutHanlder)
 		}
 	}
 	return excFrame, excPC
