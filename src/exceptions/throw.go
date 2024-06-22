@@ -85,17 +85,25 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	catchFrame, catchPC := FindCatchFrame(fs, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil {
 		// at this point, we know that the exception was caught
-		// and that the top of the frame stack holds the frame
+		// and that the returned frame is the frame
 		// containing the catch logic, referred to here as the catchFrame.
 		// now, set up the execution of the catch code by:
+		// 0. popping off the frames that are above the catch frame,
+		//    if any--so that top frame in the frame stack is the catch frame
 		// 1. creating a new objRef for the exception
-		// 2. pushing the objRef on the stack of the frame
+		// 2. pushing the objRef on the op stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
 		caughtMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
 		log.Log(caughtMsg, log.TRACE_INST)
 
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack
+		for fs.Len() > 0 {
+			fr := fs.Front().Value
+			if fr != catchFrame {
+				fs.Remove(fs.Front())
+			}
+		}
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
