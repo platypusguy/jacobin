@@ -2343,8 +2343,9 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
+				f.ExceptionPC = f.PC
+				f.PC += 2 // advance PC for the first two bytes of this bytecode
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
-				f.PC += 2 // advance PC for the first two bytes of this bytecode before possibly returning
 				if ret != nil {
 					switch ret.(type) {
 					case error: // only occurs in testing

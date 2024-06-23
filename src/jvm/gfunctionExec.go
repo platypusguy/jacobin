@@ -71,14 +71,6 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	case *gfunction.GErrBlk:
 		// var errorDetails string
 		errBlk := *ret.(*gfunction.GErrBlk)
-		// parts := strings.SplitN(errBlk.ErrMsg, ":", 2)
-		// if len(parts) == 2 {
-		// 	funcName = parts[0]
-		// 	errorDetails = parts[1]
-		// } else {
-		// 	funcName = "{MISSINGCOLON}"
-		// 	errorDetails = errBlk.ErrMsg
-		// }
 
 		var threadName string
 		if f.Thread == 1 {
