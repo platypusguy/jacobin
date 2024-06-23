@@ -61,7 +61,7 @@ func Load_Lang_Integer() {
 
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;)I"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  integerParseInt,
 		}
 
