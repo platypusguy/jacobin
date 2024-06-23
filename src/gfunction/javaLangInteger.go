@@ -59,10 +59,16 @@ func Load_Lang_Integer() {
 			GFunction:  integerIntLongValue,
 		}
 
+	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerParseInt,
+		}
+
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;I)I"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  integerParseInt,
+			GFunction:  integerParseIntRadix,
 		}
 
 	MethodSignatures["java/lang/Integer.valueOf(I)Ljava/lang/Integer;"] =
@@ -165,8 +171,34 @@ func integerIntLongValue(params []interface{}) interface{} {
 	return ii
 }
 
-// "java/lang/Integer.parseInt(Ljava/lang/String;I)I"
+// "java/lang/Integer.parseInt(Ljava/lang/String;)I"
+// Radix = 10
 func integerParseInt(params []interface{}) interface{} {
+	// Extract and validate the string argument.
+	parmObj := params[0].(*object.Object)
+	strArg := object.GoStringFromStringObject(parmObj)
+	if len(strArg) < 1 {
+		return getGErrBlk(excNames.NumberFormatException, "String length is zero")
+	}
+
+	// Replace a leading "#" with "0x" in strArg.
+	if strings.HasPrefix(strArg, "#") {
+		strArg = strings.Replace(strArg, "#", "0x", 1)
+	}
+
+	// Compute output.
+	output, err := strconv.ParseInt(strArg, 10, 64)
+	if err != nil {
+		errMsg := fmt.Sprintf("strconv.ParseInt(%s,10,64) failed, reason: %s", strArg, err.Error())
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+
+	// Return computed value.
+	return output
+}
+
+// "java/lang/Integer.parseInt(Ljava/lang/String;I)I"
+func integerParseIntRadix(params []interface{}) interface{} {
 	// Extract and validate the string argument.
 	parmObj := params[0].(*object.Object)
 	strArg := object.GoStringFromStringObject(parmObj)
