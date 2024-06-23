@@ -37,7 +37,7 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 		excFrame, excPC = FindExceptionFrame(f, excName, searchPC)
 		if excFrame != nil {
 			break
-		} else { // if the exception was not found we delete the current frame
+		} else { // if the exception was not found in this frame, we delete the current frame
 			// unless it's the last frame
 			if fr.Next() == nil {
 				return nil, -1
