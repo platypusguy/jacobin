@@ -19,6 +19,8 @@ import (
 	"slices"
 )
 
+var CaughtGfunctionException = errors.New("caugh gfunction exception")
+
 // Execution of gfunctions (that is, Java functions ported to golang).
 // As part of JACOBIN-519, this code seeks to replace the previous set of
 // functions (e.g., runGframe() and runGmethod()) with a simpler streamlined
@@ -84,7 +86,8 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
 		} else {
-			return nil // return nothing if the exception was caught
+			// if the exception was caught, tell calling function to execute the catching logic
+			return CaughtGfunctionException
 		}
 
 	case error:

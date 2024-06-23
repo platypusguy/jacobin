@@ -2157,6 +2157,9 @@ frameInterpreter:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
+						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 1
+							goto frameInterpreter
 						}
 					default: // if it's not an error, then it's a legitimate return value, which we simply push
 						push(f, ret)
