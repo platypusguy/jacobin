@@ -70,8 +70,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	// the internal format used in the constant pool
 	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
 
-	// capture the PC where the exception was thrown (saved b/c later we modify the value of f.PC)
-	f.ExceptionPC = f.PC
+	// capture the PC where the exception was thrown, if it hasn't been captured yet.
+	// (saved b/c later we modify the value of f.PC)
+	if f.ExceptionPC == -1 {
+		f.ExceptionPC = f.PC
+	}
 
 	th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
 	if !ok {
