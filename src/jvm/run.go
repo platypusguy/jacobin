@@ -2185,6 +2185,7 @@ frameInterpreter:
 					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName + methodType
 					return errors.New(errMsg)
 				}
+				f.ExceptionPC = f.PC                 // in the event the present PC is needed in an exception message
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -2272,7 +2273,8 @@ frameInterpreter:
 					}
 				}
 
-				f.PC += 1
+				f.ExceptionPC = f.PC                 // in the event the present PC is needed in an exception message
+				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
