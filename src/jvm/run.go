@@ -2280,7 +2280,7 @@ frameInterpreter:
 
 		case opcodes.INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-			f.PC += 2
+			// f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			// get the methodRef entry
@@ -2342,7 +2342,7 @@ frameInterpreter:
 				}
 
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
-				// if err != nil {
+				f.PC += 2 // advance PC for the first two bytes of this bytecode before possibly returning
 				if ret != nil {
 					switch ret.(type) {
 					case error: // only occurs in testing
@@ -2376,7 +2376,9 @@ frameInterpreter:
 					return errors.New(errMsg)
 				}
 
-				f.PC += 1                            // point to the next bytecode before exiting
+				f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
+				f.ExceptionPC = f.PC                 // in the event of an exception, here's where we were
+				f.PC += 1                            // to point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				// return runFrame(fs)
