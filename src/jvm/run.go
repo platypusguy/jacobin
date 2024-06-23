@@ -2233,10 +2233,13 @@ frameInterpreter:
 				// if err != nil {
 				if ret != nil {
 					switch ret.(type) {
-					case error: // only occurs in testing
+					case error:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
+						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 1
+							goto frameInterpreter
 						}
 					default: // if it's not an error, then it's a legitimate return value, which we simply push
 						push(f, ret)
@@ -2351,10 +2354,13 @@ frameInterpreter:
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
 				if ret != nil {
 					switch ret.(type) {
-					case error: // only occurs in testing
+					case error:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
+						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 1
+							goto frameInterpreter
 						}
 					default: // if it's not an error, then it's a legitimate return value, which we simply push
 						push(f, ret)
