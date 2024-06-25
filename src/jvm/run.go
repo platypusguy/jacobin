@@ -1073,7 +1073,10 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("in %s.%s %s",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
 				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
-				if status != exceptions.Caught {
+				if status == exceptions.Caught {
+					f.PC += 1
+					goto frameInterpreter // execute the frame with the exception
+				} else {
 					return errors.New(errMsg) // applies only if in test
 				}
 			} else {
