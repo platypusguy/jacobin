@@ -2188,7 +2188,9 @@ frameInterpreter:
 					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName + methodType
 					return errors.New(errMsg)
 				}
-				f.ExceptionPC = f.PC                 // in the event the present PC is needed in an exception message
+				if f.ExceptionPC != -1 {
+					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				}
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -2249,16 +2251,6 @@ frameInterpreter:
 					}
 					// any exception will already have been handled.
 				}
-
-				// PRIOR TO JACOBIN-519
-				// _, err = runGmethod(mtEntry, fs, className, methodName, methSig, &params, true)
-				// if err != nil {
-				// 	// any exception message will already have been displayed to the user
-				// 	glob.ErrorGoStack = string(debug.Stack())
-				// 	errMsg := fmt.Sprintf("INVOKESPECIAL: Error encountered in: %s.%s", className, methodName)
-				// 	return errors.New(errMsg)
-				// }
-				// break
 			} else if mtEntry.MType == 'J' {
 				// TODO: handle arguments to method, if any
 				m := mtEntry.Meth.(classloader.JmEntry)
@@ -2279,7 +2271,9 @@ frameInterpreter:
 					}
 				}
 
-				f.ExceptionPC = f.PC                 // in the event the present PC is needed in an exception message
+				if f.ExceptionPC != -1 {
+					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				}
 				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -2349,7 +2343,9 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				f.ExceptionPC = f.PC
+				if f.ExceptionPC != -1 {
+					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				}
 				f.PC += 2 // advance PC for the first two bytes of this bytecode
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
 				if ret != nil {
@@ -2388,8 +2384,10 @@ frameInterpreter:
 					return errors.New(errMsg)
 				}
 
-				f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
-				f.ExceptionPC = f.PC                 // in the event of an exception, here's where we were
+				f.PC += 2 // 2 == initial PC advance in this bytecode (see above)
+				if f.ExceptionPC != -1 {
+					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				}
 				f.PC += 1                            // to point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
