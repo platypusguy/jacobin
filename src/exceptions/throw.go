@@ -113,7 +113,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
-		catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
+		// catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
+		catchFrame.PC = catchPC
 		return Caught
 	}
 
