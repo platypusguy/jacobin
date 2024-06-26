@@ -1074,7 +1074,7 @@ frameInterpreter:
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, errInfo)
 				status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, f)
 				if status == exceptions.Caught {
-					f.PC += 1
+					// f.PC += 1
 					goto frameInterpreter // execute the frame with the exception
 				} else {
 					return errors.New(errMsg) // applies only if in test
@@ -2814,10 +2814,11 @@ frameInterpreter:
 					var frm = fr.Value.(*frames.Frame)
 					// f.ExceptionTable = &m.Exceptions
 					if frm == catchFrame {
-						frm.Meth = f.Meth[handlerBytecode:]
+						// frm.Meth = f.Meth[handlerBytecode:]
 						frm.TOS = -1
 						push(frm, objectRef)
-						frm.PC = 0
+						// frm.PC = 0
+						frm.PC = handlerBytecode
 						// make the frame with the catch block active
 						fs.Front().Value = frm
 						goto frameInterpreter
