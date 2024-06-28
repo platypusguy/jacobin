@@ -180,18 +180,6 @@ func Load_Traps() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -263,6 +251,12 @@ func trapClass([]interface{}) interface{} {
 // Generic trap for deprecated classes and functions
 func trapDeprecated([]interface{}) interface{} {
 	errMsg := "The requested class or function is deprecated and, therefore, not supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
+
+// Generic trap for deprecated classes and functions
+func trapUndocumented([]interface{}) interface{} {
+	errMsg := "The requested class or function is undocumented and, therefore, not supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
