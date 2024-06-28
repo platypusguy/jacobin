@@ -55,4 +55,10 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 }
