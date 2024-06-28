@@ -173,7 +173,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 }
 
 // Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
-func populator(classname string, fldtype string, fldvalue interface{}) interface{} {
+func populator(classname string, fldtype string, fldvalue interface{}) *object.Object {
 	var objPtr *object.Object
 	if fldtype == types.StringIndex {
 		objPtr = object.StringObjectFromGoString(fldvalue.(string))
