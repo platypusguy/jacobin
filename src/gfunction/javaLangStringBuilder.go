@@ -6,6 +6,8 @@
 
 package gfunction
 
+import "jacobin/object"
+
 // Implementation of some of the functions in Java/lang/Class.
 
 func Load_Lang_StringBuilder() {
@@ -16,6 +18,27 @@ func Load_Lang_StringBuilder() {
 			GFunction:  isLatin1,
 		}
 
+	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+}
+
+// Instantiate a new empty string - "java/lang/StringBuilder.<init>()V"
+func stringBuilderInitEmpty(params []interface{}) interface{} {
+	// params[0] = target object for string (updated)
+	obj := params[0].(*object.Object)
+	bytes := make([]byte, 0)
+	object.UpdateStringObjectFromBytes(obj, bytes)
+	return nil
 }
 
 // "java/lang/StringBuilder.isLatin1()Z"
