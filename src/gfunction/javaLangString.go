@@ -143,6 +143,20 @@ func Load_Lang_String() {
 			GFunction:  getBytesFromString,
 		}
 
+	// void getBytes(int srcBegin, int srcEnd, byte[] dst, int dstBegin)  ********************* DEPRECATED
+	MethodSignatures["java/lang/String.getBytes(II[BI)V"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapDeprecated,
+		}
+
+	// getBytes([BIIBI)V  ********************* UNDOCUMENTED
+	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  trapUndocumented,
+		}
+
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
