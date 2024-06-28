@@ -242,10 +242,8 @@ frameInterpreter:
 			var idx int
 			if opcode == opcodes.LDC { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
 				idx = int(f.Meth[f.PC+1])
-				f.PC += 1
 			} else {
 				idx = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-				f.PC += 2
 			}
 
 			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
@@ -278,9 +276,14 @@ frameInterpreter:
 				push(f, stringAddr)
 			}
 
+			if opcode == opcodes.LDC {
+				f.PC += 1
+			} else {
+				f.PC += 2
+			}
+
 		case opcodes.LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
 			idx := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-			f.PC += 2
 
 			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
 			if CPe.RetType == classloader.IS_INT64 { // push value twice (due to 64-bit width)
@@ -298,6 +301,8 @@ frameInterpreter:
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
+			f.PC += 2
+
 		case opcodes.ILOAD, // 0x15	(push int from local var, using next byte as index)
 			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
 			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
