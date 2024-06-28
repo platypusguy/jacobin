@@ -242,10 +242,8 @@ frameInterpreter:
 			var idx int
 			if opcode == opcodes.LDC { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
 				idx = int(f.Meth[f.PC+1])
-				f.PC += 1
 			} else {
 				idx = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-				f.PC += 2
 			}
 
 			CPe := classloader.FetchCPentry(f.CP.(*classloader.CPool), idx)
@@ -276,6 +274,12 @@ frameInterpreter:
 				stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 				// stringAddr.KlassName = stringPool.GetStringIndex(CPe.StringVal)
 				push(f, stringAddr)
+			}
+
+			if opcode == opcodes.LDC {
+				f.PC += 1
+			} else {
+				f.PC += 2
 			}
 
 		case opcodes.LDC2_W: // 0x14 	(push long or double from CP indexed by next two bytes)
