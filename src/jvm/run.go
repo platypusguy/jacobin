@@ -168,6 +168,7 @@ frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
+	fmt.Printf("DEBUG frameInterpreter: f.Thread=%d\n", f.Thread)
 
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
@@ -2090,7 +2091,6 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
 				status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
@@ -2134,8 +2134,10 @@ frameInterpreter:
 					// TODO: search the superclasses, then the classpath and retry
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 			}
 
@@ -2186,15 +2188,20 @@ frameInterpreter:
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName + methodType
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName + methodType
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 				if f.ExceptionPC != -1 {
 					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
@@ -2222,8 +2229,10 @@ frameInterpreter:
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 			}
 
 			if mtEntry.MType == 'G' { // it's a golang method
@@ -2266,8 +2275,10 @@ frameInterpreter:
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 				fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
 				if err != nil {
@@ -2320,7 +2331,7 @@ frameInterpreter:
 				// TODO: search the classpath and retry
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
-				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
@@ -2380,16 +2391,20 @@ frameInterpreter:
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 				fram, err := createAndInitNewFrame(
 					className, methodName, methodType, &m, false, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKESTATIC: Error creating frame in: " + className + "." + methodName + methodType
-					_ = log.Log(errMsg, log.SEVERE)
-					return errors.New(errMsg)
+					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 
 				f.PC += 2 // 2 == initial PC advance in this bytecode (see above)
@@ -2424,7 +2439,6 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
 					CPentry.Type, classloader.Interface)
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
-				// err := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
@@ -2574,8 +2588,10 @@ frameInterpreter:
 			if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: Invalid type for new object")
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 			}
 
 			// the classref points to a UTF8 record with the name of the class to instantiate
@@ -2589,8 +2605,10 @@ frameInterpreter:
 			if err != nil {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("NEW: could not load class %s", className)
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 			}
 			push(f, ref.(*object.Object))
 
@@ -2612,8 +2630,10 @@ frameInterpreter:
 			if actualType == object.ERROR || actualType == object.REF {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "NEWARRAY: Invalid array type specified"
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 			}
 
 			arrayPtr := object.Make1DimArray(uint8(actualType), size)
@@ -2639,8 +2659,10 @@ frameInterpreter:
 			if refType.Type != classloader.ClassRef && refType.Type != classloader.Interface {
 				// TODO: it could also point to an array, per the JVM spec
 				errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
-				_ = log.Log(errMsg, log.SEVERE)
-				return errors.New(errMsg)
+				status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
 			}
 
 			var refTypeName = ""
