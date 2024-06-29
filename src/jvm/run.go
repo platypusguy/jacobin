@@ -168,7 +168,6 @@ frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
-	fmt.Printf("DEBUG frameInterpreter: f.Thread=%d\n", f.Thread)
 
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
