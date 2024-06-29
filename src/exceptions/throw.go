@@ -115,6 +115,12 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		catchFrame.OpStack[0] = objRef // push the objRef
 		// catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
 		catchFrame.PC = catchPC
+
+		// the exception logic might throw another exception, in which case that will be
+		// the new ExceptionPC. However, it won't be updated to that value unless ExceptionPC
+		// is reset to -1. So, at this point, the exception's been caught, so we can reset
+		// ExeptionPC to -1. See JACOBIN-534
+		f.ExceptionPC = -1
 		return Caught
 	}
 
