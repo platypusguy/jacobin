@@ -2423,8 +2423,7 @@ frameInterpreter:
 				f.PC += 1                            // to point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
-				// return runFrame(fs)
-				goto frameInterpreter // changed from return line above. Need to analyze which is better/safer
+				goto frameInterpreter
 			}
 
 		case opcodes.INVOKEINTERFACE: // 0xB9 invoke an interface
@@ -2478,7 +2477,8 @@ frameInterpreter:
 			for i := 0; i < int(count)-1; i++ {
 				args = append(args, pop(f))
 			}
-			// now get the objRef pointing to the class containing the call to the method described just previously
+			// now get the objRef pointing to the class containing the call to the method
+			// described just previously.
 			// The objRef object has previously been instantiated and its constructor called.
 			objRef := pop(f)
 			if objRef == nil {
@@ -2544,19 +2544,27 @@ frameInterpreter:
 			}
 
 			var foundIntfaceName = ""
+			var mtEntry classloader.MTentry
+			var ok bool
 			for i := 0; i < len(clData.Interfaces); i++ {
 				index := uint32(clData.Interfaces[i])
 				foundIntfaceName = *stringPool.GetStringPointer(index)
 				if foundIntfaceName == interfaceName {
+					// at this point we know that clData's class implements the required interface.
+					// Now, check whether clData contains the desired method.
+					if _, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]; ok {
+						goto executeInterfaceMethod
+					}
+
 					if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
 						// in this case, LoadClassFromNameOnly() will have already thrown the exception
 						if globals.JacobinHome() == "test" {
 							return err // applies only if in test
 						}
 					}
-					mtEntry, err := classloader.FetchMethodAndCP(
+					mtEntry, _ = classloader.FetchMethodAndCP(
 						interfaceName, interfaceMethodName, interfaceMethodType)
-					if err != nil || mtEntry.Meth == nil {
+					if mtEntry.Meth == nil {
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
 							interfaceName, interfaceMethodName, interfaceMethodType)
@@ -2585,10 +2593,46 @@ frameInterpreter:
 			// CURR: execute the function in the G and J variants
 
 		executeInterfaceMethod:
-			// for the nonce
-			errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
-			exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+			if mtEntry.MType == 'J' {
+				m := mtEntry.Meth.(classloader.JmEntry)
+				if m.AccessFlags&0x0100 > 0 {
+					// Native code
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKEINTERFACE: Native method requested: " +
+						clData.Name + "." + interfaceMethodName + interfaceMethodType
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+				/*
+					// CURR: un comment following block, then load parameters into the frame's locals
+					fram, err := createAndInitNewFrame(
+						clData.Name, interfaceMethodName, interfaceMethodType, &m, false, f)
+					if err != nil {
+						glob.ErrorGoStack = string(debug.Stack())
+						errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+							interfaceMethodName + interfaceMethodType
+						status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
+						}
+					}
 
+					if f.ExceptionPC == -1 {
+						f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+					}
+					// f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
+					f.PC += 1                            // to point to the next bytecode before exiting
+					fs.PushFront(fram)                   // push the new frame
+					f = fs.Front().Value.(*frames.Frame) // point f to the new head
+					goto frameInterpreter
+
+				*/
+				// for the nonce
+				errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
+				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+			}
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
