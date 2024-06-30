@@ -2082,7 +2082,7 @@ frameInterpreter:
 		case opcodes.INVOKEVIRTUAL: // 	0xB6 invokevirtual (create new frame, invoke function)
 			var err error
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-			f.PC += 2
+			// f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
 			if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
@@ -2122,6 +2122,7 @@ frameInterpreter:
 					methodName, className)
 				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
 				if status != exceptions.Caught {
+					f.PC += 2                 // due to the PC value extracted at the start of this bytecode
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
@@ -2135,6 +2136,7 @@ frameInterpreter:
 					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
 					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
 					if status != exceptions.Caught {
+						f.PC += 2                 // due to the PC value extracted at the start of this bytecode
 						return errors.New(errMsg) // applies only if in test
 					}
 				}
@@ -2167,6 +2169,7 @@ frameInterpreter:
 							errRet := ret.(error)
 							return errRet
 						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 2 // due to the PC value extracted at the start of this bytecode
 							f.PC += 1
 							goto frameInterpreter
 						}
@@ -2178,6 +2181,7 @@ frameInterpreter:
 					}
 					// any exception will already have been handled.
 				}
+				f.PC += 2 // due to the PC value extracted at the start of this bytecode
 				break
 			}
 
@@ -2202,17 +2206,20 @@ frameInterpreter:
 						return errors.New(errMsg) // applies only if in test
 					}
 				}
-				if f.ExceptionPC != -1 {
+				if f.ExceptionPC == -1 {
 					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 				}
+
+				f.PC += 2                            // due to the PC value extracted at the start of this bytecode
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				return runFrame(fs)
 			}
+
 		case opcodes.INVOKESPECIAL: //	0xB7 invokespecial (invoke constructors, private methods, etc.)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-			f.PC += 2
+			// f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
@@ -2256,7 +2263,8 @@ frameInterpreter:
 							errRet := ret.(error)
 							return errRet
 						} else if errors.Is(ret.(error), CaughtGfunctionException) {
-							f.PC += 1
+							f.PC += 2 // for the two bytes used by CP entry
+							f.PC += 1 // point to the next executable bytecode
 							goto frameInterpreter
 						}
 					default: // if it's not an error, then it's a legitimate return value, which we simply push
@@ -2264,6 +2272,7 @@ frameInterpreter:
 						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
 							push(f, ret) // push twice if long or double
 						}
+						f.PC += 2 // for the two bytes used by CP entry
 					}
 					// any exception will already have been handled.
 				}
@@ -2289,9 +2298,10 @@ frameInterpreter:
 					}
 				}
 
-				if f.ExceptionPC != -1 {
+				if f.ExceptionPC == -1 {
 					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 				}
+				f.PC += 2                            // for the two bytes used by CP entry
 				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
