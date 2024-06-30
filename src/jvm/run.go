@@ -2361,7 +2361,7 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				if f.ExceptionPC != -1 {
+				if f.ExceptionPC == -1 {
 					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 				}
 				f.PC += 2 // advance PC for the first two bytes of this bytecode
@@ -2406,10 +2406,10 @@ frameInterpreter:
 					}
 				}
 
-				f.PC += 2 // 2 == initial PC advance in this bytecode (see above)
-				if f.ExceptionPC != -1 {
+				if f.ExceptionPC == -1 {
 					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 				}
+				f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
 				f.PC += 1                            // to point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
