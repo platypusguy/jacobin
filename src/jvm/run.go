@@ -2371,10 +2371,8 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				if f.ExceptionPC == -1 {
-					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
-				}
-				f.PC += 2 // advance PC for the first two bytes of this bytecode
+				f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				f.PC += 2            // advance PC for the first two bytes of this bytecode
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
 				if ret != nil {
 					switch ret.(type) {
@@ -2416,9 +2414,7 @@ frameInterpreter:
 					}
 				}
 
-				if f.ExceptionPC == -1 {
-					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
-				}
+				f.ExceptionPC = f.PC                 // in the event of an exception, here's where we were
 				f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
 				f.PC += 1                            // to point to the next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
