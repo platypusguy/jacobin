@@ -2168,7 +2168,9 @@ frameInterpreter:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
-						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+						}
+						if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 							// f.PC += 2 // due to the PC value extracted at the start of this bytecode
 							f.PC += 1
 							goto frameInterpreter
@@ -2206,9 +2208,7 @@ frameInterpreter:
 						return errors.New(errMsg) // applies only if in test
 					}
 				}
-				if f.ExceptionPC == -1 {
-					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
-				}
+				f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 
 				// f.PC += 2                            // due to the PC value extracted at the start of this bytecode
 				f.PC += 1                            // move to next bytecode before exiting
@@ -2262,7 +2262,9 @@ frameInterpreter:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
-						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+						}
+						if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 							// f.PC += 2 // for the two bytes used by CP entry
 							f.PC += 1 // point to the next executable bytecode
 							goto frameInterpreter
@@ -2298,9 +2300,7 @@ frameInterpreter:
 					}
 				}
 
-				if f.ExceptionPC == -1 {
-					f.ExceptionPC = f.PC // in the event of an exception, here's where we were
-				}
+				f.ExceptionPC = f.PC // in the event of an exception, here's where we were
 				// f.PC += 2                            // for the two bytes used by CP entry
 				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
 				fs.PushFront(fram)                   // push the new frame
