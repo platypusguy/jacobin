@@ -2209,7 +2209,7 @@ frameInterpreter:
 					}
 				}
 
-				// f.PC += 2                            // due to the PC value extracted at the start of this bytecode
+				// f.PC += 2                         // due to the PC value extracted at the start of this bytecode
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head

@@ -19,7 +19,7 @@ import (
 
 func Load_Lang_Throwable() {
 
-	MethodSignatures["java/lang/Throwable.FillInStackTrace()Ljava/lang/Throwable;"] =
+	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
 			ParamSlots:   0,
 			GFunction:    FillInStackTrace,
