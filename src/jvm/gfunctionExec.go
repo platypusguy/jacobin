@@ -41,6 +41,14 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	params *[]interface{}, objRef bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
+
+	// If the method needs context (i.e., if mt.Meth.NeedsContext == true),
+	// then add pointer to the JVM frame stack to the parameter list here.
+	entry := mt.Meth.(gfunction.GMeth)
+	if entry.NeedsContext {
+		*params = append(*params, fs)
+	}
+
 	var paramCount int
 	if params == nil {
 		paramCount = 0
