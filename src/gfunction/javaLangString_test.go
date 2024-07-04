@@ -224,3 +224,17 @@ func TestSprintf_3(t *testing.T) {
 		t.Errorf("TestSprintf_2: result type %T makes no sense", result)
 	}
 }
+
+func TestContainsString(t *testing.T) {
+	globals.InitGlobals("test")
+	targetString := "I love seafood"
+	targetStringObj := object.StringObjectFromGoString(targetString)
+	searchString := "food"
+	searchStringObj := object.StringObjectFromGoString(searchString)
+	params := []interface{}{searchStringObj, targetStringObj}
+
+	res := stringContains(params)
+	if res != types.JavaBoolTrue {
+		t.Errorf("TestContainsString failed, expected: %s to contain: %s", targetString, searchString)
+	}
+}
