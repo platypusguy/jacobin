@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/excNames"
+	"jacobin/log"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -126,7 +127,7 @@ func fileIsInvalid(params []interface{}) interface{} {
 	}
 }
 
-// "java/io/File.delete()Ljava/lang/String;"
+// "java/io/File.delete()Z"
 func fileDelete(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
@@ -136,12 +137,14 @@ func fileDelete(params []interface{}) interface{} {
 	path := string(bytes)
 	err := os.Remove(path)
 	if err != nil {
+		errMsg := fmt.Sprintf("fileDelete: Failed to remove file %s, reason: %s", path, err.Error())
+		_ = log.Log(errMsg, log.WARNING)
 		return int64(0)
 	}
 	return int64(1)
 }
 
-// "java/io/File.createNewFile()Ljava/lang/String;"
+// "java/io/File.createNewFile()Z"
 func fileCreate(params []interface{}) interface{} {
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
@@ -151,6 +154,8 @@ func fileCreate(params []interface{}) interface{} {
 	path := string(bytes)
 	_, err := os.Create(path)
 	if err != nil {
+		errMsg := fmt.Sprintf("fileCreate: Failed to create file %s, reason: %s", path, err.Error())
+		_ = log.Log(errMsg, log.WARNING)
 		return int64(0)
 	}
 	return int64(1)
