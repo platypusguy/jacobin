@@ -202,7 +202,7 @@ func Load_Lang_String() {
 			ParamSlots: 1,
 			GFunction:  stringConcat,
 		}
-	MethodSignatures["java/lang/String.contains(Ljava.lang.CharSequence;)Z"] =
+	MethodSignatures["java/lang/String.contains(Ljava/lang/CharSequence;)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringContains,
@@ -464,13 +464,33 @@ func newStringFromChars(params []interface{}) interface{} {
 }
 
 // java/lang/String.contains(charSequence)Z
-// charSequence is an interface, generally implemented via String. Here, we assume it is a string.
+// charSequence is an interface, generally implemented via String or array of chars
+// Here, we assume one of those two options.
 func stringContains(params []interface{}) interface{} {
+	// get the search string (the string we're searching for, i.e., "foo" in "seafood")
 	searchFor := params[0].(*object.Object)
-	searchString := searchFor.FieldTable["value"].Fvalue.(string)
+	var searchString string
+	switch searchFor.FieldTable["value"].Fvalue.(type) {
+	case []uint8:
+		searchString = string(searchFor.FieldTable["value"].Fvalue.([]byte))
+	case string:
+		searchString = searchFor.FieldTable["value"].Fvalue.(string)
+	}
 	target := params[1].(*object.Object)
-	targetString := target.FieldTable["value"].Fvalue.(string)
-	return strings.Contains(targetString, searchString)
+
+	// now get the target string (the string being searched)
+	var targetString string
+	switch target.FieldTable["value"].Fvalue.(type) {
+	case []uint8:
+		targetString = string(target.FieldTable["value"].Fvalue.([]byte))
+	case string:
+		targetString = target.FieldTable["value"].Fvalue.(string)
+	}
+
+	if strings.Contains(targetString, searchString) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 // "java/lang/String.getBytes()[B"
