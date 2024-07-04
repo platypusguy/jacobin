@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/excNames"
+	"jacobin/log"
 	"jacobin/object"
 	"jacobin/types"
 	"os"
@@ -105,7 +106,7 @@ func fileInit(params []interface{}) interface{} {
 func fileGetPath(params []interface{}) interface{} {
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "File object lacks a FileHandle field"
+		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	bytes := fld.Fvalue.([]byte)
@@ -126,32 +127,52 @@ func fileIsInvalid(params []interface{}) interface{} {
 	}
 }
 
-// "java/io/File.delete()Ljava/lang/String;"
+// "java/io/File.delete()Z"
 func fileDelete(params []interface{}) interface{} {
+	// Close the file if it is open (Windows).
+	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
+	if ok {
+		_ = osFile.Close()
+	}
+
+	// Get file path string.
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
 		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	path := string(bytes)
-	err := os.Remove(path)
+	pathStr := string(bytes)
+
+	err := os.Remove(pathStr)
 	if err != nil {
+		errMsg := fmt.Sprintf("fileDelete: Failed to remove file %s, reason: %s", pathStr, err.Error())
+		_ = log.Log(errMsg, log.WARNING)
 		return int64(0)
 	}
 	return int64(1)
 }
 
-// "java/io/File.createNewFile()Ljava/lang/String;"
+// "java/io/File.createNewFile()Z"
 func fileCreate(params []interface{}) interface{} {
-	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
+	// Get path string.
+	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	path := string(bytes)
-	_, err := os.Create(path)
+	pathStr := string(fld.Fvalue.([]byte))
+
+	// Create the file.
+	osFile, err := os.Create(pathStr)
 	if err != nil {
+		errMsg := fmt.Sprintf("fileCreate: Failed to create file %s, reason: %s", pathStr, err.Error())
+		_ = log.Log(errMsg, log.WARNING)
 		return int64(0)
 	}
+
+	// Copy the file handle into the FileOutputStream object.
+	fld = object.Field{Ftype: types.FileHandle, Fvalue: osFile}
+	params[0].(*object.Object).FieldTable[FileHandle] = fld
+
 	return int64(1)
 }
