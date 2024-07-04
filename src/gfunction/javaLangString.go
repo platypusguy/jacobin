@@ -202,7 +202,11 @@ func Load_Lang_String() {
 			ParamSlots: 1,
 			GFunction:  stringConcat,
 		}
-
+	MethodSignatures["java/lang/String.contains(Ljava.lang.CharSequence;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringContains,
+		}
 	// Return a formatted string using the reference object string as the format string
 	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
@@ -457,6 +461,16 @@ func newStringFromChars(params []interface{}) interface{} {
 	}
 	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
 	return nil
+}
+
+// java/lang/String.contains(charSequence)Z
+// charSequence is an interface, generally implemented via String. Here, we assume it is a string.
+func stringContains(params []interface{}) interface{} {
+	searchFor := params[0].(*object.Object)
+	searchString := searchFor.FieldTable["value"].Fvalue.(string)
+	target := params[1].(*object.Object)
+	targetString := target.FieldTable["value"].Fvalue.(string)
+	return strings.Contains(targetString, searchString)
 }
 
 // "java/lang/String.getBytes()[B"
