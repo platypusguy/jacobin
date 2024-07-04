@@ -150,36 +150,6 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(I)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/CharSequence;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
 		GMeth{
 			ParamSlots: 0,
