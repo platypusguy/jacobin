@@ -12,6 +12,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -150,11 +151,12 @@ func Load_Lang_String() {
 			GFunction:  trapDeprecated,
 		}
 
-	// getBytes([BIIBI)V  ********************* UNDOCUMENTED
+	// getBytes([BIIBI)V
+	// original Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
 	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
 		GMeth{
 			ParamSlots: 5,
-			GFunction:  trapUndocumented,
+			GFunction:  javaLangStringGetBytesBIIBI,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -493,11 +495,18 @@ func stringContains(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-// "java/lang/String.getBytes()[B"
+// java/lang/String.getBytes()[B
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
 	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
 	return populator("[B", types.ByteArray, bytes)
+}
+
+// java/lang/String.getBytes([BIIBI)V
+// JDK17 Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
+func javaLangStringGetBytesBIIBI(params []any) any {
+	fmt.Fprintln(os.Stderr, "java/lang/String.getBytes([BIIBI)V *****************")
+	return nil
 }
 
 // "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
