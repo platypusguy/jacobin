@@ -44,4 +44,18 @@ func Load_Lang_StringBuffer() {
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
+
+	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  appendStringToStringBuffer,
+		}
+}
+
+func appendStringToStringBuffer(params []any) any {
+	p1 := params[0]
+	if p1 == nil {
+		return nil
+	}
+	return nil
 }
