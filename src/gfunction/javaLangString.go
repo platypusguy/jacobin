@@ -209,6 +209,19 @@ func Load_Lang_String() {
 			ParamSlots: 1,
 			GFunction:  stringContains,
 		}
+
+	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/CharSequence;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/StringBuffer;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  justReturn,
+		}
+
 	// Return a formatted string using the reference object string as the format string
 	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
