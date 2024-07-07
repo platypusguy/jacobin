@@ -213,13 +213,13 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/CharSequence;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  justReturn,
+			GFunction:  javaLangStringContentEqualsL,
 		}
 
 	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/StringBuffer;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  justReturn,
+			GFunction:  javaLangStringContentEqualsL,
 		}
 
 	// Return a formatted string using the reference object string as the format string
@@ -400,6 +400,19 @@ func stringCharAt(params []interface{}) interface{} {
 	return int64(runeValue)
 }
 
+func javaLangStringContentEqualsL(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	obj = params[1].(*object.Object)
+	str2 := string(obj.FieldTable["value"].Fvalue.([]byte))
+
+	// Are they equal in value?
+	if str1 == str2 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
 // Are 2 strings equal?
 // "java/lang/String.equals(Ljava/lang/Object;)Z"
 func stringEquals(params []interface{}) interface{} {
@@ -412,9 +425,9 @@ func stringEquals(params []interface{}) interface{} {
 
 	// Are they equal in value?
 	if str1 == str2 {
-		return int64(1) // true
+		return types.JavaBoolTrue
 	}
-	return int64(0) // false
+	return types.JavaBoolFalse
 }
 
 // Instantiate a new empty string - "java/lang/String.<init>()V"
