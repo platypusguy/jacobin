@@ -620,6 +620,8 @@ frameInterpreter:
 				f.Locals[0] = popped.(int64)
 			case uint8:
 				f.Locals[0] = int64(popped.(uint8))
+			case uint32:
+				f.Locals[1] = int64(popped.(uint32))
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("in %s.%s, ISTORE_0: Invalid operand type: %T",
@@ -654,6 +656,8 @@ frameInterpreter:
 				f.Locals[2] = popped.(int64)
 			case uint8:
 				f.Locals[2] = int64(popped.(uint8))
+			case uint32:
+				f.Locals[1] = int64(popped.(uint32))
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("in %s.%s, ISTORE_2: Invalid operand type: %T",
@@ -670,6 +674,8 @@ frameInterpreter:
 				f.Locals[3] = popped.(int64)
 			case uint8:
 				f.Locals[3] = int64(popped.(uint8))
+			case uint32:
+				f.Locals[1] = int64(popped.(uint32))
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("in %s.%s, ISTORE_3: Invalid operand type: %T",
