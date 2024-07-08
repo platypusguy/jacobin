@@ -231,7 +231,7 @@ func TestContainsString(t *testing.T) {
 	targetStringObj := object.StringObjectFromGoString(targetString)
 	searchString := "food"
 	searchStringObj := object.StringObjectFromGoString(searchString)
-	params := []interface{}{searchStringObj, targetStringObj}
+	params := []interface{}{targetStringObj, searchStringObj}
 
 	res := stringContains(params)
 	if res != types.JavaBoolTrue {
