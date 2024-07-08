@@ -636,6 +636,8 @@ frameInterpreter:
 				f.Locals[1] = popped.(int64)
 			case uint8:
 				f.Locals[1] = int64(popped.(uint8))
+			case uint32:
+				f.Locals[1] = int64(popped.(uint32))
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("in %s.%s, ISTORE_1: Invalid operand type: %T",
