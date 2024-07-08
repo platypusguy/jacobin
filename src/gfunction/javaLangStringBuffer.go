@@ -57,12 +57,20 @@ func Load_Lang_StringBuffer() {
 // append the string in the first parameter to the chars in the StringBuffer that's
 // passed in the objectRef parameter (the second param)
 func appendStringToStringBuffer(params []any) any {
-	strObjectToAppend := params[0].(*object.Object)
+	stringBufferObject := params[0].(*object.Object)
+
+	strObjectToAppend := params[1].(*object.Object)
 	strToAppend := strObjectToAppend.FieldTable["value"].Fvalue.([]byte)
 
-	stringBufferObject := params[1].(*object.Object)
-	stringBufferContent := stringBufferObject.FieldTable["value"].Fvalue.([]byte)
-
-	stringBufferContent = append(stringBufferContent, strToAppend...)
+	switch stringBufferObject.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		stringBufferContent := stringBufferObject.FieldTable["value"].Fvalue.([]byte)
+		stringBufferContent = append(stringBufferContent, strToAppend...)
+	case nil: // a raw StringBuffer
+		stringBufferObject.FieldTable["value"] = object.Field{
+			Ftype:  "[B",
+			Fvalue: strToAppend,
+		}
+	}
 	return nil
 }
