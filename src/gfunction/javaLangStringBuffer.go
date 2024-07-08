@@ -72,5 +72,5 @@ func appendStringToStringBuffer(params []any) any {
 			Fvalue: strToAppend,
 		}
 	}
-	return nil
+	return stringBufferObject
 }
