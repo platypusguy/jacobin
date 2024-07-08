@@ -137,6 +137,12 @@ func Load_Lang_String() {
 			GFunction:  stringEquals,
 		}
 
+	MethodSignatures["java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEqualsIgnoreCase,
+		}
+
 	// get the bytes from a string
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
@@ -430,6 +436,25 @@ func stringEquals(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
+// Are 2 strings equal, ignoring case?
+// "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
+func stringEqualsIgnoreCase(params []interface{}) interface{} {
+	// params[0]: reference string object
+	// params[1]: compare-to string Object
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
+
+	// Are they equal in value?
+	upstr1 := strings.ToUpper(str1)
+	upstr2 := strings.ToUpper(str2)
+	if upstr1 == upstr2 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
@@ -491,12 +516,12 @@ func newStringFromChars(params []interface{}) interface{} {
 	return nil
 }
 
-// java/lang/String.contains(charSequence)Z
+// "java/lang/String.contains(Ljava/lang/CharSequence;)Z"
 // charSequence is an interface, generally implemented via String or array of chars
 // Here, we assume one of those two options.
 func stringContains(params []interface{}) interface{} {
 	// get the search string (the string we're searching for, i.e., "foo" in "seafood")
-	searchFor := params[0].(*object.Object)
+	searchFor := params[1].(*object.Object)
 	var searchString string
 	switch searchFor.FieldTable["value"].Fvalue.(type) {
 	case []uint8:
@@ -504,15 +529,15 @@ func stringContains(params []interface{}) interface{} {
 	case string:
 		searchString = searchFor.FieldTable["value"].Fvalue.(string)
 	}
-	target := params[1].(*object.Object)
+	searchIn := params[0].(*object.Object)
 
 	// now get the target string (the string being searched)
 	var targetString string
-	switch target.FieldTable["value"].Fvalue.(type) {
+	switch searchIn.FieldTable["value"].Fvalue.(type) {
 	case []uint8:
-		targetString = string(target.FieldTable["value"].Fvalue.([]byte))
+		targetString = string(searchIn.FieldTable["value"].Fvalue.([]byte))
 	case string:
-		targetString = target.FieldTable["value"].Fvalue.(string)
+		targetString = searchIn.FieldTable["value"].Fvalue.(string)
 	}
 
 	if strings.Contains(targetString, searchString) {
