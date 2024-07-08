@@ -6,6 +6,8 @@
 
 package gfunction
 
+import "jacobin/object"
+
 // Implement the minimum number of gfunctions to be able to run the java/lang/StringBuffer class,
 // which is the younger brother of java/lang/Stringbuilder. Both classes enable you to create
 // a String from an array of characters, but only StringBuffer is thread-safe.
@@ -47,15 +49,20 @@ func Load_Lang_StringBuffer() {
 
 	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] =
 		GMeth{
-			ParamSlots: 0,
+			ParamSlots: 1,
 			GFunction:  appendStringToStringBuffer,
 		}
 }
 
+// append the string in the first parameter to the chars in the StringBuffer that's
+// passed in the objectRef parameter (the second param)
 func appendStringToStringBuffer(params []any) any {
-	p1 := params[0]
-	if p1 == nil {
-		return nil
-	}
+	strObjectToAppend := params[0].(*object.Object)
+	strToAppend := strObjectToAppend.FieldTable["value"].Fvalue.([]byte)
+
+	stringBufferObject := params[1].(*object.Object)
+	stringBufferContent := stringBufferObject.FieldTable["value"].Fvalue.([]byte)
+
+	stringBufferContent = append(stringBufferContent, strToAppend...)
 	return nil
 }
