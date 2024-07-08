@@ -516,12 +516,12 @@ func newStringFromChars(params []interface{}) interface{} {
 	return nil
 }
 
-// java/lang/String.contains(charSequence)Z
+// "java/lang/String.contains(Ljava/lang/CharSequence;)Z"
 // charSequence is an interface, generally implemented via String or array of chars
 // Here, we assume one of those two options.
 func stringContains(params []interface{}) interface{} {
 	// get the search string (the string we're searching for, i.e., "foo" in "seafood")
-	searchFor := params[0].(*object.Object)
+	searchFor := params[1].(*object.Object)
 	var searchString string
 	switch searchFor.FieldTable["value"].Fvalue.(type) {
 	case []uint8:
@@ -529,15 +529,15 @@ func stringContains(params []interface{}) interface{} {
 	case string:
 		searchString = searchFor.FieldTable["value"].Fvalue.(string)
 	}
-	target := params[1].(*object.Object)
+	searchIn := params[0].(*object.Object)
 
 	// now get the target string (the string being searched)
 	var targetString string
-	switch target.FieldTable["value"].Fvalue.(type) {
+	switch searchIn.FieldTable["value"].Fvalue.(type) {
 	case []uint8:
-		targetString = string(target.FieldTable["value"].Fvalue.([]byte))
+		targetString = string(searchIn.FieldTable["value"].Fvalue.([]byte))
 	case string:
-		targetString = target.FieldTable["value"].Fvalue.(string)
+		targetString = searchIn.FieldTable["value"].Fvalue.(string)
 	}
 
 	if strings.Contains(targetString, searchString) {
