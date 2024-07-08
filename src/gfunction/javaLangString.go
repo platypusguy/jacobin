@@ -137,6 +137,12 @@ func Load_Lang_String() {
 			GFunction:  stringEquals,
 		}
 
+	MethodSignatures["java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEqualsIgnoreCase,
+		}
+
 	// get the bytes from a string
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
@@ -425,6 +431,25 @@ func stringEquals(params []interface{}) interface{} {
 
 	// Are they equal in value?
 	if str1 == str2 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// Are 2 strings equal, ignoring case?
+// "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
+func stringEqualsIgnoreCase(params []interface{}) interface{} {
+	// params[0]: reference string object
+	// params[1]: compare-to string Object
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
+
+	// Are they equal in value?
+	upstr1 := strings.ToUpper(str1)
+	upstr2 := strings.ToUpper(str2)
+	if upstr1 == upstr2 {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
