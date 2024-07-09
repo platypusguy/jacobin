@@ -128,56 +128,7 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// === METHOD FUNCTIONS ===
-
-	// // Are 2 strings equal?
-	MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  stringEquals,
-		}
-
-	MethodSignatures["java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  stringEqualsIgnoreCase,
-		}
-
-	// get the bytes from a string
-	MethodSignatures["java/lang/String.getBytes()[B"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  getBytesFromString,
-		}
-
-	// void getBytes(int srcBegin, int srcEnd, byte[] dst, int dstBegin)  ********************* DEPRECATED
-	MethodSignatures["java/lang/String.getBytes(II[BI)V"] =
-		GMeth{
-			ParamSlots: 4,
-			GFunction:  trapDeprecated,
-		}
-
-	// getBytes([BIIBI)V
-	// original Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
-	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
-		GMeth{
-			ParamSlots: 5,
-			GFunction:  javaLangStringGetBytesBIIBI,
-		}
-
-	// get the bytes from a string, given the Charset string name ************************ CHARSET
-	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	// get the bytes from a string, given the specified Charset object ******************* CHARSET
-	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+	// ==== METHOD FUNCTIONS (in alpha order by their Java names) ====
 
 	MethodSignatures["java/lang/String.charAt(I)C"] =
 		GMeth{
@@ -228,6 +179,18 @@ func Load_Lang_String() {
 			GFunction:  javaLangStringContentEqualsL,
 		}
 
+	MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEquals,
+		}
+
+	MethodSignatures["java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringEqualsIgnoreCase,
+		}
+
 	// Return a formatted string using the reference object string as the format string
 	// and the supplied arguments as input object arguments.
 	// E.g. String string = String.format("%s %i", "ABC", 42);
@@ -248,6 +211,42 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	// get the bytes from a string
+	MethodSignatures["java/lang/String.getBytes()[B"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getBytesFromString,
+		}
+
+	// void getBytes(int srcBegin, int srcEnd, byte[] dst, int dstBegin)  ********************* DEPRECATED
+	MethodSignatures["java/lang/String.getBytes(II[BI)V"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapDeprecated,
+		}
+
+	// getBytes([BIIBI)V
+	// original Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
+	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  javaLangStringGetBytesBIIBI,
+		}
+
+	// get the bytes from a string, given the Charset string name ************************ CHARSET
+	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	// get the bytes from a string, given the specified Charset object ******************* CHARSET
+	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
+		GMeth{
+			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
@@ -384,81 +383,7 @@ func Load_Lang_String() {
 
 }
 
-// "java/lang/String.<clinit>()V" -- String class initialisation
-func stringClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(types.StringClassName)
-	if klass == nil {
-		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
-		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
-	}
-	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-	return nil
-}
-
-// Get character at the given index.
-// "java/lang/String.charAt(I)C"
-func stringCharAt(params []interface{}) interface{} {
-	// Unpack the reference string and convert it to a rune array.
-	ptrObj := params[0].(*object.Object)
-	str := object.GoStringFromStringObject(ptrObj)
-	runeArray := []rune(str)
-
-	// Get index.
-	index := params[1].(int64)
-
-	// Return indexed character.
-	runeValue := runeArray[index]
-	return int64(runeValue)
-}
-
-func javaLangStringContentEqualsL(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
-	obj = params[1].(*object.Object)
-	str2 := string(obj.FieldTable["value"].Fvalue.([]byte))
-
-	// Are they equal in value?
-	if str1 == str2 {
-		return types.JavaBoolTrue
-	}
-	return types.JavaBoolFalse
-}
-
-// Are 2 strings equal?
-// "java/lang/String.equals(Ljava/lang/Object;)Z"
-func stringEquals(params []interface{}) interface{} {
-	// params[0]: reference string object
-	// params[1]: compare-to string Object
-	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
-	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
-
-	// Are they equal in value?
-	if str1 == str2 {
-		return types.JavaBoolTrue
-	}
-	return types.JavaBoolFalse
-}
-
-// Are 2 strings equal, ignoring case?
-// "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
-func stringEqualsIgnoreCase(params []interface{}) interface{} {
-	// params[0]: reference string object
-	// params[1]: compare-to string Object
-	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
-	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
-
-	// Are they equal in value?
-	upstr1 := strings.ToUpper(str1)
-	upstr2 := strings.ToUpper(str2)
-	if upstr1 == upstr2 {
-		return types.JavaBoolTrue
-	}
-	return types.JavaBoolFalse
-}
+// ==== INSTANTIATION AND INITIALIZATION FUNCTIONS ====
 
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
@@ -521,6 +446,78 @@ func newStringFromChars(params []interface{}) interface{} {
 	return nil
 }
 
+// "java/lang/String.<clinit>()V" -- String class initialisation
+func stringClinit([]interface{}) interface{} {
+	klass := classloader.MethAreaFetch(types.StringClassName)
+	if klass == nil {
+		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
+	}
+	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+	return nil
+}
+
+// ==== METHODS FOR STRING ACTIVITIES ====
+
+// Get character at the given index.
+// "java/lang/String.charAt(I)C"
+func stringCharAt(params []interface{}) interface{} {
+	// Unpack the reference string and convert it to a rune array.
+	ptrObj := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(ptrObj)
+	runeArray := []rune(str)
+
+	// Get index.
+	index := params[1].(int64)
+
+	// Return indexed character.
+	runeValue := runeArray[index]
+	return int64(runeValue)
+}
+
+// "java/lang/String.compareTo(Ljava/lang/String;)I"
+func compareToCaseSensitive(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
+	if str2 == str1 {
+		return int64(0)
+	}
+	if str1 < str2 {
+		return int64(-1)
+	}
+	return int64(1)
+}
+
+// "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
+func compareToIgnoreCase(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str1 := strings.ToLower(object.GoStringFromStringObject(obj))
+	obj = params[1].(*object.Object)
+	str2 := strings.ToLower(object.GoStringFromStringObject(obj))
+	if str2 == str1 {
+		return int64(0)
+	}
+	if str1 < str2 {
+		return int64(-1)
+	}
+	return int64(1)
+}
+
+// "java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"
+func stringConcat(params []interface{}) interface{} {
+	var str1, str2 string
+
+	fld := params[0].(*object.Object).FieldTable["value"]
+	str1 = string(fld.Fvalue.([]byte))
+	fld = params[1].(*object.Object).FieldTable["value"]
+	str2 = string(fld.Fvalue.([]byte))
+	str := str1 + str2
+	obj := object.StringObjectFromGoString(str)
+	return obj
+}
+
 // "java/lang/String.contains(Ljava/lang/CharSequence;)Z"
 // charSequence is an interface, generally implemented via String or array of chars
 // Here, we assume one of those two options.
@@ -546,6 +543,55 @@ func stringContains(params []interface{}) interface{} {
 	}
 
 	if strings.Contains(targetString, searchString) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+func javaLangStringContentEqualsL(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	obj = params[1].(*object.Object)
+	str2 := string(obj.FieldTable["value"].Fvalue.([]byte))
+
+	// Are they equal in value?
+	if str1 == str2 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// Are 2 strings equal?
+// "java/lang/String.equals(Ljava/lang/Object;)Z"
+func stringEquals(params []interface{}) interface{} {
+	// params[0]: reference string object
+	// params[1]: compare-to string Object
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
+
+	// Are they equal in value?
+	if str1 == str2 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// Are 2 strings equal, ignoring case?
+// "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
+func stringEqualsIgnoreCase(params []interface{}) interface{} {
+	// params[0]: reference string object
+	// params[1]: compare-to string Object
+	obj := params[0].(*object.Object)
+	str1 := object.GoStringFromStringObject(obj)
+	obj = params[1].(*object.Object)
+	str2 := object.GoStringFromStringObject(obj)
+
+	// Are they equal in value?
+	upstr1 := strings.ToUpper(str1)
+	upstr2 := strings.ToUpper(str2)
+	if upstr1 == upstr2 {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -577,6 +623,12 @@ func lastIndexOfString(params []any) any {
 
 	lastIndex := strings.LastIndex(baseString, searchString)
 	return int64(lastIndex)
+}
+
+// "java/lang/String.isLatin1()Z"
+func stringIsLatin1(params []interface{}) interface{} {
+	// TODO: Someday, the answer might be false.
+	return types.JavaBoolTrue // true
 }
 
 // "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
@@ -687,12 +739,6 @@ func StringFormatter(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(str)
 }
 
-// "java/lang/String.isLatin1()Z"
-func stringIsLatin1(params []interface{}) interface{} {
-	// TODO: Someday, the answer might be false.
-	return int64(1) // true
-}
-
 // "java/lang/String.length()I"
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
@@ -701,7 +747,7 @@ func stringLength(params []interface{}) interface{} {
 	return int64(len(bytes))
 }
 
-// "java/lang/String.(I)Ljava/lang/String;"
+// "java/lang/String.repeat(I)Ljava/lang/String;"
 func stringRepeat(params []interface{}) interface{} {
 	// params[0] = base string
 	// params[1] = int64 repetition factor
@@ -920,49 +966,6 @@ func valueOfObject(params []interface{}) interface{} {
 	// params[0]: input Object
 	ptrObj := params[0].(*object.Object)
 	str := ptrObj.FormatField("")
-	obj := object.StringObjectFromGoString(str)
-	return obj
-}
-
-// "java/lang/String.compareTo(Ljava/lang/String;)I"
-func compareToCaseSensitive(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
-	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
-	if str2 == str1 {
-		return int64(0)
-	}
-	if str1 < str2 {
-		return int64(-1)
-	}
-	return int64(1)
-}
-
-// "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
-func compareToIgnoreCase(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	str1 := strings.ToLower(object.GoStringFromStringObject(obj))
-	obj = params[1].(*object.Object)
-	str2 := strings.ToLower(object.GoStringFromStringObject(obj))
-	if str2 == str1 {
-		return int64(0)
-	}
-	if str1 < str2 {
-		return int64(-1)
-	}
-	return int64(1)
-}
-
-// "java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"
-func stringConcat(params []interface{}) interface{} {
-	var str1, str2 string
-
-	fld := params[0].(*object.Object).FieldTable["value"]
-	str1 = string(fld.Fvalue.([]byte))
-	fld = params[1].(*object.Object).FieldTable["value"]
-	str2 = string(fld.Fvalue.([]byte))
-	str := str1 + str2
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
