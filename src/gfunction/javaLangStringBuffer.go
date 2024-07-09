@@ -54,8 +54,8 @@ func Load_Lang_StringBuffer() {
 		}
 }
 
-// append the string in the first parameter to the chars in the StringBuffer that's
-// passed in the objectRef parameter (the second param)
+// append the string in the second parameter to the chars in the StringBuffer that's
+// passed in the objectRef parameter (the first param)
 func appendStringToStringBuffer(params []any) any {
 	stringBufferObject := params[0].(*object.Object)
 
