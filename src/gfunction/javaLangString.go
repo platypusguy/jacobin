@@ -233,7 +233,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
 		GMeth{
 			ParamSlots: 5,
-			GFunction:  javaLangStringGetBytesBIIBI,
+			GFunction:  stringGetBytesBIIBI,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -606,7 +606,7 @@ func getBytesFromString(params []interface{}) interface{} {
 
 // java/lang/String.getBytes([BIIBI)V
 // JDK17 Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
-func javaLangStringGetBytesBIIBI(params []any) any {
+func stringGetBytesBIIBI(params []any) any {
 	fmt.Fprintln(os.Stderr, "java/lang/String.getBytes([BIIBI)V *****************")
 	return nil
 }
