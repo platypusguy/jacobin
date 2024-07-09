@@ -258,6 +258,11 @@ func Load_Lang_String() {
 			GFunction:  stringIsLatin1,
 		}
 
+	MethodSignatures["java/lang/String.lastIndexOf(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  lastIndexOfString,
+		}
 	// Return the length of a String.
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
@@ -558,6 +563,20 @@ func getBytesFromString(params []interface{}) interface{} {
 func javaLangStringGetBytesBIIBI(params []any) any {
 	fmt.Fprintln(os.Stderr, "java/lang/String.getBytes([BIIBI)V *****************")
 	return nil
+}
+
+// java/lang/String.lastIndex(string)
+// finds the last instance of the search string in the base string. Returns an
+// index to the first character if the string is found, -1 if the string is not found
+func lastIndexOfString(params []any) any {
+	baseStringObject := params[0].(*object.Object)
+	baseString := string(baseStringObject.FieldTable["value"].Fvalue.([]byte))
+
+	searchStringObject := params[1].(*object.Object)
+	searchString := string(searchStringObject.FieldTable["value"].Fvalue.([]byte))
+
+	lastIndex := strings.LastIndex(baseString, searchString)
+	return int64(lastIndex)
 }
 
 // "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
