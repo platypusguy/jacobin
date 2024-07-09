@@ -616,10 +616,10 @@ func javaLangStringGetBytesBIIBI(params []any) any {
 // index to the first character if the string is found, -1 if the string is not found
 func lastIndexOfString(params []any) any {
 	baseStringObject := params[0].(*object.Object)
-	baseString := string(baseStringObject.FieldTable["value"].Fvalue.([]byte))
+	baseString := object.GoStringFromStringObject(baseStringObject)
 
 	searchStringObject := params[1].(*object.Object)
-	searchString := string(searchStringObject.FieldTable["value"].Fvalue.([]byte))
+	searchString := object.GoStringFromStringObject(searchStringObject)
 
 	lastIndex := strings.LastIndex(baseString, searchString)
 	return int64(lastIndex)
