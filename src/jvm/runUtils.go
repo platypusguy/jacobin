@@ -90,6 +90,22 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	return 0
 }
 
+// converts an interface{} value into int64
+func convertInterfaceToInt64(arg interface{}) int64 {
+	switch t := arg.(type) {
+	case int64:
+		return t
+	case uint8:
+		return int64(t)
+	case uint32:
+		return int64(t)
+	default:
+		errMsg := fmt.Sprintf("convertInterfaceToInt64: Invalid argument type: %T", arg)
+		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
+	}
+	return 0
+}
+
 // Convert an interface{} consisting of some integral value to int64.
 // Appears primarily in the runFrame{} IF* bytecodes.
 func convertIntegralValueToInt64(arg interface{}) int64 {
