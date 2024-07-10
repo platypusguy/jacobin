@@ -297,6 +297,13 @@ func Load_Lang_String() {
 			GFunction:  stringReplaceCC,
 		}
 
+	// Split a string into an array of strings.
+	MethodSignatures["java/lang/String.split(Ljava/lang/String;)[Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringSplit,
+		}
+
 	// Return a string in all lower case, using the reference object string as input.
 	MethodSignatures["java/lang/String.substring(I)Ljava/lang/String;"] =
 		GMeth{
@@ -853,6 +860,22 @@ func stringReplaceCC(params []interface{}) interface{} {
 	// Return final string in an object.
 	obj := object.StringObjectFromGoString(newStr)
 	return obj
+
+}
+
+// "java/lang/String.split(Ljava/lang/String;)[Ljava/lang/String;"
+func stringSplit(params []interface{}) interface{} {
+	// params[0] = base string
+	// params[1] = regular expression in a string
+	// TODO: As of 2024-07-10, a string, not a regular expression, is assumed to be in params[1].
+	oldStr := object.GoStringFromStringObject(params[0].(*object.Object))
+	splitter := object.GoStringFromStringObject(params[1].(*object.Object))
+	newStrArray := strings.Split(oldStr, splitter)
+	var outObjArray []*object.Object
+	for ix := 0; ix < len(newStrArray); ix++ {
+		outObjArray = append(outObjArray, object.StringObjectFromGoString(newStrArray[ix]))
+	}
+	return populator("[Ljava/lang/String;", types.RefArray, outObjArray)
 
 }
 
