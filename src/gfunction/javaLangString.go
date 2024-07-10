@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"bytes"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -777,8 +778,25 @@ func stringMatches(params []any) any {
 	return types.JavaBoolFalse
 }
 
+// do two regions in a string match?
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#regionMatches(boolean,int,java.lang.String,int,int)
+// param[0] = the base string, param[1] = offset of region in base string, param[2] pointer to second string,
+// param[3] offset in second string, param[4] length of region to comapre.
 func stringRegionMatchesILII(params []any) any {
+	baseStringObject := params[0].(*object.Object)
+	baseByteArray := object.ByteArrayFromStringObject(baseStringObject)
+	baseOffset := params[1].(int64)
 
+	compareStringObject := params[2].(*object.Object)
+	compareByteArray := object.ByteArrayFromStringObject(compareStringObject)
+	compareOffset := params[3].(int64)
+
+	regionLength := params[4].(int64)
+	section1 := baseByteArray[baseOffset : baseOffset+regionLength]
+	section2 := compareByteArray[compareOffset : compareOffset+regionLength]
+	if bytes.Equal(section1, section2) {
+		return types.JavaBoolTrue
+	}
 	return types.JavaBoolFalse
 }
 
