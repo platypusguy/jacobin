@@ -276,6 +276,12 @@ func Load_Lang_String() {
 			ParamSlots: 1,
 			GFunction:  stringMatches,
 		}
+
+	MethodSignatures["java/lang/String.regionMatches(ILjava/lang/String;II)Z"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  stringRegionMatchesILII,
+		}
 	// Returns a string whose value is the concatenation of this string repeated the specified number of times.
 	MethodSignatures["java/lang/String.repeat(I)Ljava/lang/String;"] =
 		GMeth{
@@ -791,7 +797,16 @@ func stringRegionMatchesILII(params []any) any {
 	compareByteArray := object.ByteArrayFromStringObject(compareStringObject)
 	compareOffset := params[3].(int64)
 
+	if baseOffset < 0 || compareOffset < 0 { // in the JDK, this is the indicated response, rather than an exception(!)
+		return types.JavaBoolFalse
+	}
+
 	regionLength := params[4].(int64)
+	if baseOffset+regionLength > int64(len(baseByteArray)) || // again, erroneous values simply return false
+		compareOffset+regionLength > int64(len(compareByteArray)) {
+		return types.JavaBoolFalse
+	}
+
 	section1 := baseByteArray[baseOffset : baseOffset+regionLength]
 	section2 := compareByteArray[compareOffset : compareOffset+regionLength]
 	if bytes.Equal(section1, section2) {
