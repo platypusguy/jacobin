@@ -282,11 +282,19 @@ func Load_Lang_String() {
 			ParamSlots: 4,
 			GFunction:  stringRegionMatchesILII,
 		}
+
 	// Returns a string whose value is the concatenation of this string repeated the specified number of times.
 	MethodSignatures["java/lang/String.repeat(I)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringRepeat,
+		}
+
+	// Replace a single character by another in the given string.
+	MethodSignatures["java/lang/String.replace(CC)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  stringReplaceCC,
 		}
 
 	// Return a string in all lower case, using the reference object string as input.
@@ -827,6 +835,22 @@ func stringRepeat(params []interface{}) interface{} {
 	}
 
 	// Return new string in an object.
+	obj := object.StringObjectFromGoString(newStr)
+	return obj
+
+}
+
+// "java/lang/String.replace(CC)Ljava/lang/String;"
+func stringReplaceCC(params []interface{}) interface{} {
+	// params[0] = base string
+	// params[1] = character to be replaced
+	// params[2] = replacement character
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
+	oldChar := byte((params[1].(int64)) & 0xFF)
+	newChar := byte((params[2].(int64)) & 0xFF)
+	newStr := strings.ReplaceAll(str, string(oldChar), string(newChar))
+
+	// Return final string in an object.
 	obj := object.StringObjectFromGoString(newStr)
 	return obj
 
