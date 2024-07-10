@@ -85,6 +85,7 @@ const (
 	NullPointerException
 	NumberFormatException
 	ObjectCollectedException
+	PatternSyntaxException
 	ProfileDataException
 	ProviderException
 	ProviderNotFoundException
@@ -306,6 +307,7 @@ var JVMexceptionNames = []string{
 	"java.lang.NullPointerException",                         // VERIFIED
 	"java.lang.NumberFormatException",                        // VERIFIED
 	"com.sun.jdi.ObjectCollectedException",                   // VERIFIED
+	"java.util.regex.PatternSyntaxException",                 // VERIFIED
 	"java.awt.color.ProfileDataException",                    // VERIFIED
 	"java.security.ProviderException",                        // VERIFIED
 	"java.nio.file.ProviderNotFoundException",                // VERIFIED
