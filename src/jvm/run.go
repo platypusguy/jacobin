@@ -572,10 +572,15 @@ frameInterpreter:
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
 			}
-			f.Locals[index] = pop(f).(int64)
+			//f.Locals[index] = pop(f).(int64)
+			popped := pop(f)
+			f.Locals[index] = convertInterfaceToInt64(popped)
+
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			if opcode == opcodes.LSTORE {
-				f.Locals[index+1] = pop(f).(int64)
+				//f.Locals[index+1] = pop(f).(int64)
+				popped := pop(f)
+				f.Locals[index+1] = convertInterfaceToInt64(popped)
 			}
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
 			var index int
