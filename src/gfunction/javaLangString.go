@@ -777,6 +777,11 @@ func stringMatches(params []any) any {
 	return types.JavaBoolFalse
 }
 
+func stringRegionMatchesILII(params []any) any {
+
+	return types.JavaBoolFalse
+}
+
 // "java/lang/String.repeat(I)Ljava/lang/String;"
 func stringRepeat(params []interface{}) interface{} {
 	// params[0] = base string
