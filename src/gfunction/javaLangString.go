@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-4 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -13,6 +13,7 @@ import (
 	"jacobin/object"
 	"jacobin/types"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -269,6 +270,11 @@ func Load_Lang_String() {
 			GFunction:  stringLength,
 		}
 
+	MethodSignatures["java/lang/String.matches(Ljava/lang/String;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringMatches,
+		}
 	// Returns a string whose value is the concatenation of this string repeated the specified number of times.
 	MethodSignatures["java/lang/String.repeat(I)Ljava/lang/String;"] =
 		GMeth{
@@ -597,40 +603,6 @@ func stringEqualsIgnoreCase(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-// java/lang/String.getBytes()[B
-func getBytesFromString(params []interface{}) interface{} {
-	// params[0] = reference string with byte array to be returned
-	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
-	return populator("[B", types.ByteArray, bytes)
-}
-
-// java/lang/String.getBytes([BIIBI)V
-// JDK17 Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
-func stringGetBytesBIIBI(params []any) any {
-	fmt.Fprintln(os.Stderr, "java/lang/String.getBytes([BIIBI)V *****************")
-	return nil
-}
-
-// java/lang/String.lastIndex(string)
-// finds the last instance of the search string in the base string. Returns an
-// index to the first character if the string is found, -1 if the string is not found
-func lastIndexOfString(params []any) any {
-	baseStringObject := params[0].(*object.Object)
-	baseString := object.GoStringFromStringObject(baseStringObject)
-
-	searchStringObject := params[1].(*object.Object)
-	searchString := object.GoStringFromStringObject(searchStringObject)
-
-	lastIndex := strings.LastIndex(baseString, searchString)
-	return int64(lastIndex)
-}
-
-// "java/lang/String.isLatin1()Z"
-func stringIsLatin1(params []interface{}) interface{} {
-	// TODO: Someday, the answer might be false.
-	return types.JavaBoolTrue // true
-}
-
 // "java/lang/String.format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"
 // "java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"
 func sprintf(params []interface{}) interface{} {
@@ -739,12 +711,70 @@ func StringFormatter(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(str)
 }
 
+// java/lang/String.getBytes()[B
+func getBytesFromString(params []interface{}) interface{} {
+	// params[0] = reference string with byte array to be returned
+	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
+	return populator("[B", types.ByteArray, bytes)
+}
+
+// java/lang/String.getBytes([BIIBI)V
+// JDK17 Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
+func stringGetBytesBIIBI(params []any) any {
+	fmt.Fprintln(os.Stderr, "java/lang/String.getBytes([BIIBI)V *****************")
+	return nil
+}
+
+// java/lang/String.lastIndex(string)
+// finds the last instance of the search string in the base string. Returns an
+// index to the first character if the string is found, -1 if the string is not found
+func lastIndexOfString(params []any) any {
+	baseStringObject := params[0].(*object.Object)
+	baseString := object.GoStringFromStringObject(baseStringObject)
+
+	searchStringObject := params[1].(*object.Object)
+	searchString := object.GoStringFromStringObject(searchStringObject)
+
+	lastIndex := strings.LastIndex(baseString, searchString)
+	return int64(lastIndex)
+}
+
+// "java/lang/String.isLatin1()Z"
+func stringIsLatin1(params []interface{}) interface{} {
+	// TODO: Someday, the answer might be false.
+	return types.JavaBoolTrue // true
+}
+
 // "java/lang/String.length()I"
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
 	obj := params[0].(*object.Object)
 	bytes := object.ByteArrayFromStringObject(obj)
 	return int64(len(bytes))
+}
+
+// java/lang/String.matches(Ljava/lang/String;)Z
+// is the string in params[0] a match for the regex in params[1]?
+func stringMatches(params []any) any {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("stringMatches: Expected a string and a regular expression")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	baseStringObject := params[0].(*object.Object)
+	baseString := object.GoStringFromStringObject(baseStringObject)
+
+	regexStringObject := params[1].(*object.Object)
+	regexString := object.GoStringFromStringObject(regexStringObject)
+
+	regex, err := regexp.Compile(regexString)
+	if err != nil {
+		errMsg := fmt.Sprintf("Invalid regular expression: %s", regexString)
+		return getGErrBlk(excNames.PatternSyntaxException, errMsg)
+	}
+	if regex.MatchString(baseString) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 // "java/lang/String.repeat(I)Ljava/lang/String;"
