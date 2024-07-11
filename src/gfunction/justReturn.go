@@ -43,6 +43,12 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["java/math/MathContext.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -58,6 +64,24 @@ func Load_Just_Return() {
 	MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
 		GMeth{
 			ParamSlots: 1,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/lang/SecurityManager.checkRead(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/lang/System.registerNatives()V"] =
+		GMeth{
+			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
 
