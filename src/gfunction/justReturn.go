@@ -85,4 +85,16 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 6,
+			GFunction:  justReturn,
+		}
+
 }
