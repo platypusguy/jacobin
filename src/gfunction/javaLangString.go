@@ -277,6 +277,7 @@ func Load_Lang_String() {
 			GFunction:  stringMatches,
 		}
 
+	// does the region of one string match a region of another string (using offset and length values to define regions)
 	MethodSignatures["java/lang/String.regionMatches(ILjava/lang/String;II)Z"] =
 		GMeth{
 			ParamSlots: 4,
@@ -801,9 +802,12 @@ func stringMatches(params []any) any {
 
 // do two regions in a string match?
 // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#regionMatches(boolean,int,java.lang.String,int,int)
-// param[0] = the base string, param[1] = offset of region in base string, param[2] pointer to second string,
-// param[3] offset in second string, param[4] length of region to comapre.
 func stringRegionMatchesILII(params []any) any {
+	// param[0] the base string
+	// param[1] offset of region in base string
+	// param[2] pointer to second string
+	// param[3] offset in second string
+	// param[4] length of region to compare
 	baseStringObject := params[0].(*object.Object)
 	baseByteArray := object.ByteArrayFromStringObject(baseStringObject)
 	baseOffset := params[1].(int64)
