@@ -10,6 +10,8 @@ import (
 	"container/list"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
+	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
@@ -156,7 +158,12 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 		if rawMethod.MType == 'G' { // nothing more to do if it's a native method
 			return
 		}
-		method := rawMethod.Meth.(classloader.JmEntry)
+		method, ok := rawMethod.Meth.(classloader.JmEntry)
+		if !ok {
+			errMsg := fmt.Sprintf("initStackTraceElement: %s.%s, Invalid operand type for rawMethod.Meth: %T",
+				util.ConvertInternalClassNameToUserFormat(frame.ClName), frame.MethName, rawMethod.Meth)
+			_ = exceptions.ThrowEx(excNames.InternalException, errMsg, &frame)
+		}
 		for i := 0; i < len(method.Attribs); i++ {
 			index := method.Attribs[i].AttrName
 			if method.Cp.Utf8Refs[index] == "LineNumberTable" {

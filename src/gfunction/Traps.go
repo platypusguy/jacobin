@@ -48,12 +48,6 @@ func Load_Traps() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 	MethodSignatures["java/io/FileSystem.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
