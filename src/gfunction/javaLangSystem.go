@@ -79,12 +79,6 @@ func Load_Lang_System() {
 			GFunction:  getProperty,
 		}
 
-	MethodSignatures["java/lang/System.registerNatives()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
 		GMeth{
 			ParamSlots: 0,
