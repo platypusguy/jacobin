@@ -198,3 +198,8 @@ func eofGet(obj *object.Object) bool {
 	}
 	return value
 }
+
+// Return a null object.
+func returnNullObject(params []interface{}) interface{} {
+	return object.Null
+}
