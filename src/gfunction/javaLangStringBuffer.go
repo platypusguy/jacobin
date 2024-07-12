@@ -23,53 +23,50 @@ func Load_Lang_StringBuffer() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(I)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/CharSequence;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuffer.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  appendStringToStringBuffer,
 		}
+
 }
 
 // append the string in the second parameter to the chars in the StringBuffer that's
 // passed in the objectRef parameter (the first param)
 func appendStringToStringBuffer(params []any) any {
 	stringBufferObject := params[0].(*object.Object)
+	stringBufferStringLen := stringBufferObject.FieldTable["count"].Fvalue.(int64)
 
 	strObjectToAppend := params[1].(*object.Object)
 	strToAppend := strObjectToAppend.FieldTable["value"].Fvalue.([]byte)
 
 	switch stringBufferObject.FieldTable["value"].Fvalue.(type) {
-	case []byte:
-		stringBufferContent := stringBufferObject.FieldTable["value"].Fvalue.([]byte)
-		stringBufferContent = append(stringBufferContent, strToAppend...)
+	case []byte: // the usual case
+		if stringBufferStringLen == 0 {
+			stringBufferObject.FieldTable["value"] = object.Field{
+				Ftype:  "[B",
+				Fvalue: strToAppend,
+			}
+			stringBufferObject.FieldTable["count"] = object.Field{
+				Ftype:  "I",
+				Fvalue: int64(len(strToAppend)),
+			}
+		} else {
+			stringBufferContent := stringBufferObject.FieldTable["value"].Fvalue.([]byte)
+			stringBufferContent = append(stringBufferContent, strToAppend...)
+			stringBufferObject.FieldTable["count"] = object.Field{
+				Ftype:  "I",
+				Fvalue: int64(len(stringBufferContent)),
+			}
+		}
 	case nil: // a raw StringBuffer
 		stringBufferObject.FieldTable["value"] = object.Field{
 			Ftype:  "[B",
 			Fvalue: strToAppend,
+		}
+		stringBufferObject.FieldTable["count"] = object.Field{
+			Ftype:  "I",
+			Fvalue: int64(len(strToAppend)),
 		}
 	}
 	return stringBufferObject
