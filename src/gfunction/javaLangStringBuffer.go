@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -15,7 +15,7 @@ import "jacobin/object"
 
 func Load_Lang_StringBuffer() {
 
-	// === OBJECT INSTANTIATION ===
+	// === Instantiation ===
 
 	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
 		GMeth{
@@ -23,12 +23,36 @@ func Load_Lang_StringBuffer() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] =
+	// === Methods ===
+
+	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] = // append string
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  appendStringToStringBuffer,
 		}
 
+	MethodSignatures["java/lang/StringBuffer.append([C)Ljava/lang/StringBuffer"] = // append char array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  appendStringToStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/CharSequence;)Ljava/lang/StringBuffer"] = // append char seq
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  appendStringToStringBuffer,
+		}
+	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/Object;)Ljava/lang/StringBuffer;"] = // append object
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  appendStringToStringBuffer,
+		}
+
+	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/StringBuffer;)Ljava/lang/StringBuffer"] = // append stringBuffer
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  appendStringToStringBuffer,
+		}
 }
 
 // append the string in the second parameter to the chars in the StringBuffer that's
