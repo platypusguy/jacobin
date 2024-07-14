@@ -91,11 +91,26 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 }
 
 // converts an interface{} value into int64
+// notes:
+//   - an exception is thrown if function is passed a uint64
+//   - there exists a similarl uint function: convertInterfaceToUint64()
+//   - for converting a byte as a numeric value and so to propagate negative values,
+//     use byteToInt64(). This would be done only in numeric conversions of binary data.
 func convertInterfaceToInt64(arg interface{}) int64 {
 	switch t := arg.(type) {
 	case int64:
 		return t
+	case int8:
+		return int64(t)
 	case uint8:
+		return int64(t)
+	case int16:
+		return int64(t)
+	case uint16:
+		return int64(t)
+	case int:
+		return int64(t)
+	case int32:
 		return int64(t)
 	case uint32:
 		return int64(t)
