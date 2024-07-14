@@ -572,16 +572,15 @@ frameInterpreter:
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
 			}
-			//f.Locals[index] = pop(f).(int64)
+
 			popped := pop(f)
 			f.Locals[index] = convertInterfaceToInt64(popped)
 
 			// longs and doubles are stored in localvar[x] and again in localvar[x+1]
 			if opcode == opcodes.LSTORE {
-				//f.Locals[index+1] = pop(f).(int64)
-				popped := pop(f)
-				f.Locals[index+1] = convertInterfaceToInt64(popped)
+				f.Locals[index+1] = convertInterfaceToInt64(pop(f))
 			}
+
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
@@ -620,22 +619,23 @@ frameInterpreter:
 			f.Locals[index] = pop(f)
 		case opcodes.ISTORE_0: //   0x3B    (store popped top of stack int into local 0)
 			popped := pop(f)
-			switch popped.(type) {
-			case int64:
-				f.Locals[0] = popped.(int64)
-			case uint8:
-				f.Locals[0] = int64(popped.(uint8))
-			case uint32:
-				f.Locals[1] = int64(popped.(uint32))
-			default:
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, ISTORE_0: Invalid operand type: %T",
-					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, popped)
-				status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-			}
+			f.Locals[0] = convertInterfaceToInt64(popped)
+			// switch popped.(type) {
+			// case int64:
+			// 	f.Locals[0] = popped.(int64)
+			// case uint8:
+			// 	f.Locals[0] = int64(popped.(uint8))
+			// case uint32:
+			// 	f.Locals[1] = int64(popped.(uint32))
+			// default:
+			// 	glob.ErrorGoStack = string(debug.Stack())
+			// 	errMsg := fmt.Sprintf("in %s.%s, ISTORE_0: Invalid operand type: %T",
+			// 		util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, popped)
+			// 	status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+			// 	if status != exceptions.Caught {
+			// 		return errors.New(errMsg) // applies only if in test
+			// 	}
+			// }
 		case opcodes.ISTORE_1: //   0x3C   	(store popped top of stack int into local 1)
 			popped := pop(f)
 			switch popped.(type) {
@@ -2811,9 +2811,9 @@ frameInterpreter:
 			exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
 
 			// get the PC of the exception and check for any catch blocks
-			//if f.ExceptionPC == -1 {
+			// if f.ExceptionPC == -1 {
 			//	f.ExceptionPC = f.PC
-			//}
+			// }
 
 			// find the frame with a valid catch block for this exception, if any
 			catchFrame, handlerBytecode := exceptions.FindCatchFrame(fs, exceptionName, f.ExceptionPC)

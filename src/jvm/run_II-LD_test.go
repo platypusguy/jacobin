@@ -463,6 +463,29 @@ func TestIstore(t *testing.T) {
 	}
 }
 
+// ISTORE: Store byte value from stack into local specified by following byte.
+func TestIstoreByte(t *testing.T) {
+	f := newFrame(opcodes.ISTORE)
+	f.Meth = append(f.Meth, 0x02) // use local var #2
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	push(&f, uint8(0x22))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.Locals[2] != int64(0x22) {
+		t.Errorf("ISTORE: Expecting int64 of 0x222 in locals[2], got: 0x%x", f.Locals[2])
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("ISTORE: Expecting an empty stack, but tos points to item: %d", f.TOS)
+	}
+}
+
 // ISTORE_0: Store integer from stack into localVar[0]
 func TestIstore0(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_0)
@@ -472,14 +495,50 @@ func TestIstore0(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.Locals[0] != int64(220) {
-		t.Errorf("ISTORE_0: expected lcoals[0] to be 220, got: %d", f.Locals[0])
+		t.Errorf("ISTORE_0: expected locals[0] to be 220, got: %d", f.Locals[0])
 	}
 	if f.TOS != -1 {
 		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
 	}
 }
 
-// ISTORE1
+// ISTORE_0: Store byte value from stack into localVar[0]
+// Note: the logic for this bytecode is the same as ISTORE_1, ISTORE_2, ISTORE_3,
+// so this test is not duplicated for those bytecodes
+func TestIstore0Byte(t *testing.T) {
+	f := newFrame(opcodes.ISTORE_0)
+	f.Locals = append(f.Locals, zero)
+	push(&f, byte(220))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[0] != int64(220) {
+		t.Errorf("ISTORE_0: expected locals[0] to be int64 of value 220, got value of: %d", f.Locals[0])
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// ISTORE_0: Store uint32 value from stack into localVar[0]
+// Note: the logic for this bytecode is the same as ISTORE_1, ISTORE_2, ISTORE_3,
+// so this test is not duplicated for those bytecodes
+func TestIstore0Uint32(t *testing.T) {
+	f := newFrame(opcodes.ISTORE_0)
+	f.Locals = append(f.Locals, zero)
+	push(&f, uint32(220))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[0] != int64(220) {
+		t.Errorf("ISTORE_0: expected locals[0] to be int64 of value 220, got value of: %d", f.Locals[0])
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+// ISTORE_1
 func TestIstore1(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_1)
 	f.Locals = append(f.Locals, zero)
@@ -496,7 +555,7 @@ func TestIstore1(t *testing.T) {
 	}
 }
 
-// ISTORE2
+// ISTORE_2
 func TestIstore2(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_2)
 	f.Locals = append(f.Locals, zero)
@@ -514,6 +573,7 @@ func TestIstore2(t *testing.T) {
 	}
 }
 
+// ISTORE_3
 func TestIstore3(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_3)
 	f.Locals = append(f.Locals, zero)
