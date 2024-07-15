@@ -127,33 +127,6 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 	return 0
 }
 
-// Convert an interface{} consisting of some integral value to int64.
-// Appears primarily in the runFrame{} IF* bytecodes.
-func convertIntegralValueToInt64(arg interface{}) int64 {
-	var value int64
-	switch arg.(type) {
-	case int64:
-		value = arg.(int64)
-	case bool:
-		if arg == true {
-			value = int64(1)
-		} else {
-			value = int64(0)
-		}
-	case uint8:
-		if arg == uint8(1) {
-			value = int64(1)
-		} else {
-			value = int64(0)
-		}
-	default:
-		errMsg := fmt.Sprintf("convertIntegralValueToInt64: Invalid argument type: %T", arg)
-		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
-	}
-
-	return value
-}
-
 // Log the existing stack
 // Could be called for tracing -or- supply info for an error section
 func logTraceStack(f *frames.Frame) {
