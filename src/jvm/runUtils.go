@@ -114,6 +114,12 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 		return int64(t)
 	case uint32:
 		return int64(t)
+	case bool:
+		if t == true {
+			return types.JavaBoolTrue // is int64
+		} else {
+			return types.JavaBoolFalse
+		}
 	default:
 		errMsg := fmt.Sprintf("convertInterfaceToInt64: Invalid argument type: %T", arg)
 		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)

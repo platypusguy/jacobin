@@ -13,13 +13,13 @@ import "testing"
 
 func TestConvertBoolByteToInt64(t *testing.T) {
 	var bite = byte(0x01)
-	res := convertIntegralValueToInt64(bite)
+	res := convertInterfaceToInt64(bite)
 	if res != 1 {
 		t.Errorf("convertBoolByteToInt64(byte), expected = 1, got %d", res)
 	}
 
 	yesNo := true
-	if convertIntegralValueToInt64(yesNo) != 1 {
+	if convertInterfaceToInt64(yesNo) != 1 {
 		t.Errorf("convertBoolByteToInt64(bool) != 1 (true), got %d", res)
 	}
 }
