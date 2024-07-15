@@ -538,6 +538,36 @@ func TestIstore0Uint32(t *testing.T) {
 	}
 }
 
+func TestIstore0BooleanTrue(t *testing.T) {
+	f := newFrame(opcodes.ISTORE_0)
+	f.Locals = append(f.Locals, zero)
+	push(&f, bool(true))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[0] != types.JavaBoolTrue {
+		t.Errorf("ISTORE_0: expected locals[0] to be int64 of value 1, got value of: %d", f.Locals[0])
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
+func TestIstore0BooleanFalse(t *testing.T) {
+	f := newFrame(opcodes.ISTORE_0)
+	f.Locals = append(f.Locals, zero)
+	push(&f, false)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+	if f.Locals[0] != types.JavaBoolFalse {
+		t.Errorf("ISTORE_0: expected locals[0] to be int64 of value 0, got value of: %d", f.Locals[0])
+	}
+	if f.TOS != -1 {
+		t.Errorf("ISTORE_0: Expected op stack to be empty, got tos: %d", f.TOS)
+	}
+}
+
 // ISTORE_1
 func TestIstore1(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_1)
