@@ -18,7 +18,7 @@ func TestIsNull(t *testing.T) {
 		t.Errorf("nil should be null")
 	}
 
-	var op *Object
+	var op *Object = Null
 	if !IsNull(op) {
 		t.Errorf("pointer to non-allocated object should be null")
 	}

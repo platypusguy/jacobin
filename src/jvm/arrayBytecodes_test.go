@@ -197,10 +197,12 @@ func TestAastore(t *testing.T) {
 
 // AASTORE: Test error conditions: invalid array address
 func TestAastoreInvalid1(t *testing.T) {
+	globals.InitStringPool()
 	f := newFrame(opcodes.AASTORE)
-	push(&f, (*object.Object)(nil))                // this should point to an array, will here cause the error
-	push(&f, int64(30))                            // the index into the array
-	push(&f, object.Make1DimArray(object.REF, 10)) // the value to insert
+	obj := object.Make1DimArray(object.REF, 10)
+	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
+	push(&f, int64(30))             // the index into the array
+	push(&f, obj)                   // the value to insert
 
 	log.Init()
 	globals.InitGlobals("test")
@@ -1207,6 +1209,7 @@ func TestDastore(t *testing.T) {
 
 // DASTORE: Test error conditions: invalid array address
 func TestDastoreInvalid1(t *testing.T) {
+	globals.InitStringPool()
 	f := newFrame(opcodes.DASTORE)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array
@@ -1777,6 +1780,7 @@ func TestIastore(t *testing.T) {
 
 // IASTORE: Test error conditions: invalid array address
 func TestIastoreInvalid1(t *testing.T) {
+	globals.InitStringPool()
 	f := newFrame(opcodes.IASTORE)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array

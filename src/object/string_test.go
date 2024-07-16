@@ -142,7 +142,7 @@ func TestUpdateStringObjectFromBytes(t *testing.T) {
 	if !IsStringObject(strObj) {
 		t.Errorf("expected IsStringObject(valid string object) to be true, observed false")
 	}
-	UpdateStringObjectFromBytes(strObj, constBytes)
+	UpdateValueFieldFromBytes(strObj, constBytes)
 	strValue := GoStringFromStringObject(strObj)
 	if strValue != constStr {
 		t.Errorf("strValue from updated string object has wrong value: %s", strValue)
