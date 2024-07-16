@@ -1721,7 +1721,7 @@ func TestIfnonnull(t *testing.T) {
 func TestIfnonnullFallThrough(t *testing.T) {
 	f := newFrame(opcodes.IFNONNULL)
 	var oAddr *object.Object
-	oAddr = nil
+	oAddr = object.Null
 	push(&f, oAddr)
 	f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
 	f.Meth = append(f.Meth, 4)
@@ -1731,8 +1731,8 @@ func TestIfnonnullFallThrough(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 	if f.Meth[f.PC-1] == opcodes.ICONST_2 { // -1 b/c the run loop adds 1 before exiting
-		t.Errorf("IFNONNULL: Invalid fall-through, got: %s",
-			opcodes.BytecodeNames[f.PC])
+		t.Logf("IFNONNULL: Invalid fall-through, got: %s", opcodes.BytecodeNames[f.PC])
+		t.Errorf("f.PC-1=%d, f.PC=%d, f.Meth[f.PC-1]=%d, f.Meth[f.PC]=%d", f.PC-1, f.PC, f.Meth[f.PC-1], f.Meth[f.PC])
 	}
 }
 
