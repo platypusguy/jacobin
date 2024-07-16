@@ -23,6 +23,12 @@ func Load_Lang_StringBuffer() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	// === Methods ===
 
 	MethodSignatures["java/lang/StringBuffer.append(Ljava/lang/String;)Ljava/lang/StringBuffer;"] = // append string

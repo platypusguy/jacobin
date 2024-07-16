@@ -143,7 +143,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destPos := params[3].(int64)
 	length := params[4].(int64)
 
-	if src == nil || dest == nil {
+	if object.IsNull(src) || object.IsNull(dest) {
 		errMsg := fmt.Sprintf("null src or dest")
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}

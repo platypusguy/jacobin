@@ -75,7 +75,7 @@ func StringObjectFromGoString(str string) *Object {
 // GoStringFromStringObject: convenience method to extract a Go string from a String object (Java string)
 func GoStringFromStringObject(obj *Object) string {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		if obj.FieldTable["value"].Fvalue != nil {
+		if len(obj.FieldTable["value"].Fvalue.([]byte)) > 0 {
 			return string(obj.FieldTable["value"].Fvalue.([]byte))
 		}
 	}
@@ -153,10 +153,4 @@ func IsStringObject(unknown any) bool {
 		return true
 	}
 	return false
-}
-
-// UpdateStringObjectFromBytes: Set the value field of the given object to the given byte array
-func UpdateStringObjectFromBytes(objPtr *Object, argBytes []byte) {
-	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
-	objPtr.FieldTable["value"] = fld
 }

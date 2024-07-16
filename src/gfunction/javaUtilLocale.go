@@ -77,7 +77,7 @@ func localeFromLanguageCountry(params []interface{}) interface{} {
 	countryStr := object.GoStringFromStringObject(countryObj)
 
 	bytes := []byte(langStr + "_" + countryStr)
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 
 	return nil
 }
@@ -98,7 +98,7 @@ func localeFromLanguageCountryVariant(params []interface{}) interface{} {
 	variantStr := object.GoStringFromStringObject(variantObj)
 
 	bytes := []byte(langStr + "_" + countryStr + "_" + variantStr)
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 
 	return nil
 }

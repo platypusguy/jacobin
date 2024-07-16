@@ -183,8 +183,8 @@ func PrintlnV(params []interface{}) interface{} {
 
 // "java/io/PrintStream.println(C)V"
 func PrintlnChar(params []interface{}) interface{} {
-	cc := fmt.Sprint(params[1].(int64))
-	fmt.Fprintln(params[0].(*os.File), cc)
+	bb := byte(params[1].(int64))
+	fmt.Fprintln(params[0].(*os.File), string(bb))
 	return nil
 }
 
@@ -245,8 +245,8 @@ func PrintlnObject(params []interface{}) interface{} {
 
 // "java/io/PrintStream.print(C)V"
 func PrintChar(params []interface{}) interface{} {
-	cc := fmt.Sprint(params[1].(int64))
-	fmt.Fprint(params[0].(*os.File), cc)
+	bb := byte(params[1].(int64))
+	fmt.Fprint(params[0].(*os.File), string(bb))
 	return nil
 }
 

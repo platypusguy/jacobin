@@ -97,15 +97,17 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// String(byte[] bytes, Charset charset) ************************************** CHARSET
 	MethodSignatures["java/lang/String.<init>([C)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  newStringFromChars,
 		}
 
-	// String(char[] value) ****************************** works fine with JDK libraries
-	// String(char[] value, int offset, int count) ******* works fine with JDK libraries
+	MethodSignatures["java/lang/String.<init>([CII)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  newStringFromChars,
+		}
 
 	// String(int[] codePoints, int offset, int count) ************************ CODEPOINTS
 	MethodSignatures["java/lang/String.<init>([III)V"] =
@@ -372,7 +374,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.valueOf([CII)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  valueOfCharSubarray,
+			GFunction:  newStringFromCharsSubset,
 		}
 
 	// Return a string representing a double value.
@@ -418,7 +420,7 @@ func Load_Lang_String() {
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
 	bytes := make([]byte, 0)
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -428,7 +430,7 @@ func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
 	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -455,7 +457,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 
 	// Compute subarray and update params[0].
 	bytes = bytes[ssStart : ssStart+ssEnd]
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 	return nil
 
 }
@@ -471,8 +473,49 @@ func newStringFromChars(params []interface{}) interface{} {
 	for _, ii := range ints {
 		bytes = append(bytes, byte(ii&0xFF))
 	}
-	object.UpdateStringObjectFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
 	return nil
+}
+
+// Construct a string object from a subset of a character array.
+// "java/lang/String.valueOf([CII)Ljava/lang/String;"
+func newStringFromCharsSubset(params []interface{}) interface{} {
+	// params[0] = character array object
+	// params[1] = start offset
+	// params[2] = end offset
+	// Return the string.
+	fld, ok := params[0].(*object.Object).FieldTable["value"]
+	if !ok {
+		errMsg := fmt.Sprintf("Missing value field in character array object")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	iarray, ok := fld.Fvalue.([]int64)
+	if !ok {
+		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in character array object", fld.Ftype, fld.Fvalue)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get substring start and end offset
+	ssStart := params[1].(int64)
+	ssEnd := params[2].(int64)
+
+	// Validate boundaries.
+	totalLength := int64(len(iarray))
+	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
+		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", totalLength, ssStart, ssEnd)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Compute subarray and update params[0].
+	iarray = iarray[ssStart : ssStart+ssEnd]
+	var bytes []byte
+	for _, ii := range iarray {
+		bytes = append(bytes, byte(ii&0xFF))
+	}
+	obj := object.StringObjectFromByteArray(bytes)
+	return obj
+
 }
 
 // "java/lang/String.<clinit>()V" -- String class initialisation

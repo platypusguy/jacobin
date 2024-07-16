@@ -691,7 +691,7 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: Invalid (null) reference to an array",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
@@ -747,7 +747,7 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: Invalid (null) reference to an array",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)

@@ -45,9 +45,6 @@ type Field struct {
 	Fvalue any    // the actual value or a pointer to the value (ftype="[something)
 }
 
-// Null is the Jacobin implementation of Java's null
-var Null *Object = nil
-
 // MakeEmptyObject() creates an empty basis Object. It is expected that other
 // code will fill in the Klass header field and the data fields.
 func MakeEmptyObject() *Object {
@@ -85,7 +82,17 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	return objPtr
 }
 
+// UpdateValueFieldFromBytes: Set the value field of the given object to the given byte array
+func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
+	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
+	objPtr.FieldTable["value"] = fld
+}
+
+// Null is the Jacobin implementation of Java's null
+var zero64 = uint64(0)
+var Null *Object = (*Object)(unsafe.Pointer(&zero64))
+
 // determines whether a value is null or not
-func IsNull(value any) bool {
+func IsNull(value *Object) bool {
 	return value == nil || value == Null
 }
