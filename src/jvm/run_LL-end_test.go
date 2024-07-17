@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -725,59 +725,6 @@ func TestPopWithTracing(t *testing.T) {
 	}
 }
 
-// POP2: pop two items
-func TestPop2(t *testing.T) {
-	_ = log.SetLogLevel(log.WARNING)
-
-	f := newFrame(opcodes.POP2)
-	push(&f, int64(34)) // push three different values; 34 at bottom
-	push(&f, int64(21))
-	push(&f, int64(10))
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
-
-	if f.TOS != 0 {
-		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
-	}
-
-	top := pop(&f).(int64)
-
-	if top != 34 {
-		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
-	}
-}
-
-// POP2: pop two items off stack -- make sure tracing doesn't affect the output
-func TestPop2WithTrace(t *testing.T) {
-	_ = log.SetLogLevel(log.WARNING)
-	f := newFrame(opcodes.POP2)
-	push(&f, int64(34)) // push three different values; 34 at bottom
-	push(&f, int64(21))
-	push(&f, int64(10))
-
-	MainThread = thread.CreateThread()
-	MainThread.Stack = frames.CreateFrameStack()
-	MainThread.Stack.PushFront(&f) // push the new frame
-	MainThread.Trace = true        // turn on tracing
-	_ = runFrame(MainThread.Stack)
-
-	if f.TOS != 0 {
-		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
-	}
-
-	top := pop(&f).(int64)
-
-	if top != 34 {
-		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
-	}
-
-	if MainThread.Trace != true {
-		t.Errorf("POP2: MainThread.Trace was not re-enabled after the POP2 execution")
-	}
-}
-
 // POP with stack underflow error
 func TestPopWithStackUnderflow(t *testing.T) {
 	normalStderr := os.Stderr
@@ -848,6 +795,85 @@ func TestPopWithStackUnderflow(t *testing.T) {
 
 	if !strings.Contains(msg, "stack underflow") {
 		t.Errorf("got unexpected error message: %s", msg)
+	}
+}
+
+// The previous tests for pop test it as an action performed by Jacobin in the course
+// of handling other bytecodes. Here we test the POP bytecode. We know from previous
+// tests it works correctly. So, here we test only that it handles errors correctly.
+func TestPopBytecodrUnderflow(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// hide the error message to stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.POP)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if !strings.Contains(ret.Error(), "stack underflow") {
+		t.Errorf("Did not get expected error from invalide POP, got: %s", ret.Error())
+	}
+
+}
+
+// POP2: pop two items
+func TestPop2(t *testing.T) {
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.POP2)
+	push(&f, int64(34)) // push three different values; 34 at bottom
+	push(&f, int64(21))
+	push(&f, int64(10))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.TOS != 0 {
+		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 34 {
+		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	}
+}
+
+// POP2: pop two items off stack -- make sure tracing doesn't affect the output
+func TestPop2WithTrace(t *testing.T) {
+	_ = log.SetLogLevel(log.WARNING)
+	f := newFrame(opcodes.POP2)
+	push(&f, int64(34)) // push three different values; 34 at bottom
+	push(&f, int64(21))
+	push(&f, int64(10))
+
+	MainThread = thread.CreateThread()
+	MainThread.Stack = frames.CreateFrameStack()
+	MainThread.Stack.PushFront(&f) // push the new frame
+	MainThread.Trace = true        // turn on tracing
+	_ = runFrame(MainThread.Stack)
+
+	if f.TOS != 0 {
+		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
+	}
+
+	top := pop(&f).(int64)
+
+	if top != 34 {
+		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	}
+
+	if MainThread.Trace != true {
+		t.Errorf("POP2: MainThread.Trace was not re-enabled after the POP2 execution")
 	}
 }
 
