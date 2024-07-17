@@ -818,7 +818,7 @@ func TestPopBytecodrUnderflow(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 
-	if !strings.Contains(ret.Error(), "stack underflow") {
+	if !strings.Contains(ret.Error(), "stack underflow in POP") {
 		t.Errorf("Did not get expected error from invalide POP, got: %s", ret.Error())
 	}
 
@@ -875,6 +875,30 @@ func TestPop2WithTrace(t *testing.T) {
 	if MainThread.Trace != true {
 		t.Errorf("POP2: MainThread.Trace was not re-enabled after the POP2 execution")
 	}
+}
+
+// POP2: Test underflow error
+func TestPo2Underflow(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// hide the error message to stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.POP2)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if !strings.Contains(ret.Error(), "stack underflow in POP2") {
+		t.Errorf("Did not get expected error from invalide POP, got: %s", ret.Error())
+	}
+
 }
 
 // PUSH: Push a value on the op stack

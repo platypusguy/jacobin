@@ -890,7 +890,7 @@ frameInterpreter:
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
 				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
 				if status != exceptions.Caught {
-					return nil // applies only if in test
+					return errors.New(errMsg) // applies only if in test
 				}
 			}
 			f.TOS -= 2
