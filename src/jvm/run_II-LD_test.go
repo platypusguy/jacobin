@@ -973,6 +973,12 @@ func TestLdcTest2(t *testing.T) {
 // LDC cannot load a double. This tests that it generates the right error.
 func TestLdcInvalidDouble(t *testing.T) {
 	globals.InitGlobals("test")
+
+	// hide the error message to stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.LDC)
 	f.Meth = append(f.Meth, 0x01)
 
@@ -995,6 +1001,11 @@ func TestLdcInvalidDouble(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	ret := runFrame(fs)
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+
 	if !strings.Contains(ret.Error(), "LDC: Invalid type") {
 		t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
 	}
