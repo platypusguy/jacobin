@@ -180,18 +180,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/security/AccessController.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
-	MethodSignatures["java/security/AccessController.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
 	MethodSignatures["java/util/Random.next(I)V"] =
 		GMeth{
 			ParamSlots: 1,
