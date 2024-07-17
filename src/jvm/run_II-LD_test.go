@@ -970,6 +970,36 @@ func TestLdcTest2(t *testing.T) {
 	}
 }
 
+// LDC cannot load a double. This tests that it generates the right error.
+func TestLdcInvalidDouble(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.LDC)
+	f.Meth = append(f.Meth, 0x01)
+
+	cp := classloader.CPool{}
+	f.CP = &cp
+	CP := f.CP.(*classloader.CPool)
+	// now create a skeletal, two-entry CP
+	var doubles = make([]float64, 2)
+	CP.Doubles = doubles
+	CP.Doubles[0] = 1.234
+
+	CP.CpIndex = []classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{}
+	stringEntry := classloader.CpEntry{
+		Type: classloader.DoubleConst, Slot: 0,
+	}
+	CP.CpIndex = append(CP.CpIndex, dummyEntry)
+	CP.CpIndex = append(CP.CpIndex, stringEntry)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	ret := runFrame(fs)
+	if !strings.Contains(ret.Error(), "LDC: Invalid type") {
+		t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+	}
+}
+
 // Test LDC_W: get int64 CP entry indexed by two bytes
 func TestLdcw(t *testing.T) {
 	f := newFrame(opcodes.LDC_W)
