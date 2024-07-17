@@ -230,8 +230,8 @@ func PrintlnDoubleFloat(params []interface{}) interface{} {
 // "java/io/PrintStream.println(Ljava/lang/Object;)V"
 func PrintlnObject(params []interface{}) interface{} {
 	if params[1] == nil {
-		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		fmt.Fprintln(params[0].(*os.File), "null")
+		return nil
 	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
@@ -320,8 +320,8 @@ func PrintString(params []interface{}) interface{} {
 // "java/io/PrintStream.print(Ljava/lang/Object;)V"
 func PrintObject(params []interface{}) interface{} {
 	if params[1] == nil {
-		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		fmt.Fprint(params[0].(*os.File), "null")
+		return nil
 	}
 	objPtr := params[1].(*object.Object)
 	fld := objPtr.FieldTable["value"]
