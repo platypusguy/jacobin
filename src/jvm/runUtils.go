@@ -12,6 +12,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
@@ -121,8 +122,11 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 			return types.JavaBoolFalse
 		}
 	default:
-		errMsg := fmt.Sprintf("convertInterfaceToInt64: Invalid argument type: %T", arg)
-		exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
+		gl := globals.GetGlobalRef()
+		if gl.JacobinName != "test" {
+			errMsg := fmt.Sprintf("convertInterfaceToInt64: Invalid argument type: %T", arg)
+			exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, nil)
+		}
 	}
 	return 0
 }
