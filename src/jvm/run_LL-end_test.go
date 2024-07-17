@@ -252,6 +252,14 @@ func TestLrem(t *testing.T) {
 
 // LREM: long modulo -- divide by zero
 func TestLremDivideByZero(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	// hide the error message to stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.LREM)
 	push(&f, int64(6))
 	push(&f, int64(6))
@@ -261,6 +269,10 @@ func TestLremDivideByZero(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	err := runFrame(fs)
+
+	// reset stderr to its normal stream
+	os.Stderr = normalStderr
+
 	errMsg := err.Error()
 	if !strings.Contains(errMsg, "divide by zero") {
 		t.Errorf("LREM: Expected divide by zero error msg, got: %s", errMsg)
