@@ -1838,6 +1838,9 @@ frameInterpreter:
 				// then it should be a pointer to an object or to
 				// a loaded class
 				value = pop(f)
+				if value == nil {
+					value = object.Null
+				}
 				switch value.(type) {
 				case *object.Object:
 					statics.Statics[fieldName] = statics.Static{
@@ -2709,7 +2712,7 @@ frameInterpreter:
 				size = int64(len(array))
 			case *object.Object:
 				r := ref.(*object.Object)
-				if r == nil {
+				if object.IsNull(r) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
 					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
@@ -3126,7 +3129,7 @@ frameInterpreter:
 		case opcodes.IFNULL: // 0xC6 jump if TOS holds a null address
 			// null = nil or object.Null (a pointer to nil)
 			value := pop(f)
-			if value == nil || value == object.Null {
+			if object.IsNull(value.(*object.Object)) {
 				jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 				f.PC = f.PC + int(jumpTo) - 1
 			} else {
@@ -3137,7 +3140,7 @@ frameInterpreter:
 			value := pop(f)
 			if value != nil { // it's not nil, but is it a null pointer?
 				checkForPtr := value.(*object.Object)
-				if checkForPtr == nil || checkForPtr == object.Null { // it really is a null pointer, so just move on
+				if object.IsNull(checkForPtr) { // it really is a null pointer, so just move on
 					f.PC += 2
 				} else { // no, it's not nil nor a null pointer--so do the jump
 					jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
