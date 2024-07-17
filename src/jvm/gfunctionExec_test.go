@@ -21,11 +21,9 @@ import (
 )
 
 func TestGfunctionExecValid(t *testing.T) {
-
 	globals.InitGlobals("test")
-
 	log.Init()
-	globals.InitGlobals("test")
+
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
