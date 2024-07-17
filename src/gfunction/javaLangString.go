@@ -1125,9 +1125,22 @@ func valueOfLong(params []interface{}) interface{} {
 
 // "java/lang/String.valueOf(Ljava/lang/Object;)Ljava/lang/String;"
 func valueOfObject(params []interface{}) interface{} {
-	// params[0]: input Object
-	ptrObj := params[0].(*object.Object)
-	str := ptrObj.FormatField("")
-	obj := object.StringObjectFromGoString(str)
-	return obj
+	// params[0]: input Object or primitive
+	var str string
+
+	switch params[0].(type) {
+	case *object.Object:
+		inObj := params[0].(*object.Object)
+		str = object.GoStringFromStringPoolIndex(inObj.KlassName)
+	case int64:
+		str = fmt.Sprintf("%d", params[0].(int64))
+	case float64:
+		str = fmt.Sprintf("%f", params[0].(float64))
+	default:
+		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	outObj := object.StringObjectFromGoString(str)
+	return outObj
 }
