@@ -1921,7 +1921,15 @@ frameInterpreter:
 			var fieldType string
 			var fieldValue interface{}
 
-			objField := obj.FieldTable[fieldName]
+			objField, ok := obj.FieldTable[fieldName]
+			if !ok {
+				errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable for %s.%s%s",
+					f.PC, fieldName, f.ClName, f.MethName, f.MethType)
+				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
 			fieldType = objField.Ftype
 			if fieldType == types.StringIndex {
 				fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
