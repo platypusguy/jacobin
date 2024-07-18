@@ -2185,7 +2185,7 @@ frameInterpreter:
 			CP := f.CP.(*classloader.CPool)
 			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
-			// if it's a call to java/lang/Object."<init>":()V, which happens frequently,
+			// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
 			fullConstructorName := className + "." + methodName + methodType
 			if fullConstructorName == "java/lang/Object.<init>()V" {
