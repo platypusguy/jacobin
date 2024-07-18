@@ -19,8 +19,12 @@ package object
 // * string objects' "value" field contains a byte array, which is required by Java methods and gfunctions.
 
 import (
+	"fmt"
+	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"strconv"
+	"strings"
 )
 
 // NewStringObject creates an empty string object (aka Java String)
@@ -153,4 +157,81 @@ func IsStringObject(unknown any) bool {
 		return true
 	}
 	return false
+}
+
+// With the specified object and field, return a string representing the field value.
+func ObjectFieldToString(obj *Object, fieldName string) string {
+	// If null, return a 0-length string.
+	if IsNull(obj) {
+		return ""
+	}
+
+	// If the field is missing, give a warning and return a 0-length string.
+	fld, ok := obj.FieldTable[fieldName]
+	if !ok {
+		warnMsg := fmt.Sprintf("objectFieldToString: field \"%s\" was not found. Returning \"\"", fieldName)
+		log.Log(warnMsg, log.WARNING)
+		return ""
+	}
+
+	// If a static, remove the leading types.Static.
+	if strings.HasPrefix(fld.Ftype, types.Static) {
+		bytes := []byte(fld.Ftype)
+		fld.Ftype = string(bytes[1:])
+	}
+
+	// What type is the field?
+	switch fld.Ftype {
+	case types.BigInteger:
+		return fmt.Sprint(fld.Fvalue)
+	case types.Bool:
+		boolAsInt64 := fld.Fvalue.(int64)
+		if boolAsInt64 > 0 {
+			return "true"
+		}
+		return "false"
+	case types.BoolArray:
+		var str string
+		for _, elem := range fld.Fvalue.([]int64) {
+			if elem > 0 {
+				str += "true"
+			} else {
+				str += "false"
+			}
+			str += " "
+		}
+		str = strings.TrimSuffix(str, " ")
+		return str
+	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
+		return fmt.Sprintf("%d", fld.Fvalue.(int64))
+	case types.ByteArray, types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
+		var str string
+		for _, elem := range fld.Fvalue.([]int64) {
+			str += fmt.Sprint(elem)
+			str += " "
+		}
+		str = strings.TrimSuffix(str, " ")
+		return str
+	case types.Double, types.Float:
+		//return fmt.Sprintf("%f", fld.Fvalue.(float64))
+		return strconv.FormatFloat(fld.Fvalue.(float64), 'f', -1, 64)
+	case types.DoubleArray, types.FloatArray:
+		var str string
+		for _, elem := range fld.Fvalue.([]float64) {
+			str += strconv.FormatFloat(elem, 'f', -1, 64)
+			str += " "
+		}
+		str = strings.TrimSuffix(str, " ")
+		return str
+	case types.FileHandle:
+		return "FileHandle"
+	case types.Ref, types.RefArray:
+		return GoStringFromStringPoolIndex(obj.KlassName)
+	}
+
+	// None of the above.
+	warnMsg := fmt.Sprintf("objectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
+		fieldName, fld.Ftype)
+	log.Log(warnMsg, log.WARNING)
+	return GoStringFromStringPoolIndex(obj.KlassName)
 }
