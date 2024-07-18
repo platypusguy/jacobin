@@ -111,7 +111,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Nio_Charset_Charset()
 
 	// java/security/*
-	Load_Security_SecureRandom()
+	//Load_Security_SecureRandom()
 
 	// java/util/*
 	Load_Util_Concurrent_Atomic_AtomicInteger()
@@ -202,4 +202,14 @@ func eofGet(obj *object.Object) bool {
 // Return a null object.
 func returnNullObject(params []interface{}) interface{} {
 	return object.Null
+}
+
+// Return false.
+func returnFalse(params []interface{}) interface{} {
+	return types.JavaBoolFalse
+}
+
+// Return true.
+func returnTrue(params []interface{}) interface{} {
+	return types.JavaBoolTrue
 }
