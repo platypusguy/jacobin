@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
-	"jacobin/types"
 	"math"
 	"os"
 )
@@ -229,17 +228,16 @@ func PrintlnDoubleFloat(params []interface{}) interface{} {
 // Println an Object's contents
 // "java/io/PrintStream.println(Ljava/lang/Object;)V"
 func PrintlnObject(params []interface{}) interface{} {
-	if params[1] == nil {
-		fmt.Fprintln(params[0].(*os.File), "null")
-		return nil
+	var str string
+	switch params[1].(type) {
+	case *object.Object:
+		inObj := params[1].(*object.Object)
+		str = object.ObjectFieldToString(inObj, "value")
+	default:
+		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	objPtr := params[1].(*object.Object)
-	fld := objPtr.FieldTable["value"]
-	if fld.Ftype == types.ByteArray {
-		fmt.Fprintln(params[0].(*os.File), string(fld.Fvalue.([]byte)))
-		return nil
-	}
-	fmt.Fprintln(params[0].(*os.File), fld.Fvalue)
+	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
 
@@ -319,17 +317,16 @@ func PrintString(params []interface{}) interface{} {
 // Print an Object's contents
 // "java/io/PrintStream.print(Ljava/lang/Object;)V"
 func PrintObject(params []interface{}) interface{} {
-	if params[1] == nil {
-		fmt.Fprint(params[0].(*os.File), "null")
-		return nil
+	var str string
+	switch params[1].(type) {
+	case *object.Object:
+		inObj := params[1].(*object.Object)
+		str = object.ObjectFieldToString(inObj, "value")
+	default:
+		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	objPtr := params[1].(*object.Object)
-	fld := objPtr.FieldTable["value"]
-	if fld.Ftype == types.ByteArray {
-		fmt.Fprint(params[0].(*os.File), string(fld.Fvalue.([]byte)))
-		return nil
-	}
-	fmt.Fprint(params[0].(*os.File), fld.Fvalue)
+	fmt.Fprint(params[0].(*os.File), str)
 	return nil
 }
 

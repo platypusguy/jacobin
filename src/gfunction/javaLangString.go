@@ -1131,11 +1131,7 @@ func valueOfObject(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		inObj := params[0].(*object.Object)
-		str = object.GoStringFromStringPoolIndex(inObj.KlassName)
-	case int64:
-		str = fmt.Sprintf("%d", params[0].(int64))
-	case float64:
-		str = fmt.Sprintf("%f", params[0].(float64))
+		str = object.ObjectFieldToString(inObj, "value")
 	default:
 		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
