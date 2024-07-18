@@ -97,6 +97,12 @@ func Load_Lang_System() {
 			GFunction:  returnNullObject,
 		}
 
+	MethodSignatures["java/lang/System.allowSecurityManager()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
 }
 
 /*
