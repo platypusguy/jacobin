@@ -7,7 +7,9 @@
 package gfunction
 
 import (
-	"jacobin/types"
+	"fmt"
+	"jacobin/excNames"
+	"jacobin/object"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -17,13 +19,28 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.isLatin1()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  isLatin1,
+			GFunction:  returnTrue,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.append(Ljava/lang/Object;)Ljava/lang/StringBuilder;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  stringBuilderAppendObject,
 		}
 
 }
 
-// "java/lang/StringBuilder.isLatin1()Z"
-func isLatin1([]interface{}) interface{} {
-	// TODO: Someday, jacobin will need to discern between StringLatin1 and StringUTF16.
-	return types.JavaBoolTrue
+// "java/lang/StringBuilder.append(Ljava/lang/Object;)Ljava/lang/StringBuilder;"
+// Appends the string representation of the Object argument.
+// The overall effect is exactly as if the argument were converted to
+// a string by the method String.valueOf(Object), and the characters of that string
+// were then appended to this character sequence.
+func stringBuilderAppendObject(params []interface{}) interface{} {
+	// params[0]: input StringBuilder Object
+	inObj := params[0].(*object.Object)
+	str := object.ObjectFieldToString(inObj, "value")
+	errMsg := fmt.Sprintf("Not working yet. Object: %s", str)
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+
+	//return nil
 }
