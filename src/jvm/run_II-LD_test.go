@@ -325,6 +325,8 @@ func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
+// CURR: INVOKESPECIAL for non-existent class or method.
+
 // INVOKEVIRTUAL : invoke method -- here testing for error
 func TestInvokevirtualInvalid(t *testing.T) {
 
