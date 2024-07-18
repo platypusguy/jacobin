@@ -18,6 +18,7 @@ const Float = "F"
 const Int = "I" // can be either 32- or 64-bit int
 const Long = "J"
 const Ref = "L"
+const Rune = "R"
 const Short = "S"
 
 const Array = "["
@@ -29,7 +30,8 @@ const IntArray = "[I"
 const FloatArray = "[F"
 const LongArray = "[J"
 const RefArray = "[L"
-const RuneArray = "[R" // used only in strings that are not compact
+const RuneArray = CharArray // used only in strings that are not compact
+const ShortArray = "[S"
 
 // Jacobin-specific types
 const StringIndex = "T"
