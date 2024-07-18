@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2024 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -14,16 +14,17 @@ func Load_Security_SecureRandom() {
 			GFunction:  justReturn,
 		}
 
+	/**
 	MethodSignatures["java/security/SecureRandom.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  secureRandomInit,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>([B)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  secureRandomInit,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>(Ljava.security.SecureRandomSpi;Ljava.security.Provider;)V"] =
@@ -31,11 +32,6 @@ func Load_Security_SecureRandom() {
 			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
+	**/
 
-}
-
-// "java/security/SecureRandom.<init>()V"
-// "java/security/SecureRandom.<init>([B)V"
-func secureRandomInit(params []interface{}) interface{} {
-	return nil
 }

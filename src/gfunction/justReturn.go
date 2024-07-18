@@ -73,12 +73,6 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	MethodSignatures["java/lang/System.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
