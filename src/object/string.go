@@ -204,7 +204,15 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return str
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
-	case types.ByteArray, types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
+	case types.ByteArray:
+		var str string
+		for _, elem := range fld.Fvalue.([]byte) {
+			str += fmt.Sprint(elem)
+			str += " "
+		}
+		str = strings.TrimSuffix(str, " ")
+		return str
+	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {
 			str += fmt.Sprint(elem)
