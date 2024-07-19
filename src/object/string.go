@@ -169,9 +169,9 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If the field is missing, give a warning and return a 0-length string.
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
-		warnMsg := fmt.Sprintf("objectFieldToString: field \"%s\" was not found. Returning \"\"", fieldName)
+		warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" was not found. Returning \"null\"", fieldName)
 		log.Log(warnMsg, log.WARNING)
-		return ""
+		return "null"
 	}
 
 	// If a static, remove the leading types.Static.
@@ -238,7 +238,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	}
 
 	// None of the above.
-	warnMsg := fmt.Sprintf("objectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
+	warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
 	log.Log(warnMsg, log.WARNING)
 	return GoStringFromStringPoolIndex(obj.KlassName)
