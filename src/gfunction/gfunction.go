@@ -117,7 +117,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_HashMap()
-	Load_Util_HexFormat()
 	Load_Util_Locale()
 	Load_Util_Random()
 
