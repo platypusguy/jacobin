@@ -93,6 +93,10 @@ var zero64 = uint64(0)
 var Null *Object = (*Object)(unsafe.Pointer(&zero64))
 
 // determines whether a value is null or not
-func IsNull(value *Object) bool {
-	return value == nil || value == Null
+func IsNull(value any) bool {
+	switch value.(type) {
+	case *Object:
+		return value == nil || value == Null
+	}
+	return value == nil
 }
