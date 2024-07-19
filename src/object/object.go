@@ -96,7 +96,8 @@ var Null *Object = (*Object)(unsafe.Pointer(&zero64))
 func IsNull(value any) bool {
 	switch value.(type) {
 	case *Object:
-		return value == nil || value == Null
+		obj := value.(*Object)
+		return obj == nil || obj == Null
 	}
 	return value == nil
 }
