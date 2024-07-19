@@ -533,7 +533,11 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				bAref = ref.(*object.Object)
-				array = bAref.FieldTable["value"].Fvalue.([]byte)
+				if object.IsNull(bAref) {
+					array = make([]byte, 0)
+				} else {
+					array = bAref.FieldTable["value"].Fvalue.([]byte)
+				}
 			case *[]uint8:
 				array = *(ref.(*[]uint8))
 			case []uint8:
@@ -2001,7 +2005,7 @@ frameInterpreter:
 			// object
 			switch value.(type) {
 			case *object.Object:
-				if value != object.Null {
+				if !object.IsNull(value.(*object.Object)) {
 					v := *(value.(*object.Object))
 					o, ok := v.FieldTable["value"]
 					if ok && strings.HasPrefix(o.Ftype, types.Array) {
