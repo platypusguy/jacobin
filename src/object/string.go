@@ -163,7 +163,7 @@ func IsStringObject(unknown any) bool {
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return a 0-length string.
 	if IsNull(obj) {
-		return ""
+		return "null"
 	}
 
 	// If the field is missing, give a warning and return a 0-length string.
