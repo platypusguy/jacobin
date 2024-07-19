@@ -390,7 +390,7 @@ func TestInvokeSpecialNonExistentMethod(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-func TestInvokeGethodNoParms(t *testing.T) {
+func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// redirect stderr so as not to pollute the test output with the expected error message
@@ -401,10 +401,11 @@ func TestInvokeGethodNoParms(t *testing.T) {
 	// Initialize classloaders and method area
 	err := classloader.Init()
 	if err != nil {
-		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParms")
+		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParams")
 	}
 	classloader.LoadBaseClasses() // must follow classloader.Init()
 	gfunction.Load_Lang_System()
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	f := newFrame(opcodes.INVOKESPECIAL)
 	f.Meth = append(f.Meth, 0x00)
@@ -434,9 +435,12 @@ func TestInvokeGethodNoParms(t *testing.T) {
 	CP.Utf8Refs[0] = "getSecurityManager" // method presently returns a null
 
 	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1} // method name
-	CP.Utf8Refs[1] = "()Ljava/lang.SecurityManager;"
+	CP.Utf8Refs[1] = "()Ljava/lang/SecurityManager;"
 
 	f.CP = &CP
+	obj := object.MakeEmptyObject()
+	push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	err = runFrame(fs)
