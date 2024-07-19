@@ -233,6 +233,8 @@ func PrintlnObject(params []interface{}) interface{} {
 	case *object.Object:
 		inObj := params[1].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "value")
+	case nil:
+		str = "null"
 	default:
 		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -322,6 +324,8 @@ func PrintObject(params []interface{}) interface{} {
 	case *object.Object:
 		inObj := params[1].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "value")
+	case nil:
+		str = "null"
 	default:
 		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
