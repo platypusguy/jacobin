@@ -137,7 +137,7 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	observed = ObjectFieldToString(obj, fieldName)
 	expected = "1 2 3"
 	if observed != expected {
-		t.Errorf("Byte scalar, expected: %s, observed: %s\n", expected, observed)
+		t.Errorf("Byte array, expected: %s, observed: %s\n", expected, observed)
 	}
 
 	// Double array
@@ -146,7 +146,7 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	observed = ObjectFieldToString(obj, fieldName)
 	expected = "1.1 2.2 3.3"
 	if observed != expected {
-		t.Errorf("Byte scalar, expected: %s, observed: %s\n", expected, observed)
+		t.Errorf("Double array, expected: %s, observed: %s\n", expected, observed)
 	}
 
 	// Reference scalar
