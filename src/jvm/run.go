@@ -2217,7 +2217,6 @@ frameInterpreter:
 				params = append(params, objRef)
 
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
-				// if err != nil {
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2226,7 +2225,6 @@ frameInterpreter:
 							return errRet
 						}
 						if errors.Is(ret.(error), CaughtGfunctionException) {
-							// f.PC += 2 // for the two bytes used by CP entry
 							f.PC += 1 // point to the next executable bytecode
 							goto frameInterpreter
 						}
@@ -2235,7 +2233,6 @@ frameInterpreter:
 						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
 							push(f, ret) // push twice if long or double
 						}
-						// f.PC += 2 // for the two bytes used by CP entry
 					}
 					// any exception will already have been handled.
 				}

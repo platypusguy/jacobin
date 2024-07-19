@@ -91,7 +91,7 @@ func Load_Lang_System() {
 			GFunction:  clinit,
 		}
 
-	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang.SecurityManager;"] =
+	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  returnNullObject,
