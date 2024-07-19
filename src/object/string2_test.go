@@ -132,7 +132,7 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	}
 
 	// Byte array
-	var byteAry = []int64{1, 2, 3}
+	var byteAry = []byte{1, 2, 3}
 	setField(obj, fieldName, types.ByteArray, byteAry)
 	observed = ObjectFieldToString(obj, fieldName)
 	expected = "1 2 3"
