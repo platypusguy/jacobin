@@ -403,7 +403,7 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
@@ -450,7 +450,7 @@ frameInterpreter:
 				array = ref.([]float64)
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid object pointer (nil)",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
@@ -2873,7 +2873,7 @@ frameInterpreter:
 			var obj *object.Object
 			switch ref.(type) {
 			case *object.Object:
-				if ref == object.Null { // if ref is null, just carry on
+				if object.IsNull(ref) { // if ref is null, just carry on
 					f.PC += 2 // move past two bytes pointing to comp object
 					f.PC += 1
 					continue
