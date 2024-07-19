@@ -167,4 +167,16 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	if observed != theClassName {
 		t.Errorf("Reference array, expected: %s, observed: %s\n", theClassName, observed)
 	}
+
+	// nil
+	observed = ObjectFieldToString(nil, fieldName)
+	if observed != "null" {
+		t.Errorf("nil, expected: %s, observed: %s\n", "null", observed)
+	}
+
+	// Null
+	observed = ObjectFieldToString(Null, fieldName)
+	if observed != "null" {
+		t.Errorf("object.Null, expected: %s, observed: %s\n", "null", observed)
+	}
 }
