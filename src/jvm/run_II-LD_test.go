@@ -249,7 +249,7 @@ func TestInstanceofString(t *testing.T) {
 	// [0] First entry is perforce 0
 	// [1] is a ClassRef that points to string pool entry for java/lang/String
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // point to string pool entry for java/lang/String
@@ -288,11 +288,11 @@ func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 
-	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -347,11 +347,11 @@ func TestInvokeSpecialNonExistentMethod(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 
-	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -378,11 +378,12 @@ func TestInvokeSpecialNonExistentMethod(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("INVOKESPECIAL: Should have returned an error for non-existent method, but didn't")
-	}
+	} else {
 
-	if !strings.Contains(err.Error(),
-		"INVOKESPECIAL: Class method not found: java/lang/Object.no-such-method()V") {
-		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
+		if !strings.Contains(err.Error(),
+			"INVOKESPECIAL: Class method not found: java/lang/Object.no-such-method()V") {
+			t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
+		}
 	}
 
 	// restore stderr
@@ -412,11 +413,11 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 
-	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -480,11 +481,11 @@ func TestInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 
-	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -549,11 +550,11 @@ func TestInvokeSpecialGmethodIParamGeneratingAnError(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 
-	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
 	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
@@ -608,11 +609,11 @@ func TestInvokevirtualInvalid(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
 
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex = make([]classloader.CpEntry, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a method ref
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1)
 	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
 	f.CP = &CP
 
@@ -861,7 +862,7 @@ func TestIstore0Uint32(t *testing.T) {
 func TestIstore0BooleanTrue(t *testing.T) {
 	f := newFrame(opcodes.ISTORE_0)
 	f.Locals = append(f.Locals, zero)
-	push(&f, bool(true))
+	push(&f, true)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1326,8 +1327,12 @@ func TestLdcInvalidDouble(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 
-	if !strings.Contains(ret.Error(), "LDC: Invalid type") {
-		t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+	if ret != nil {
+		if !strings.Contains(ret.Error(), "LDC: Invalid type") {
+			t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+		}
+	} else {
+		t.Errorf("Did not get expected error from LDC with double value")
 	}
 }
 
@@ -1504,8 +1509,12 @@ func TestLdc2wInvalidForString(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 
-	if !strings.Contains(ret.Error(), "LDC2_W: Invalid type") {
-		t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+	if ret != nil {
+		if !strings.Contains(ret.Error(), "LDC2_W: Invalid type") {
+			t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+		}
+	} else {
+		t.Errorf("Did not get expected error message in TestLdc2wInvalidForString()")
 	}
 }
 
