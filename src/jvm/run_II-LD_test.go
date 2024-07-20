@@ -390,7 +390,7 @@ func TestInvokeSpecialNonExistentMethod(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-// INVOKESPECIAL: verify that a call to a gmethod works correctly
+// INVOKESPECIAL: verify that a call to a gmethod works correctly (passing nothing, getting a link back)
 func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -404,7 +404,7 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParams")
 	}
-	classloader.LoadBaseClasses() // must follow classloader.Init()
+
 	gfunction.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESPECIAL)
@@ -458,7 +458,7 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-// INVOKESPECIAL: verify that a call to a gmethod works correctly and pushess the returned D twice
+// INVOKESPECIAL: verify call to a gmethod works correctly and pushes the returned D twice
 func TestInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -472,7 +472,76 @@ func TestInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParams")
 	}
-	classloader.LoadBaseClasses() // must follow classloader.Init()
+
+	gfunction.CheckTestGfunctionsLoaded()
+
+	f := newFrame(opcodes.INVOKESPECIAL)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
+
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1, 1)
+	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 4)
+	classname := "java/lang/Object"
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
+
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
+		NameIndex: 4,
+		DescIndex: 5,
+	}
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0} // method name
+	CP.Utf8Refs = make([]string, 4)
+	CP.Utf8Refs[0] = "test" // method presently returns a null
+
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1} // method name
+	CP.Utf8Refs[1] = "()D"
+
+	f.CP = &CP
+	obj := object.MakeEmptyObject()
+	push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err = runFrame(fs)
+
+	if err != nil {
+		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
+	}
+
+	if f.TOS != 1 { // should be 1 b/c a returned D occupies two slots on the op stack
+		t.Errorf("Expecting TOS to be 1, got %d", f.TOS)
+	}
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+// INVOKESPECIAL: verify call to a gmethod that returns an error
+// CURR: resume here. Add the E type to testGfunctions.go and use that
+func TestInvokeSpecialGmethodIParamGeneratingAnError(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodNoParams")
+	}
+
 	gfunction.CheckTestGfunctionsLoaded()
 
 	f := newFrame(opcodes.INVOKESPECIAL)
