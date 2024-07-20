@@ -25,6 +25,13 @@ import (
 func Load_TestGfunctions() {
 
 	// ==== accepting no params ====
+
+	TestMethodSignatures["java/lang/Object.test()D"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  vd,
+		}
+
 	TestMethodSignatures["java/lang/Object.test()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -91,6 +98,10 @@ func Load_TestGfunctions() {
 			ParamSlots: 1,
 			GFunction:  ld,
 		}
+}
+
+func vd(params []any) any {
+	return float64(41.41)
 }
 
 func vl(params []any) any {
