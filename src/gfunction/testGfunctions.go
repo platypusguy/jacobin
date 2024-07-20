@@ -6,6 +6,11 @@
 
 package gfunction
 
+import (
+	"jacobin/object"
+	"jacobin/types"
+)
+
 // This file contains test gfunctions for unit tests. They're primarily designed such
 // that you specify the variable types passed in and the return value. They do nothing
 // but accept the params and return what the signature promises
@@ -13,56 +18,102 @@ package gfunction
 func Load_TestGfunctions() {
 
 	// === returning void
-	MethodSignatures["java/lang/Object.test(I)V"] =
+	TestMethodSignatures["java/lang/Object.test(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  arrayCopy,
+			GFunction:  iv,
 		}
 
-	MethodSignatures["java/lang/Object.test(D)V"] =
+	TestMethodSignatures["java/lang/Object.test(D)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  currentTimeMillis,
+			GFunction:  dv,
 		}
 
-	MethodSignatures["java/lang/Object.test(Ljava/lang/Object;)V"] =
+	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  nanoTime,
+			GFunction:  lv,
 		}
 
 	// === returning int or double
 
-	MethodSignatures["java/lang/Object.test(I)I"] =
+	TestMethodSignatures["java/lang/Object.test(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  exitI,
+			GFunction:  ii,
 		}
 
-	MethodSignatures["java/lang/Object.test(I)D"] =
+	TestMethodSignatures["java/lang/Object.test(I)D"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  forceGC,
+			ParamSlots: 1,
+			GFunction:  id,
+		}
+
+	TestMethodSignatures["I)Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  il,
 		}
 
 	// === accepting reference to java/lang/Object and returning something
 
-	MethodSignatures["java/lang/Object.test(Ljava/lang/Object;)I"] =
+	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  getProperty,
+			GFunction:  li,
 		}
 
-	MethodSignatures["java/lang/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
+	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  getConsole,
+			ParamSlots: 1,
+			GFunction:  ll,
 		}
 
-	MethodSignatures["java/lang/Object.test(Ljava/lang/Object;)D"] =
+	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)D"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinit,
+			ParamSlots: 1,
+			GFunction:  ld,
 		}
 
+}
+
+func iv(params []any) any {
+	return nil
+}
+
+func dv(params []any) any {
+	return nil
+}
+
+func lv(params []any) any {
+	return nil
+}
+
+func ii(params []any) any {
+	return int64(43)
+}
+
+func id(params []any) any {
+	return float64(43.43)
+}
+
+func il(params []any) any {
+	obj := object.MakeEmptyObject()
+	obj.KlassName = types.ObjectPoolStringIndex
+	return &obj
+}
+
+func li(params []any) any {
+	return 44
+}
+
+func ll(params []any) any {
+	obj := object.MakeEmptyObject()
+	obj.KlassName = types.ObjectPoolStringIndex
+	return &obj
+}
+
+func ld(params []any) any {
+	return float64(44.44)
 }

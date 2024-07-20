@@ -20,6 +20,7 @@ import (
 
 // Map repository of method signatures for all G functions:
 var MethodSignatures = make(map[string]GMeth)
+var TestMethodSignatures = make(map[string]GMeth) // used only for the test gfunctions
 
 // File I/O and stream Field keys:
 var FileStatus string = "status"     // using this value in case some member function is looking at it
