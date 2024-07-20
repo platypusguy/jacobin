@@ -7,15 +7,31 @@
 package gfunction
 
 import (
+	"jacobin/classloader"
 	"jacobin/object"
 	"jacobin/types"
 )
 
-// This file contains test gfunctions for unit tests. They're primarily designed such
+// This file contains test gfunctions for use in unit tests. They're primarily designed such
 // that you specify the variable types passed in and the return value. They do nothing
-// but accept the params and return what the signature promises
+// but accept the params and return what the signature promises. In the case of a returned
+// *object.Object, it's always a pointer to a bare object.
+//
+// *NOTE*: In your test, call gfunction.CheckTestGfunctionsLoaded() prior to using any
+// of the tests below.
+//
+// For an example using these tests, see: jvm.TestInvokeSpecialGmethodNoParams()
 
 func Load_TestGfunctions() {
+
+	// ==== accepting no params ====
+	TestMethodSignatures["java/lang/Object.test()Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  vl,
+		}
+
+	// ==== accepting params ====
 
 	// === returning void
 	TestMethodSignatures["java/lang/Object.test(I)V"] =
@@ -50,7 +66,7 @@ func Load_TestGfunctions() {
 			GFunction:  id,
 		}
 
-	TestMethodSignatures["I)Ljava/lang/Object;"] =
+	TestMethodSignatures["java/lang/Object.test(I)Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  il,
@@ -75,7 +91,12 @@ func Load_TestGfunctions() {
 			ParamSlots: 1,
 			GFunction:  ld,
 		}
+}
 
+func vl(params []any) any {
+	obj := object.MakeEmptyObject()
+	obj.KlassName = types.ObjectPoolStringIndex
+	return &obj
 }
 
 func iv(params []any) any {
@@ -116,4 +137,15 @@ func ll(params []any) any {
 
 func ld(params []any) any {
 	return float64(44.44)
+}
+
+// Make sure that these test gfunctions have been loaded. Call this
+// from the test that invokes one of the test gfunctions in this file
+func CheckTestGfunctionsLoaded() {
+	if !TestGfunctionsLoaded {
+		if classloader.MTable == nil {
+			classloader.MTable = make(map[string]classloader.MTentry)
+		}
+		LoadTestGfunctions(&classloader.MTable)
+	}
 }

@@ -21,6 +21,7 @@ import (
 // Map repository of method signatures for all G functions:
 var MethodSignatures = make(map[string]GMeth)
 var TestMethodSignatures = make(map[string]GMeth) // used only for the test gfunctions
+var TestGfunctionsLoaded = false
 
 // File I/O and stream Field keys:
 var FileStatus string = "status"     // using this value in case some member function is looking at it
@@ -136,7 +137,13 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		With the accumulated MethodSignatures maps, load MTable.
 	*/
 	loadlib(MTable, MethodSignatures)
+}
 
+// load the test gfunctions in testGfunctions.go
+func LoadTestGfunctions(MTable *classloader.MT) {
+	Load_TestGfunctions()
+	loadlib(MTable, TestMethodSignatures)
+	TestGfunctionsLoaded = true
 }
 
 func checkKey(key string) bool {

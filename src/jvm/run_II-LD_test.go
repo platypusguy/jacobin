@@ -406,7 +406,8 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	classloader.LoadBaseClasses() // must follow classloader.Init()
 	gfunction.Load_Lang_System()
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
-
+	gfunction.CheckTestGfunctionsLoaded()
+	// gfunction.LoadTestGfunctions(&classloader.MTable)
 	f := newFrame(opcodes.INVOKESPECIAL)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -421,7 +422,7 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "java/lang/System"
+	classname := "java/lang/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -432,10 +433,10 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 	}
 	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0} // method name
 	CP.Utf8Refs = make([]string, 4)
-	CP.Utf8Refs[0] = "getSecurityManager" // method presently returns a null
+	CP.Utf8Refs[0] = "test" // method presently returns a null
 
 	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1} // method name
-	CP.Utf8Refs[1] = "()Ljava/lang/SecurityManager;"
+	CP.Utf8Refs[1] = "()Ljava/lang/Object;"
 
 	f.CP = &CP
 	obj := object.MakeEmptyObject()
