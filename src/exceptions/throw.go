@@ -84,7 +84,6 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	fs := th.Stack
 
 	// find out if the exception is caught and if so point to the catch code
-	// catchFrame, catchPC := FindExceptionFrame(f, exceptionCPname, f.ExceptionPC)
 	catchFrame, catchPC := FindCatchFrame(fs, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil {
 		// at this point, we know that the exception was caught
