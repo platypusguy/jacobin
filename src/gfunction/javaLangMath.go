@@ -221,7 +221,7 @@ func mathClinit([]interface{}) interface{} {
 	if klass == nil {
 		errMsg := "Math<clinit>: Expected java/lang/Math to be in the MethodArea, but it was not"
 		_ = log.Log(errMsg, log.SEVERE)
-		return getGErrBlk(excNames.VirtualMachineError, errMsg)
+		return getGErrBlk(excNames.InternalException, errMsg)
 	}
 	return nil
 }
