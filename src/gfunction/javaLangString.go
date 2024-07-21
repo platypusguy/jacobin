@@ -714,15 +714,15 @@ func StringFormatter(params []interface{}) interface{} {
 
 	// Make sure that the argument slice is a reference array.
 	valuesOut := []any{}
-	fld := params[1].(*object.Object).FieldTable["value"]
-	if !strings.HasPrefix(fld.Ftype, types.RefArray) {
+	field := params[1].(*object.Object).FieldTable["value"]
+	if !strings.HasPrefix(field.Ftype, types.RefArray) {
 		errMsg := fmt.Sprintf("StringFormatter: Expected Ftype=%s for params[1]: fld.Ftype=%s, fld.Fvalue=%v",
-			types.RefArray, fld.Ftype, fld.Fvalue)
+			types.RefArray, field.Ftype, field.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// valuesIn = the reference array
-	valuesIn := fld.Fvalue.([]*object.Object)
+	valuesIn := field.Fvalue.([]*object.Object)
 
 	// Main loop for reference array.
 	for ii := 0; ii < len(valuesIn); ii++ {
