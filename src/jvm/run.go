@@ -2090,7 +2090,6 @@ frameInterpreter:
 					methodName, className)
 				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
 				if status != exceptions.Caught {
-					// f.PC += 2                 // due to the PC value extracted at the start of this bytecode
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
@@ -2150,7 +2149,6 @@ frameInterpreter:
 					}
 					// any exception will already have been handled.
 				}
-				// f.PC += 2 // due to the PC value extracted at the start of this bytecode
 				break
 			}
 
@@ -2176,7 +2174,6 @@ frameInterpreter:
 					}
 				}
 
-				// f.PC += 2                         // due to the PC value extracted at the start of this bytecode
 				f.PC += 1                            // move to next bytecode before exiting
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
@@ -2262,7 +2259,6 @@ frameInterpreter:
 					}
 				}
 
-				// f.PC += 2                            // for the two bytes used by CP entry
 				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
