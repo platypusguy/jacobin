@@ -252,7 +252,7 @@ func pop(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
 		errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
-		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 		if status != exceptions.Caught {
 			return nil // applies only if in test
 		}
@@ -310,7 +310,7 @@ func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
 		errMsg := fmt.Sprintf("stack underflow in peek() in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
-		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 		if status != exceptions.Caught {
 			return nil // applies only if in test
 		}

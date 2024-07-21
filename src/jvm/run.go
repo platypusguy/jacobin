@@ -881,7 +881,7 @@ frameInterpreter:
 			if f.TOS < 0 {
 				errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
-				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
@@ -892,7 +892,7 @@ frameInterpreter:
 			if f.TOS < 1 {
 				errMsg := fmt.Sprintf("stack underflow in POP2 in %s.%s",
 					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
-				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
@@ -1929,7 +1929,7 @@ frameInterpreter:
 			if !ok {
 				errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable for %s.%s%s",
 					f.PC, fieldName, f.ClName, f.MethName, f.MethType)
-				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
@@ -2729,7 +2729,7 @@ frameInterpreter:
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
-				status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, f)
+				status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
