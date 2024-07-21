@@ -186,12 +186,6 @@ func Load_Traps() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapClass,
-		}
-
 }
 
 // Generic trap for classes
