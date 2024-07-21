@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 )
@@ -98,6 +99,13 @@ func Load_TestGfunctions() {
 			ParamSlots: 1,
 			GFunction:  ld,
 		}
+
+	// === return error block ===
+	TestMethodSignatures["jacobin/test/Object.test(D)E"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  ie,
+		}
 }
 
 func vd(params []any) any {
@@ -148,6 +156,11 @@ func ll(params []any) any {
 
 func ld(params []any) any {
 	return float64(44.44)
+}
+
+func ie(params []any) any {
+	geb := GErrBlk{excNames.InternalError, "intended return of test error"}
+	return &geb
 }
 
 // Make sure that these test gfunctions have been loaded. Call this

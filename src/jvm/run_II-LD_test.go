@@ -527,7 +527,8 @@ func TestInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-func TestInvokeSpecialGmethod1ParamReturnsD(t *testing.T) {
+// INVOKESPECIAL: Test proper operation of a method that reports an error
+func TestInvokeSpecialGmethodErrorReturn(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// redirect stderr so as not to pollute the test output with the expected error message
@@ -538,7 +539,7 @@ func TestInvokeSpecialGmethod1ParamReturnsD(t *testing.T) {
 	// Initialize classloaders and method area
 	err := classloader.Init()
 	if err != nil {
-		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodReturnsD")
+		t.Errorf("Failure to load classes in TestInvokeSpecialGmethodErrorReturn")
 	}
 
 	gfunction.CheckTestGfunctionsLoaded()
@@ -571,7 +572,7 @@ func TestInvokeSpecialGmethod1ParamReturnsD(t *testing.T) {
 	CP.Utf8Refs[0] = "test"
 
 	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1} // method name
-	CP.Utf8Refs[1] = "(I)D"
+	CP.Utf8Refs[1] = "(D)E"
 
 	f.CP = &CP
 	obj := object.MakeEmptyObject()
@@ -582,12 +583,13 @@ func TestInvokeSpecialGmethod1ParamReturnsD(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	err = runFrame(fs)
 
-	if err != nil {
-		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
-	}
-
-	if f.TOS != 1 { // should be 1 b/c a returned D occupies two slots on the op stack
-		t.Errorf("Expecting TOS to be 1, got %d", f.TOS)
+	if err == nil {
+		t.Errorf("INVOKESPECIAL: Expected an error returned, got none")
+	} else {
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "intended return of test error") {
+			t.Errorf("INVOKESPECIAL: Expected error message re 'intended return of test error', got: %s", errMsg)
+		}
 	}
 
 	// restore stderr
