@@ -19,7 +19,7 @@ import (
 	"slices"
 )
 
-var CaughtGfunctionException = errors.New("caugh gfunction exception")
+var CaughtGfunctionException = errors.New("caught gfunction exception")
 
 // Execution of gfunctions (that is, Java functions ported to golang).
 // As part of JACOBIN-519, this code seeks to replace the previous set of
