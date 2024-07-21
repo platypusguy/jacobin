@@ -34,7 +34,7 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 			searchPC = f.ExceptionPC
 		}
 
-		excFrame, excPC = FindExceptionFrame(f, excName, searchPC)
+		excFrame, excPC = LocateExceptionFrame(f, excName, searchPC)
 		if excFrame != nil {
 			break
 		} else { // if the exception was not found in this frame, we delete the current frame
@@ -49,27 +49,27 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 	return excFrame, excPC
 }
 
-// FindExceptionFrame is a helper function for FindCatchFrame
-func FindExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Frame, int) {
+// LocateExceptionFrame is a helper function for FindCatchFrame
+func LocateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Frame, int) {
 	// get the method and check for an exception catch table
 	// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
 	fullMethName := f.ClName + "." + f.MethName + f.MethType
 	methEntry, found := classloader.MTable[fullMethName]
 	if !found {
-		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s not found in MTable", fullMethName)
+		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s not found in MTable", fullMethName)
 		_ = log.Log(errMsg, log.SEVERE)
 		return nil, -1
 	}
 
 	if methEntry.MType != 'J' {
-		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s is a native method", fullMethName)
+		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s is a native method", fullMethName)
 		_ = log.Log(errMsg, log.SEVERE)
 		return nil, -1
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
 	if method.Exceptions == nil {
-		errMsg := fmt.Sprintf("FindExceptionFrame: Method %s has no exception table", fullMethName)
+		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s has no exception table", fullMethName)
 		_ = log.Log(errMsg, log.INFO)
 		// continue // loop to the next frame
 		return nil, -1
