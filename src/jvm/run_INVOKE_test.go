@@ -353,45 +353,6 @@ func TestInvokeSpecialGmethodErrorReturn(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-// INVOKEVIRTUAL : invoke method -- here testing for error
-func TestInvokevirtualInvalid(t *testing.T) {
-
-	// redirect stderr so as not to pollute the test output with the expected error message
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
-
-	f := newFrame(opcodes.INVOKEVIRTUAL)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a method ref
-	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
-	f.CP = &CP
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
-
-	if err == nil {
-		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
-	} else {
-		errMsg := err.Error()
-		if !strings.Contains(errMsg, "Expected a method ref, but got") {
-			t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got: %s", errMsg)
-		}
-	}
-
-	// restore stderr
-	_ = w.Close()
-	os.Stderr = normalStderr
-}
-
 // INVOKESTATIC: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
 func TestInvokeStaticGmethodNoParams(t *testing.T) {
 	globals.InitGlobals("test")
@@ -480,6 +441,143 @@ func TestInvokeStaticGmethodNoParams(t *testing.T) {
 
 	if f.TOS != 0 {
 		t.Errorf("INVOKESTATIC: Expecting TOS to be 0, got %d", f.TOS)
+	}
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+// INVOKESTATIC: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
+func TestInvokeStaticGmethodReturnError(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeStaticGmethodNoParams")
+	}
+
+	gfunction.CheckTestGfunctionsLoaded()
+
+	f := newFrame(opcodes.INVOKESTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
+
+	CP.MethodRefs = make([]classloader.MethodRefEntry, 1)
+	CP.MethodRefs[0] = classloader.MethodRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 4)
+	classname := "jacobin/test/Object"
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
+
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
+		NameIndex: 4,
+		DescIndex: 5,
+	}
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0} // method name
+	CP.Utf8Refs = make([]string, 4)
+	CP.Utf8Refs[0] = "test"
+
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1} // method name
+	CP.Utf8Refs[1] = "(D)E"
+
+	f.CP = &CP
+
+	push(&f, int64(999)) // push the one param
+
+	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
+	clData := classloader.ClData{
+		Name:            "jacobin/test/Object",
+		NameIndex:       CP.ClassRefs[0],
+		Superclass:      "java/lang/Object",
+		SuperclassIndex: 0,
+		Module:          "",
+		Pkg:             "",
+		Interfaces:      nil,
+		Fields:          nil,
+		MethodTable:     nil,
+		Methods:         nil,
+		Attributes:      nil,
+		SourceFile:      "",
+		Bootstraps:      nil,
+		CP:              classloader.CPool{},
+		Access:          classloader.AccessFlags{},
+		ClInit:          types.ClInitRun,
+	}
+	k := classloader.Klass{
+		Status: 'X',
+		Loader: "boostrap",
+		Data:   &clData,
+	}
+
+	classloader.MethAreaInsert("jacobin/test/Object", &k)
+	// obj := object.MakeEmptyObject()
+	// push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err = runFrame(fs)
+
+	if err == nil {
+		t.Errorf("INVOKESTATIC: Expected an error returned, got none")
+	} else {
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "intended return of test error") {
+			t.Errorf("INVOKESTATIC: Expected error message re 'intended return of test error', got: %s", errMsg)
+		}
+	}
+
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+// INVOKEVIRTUAL : invoke method -- here testing for error
+func TestInvokevirtualInvalid(t *testing.T) {
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.INVOKEVIRTUAL)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a method ref
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.FieldRefEntry, 1)
+	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err := runFrame(fs)
+
+	if err == nil {
+		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
+	} else {
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "Expected a method ref, but got") {
+			t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got: %s", errMsg)
+		}
 	}
 
 	// restore stderr
