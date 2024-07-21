@@ -403,7 +403,7 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
@@ -450,7 +450,7 @@ frameInterpreter:
 				array = ref.([]float64)
 			case *object.Object:
 				obj := ref.(*object.Object)
-				if obj == object.Null {
+				if object.IsNull(obj) {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid object pointer (nil)",
 						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
@@ -533,7 +533,11 @@ frameInterpreter:
 			switch ref.(type) {
 			case *object.Object:
 				bAref = ref.(*object.Object)
-				array = bAref.FieldTable["value"].Fvalue.([]byte)
+				if object.IsNull(bAref) {
+					array = make([]byte, 0)
+				} else {
+					array = bAref.FieldTable["value"].Fvalue.([]byte)
+				}
 			case *[]uint8:
 				array = *(ref.(*[]uint8))
 			case []uint8:
@@ -2001,7 +2005,7 @@ frameInterpreter:
 			// object
 			switch value.(type) {
 			case *object.Object:
-				if value != object.Null {
+				if !object.IsNull(value.(*object.Object)) {
 					v := *(value.(*object.Object))
 					o, ok := v.FieldTable["value"]
 					if ok && strings.HasPrefix(o.Ftype, types.Array) {
@@ -2869,7 +2873,7 @@ frameInterpreter:
 			var obj *object.Object
 			switch ref.(type) {
 			case *object.Object:
-				if ref == object.Null { // if ref is null, just carry on
+				if object.IsNull(ref) { // if ref is null, just carry on
 					f.PC += 2 // move past two bytes pointing to comp object
 					f.PC += 1
 					continue

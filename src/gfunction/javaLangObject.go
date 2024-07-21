@@ -7,6 +7,8 @@
 package gfunction
 
 import (
+	"fmt"
+	"jacobin/excNames"
 	"jacobin/object"
 )
 
@@ -26,6 +28,12 @@ func Load_Lang_Object() {
 			GFunction:  objectGetClass,
 		}
 
+	MethodSignatures["java/lang/Object.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  objectToString,
+		}
+
 }
 
 // "java/lang/Object.getClass()Ljava/lang/Class;"
@@ -34,4 +42,20 @@ func objectGetClass(params []interface{}) interface{} {
 	wint := obj.KlassName
 	name := object.GoStringFromStringPoolIndex(wint)
 	return object.StringObjectFromGoString("class " + name)
+}
+
+// "java/lang/Object.toString()Ljava/lang/String;"
+func objectToString(params []interface{}) interface{} {
+	// params[0]: input Object
+	var str string
+
+	switch params[0].(type) {
+	case *object.Object:
+		inObj := params[0].(*object.Object)
+		str = object.ObjectFieldToString(inObj, "value")
+		return object.StringObjectFromGoString(str)
+	}
+
+	errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
+	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 }

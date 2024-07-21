@@ -440,9 +440,9 @@ func bigIntegerClinit([]interface{}) interface{} {
 
 // Convert a byte slice into a signed big integer.
 // Thank you, ChatGPT.
-func BytesToBigInt(buf []byte) *big.Int {
+func BytesToBigInt(buf []byte) (*big.Int, int64) {
 	if len(buf) == 0 {
-		return big.NewInt(0)
+		return big.NewInt(0), int64(0)
 	}
 
 	// Check if the most significant bit is set (indicating a negative number).
@@ -466,11 +466,18 @@ func BytesToBigInt(buf []byte) *big.Int {
 		// Negate the result to get the original negative number.
 		twoComplementBigInt.Neg(twoComplementBigInt)
 
-		return twoComplementBigInt
+		return twoComplementBigInt, int64(-1)
 	}
 
-	// If not negative, just use SetBytes to convert to a big integer.
-	return new(big.Int).SetBytes(buf)
+	// Not negative.
+	// Use SetBytes to convert to a big integer.
+	bigInt := new(big.Int).SetBytes(buf)
+
+	// Get sign (+ or 0).
+	signum := int64(bigInt.Sign())
+
+	// Return result.
+	return bigInt, signum
 }
 
 // "java/math/BigInteger.<init>([B)V"
@@ -480,11 +487,17 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
 	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	zz := BytesToBigInt(bytes)
+	zz, signum := BytesToBigInt(bytes)
 
-	// Update base object and return nil
+	// Set value to big integer.
 	fld.Fvalue = zz
 	obj.FieldTable["value"] = fld
+
+	// Set signum to sign.
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	obj.FieldTable["signum"] = fld
+
+	// Return void.
 	return nil
 }
 
@@ -501,9 +514,15 @@ func bigIntegerInitProbablyPrime(params []interface{}) interface{} {
 
 	zz, errMsg := getPrime(int(bitLength))
 	if zz != nil {
-		// Update base object and return nil
+		// Set value to big integer.
 		fld.Fvalue = zz
 		obj.FieldTable["value"] = fld
+
+		// Set signum to sign.
+		fld = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
+		obj.FieldTable["signum"] = fld
+
+		// Return void.
 		return nil
 	}
 	return getGErrBlk(excNames.ArithmeticException, errMsg)
@@ -515,8 +534,8 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	// params[1]: int64 holding numbits such that the base object value field
 	//            will be set to a random value in the rang given by [0 : 2**(numbits) - 1].
 	// params[2]: Random object
-	objBase := params[0].(*object.Object)
-	fldBase := objBase.FieldTable["value"]
+	obj := params[0].(*object.Object)
+	fld := obj.FieldTable["value"]
 	numBits := params[1].(int64)
 	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
 
@@ -530,9 +549,15 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
-	// Update base object and return nil
-	fldBase.Fvalue = zz
-	objBase.FieldTable["value"] = fldBase
+	// Set value to big integer.
+	fld.Fvalue = zz
+	obj.FieldTable["value"] = fld
+
+	// Set signum to sign.
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
+	obj.FieldTable["signum"] = fld
+
+	// Return void.
 	return nil
 }
 
