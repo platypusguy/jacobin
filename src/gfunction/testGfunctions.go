@@ -26,13 +26,13 @@ func Load_TestGfunctions() {
 
 	// ==== accepting no params ====
 
-	TestMethodSignatures["java/lang/Object.test()D"] =
+	TestMethodSignatures["jacobin/test/Object.test()D"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  vd,
 		}
 
-	TestMethodSignatures["java/lang/Object.test()Ljava/lang/Object;"] =
+	TestMethodSignatures["jacobin/test/Object.test()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  vl,
@@ -41,19 +41,19 @@ func Load_TestGfunctions() {
 	// ==== accepting params ====
 
 	// === returning void
-	TestMethodSignatures["java/lang/Object.test(I)V"] =
+	TestMethodSignatures["jacobin/test/Object.test(I)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  iv,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(D)V"] =
+	TestMethodSignatures["jacobin/test/Object.test(D)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  dv,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)V"] =
+	TestMethodSignatures["jacobin/test/Object.test(Ljava/lang/Object;)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  lv,
@@ -61,19 +61,19 @@ func Load_TestGfunctions() {
 
 	// === returning int or double
 
-	TestMethodSignatures["java/lang/Object.test(I)I"] =
+	TestMethodSignatures["jacobin/test/Object.test(I)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  ii,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(I)D"] =
+	TestMethodSignatures["jacobin/test/Object.test(I)D"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  id,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(I)Ljava/lang/Object;"] =
+	TestMethodSignatures["jacobin/test/Object.test(I)Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  il,
@@ -81,19 +81,19 @@ func Load_TestGfunctions() {
 
 	// === accepting reference to java/lang/Object and returning something
 
-	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)I"] =
+	TestMethodSignatures["jacobin/test/Object.test(Ljava/lang/Object;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  li,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
+	TestMethodSignatures["jacobin/test/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  ll,
 		}
 
-	TestMethodSignatures["java/lang/Object.test(Ljava/lang/Object;)D"] =
+	TestMethodSignatures["jacobin/test/Object.test(Ljava/lang/Object;)D"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  ld,
@@ -153,10 +153,18 @@ func ld(params []any) any {
 // Make sure that these test gfunctions have been loaded. Call this
 // from the test that invokes one of the test gfunctions in this file
 func CheckTestGfunctionsLoaded() {
-	if !TestGfunctionsLoaded {
-		if classloader.MTable == nil {
-			classloader.MTable = make(map[string]classloader.MTentry)
-		}
-		LoadTestGfunctions(&classloader.MTable)
+	if classloader.MTable == nil {
+		classloader.MTable = make(map[string]classloader.MTentry)
 	}
+
+	// in order to load the test functions, there needs to be an object-like entry
+	// in the method table, which is handled next. After which, we load the test functions
+	klass := classloader.Klass{
+		Status: 'Z',
+		Loader: "test",
+		Data:   nil,
+	}
+	classloader.MethAreaInsert("jacobin/test/Object", &klass)
+
+	LoadTestGfunctions(&classloader.MTable)
 }
