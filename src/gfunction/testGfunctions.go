@@ -14,12 +14,12 @@ import (
 )
 
 // This file contains test gfunctions for use in unit tests. They're primarily designed such
-// that you specify the variable types passed in and the return value. They do nothing
+// that you specify the variable types passed in and the returned value. They do nothing
 // but accept the params and return what the signature promises. In the case of a returned
-// *object.Object, it's always a pointer to a bare object.
+// *object.Object, it's always a pointer to a bare java/lang/Object.
 //
-// *NOTE*: In your test, call gfunction.CheckTestGfunctionsLoaded() prior to using any
-// of the tests below.
+// *IMPORTANT*: Before calling any of these functions, run gfunction.CheckTestGfunctionsLoaded()
+// prior to using the tests below. It needs to be called only once per unit test.
 //
 // For an example using these tests, see: jvm.TestInvokeSpecialGmethodNoParams()
 
