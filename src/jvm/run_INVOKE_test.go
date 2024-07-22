@@ -1,7 +1,7 @@
 /*
  * Jacobin VM - A Java virtual machine
  * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
  */
 
 package jvm
@@ -23,7 +23,7 @@ import (
 // This contains all the unit tests for the INVOKE family of bytecodes. They would normally
 // appear in run_II-LD_test.go, but they would make that an enormous file. So, they're extracted here.
 
-// INVOKESPECIAL of java.Lang.Object (should do nothing and report no errors)
+// INVOKESPECIAL should do nothing and report no errors
 func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -428,8 +428,6 @@ func TestInvokeStaticGmethodNoParams(t *testing.T) {
 	}
 
 	classloader.MethAreaInsert("jacobin/test/Object", &k)
-	// obj := object.MakeEmptyObject()
-	// push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -449,7 +447,7 @@ func TestInvokeStaticGmethodNoParams(t *testing.T) {
 }
 
 // INVOKESTATIC: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
-func TestInvokeStaticGmethodReturnError(t *testing.T) {
+func TestInvokeStaticGmethodErrorReturn(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// redirect stderr so as not to pollute the test output with the expected error message
@@ -525,8 +523,6 @@ func TestInvokeStaticGmethodReturnError(t *testing.T) {
 	}
 
 	classloader.MethAreaInsert("jacobin/test/Object", &k)
-	// obj := object.MakeEmptyObject()
-	// push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
