@@ -17,8 +17,6 @@ import (
 )
 
 /*
- * Tests for Hello.class, which is the first class Jacobin executed. Its source code:
- *
  *  This simple test kindly suggested by Olaf Lebbe @oflebbe in 2023
  *  final class SimpleStaticInit{
  *   static int x = 100;

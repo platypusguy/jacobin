@@ -87,6 +87,10 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List) error {
 	meth := m.(classloader.JmEntry)
 	f := frames.CreateFrame(meth.MaxStack + 2) // create a new frame (adding 2 b/c of unexplained bytecode needs)
+	if fs.Front() != nil {
+		parentFrame := *(fs.Front().Value.(*frames.Frame))
+		f.Thread = parentFrame.Thread
+	}
 	f.MethName = "<clinit>"
 	f.ClName = k.Data.Name
 	f.CP = meth.Cp                        // add its pointer to the class CP

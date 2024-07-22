@@ -81,22 +81,22 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
 
 	// create the first thread and place its first frame on it
-	// MainThread = *mainThread
 	MainThread.Stack = frames.CreateFrameStack()
 	mainThread.Stack = MainThread.Stack
 	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
 	MainThread.Trace = tracing
 
-	// must first instantiate the class, so that any static initializers are run
-	_, instantiateError := InstantiateClass(className, MainThread.Stack)
-	if instantiateError != nil {
-		return errors.New("Error instantiating: " + className + ".main()")
-	}
-
+	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
 		_ = log.Log(errMsg, log.SEVERE)
 		return errors.New(errMsg)
+	}
+
+	// must first instantiate the class, so that any static initializers are run
+	_, instantiateError := InstantiateClass(className, MainThread.Stack)
+	if instantiateError != nil {
+		return errors.New("Error instantiating: " + className + ".main()")
 	}
 
 	if MainThread.Trace {
