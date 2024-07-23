@@ -24,6 +24,7 @@ type Number interface {
 	int64 | float64
 }
 
+// get the last four digits of the frame address. Used for logging/diagnostics
 func ftag(f *Frame) string {
 	pp := fmt.Sprintf("%p\n", f)
 	jj := len(pp) - 5 // show last 4 hex digits

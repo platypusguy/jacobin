@@ -3165,6 +3165,12 @@ frameInterpreter:
 				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
+		case opcodes.JSR_W: // 0xC9 jump to a four-byte offset from the current PC
+			jumpTo := fourBytesToInt64(
+				f.Meth[f.PC+1], f.Meth[f.PC+2], f.Meth[f.PC+3], f.Meth[f.PC+4])
+			push(f, jumpTo)               // JSR and JSR_W both push the jump offset and jump to it
+			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
+
 		default:
 			missingOpCode := fmt.Sprintf("%d (0x%X)", opcode, opcode)
 
