@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
 	"jacobin/frames"
 	"jacobin/log"
 	"jacobin/util"
@@ -34,7 +35,7 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 			searchPC = f.ExceptionPC
 		}
 
-		excFrame, excPC = LocateExceptionFrame(f, excName, searchPC)
+		excFrame, excPC = locateExceptionFrame(f, excName, searchPC)
 		if excFrame != nil {
 			break
 		} else { // if the exception was not found in this frame, we delete the current frame
@@ -49,30 +50,27 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 	return excFrame, excPC
 }
 
-// LocateExceptionFrame is a helper function for FindCatchFrame
-func LocateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Frame, int) {
+// locateExceptionFrame (private to package exceptions) is a helper function for FindCatchFrame
+func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Frame, int) {
 	// get the method and check for an exception catch table
 	// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
 	fullMethName := f.ClName + "." + f.MethName + f.MethType
 	methEntry, found := classloader.MTable[fullMethName]
 	if !found {
-		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s not found in MTable", fullMethName)
-		_ = log.Log(errMsg, log.SEVERE)
-		return nil, -1
+		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s not found in MTable", fullMethName)
+		minimalAbort(excNames.InternalError, errMsg)
 	}
 
 	if methEntry.MType != 'J' {
-		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s is a native method", fullMethName)
-		_ = log.Log(errMsg, log.SEVERE)
-		return nil, -1
+		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s is a native method", fullMethName)
+		minimalAbort(excNames.InternalError, errMsg)
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
 	if method.Exceptions == nil {
-		errMsg := fmt.Sprintf("LocateExceptionFrame: Method %s has no exception table", fullMethName)
-		_ = log.Log(errMsg, log.INFO)
-		// continue // loop to the next frame
-		return nil, -1
+		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s has no exception table", fullMethName)
+		_ = log.Log(errMsg, log.TRACE_INST)
+		return nil, -1 // no exception handler was found
 	}
 
 	// if we got this far, the method has an exception table
