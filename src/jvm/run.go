@@ -1539,7 +1539,7 @@ frameInterpreter:
 			push(f, jumpTo)               // JSR pushes the offset before jumping
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
-		case opcodes.RET: // 0xA9     (return by jumping to a return address--used mostly with JSR)
+		case opcodes.RET: // 0xA9     (return by jumping to a return address in a local--used mostly with JSR)
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
@@ -1550,7 +1550,8 @@ frameInterpreter:
 				f.PC += 1
 			}
 			newPC := f.Locals[index].(int64)
-			f.PC = int(newPC)
+			f.PC = int(newPC) - 1 // -1 because the loop will bump the PC value by 1
+
 		case opcodes.TABLESWITCH: // 0xAA (switch based on table of offsets)
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.tableswitch
 			basePC := f.PC // where we are when the processing begins

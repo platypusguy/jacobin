@@ -1458,8 +1458,8 @@ func TestWideRET(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
 
-	if f.PC-1 != 123456 { // -1 because PC++ after processing RET
-		t.Errorf("WIDE,RET: expected frame PC value to be 123457, got: %d", f.PC)
+	if f.PC-1 != 123455 { // -1 because PC++ after processing RET
+		t.Errorf("WIDE,RET: expected frame PC value to be 123455, got: %d", f.PC)
 	}
 }
 func TestInvalidInstruction(t *testing.T) {
