@@ -1534,6 +1534,11 @@ frameInterpreter:
 			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
+		case opcodes.JSR: // 0xA8 (jump to a bytecode that is at jumpTo bytes from present bytecode
+			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+			push(f, jumpTo)               // JSR pushes the offset before jumping
+			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
+
 		case opcodes.RET: // 0xA9     (return by jumping to a return address--used mostly with JSR)
 			var index int
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
