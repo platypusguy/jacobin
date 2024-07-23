@@ -73,3 +73,29 @@ func TestJustReturn(t *testing.T) {
 		t.Errorf("Expecting nil return value, got: %v", retVal)
 	}
 }
+
+func TestCheckKey(t *testing.T) {
+	if checkKey("java/lang/Object") != false {
+		t.Errorf("invalid key %s was allowed in gfunction", "java/lang/Object")
+	}
+
+	if checkKey("java/lang/Object.toString") != false {
+		t.Errorf("invalid key %s was allowed in gfunction",
+			"java/lang/Object.toString")
+	}
+
+	if checkKey("java/lang/Object.toString(") != false {
+		t.Errorf("invalid key %s was allowed in gfunction",
+			"java/lang/Object.toString(")
+	}
+
+	if checkKey("java/lang/Object.toString()") != false {
+		t.Errorf("invalid key %s was allowed in gfunction",
+			"java/lang/Object.toString()")
+	}
+
+	if checkKey("java/lang/Object.toString(I)Ljava/lang/String;") != true {
+		t.Errorf("got unexpected error checking key %s",
+			"java/lang/Object.toString(I)Ljava/lang/String;")
+	}
+}

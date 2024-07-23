@@ -113,7 +113,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Nio_Charset_Charset()
 
 	// java/security/*
-	//Load_Security_SecureRandom()
+	// Load_Security_SecureRandom()
 
 	// java/util/*
 	Load_Util_Concurrent_Atomic_AtomicInteger()
@@ -132,9 +132,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// Load traps that lead to unconditional error returns.
 	Load_Traps()
 
-	/*
-		With the accumulated MethodSignatures maps, load MTable.
-	*/
+	//	now, with the accumulated MethodSignatures maps, load MTable.
 	loadlib(MTable, MethodSignatures)
 }
 
