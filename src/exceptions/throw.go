@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -8,15 +8,12 @@ package exceptions
 
 import (
 	"fmt"
-	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
-	"jacobin/opcodes"
 	"jacobin/shutdown"
-	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/util"
 	"os"
@@ -26,7 +23,7 @@ import (
 // This file contains the functions for throwing exceptions from within
 // Jacobin. That is, situations in which Jacobin itself is throwing the error,
 // rather than the application. Typically, this is for errors/exceptions in the
-// operation of the JVM, and for a few occasional user errors, such as
+// operation of the JVM and for a few occasional user errors, such as
 // divide by zero.
 
 const (
@@ -60,7 +57,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		} else { // if we got here by a call to ThrowExNil()
 			errMsg = fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[which], msg)
 		}
-		fmt.Fprintln(os.Stderr, errMsg)
+		_, _ = fmt.Fprintln(os.Stderr, errMsg)
 		return NotCaught
 	}
 
@@ -102,7 +99,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		// 2. pushing the objRef on the op stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
 		caughtMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
-		log.Log(caughtMsg, log.TRACE_INST)
+		_ = log.Log(caughtMsg, log.TRACE_INST)
 
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack
@@ -118,12 +115,11 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
-		// catchFrame.PC = catchPC - 1    // -1 because the loop in run.go will increment PC after this code block's return
 		catchFrame.PC = catchPC
 
 		// the exception logic might throw another exception, in which case that will be
 		// the new ExceptionPC. However, it won't be updated to that value unless ExceptionPC
-		// is reset to -1. So, at this point, the exception's been caught, so we can reset
+		// is reset to -1. So, at this point, the exception has been caught, so we can reset
 		// ExeptionPC to -1. See JACOBIN-534
 		f.ExceptionPC = -1
 		return Caught
@@ -145,7 +141,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	glob.FuncFillInStackTrace(params)
 
 	excInfo := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
-	fmt.Fprintln(os.Stderr, excInfo)
+	_, _ = fmt.Fprintln(os.Stderr, excInfo)
 
 	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	traceEntries := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
@@ -168,7 +164,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			traceEntry.FieldTable["methodName"].Fvalue.(string),
 			traceEntry.FieldTable["fileName"].Fvalue.(string),
 			traceEntry.FieldTable["sourceLine"].Fvalue.(string))
-		fmt.Fprintln(os.Stderr, traceInfo)
+		_, _ = fmt.Fprintln(os.Stderr, traceInfo)
 	}
 
 	if !glob.StrictJDK {
@@ -181,8 +177,12 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	_ = shutdown.Exit(shutdown.JVM_EXCEPTION) // in test mode, this call returns
-	return NotCaught
+	return NotCaught                          // only applies to tests
 }
+
+/* This code is not called. However, before deleting it, we want to make sure it won't be
+   needed in the future for some edge cases in exception handling. We expect that that is
+   unlikely, but until we're sure we'll keep this around a release or two more.
 
 func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string) []byte {
 	// the functionality we generate bytecodes for is (using a NPE as an example):
@@ -273,9 +273,10 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 	genCode = append(genCode, opcodes.ATHROW)
 	return genCode
 }
+*/
 
 // minimalAbort is the exception thrown when the frame info is not available,
-// such as during start-up, when the main class can't be found, etc.
+// such as during start-up, if the main class can't be found, etc.
 func minimalAbort(whichException int, msg string) {
 	var stack string
 	bytes := debug.Stack()
@@ -287,7 +288,7 @@ func minimalAbort(whichException int, msg string) {
 	glob := globals.GetGlobalRef()
 	glob.ErrorGoStack = stack
 	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
-	fmt.Fprintln(os.Stderr, errMsg)
+	_, _ = fmt.Fprintln(os.Stderr, errMsg)
 	// errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
 	// ShowPanicCause(errMsg)
 	// ShowFrameStack(&thread.ExecThread{})
