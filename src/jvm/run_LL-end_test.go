@@ -1189,6 +1189,25 @@ func TestPutStaticInvalid(t *testing.T) {
 	}
 }
 
+// RET: the complement to JSR. The wide version of RET is tested farther below with
+// the other WIDE bytecodes
+func TestRET(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	f := newFrame(opcodes.RET)
+	f.Meth = append(f.Meth, 0x02) // index pointing to local variable 2
+	f.PC = 0
+	fs := frames.CreateFrameStack()
+	f.Locals = append(f.Locals, int64(0), int64(0), int64(456))
+	fs.PushFront(&f) // push the new frame
+	_ = runFrame(fs)
+
+	if f.PC-1 != 455 { // -1 because PC++ after processing RET
+		t.Errorf("WIDE,RET: expected frame PC value -1 to be 455, got: %d", f.PC)
+	}
+}
+
 // RETURN: Does a function return correctly?
 func TestReturn(t *testing.T) {
 	f := newFrame(opcodes.RETURN)
