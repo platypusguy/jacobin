@@ -1540,14 +1540,12 @@ frameInterpreter:
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
 		case opcodes.RET: // 0xA9     (return by jumping to a return address in a local--used mostly with JSR)
-			var index int
+			var index int64
 			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
-				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
-				f.PC += 2
+				index = (byteToInt64(f.Meth[f.PC+1]) * 256) + byteToInt64(f.Meth[f.PC+2])
 				wideInEffect = false
 			} else {
-				index = int(f.Meth[f.PC+1])
-				f.PC += 1
+				index = byteToInt64(f.Meth[f.PC+1])
 			}
 			newPC := f.Locals[index].(int64)
 			f.PC = int(newPC) - 1 // -1 because the loop will bump the PC value by 1
