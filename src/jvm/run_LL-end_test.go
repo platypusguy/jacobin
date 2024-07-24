@@ -1204,7 +1204,7 @@ func TestRET(t *testing.T) {
 	_ = runFrame(fs)
 
 	if f.PC-1 != 455 { // -1 because PC++ after processing RET
-		t.Errorf("WIDE,RET: expected frame PC value -1 to be 455, got: %d", f.PC)
+		t.Errorf("WIDE,RET: expected frame PC value to be 455, got: %d", f.PC)
 	}
 }
 

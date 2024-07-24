@@ -1535,7 +1535,7 @@ frameInterpreter:
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
 		case opcodes.JSR: // 0xA8 (jump to a bytecode that is at jumpTo bytes from present bytecode
-			jumpTo := (int16(f.Meth[f.PC+1]) * 256) + int16(f.Meth[f.PC+2])
+			jumpTo := (byteToInt64(f.Meth[f.PC+1]) * 256) + byteToInt64(f.Meth[f.PC+2])
 			push(f, jumpTo)               // JSR pushes the offset before jumping
 			f.PC = f.PC + int(jumpTo) - 1 // -1 because this loop will increment f.PC by 1
 
