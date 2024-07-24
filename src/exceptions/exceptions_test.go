@@ -36,3 +36,24 @@ func TestThrowExNil(t *testing.T) {
 		t.Errorf("Got unexpected output: %s", msg)
 	}
 }
+
+func TestMinimalThrow(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.WARNING)
+
+	// to inspect log messages, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	minimalAbort(excNames.UnknownError, "just a test")
+	// restore stderr to what it was before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+	if !strings.Contains(msg, "java.lang.UnknownError") || !strings.Contains(msg, "just a test") {
+		t.Errorf("Got unexpected output: %s", msg)
+	}
+}
