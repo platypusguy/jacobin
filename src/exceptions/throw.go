@@ -52,9 +52,14 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	// If in a unit test, log a severe message and return.
 	glob := globals.GetGlobalRef()
 	if glob.JacobinName == "test" {
-		errMsg := fmt.Sprintf("%s in %s.%s, %s",
-			excNames.JVMexceptionNames[which],
-			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, msg)
+		var errMsg string
+		if f != nil {
+			errMsg = fmt.Sprintf("%s in %s.%s, %s",
+				excNames.JVMexceptionNames[which],
+				util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, msg)
+		} else { // if we got here by a call to ThrowExNil()
+			errMsg = fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[which], msg)
+		}
 		fmt.Fprintln(os.Stderr, errMsg)
 		return NotCaught
 	}
