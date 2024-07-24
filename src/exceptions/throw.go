@@ -67,6 +67,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	// Frame pointer provided?
 	if f == nil {
 		minimalAbort(which, msg) // this calls exit()
+		return NotCaught         // only occurs in tests
 	}
 
 	// the name of the exception as shown to the user
