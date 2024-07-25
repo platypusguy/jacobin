@@ -12,6 +12,7 @@ import (
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"math"
 	"testing"
 )
 
@@ -87,6 +88,20 @@ func TestByteArrayFromStringObject(t *testing.T) {
 	}
 }
 
+func TestByteArrayFromStringObjectInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+
+	constStr := "Mary had a little lamb whose fleece was white as snow."
+
+	strObj := StringObjectFromGoString(constStr)
+	strObj.KlassName = uint32(200) // the invalid part; KlassName is not java/lang/String
+	bb := ByteArrayFromStringObject(strObj)
+	if bb != nil {
+		t.Errorf("expected nil return b/c of error, observed: %v", bb)
+	}
+}
+
 func TestStringObjectFromByteArray(t *testing.T) {
 	globals.InitGlobals("test")
 	statics.LoadStaticsString()
@@ -135,6 +150,28 @@ func TestStringPoolStringOperations(t *testing.T) {
 	}
 }
 
+func TestStringPoolStringIndexFromStringObjectInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+
+	constStr := "Mary had a little lamb whose fleece was white as snow."
+	strObj := StringObjectFromGoString(constStr)
+	strObj.KlassName = uint32(200) // the invalid part: KlassName is not java/lang/String
+	index := StringPoolIndexFromStringObject(strObj)
+	if index != types.InvalidStringIndex {
+		t.Errorf("Expected types.InvalidStringIndex, got %d", index)
+		return
+	}
+}
+
+func TestByteArrayFromStringPoolIndexInvalid(t *testing.T) {
+	index := math.MaxInt32 // use a string pool index that will always be too big
+	byteArray := ByteArrayFromStringPoolIndex(uint32(index))
+	if byteArray != nil {
+		t.Errorf("expected nil due to error, got %v", byteArray)
+	}
+}
+
 func TestUpdateStringObjectFromBytes(t *testing.T) {
 	constStr := "Mary had a little lamb whose fleece was white as snow."
 	constBytes := []byte(constStr)
@@ -147,7 +184,6 @@ func TestUpdateStringObjectFromBytes(t *testing.T) {
 	if strValue != constStr {
 		t.Errorf("strValue from updated string object has wrong value: %s", strValue)
 	}
-
 }
 
 func TestIsStringObjectValid(t *testing.T) {
