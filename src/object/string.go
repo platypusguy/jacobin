@@ -141,8 +141,8 @@ func ByteArrayFromStringPoolIndex(index uint32) []byte {
 }
 
 // IsStringObject determines whether an object is a string object
-// (i.e., a Java string). It // assumes that any object whose
-// KlassName is java/lang/String is an instance of a Java string
+// (i.e., a Java string). It assumes that any object whose
+// KlassName refers to java/lang/String is an instance of a Java string
 func IsStringObject(unknown any) bool {
 	if unknown == nil {
 		return false
@@ -153,10 +153,7 @@ func IsStringObject(unknown any) bool {
 		return false
 	}
 
-	if o.KlassName == types.StringPoolStringIndex {
-		return true
-	}
-	return false
+	return o.KlassName == types.StringPoolStringIndex
 }
 
 // With the specified object and field, return a string representing the field value.
@@ -170,7 +167,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
 		warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" was not found. Returning \"null\"", fieldName)
-		log.Log(warnMsg, log.WARNING)
+		_ = log.Log(warnMsg, log.WARNING)
 		return "null"
 	}
 
@@ -221,7 +218,6 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		str = strings.TrimSuffix(str, " ")
 		return str
 	case types.Double, types.Float:
-		//return fmt.Sprintf("%f", fld.Fvalue.(float64))
 		return strconv.FormatFloat(fld.Fvalue.(float64), 'f', -1, 64)
 	case types.DoubleArray, types.FloatArray:
 		var str string
@@ -240,6 +236,6 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// None of the above.
 	warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	log.Log(warnMsg, log.WARNING)
+	_ = log.Log(warnMsg, log.WARNING)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }
