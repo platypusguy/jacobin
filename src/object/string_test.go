@@ -335,3 +335,53 @@ func TestObjectFieldToStringForUnknownType(t *testing.T) {
 		t.Errorf("Expected different error message, got %s", msg)
 	}
 }
+
+func TestObjectFieldToStringForFileHandle(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.FINE)
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj := StringObjectFromGoString("allo!")
+	obj.FieldTable["testField"] = Field{
+		Ftype:  types.FileHandle,
+		Fvalue: nil,
+	}
+	ret := ObjectFieldToString(obj, "testField")
+
+	if !strings.Contains(ret, "FileHandle") {
+		t.Errorf("Expected different return string, got %s", ret)
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
+
+func TestObjectFieldToStringForStaticBool(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.FINE)
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj := StringObjectFromGoString("allo!")
+	obj.FieldTable["testField"] = Field{
+		Ftype:  "XZ",
+		Fvalue: int64(1),
+	}
+	ret := ObjectFieldToString(obj, "testField")
+
+	if !strings.Contains(ret, "true") {
+		t.Errorf("Expected different return string, got %s", ret)
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	os.Stderr = normalStderr
+}
