@@ -8,11 +8,15 @@ package object
 
 import (
 	"bytes"
+	"io"
 	"jacobin/globals"
+	"jacobin/log"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"math"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -244,5 +248,59 @@ func TestIsStringObject(t *testing.T) {
 	emptyObj := Make1DimArray(BYTE, 10)
 	if IsStringObject(emptyObj) {
 		t.Errorf("expected IsStringObject(emptyObj) to be false, got true")
+	}
+}
+
+func TestObjectFieldToStringInvalidFieldName(t *testing.T) {
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.FINE)
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj := StringObjectFromGoString("a little lamb")
+	ret := ObjectFieldToString(obj, "non-existentField")
+
+	if ret != "null" {
+		t.Errorf("Expected null, got %s", ret)
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "was not found") {
+		t.Errorf("Expected 'was not found' in error message, got %s", msg)
+	}
+}
+
+func TestObjectFieldToStringForIntArray(t *testing.T) {
+	globals.InitGlobals("test")
+	log.SetLogLevel(log.FINE)
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj := Make1DimArray(INT, 10)
+	ret := ObjectFieldToString(obj, "value")
+
+	if !strings.Contains(ret, " 0") {
+		t.Errorf("Expected different return string, got %s", ret)
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if msg != "" {
+		t.Errorf("Expected no error message, got %s", msg)
 	}
 }
