@@ -280,7 +280,7 @@ func TestObjectFieldToStringInvalidFieldName(t *testing.T) {
 
 func TestObjectFieldToStringForIntArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.FINE)
+	_ = log.SetLogLevel(log.FINE)
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr
@@ -302,5 +302,36 @@ func TestObjectFieldToStringForIntArray(t *testing.T) {
 
 	if msg != "" {
 		t.Errorf("Expected no error message, got %s", msg)
+	}
+}
+
+func TestObjectFieldToStringForUnknownType(t *testing.T) {
+	globals.InitGlobals("test")
+	_ = log.SetLogLevel(log.FINE)
+
+	// to inspect usage message, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	obj := StringObjectFromGoString("allo!")
+	obj.FieldTable["testField"] = Field{
+		Ftype:  "..",
+		Fvalue: nil,
+	}
+	ret := ObjectFieldToString(obj, "testField")
+
+	if !strings.Contains(ret, "java/lang/String") {
+		t.Errorf("Expected different return string, got %s", ret)
+	}
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+	msg := string(out[:])
+
+	if !strings.Contains(msg, "not yet supported") {
+		t.Errorf("Expected different error message, got %s", msg)
 	}
 }
