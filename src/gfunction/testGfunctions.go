@@ -159,7 +159,7 @@ func ld(params []any) any {
 }
 
 func ie(params []any) any {
-	geb := GErrBlk{excNames.InternalError, "intended return of test error"}
+	geb := GErrBlk{excNames.InternalException, "intended return of test error"}
 	return &geb
 }
 
