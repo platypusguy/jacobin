@@ -842,29 +842,43 @@ frameInterpreter:
 		case opcodes.BASTORE: // 0x54 	(store a boolean or byte in byte array)
 			value := convertInterfaceToByte(pop(f))
 			index := pop(f).(int64)
-			arrayRef := pop(f).(*object.Object) // ptr to array object
-			if arrayRef == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, BASTORE: Invalid (null) reference to an array",
-					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
-				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New("AASTORE: null array reference") // applies only if in test
+			var rawArray []byte
+			arrayRef := pop(f)
+			switch arrayRef.(type) {
+			case *object.Object:
+				obj := arrayRef.(*object.Object)
+				if object.IsNull(obj) {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("in %s.%s, BASTORE: Invalid (null) reference to an array",
+						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+					status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
-			}
-
-			o := arrayRef.FieldTable["value"]
-			if o.Ftype != "[B" {
+				fld := obj.FieldTable["value"]
+				if fld.Ftype != types.ByteArray {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected=%s, observed=%s",
+						util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, types.ByteArray, fld.Ftype)
+					status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+				rawArray = fld.Fvalue.([]byte)
+			case []byte:
+				rawArray = arrayRef.([]byte)
+			default:
 				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type must start with '[B', got %s",
-					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, o.Ftype)
+				errMsg := fmt.Sprintf("in %s.%s, BASTORE: unexpected reference type: %T",
+					util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, arrayRef)
 				status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, f)
 				if status != exceptions.Caught {
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
 
-			rawArray := o.Fvalue.([]byte)
 			size := int64(len(rawArray))
 			if index >= size {
 				glob.ErrorGoStack = string(debug.Stack())
