@@ -24,6 +24,12 @@ func Load_Io_File() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/io/File.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["java/io/File.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -60,14 +66,25 @@ func Load_Io_File() {
 // File file = new File(path);
 func fileInit(params []interface{}) interface{} {
 
-	// Initialise the status as "invalid".
-	fld := object.Field{Ftype: types.Int, Fvalue: int64(0)}
-	params[0].(*object.Object).FieldTable[FileStatus] = fld
+	// Get File object. Initialise the field map if required.
+	objFile := params[0].(*object.Object)
+	if objFile.FieldTable == nil {
+		objFile.FieldTable = make(map[string]object.Field)
+	}
 
-	// Get the argument path string.
-	argPathStr := object.GoStringFromStringObject(params[1].(*object.Object))
+	// Initialise the file status as "invalid".
+	fld := object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	objFile.FieldTable[FileStatus] = fld
+
+	// Get the argument path string object.
+	objPath := params[1]
+	if object.IsNull(objPath) {
+		errMsg := "Path object is null"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+	argPathStr := object.GoStringFromStringObject(objPath.(*object.Object))
 	if argPathStr == "" {
-		errMsg := "String argument for path is null"
+		errMsg := "String argument for path is empty"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
@@ -81,23 +98,23 @@ func fileInit(params []interface{}) interface{} {
 	// Fill in File attributes that might get accessed by OpenJDK library member functions.
 
 	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(absPathStr)}
-	params[0].(*object.Object).FieldTable[FilePath] = fld
+	objFile.FieldTable[FilePath] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
-	params[0].(*object.Object).FieldTable["separatorChar"] = fld
+	objFile.FieldTable["separatorChar"] = fld
 
 	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathSeparator}}
-	params[0].(*object.Object).FieldTable["separator"] = fld
+	objFile.FieldTable["separator"] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathListSeparator}
-	params[0].(*object.Object).FieldTable["pathSeparatorChar"] = fld
+	objFile.FieldTable["pathSeparatorChar"] = fld
 
 	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathListSeparator}}
-	params[0].(*object.Object).FieldTable["pathSeparator"] = fld
+	objFile.FieldTable["pathSeparator"] = fld
 
 	// Set status to "checked" (=1).
 	fld = object.Field{Ftype: types.Int, Fvalue: int64(1)}
-	params[0].(*object.Object).FieldTable[FileStatus] = fld
+	objFile.FieldTable[FileStatus] = fld
 
 	return nil
 }

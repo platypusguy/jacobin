@@ -324,6 +324,8 @@ func getProperty(params []interface{}) interface{} {
 		value = "no JIT"
 	case "java.home":
 		value = g.JavaHome
+	case "java.io.tmpdir":
+		value = os.TempDir()
 	case "java.library.path":
 		value = g.JavaHome
 	case "java.vendor":

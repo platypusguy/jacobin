@@ -912,9 +912,9 @@ func TestBastoreInvalid1(t *testing.T) {
 
 // BASTORE: Test error conditions: wrong type of array (not [I)
 func TestBastoreInvalid2(t *testing.T) {
-
-	o := object.Make1DimArray(object.FLOAT, 10)
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.BASTORE)
+	o := object.Make1DimArray(object.FLOAT, 10)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
 	push(&f, int64(30)) // the index into the array
 	push(&f, int64(20)) // the value to insert
@@ -943,7 +943,7 @@ func TestBastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "field type must start with '[B',") {
+	if !strings.Contains(errMsg, "field type expected=[B") {
 		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -951,6 +951,7 @@ func TestBastoreInvalid2(t *testing.T) {
 // BASTORE: Test error conditions: index out of range
 func TestBastoreInvalid3(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.BYTE, 10)
 	f := newFrame(opcodes.BASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
@@ -958,7 +959,6 @@ func TestBastoreInvalid3(t *testing.T) {
 	push(&f, int64(20)) // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1209,7 +1209,7 @@ func TestDastore(t *testing.T) {
 
 // DASTORE: Test error conditions: invalid array address
 func TestDastoreInvalid1(t *testing.T) {
-	globals.InitStringPool()
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.DASTORE)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array
@@ -1217,7 +1217,6 @@ func TestDastoreInvalid1(t *testing.T) {
 	push(&f, float64(20.0))
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1247,6 +1246,7 @@ func TestDastoreInvalid1(t *testing.T) {
 
 // DASTORE: Test error conditions: wrong type of array (not [I)
 func TestDastoreInvalid2(t *testing.T) {
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.INT, 10)
 	f := newFrame(opcodes.DASTORE)
 	push(&f, o)             // this should point to an array of floats, not ints, will here cause the error
@@ -1255,7 +1255,6 @@ func TestDastoreInvalid2(t *testing.T) {
 	push(&f, float64(20.0))
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1286,6 +1285,7 @@ func TestDastoreInvalid2(t *testing.T) {
 // DASTORE: Test error conditions: index out of range
 func TestDastoreInvalid3(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.FLOAT, 10)
 	f := newFrame(opcodes.DASTORE)
 	push(&f, o)             // an array of 10 ints, not floats
@@ -1294,7 +1294,6 @@ func TestDastoreInvalid3(t *testing.T) {
 	push(&f, float64(20.0))
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1525,6 +1524,7 @@ func TestFastoreInvalid1(t *testing.T) {
 
 // FASTORE: Test error conditions: wrong type of array (not [I)
 func TestFastoreInvalid2(t *testing.T) {
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.INT, 10)
 	f := newFrame(opcodes.FASTORE)
 	push(&f, o)             // this should point to an array of floats, not ints, will here cause the error
@@ -1532,7 +1532,6 @@ func TestFastoreInvalid2(t *testing.T) {
 	push(&f, float64(20.0)) // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1562,7 +1561,7 @@ func TestFastoreInvalid2(t *testing.T) {
 
 // FASTORE: Test error conditions: index out of range
 func TestFastoreInvalid3(t *testing.T) {
-
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.FLOAT, 10)
 	f := newFrame(opcodes.FASTORE)
 	push(&f, o)             // an array of 10 ints, not floats
@@ -1570,7 +1569,6 @@ func TestFastoreInvalid3(t *testing.T) {
 	push(&f, float64(20.0)) // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1780,14 +1778,13 @@ func TestIastore(t *testing.T) {
 
 // IASTORE: Test error conditions: invalid array address
 func TestIastoreInvalid1(t *testing.T) {
-	globals.InitStringPool()
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.IASTORE)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array
 	push(&f, int64(20))             // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1818,6 +1815,7 @@ func TestIastoreInvalid1(t *testing.T) {
 // IASTORE: Test error conditions: wrong type of array (not [I)
 func TestIastoreInvalid2(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.FLOAT, 10)
 	f := newFrame(opcodes.IASTORE)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
@@ -1825,7 +1823,6 @@ func TestIastoreInvalid2(t *testing.T) {
 	push(&f, int64(20)) // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1856,6 +1853,7 @@ func TestIastoreInvalid2(t *testing.T) {
 // IASTORE: Test error conditions: index out of range
 func TestIastoreInvalid3(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.INT, 10)
 	f := newFrame(opcodes.IASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
@@ -1863,7 +1861,6 @@ func TestIastoreInvalid3(t *testing.T) {
 	push(&f, int64(20)) // the value to insert
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -2101,6 +2098,7 @@ func TestLastoreInvalid1(t *testing.T) {
 // LASTORE: Test error conditions: wrong type of array (not [I)
 func TestLastoreInvalid2(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.FLOAT, 10)
 	f := newFrame(opcodes.LASTORE)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
@@ -2109,7 +2107,6 @@ func TestLastoreInvalid2(t *testing.T) {
 	push(&f, int64(20))
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -2140,6 +2137,7 @@ func TestLastoreInvalid2(t *testing.T) {
 // LASTORE: Test error conditions: index out of range
 func TestLastoreInvalid3(t *testing.T) {
 
+	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.INT, 10)
 	f := newFrame(opcodes.LASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
@@ -2148,7 +2146,6 @@ func TestLastoreInvalid3(t *testing.T) {
 	push(&f, int64(20))
 
 	log.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -2178,6 +2175,7 @@ func TestLastoreInvalid3(t *testing.T) {
 
 // MULTIANEWARRAY: test creation of a two-dimensional byte array
 func Test2DimArray1(t *testing.T) {
+	globals.InitGlobals("test")
 	arr, err := object.Make2DimArray(3, 4, object.BYTE)
 	if err != nil {
 		t.Error("Error creating 2-dimensional array")
@@ -2200,6 +2198,7 @@ func Test2DimArray1(t *testing.T) {
 
 // MULTIANEWARRAY: test creation of a two-dimensional byte array and its Klass field
 func Test2DimArrayKlassField(t *testing.T) {
+	globals.InitGlobals("test")
 	arr, err := object.Make2DimArray(3, 4, object.BYTE)
 	if err != nil {
 		t.Error("Error creating 2-dimensional array")
