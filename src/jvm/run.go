@@ -2309,7 +2309,7 @@ frameInterpreter:
 
 			// before we can run the method, we need to either instantiate the class and/or
 			// make sure that its static intializer block (if any) has been run. At this point,
-			// all we know the class exists and has been loaded.
+			// all we know is that the class exists and has been loaded.
 			k := classloader.MethAreaFetch(className)
 			if k.Data.ClInit == types.ClInitNotRun {
 				err = runInitializationBlock(k, nil, fs)
@@ -2500,6 +2500,7 @@ frameInterpreter:
 
 			var foundIntfaceName = ""
 			var mtEntry classloader.MTentry
+			var meth *classloader.Method
 			var ok bool
 			for i := 0; i < len(clData.Interfaces); i++ {
 				index := uint32(clData.Interfaces[i])
@@ -2507,7 +2508,10 @@ frameInterpreter:
 				if foundIntfaceName == interfaceName {
 					// at this point we know that clData's class implements the required interface.
 					// Now, check whether clData contains the desired method.
-					if _, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]; ok {
+					meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
+					if ok {
+						mtEntry, _ = classloader.FetchMethodAndCP(
+							interfaceName, interfaceMethodName, interfaceMethodType)
 						goto executeInterfaceMethod
 					}
 
@@ -2549,8 +2553,8 @@ frameInterpreter:
 
 		executeInterfaceMethod:
 			if mtEntry.MType == 'J' {
-				m := mtEntry.Meth.(classloader.JmEntry)
-				if m.AccessFlags&0x0100 > 0 {
+				// m := mtEntry.Meth.(classloader.JmEntry)
+				if meth.AccessFlags&0x0100 > 0 {
 					// Native code
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEINTERFACE: Native method requested: " +
