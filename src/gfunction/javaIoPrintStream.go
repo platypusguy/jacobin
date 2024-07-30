@@ -232,7 +232,10 @@ func PrintlnObject(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case *object.Object:
 		inObj := params[1].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "value")
+		str = object.ObjectFieldToString(inObj, "FilePath")
+		if str == "null" {
+			str = object.ObjectFieldToString(inObj, "value")
+		}
 	case nil:
 		str = "null"
 	default:
@@ -323,7 +326,10 @@ func PrintObject(params []interface{}) interface{} {
 	switch params[1].(type) {
 	case *object.Object:
 		inObj := params[1].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "value")
+		str = object.ObjectFieldToString(inObj, "FilePath")
+		if str == "null" {
+			str = object.ObjectFieldToString(inObj, "value")
+		}
 	case nil:
 		str = "null"
 	default:
