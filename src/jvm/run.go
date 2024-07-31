@@ -2442,14 +2442,15 @@ frameInterpreter:
 			interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
 				CP, interfaceMethodSigIndex)
 
-			var args []any
-			for i := 0; i < int(count)-1; i++ {
-				args = append(args, pop(f))
-			}
+			// var args []any
+			// for i := 0; i < int(count)-1; i++ {
+			// 	args = append(args, pop(f))
+			// }
+
 			// now get the objRef pointing to the class containing the call to the method
 			// described just previously.
 			// The objRef object has previously been instantiated and its constructor called.
-			objRef := pop(f)
+			objRef := f.OpStack[f.TOS-int(count)]
 			if objRef == nil {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
 					interfaceName+interfaceMethodName+interfaceMethodType)
@@ -2567,9 +2568,7 @@ frameInterpreter:
 
 		executeInterfaceMethod:
 			if mtEntry.MType == 'J' {
-				// m := mtEntry.Meth.(classloader.JmEntry)
-				if meth.AccessFlags&0x0100 > 0 {
-					// Native code
+				if meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEINTERFACE: Native method requested: " +
 						clData.Name + "." + interfaceMethodName + interfaceMethodType
@@ -2579,10 +2578,9 @@ frameInterpreter:
 					}
 				}
 
-				// CURR: un comment following block, then load parameters into the frame's locals
 				entry := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
-					clData.Name, interfaceMethodName, interfaceMethodType, &entry, false, f)
+					clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, f)
 				if err != nil {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
