@@ -2448,9 +2448,10 @@ frameInterpreter:
 			// }
 
 			// now get the objRef pointing to the class containing the call to the method
-			// described just previously.
+			// described just previously. It is located on the f.OpStack below the args to
+			// be passed to the method.
 			// The objRef object has previously been instantiated and its constructor called.
-			objRef := f.OpStack[f.TOS-int(count)]
+			objRef := f.OpStack[f.TOS-int(count)+1]
 			if objRef == nil {
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
 					interfaceName+interfaceMethodName+interfaceMethodType)
@@ -2562,8 +2563,6 @@ frameInterpreter:
 				}
 			}
 
-			// CURR: get a pointer to the method area
-			// CURR: extract the parameters to the function
 			// CURR: execute the function in the G and J variants
 
 		executeInterfaceMethod:
