@@ -375,6 +375,9 @@ func getProperty(params []interface{}) interface{} {
 	case "user.name":
 		currentUser, _ := user.Current()
 		value = currentUser.Name
+	case "user.timezone":
+		now := time.Now()
+		value, _ = now.Zone()
 	default:
 		return object.Null
 	}

@@ -34,10 +34,34 @@ func Load_Io_RandomAccessFile() {
 			GFunction:  rafInitFile,
 		}
 
+	MethodSignatures["java/io/RandomAccessFile.close()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  fisClose,
+		}
+
 	MethodSignatures["java/io/RandomAccessFile.getFilePointer()J"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  rafGetFilePointer,
+		}
+
+	MethodSignatures["java/io/RandomAccessFile.read()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  fisReadOne,
+		}
+
+	MethodSignatures["java/io/RandomAccessFile.read([B)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  fisReadByteArray,
+		}
+
+	MethodSignatures["java/io/RandomAccessFile.read([BII)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  fisReadByteArrayOffset,
 		}
 
 	// ----------------------------------------------------------
