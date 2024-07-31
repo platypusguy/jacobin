@@ -2525,7 +2525,7 @@ frameInterpreter:
 					meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
 					if ok {
 						mtEntry, _ = classloader.FetchMethodAndCP(
-							interfaceName, interfaceMethodName, interfaceMethodType)
+							clData.Name, interfaceMethodName, interfaceMethodType)
 						goto executeInterfaceMethod
 					}
 
@@ -2578,33 +2578,29 @@ frameInterpreter:
 						return errors.New(errMsg) // applies only if in test
 					}
 				}
-				/*
-					// CURR: un comment following block, then load parameters into the frame's locals
-					fram, err := createAndInitNewFrame(
-						clData.Name, interfaceMethodName, interfaceMethodType, &m, false, f)
-					if err != nil {
-						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
-							interfaceMethodName + interfaceMethodType
-						status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
-						if status != exceptions.Caught {
-							return errors.New(errMsg) // applies only if in test
-						}
-					}
 
-					if f.ExceptionPC == -1 {
-						f.ExceptionPC = f.PC // in the event of an exception, here's where we were
+				// CURR: un comment following block, then load parameters into the frame's locals
+				entry := mtEntry.Meth.(classloader.JmEntry)
+				fram, err := createAndInitNewFrame(
+					clData.Name, interfaceMethodName, interfaceMethodType, &entry, false, f)
+				if err != nil {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+						interfaceMethodName + interfaceMethodType
+					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
 					}
-					// f.PC += 2                            // 2 == initial PC advance in this bytecode (see above)
-					f.PC += 1                            // to point to the next bytecode before exiting
-					fs.PushFront(fram)                   // push the new frame
-					f = fs.Front().Value.(*frames.Frame) // point f to the new head
-					goto frameInterpreter
+				}
 
-				*/
+				f.PC += 1                            // to point to the next bytecode before exiting
+				fs.PushFront(fram)                   // push the new frame
+				f = fs.Front().Value.(*frames.Frame) // point f to the new head
+				goto frameInterpreter
+
 				// for the nonce
-				errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
-				exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+				// errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
+				// exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 			}
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
