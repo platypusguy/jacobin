@@ -307,14 +307,14 @@ func Load_Lang_String() {
 			GFunction:  stringSplit,
 		}
 
-	// Return a string in all lower case, using the reference object string as input.
+	// Return a substring starting at the given index of the byte array.
 	MethodSignatures["java/lang/String.substring(I)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  substringToTheEnd,
 		}
 
-	// Return a string in all lower case, using the reference object string as input.
+	// Return a substring starting at the given index of the byte array of the given length.
 	MethodSignatures["java/lang/String.substring(II)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
@@ -335,14 +335,14 @@ func Load_Lang_String() {
 			GFunction:  toLowerCase,
 		}
 
-	// Return a string in all lower case, using the reference object string as input.
+	// Return a string in all upper case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toUpperCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  toUpperCase,
 		}
 
-	// Return a string in all lower case, using the reference object string as input.
+	// Return a string trimmed of leading and trailing whitespace.
 	MethodSignatures["java/lang/String.trim()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
