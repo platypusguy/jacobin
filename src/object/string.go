@@ -163,11 +163,11 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "null"
 	}
 
-	// If the field is missing, give a warning and return a 0-length string.
+	// If the field is missing, give a warning (if tracing) and return a 0-length string.
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
 		warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" was not found. Returning \"null\"", fieldName)
-		_ = log.Log(warnMsg, log.WARNING)
+		_ = log.Log(warnMsg, log.TRACE_INST)
 		return "null"
 	}
 
