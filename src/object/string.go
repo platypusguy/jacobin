@@ -78,10 +78,19 @@ func StringObjectFromGoString(str string) *Object {
 
 // GoStringFromStringObject: convenience method to extract a Go string from a String object (Java string)
 func GoStringFromStringObject(obj *Object) string {
-	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		if len(obj.FieldTable["value"].Fvalue.([]byte)) > 0 {
-			return string(obj.FieldTable["value"].Fvalue.([]byte))
-		}
+	if IsNull(obj) {
+		return ""
+	}
+	fld, ok := obj.FieldTable["value"]
+	if !ok {
+		return ""
+	}
+	bytes, ok := fld.Fvalue.([]byte)
+	if !ok {
+		return ""
+	}
+	if len(bytes) > 0 {
+		return string(bytes)
 	}
 	return ""
 }
@@ -160,14 +169,16 @@ func IsStringObject(unknown any) bool {
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return a 0-length string.
 	if IsNull(obj) {
+		warnMsg := "ObjectFieldToString: object is null. Returning \"null\""
+		_ = log.Log(warnMsg, log.FINE)
 		return "null"
 	}
 
-	// If the field is missing, give a warning and return a 0-length string.
+	// If the field is missing, give a warning (if tracing) and return a 0-length string.
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
 		warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" was not found. Returning \"null\"", fieldName)
-		_ = log.Log(warnMsg, log.WARNING)
+		_ = log.Log(warnMsg, log.FINE)
 		return "null"
 	}
 
@@ -231,6 +242,6 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// None of the above.
 	warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	_ = log.Log(warnMsg, log.WARNING)
+	_ = log.Log(warnMsg, log.FINE)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }

@@ -66,13 +66,9 @@ func TestStringObjectFromGoString(t *testing.T) {
 func TestGoStringFromInvalidStringObject(t *testing.T) {
 	globals.InitGlobals("test")
 	statics.LoadStaticsString()
-
-	constStr := "Mary had a little lamb whose fleece was white as snow."
-
-	strObj := StringObjectFromGoString(constStr)
-	strLit := "invalidString"
-	strObj.KlassName = stringPool.GetStringIndex(&strLit)
-	strValue := GoStringFromStringObject(strObj)
+	className := "Oregano"
+	obj := MakeEmptyObjectWithClassName(&className)
+	strValue := GoStringFromStringObject(obj)
 	if strValue != "" {
 		t.Errorf("expected empty string , observed: '%s'", strValue)
 	}
