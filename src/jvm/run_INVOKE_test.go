@@ -23,8 +23,8 @@ import (
 // This contains all the unit tests for the INVOKE family of bytecodes. They would normally
 // appear in run_II-LD_test.go, but they would make that an enormous file. So, they're extracted here.
 
-// INVOKEINTERFACE: Invalid passed parameter
-func TestInvokeInterfaceInvalid(t *testing.T) {
+// INVOKEINTERFACE: Invalid count field in the class file
+func TestInvokeInterfaceInvalidCountField(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// redirect stderr so as not to pollute the test output with the expected error message
@@ -66,7 +66,51 @@ func TestInvokeInterfaceInvalid(t *testing.T) {
 	// restore stderr
 	_ = w.Close()
 	os.Stderr = normalStderr
+}
 
+// INVOKEINTERFACE: The CP entry does not point to an interface
+func TestInvokeInterfaceNotPointingToInterface(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
+	}
+	classloader.LoadBaseClasses() // must follow classloader.Init()
+
+	f := newFrame(opcodes.INVOKEINTERFACE)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	f.Meth = append(f.Meth, 0x01)
+	f.Meth = append(f.Meth, 0x00)
+
+	// create a dummy CP with 2 entries so that the CP slot index above does not cause an error.
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0} // expects classloader.Interface -- the error
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err = runFrame(fs)
+
+	if err == nil {
+		t.Errorf("INVOKEINTERFACE: Should have returned an error for non-existent method, but didn't")
+	} else {
+		if !strings.Contains(err.Error(), "did not point to an interface method type") {
+			t.Errorf("INVOKEINTERFACE: Got unexpected error message: %s", err.Error())
+		}
+	}
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
 }
 
 // INVOKESPECIAL should do nothing and report no errors
