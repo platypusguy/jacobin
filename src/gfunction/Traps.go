@@ -144,24 +144,6 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.<init>(I)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/CharSequence;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/StringBuilder.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
