@@ -2599,6 +2599,7 @@ frameInterpreter:
 				// errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
 				// exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
 			}
+
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2

@@ -23,6 +23,52 @@ import (
 // This contains all the unit tests for the INVOKE family of bytecodes. They would normally
 // appear in run_II-LD_test.go, but they would make that an enormous file. So, they're extracted here.
 
+// INVOKEINTERFACE: Invalid passed parameter
+func TestInvokeInterfaceInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
+	}
+	classloader.LoadBaseClasses() // must follow classloader.Init()
+
+	f := newFrame(opcodes.INVOKEINTERFACE)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	f.Meth = append(f.Meth, 0x00) // the param count (which cannot be zero--this causes the error)
+	f.Meth = append(f.Meth, 0x00)
+
+	// create a dummy CP with 2 entries so that the CP slot index above does not cause an error.
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	err = runFrame(fs)
+
+	if err == nil {
+		t.Errorf("INVOKEINTERFACE: Should have returned an error for non-existent method, but didn't")
+	} else {
+		if !strings.Contains(err.Error(), "Invalid values for INVOKEINTERFACE bytecode") {
+			t.Errorf("INVOKEINTERFACE: Got unexpected error message: %s", err.Error())
+		}
+	}
+	// restore stderr
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+}
+
 // INVOKESPECIAL should do nothing and report no errors
 func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	globals.InitGlobals("test")
@@ -135,7 +181,6 @@ func TestInvokeSpecialNonExistentMethod(t *testing.T) {
 	if err == nil {
 		t.Errorf("INVOKESPECIAL: Should have returned an error for non-existent method, but didn't")
 	} else {
-
 		if !strings.Contains(err.Error(),
 			"INVOKESPECIAL: Class method not found: java/lang/Object.no-such-method()V") {
 			t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
