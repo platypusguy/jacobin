@@ -2549,7 +2549,7 @@ frameInterpreter:
 						}
 					}
 					goto executeInterfaceMethod // method found, move on to execution
-				} else { // TODO: check for superclasses, after checking Object
+				} else { // CURR: check for superclasses, after checking Object
 					foundIntfaceName = ""
 				}
 			}
@@ -2562,8 +2562,6 @@ frameInterpreter:
 					return errors.New(errMsg) // applies only if in test
 				}
 			}
-
-			// CURR: execute the function in the G and J variants
 
 		executeInterfaceMethod:
 			if mtEntry.MType == 'J' {
@@ -2594,10 +2592,35 @@ frameInterpreter:
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				goto frameInterpreter
+			}
 
-				// for the nonce
-				// errMsg := "INVOKEINTERFACE: WIP, forcing an error, for the nonce"
-				// exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, f)
+			if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+				gmethData := mtEntry.Meth.(gfunction.GMeth)
+				paramCount := gmethData.ParamSlots
+				var params []interface{}
+				for i := 0; i < paramCount; i++ {
+					params = append(params, pop(f))
+				}
+
+				ret := runGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true)
+				if ret != nil {
+					switch ret.(type) {
+					case error:
+						if glob.JacobinName == "test" {
+							errRet := ret.(error)
+							return errRet
+						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 1
+							goto frameInterpreter
+						}
+					default: // if it's not an error, then it's a legitimate return value, which we simply push
+						push(f, ret)
+						if strings.HasSuffix(interfaceMethodType, "D") || strings.HasSuffix(interfaceMethodType, "J") {
+							push(f, ret) // push twice if long or double
+						}
+					}
+					// any exception will already have been handled.
+				}
 			}
 
 		case opcodes.NEW: // 0xBB 	new: create and instantiate a new object
