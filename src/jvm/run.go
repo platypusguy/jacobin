@@ -2505,7 +2505,7 @@ frameInterpreter:
 			// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
 
 			clData := *class.Data
-			if len(clData.Interfaces) == 0 {
+			if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
 				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
 					objRefClassName, interfaceName)
 				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
