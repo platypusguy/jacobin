@@ -70,31 +70,31 @@ func Load_Lang_StringBuilder() {
 			GFunction:  stringBuilderAppend,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.append([CII)Ljava/lang/StringBuilder;"] = // append subset of char array
+	MethodSignatures["java/lang/StringBuilder.append([CII)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.append(D)Ljava/lang/StringBuilder;"] = // append double
+	MethodSignatures["java/lang/StringBuilder.append(D)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  stringBuilderAppend,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.append(F)Ljava/lang/StringBuilder;"] = // append float
+	MethodSignatures["java/lang/StringBuilder.append(F)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.append(I)Ljava/lang/StringBuilder;"] = // append integer
+	MethodSignatures["java/lang/StringBuilder.append(I)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 		}
 
-	MethodSignatures["java/lang/StringBuilder.append(J)Ljava/lang/StringBuilder;"] = // append long
+	MethodSignatures["java/lang/StringBuilder.append(J)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  stringBuilderAppend,
@@ -187,13 +187,13 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.delete(II)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderDelete,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.deleteCharAt(I)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderDelete,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.ensureCapacity(I)V"] =
@@ -555,6 +555,61 @@ func stringBuilderCharAt(params []any) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	return int64(bytes[ix])
+}
+
+// Removes the characters in a substring of the StringBuilder object. The substring begins at the specified start
+// and extends to the character at index end - 1 or to the end of the sequence if no such character exists.
+// If start is equal to end, no changes are made.
+func stringBuilderDelete(params []any) any {
+	objBase := params[0].(*object.Object)
+	initBytes := objBase.FieldTable["value"].Fvalue.([]byte)
+	initLen := int64(len(initBytes))
+	start := params[1].(int64)
+	var end int64
+	if len(params) == 3 {
+		end = params[2].(int64) // delete(start, end)
+	} else {
+		end = start + 1 // deleteCharAt(offset)
+	}
+
+	// Validate start and end.
+	if start < 0 || start > initLen {
+		errMsg := fmt.Sprintf("Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if end < start {
+		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end, start)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if end > initLen {
+		end = initLen
+	}
+
+	// If start = end, return object as-is.
+	if start == end {
+		return objBase
+	}
+
+	// Copy retained bytes to a new byte array.
+	newArray := make([]byte, start)
+	if start > 0 {
+		copy(newArray, initBytes[0:start])
+	}
+	newArray = append(newArray, initBytes[end:]...)
+
+	// New length of byte array --> count.
+	count := int64(len(newArray))
+
+	// Initialise the output object.
+	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
+	objOut.FieldTable = objBase.FieldTable
+
+	// Finalize output object.
+	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objOut, count)
+
+	return objOut
 }
 
 // Insert the second parameter to the bytes into the StringBuilder
