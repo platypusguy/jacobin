@@ -578,7 +578,7 @@ func stringBuilderDelete(params []any) any {
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end < start {
-		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end, start)
+		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end > initLen {
