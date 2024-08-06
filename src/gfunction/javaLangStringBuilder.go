@@ -217,7 +217,7 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.insert(IC)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  stringBuilderInsert,
+			GFunction:  stringBuilderInsertChar,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.insert(I[C)Ljava/lang/StringBuilder;"] =
@@ -234,7 +234,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.insert(ID)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 3,
 			GFunction:  stringBuilderInsert,
 		}
 
@@ -252,7 +252,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.insert(IJ)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 3,
 			GFunction:  stringBuilderInsert,
 		}
 
@@ -566,9 +566,9 @@ func stringBuilderInsert(params []any) any {
 
 	// Get the index value.
 	ix := params[1].(int64)
-	if ix >= int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) exceeds the byte array size (%d)", ix, len(byteArray))
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	if ix < 0 || ix > int64(len(byteArray)) {
+		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Initialise the output object.
@@ -576,9 +576,9 @@ func stringBuilderInsert(params []any) any {
 	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray []byte
-	switch params[1].(type) {
+	switch params[2].(type) {
 	case *object.Object: // char array, String, StringBuffer, or StringBuilder
-		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
+		fvalue := params[2].(*object.Object).FieldTable["value"].Fvalue
 		switch fvalue.(type) {
 		case []byte: // String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]byte)
@@ -591,10 +591,10 @@ func stringBuilderInsert(params []any) any {
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	case int64: // integer, long
-		str := fmt.Sprintf("%d", params[1].(int64))
+		str := fmt.Sprintf("%d", params[2].(int64))
 		parmArray = []byte(str)
 	case float64: // float, double
-		ff := params[1].(float64)
+		ff := params[2].(float64)
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
 		parmArray = []byte(str)
 	default:
@@ -604,7 +604,10 @@ func stringBuilderInsert(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := byteArray[:(ix - 1)]
+	newArray := make([]byte, ix)
+	if ix > 0 {
+		copy(newArray, byteArray[0:ix])
+	}
 	newArray = append(newArray, parmArray...)
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
@@ -625,9 +628,9 @@ func stringBuilderInsertBoolean(params []any) any {
 
 	// Get the index value.
 	ix := params[1].(int64)
-	if ix >= int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) exceeds the byte array size (%d)", ix, len(byteArray))
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	if ix < 0 || ix > int64(len(byteArray)) {
+		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Initialise the output object.
@@ -635,10 +638,10 @@ func stringBuilderInsertBoolean(params []any) any {
 	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray []byte
-	switch params[1].(type) {
+	switch params[2].(type) {
 	case int64: // boolean
 		var str string
-		if params[1].(int64) == types.JavaBoolTrue {
+		if params[2].(int64) == types.JavaBoolTrue {
 			str = "true"
 		} else {
 			str = "false"
@@ -651,7 +654,10 @@ func stringBuilderInsertBoolean(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := byteArray[:(ix - 1)]
+	newArray := make([]byte, ix)
+	if ix > 0 {
+		copy(newArray, byteArray[0:ix])
+	}
 	newArray = append(newArray, parmArray...)
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
@@ -672,20 +678,19 @@ func stringBuilderInsertChar(params []any) any {
 
 	// Get the index value.
 	ix := params[1].(int64)
-	if ix >= int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) exceeds the byte array size (%d)", ix, len(byteArray))
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	if ix < 0 || ix > int64(len(byteArray)) {
+		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
 	// Initialise the output object.
 	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
 	objOut.FieldTable = objBase.FieldTable
 
-	var parmArray = make([]byte, 1)
-	switch params[1].(type) {
+	var bb byte
+	switch params[2].(type) {
 	case int64: // char
-		bb := byte(params[1].(int64))
-		parmArray[0] = bb
+		bb = byte(params[2].(int64))
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -693,8 +698,11 @@ func stringBuilderInsertChar(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := byteArray[:(ix - 1)]
-	newArray = append(newArray, parmArray...)
+	newArray := make([]byte, ix)
+	if ix > 0 {
+		copy(newArray, byteArray[0:ix])
+	}
+	newArray = append(newArray, bb)
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
