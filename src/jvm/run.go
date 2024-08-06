@@ -3085,7 +3085,7 @@ frameInterpreter:
 				// utf8Index := CP.ClassRefs[CPentry.Slot]
 				// arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
 				arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
-				arrayDesc = *stringPool.GetStringPointer(uint32(arrayDescStringPoolIndex))
+				arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
 			}
 
 			var rawArrayType uint8
