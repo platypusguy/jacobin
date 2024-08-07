@@ -2951,6 +2951,28 @@ frameInterpreter:
 					_ = log.Log(traceInfo, log.TRACE_INST)
 				}
 
+				// at this point, we have the resolved class (className) and the objectref (obj).
+				// The rules for identifying valid casting are (from the JVM 17 spec):
+				/*
+						If objectref can be cast to the resolved class, array, or interface type, the operand stack is
+					    unchanged; otherwise, the checkcast instruction throws a ClassCastException.
+
+						If S is the type of the object referred to by objectref, and T is the resolved class, array, or
+						interface type, then checkcast determines whether objectref can be cast to type T as follows:
+
+						If S is a class type, then:
+						* If T is a class type, then S must be the same class as T, or S must be a subclass of T;
+						* If T is an interface type, then S must implement interface T.
+
+						If S is an array type SC[], that is, an array of components of type SC, then:
+						* If T is a class type, then T must be Object.
+						* If T is an interface type, then T must be one of the interfaces implemented by arrays (JLS §4.10.3).
+						* If T is an array type TC[], that is, an array of components of type TC, then one of the following
+						  must be true:
+							> TC and SC are the same primitive type.
+							> TC and SC are reference types, and type SC can be cast to TC by
+						      recursive application of these rules. */
+
 				if strings.HasPrefix(className, "[") { // the object being checked is an array
 					if obj.KlassName != types.InvalidStringIndex {
 						sptr := stringPool.GetStringPointer(obj.KlassName)
