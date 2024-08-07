@@ -208,6 +208,18 @@ func Load_Lang_StringBuilder() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/lang/StringBuilder.indexOf(Ljava/lang/String;)Ljava/lang/StringBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/StringBuilder.indexOf(Ljava/lang/String;I)Ljava/lang/StringBuilder;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/StringBuilder.insert(IZ)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 2,
