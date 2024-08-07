@@ -147,7 +147,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.compareTo(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  compareToCaseSensitive,
+			GFunction:  stringCompareToCaseSensitive,
 		}
 
 	// Compare 2 strings lexicographically, ignoring case (upper/lower).
@@ -157,7 +157,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  compareToIgnoreCase,
+			GFunction:  stringCompareToIgnoreCase,
 		}
 
 	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
@@ -548,7 +548,7 @@ func stringCharAt(params []interface{}) interface{} {
 }
 
 // "java/lang/String.compareTo(Ljava/lang/String;)I"
-func compareToCaseSensitive(params []interface{}) interface{} {
+func stringCompareToCaseSensitive(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str1 := object.GoStringFromStringObject(obj)
 	obj = params[1].(*object.Object)
@@ -563,7 +563,7 @@ func compareToCaseSensitive(params []interface{}) interface{} {
 }
 
 // "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
-func compareToIgnoreCase(params []interface{}) interface{} {
+func stringCompareToIgnoreCase(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str1 := strings.ToLower(object.GoStringFromStringObject(obj))
 	obj = params[1].(*object.Object)
