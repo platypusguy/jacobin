@@ -73,7 +73,7 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.append([CII)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderAppend,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.append(D)Ljava/lang/StringBuilder;"] =
@@ -181,7 +181,7 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.compareTo(Ljava/lang/StringBuilder;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  stringCompareToCaseSensitive,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.delete(II)Ljava/lang/StringBuilder;"] =
@@ -229,7 +229,7 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.insert(I[CII)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderInsert,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.insert(ID)Ljava/lang/StringBuilder;"] =
@@ -324,13 +324,13 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.setCharAt(IC)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderSetCharAt,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.setLength(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderSetLength,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.subSequence(II)Ljava/lang/CharSequence;"] =
@@ -446,8 +446,23 @@ func stringBuilderAppend(params []any) any {
 		case []byte: // String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]byte)
 		case []int64: // char array
-			for _, elem := range fvalue.([]int64) {
-				parmArray = append(parmArray, byte(elem))
+			if len(params) == 4 {
+				int64Array := fvalue.([]int64)
+				len64Array := int64(len(int64Array))
+				start := params[2].(int64)
+				length := params[3].(int64)
+				end := start + length
+				if start < 0 || start > len64Array || end <= start || end > len64Array {
+					errMsg := fmt.Sprintf("Invalid offset (%d) or length (%d)", start, length)
+					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+				}
+				for ix := start; ix < start+length; ix++ {
+					parmArray = append(parmArray, byte(int64Array[ix]))
+				}
+			} else { // Append the entire char array.
+				for _, elem := range fvalue.([]int64) {
+					parmArray = append(parmArray, byte(elem))
+				}
 			}
 		default:
 			errMsg := fmt.Sprintf("Object value field value type (%T) is not a byte array nor a char array", params[1])
@@ -638,8 +653,23 @@ func stringBuilderInsert(params []any) any {
 		case []byte: // String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]byte)
 		case []int64: // char array
-			for _, elem := range fvalue.([]int64) {
-				parmArray = append(parmArray, byte(elem))
+			if len(params) == 5 { // subset of char array
+				int64Array := fvalue.([]int64)
+				len64Array := int64(len(int64Array))
+				start := params[3].(int64)
+				length := params[4].(int64)
+				end := start + length
+				if start < 0 || start > len64Array || end <= start || end > len64Array {
+					errMsg := fmt.Sprintf("Invalid offset (%d) or length (%d)", start, length)
+					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+				}
+				for ix := start; ix < start+length; ix++ {
+					parmArray = append(parmArray, byte(int64Array[ix]))
+				}
+			} else { // Append the entire char array.
+				for _, elem := range fvalue.([]int64) {
+					parmArray = append(parmArray, byte(elem))
+				}
 			}
 		default:
 			errMsg := fmt.Sprintf("Object value field value type (%T) is not a byte array nor a char array", params[1])
@@ -766,6 +796,54 @@ func stringBuilderInsertChar(params []any) any {
 	expandCapacity(objOut, count)
 
 	return objOut
+}
+
+// Set the char parameter into the bytes into the StringBuilder
+// at the given index.
+func stringBuilderSetCharAt(params []any) any {
+	obj := params[0].(*object.Object)
+	fld := obj.FieldTable["value"]
+	byteArray := fld.Fvalue.([]byte)
+	ix := params[1].(int64)
+	ch := params[2].(int64)
+	if ix < 0 || ix > int64(len(byteArray)) {
+		errMsg := fmt.Sprintf("Index value (%d) is illegal", ix)
+		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+	}
+	byteArray[ix] = byte(ch)
+	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+
+	return nil
+}
+
+// Set the length of the character sequence.
+func stringBuilderSetLength(params []any) any {
+	obj := params[0].(*object.Object)
+	fld := obj.FieldTable["value"]
+	oldArray := fld.Fvalue.([]byte)
+	oldlen := int64(len(oldArray))
+	newlen := params[1].(int64)
+	newArray := make([]byte, newlen)
+	if newlen < 0 {
+		errMsg := fmt.Sprintf("Length value (%d) is negative", newlen)
+		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
+	}
+	if newlen == oldlen {
+		return nil
+	}
+	if newlen > oldlen {
+		copy(newArray, oldArray)
+		for ix := oldlen; ix < newlen; ix++ {
+			newArray[ix] = 0
+		}
+	} else { // truncation, newlen < oldlen
+		copy(newArray, oldArray[:newlen])
+	}
+	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	obj.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
+	expandCapacity(obj, newlen)
+
+	return nil
 }
 
 // Convert the byte array of a StringBuilder object to a String object. Then, return it.
