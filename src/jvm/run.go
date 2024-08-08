@@ -2957,6 +2957,9 @@ frameInterpreter:
 						If objectref can be cast to the resolved class, array, or interface type, the operand stack is
 					    unchanged; otherwise, the checkcast instruction throws a ClassCastException.
 
+						S = obj
+						T = className
+
 						If S is the type of the object referred to by objectref, and T is the resolved class, array, or
 						interface type, then checkcast determines whether objectref can be cast to type T as follows:
 
