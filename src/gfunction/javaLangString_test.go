@@ -71,7 +71,7 @@ func TestCompareToIgnoreCaseOk(t *testing.T) {
 	aObj := object.StringObjectFromGoString(aString)
 	bObj := object.StringObjectFromGoString(bString)
 	params := []interface{}{aObj, bObj}
-	result := compareToIgnoreCase(params).(int64)
+	result := stringCompareToIgnoreCase(params).(int64)
 	if result != 0 {
 		t.Errorf("TestCompareToIgnoreCaseOk: expected: 0, observed: %d", result)
 	}
@@ -84,7 +84,7 @@ func TestCompareToIgnoreCaseNotOk_1(t *testing.T) {
 	aObj := object.StringObjectFromGoString(aString)
 	bObj := object.StringObjectFromGoString(bString)
 	params := []interface{}{aObj, bObj}
-	result := compareToIgnoreCase(params).(int64)
+	result := stringCompareToIgnoreCase(params).(int64)
 	if result >= 0 {
 		t.Errorf("TestCompareToIgnoreCaseOk_1: expected: <0, observed: %d", result)
 	}
@@ -97,7 +97,7 @@ func TestCompareToIgnoreCaseNotOk_2(t *testing.T) {
 	aObj := object.StringObjectFromGoString(aString)
 	bObj := object.StringObjectFromGoString(bString)
 	params := []interface{}{aObj, bObj}
-	result := compareToIgnoreCase(params).(int64)
+	result := stringCompareToIgnoreCase(params).(int64)
 	if result <= 0 {
 		t.Errorf("TestCompareToIgnoreCaseOk_2: expected: >0, observed: %d", result)
 	}
