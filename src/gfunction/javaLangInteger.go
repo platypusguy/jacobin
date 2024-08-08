@@ -71,6 +71,12 @@ func Load_Lang_Integer() {
 			GFunction:  integerParseIntRadix,
 		}
 
+	MethodSignatures["java/lang/Integer.signum(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerSignum,
+		}
+
 	MethodSignatures["java/lang/Integer.valueOf(I)Ljava/lang/Integer;"] =
 		GMeth{
 			ParamSlots: 1,
@@ -240,6 +246,19 @@ func integerParseIntRadix(params []interface{}) interface{} {
 
 	// Return computed value.
 	return output
+}
+
+// "java/lang/Integer.signum(I)I"
+func integerSignum(params []interface{}) interface{} {
+	int64Value := params[0].(int64)
+	switch {
+	case int64Value < 0:
+		return int64(-1)
+	case int64Value > 0:
+		return int64(+1)
+	default:
+		return int64(0)
+	}
 }
 
 // "java/lang/Integer.valueOf(I)Ljava/lang/Integer;"
