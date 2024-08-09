@@ -9,6 +9,7 @@ package jvm
 import (
 	"encoding/binary"
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
@@ -16,6 +17,7 @@ import (
 	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
@@ -397,5 +399,47 @@ func push(f *frames.Frame, x interface{}) {
 	if MainThread.Trace {
 		logTraceStack(f)
 	} // trace the resultant stack
+}
 
+// accepts a stringpool index to the classname and returns an array of names of superclasses.
+// These names are returned in the form of stringPool indexes, that is, uint32 values.
+func getSuperclasses(classNameIndex uint32) []uint32 {
+	retval := []uint32{}
+	if classNameIndex == types.InvalidStringIndex {
+		return retval
+	}
+
+	if classNameIndex == types.ObjectPoolStringIndex { // if the object is java/lang/Object, it has no superclasses
+		return retval
+	}
+
+	thisClassName := stringPool.GetStringPointer(classNameIndex)
+	thisClass := classloader.MethAreaFetch(*thisClassName)
+	thisClassSuper := thisClass.Data.SuperclassIndex
+
+	retval = append(retval, thisClassSuper)
+
+	if thisClassSuper == types.ObjectPoolStringIndex { // is the immediate superclass java/lang/Object? most cases = yes
+		return retval
+	}
+
+	for {
+		idx := thisClassSuper
+		thisClassName = stringPool.GetStringPointer(idx)
+		thisClass = classloader.MethAreaFetch(*thisClassName)
+		if thisClass == nil {
+			classloader.LoadClassFromNameOnly(*thisClassName)
+			thisClass = classloader.MethAreaFetch(*thisClassName)
+		}
+
+		thisClassSuper = thisClass.Data.SuperclassIndex
+		retval = append(retval, thisClassSuper)
+
+		if thisClassSuper == types.ObjectPoolStringIndex { // is the superclass java/lang/Object? If so, this is the
+			break // loop's exit condition as all objects have java/lang/Object at the top of their superclass hierarchy
+		} else {
+			idx = thisClassSuper
+		}
+	}
+	return retval
 }
