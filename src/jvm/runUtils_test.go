@@ -7,7 +7,10 @@
 package jvm
 
 import (
+	"jacobin/classloader"
 	"jacobin/globals"
+	"jacobin/log"
+	"jacobin/stringPool"
 	"testing"
 )
 
@@ -96,5 +99,55 @@ func TestDataByteToInt64(t *testing.T) {
 	val := byteToInt64(b)
 	if !(val < 0) {
 		t.Errorf("dataByteToInt64(byte), expected value < 0, got %d", val)
+	}
+}
+
+func TestIfClassAisAsubclassOfBool(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
+	}
+	classloader.LoadBaseClasses() // must follow classloader.Init()
+	classAname := "java/lang/ClassNotFoundException"
+	classA := stringPool.GetStringIndex(&classAname)
+
+	classBname := "java/lang/Throwable"
+	classB := stringPool.GetStringIndex(&classBname)
+
+	isIt := isClassAaSublclassOfB(classA, classB)
+	if !isIt {
+		t.Errorf("%s is a subclass of %s, but result said not",
+			classAname, classBname)
+	}
+}
+
+func TestIfClassAisAsubclassOfBoolInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
+	}
+	classloader.LoadBaseClasses()
+
+	// Throwable is not a subclass of ClassNotFoundException, so s/return false
+	classAname := "java/lang/Throwable"
+	classA := stringPool.GetStringIndex(&classAname)
+
+	classBname := "java/lang/ClassNotFoundException"
+	classB := stringPool.GetStringIndex(&classBname)
+
+	isIt := isClassAaSublclassOfB(classA, classB)
+	if isIt {
+		t.Errorf("%s is not a subclass of %s, but result said it was",
+			classAname, classBname)
 	}
 }

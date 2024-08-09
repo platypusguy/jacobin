@@ -401,6 +401,7 @@ func push(f *frames.Frame, x interface{}) {
 	} // trace the resultant stack
 }
 
+// determines whether classA is a subset of classB, using the stringpool indices that point to the class names
 func isClassAaSublclassOfB(classA uint32, classB uint32) bool {
 	if classA == classB {
 		return true
@@ -444,7 +445,7 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 		thisClassName = stringPool.GetStringPointer(idx)
 		thisClass = classloader.MethAreaFetch(*thisClassName)
 		if thisClass == nil {
-			classloader.LoadClassFromNameOnly(*thisClassName)
+			_ = classloader.LoadClassFromNameOnly(*thisClassName)
 			thisClass = classloader.MethAreaFetch(*thisClassName)
 		}
 
