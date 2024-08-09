@@ -324,13 +324,13 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.replace(IILjava/lang/String;)Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderReplace,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.reverse()Ljava/lang/StringBuilder;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderReverse,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.setCharAt(IC)V"] =
@@ -806,6 +806,82 @@ func stringBuilderInsertChar(params []any) any {
 	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
 	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
 	expandCapacity(objOut, count)
+
+	return objOut
+}
+
+// Replace the characters in a substring of this StringBuilder object with characters in the specified String.
+func stringBuilderReplace(params []any) any {
+	// Get byteArray.
+	objIn := params[0].(*object.Object)
+	fld := objIn.FieldTable["value"]
+	initBytes := fld.Fvalue.([]byte)
+	initLen := int64(len(initBytes))
+
+	// Get start index, end index, and byte array to use as a replacment.
+	start := params[1].(int64)
+	end := params[2].(int64)
+	repls := params[3].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+
+	// Validate start and end.
+	if start < 0 || start > initLen {
+		errMsg := fmt.Sprintf("Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if end < start {
+		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if end > initLen {
+		end = initLen
+	}
+
+	// If start = end, return object as-is.
+	if start == end {
+		return objIn
+	}
+
+	// Copy the left-most retained bytes to a new byte array.
+	newArray := make([]byte, start)
+	if start > 0 {
+		copy(newArray, initBytes[0:start])
+	}
+
+	// Append newArray with the replacement bytes.
+	if len(repls) > 0 {
+		newArray = append(newArray, repls...)
+	}
+
+	// Append newArray with the right-most retained bytes.
+	newArray = append(newArray, initBytes[end:]...)
+	newlen := int64(len(newArray))
+
+	// Initialise the output object.
+	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
+	objOut.FieldTable = objIn.FieldTable
+	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
+	expandCapacity(objOut, newlen)
+
+	return objOut
+}
+
+// Reverse the order of the byte array.
+func stringBuilderReverse(params []any) any {
+	// Get byteArray.
+	objIn := params[0].(*object.Object)
+	fld := objIn.FieldTable["value"]
+	byteArray := fld.Fvalue.([]byte)
+
+	// Reverse the bytes in byteArray.
+	for ii, jj := 0, len(byteArray)-1; ii < jj; ii, jj = ii+1, jj-1 {
+		byteArray[ii], byteArray[jj] = byteArray[jj], byteArray[ii]
+	}
+
+	// Initialise the output object.
+	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
+	objOut.FieldTable = objIn.FieldTable
+	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
 
 	return objOut
 }
