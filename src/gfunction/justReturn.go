@@ -79,6 +79,12 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/util/HexFormat.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
