@@ -401,6 +401,22 @@ func push(f *frames.Frame, x interface{}) {
 	} // trace the resultant stack
 }
 
+func isClassAaSublclassOfB(classA uint32, classB uint32) bool {
+	if classA == classB {
+		return true
+	}
+
+	superclasses := getSuperclasses(classA)
+	if len(superclasses) > 0 {
+		for _, superclass := range superclasses {
+			if superclass == classB {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // accepts a stringpool index to the classname and returns an array of names of superclasses.
 // These names are returned in the form of stringPool indexes, that is, uint32 values.
 func getSuperclasses(classNameIndex uint32) []uint32 {
