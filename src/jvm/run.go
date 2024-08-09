@@ -2924,13 +2924,13 @@ frameInterpreter:
 				}
 			}
 
-			// at this point, we know we have a valid non-nil, non-null pointer to an object
+			// at this point, we know we have a non-nil, non-null pointer to an object
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
-			if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
-				// a CP entry for a UTF8 record w/ name of class
+			if CPentry.Type == classloader.ClassRef || CPentry.Type == classloader.Interface {
+				// slot of ClassRef points to a CP entry for a UTF8 record w/ name of class
 				var className string
 				classNamePtr := classloader.FetchCPentry(CP, CPslot)
 				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
@@ -2938,8 +2938,15 @@ frameInterpreter:
 					errMsg := fmt.Sprintf("CHECKCAST: Invalid classRef found, classNamePtr.RetType=%d", classNamePtr.RetType)
 					_ = log.Log(errMsg, log.SEVERE)
 					return errors.New(errMsg)
+				} else {
+					errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+					status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
 				}
 
+				// we now know we're point to a valid class, array, or interface. We handle classes and arrays here.
 				className = *(classNamePtr.StringVal)
 				if MainThread.Trace {
 					var traceInfo string
@@ -3012,18 +3019,30 @@ frameInterpreter:
 						classPtr = classloader.MethAreaFetch(className)
 					}
 
+					// if classPtr does not point to the entry for the same class, then examine superclasses
 					if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+						classStringPoolIndex := stringPool.GetStringIndex(&className)
+						superclasses := getSuperclasses(classStringPoolIndex)
+						for _, sc := range superclasses {
+							if sc == classStringPoolIndex { // it's castable, if it's a superclass
+								goto checkcastOK
+							}
+						}
 						glob.ErrorGoStack = string(debug.Stack())
 						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
 						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
 						if status != exceptions.Caught {
 							return errors.New(errMsg) // applies only if in test
 						}
+					} else {
+						goto checkcastOK // they both point to the same class, so perforce castable
 					}
-					// note that if the classPtr == obj.Klass, which is the desired outcome,
-					// do nothing. That is, the incoming stack should remain the same.
-				}
+				} // end of checking an object that's not an array
+			} else { // here only if the entry does not point to a classref
+
 			}
+		checkcastOK:
+			continue // if CHECKCAST succeeds, do nothing
 
 		case opcodes.INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
 			// because this uses similar logic to CHECKCAST, any change here should
