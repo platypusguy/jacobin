@@ -34,6 +34,9 @@ const RuneArray = CharArray // used only in strings that are not compact
 const ShortArray = "[S"
 
 // Jacobin-specific types
+const Interface = "i"
+const NonArrayObject = "n"
+
 const StringIndex = "T"
 const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
