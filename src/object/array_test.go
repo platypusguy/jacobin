@@ -37,6 +37,28 @@ func TestArrayTypeConversions(t *testing.T) {
 	}
 }
 
+func TestGetArrayType(t *testing.T) {
+	retVal := GetArrayType("[[B")
+	if retVal != "B" {
+		t.Errorf("did not get expected 'B' for [[B, got: %s", retVal)
+	}
+
+	retVal = GetArrayType("I")
+	if retVal != "I" {
+		t.Errorf("did not get expected 'I' for I, got: %s", retVal)
+	}
+
+	retVal = GetArrayType("[Ljava/lang/Object;")
+	if retVal != "Ljava/lang/Object;" {
+		t.Errorf("did not get expected 'Ljava/lang/Object;', got: %s", retVal)
+	}
+
+	retVal = GetArrayType("")
+	if retVal != "" {
+		t.Errorf("did not get expected empty string for an empty string, got %s", retVal)
+	}
+}
+
 func TestMakde1DimByteArray(t *testing.T) {
 	globals.InitGlobals("test")
 	bArr := Make1DimArray(BYTE, 10)

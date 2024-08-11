@@ -2908,6 +2908,7 @@ frameInterpreter:
 			}
 
 			var obj *object.Object
+			var objName string
 			switch ref.(type) {
 			case *object.Object:
 				if object.IsNull(ref) { // if ref is null, just carry on
@@ -2916,6 +2917,7 @@ frameInterpreter:
 					continue
 				} else {
 					obj = (ref).(*object.Object)
+					objName = *(stringPool.GetStringPointer(obj.KlassName))
 				}
 			default: // objectRef must be a reference to an object
 				glob.ErrorGoStack = string(debug.Stack())
@@ -2931,20 +2933,27 @@ frameInterpreter:
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
-			CPentry := CP.CpIndex[CPslot]
+			// CPentry := CP.CpIndex[CPslot]
 			classNamePtr := classloader.FetchCPentry(CP, CPslot)
 
-			var targetClassType = types.Error
-			if CPentry.Type == classloader.Interface {
-				targetClassType = types.Interface
-			} else if strings.HasPrefix(*(classNamePtr.StringVal), "[") {
-				targetClassType = types.Array
+			var objClassType = types.Error
+			if strings.HasPrefix(objName, "[") {
+				objClassType = types.Array
 			} else {
-				targetClassType = types.NonArrayObject
+				objData := classloader.MethAreaFetch(objName)
+				if objData == nil || objData.Data == nil {
+					classloader.LoadClassFromNameOnly(objName)
+					objData = classloader.MethAreaFetch(objName)
+				}
+				if objData.Data.Access.ClassIsInterface {
+					objClassType = types.Interface
+				} else {
+					objClassType = types.NonArrayObject
+				}
 			}
 
 			var checkcastStatus bool
-			switch targetClassType {
+			switch objClassType {
 			case types.NonArrayObject:
 				checkcastStatus = checkcastNonArrayObject(obj, *(classNamePtr.StringVal))
 			case types.Array:
@@ -2970,7 +2979,7 @@ frameInterpreter:
 			}
 
 			// if it is castable, do nothing.
-
+			/* // CODE to review for use in runUtils.go
 			if CPentry.Type == classloader.ClassRef {
 				// slot of ClassRef points to a CP entry for a UTF8 record w/ name of class
 				var className string
@@ -2999,87 +3008,87 @@ frameInterpreter:
 					}
 					_ = log.Log(traceInfo, log.TRACE_INST)
 				}
+			*/
+			/* we now have the resolved class (className) and the objectref (obj)
+			    The rules for identifying obj can be cast to classname are (from the JVM 17 spec):
 
-				/* we now have the resolved class (className) and the objectref (obj)
-				    The rules for identifying obj can be cast to classname are (from the JVM 17 spec):
+				If objectref can be cast to the resolved class, array, or interface type, the operand stack is
+			    unchanged; otherwise, the checkcast instruction throws a ClassCastException.
 
-					If objectref can be cast to the resolved class, array, or interface type, the operand stack is
-				    unchanged; otherwise, the checkcast instruction throws a ClassCastException.
+				S = obj
+				T = className
 
-					S = obj
-					T = className
+				If S is the type of the object referred to by objectref, and T is the resolved class, array, or
+				interface type, then checkcast determines whether objectref can be cast to type T as follows:
 
-					If S is the type of the object referred to by objectref, and T is the resolved class, array, or
-					interface type, then checkcast determines whether objectref can be cast to type T as follows:
+				If S is a class type, then:
+				* If T is a class type, then S must be the same class as T, or S must be a subclass of T;
+				* If T is an interface type, then S must implement interface T.
 
-					If S is a class type, then:
-					* If T is a class type, then S must be the same class as T, or S must be a subclass of T;
-					* If T is an interface type, then S must implement interface T.
+				If S is an array type SC[], that is, an array of components of type SC, then:
+				* If T is a class type, then T must be Object.
+				* If T is an interface type, then T must be one of the interfaces implemented by arrays (JLS §4.10.3).
+				* If T is an array type TC[], that is, an array of components of type TC, then one of the following
+				  must be true:
+					> TC and SC are the same primitive type.
+					> TC and SC are reference types, and type SC can be cast to TC by
+				      recursive application of these rules. */
 
-					If S is an array type SC[], that is, an array of components of type SC, then:
-					* If T is a class type, then T must be Object.
-					* If T is an interface type, then T must be one of the interfaces implemented by arrays (JLS §4.10.3).
-					* If T is an array type TC[], that is, an array of components of type TC, then one of the following
-					  must be true:
-						> TC and SC are the same primitive type.
-						> TC and SC are reference types, and type SC can be cast to TC by
-					      recursive application of these rules. */
-
-				// if strings.HasPrefix(className, "[") { // the object being checked is an array
-				// 	if obj.KlassName != types.InvalidStringIndex {
-				// 		sptr := stringPool.GetStringPointer(obj.KlassName)
-				// 		// for the nonce if they're both the same type of arrays, we're good
-				// 		// TODO: if both are arrays of reference, check the leaf types
-				// 		if *sptr == className || strings.HasPrefix(className, *sptr) {
-				// 			break // exit this bytecode processing
-				// 		} else {
-				// 			/*** TODO: bypass this Throw action. Right thing to do?
-				// 			  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
-				// 			  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
-				// 			  if status != exceptions.Caught {
-				// 			  	return errors.New(errMsg) // applies only if in test
-				// 			  }
-				// 			  ***/
-				// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
-				// 			_ = log.Log(warnMsg, log.WARNING)
-				// 		}
-				// 	} else {
-				// 		glob.ErrorGoStack = string(debug.Stack())
-				// 		errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
-				// 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-				// 		if status != exceptions.Caught {
-				// 			return errors.New(errMsg) // applies only if in test
-				// 		}
-				// 	}
-				// } else {
-				// // the object being checked is a class
-				// classPtr := classloader.MethAreaFetch(className)
-				// if classPtr == nil { // class wasn't loaded, so load it now
-				// 	if classloader.LoadClassFromNameOnly(className) != nil {
-				// 		glob.ErrorGoStack = string(debug.Stack())
-				// 		return errors.New("CHECKCAST: Could not load class: " + className)
-				// 	}
-				// 	classPtr = classloader.MethAreaFetch(className)
-				// }
-				//
-				// // if classPtr does not point to the entry for the same class, then examine superclasses
-				// if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
-				// 	if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
-				// 		goto checkcastOK
-				// 	}
-				//
-				// 	glob.ErrorGoStack = string(debug.Stack())
-				// 	errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-				// 		className, classPtr.Data.Name)
-				// 	status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-				// 	if status != exceptions.Caught {
-				// 		return errors.New(errMsg) // applies only if in test
-				// 	}
-				// } else {
-				// 	goto checkcastOK // they both point to the same class, so perforce castable
-				// }
-				// } // end of checking an object that's not an array
-			}
+			// if strings.HasPrefix(className, "[") { // the object being checked is an array
+			// 	if obj.KlassName != types.InvalidStringIndex {
+			// 		sptr := stringPool.GetStringPointer(obj.KlassName)
+			// 		// for the nonce if they're both the same type of arrays, we're good
+			// 		// TODO: if both are arrays of reference, check the leaf types
+			// 		if *sptr == className || strings.HasPrefix(className, *sptr) {
+			// 			break // exit this bytecode processing
+			// 		} else {
+			// 			/*** TODO: bypass this Throw action. Right thing to do?
+			// 			  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
+			// 			  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
+			// 			  if status != exceptions.Caught {
+			// 			  	return errors.New(errMsg) // applies only if in test
+			// 			  }
+			// 			  ***/
+			// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
+			// 			_ = log.Log(warnMsg, log.WARNING)
+			// 		}
+			// 	} else {
+			// 		glob.ErrorGoStack = string(debug.Stack())
+			// 		errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
+			// 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+			// 		if status != exceptions.Caught {
+			// 			return errors.New(errMsg) // applies only if in test
+			// 		}
+			// 	}
+			// } else {
+			// // the object being checked is a class
+			// classPtr := classloader.MethAreaFetch(className)
+			// if classPtr == nil { // class wasn't loaded, so load it now
+			// 	if classloader.LoadClassFromNameOnly(className) != nil {
+			// 		glob.ErrorGoStack = string(debug.Stack())
+			// 		return errors.New("CHECKCAST: Could not load class: " + className)
+			// 	}
+			// 	classPtr = classloader.MethAreaFetch(className)
+			// }
+			//
+			// // if classPtr does not point to the entry for the same class, then examine superclasses
+			// if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+			// 	if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
+			// 		goto checkcastOK
+			// 	}
+			//
+			// 	glob.ErrorGoStack = string(debug.Stack())
+			// 	errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+			// 		className, classPtr.Data.Name)
+			// 	status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+			// 	if status != exceptions.Caught {
+			// 		return errors.New(errMsg) // applies only if in test
+			// 	}
+			// } else {
+			// 	goto checkcastOK // they both point to the same class, so perforce castable
+			// }
+			// } // end of checking an object that's not an array
+			// }
 		// checkcastOK:
 		// 	f.PC += 1
 		// 	continue // if CHECKCAST succeeds, do nothing

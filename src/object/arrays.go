@@ -75,6 +75,19 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 	}
 }
 
+// identifies the type of entry that the array is made up of
+// i.e., primitives or specific references. Note if the array is a
+// reference array, the trailing ; is *not* removed.
+func GetArrayType(arrayType string) string {
+	typeChars := []byte(arrayType)
+	for index, char := range typeChars {
+		if char != '[' {
+			return string(typeChars[index:])
+		}
+	}
+	return arrayType
+}
+
 // Make2DimArray creates the last two dimensions of a multi// dimensional array.
 // (All the dimensions > 2 are simply arrays  of pointers to arrays.)
 func Make2DimArray(ptrArrSize, leafArrSize int64, arrType uint8) (*Object, error) {
