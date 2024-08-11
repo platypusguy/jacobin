@@ -2899,10 +2899,12 @@ frameInterpreter:
 			// and doesn't change the stack if the cast is legal.
 			// Because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
+
 			ref := peek(f)  // peek b/c the objectRef is *not* removed from the op stack
 			if ref == nil { // if ref is nil, just carry on
 				f.PC += 2 // move past two bytes pointing to comp object
-				goto checkcastOK
+				f.PC += 1
+				continue // cannot goto checkcastOK, b/c golang doesn't allow a jump over variable initialization
 			}
 
 			var obj *object.Object
@@ -2910,7 +2912,8 @@ frameInterpreter:
 			case *object.Object:
 				if object.IsNull(ref) { // if ref is null, just carry on
 					f.PC += 2 // move past two bytes pointing to comp object
-					goto checkcastOK
+					f.PC += 1
+					continue
 				} else {
 					obj = (ref).(*object.Object)
 				}
@@ -2929,10 +2932,49 @@ frameInterpreter:
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			CPentry := CP.CpIndex[CPslot]
-			if CPentry.Type == classloader.ClassRef || CPentry.Type == classloader.Interface {
+			classNamePtr := classloader.FetchCPentry(CP, CPslot)
+
+			var targetClassType = types.Error
+			if CPentry.Type == classloader.Interface {
+				targetClassType = types.Interface
+			} else if strings.HasPrefix(*(classNamePtr.StringVal), "[") {
+				targetClassType = types.Array
+			} else {
+				targetClassType = types.NonArrayObject
+			}
+
+			var checkcastStatus bool
+			switch targetClassType {
+			case types.NonArrayObject:
+				checkcastStatus = checkcastNonArrayObject(obj, *(classNamePtr.StringVal))
+			case types.Array:
+				checkcastStatus = checkcastArray(obj, *(classNamePtr.StringVal))
+			case types.Interface:
+				checkcastStatus = checkcastInterface(obj, *(classNamePtr.StringVal))
+			default:
+				errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+				status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			if checkcastStatus == false {
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+					*(stringPool.GetStringPointer(obj.KlassName)), *(classNamePtr.StringVal))
+				status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			// if it is castable, do nothing.
+
+			if CPentry.Type == classloader.ClassRef {
 				// slot of ClassRef points to a CP entry for a UTF8 record w/ name of class
 				var className string
-				classNamePtr := classloader.FetchCPentry(CP, CPslot)
+				classNamePtr = classloader.FetchCPentry(CP, CPslot)
 				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("CHECKCAST: Invalid classRef found, classNamePtr.RetType=%d", classNamePtr.RetType)
@@ -2983,63 +3025,64 @@ frameInterpreter:
 						> TC and SC are reference types, and type SC can be cast to TC by
 					      recursive application of these rules. */
 
-				if strings.HasPrefix(className, "[") { // the object being checked is an array
-					if obj.KlassName != types.InvalidStringIndex {
-						sptr := stringPool.GetStringPointer(obj.KlassName)
-						// for the nonce if they're both the same type of arrays, we're good
-						// TODO: if both are arrays of reference, check the leaf types
-						if *sptr == className || strings.HasPrefix(className, *sptr) {
-							break // exit this bytecode processing
-						} else {
-							/*** TODO: bypass this Throw action. Right thing to do?
-							  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
-							  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
-							  if status != exceptions.Caught {
-							  	return errors.New(errMsg) // applies only if in test
-							  }
-							  ***/
-							warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
-							_ = log.Log(warnMsg, log.WARNING)
-						}
-					} else {
-						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
-						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						if status != exceptions.Caught {
-							return errors.New(errMsg) // applies only if in test
-						}
-					}
-				} else { // the object being checked is a class
-					classPtr := classloader.MethAreaFetch(className)
-					if classPtr == nil { // class wasn't loaded, so load it now
-						if classloader.LoadClassFromNameOnly(className) != nil {
-							glob.ErrorGoStack = string(debug.Stack())
-							return errors.New("CHECKCAST: Could not load class: " + className)
-						}
-						classPtr = classloader.MethAreaFetch(className)
-					}
-
-					// if classPtr does not point to the entry for the same class, then examine superclasses
-					if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
-						if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
-							goto checkcastOK
-						}
-
-						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-							className, classPtr.Data.Name)
-						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-						if status != exceptions.Caught {
-							return errors.New(errMsg) // applies only if in test
-						}
-					} else {
-						goto checkcastOK // they both point to the same class, so perforce castable
-					}
-				} // end of checking an object that's not an array
+				// if strings.HasPrefix(className, "[") { // the object being checked is an array
+				// 	if obj.KlassName != types.InvalidStringIndex {
+				// 		sptr := stringPool.GetStringPointer(obj.KlassName)
+				// 		// for the nonce if they're both the same type of arrays, we're good
+				// 		// TODO: if both are arrays of reference, check the leaf types
+				// 		if *sptr == className || strings.HasPrefix(className, *sptr) {
+				// 			break // exit this bytecode processing
+				// 		} else {
+				// 			/*** TODO: bypass this Throw action. Right thing to do?
+				// 			  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
+				// 			  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
+				// 			  if status != exceptions.Caught {
+				// 			  	return errors.New(errMsg) // applies only if in test
+				// 			  }
+				// 			  ***/
+				// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
+				// 			_ = log.Log(warnMsg, log.WARNING)
+				// 		}
+				// 	} else {
+				// 		glob.ErrorGoStack = string(debug.Stack())
+				// 		errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
+				// 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+				// 		if status != exceptions.Caught {
+				// 			return errors.New(errMsg) // applies only if in test
+				// 		}
+				// 	}
+				// } else {
+				// // the object being checked is a class
+				// classPtr := classloader.MethAreaFetch(className)
+				// if classPtr == nil { // class wasn't loaded, so load it now
+				// 	if classloader.LoadClassFromNameOnly(className) != nil {
+				// 		glob.ErrorGoStack = string(debug.Stack())
+				// 		return errors.New("CHECKCAST: Could not load class: " + className)
+				// 	}
+				// 	classPtr = classloader.MethAreaFetch(className)
+				// }
+				//
+				// // if classPtr does not point to the entry for the same class, then examine superclasses
+				// if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+				// 	if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
+				// 		goto checkcastOK
+				// 	}
+				//
+				// 	glob.ErrorGoStack = string(debug.Stack())
+				// 	errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+				// 		className, classPtr.Data.Name)
+				// 	status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+				// 	if status != exceptions.Caught {
+				// 		return errors.New(errMsg) // applies only if in test
+				// 	}
+				// } else {
+				// 	goto checkcastOK // they both point to the same class, so perforce castable
+				// }
+				// } // end of checking an object that's not an array
 			}
-		checkcastOK:
-			f.PC += 1
-			continue // if CHECKCAST succeeds, do nothing
+		// checkcastOK:
+		// 	f.PC += 1
+		// 	continue // if CHECKCAST succeeds, do nothing
 
 		case opcodes.INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
 			// because this uses similar logic to CHECKCAST, any change here should

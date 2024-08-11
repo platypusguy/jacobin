@@ -21,6 +21,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"strings"
 	"unsafe"
 )
 
@@ -459,4 +460,65 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 		}
 	}
 	return retval
+}
+
+func checkcastNonArrayObject(obj *object.Object, className string) bool {
+	// the object being checked is a class
+	// glob := globals.GetGlobalRef()
+	classPtr := classloader.MethAreaFetch(className)
+	if classPtr == nil { // class wasn't loaded, so load it now
+		if classloader.LoadClassFromNameOnly(className) != nil {
+			// glob.ErrorGoStack = string(debug.Stack())
+			// return errors.New("CHECKCAST: Could not load class: "
+			// + className)
+			return false
+		}
+		classPtr = classloader.MethAreaFetch(className)
+	}
+
+	// if classPtr does not point to the entry for the same class, then examine superclasses
+	if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+		return true
+	} else if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
+		return true
+	}
+	return false
+}
+
+// do the checkcast logic for an array. The rules are:
+// S = obj
+// T = className
+//
+// If S is the type of the object referred to by objectref, and T is the resolved class, array, or
+// interface type, then checkcast determines whether objectref can be cast to type T as follows:
+//
+// If S is an array type SC[], that is, an array of components of type SC, then:
+// * If T is a class type, then T must be Object.
+// * If T is an interface type, then T must be one of the interfaces implemented by arrays (JLS §4.10.3).
+// * If T is an array type TC[], that is, an array of components of type TC,
+// then one of the following must be true:
+// >          TC and SC are the same primitive type.
+// >          TC and SC are reference types, and type SC can be cast to TC by
+// >             recursive application of these rules.
+func checkcastArray(obj *object.Object, className string) bool {
+	if obj.KlassName == types.InvalidStringIndex {
+		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+		status := exceptions.ThrowExNil(excNames.InvalidTypeException, errMsg)
+		if status != exceptions.Caught {
+			return false // applies only if in test
+		}
+	}
+
+	sptr := stringPool.GetStringPointer(obj.KlassName)
+	// for the nonce if they're both the same type of arrays, we're good
+	// TODO: if both are arrays of reference, check the leaf types
+	if *sptr == className || strings.HasPrefix(className, *sptr) {
+		return true
+	}
+
+	return false
+}
+
+func checkcastInterface(obj *object.Object, className string) bool {
+	return false
 }

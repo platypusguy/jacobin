@@ -95,7 +95,7 @@ type Globals struct {
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
-	FuncThrowException   func(int, string)
+	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
 
@@ -290,9 +290,10 @@ func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) 
 }
 
 // Fake ThrowEx() in exceptions.go
-func fakeThrowEx(whichEx int, msg string) {
+func fakeThrowEx(whichEx int, msg string) bool {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func")
 	fmt.Fprintf(os.Stderr, errMsg)
+	return false
 }
 
 func InitStringPool() {
