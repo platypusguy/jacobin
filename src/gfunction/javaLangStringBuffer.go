@@ -323,13 +323,13 @@ func Load_Lang_StringBuffer() {
 	MethodSignatures["java/lang/StringBuffer.replace(IILjava/lang/String;)Ljava/lang/StringBuffer;"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderReplace,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.reverse()Ljava/lang/StringBuffer;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  stringBuilderReverse,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.setCharAt(IC)V"] =
