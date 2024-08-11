@@ -75,6 +75,9 @@ func JdkArrayTypeToJacobinType(jdkType int) int {
 	}
 }
 
+// identifies the type of entry that the array is made up of
+// i.e., primitives or specific references. Note if the array is a
+// reference array, the trailing ; is *not* removed.
 func GetArrayType(arrayType string) string {
 	typeChars := []byte(arrayType)
 	for index, char := range typeChars {
