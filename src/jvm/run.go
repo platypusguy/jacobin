@@ -2895,14 +2895,14 @@ frameInterpreter:
 					}
 				}
 			}
-		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but throws exception on null
-			// because this uses the same logic as INSTANCEOF, any change here should
+		case opcodes.CHECKCAST: // 0xC0 same as INSTANCEOF but does nothing on null,
+			// and doesn't change the stack if the cast is legal.
+			// Because this uses the same logic as INSTANCEOF, any change here should
 			// be made to INSTANCEOF
-			ref := peek(f)
+			ref := peek(f)  // peek b/c the objectRef is *not* removed from the op stack
 			if ref == nil { // if ref is nil, just carry on
 				f.PC += 2 // move past two bytes pointing to comp object
-				f.PC += 1
-				continue
+				goto checkcastOK
 			}
 
 			var obj *object.Object
@@ -2910,12 +2910,11 @@ frameInterpreter:
 			case *object.Object:
 				if object.IsNull(ref) { // if ref is null, just carry on
 					f.PC += 2 // move past two bytes pointing to comp object
-					f.PC += 1
-					continue
+					goto checkcastOK
 				} else {
 					obj = (ref).(*object.Object)
 				}
-			default:
+			default: // objectRef must be a reference to an object
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("CHECKCAST: Invalid class reference, type=%T", ref)
 				status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
@@ -2924,7 +2923,8 @@ frameInterpreter:
 				}
 			}
 
-			// at this point, we know we have a non-nil, non-null pointer to an object
+			// at this point, we know we have a non-nil, non-null pointer to an object;
+			// now, get the class we're casting the object to.
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
@@ -3024,15 +3024,10 @@ frameInterpreter:
 						if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
 							goto checkcastOK
 						}
-						// classStringPoolIndex := stringPool.GetStringIndex(&className)
-						// superclasses := getSuperclasses(classStringPoolIndex)
-						// for _, sc := range superclasses {
-						// 	if sc == classStringPoolIndex { // it's castable, if it's a superclass
-						// 		goto checkcastOK
-						// 	}
-						// }
+
 						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, classPtr.Data.Name)
+						errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+							className, classPtr.Data.Name)
 						status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
 						if status != exceptions.Caught {
 							return errors.New(errMsg) // applies only if in test
