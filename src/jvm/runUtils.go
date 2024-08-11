@@ -522,7 +522,32 @@ func checkcastArray(obj *object.Object, className string) bool {
 		return className == "java/lang/Object"
 	}
 
-	return false
+	// If S (obj) is an array type SC[], that is, an array of components of type SC,
+	// if T is an array type TC[], that is, an array of components of type TC,
+	// then one of the following must be true:
+	// >          TC and SC are the same primitive type.
+	objArrayType := object.GetArrayType(*sptr)
+	classArrayType := object.GetArrayType(className)
+	if !strings.HasPrefix(objArrayType, "L") && // if both array types are primitives
+		!strings.HasPrefix(classArrayType, "L") {
+		if objArrayType == classArrayType { // are they the same primitive?
+			return true
+		}
+	}
+
+	// we now know both types are arrays of references, so the objects
+	// referred to must be castable:
+	// If TC and SC are reference types, and type SC can be cast to TC by
+	//    recursive application of these rules.
+	rawObjArrayType, _ := strings.CutPrefix(objArrayType, "L")
+	rawObjArrayType = strings.TrimSuffix(rawObjArrayType, ";")
+	rawClassArrayType, _ := strings.CutPrefix(classArrayType, "L")
+	rawClassArrayType = strings.TrimSuffix(rawClassArrayType, ";")
+	if rawObjArrayType == classArrayType || rawClassArrayType == "java/lang/Object" {
+		return true
+	} else {
+		return isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className))
+	}
 }
 
 func checkcastInterface(obj *object.Object, className string) bool {
