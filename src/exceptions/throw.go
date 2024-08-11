@@ -32,8 +32,8 @@ const (
 )
 
 // ThrowExNil simply calls ThrowEx with a nil pointer for the frame.
-func ThrowExNil(which int, msg string) {
-	ThrowEx(which, msg, nil)
+func ThrowExNil(which int, msg string) bool {
+	return ThrowEx(which, msg, nil)
 }
 
 // ThrowEx throws an exception. It is used primarily for exceptions and
