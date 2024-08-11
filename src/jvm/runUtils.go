@@ -502,7 +502,7 @@ func checkcastNonArrayObject(obj *object.Object, className string) bool {
 // >             recursive application of these rules.
 func checkcastArray(obj *object.Object, className string) bool {
 	if obj.KlassName == types.InvalidStringIndex {
-		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+		errMsg := "CHECKCAST: expected to verify class or interface, but got none"
 		status := exceptions.ThrowExNil(excNames.InvalidTypeException, errMsg)
 		if status != exceptions.Caught {
 			return false // applies only if in test
@@ -514,6 +514,12 @@ func checkcastArray(obj *object.Object, className string) bool {
 	// TODO: if both are arrays of reference, check the leaf types
 	if *sptr == className || strings.HasPrefix(className, *sptr) {
 		return true
+	}
+
+	// If S (obj) is an array type SC[], that is, an array of components of type SC,
+	// then: If T (className) is a class type, then T must be Object.
+	if !strings.HasPrefix(className, types.Array) {
+		return className == "java/lang/Object"
 	}
 
 	return false
