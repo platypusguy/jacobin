@@ -510,8 +510,7 @@ func checkcastArray(obj *object.Object, className string) bool {
 	}
 
 	sptr := stringPool.GetStringPointer(obj.KlassName)
-	// for the nonce if they're both the same type of arrays, we're good
-	// TODO: if both are arrays of reference, check the leaf types
+	// if they're both the same type of arrays, we're good
 	if *sptr == className || strings.HasPrefix(className, *sptr) {
 		return true
 	}
@@ -546,7 +545,9 @@ func checkcastArray(obj *object.Object, className string) bool {
 	if rawObjArrayType == classArrayType || rawClassArrayType == "java/lang/Object" {
 		return true
 	} else {
-		return isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className))
+		return isClassAaSublclassOfB(
+			stringPool.GetStringIndex(&rawObjArrayType),
+			stringPool.GetStringIndex(&rawClassArrayType))
 	}
 }
 
