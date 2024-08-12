@@ -10,6 +10,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/object"
 	"jacobin/stringPool"
 	"testing"
 )
@@ -149,5 +150,76 @@ func TestIfClassAisAsubclassOfBoolInvalid(t *testing.T) {
 	if isIt {
 		t.Errorf("%s is not a subclass of %s, but result said it was",
 			classAname, classBname)
+	}
+}
+
+// check that if an array is cast to an object, only java/lang/Object works.
+func TestCheckCastArray1(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestCheckCastArray1")
+	}
+	classloader.LoadBaseClasses()
+
+	array := object.Make1DimArray(object.INT, 10)
+
+	ret := checkcastArray(array, "java/lang/Object")
+	if !ret {
+		t.Errorf("checkcastArray(array, \"java/lang/Object\") shoud return true, got false")
+	}
+
+	ret = checkcastArray(array, "java/lang/Array")
+	if ret {
+		t.Errorf("checkcastArray(array, \"java/lang/Object\") shoud return false, got true")
+	}
+}
+
+// check that two identical arrays come back as castable to each other
+func TestCheckCastArray2(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestCheckCastArray2")
+	}
+	classloader.LoadBaseClasses()
+
+	array1 := object.Make1DimArray(object.INT, 10)
+	array2 := object.Make1DimArray(object.INT, 10)
+
+	ret := checkcastArray(array1, *(stringPool.GetStringPointer(array2.KlassName)))
+	if !ret {
+		t.Errorf("checkcastArray of two identical arrays should return true, got false")
+	}
+}
+
+// check that two reference arrays are castable if one is a subclass of the other
+func TestCheckCastArray3(t *testing.T) {
+	globals.InitGlobals("test")
+	log.Init()
+	_ = log.SetLogLevel(log.WARNING)
+
+	// Initialize classloaders and method area
+	err := classloader.Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestCheckCastArray3")
+	}
+	classloader.LoadBaseClasses()
+
+	object := object.MakeEmptyObject()
+	objectKlassName := "[Ljava/lang/NullPointerException;"
+	object.KlassName = stringPool.GetStringIndex(&objectKlassName)
+
+	ret := checkcastArray(object, "[java/lang/Throwable")
+	if !ret {
+		t.Errorf("checkcastArray of a subclass array should return true, got false")
 	}
 }
