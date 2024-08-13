@@ -31,6 +31,12 @@ func Load_Util_Random() {
 			GFunction:  randomInitLong,
 		}
 
+	MethodSignatures["java/util/Random.next(I)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/util/Random.nextBoolean()Z"] =
 		GMeth{
 			ParamSlots: 0,
