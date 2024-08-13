@@ -162,12 +162,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/util/Random.next(I)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
 }
 
 // Generic trap for classes

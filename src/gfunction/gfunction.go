@@ -48,6 +48,7 @@ type GMeth struct {
 	ParamSlots   int
 	GFunction    func([]interface{}) interface{}
 	NeedsContext bool
+	ThreadSafe   bool
 }
 
 // G function error block.
@@ -166,6 +167,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		gme.ParamSlots = val.ParamSlots
 		gme.GFunction = val.GFunction
 		gme.NeedsContext = val.NeedsContext
+		gme.ThreadSafe = val.ThreadSafe
 
 		tableEntry := classloader.MTentry{
 			MType: 'G',

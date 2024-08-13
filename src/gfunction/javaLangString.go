@@ -69,7 +69,7 @@ func Load_Lang_String() {
 			GFunction:  trapDeprecated,
 		}
 
-	// String(byte[] bytes, int offset, int length, String charsetName) *********** CHARSET
+	// String(byte[] bytes, int offset, int length, String charsetName) *********** CHARSET NAME
 	MethodSignatures["java/lang/String.<init>([BIILjava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 4,
@@ -83,7 +83,7 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// String(byte[] bytes, String charsetName) *********************************** CHARSET
+	// String(byte[] bytes, String charsetName) *********************************** CHARSET NAME
 	MethodSignatures["java/lang/String.<init>([BLjava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 2,
@@ -116,20 +116,25 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// String(String original) - works fine in Java
+	// String(String original)
+	MethodSignatures["java/lang/String.<init>(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  newStringFromString,
+		}
 
-	// String(StringBuffer buffer) ********************************************* StringBuffer
+	// String(StringBuffer buffer)
 	MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuffer;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  newStringFromString,
 		}
 
-	// String(StringBuilder builder) ******************************************* StringBuilder
+	// String(StringBuilder builder)
 	MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuilder;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  newStringFromString,
 		}
 
 	// ==== METHOD FUNCTIONS (in alpha order by their Java names) ====
@@ -516,6 +521,15 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	obj := object.StringObjectFromByteArray(bytes)
 	return obj
 
+}
+
+// New String from String, StringBuilder, or StringBuffer.
+func newStringFromString(params []interface{}) interface{} {
+	// params[0] = reference string (to be updated with byte array)
+	// params[1] = String, StringBuilder, or StringBuffer object
+	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	return nil
 }
 
 // "java/lang/String.<clinit>()V" -- String class initialisation

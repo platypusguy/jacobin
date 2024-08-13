@@ -9,6 +9,7 @@ package classloader
 import (
 	"errors"
 	"fmt"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -119,7 +120,7 @@ func WaitForClassStatus(className string) error {
 	_ = log.Log("WaitForClassStatus: class name: "+className, log.CLASS)
 	klass := MethAreaFetch(className)
 	if klass == nil { // class not there yet
-		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds
+		time.Sleep(globals.SleepMsecs * time.Millisecond) // sleep awhile
 		klass = MethAreaFetch(className)
 		if klass == nil {
 			errMsg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to load", className)
@@ -127,7 +128,7 @@ func WaitForClassStatus(className string) error {
 		}
 	}
 	if klass.Status == 'I' { // class is being initialized by a loader, so wait
-		time.Sleep(100 * time.Millisecond) // sleep 100 milliseconds
+		time.Sleep(globals.SleepMsecs * time.Millisecond) // sleep awhile
 		klass = MethAreaFetch(className)
 		if klass.Status == 'I' {
 			errMsg := fmt.Sprintf("WaitClassStatus: Timeout waiting for class %s to be initialized", className)
