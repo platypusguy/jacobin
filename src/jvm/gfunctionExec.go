@@ -15,6 +15,7 @@ import (
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/gfunction"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
 	"slices"
@@ -94,7 +95,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	lockloop:
 		_, loaded = thSafeMap.LoadOrStore(key, dummy)
 		if loaded {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(globals.SleepMsecs * time.Millisecond) // sleep awhile
 			goto lockloop
 		}
 		// The key is locked to me.

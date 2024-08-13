@@ -17,6 +17,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 var StringEnvVarHeadless = "java.awt.headless"
@@ -109,6 +110,10 @@ var StringIndexString uint32
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
 
+// Standard Sleep amount in milliseconds used in various places.
+var SleepMsecs time.Duration = 5
+
+// Instantiate the Globals struct.
 var global Globals
 
 // InitGlobals initializes the global values that are known at start-up
