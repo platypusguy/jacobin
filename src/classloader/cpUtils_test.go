@@ -101,3 +101,40 @@ func TestMeInfoFromMethRefValid(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 }
+
+func TestGetClassNameFromCPclassref(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Initialize classloaders and method area
+	err := Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestMeInfoFromMethRefValid")
+	}
+	LoadBaseClasses() // must follow classloader.Init()
+
+	f := frames.CreateFrame(4)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+
+	CP := CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: ClassRef, Slot: 0}
+	CP.CpIndex[2] = CpEntry{Type: ClassRef, Slot: 1}
+
+	CP.ClassRefs = make([]uint32, 4)
+	CP.ClassRefs[0] = types.ObjectPoolStringIndex
+	CP.ClassRefs[1] = types.InvalidStringIndex
+
+	f.CP = &CP
+
+	s1 := GetClassNameFromCPclassref(&CP, 1)
+	if s1 != "java/lang/Object" {
+		t.Errorf("Expect class name of 'java/lang/Object', got %s", s1)
+	}
+
+	s2 := GetClassNameFromCPclassref(&CP, 0)
+	if s2 != "" {
+		t.Errorf("Expected empty class name, got %s", s2)
+	}
+}
