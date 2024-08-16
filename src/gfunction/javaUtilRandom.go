@@ -31,6 +31,78 @@ func Load_Util_Random() {
 			GFunction:  randomInitLong,
 		}
 
+	MethodSignatures["java/util/Random.doubles()Ljava/util/stream/DoubleStream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.doubles(DD)Ljava/util/stream/DoubleStream;"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.doubles(J)Ljava/util/stream/DoubleStream;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.doubles(JDD)Ljava/util/stream/DoubleStream;"] =
+		GMeth{
+			ParamSlots: 6,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.ints()Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.ints(II)Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.ints(J)Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.ints(JII)Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.longs()Ljava/util/stream/LongStream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.longs(J)Ljava/util/stream/LongStream;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.longs(JJ)Ljava/util/stream/LongStream;"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/Random.longs(JJJ)Ljava/util/stream/LongStream;"] =
+		GMeth{
+			ParamSlots: 6,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/util/Random.next(I)I"] =
 		GMeth{
 			ParamSlots: 1,

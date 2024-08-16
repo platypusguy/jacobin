@@ -130,6 +130,13 @@ func Load_Lang_String() {
 			GFunction:  newStringFromString,
 		}
 
+	// Not in API: Latin1?
+	MethodSignatures["java/lang/String.isLatin1()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  stringIsLatin1,
+		}
+
 	// String(StringBuilder builder)
 	MethodSignatures["java/lang/String.<init>(Ljava/lang/StringBuilder;)V"] =
 		GMeth{
@@ -143,6 +150,36 @@ func Load_Lang_String() {
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringCharAt,
+		}
+
+	MethodSignatures["java/lang/String.chars()Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/String.codePointAt(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/String.codePointBefore(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/String.codePointCount(II)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/String.codePoints()Ljava/util/stream/IntStream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	// Compare 2 strings lexicographically, case-sensitive (upper/lower).
@@ -188,6 +225,28 @@ func Load_Lang_String() {
 			GFunction:  javaLangStringContentEqualsL,
 		}
 
+	// Return a string representing a char array.
+	MethodSignatures["java/lang/String.copyValueOf([C)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  valueOfCharArray,
+		}
+
+	// Return a string representing a char subarray.
+	MethodSignatures["java/lang/String.copyValueOf([CII)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  newStringFromCharsSubset,
+		}
+
+	MethodSignatures["java/lang/String.describeConstable()Ljava/util/Optional;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	// OpenJDK JVM "java/lang/String.endsWith(Ljava/lang/String;)Z" works with the jacobin String object.
+
 	MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
@@ -209,18 +268,18 @@ func Load_Lang_String() {
 			GFunction:  sprintf,
 		}
 
-	// This method is equivalent to String.format(this, args).
-	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  sprintf,
-		}
-
 	// Return a formatted string using the specified locale, format string, and arguments.
 	MethodSignatures["java/lang/String.format(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  trapFunction,
+		}
+
+	// This method is equivalent to String.format(this, args).
+	MethodSignatures["java/lang/String.formatted([Ljava/lang/Object;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  sprintf,
 		}
 
 	// get the bytes from a string
@@ -237,12 +296,11 @@ func Load_Lang_String() {
 			GFunction:  trapDeprecated,
 		}
 
-	// getBytes([BIIBI)V
-	// original Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
-	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
+	// Encodes this String into a sequence of bytes using the given charset, storing the result into a new byte array.
+	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
 		GMeth{
-			ParamSlots: 5,
-			GFunction:  stringGetBytesBIIBI,
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	// get the bytes from a string, given the Charset string name ************************ CHARSET
@@ -252,18 +310,42 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// get the bytes from a string, given the specified Charset object ******************* CHARSET
-	MethodSignatures["java/lang/String.getBytes(Ljava/nio/charset/Charset;)[B"] =
+	// Not in API: getBytes([BIIBI)V
+	// original Java source: https://gist.github.com/platypusguy/03c1a9e3acb1cb2cfc2d821aa2dd4490
+	MethodSignatures["java/lang/String.getBytes([BIIBI)V"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 5,
+			GFunction:  stringGetBytesBIIBI,
+		}
+
+	// TODO: "java/lang/String.getChars(II[CI)V"
+
+	// TODO: "java/lang/String.hashcode()I"
+
+	// TODO: "java/lang/String.indent(I)Ljava/lang/String;"
+
+	// TODO: "java/lang/String.indexOf(I)I"
+
+	// TODO: "java/lang/String.indexOf(II)I"
+
+	// TODO: "java/lang/String.indexOf(Ljava/lang/String;)I"
+
+	// TODO: "java/lang/String.intern()Ljava/lang/String;"
+
+	// TODO: "java/lang/String.isBlank()Z"
+
+	// TODO: "java/lang/String.isEmpty()Z"
+
+	MethodSignatures["java/lang/String.join(Ljava/lang/CharSequence;[Ljava/lang/CharSequence;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
 
-	// Return the length of a String.
-	MethodSignatures["java/lang/String.isLatin1()Z"] =
+	MethodSignatures["java/lang/String.join(Ljava/lang/CharSequence;[Ljava/lang/Iterable;)Ljava/lang/String;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  stringIsLatin1,
+			ParamSlots: 2,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/String.lastIndexOf(Ljava/lang/String;)I"] =
@@ -271,6 +353,9 @@ func Load_Lang_String() {
 			ParamSlots: 1,
 			GFunction:  lastIndexOfString,
 		}
+
+	// TODO: "java/lang/String.lastIndexOf(Ljava/lang/String;I)I"
+
 	// Return the length of a String.
 	MethodSignatures["java/lang/String.length()I"] =
 		GMeth{
@@ -278,11 +363,25 @@ func Load_Lang_String() {
 			GFunction:  stringLength,
 		}
 
+	MethodSignatures["java/lang/String.lines()Ljava/util/stream/Stream;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/String.matches(Ljava/lang/String;)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringMatches,
 		}
+
+	MethodSignatures["java/lang/String.offsetByCodePoints(II)II"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	// TODO: "java/lang/String.regionMatches(ZILjava/lang/String;II)Z"
 
 	// does the region of one string match a region of another string (using offset and length values to define regions)
 	MethodSignatures["java/lang/String.regionMatches(ILjava/lang/String;II)Z"] =
@@ -305,11 +404,48 @@ func Load_Lang_String() {
 			GFunction:  stringReplaceCC,
 		}
 
+	// Replace a character sequence by another in the given string.
+	MethodSignatures["java/lang/String.replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  stringReplaceCC,
+		}
+
+	// TODO: "java/lang/String.replaceAll(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"
+
+	// TODO: "java/lang/String.replaceFirst(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"
+
+	MethodSignatures["java/lang/String.resolveConstantDesc(java/lang/invoke/MethodHandles/Lookup;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	// Split a string into an array of strings.
 	MethodSignatures["java/lang/String.split(Ljava/lang/String;)[Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringSplit,
+		}
+
+	// TODO: "java/lang/String.split(Ljava/lang/String;I)[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.startsWith(Ljava/lang/String;)[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.startsWith(Ljava/lang/String;I)[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.strip()[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.stripIndent()[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.stripLeading()[Ljava/lang/String;"
+
+	// TODO: "java/lang/String.stripTrailing()[Ljava/lang/String;"
+
+	MethodSignatures["java/lang/String.subSequence(II)Ljava/lang/CharSequence;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
 		}
 
 	// Return a substring starting at the given index of the byte array.
@@ -340,12 +476,30 @@ func Load_Lang_String() {
 			GFunction:  toLowerCase,
 		}
 
+	MethodSignatures["java/lang/String.toLowerCase(Ljava/util/Locale;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	// TODO: "java/lang/String.toString()Ljava/lang/String;"
+
 	// Return a string in all upper case, using the reference object string as input.
 	MethodSignatures["java/lang/String.toUpperCase()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  toUpperCase,
 		}
+
+	MethodSignatures["java/lang/String.toUpperCase(Ljava/util/Locale;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	// BIZARRE: <R> R transform(Function<? super String,? extends R> f)
+
+	// TODO: "java/lang/String.translateEscapes()Ljava/lang/String;"
 
 	// Return a string trimmed of leading and trailing whitespace.
 	MethodSignatures["java/lang/String.trim()Ljava/lang/String;"] =
