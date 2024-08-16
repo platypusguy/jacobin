@@ -86,9 +86,13 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 	// addresses of strings
 	case ClassRef: // points to a CP entry, which is a string pool entry
 		e := cp.ClassRefs[entry.Slot]
-		// className := FetchUTF8stringFromCPEntryNumber(&cp, e)
 		classNamePtr := stringPool.GetStringPointer(uint32(e))
-		className := *classNamePtr
+
+		className := ""
+		if classNamePtr != nil {
+			className = *classNamePtr
+		}
+
 		return CpType{EntryType: int(entry.Type),
 			RetType: IS_STRING_ADDR, StringVal: &className}
 
