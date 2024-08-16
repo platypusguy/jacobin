@@ -52,8 +52,7 @@ A more-than-minimal JVM written in Go.
 * Robust preparation and initialization
 
 ### Execution
-* Execution of bytecodes :pencil2: The primary focus of current coding work<br>
-  All bytecodes except invokedynamic implemented, including one- and multi-dimensional arrays
+* Executes all bytecodes except INVOKEDYNAMIC, including one- and multi-dimensional arrays
 * Static initialization blocks
 * Throwing and catching exceptions
 * Running native functions (written in go). [Details here.](https://github.com/platypusguy/jacobin/wiki/Native-golang-functions-methods )
