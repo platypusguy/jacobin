@@ -2082,27 +2082,30 @@ frameInterpreter:
 				}
 			}
 
-			// get the methodRef entry
-			method := CP.MethodRefs[CPentry.Slot]
+			className, methodName, methodType :=
+				classloader.GetMethInfoFromCPmethref(CP, CPslot)
+			/*
+				// get the methodRef entry
+				method := CP.MethodRefs[CPentry.Slot]
 
-			// get the class entry from this method
-			classRef := method.ClassIndex
-			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(classNameIndex)
-			className := *classNamePtr
+				// get the class entry from this method
+				classRef := method.ClassIndex
+				classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+				classNamePtr := stringPool.GetStringPointer(classNameIndex)
+				className := *classNamePtr
 
-			// get the method name for this method
-			nAndTindex := method.NameAndType
-			nAndTentry := CP.CpIndex[nAndTindex]
-			nAndTslot := nAndTentry.Slot
-			nAndT := CP.NameAndTypes[nAndTslot]
-			methodNameIndex := nAndT.NameIndex
-			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
+				// get the method name for this method
+				nAndTindex := method.NameAndType
+				nAndTentry := CP.CpIndex[nAndTindex]
+				nAndTslot := nAndTentry.Slot
+				nAndT := CP.NameAndTypes[nAndTslot]
+				methodNameIndex := nAndT.NameIndex
+				methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
 
-			// get the signature for this method
-			methodSigIndex := nAndT.DescIndex
-			methodType := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodSigIndex)
-
+				// get the signature for this method
+				methodSigIndex := nAndT.DescIndex
+				methodType := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodSigIndex)
+			*/
 			if native.IsUnsupportedNativeMethod(className + "." + methodName) {
 				errMsg := fmt.Sprintf("%s() in %s is an unsupported native function",
 					methodName, className)
