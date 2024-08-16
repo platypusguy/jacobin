@@ -153,14 +153,11 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	}
 	methodRef := CP.CpIndex[cpIndex].Slot
 	classIndex := CP.MethodRefs[methodRef].ClassIndex
-	// nameAndTypeIndex := CP.MethodRefs[methodRef].NameAndType
 
 	classRefIdx := CP.CpIndex[classIndex].Slot
 	classIdx := CP.ClassRefs[classRefIdx]
 	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
 	className := *classNamePtr
-	// classNameIdx := CP.CpIndex[classIdx]
-	// className := CP.Utf8Refs[classNameIdx.Slot]
 
 	// now get the method signature
 	nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType

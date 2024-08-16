@@ -17,8 +17,8 @@ func TestMeInfoFromMethRefInvalid(t *testing.T) {
 	log.Init()
 	_ = log.SetLogLevel(log.CLASS)
 
-	// set up a class with a constant pool containing the one
-	// errors in it
+	// set up a class with a constant pool containing entries
+	// that will fail the following tests
 	klass := CPool{}
 	klass.CpIndex = append(klass.CpIndex, CpEntry{})
 	klass.CpIndex = append(klass.CpIndex, CpEntry{IntConst, 0})

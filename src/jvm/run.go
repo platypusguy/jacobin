@@ -2285,30 +2285,10 @@ frameInterpreter:
 
 		case opcodes.INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-			// f.PC += 2
 			CP := f.CP.(*classloader.CPool)
-			CPentry := CP.CpIndex[CPslot]
-			// get the methodRef entry
-			method := CP.MethodRefs[CPentry.Slot]
 
-			// get the class entry from this method
-			classRef := method.ClassIndex
-			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
-			className := *classNamePtr
-
-			// get the method name for this method
-			nAndTindex := method.NameAndType
-			nAndTentry := CP.CpIndex[nAndTindex]
-			nAndTslot := nAndTentry.Slot
-			nAndT := CP.NameAndTypes[nAndTslot]
-			methodNameIndex := nAndT.NameIndex
-			methodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, methodNameIndex)
-
-			// get the signature for this method
-			methodSigIndex := nAndT.DescIndex
-			methodType := classloader.FetchUTF8stringFromCPEntryNumber(
-				CP, methodSigIndex)
+			className, methodName, methodType :=
+				classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 			if err != nil || mtEntry.Meth == nil {

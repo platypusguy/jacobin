@@ -534,8 +534,8 @@ func checkcastArray(obj *object.Object, className string) bool {
 		}
 	}
 
-	// we now know both types are arrays of references, so the objects
-	// referred to must be castable:
+	// we now know both types are arrays of references, so we test to see whether
+	// the reference object is castable, using this guideline:
 	// If TC and SC are reference types, and type SC can be cast to TC by
 	//    recursive application of these rules.
 	rawObjArrayType, _ := strings.CutPrefix(objArrayType, "L")
