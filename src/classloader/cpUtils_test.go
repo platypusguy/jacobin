@@ -140,6 +140,7 @@ func TestGetClassNameFromCPclassref(t *testing.T) {
 	}
 }
 
+// test al CP lookups that do not return structs consisting of two CP entries
 func TestFetchCPentry(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -234,4 +235,88 @@ func TestFetchCPentry(t *testing.T) {
 	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
 		t.Errorf("Expected IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
 	}
+
+}
+
+func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
+	globals.InitGlobals("test")
+
+	CP := CPool{
+		CpIndex:        []CpEntry{},
+		ClassRefs:      []uint32{},
+		Doubles:        []float64{},
+		Dynamics:       []DynamicEntry{},
+		Floats:         []float32{},
+		IntConsts:      []int32{},
+		InterfaceRefs:  []InterfaceRefEntry{},
+		InvokeDynamics: []InvokeDynamicEntry{},
+		LongConsts:     []int64{},
+		MethodHandles:  []MethodHandleEntry{},
+		MethodRefs:     []MethodRefEntry{},
+		MethodTypes:    []uint16{},
+		NameAndTypes:   []NameAndTypeEntry{},
+		Utf8Refs:       []string{},
+	}
+
+	CP.CpIndex = make([]CpEntry, 20)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0} // mandatory dummy entry
+	CP.CpIndex[1] = CpEntry{Type: Interface, Slot: 0}
+	CP.CpIndex[2] = CpEntry{Type: Dynamic, Slot: 0}
+	CP.CpIndex[3] = CpEntry{Type: InvokeDynamic, Slot: 0}
+	CP.CpIndex[4] = CpEntry{Type: MethodHandle, Slot: 0}
+
+	// Interface
+	irf := InterfaceRefEntry{
+		ClassIndex:  4,
+		NameAndType: 2,
+	}
+	CP.InterfaceRefs = []InterfaceRefEntry{irf}
+
+	cp := FetchCPentry(&CP, 1)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc := *cp.AddrVal
+	if struc.entry1 != uint16(4) || struc.entry2 != 2 {
+		t.Errorf("Expected returned struc to contain 4 and 2, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
+
+	// Dynamic
+	de := DynamicEntry{
+		BootstrapIndex: 5,
+		NameAndType:    3,
+	}
+	CP.Dynamics = []DynamicEntry{de}
+
+	cp = FetchCPentry(&CP, 2)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc = *cp.AddrVal
+	if struc.entry1 != uint16(5) || struc.entry2 != uint16(3) {
+		t.Errorf("Expected returned struc to contain 5 and 3, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
+
+	// InvokeDynamic
+	id := InvokeDynamicEntry{
+		BootstrapIndex: 6,
+		NameAndType:    7,
+	}
+	CP.InvokeDynamics = []InvokeDynamicEntry{id}
+
+	cp = FetchCPentry(&CP, 3)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc = *cp.AddrVal
+	if struc.entry1 != uint16(6) || struc.entry2 != uint16(7) {
+		t.Errorf("Expected returned struc to contain 6 and 7, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
+
 }
