@@ -31,7 +31,6 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 var MainThread thread.ExecThread
@@ -269,11 +268,9 @@ frameInterpreter:
 			case classloader.IS_FLOAT64:
 				push(f, CPe.FloatVal)
 			case classloader.IS_STRUCT_ADDR:
-				push(f, (*object.Object)(unsafe.Pointer(CPe.AddrVal)))
+				push(f, CPe.AddrVal)
 			case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
-				// stringAddr := object.CreateStringPoolEntryFromGoString(CPe.StringVal)
 				stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
-				// stringAddr.KlassName = stringPool.GetStringIndex(CPe.StringVal)
 				push(f, stringAddr)
 			}
 

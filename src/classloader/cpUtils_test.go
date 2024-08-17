@@ -175,6 +175,7 @@ func TestFetchCPentry(t *testing.T) {
 	CP.CpIndex[6] = CpEntry{Type: FloatConst, Slot: 0}
 	CP.CpIndex[7] = CpEntry{Type: DoubleConst, Slot: 0}
 	CP.CpIndex[8] = CpEntry{Type: ClassRef, Slot: 0}
+	CP.CpIndex[9] = CpEntry{Type: StringConst, Slot: 8} // causes an error, s/point to at UTF8 entry
 
 	CP.IntConsts = []int32{25}
 	cp = FetchCPentry(&CP, 1)
@@ -192,7 +193,12 @@ func TestFetchCPentry(t *testing.T) {
 	cp = FetchCPentry(&CP, 3) // get the string const that points to the string in Utf8Refs[0]
 	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
 		t.Errorf("Expect IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
-	} // when this passes, we know that StringConst and UTF8 both work
+	}
+
+	cp = FetchCPentry(&CP, 9) // get an invalid string const
+	if cp.RetType != IS_ERROR || cp.EntryType != 0 {
+		t.Errorf("Expect IS_ERROR with value 0, got %d with value %d", cp.RetType, cp.EntryType)
+	}
 
 	CP.MethodTypes = []uint16{24}
 	cp = FetchCPentry(&CP, 5)
@@ -216,11 +222,16 @@ func TestFetchCPentry(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failure to load classes in TestFetchCPentry")
 	}
-	LoadBaseClasses() // must follow classloader.Init()
+	LoadBaseClasses()
 	CP.ClassRefs = []uint32{types.StringPoolStringIndex}
 	cp = FetchCPentry(&CP, 8)
 	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "java/lang/String" {
 		t.Errorf("Expected IS_STRING_ADDR pointing to 'java/lang/String', got %d pointing to %s",
 			cp.RetType, *cp.StringVal)
+	}
+
+	cp = FetchCPentry(&CP, 4) // UTF-8
+	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
+		t.Errorf("Expected IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
 	}
 }

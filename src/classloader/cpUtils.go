@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -12,7 +12,6 @@ package classloader
 
 import (
 	"jacobin/stringPool"
-	"unsafe"
 )
 
 type CpType struct {
@@ -20,8 +19,15 @@ type CpType struct {
 	RetType   int
 	IntVal    int64
 	FloatVal  float64
-	AddrVal   uintptr
+	AddrVal   *CPuint16s
 	StringVal *string
+}
+
+// all the multi-value structs use this layout. Depending on the type of
+// the CPentry, the fields entry1 and entry2 will have different meanings.
+type CPuint16s struct {
+	entry1 uint16
+	entry2 uint16
 }
 
 var IS_ERROR = 0
@@ -112,28 +118,52 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 
 	// addresses of structures or other elements
 	case Dynamic:
-		v := unsafe.Pointer(&(cp.Dynamics[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		dyn := cp.Dynamics[entry.Slot]
+		cpe := CPuint16s{
+			entry1: dyn.BootstrapIndex,
+			entry2: dyn.NameAndType,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case Interface:
-		v := unsafe.Pointer(&(cp.InterfaceRefs[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		iface := cp.InterfaceRefs[entry.Slot]
+		cpe := CPuint16s{
+			entry1: iface.ClassIndex,
+			entry2: iface.NameAndType,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case InvokeDynamic:
-		v := unsafe.Pointer(&(cp.InvokeDynamics[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		idyn := cp.InvokeDynamics[entry.Slot]
+		cpe := CPuint16s{
+			entry1: idyn.BootstrapIndex,
+			entry2: idyn.NameAndType,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case MethodHandle:
-		v := unsafe.Pointer(&(cp.MethodHandles[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		mh := cp.MethodHandles[entry.Slot]
+		cpe := CPuint16s{
+			entry1: mh.RefKind,
+			entry2: mh.RefIndex,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case MethodRef:
-		v := unsafe.Pointer(&(cp.MethodRefs[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		mr := cp.MethodRefs[entry.Slot]
+		cpe := CPuint16s{
+			entry1: mr.ClassIndex,
+			entry2: mr.NameAndType,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	case NameAndType:
-		v := unsafe.Pointer(&(cp.NameAndTypes[entry.Slot]))
-		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: uintptr(v)}
+		nat := cp.NameAndTypes[entry.Slot]
+		cpe := CPuint16s{
+			entry1: nat.NameIndex,
+			entry2: nat.DescIndex,
+		}
+		return CpType{EntryType: int(entry.Type), RetType: IS_STRUCT_ADDR, AddrVal: &cpe}
 
 	// error: name of module or package would
 	// not normally be retrieved here
