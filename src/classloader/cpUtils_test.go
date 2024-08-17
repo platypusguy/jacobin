@@ -265,6 +265,7 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	CP.CpIndex[4] = CpEntry{Type: MethodHandle, Slot: 0}
 	CP.CpIndex[5] = CpEntry{Type: MethodRef, Slot: 0}
 	CP.CpIndex[6] = CpEntry{Type: NameAndType, Slot: 0}
+	CP.CpIndex[7] = CpEntry{Type: InvokeDynamic, Slot: 0}
 
 	// Interface
 	irf := InterfaceRefEntry{
@@ -299,6 +300,24 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 	struc = *cp.AddrVal
 	if struc.entry1 != uint16(5) || struc.entry2 != uint16(3) {
 		t.Errorf("Expected returned struc to contain 5 and 3, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
+
+	// InvokeDynamic
+	id := InvokeDynamicEntry{
+		BootstrapIndex: 20,
+		NameAndType:    21,
+	}
+	CP.InvokeDynamics = []InvokeDynamicEntry{id}
+
+	cp = FetchCPentry(&CP, 7)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc = *cp.AddrVal
+	if struc.entry1 != uint16(20) || struc.entry2 != uint16(21) {
+		t.Errorf("Expected returned struc to contain 20 and 21, got %d and %d",
 			struc.entry1, struc.entry2)
 	}
 
