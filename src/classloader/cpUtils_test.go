@@ -49,6 +49,8 @@ func TestMeInfoFromMethRefInvalid(t *testing.T) {
 
 func TestMeInfoFromMethRefValid(t *testing.T) {
 	globals.InitGlobals("test")
+	log.Init()
+	log.SetLogLevel(log.WARNING)
 
 	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
@@ -177,6 +179,8 @@ func TestFetchCPentry(t *testing.T) {
 	CP.CpIndex[7] = CpEntry{Type: DoubleConst, Slot: 0}
 	CP.CpIndex[8] = CpEntry{Type: ClassRef, Slot: 0}
 	CP.CpIndex[9] = CpEntry{Type: StringConst, Slot: 8} // causes an error, s/point to at UTF8 entry
+	CP.CpIndex[10] = CpEntry{Type: Module, Slot: 0}     // should cause an error
+	CP.CpIndex[11] = CpEntry{Type: Package, Slot: 0}    // should cause an error
 
 	CP.IntConsts = []int32{25}
 	cp = FetchCPentry(&CP, 1)
@@ -234,6 +238,16 @@ func TestFetchCPentry(t *testing.T) {
 	cp = FetchCPentry(&CP, 4) // UTF-8
 	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
 		t.Errorf("Expected IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
+	}
+
+	cp = FetchCPentry(&CP, 10) // Module, should cause an error
+	if cp.RetType != IS_ERROR {
+		t.Errorf("Expect IS_ERRROR for Module lookup, got %d", cp.RetType)
+	}
+
+	cp = FetchCPentry(&CP, 11) // Package, should cause an error
+	if cp.RetType != IS_ERROR {
+		t.Errorf("Expect IS_ERRROR for Package lookup, got %d", cp.RetType)
 	}
 }
 
