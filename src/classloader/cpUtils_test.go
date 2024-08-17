@@ -235,7 +235,6 @@ func TestFetchCPentry(t *testing.T) {
 	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
 		t.Errorf("Expected IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
 	}
-
 }
 
 func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
@@ -258,12 +257,14 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 		Utf8Refs:       []string{},
 	}
 
-	CP.CpIndex = make([]CpEntry, 20)
+	CP.CpIndex = make([]CpEntry, 10)
 	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0} // mandatory dummy entry
 	CP.CpIndex[1] = CpEntry{Type: Interface, Slot: 0}
 	CP.CpIndex[2] = CpEntry{Type: Dynamic, Slot: 0}
 	CP.CpIndex[3] = CpEntry{Type: InvokeDynamic, Slot: 0}
 	CP.CpIndex[4] = CpEntry{Type: MethodHandle, Slot: 0}
+	CP.CpIndex[5] = CpEntry{Type: MethodRef, Slot: 0}
+	CP.CpIndex[6] = CpEntry{Type: NameAndType, Slot: 0}
 
 	// Interface
 	irf := InterfaceRefEntry{
@@ -301,22 +302,57 @@ func TestFetchCPentriesThatAreStructAddresses(t *testing.T) {
 			struc.entry1, struc.entry2)
 	}
 
-	// InvokeDynamic
-	id := InvokeDynamicEntry{
-		BootstrapIndex: 6,
-		NameAndType:    7,
+	// Method Handle
+	mh := MethodHandleEntry{
+		RefKind:  8,
+		RefIndex: 9,
 	}
-	CP.InvokeDynamics = []InvokeDynamicEntry{id}
+	CP.MethodHandles = []MethodHandleEntry{mh}
 
-	cp = FetchCPentry(&CP, 3)
+	cp = FetchCPentry(&CP, 4)
 	if cp.RetType != IS_STRUCT_ADDR {
 		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
 	}
 
 	struc = *cp.AddrVal
-	if struc.entry1 != uint16(6) || struc.entry2 != uint16(7) {
-		t.Errorf("Expected returned struc to contain 6 and 7, got %d and %d",
+	if struc.entry1 != uint16(8) || struc.entry2 != uint16(9) {
+		t.Errorf("Expected returned struc to contain 8 and 9, got %d and %d",
 			struc.entry1, struc.entry2)
 	}
 
+	// Method Ref
+	mr := MethodRefEntry{
+		ClassIndex:  10,
+		NameAndType: 11,
+	}
+	CP.MethodRefs = []MethodRefEntry{mr}
+
+	cp = FetchCPentry(&CP, 5)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc = *cp.AddrVal
+	if struc.entry1 != uint16(10) || struc.entry2 != uint16(11) {
+		t.Errorf("Expected returned struc to contain 10 and 11, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
+
+	// NameAndType
+	nt := NameAndTypeEntry{
+		NameIndex: 12,
+		DescIndex: 13,
+	}
+	CP.NameAndTypes = []NameAndTypeEntry{nt}
+
+	cp = FetchCPentry(&CP, 6)
+	if cp.RetType != IS_STRUCT_ADDR {
+		t.Errorf("Expected IS_STRUCT_ADDR, got %d", cp.RetType)
+	}
+
+	struc = *cp.AddrVal
+	if struc.entry1 != uint16(12) || struc.entry2 != uint16(13) {
+		t.Errorf("Expected returned struc to contain 12 and 13, got %d and %d",
+			struc.entry1, struc.entry2)
+	}
 }
