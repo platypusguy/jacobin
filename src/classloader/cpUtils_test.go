@@ -138,3 +138,45 @@ func TestGetClassNameFromCPclassref(t *testing.T) {
 		t.Errorf("Expected empty class name, got %s", s2)
 	}
 }
+
+func TestFetchCPentry(t *testing.T) {
+	cp := FetchCPentry(nil, 6)
+	if cp.RetType != IS_ERROR {
+		t.Errorf("Expect IS_ERROR, got %d", cp.RetType)
+	}
+
+	CP := CPool{
+		CpIndex:        []CpEntry{},
+		ClassRefs:      []uint32{},
+		Doubles:        []float64{},
+		Dynamics:       []DynamicEntry{},
+		Floats:         []float32{},
+		IntConsts:      []int32{},
+		InterfaceRefs:  []InterfaceRefEntry{},
+		InvokeDynamics: []InvokeDynamicEntry{},
+		LongConsts:     []int64{},
+		MethodHandles:  []MethodHandleEntry{},
+		MethodRefs:     []MethodRefEntry{},
+		MethodTypes:    []uint16{},
+		NameAndTypes:   []NameAndTypeEntry{},
+		Utf8Refs:       []string{},
+	}
+
+	CP.CpIndex = make([]CpEntry, 20)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0} // mandatory dummy entry
+	CP.CpIndex[1] = CpEntry{Type: IntConst, Slot: 0}
+	CP.CpIndex[2] = CpEntry{Type: LongConst, Slot: 0}
+
+	CP.IntConsts = []int32{25}
+	cp = FetchCPentry(&CP, 1)
+	if cp.RetType != IS_INT64 || cp.IntVal != int64(25) {
+		t.Errorf("Expect IS_INT64 with value of 25, got %d with value of %d", cp.RetType, cp.IntVal)
+	}
+
+	CP.LongConsts = []int64{250}
+	cp = FetchCPentry(&CP, 2)
+	if cp.RetType != IS_INT64 || cp.IntVal != int64(250) {
+		t.Errorf("Expect IS_INT64 with value of 250, got %d with value of %d", cp.RetType, cp.IntVal)
+	}
+
+}
