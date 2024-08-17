@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/types"
+	"math"
 	"os"
 	"testing"
 )
@@ -108,7 +109,7 @@ func TestGetClassNameFromCPclassref(t *testing.T) {
 	// Initialize classloaders and method area
 	err := Init()
 	if err != nil {
-		t.Errorf("Failure to load classes in TestMeInfoFromMethRefValid")
+		t.Errorf("Failure to load classes in TestGetClassNameFromCPclassref")
 	}
 	LoadBaseClasses() // must follow classloader.Init()
 
@@ -140,6 +141,8 @@ func TestGetClassNameFromCPclassref(t *testing.T) {
 }
 
 func TestFetchCPentry(t *testing.T) {
+	globals.InitGlobals("test")
+
 	cp := FetchCPentry(nil, 6)
 	if cp.RetType != IS_ERROR {
 		t.Errorf("Expect IS_ERROR, got %d", cp.RetType)
@@ -166,6 +169,12 @@ func TestFetchCPentry(t *testing.T) {
 	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0} // mandatory dummy entry
 	CP.CpIndex[1] = CpEntry{Type: IntConst, Slot: 0}
 	CP.CpIndex[2] = CpEntry{Type: LongConst, Slot: 0}
+	CP.CpIndex[3] = CpEntry{Type: StringConst, Slot: 4}
+	CP.CpIndex[4] = CpEntry{Type: UTF8, Slot: 0}
+	CP.CpIndex[5] = CpEntry{Type: MethodType, Slot: 0}
+	CP.CpIndex[6] = CpEntry{Type: FloatConst, Slot: 0}
+	CP.CpIndex[7] = CpEntry{Type: DoubleConst, Slot: 0}
+	CP.CpIndex[8] = CpEntry{Type: ClassRef, Slot: 0}
 
 	CP.IntConsts = []int32{25}
 	cp = FetchCPentry(&CP, 1)
@@ -179,4 +188,39 @@ func TestFetchCPentry(t *testing.T) {
 		t.Errorf("Expect IS_INT64 with value of 250, got %d with value of %d", cp.RetType, cp.IntVal)
 	}
 
+	CP.Utf8Refs = []string{"Hello from Jacobin JVM!"}
+	cp = FetchCPentry(&CP, 3) // get the string const that points to the string in Utf8Refs[0]
+	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "Hello from Jacobin JVM!" {
+		t.Errorf("Expect IS_STRING_ADDR pointing to 'Hello from Jacobin JVM!', got %s", *cp.StringVal)
+	} // when this passes, we know that StringConst and UTF8 both work
+
+	CP.MethodTypes = []uint16{24}
+	cp = FetchCPentry(&CP, 5)
+	if cp.RetType != IS_INT64 || cp.IntVal != int64(24) {
+		t.Errorf("Expect IS_INT64 with value of 24, got %d with value of %d", cp.RetType, cp.IntVal)
+	}
+
+	CP.Floats = []float32{float32(24.100000)}
+	cp = FetchCPentry(&CP, 6)
+	if cp.RetType != IS_FLOAT64 || math.Abs(24.1-cp.FloatVal) > 0.001 {
+		t.Errorf("Expected IS_FLOAT64 with value of 24.1, got %d with value of %f", cp.RetType, cp.FloatVal)
+	}
+
+	CP.Doubles = []float64{24.20}
+	cp = FetchCPentry(&CP, 7)
+	if cp.RetType != IS_FLOAT64 || math.Abs(24.20-cp.FloatVal) > 0.001 {
+		t.Errorf("Expected IS_FLOAT64 with value of 24.2, got %d with value of %f", cp.RetType, cp.FloatVal)
+	}
+
+	err := Init()
+	if err != nil {
+		t.Errorf("Failure to load classes in TestFetchCPentry")
+	}
+	LoadBaseClasses() // must follow classloader.Init()
+	CP.ClassRefs = []uint32{types.StringPoolStringIndex}
+	cp = FetchCPentry(&CP, 8)
+	if cp.RetType != IS_STRING_ADDR || *cp.StringVal != "java/lang/String" {
+		t.Errorf("Expected IS_STRING_ADDR pointing to 'java/lang/String', got %d pointing to %s",
+			cp.RetType, *cp.StringVal)
+	}
 }
