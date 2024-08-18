@@ -61,7 +61,6 @@ func CreateFrameStack() *list.List {
 // CreateFrame creates a raw frame and allocates an opStack of the passed-in size.
 func CreateFrame(opStackSize int) *Frame {
 	fram := Frame{}
-	// fram.OpStack = *new(opStack)
 
 	if opStackSize < 0 { // TODO: Check if this is possible. If so, decide what to do. Class is clearly malformed.
 		opStackSize = 0

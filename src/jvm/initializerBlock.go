@@ -86,7 +86,7 @@ func runInitializationBlock(k *classloader.Klass, superClasses []string, fs *lis
 // frame stacks combined into one.)
 func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List) error {
 	meth := m.(classloader.JmEntry)
-	f := frames.CreateFrame(meth.MaxStack + 2) // create a new frame (adding 2 b/c of unexplained bytecode needs)
+	f := frames.CreateFrame(meth.MaxStack)
 	if fs.Front() != nil {
 		parentFrame := *(fs.Front().Value.(*frames.Frame))
 		f.Thread = parentFrame.Thread
