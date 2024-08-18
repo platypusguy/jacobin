@@ -57,7 +57,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	}
 
 	m := me.Meth.(classloader.JmEntry)
-	f := frames.CreateFrame(m.MaxStack)
+	f := frames.CreateFrame(m.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
 	f.Thread = MainThread.ID
 	f.MethName = "main"
 	f.MethType = "([Ljava/lang/String;)V"
@@ -3309,12 +3309,12 @@ func createAndInitNewFrame(
 
 	f := currFrame
 
-	stackSize := m.MaxStack
+	stackSize := m.MaxStack + types.StackInflator // Experimental addition, see JACOBIN-494
 	if stackSize < 1 {
 		stackSize = 2
 	}
 
-	fram := frames.CreateFrame(stackSize + 2) // +2 stack entries needed for several ops. JACOBIN-494
+	fram := frames.CreateFrame(stackSize)
 	fram.Thread = currFrame.Thread
 	fram.ClName = className
 	fram.MethName = methodName

@@ -27,3 +27,6 @@ var StringClassName = "java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
 var EmptyString = ""
+
+// ---- experimental values ----
+var StackInflator = 20 // for toying with whether to increase # of stack entries
