@@ -29,4 +29,4 @@ var StringPoolStringIndex = uint32(1) // points to the string pool slice for "ja
 var EmptyString = ""
 
 // ---- experimental values ----
-var StackInflator = 20 // for toying with whether to increase # of stack entries
+var StackInflator = 2 // for toying with whether to increase # of stack entries

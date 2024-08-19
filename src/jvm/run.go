@@ -2182,15 +2182,6 @@ frameInterpreter:
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
-			objRef := pop(f)
-			if objRef == object.Null {
-				errMsg := fmt.Sprintf("Null objectRef in constructor %s.%s(%s)",
-					className, methodName, methodType)
-				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-			}
 
 			// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
@@ -2220,7 +2211,7 @@ frameInterpreter:
 				}
 
 				// now get the objectRef (the object whose method we're invoking)
-				// objRef := pop(f).(*object.Object)
+				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
@@ -2271,6 +2262,105 @@ frameInterpreter:
 				return runFrame(fs)
 			} // end of if method is 'J'
 
+		/*
+			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+			f.PC += 2
+			CP := f.CP.(*classloader.CPool)
+			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
+			// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
+			// that function simply returns. So test for it here and if it is, skip the rest
+			fullConstructorName := className + "." + methodName + methodType
+			if fullConstructorName == "java/lang/Object.<init>()V" {
+				_ = pop(f)
+				break
+			}
+
+			mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
+			if err != nil || mtEntry.Meth == nil {
+				// TODO: search the classpath and retry
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
+				status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			if mtEntry.MType == 'G' { // it's a golang method
+				// get the parameters/args, if any, off the stack
+				gmethData := mtEntry.Meth.(gfunction.GMeth)
+				paramCount := gmethData.ParamSlots
+				var params []interface{}
+				for i := 0; i < paramCount; i++ {
+					params = append(params, pop(f))
+				}
+
+				// now get the objectRef (the object whose method we're invoking)
+				objRef2 := pop(f).(*object.Object)
+				params = append(params, objRef2) // because we do this, we can set to false the last param in runGfucntion()
+
+				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
+				if ret != nil {
+					switch ret.(type) {
+					case error:
+						if glob.JacobinName == "test" {
+							errRet := ret.(error)
+							return errRet
+						}
+						if errors.Is(ret.(error), CaughtGfunctionException) {
+							f.PC += 1 // point to the next executable bytecode
+							goto frameInterpreter
+						}
+					default: // if it's not an error, then it's a legitimate return value, which we simply push
+						push(f, ret)
+						if strings.HasSuffix(methodType, "D") || strings.HasSuffix(methodType, "J") {
+							push(f, ret) // push twice if long or double
+						}
+					}
+					// any exception will already have been handled.
+				}
+			} else if mtEntry.MType == 'J' {
+				// TODO: handle arguments to method, if any
+				m := mtEntry.Meth.(classloader.JmEntry)
+				if m.AccessFlags&0x0100 > 0 {
+					// Native code
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
+					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+
+				fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
+				if err != nil {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
+					status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+
+				if f.TOS != -1 {
+					objRef := pop(f) // remove the objectRef from the stack
+					if objRef == object.Null {
+						errMsg := fmt.Sprintf("INVOKESPECIAL Null objectRef in constructor %s.%s(%s)",
+							className, methodName, methodType)
+						status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
+						}
+					}
+				}
+
+				f.PC += 1                            // point to the next bytecode for when we return from the invoked method.
+				fs.PushFront(fram)                   // push the new frame
+				f = fs.Front().Value.(*frames.Frame) // point f to the new head
+				return runFrame(fs)
+			} // end of if method is 'J'
+		*/
 		case opcodes.INVOKESTATIC: // 	0xB8 invokestatic (create new frame, invoke static function)
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			CP := f.CP.(*classloader.CPool)

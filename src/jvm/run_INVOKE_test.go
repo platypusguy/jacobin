@@ -163,14 +163,15 @@ func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	push(&f, object.MakeEmptyObjectWithClassName(&classname))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
+
 	err = runFrame(fs)
 
 	if err != nil {
 		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
 	}
 
-	if f.TOS != -1 {
-		t.Errorf("INVOKESPECIAL: Expected TOS after return to be -1, got %d", f.TOS)
+	if f.TOS != 0 {
+		t.Errorf("INVOKESPECIAL: Expected TOS after return to be 0, got %d", f.TOS)
 	}
 
 	// restore stderr
