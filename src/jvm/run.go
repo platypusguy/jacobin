@@ -2182,6 +2182,15 @@ frameInterpreter:
 			f.PC += 2
 			CP := f.CP.(*classloader.CPool)
 			className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+			objRef := pop(f)
+			if objRef == object.Null {
+				errMsg := fmt.Sprintf("Null objectRef in constructor %s.%s(%s)",
+					className, methodName, methodType)
+				status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
 
 			// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 			// that function simply returns. So test for it here and if it is, skip the rest
@@ -2211,7 +2220,7 @@ frameInterpreter:
 				}
 
 				// now get the objectRef (the object whose method we're invoking)
-				objRef := pop(f).(*object.Object)
+				// objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
 				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
