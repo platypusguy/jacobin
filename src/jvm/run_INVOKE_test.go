@@ -159,12 +159,18 @@ func TestInvokeSpecialJavaLangObject(t *testing.T) {
 	CP.Utf8Refs[1] = "()V"
 
 	f.CP = &CP
+	classname := "java/lang/Object"
+	push(&f, object.MakeEmptyObjectWithClassName(&classname))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	err = runFrame(fs)
 
 	if err != nil {
 		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("INVOKESPECIAL: Expected TOS after return to be -1, got %d", f.TOS)
 	}
 
 	// restore stderr
@@ -295,7 +301,7 @@ func TestInvokeSpecialGmethodNoParams(t *testing.T) {
 		t.Errorf("INVOKESPECIAL: Got unexpected error: %s", err.Error())
 	}
 
-	if f.TOS != 0 {
+	if f.TOS != 0 { // it's 0 b/c the gfunction returns a value, that is pushed onto the op stack
 		t.Errorf("Expecting TOS to be 0, got %d", f.TOS)
 	}
 
