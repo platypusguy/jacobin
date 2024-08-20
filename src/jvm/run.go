@@ -2206,7 +2206,9 @@ frameInterpreter:
 				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
-				for i := 0; i < paramCount; i++ { // could this be prolematic for D and L?
+				for i := 0; i < paramCount; i++ {
+					// This is not problematic because the params count in the gfunction definition
+					// counts slots, rather than items, so doubles and longs are listed as two slots.
 					params = append(params, pop(f))
 				}
 
