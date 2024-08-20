@@ -2206,7 +2206,7 @@ frameInterpreter:
 				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
-				for i := 0; i < paramCount; i++ {
+				for i := 0; i < paramCount; i++ { // could this be prolematic for D and L?
 					params = append(params, pop(f))
 				}
 
@@ -2235,7 +2235,7 @@ frameInterpreter:
 					// any exception will already have been handled.
 				}
 			} else if mtEntry.MType == 'J' {
-				// TODO: handle arguments to method, if any
+				// The arguments are correctly handled in createAndInitNewFrame()
 				m := mtEntry.Meth.(classloader.JmEntry)
 				if m.AccessFlags&0x0100 > 0 {
 					// Native code
