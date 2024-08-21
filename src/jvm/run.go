@@ -2652,9 +2652,7 @@ frameInterpreter:
 				fs.PushFront(fram)                   // push the new frame
 				f = fs.Front().Value.(*frames.Frame) // point f to the new head
 				goto frameInterpreter
-			}
-
-			if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+			} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
 				gmethData := mtEntry.Meth.(gfunction.GMeth)
 				paramCount := gmethData.ParamSlots
 				var params []interface{}
