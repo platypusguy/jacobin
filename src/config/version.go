@@ -17,14 +17,12 @@ var JacobinVersion = "0.5.001"
 func GetJacobinVersion() string {
 	file, err := os.Open("BUILDNO.txt")
 	if err != nil {
-		fmt.Println(err)
 		return JacobinVersion
 	}
 	defer file.Close()
 
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		fmt.Println(err)
 		return JacobinVersion
 	}
 
