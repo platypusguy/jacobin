@@ -6,25 +6,7 @@
 
 package config
 
-import (
-	"fmt"
-	"io/ioutil"
-	"os"
-)
-
-var JacobinVersion = "0.5.001"
-
-func GetJacobinVersion() string {
-	file, err := os.Open("BUILDNO.txt")
-	if err != nil {
-		return JacobinVersion
-	}
-	defer file.Close()
-
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		return JacobinVersion
-	}
-
-	return fmt.Sprintf("%s Build %s", JacobinVersion, string(byteValue))
-}
+var JacobinVersion = "0.5.001" // Major.Minor.Build
+var VmModel = "server"
+var MaxJavaVersion = 17    // this value and MaxJavaVersionRaw must *always* be in sync
+var MaxJavaVersionRaw = 61 // this value and MaxJavaVersion must *always* be in sync

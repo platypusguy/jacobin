@@ -144,12 +144,6 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

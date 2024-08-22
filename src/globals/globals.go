@@ -120,8 +120,8 @@ var global Globals
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
-		Version:           config.GetJacobinVersion(), // gets version # and, if available, the build #
-		VmModel:           "server",
+		Version:           config.JacobinVersion,
+		VmModel:           config.VmModel,
 		ExitNow:           false,
 		JacobinName:       progName,
 		JacobinHome:       "",
@@ -130,8 +130,8 @@ func InitGlobals(progName string) Globals {
 		Options:           make(map[string]Option),
 		StartingClass:     "",
 		StartingJar:       "",
-		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
+		MaxJavaVersion:    config.MaxJavaVersion,
+		MaxJavaVersionRaw: config.MaxJavaVersionRaw,
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
 		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
 		JacobinBuildData:     nil,
