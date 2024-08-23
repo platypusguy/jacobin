@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/config"
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
@@ -28,6 +29,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -107,11 +109,13 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	err = runThread(&MainThread)
 	if err != nil {
 		statics.DumpStatics()
+		config.DumpConfig(os.Stderr)
 		return err
 	}
 
 	if MainThread.Trace {
 		statics.DumpStatics()
+		config.DumpConfig(os.Stderr)
 	}
 
 	return nil
@@ -130,6 +134,7 @@ func runThread(t *thread.ExecThread) error {
 			exceptions.ShowFrameStack(t)
 			exceptions.ShowGoStackTrace(nil)
 			statics.DumpStatics()
+			config.DumpConfig(os.Stderr)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK

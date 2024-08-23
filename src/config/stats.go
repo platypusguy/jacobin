@@ -6,10 +6,13 @@
 
 package config
 
-import "strconv"
+import (
+	"fmt"
+	"os"
+	"runtime"
+)
 
-var JacobinVersion = "0.5.003"
-
-func GetJacobinVersion() string {
-	return JacobinVersion + " Build " + strconv.Itoa(BuildNo)
+// routines to dump configuration info for debugging puproses
+func DumpConfig(out *os.File) {
+	fmt.Fprintf(out, "Version: %s, OS %s\n", GetJacobinVersion(), runtime.GOOS)
 }
