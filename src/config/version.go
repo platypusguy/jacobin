@@ -6,20 +6,10 @@
 
 package config
 
+import "strconv"
+
 var JacobinVersion = "0.5.001"
 
 func GetJacobinVersion() string {
-	// file, err := os.Open("BUILDNO.txt")
-	// if err != nil {
-	// 	return JacobinVersion
-	// }
-	// defer file.Close()
-	//
-	// byteValue, err := ioutil.ReadAll(file)
-	// if err != nil {
-	// 	return JacobinVersion
-	// }
-	//
-	// return fmt.Sprintf("%s Build %s", JacobinVersion, string(byteValue))
-	return BuildNo
+	return JacobinVersion + " Build " + strconv.Itoa(BuildNo)
 }

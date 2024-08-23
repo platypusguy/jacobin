@@ -6,4 +6,4 @@
 
 package config
 
-var BuildNo = "2984"
+var BuildNo = 2984
