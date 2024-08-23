@@ -8,7 +8,7 @@ package config
 
 import "strconv"
 
-var JacobinVersion = "0.5.001"
+var JacobinVersion = "0.5.002"
 
 func GetJacobinVersion() string {
 	return JacobinVersion + " Build " + strconv.Itoa(BuildNo)
