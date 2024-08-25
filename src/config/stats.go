@@ -7,12 +7,19 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 )
 
-// routines to dump configuration info for debugging puproses
-func DumpConfig(out *os.File) {
-	fmt.Fprintf(out, "Version: %s, OS %s\n", GetJacobinVersion(), runtime.GOOS)
+// routines to dump configuration info for debugging puproses. Can be redirected to any file.
+func DumpConfig(out *os.File) error {
+	versionAndOs := fmt.Sprintf("Version: %s, OS: %s", GetJacobinVersion(), runtime.GOOS)
+	n, err := fmt.Fprintln(out, versionAndOs)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error occurred %s, output %d bytes", err.Error(), n))
+	} else {
+		return nil
+	}
 }
