@@ -2507,11 +2507,6 @@ frameInterpreter:
 			interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
 				CP, interfaceMethodSigIndex)
 
-			// var args []any
-			// for i := 0; i < int(count)-1; i++ {
-			// 	args = append(args, pop(f))
-			// }
-
 			// now get the objRef pointing to the class containing the call to the method
 			// described just previously. It is located on the f.OpStack below the args to
 			// be passed to the method.
@@ -2570,75 +2565,86 @@ frameInterpreter:
 			// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
 
 			clData := *class.Data
-			if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
-				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-					objRefClassName, interfaceName)
-				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-			}
-
-			var foundIntfaceName = ""
 			var mtEntry classloader.MTentry
-			var meth *classloader.Method
-			var ok bool
-			for i := 0; i < len(clData.Interfaces); i++ {
-				index := uint32(clData.Interfaces[i])
-				foundIntfaceName = *stringPool.GetStringPointer(index)
-				if foundIntfaceName == interfaceName {
-					// at this point we know that clData's class implements the required interface.
-					// Now, check whether clData contains the desired method.
-					meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
-					if ok {
-						mtEntry, _ = classloader.FetchMethodAndCP(
-							clData.Name, interfaceMethodName, interfaceMethodType)
-						goto executeInterfaceMethod
-					}
-
-					if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
-						// in this case, LoadClassFromNameOnly() will have already thrown the exception
-						if globals.JacobinHome() == "test" {
-							return err // applies only if in test
-						}
-					}
-					mtEntry, _ = classloader.FetchMethodAndCP(
-						interfaceName, interfaceMethodName, interfaceMethodType)
-					if mtEntry.Meth == nil {
-						glob.ErrorGoStack = string(debug.Stack())
-						errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
-							interfaceName, interfaceMethodName, interfaceMethodType)
-						status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+			mtEntry, err := invokeInterface(class, f, fs, objRefClassName, interfaceName,
+				interfaceMethodName, interfaceMethodType)
+			if err != nil { // any error will already have been handled
+				continue
+			}
+			/*
+					if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
+						errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+							objRefClassName, interfaceName)
+						status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
 						if status != exceptions.Caught {
 							return errors.New(errMsg) // applies only if in test
 						}
 					}
-					goto executeInterfaceMethod // method found, move on to execution
-				} else { // CURR: check for superclasses, after checking Object
-					foundIntfaceName = ""
-				}
-			}
 
-			if foundIntfaceName == "" { // no interface was found, check java.lang.Object()
-				errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-					objRefClassName, interfaceName)
-				status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-			}
+					var foundIntfaceName = ""
+					var mtEntry classloader.MTentry
+					var meth *classloader.Method
+					var ok bool
+					for i := 0; i < len(clData.Interfaces); i++ {
+						index := uint32(clData.Interfaces[i])
+						foundIntfaceName = *stringPool.GetStringPointer(index)
+						if foundIntfaceName == interfaceName {
+							// at this point we know that clData's class implements the required interface.
+							// Now, check whether clData contains the desired method.
+							meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
+							if ok {
+								mtEntry, _ = classloader.FetchMethodAndCP(
+									clData.Name, interfaceMethodName, interfaceMethodType)
+								goto executeInterfaceMethod
+							}
 
-		executeInterfaceMethod:
-			if mtEntry.MType == 'J' {
-				if meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
-					glob.ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEINTERFACE: Native method requested: " +
-						clData.Name + "." + interfaceMethodName + interfaceMethodType
-					status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
-					if status != exceptions.Caught {
-						return errors.New(errMsg) // applies only if in test
+							if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+								// in this case, LoadClassFromNameOnly() will have already thrown the exception
+								if globals.JacobinHome() == "test" {
+									return err // applies only if in test
+								}
+							}
+							mtEntry, _ = classloader.FetchMethodAndCP(
+								interfaceName, interfaceMethodName, interfaceMethodType)
+							if mtEntry.Meth == nil {
+								glob.ErrorGoStack = string(debug.Stack())
+								errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+									interfaceName, interfaceMethodName, interfaceMethodType)
+								status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+								if status != exceptions.Caught {
+									return errors.New(errMsg) // applies only if in test
+								}
+							}
+							goto executeInterfaceMethod // method found, move on to execution
+						} else { // CURR: check for superclasses, after checking Object
+							foundIntfaceName = ""
+						}
 					}
-				}
+
+					if foundIntfaceName == "" { // no interface was found, check java.lang.Object()
+						errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+							objRefClassName, interfaceName)
+						status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+						if status != exceptions.Caught {
+							return errors.New(errMsg) // applies only if in test
+						}
+					}
+
+
+				executeInterfaceMethod:
+
+			*/
+
+			if mtEntry.MType == 'J' {
+				// if meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
+				// 	glob.ErrorGoStack = string(debug.Stack())
+				// 	errMsg := "INVOKEINTERFACE: Native method requested: " +
+				// 		clData.Name + "." + interfaceMethodName + interfaceMethodType
+				// 	status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+				// 	if status != exceptions.Caught {
+				// 		return errors.New(errMsg) // applies only if in test
+				// 	}
+				// }
 
 				entry := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(

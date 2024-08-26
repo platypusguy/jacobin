@@ -7,7 +7,9 @@
 package jvm
 
 import (
+	"container/list"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -21,6 +23,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"runtime/debug"
 	"strings"
 	"unsafe"
 )
@@ -553,4 +556,159 @@ func checkcastArray(obj *object.Object, className string) bool {
 
 func checkcastInterface(obj *object.Object, className string) bool {
 	return false
+}
+
+// the function that finds the interface method to execute (and returns it).
+func invokeInterface(
+	class *classloader.Klass,
+	f *frames.Frame,
+	fs *list.List,
+	objRefClassName string,
+	interfaceName string,
+	interfaceMethodName string,
+	interfaceMethodType string) (classloader.MTentry, error) {
+
+	glob := globals.GetGlobalRef()
+
+	// Now find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
+	// the steps are taken, where C is the interface:
+	//
+	// 1) If C is not an interface, interface method resolution throws an IncompatibleClassChangeError.
+	//
+	// 2) Otherwise, if C declares a method with the name and descriptor specified by the
+	// interface method reference, method lookup succeeds.
+	//
+	// 3) Otherwise, if the class Object declares a method with the name and descriptor specified by the
+	// interface method reference, which has its ACC_PUBLIC flag set and does not have its ACC_STATIC flag set,
+	// method lookup succeeds.
+	//
+	// 4) Otherwise, if the maximally-specific superinterface methods (§5.4.3.3) of C for the name and descriptor
+	// specified by the method reference include exactly one method that does not have its ACC_ABSTRACT flag set,
+	// then this method is chosen and method lookup succeeds.
+	//
+	// 5) Otherwise, if any superinterface of C declares a method with the name and descriptor specified by the
+	// method reference that has neither its ACC_PRIVATE flag nor its ACC_STATIC flag set, one of these is
+	// arbitrarily chosen and method lookup succeeds.
+	//
+	// 6) Otherwise, method lookup fails.
+	//
+	// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
+
+	clData := *class.Data
+	if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+			objRefClassName, interfaceName)
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+		if status != exceptions.Caught {
+			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+		}
+	}
+
+	var foundIntfaceName = ""
+	var mtEntry classloader.MTentry
+	var meth *classloader.Method
+	var ok bool
+	for i := 0; i < len(clData.Interfaces); i++ {
+		index := uint32(clData.Interfaces[i])
+		foundIntfaceName = *stringPool.GetStringPointer(index)
+		if foundIntfaceName == interfaceName {
+			// at this point we know that clData's class implements the required interface.
+			// Now, check whether clData contains the desired method.
+			meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
+			if ok {
+				mtEntry, _ = classloader.FetchMethodAndCP(
+					clData.Name, interfaceMethodName, interfaceMethodType)
+				goto verifyInterfaceMethod
+			}
+
+			if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+				// in this case, LoadClassFromNameOnly() will have already thrown the exception
+				if globals.JacobinHome() == "test" {
+					return classloader.MTentry{}, err // applies only if in test
+				}
+			}
+			mtEntry, _ = classloader.FetchMethodAndCP(
+				interfaceName, interfaceMethodName, interfaceMethodType)
+			if mtEntry.Meth == nil {
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+					interfaceName, interfaceMethodName, interfaceMethodType)
+				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				if status != exceptions.Caught {
+					return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+				}
+			}
+			goto verifyInterfaceMethod // method found, move on to execution
+		} else { // CURR: check for superclasses, after checking Object
+			foundIntfaceName = ""
+		}
+	}
+
+	if foundIntfaceName == "" { // no interface was found, check java.lang.Object()
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+			objRefClassName, interfaceName)
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+		if status != exceptions.Caught {
+			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+		}
+	}
+
+verifyInterfaceMethod:
+	if mtEntry.MType == 'J' && meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
+		glob.ErrorGoStack = string(debug.Stack())
+		errMsg := "INVOKEINTERFACE: Native method requested: " +
+			clData.Name + "." + interfaceMethodName + interfaceMethodType
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+		if status != exceptions.Caught {
+			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+		}
+	}
+
+	return mtEntry, nil
+
+	// entry := mtEntry.Meth.(classloader.JmEntry)
+	// fram, err := createAndInitNewFrame(
+	// 	clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, f)
+	// if err != nil {
+	// 	glob.ErrorGoStack = string(debug.Stack())
+	// 	errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+	// 		interfaceMethodName + interfaceMethodType
+	// 	status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+	// 	if status != exceptions.Caught {
+	// 		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+	// 	}
+	// }
+	//
+	// f.PC += 1                            // to point to the next bytecode before exiting
+	// fs.PushFront(fram)                   // push the new frame
+	// f = fs.Front().Value.(*frames.Frame) // point f to the new head
+	// goto frameInterpreter
+	// } else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+	// 	gmethData := mtEntry.Meth.(gfunction.GMeth)
+	// 	paramCount := gmethData.ParamSlots
+	// 	var params []interface{}
+	// 	for i := 0; i < paramCount; i++ {
+	// 		params = append(params, pop(f))
+	// 	}
+	//
+	// 	ret := runGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true)
+	// 	if ret != nil {
+	// 		switch ret.(type) {
+	// 		case error:
+	// 			if glob.JacobinName == "test" {
+	// 				errRet := ret.(error)
+	// 				return classloader.MTentry{}, errRet
+	// 			} else if errors.Is(ret.(error), CaughtGfunctionException) {
+	// 				f.PC += 1
+	// 				goto frameInterpreter
+	// 			}
+	// 		default: // if it's not an error, then it's a legitimate return value, which we simply push
+	// 			push(f, ret)
+	// 			if strings.HasSuffix(interfaceMethodType, "D") || strings.HasSuffix(interfaceMethodType, "J") {
+	// 				push(f, ret) // push twice if long or double
+	// 			}
+	// 		}
+	// 		// any exception will already have been handled.
+	// 	}
+	// }
 }
