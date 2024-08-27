@@ -2540,15 +2540,15 @@ frameInterpreter:
 				}
 			}
 
-			clData := *class.Data
-
 			var mtEntry classloader.MTentry
-			mtEntry, err := locateInterfaceMeth(class, f, objRefClassName, interfaceName,
+			var err error
+			mtEntry, err = locateInterfaceMeth(class, f, objRefClassName, interfaceName,
 				interfaceMethodName, interfaceMethodType)
 			if err != nil { // any error will already have been handled
 				continue
 			}
 
+			clData := *class.Data
 			if mtEntry.MType == 'J' {
 				entry := mtEntry.Meth.(classloader.JmEntry)
 				fram, err := createAndInitNewFrame(
