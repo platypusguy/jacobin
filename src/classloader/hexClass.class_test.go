@@ -3073,8 +3073,8 @@ func TestLoadFullyParsedClass_Class(t *testing.T) {
 		t.Errorf("Got unexpected error from parse of Class.class: %s", err.Error())
 	}
 	classToPost := convertToPostableClass(&fullyParsedClass)
-	if len(classToPost.Methods) < 1 {
-		t.Errorf("Invalid number of methods in Class.class: %d", len(classToPost.Methods))
+	if len(classToPost.MethodTable) < 1 {
+		t.Errorf("Invalid number of methods in Class.class: %d", len(classToPost.MethodTable))
 	}
 }
 

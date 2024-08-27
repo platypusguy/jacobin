@@ -85,7 +85,6 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 		Interfaces:  nil,
 		Fields:      nil,
 		MethodTable: nil,
-		Methods:     nil,
 		Attributes:  nil,
 		SourceFile:  "testClass.java",
 		Bootstraps:  nil,

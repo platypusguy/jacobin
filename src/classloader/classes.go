@@ -32,7 +32,6 @@ type ClData struct {
 	Interfaces      []uint16 // indices into UTF8Refs
 	Fields          []Field
 	MethodTable     map[string]*Method
-	Methods         []Method
 	Attributes      []Attr
 	SourceFile      string
 	Bootstraps      []BootstrapMethod

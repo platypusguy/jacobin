@@ -8,7 +8,7 @@ package config
 
 import "strconv"
 
-var JacobinVersion = "0.5.005"
+var JacobinVersion = "0.5.006"
 
 // GetJacobinVersion returns a manually updated version number and an
 // automatically updated build #. The latter being updated by bumpbuildno.go

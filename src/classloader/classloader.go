@@ -557,7 +557,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 				}
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
-			kd.Methods = append(kd.Methods, kdm)
+			// kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
 
 			methodTableKey := methName + methDesc
 			kd.MethodTable[methodTableKey] = &kdm
