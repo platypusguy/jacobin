@@ -554,12 +554,12 @@ func checkcastArray(obj *object.Object, className string) bool {
 }
 
 func checkcastInterface(obj *object.Object, className string) bool {
-	return false
+	return false // TODO: fill this in
 }
 
 // the function that finds the interface method to execute (and returns it).
 func locateInterfaceMeth(
-	class *classloader.Klass,
+	class *classloader.Klass, // the objRef class
 	f *frames.Frame,
 	objRefClassName string,
 	interfaceName string,
@@ -568,7 +568,7 @@ func locateInterfaceMeth(
 
 	glob := globals.GetGlobalRef()
 
-	// Now find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
+	// Find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
 	// the steps are taken, where C is the interface:
 	//
 	// 1) If C is not an interface, interface method resolution throws an IncompatibleClassChangeError.
