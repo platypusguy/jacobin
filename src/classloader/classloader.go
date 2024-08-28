@@ -504,7 +504,8 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
-			var jmeth JmEntry
+			jmeth := JmEntry{}
+			jmeth.CodeAttr = CodeAttrib{}
 
 			kdm := Method{}
 			kdm.Name = uint16(fullyParsedClass.methods[i].name)
@@ -532,7 +533,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
 					kdmce.CatchType = uint16(fullyParsedClass.methods[i].codeAttr.exceptions[j].catchType)
 					kdm.CodeAttr.Exceptions = append(kdm.CodeAttr.Exceptions, kdmce)
-					jmeth.Exceptions = append(jmeth.Exceptions, kdmce)
+					jmeth.CodeAttr.Exceptions = append(jmeth.Exceptions, kdmce)
 				}
 			}
 
@@ -546,9 +547,11 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					jmeth.CodeAttr.Attributes = append(jmeth.CodeAttr.Attributes, kdmca)
 				}
 			}
-			fullyParsedClass.methods[i].codeAttr.sourceLineTable =
-				fullyParsedClass.methods[i].codeAttr.sourceLineTable
-			jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
+			// fullyParsedClass.methods[i].codeAttr.sourceLineTable =
+			// 	fullyParsedClass.methods[i].codeAttr.sourceLineTable
+			if len(*fullyParsedClass.methods[i].codeAttr.sourceLineTable) > 0 {
+				jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
+			}
 
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
 				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
@@ -580,7 +583,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
 			jmeth.deprecated = fullyParsedClass.methods[i].deprecated
-			kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
+			// kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
 
 			methodTableKey := methName + methDesc
 			kd.MethodTable[methodTableKey] = &kdm
