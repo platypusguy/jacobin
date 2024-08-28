@@ -48,6 +48,7 @@ type JmEntry struct {
 	Exceptions  []CodeException
 	Attribs     []Attr
 	params      []ParamAttrib
+	CodeAttr    CodeAttrib
 	deprecated  bool
 	Cp          *CPool
 }

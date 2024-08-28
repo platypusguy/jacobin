@@ -463,8 +463,11 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 }
 
 // load the parsed class into a form suitable for posting to the method area (which is
-// exec.MethArea). This mostly involves copying the data, converting most indexes to uint16
-// and removing some fields we needed in parsing, but which are no longer required.
+// classloader.MethArea). This mostly involves copying the data, converting most indexes
+// to uint16 and removing some fields we needed in parsing, but which are no longer required.
+//
+// As of JACOBIN-575, methods are no longer included in the MethArea, but are all loaded into
+// the JVM-wide MTable (classloader.mTable).
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd := ClData{}
@@ -501,15 +504,26 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
+			var jmeth JmEntry
+
 			kdm := Method{}
 			kdm.Name = uint16(fullyParsedClass.methods[i].name)
 			methName := fullyParsedClass.utf8Refs[int(kdm.Name)].content
 			kdm.Desc = uint16(fullyParsedClass.methods[i].description)
 			methDesc := fullyParsedClass.utf8Refs[int(kdm.Desc)].content
+
 			kdm.AccessFlags = fullyParsedClass.methods[i].accessFlags
+			jmeth.AccessFlags = fullyParsedClass.methods[i].accessFlags
+
 			kdm.CodeAttr.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
+			jmeth.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
+
 			kdm.CodeAttr.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
+			jmeth.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
+
 			kdm.CodeAttr.Code = fullyParsedClass.methods[i].codeAttr.code
+			jmeth.Code = fullyParsedClass.methods[i].codeAttr.code
+
 			if len(fullyParsedClass.methods[i].codeAttr.exceptions) > 0 {
 				for j := 0; j < len(fullyParsedClass.methods[i].codeAttr.exceptions); j++ {
 					kdmce := CodeException{}
@@ -518,8 +532,10 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
 					kdmce.CatchType = uint16(fullyParsedClass.methods[i].codeAttr.exceptions[j].catchType)
 					kdm.CodeAttr.Exceptions = append(kdm.CodeAttr.Exceptions, kdmce)
+					jmeth.Exceptions = append(jmeth.Exceptions, kdmce)
 				}
 			}
+
 			if len(fullyParsedClass.methods[i].codeAttr.attributes) > 0 {
 				for m := 0; m < len(fullyParsedClass.methods[i].codeAttr.attributes); m++ {
 					kdmca := Attr{}
@@ -527,10 +543,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmca.AttrSize = fullyParsedClass.methods[i].codeAttr.attributes[m].attrSize
 					kdmca.AttrContent = fullyParsedClass.methods[i].codeAttr.attributes[m].attrContent
 					kdm.CodeAttr.Attributes = append(kdm.CodeAttr.Attributes, kdmca)
+					jmeth.CodeAttr.Attributes = append(jmeth.CodeAttr.Attributes, kdmca)
 				}
 			}
 			fullyParsedClass.methods[i].codeAttr.sourceLineTable =
 				fullyParsedClass.methods[i].codeAttr.sourceLineTable
+			jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
 
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
 				for n := 0; n < len(fullyParsedClass.methods[i].attributes); n++ {
@@ -540,13 +558,16 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 						AttrContent: fullyParsedClass.methods[i].attributes[n].attrContent,
 					}
 					kdm.Attributes = append(kdm.Attributes, kdma)
+					jmeth.Attribs = append(jmeth.Attribs, kdma)
 				}
 			}
+
 			if len(fullyParsedClass.methods[i].exceptions) > 0 {
 				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
 					kdm.Exceptions = append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
 				}
 			}
+
 			if len(fullyParsedClass.methods[i].parameters) > 0 {
 				for q := 0; q < len(fullyParsedClass.methods[i].parameters); q++ {
 					kdmp := ParamAttrib{
@@ -554,10 +575,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 						AccessFlags: fullyParsedClass.methods[i].parameters[q].accessFlags,
 					}
 					kdm.Parameters = append(kdm.Parameters, kdmp)
+					jmeth.params = append(jmeth.params, kdmp)
 				}
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
-			// kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
+			jmeth.deprecated = fullyParsedClass.methods[i].deprecated
+			kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
 
 			methodTableKey := methName + methDesc
 			kd.MethodTable[methodTableKey] = &kdm
