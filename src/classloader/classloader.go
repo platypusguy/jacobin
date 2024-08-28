@@ -549,8 +549,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			}
 			// fullyParsedClass.methods[i].codeAttr.sourceLineTable =
 			// 	fullyParsedClass.methods[i].codeAttr.sourceLineTable
-			if len(*fullyParsedClass.methods[i].codeAttr.sourceLineTable) > 0 {
-				jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
+			if fullyParsedClass.methods[i].codeAttr.sourceLineTable != nil {
+				if len(*fullyParsedClass.methods[i].codeAttr.sourceLineTable) > 0 {
+					jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
+				}
+			} else {
+				fullyParsedClass.methods[i].codeAttr.sourceLineTable = nil
 			}
 
 			if len(fullyParsedClass.methods[i].attributes) > 0 {
