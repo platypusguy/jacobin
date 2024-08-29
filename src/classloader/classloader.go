@@ -533,7 +533,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
 					kdmce.CatchType = uint16(fullyParsedClass.methods[i].codeAttr.exceptions[j].catchType)
 					kdm.CodeAttr.Exceptions = append(kdm.CodeAttr.Exceptions, kdmce)
-					jmeth.CodeAttr.Exceptions = append(jmeth.Exceptions, kdmce)
+					jmeth.CodeAttr.Exceptions = append(jmeth.CodeAttr.Exceptions, kdmce)
 				}
 			}
 
@@ -547,8 +547,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					jmeth.CodeAttr.Attributes = append(jmeth.CodeAttr.Attributes, kdmca)
 				}
 			}
-			// fullyParsedClass.methods[i].codeAttr.sourceLineTable =
-			// 	fullyParsedClass.methods[i].codeAttr.sourceLineTable
+
 			if fullyParsedClass.methods[i].codeAttr.sourceLineTable != nil {
 				if len(*fullyParsedClass.methods[i].codeAttr.sourceLineTable) > 0 {
 					jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
@@ -572,7 +571,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			if len(fullyParsedClass.methods[i].exceptions) > 0 {
 				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
 					kdm.Exceptions = append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
-				}
+				} // CURR
 			}
 
 			if len(fullyParsedClass.methods[i].parameters) > 0 {
@@ -587,12 +586,11 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
 			jmeth.deprecated = fullyParsedClass.methods[i].deprecated
-			// kd.Methods = append(kd.Methods, kdm) // JACOBIN-575
 
 			methodTableKey := methName + methDesc
 			kd.MethodTable[methodTableKey] = &kdm
 		}
-	}
+	} // end of methods processing
 
 	_, clInitPresent := kd.MethodTable["<clinit>()V"]
 	if clInitPresent {

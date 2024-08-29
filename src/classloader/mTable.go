@@ -45,7 +45,7 @@ type JmEntry struct {
 	MaxStack    int
 	MaxLocals   int
 	Code        []byte
-	Exceptions  []CodeException
+	Exceptions  []uint16
 	Attribs     []Attr
 	params      []ParamAttrib
 	CodeAttr    CodeAttrib
