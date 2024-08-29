@@ -74,8 +74,8 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	}
 
 	// if we got this far, the method has an exception table
-	for i := 0; i < len(method.Exceptions); i++ {
-		entry := method.Exceptions[i]
+	for i := 0; i < len(method.CodeAttr.Exceptions); i++ {
+		entry := method.CodeAttr.Exceptions[i]
 		// per https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.3
 		// the StartPC value is inclusive, the EndPC value is exclusive
 		if pc >= entry.StartPc && pc < entry.EndPc {
