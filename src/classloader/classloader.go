@@ -568,9 +568,13 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 				}
 			}
 
+			// exceptions here are simply indexes into the CP, pointing to class references
+			// for each exception that is declared for this method to throw. See:
+			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.5
 			if len(fullyParsedClass.methods[i].exceptions) > 0 {
 				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
-					kdm.Exceptions = append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
+					kdm.Exceptions =
+						append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
 				} // CURR
 			}
 
