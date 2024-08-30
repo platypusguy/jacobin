@@ -67,7 +67,7 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
-	if method.Exceptions == nil {
+	if method.CodeAttr.Exceptions == nil {
 		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s has no exception table", fullMethName)
 		_ = log.Log(errMsg, log.TRACE_INST)
 		return nil, -1 // no exception handler was found
