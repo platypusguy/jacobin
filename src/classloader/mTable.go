@@ -45,12 +45,13 @@ type JmEntry struct {
 	MaxStack    int
 	MaxLocals   int
 	Code        []byte
-	Exceptions  []uint16
-	Attribs     []Attr
-	params      []ParamAttrib
-	CodeAttr    CodeAttrib
-	deprecated  bool
-	Cp          *CPool
+	// Exceptions  []uint16 prior to JACOBIN-575
+	Exceptions []CodeException
+	Attribs    []Attr
+	params     []ParamAttrib
+	CodeAttr   CodeAttrib
+	deprecated bool
+	Cp         *CPool
 }
 
 // Function is the generic-style function used for Go entries: a function that accepts a
