@@ -67,15 +67,15 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
-	if method.CodeAttr.Exceptions == nil {
+	if method.Exceptions == nil {
 		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s has no exception table", fullMethName)
 		_ = log.Log(errMsg, log.TRACE_INST)
 		return nil, -1 // no exception handler was found
 	}
 
 	// if we got this far, the method has an exception table
-	for i := 0; i < len(method.CodeAttr.Exceptions); i++ {
-		entry := method.CodeAttr.Exceptions[i]
+	for i := 0; i < len(method.Exceptions); i++ {
+		entry := method.Exceptions[i]
 		// per https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.3
 		// the StartPC value is inclusive, the EndPC value is exclusive
 		if pc >= entry.StartPc && pc < entry.EndPc {

@@ -46,7 +46,7 @@ type JmEntry struct {
 	MaxLocals   int
 	Code        []byte
 	// Exceptions  []uint16 prior to JACOBIN-575
-	Exceptions []CodeException
+	Exceptions []CodeException // the exception data stored in the code attribute.
 	Attribs    []Attr
 	params     []ParamAttrib
 	CodeAttr   CodeAttrib
