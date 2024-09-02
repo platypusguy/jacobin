@@ -34,7 +34,7 @@ func TestMethAreadDelete(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry1", &k)
@@ -66,7 +66,7 @@ func TestMethAreadDeleteNonExistentEntry(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -108,7 +108,7 @@ func TestMethAreadFetchNonExistentEntry(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -148,7 +148,7 @@ func TestWaitFornNonExistentClass(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -194,7 +194,7 @@ func TestWaitFornUnresolvedClassStatus(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'I'
 	MethAreaInsert("TestEntry", &k)

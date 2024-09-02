@@ -15,12 +15,14 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/types"
 	"strings"
 	"testing"
 )
 
 func TestJavaLangThrowableClinit(t *testing.T) {
 	statics.Statics = make(map[string]statics.Static)
+	globals.InitStringPool()
 
 	throwableClinit(nil)
 	_, ok := statics.Statics["Throwable.UNASSIGNED_STACK"]
@@ -78,19 +80,19 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	f.MethType = "([Ljava/lang/String;)V"
 
 	clData := classloader.ClData{
-		Name:        "",
-		Superclass:  "",
-		Module:      "test module",
-		Pkg:         "",
-		Interfaces:  nil,
-		Fields:      nil,
-		MethodTable: nil,
-		Attributes:  nil,
-		SourceFile:  "testClass.java",
-		Bootstraps:  nil,
-		CP:          classloader.CPool{},
-		Access:      classloader.AccessFlags{},
-		ClInit:      0,
+		Name:            "",
+		SuperclassIndex: types.ObjectPoolStringIndex,
+		Module:          "test module",
+		Pkg:             "",
+		Interfaces:      nil,
+		Fields:          nil,
+		MethodTable:     nil,
+		Attributes:      nil,
+		SourceFile:      "testClass.java",
+		Bootstraps:      nil,
+		CP:              classloader.CPool{},
+		Access:          classloader.AccessFlags{},
+		ClInit:          0,
 	}
 	klass := classloader.Klass{Loader: "testLoader", Data: &clData}
 	classloader.MethAreaInsert("java/testClass", &klass)

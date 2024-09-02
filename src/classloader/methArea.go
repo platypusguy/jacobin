@@ -19,7 +19,6 @@ import (
 )
 
 // MethArea contains all the loaded classes. Key is the class name in java/lang/Object format.
-// var MethArea = make(map[string]Klass)
 var MethArea *sync.Map
 var methAreaSize = 0
 var MethAreaMutex sync.RWMutex // All additions or updates to MethArea map come through this mutex
@@ -43,7 +42,8 @@ func MethAreaPreload() {
 	emptyKlass := Klass{
 		Status: 'N', // N = instantiated
 		Loader: "bootstrap",
-		Data: &ClData{Superclass: types.ObjectClassName,
+		Data: &ClData{
+			// Superclass: types.ObjectClassName,
 			SuperclassIndex: stringPool.GetStringIndex(types.PtrToJavaLangObject)}, // empty class info
 	}
 

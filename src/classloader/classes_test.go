@@ -146,7 +146,8 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass = types.ObjectClassName
+	// k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -298,7 +299,7 @@ func TestInvalidMainMethod(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.Superclass = types.ObjectClassName
+	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)

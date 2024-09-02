@@ -13,8 +13,14 @@ import (
 	"jacobin/excNames"
 	"jacobin/frames"
 	"jacobin/log"
+	"jacobin/stringPool"
 	"jacobin/util"
 )
+
+// the three likely superclasses of a given exception
+var javaLangError = "java/lang/Error"
+var javaLangException = "java/lang/Exception"
+var javaLangThrowable = "java/lang/Throwable"
 
 // This routine looks for a handler for the given exception (excName) in the
 // current frame stack working its way up the frame stack (fs). If one is found,
@@ -89,17 +95,17 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 			// superclasses.
 			if catchName == excName ||
 				catchName == "java/lang/Throwable" ||
-				catchName == "java/lang/Error" ||
-				catchName == "java/lang/Exception" {
+				catchName == "java/lang/Exception" ||
+				catchName == "java/lang/Error" {
 				return f, entry.HandlerPc
 			} else {
 				catchClass := classloader.MethAreaFetch(catchName)
 				if catchClass == nil { // if the class isn't found, skip it
 					continue // in theory, this should be impossible
 				}
-				if catchClass.Data.Superclass == "java/lang/Throwable" ||
-					catchClass.Data.Superclass == "java/lang/Error" ||
-					catchClass.Data.Superclass == "java/lang/Exception" {
+				if catchClass.Data.SuperclassIndex == stringPool.GetStringIndex(&javaLangThrowable) ||
+					catchClass.Data.SuperclassIndex == stringPool.GetStringIndex(&javaLangException) ||
+					catchClass.Data.SuperclassIndex == stringPool.GetStringIndex(&javaLangError) {
 					return f, entry.HandlerPc
 				}
 			}

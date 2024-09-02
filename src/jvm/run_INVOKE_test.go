@@ -500,10 +500,10 @@ func TestInvokeStaticGmethodNoParams(t *testing.T) {
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
-		Name:            "jacobin/test/Object",
-		NameIndex:       CP.ClassRefs[0],
-		Superclass:      "java/lang/Object",
-		SuperclassIndex: 0,
+		Name:      "jacobin/test/Object",
+		NameIndex: CP.ClassRefs[0],
+		// Superclass:      "java/lang/Object",
+		SuperclassIndex: types.ObjectPoolStringIndex,
 		Module:          "",
 		Pkg:             "",
 		Interfaces:      nil,
@@ -595,10 +595,10 @@ func TestInvokeStaticGmethodErrorReturn(t *testing.T) {
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
-		Name:            "jacobin/test/Object",
-		NameIndex:       CP.ClassRefs[0],
-		Superclass:      "java/lang/Object",
-		SuperclassIndex: 0,
+		Name:      "jacobin/test/Object",
+		NameIndex: CP.ClassRefs[0],
+		// Superclass:      "java/lang/Object",
+		SuperclassIndex: types.ObjectPoolStringIndex,
 		Module:          "",
 		Pkg:             "",
 		Interfaces:      nil,

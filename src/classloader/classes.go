@@ -25,7 +25,6 @@ type Klass struct {
 type ClData struct {
 	Name            string
 	NameIndex       uint32 // index into StringPool
-	Superclass      string
 	SuperclassIndex uint32 // index into StringPool
 	Module          string
 	Pkg             string   // package name, if any. (so named, b/c 'package' is a golang keyword)
