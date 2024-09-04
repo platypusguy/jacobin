@@ -130,8 +130,8 @@ func InitGlobals(progName string) Globals {
 		Options:           make(map[string]Option),
 		StartingClass:     "",
 		StartingJar:       "",
-		MaxJavaVersion:    17, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw: 61, // this value and MaxJavaVersion must *always* be in sync
+		MaxJavaVersion:    21, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw: 65, // this value and MaxJavaVersion must *always* be in sync
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
 		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
 		JacobinBuildData:     nil,
