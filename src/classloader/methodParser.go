@@ -109,9 +109,15 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 					}
 				case "MethodParameters":
 					_ = log.Log("    Attribute: MethodParameters", log.FINEST)
-					if parseMethodParametersAttribute(attrib, &meth, klass) != nil {
-						return pos, cfe("") // error msg will already have been shown to user
-					}
+					// JACOBIN-577: Removed because JDK 21 causes something in the parsing
+					// of this attribute to become unhinged. As this attribute is not needed in
+					// the execution of a class, we've temporarily chosen to block this call.
+					// When time permits or if the MethodParameters attribute assumes a new importance,
+					// we'll return here and figure out what needs to be done.
+					//
+					// if parseMethodParametersAttribute(attrib, &meth, klass) != nil {
+					// 	return pos, cfe("") // error msg will already have been shown to user
+					// }
 				default:
 					_ = log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
