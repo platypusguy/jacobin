@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"fmt"
 	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/util"
@@ -172,7 +173,7 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 			ex.endPc, _ = intFrom2Bytes(att.attrContent, pos+3)
 			ex.handlerPc, _ = intFrom2Bytes(att.attrContent, pos+5)
 			ex.catchType, err = intFrom2Bytes(att.attrContent, pos+7)
-			//fmt.Printf("DEBUG parseCodeAttribute methodName=%s, ex = %v\n", methodName, ex)
+			// fmt.Printf("DEBUG parseCodeAttribute methodName=%s, ex = %v\n", methodName, ex)
 			pos += 8
 
 			if err != nil {
@@ -354,14 +355,9 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 //	   } parameters[parameters_count];
 //	}
 func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) error {
-	var err error
 	pos := 0
 	parametersCount := int(att.attrContent[pos])
 	pos += 1
-	if err != nil {
-		return cfe("Error getting number of Parameter attributes in method: " +
-			klass.utf8Refs[meth.name].content)
-	}
 
 	for k := 0; k < parametersCount; k++ {
 		mpAttrib := paramAttrib{}
@@ -393,9 +389,14 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
 		}
 		// do format check on the access flags here
-		if accessFlags != 0x10 && accessFlags != 0x1000 && accessFlags != 0x8000 {
-			return cfe("Invalid access flags of MethodParameters attribute #" +
-				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
+		switch accessFlags {
+		case 0x00, 0x10, 0x1000, 0x1010, 0x8000, 0x8010:
+			break
+		default:
+			errMsg := fmt.Sprintf(
+				"Invalid access flags of MethodParameters attribute #%s in method %s: %X",
+				strconv.Itoa(k+1), klass.utf8Refs[meth.name].content, accessFlags)
+			return cfe(errMsg)
 		}
 
 		mpAttrib.accessFlags = accessFlags
