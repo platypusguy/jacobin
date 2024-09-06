@@ -102,12 +102,12 @@ func JVMrun() int {
 			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", globPtr.StartingJar), log.INFO)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
-		mainClassNameIndex, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
+		mainClassNameIndex, _, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	} else if globPtr.StartingClass != "" {
-		mainClassNameIndex, err = classloader.LoadClassFromFile(classloader.BootstrapCL, globPtr.StartingClass)
+		mainClassNameIndex, _, err = classloader.LoadClassFromFile(classloader.BootstrapCL, globPtr.StartingClass)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}

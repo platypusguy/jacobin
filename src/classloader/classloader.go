@@ -16,6 +16,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/stringPool"
 	"jacobin/types"
 	"jacobin/util"
 	"os"
@@ -218,7 +219,7 @@ func walk(s string, d fs.DirEntry, err error) error {
 	}
 	if !d.IsDir() && strings.HasSuffix(s, ".class") {
 		// Error is discarded b/c it's not clear yet a given class is needed.
-		_, _ = LoadClassFromFile(BootstrapCL, s)
+		_, _, _ = LoadClassFromFile(BootstrapCL, s)
 	}
 	return nil
 }
@@ -289,9 +290,13 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 	globals.LoaderWg.Done()
 }
 
-// Load a class from name in java/lang/Class format
-func LoadClassFromNameOnly(className string) error {
+// LoadClassFromNameOnly loads a class from name in java/lang/Class format
+// It also loads the superclass of any class it loads.
+func LoadClassFromNameOnly(name string) error {
 	var err error
+	className := name
+
+loadAclass:
 
 	if className == "" {
 		errMsg := "LoadClassFromNameOnly(): null class name is invalid"
@@ -319,7 +324,7 @@ func LoadClassFromNameOnly(className string) error {
 			_ = log.Log("LoadClassFromNameOnly: GetClassBytes className="+className+" from jmodFileName="+jmodFileName+" failed", log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
 		}
-		_, err = loadClassFromBytes(AppCL, className, classBytes)
+		_, _, err = loadClassFromBytes(AppCL, className, classBytes)
 		return err
 	}
 
@@ -327,7 +332,7 @@ func LoadClassFromNameOnly(className string) error {
 	if len(globals.GetGlobalRef().StartingJar) > 0 {
 		validName := util.ConvertToPlatformPathSeparators(className)
 		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.CLASS)
-		_, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
+		_, _, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
 			_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName+" failed", log.SEVERE)
 			_ = log.Log(err.Error(), log.SEVERE)
@@ -339,18 +344,24 @@ func LoadClassFromNameOnly(className string) error {
 	// TODO: classpath
 	validName := util.ConvertToPlatformPathSeparators(className)
 	_ = log.Log("LoadClassFromNameOnly: Loaded class from file "+validName, log.CLASS)
-	_, err = LoadClassFromFile(AppCL, validName)
+	_, superclassIndex, err := LoadClassFromFile(AppCL, validName)
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadClassFromNameOnly for %s failed", className)
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
 		return errors.New(errMsg) // return for tests only
+	}
+
+	// load any superclass in a recursive fashion
+	if superclassIndex != types.ObjectPoolStringIndex { // don't load if it's java/lang/Object
+		className = *stringPool.GetStringPointer(superclassIndex)
+		goto loadAclass
 	}
 	return err
 }
 
 // LoadClassFromFile first canonicalizes the filename, and reads
 // the indicated file, and runs it through the classloader.
-func LoadClassFromFile(cl Classloader, fname string) (uint32, error) {
+func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	var filename string
 	if !strings.HasSuffix(fname, ".class") {
 		filename = fname + ".class"
@@ -361,13 +372,13 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, error) {
 		msg := "LoadClassFromFile: class name" + fname + " is invalid"
 		_ = log.Log(msg, log.SEVERE)
 		debug.PrintStack()
-		return types.InvalidStringIndex, errors.New(msg)
+		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(msg)
 	}
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
-		return types.InvalidStringIndex, errors.New(errMsg) // return for tests only
+		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
 	}
 	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
 
