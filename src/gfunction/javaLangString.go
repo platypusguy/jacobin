@@ -447,9 +447,17 @@ func Load_Lang_String() {
 
 	// TODO: "java/lang/String.split(Ljava/lang/String;I)[Ljava/lang/String;"
 
-	// TODO: "java/lang/String.startsWith(Ljava/lang/String;)[Ljava/lang/String;"
+	MethodSignatures["java/lang/String.startsWith(Ljava/lang/String;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringStartsWith,
+		}
 
-	// TODO: "java/lang/String.startsWith(Ljava/lang/String;I)[Ljava/lang/String;"
+	MethodSignatures["java/lang/String.startsWith(Ljava/lang/String;I)Z"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  stringStartsWith,
+		}
 
 	// TODO: "java/lang/String.strip()[Ljava/lang/String;"
 
@@ -745,12 +753,12 @@ func stringCompareToCaseSensitive(params []interface{}) interface{} {
 	obj = params[1].(*object.Object)
 	str2 := object.GoStringFromStringObject(obj)
 	if str2 == str1 {
-		return int64(0)
+		return types.JavaBoolFalse
 	}
 	if str1 < str2 {
 		return int64(-1)
 	}
-	return int64(1)
+	return types.JavaBoolTrue
 }
 
 // "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
@@ -765,7 +773,7 @@ func stringCompareToIgnoreCase(params []interface{}) interface{} {
 	if str1 < str2 {
 		return int64(-1)
 	}
-	return int64(1)
+	return types.JavaBoolTrue
 }
 
 // "java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"
@@ -1402,4 +1410,40 @@ func stringHashCode(params []interface{}) interface{} {
 		hash = 31*hash + int32(wint32)
 	}
 	return int64(hash)
+}
+
+// "java/lang/String.startsWith(Ljava/lang/String;)Z"
+// "java/lang/String.startsWith(Ljava/lang/String;I)Z"
+func stringStartsWith(params []interface{}) interface{} {
+	baseObj := params[0].(*object.Object)
+	baseStr := object.GoStringFromStringObject(baseObj)
+	argObj := params[1].(*object.Object)
+	prefix := object.GoStringFromStringObject(argObj)
+	if len(params) == 3 {
+		offset := int(params[2].(int64))
+		if offset < 0 || offset > len(baseStr) {
+			errMsg := fmt.Sprintf("checkBoundsOffCount: base: %s, prefix: %s, offset: %d", baseStr, prefix, offset)
+			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+		}
+		if strings.HasPrefix(baseStr[offset:], prefix) {
+			return types.JavaBoolTrue
+		}
+		return types.JavaBoolFalse
+	}
+	if strings.HasPrefix(baseStr, prefix) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// "java/lang/String.endsWith(Ljava/lang/String;)Z"
+func stringEndsWith(params []interface{}) interface{} {
+	baseObj := params[0].(*object.Object)
+	baseStr := object.GoStringFromStringObject(baseObj)
+	argObj := params[1].(*object.Object)
+	prefix := object.GoStringFromStringObject(argObj)
+	if strings.HasSuffix(baseStr, prefix) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }

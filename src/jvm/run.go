@@ -1698,7 +1698,7 @@ frameInterpreter:
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			classNamePtr := stringPool.GetStringPointer(classNameIndex)
 			className := *classNamePtr
 
 			// process the name and type entry for this field
@@ -1782,7 +1782,7 @@ frameInterpreter:
 			// get the class entry from the field entry for this field. It's the class name.
 			classRef := field.ClassIndex
 			classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-			classNamePtr := stringPool.GetStringPointer(uint32(classNameIndex))
+			classNamePtr := stringPool.GetStringPointer(classNameIndex)
 			className := *classNamePtr
 
 			// process the name and type entry for this field
@@ -1985,7 +1985,7 @@ frameInterpreter:
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
 				_ = log.Log(errMsg, log.SEVERE)
-				logTraceStack(f)
+				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
 
@@ -2012,7 +2012,7 @@ frameInterpreter:
 					"location %d in method %s of class %s, previously popped a value(type %T):\n%v\n",
 					ref, f.PC, f.MethName, f.ClName, value, value)
 				_ = log.Log(errMsg, log.SEVERE)
-				logTraceStack(f)
+				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
 
@@ -2049,7 +2049,7 @@ frameInterpreter:
 					errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
 						fieldName, f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
-					logTraceStack(f)
+					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
 
@@ -2059,7 +2059,7 @@ frameInterpreter:
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
 					_ = log.Log(errMsg, log.SEVERE)
-					logTraceStack(f)
+					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
 
@@ -2128,8 +2128,7 @@ frameInterpreter:
 				popped := pop(f)
 				params = append(params, popped)
 
-				// _, err = runGmethod(mtEntry, fs, className, methodName, methodType, &params, true)
-				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
 				// if err != nil {
 				if ret != nil {
 					switch ret.(type) {
@@ -2138,7 +2137,7 @@ frameInterpreter:
 							errRet := ret.(error)
 							return errRet
 						}
-						if errors.Is(ret.(error), CaughtGfunctionException) {
+						if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 							// f.PC += 2 // due to the PC value extracted at the start of this bytecode
 							f.PC += 1
 							goto frameInterpreter
@@ -2221,7 +2220,7 @@ frameInterpreter:
 				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
-				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, true)
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2229,7 +2228,7 @@ frameInterpreter:
 							errRet := ret.(error)
 							return errRet
 						}
-						if errors.Is(ret.(error), CaughtGfunctionException) {
+						if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 							f.PC += 1 // point to the next executable bytecode
 							goto frameInterpreter
 						}
@@ -2313,14 +2312,14 @@ frameInterpreter:
 				}
 
 				f.PC += 2 // advance PC for the first two bytes of this bytecode
-				ret := runGfunction(mtEntry, fs, className, methodName, methodType, &params, false)
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, false, MainThread.Trace)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
-						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+						} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 							f.PC += 1
 							goto frameInterpreter
 						}
@@ -2363,8 +2362,8 @@ frameInterpreter:
 
 		case opcodes.INVOKEINTERFACE: // 0xB9 invoke an interface
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-			count := uint8(f.Meth[f.PC+3])
-			zeroByte := uint8(f.Meth[f.PC+4])
+			count := f.Meth[f.PC+3]
+			zeroByte := f.Meth[f.PC+4]
 			f.PC += 4
 
 			CP := f.CP.(*classloader.CPool)
@@ -2392,7 +2391,7 @@ frameInterpreter:
 			// get the class entry from this method
 			interfaceRef := method.ClassIndex
 			interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
-			interfaceNamePtr := stringPool.GetStringPointer(uint32(interfaceNameIndex))
+			interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
 			interfaceName := *interfaceNamePtr
 
 			// get the method name for this method
@@ -2476,14 +2475,14 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				ret := runGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true)
+				ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, MainThread.Trace)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
 						if glob.JacobinName == "test" {
 							errRet := ret.(error)
 							return errRet
-						} else if errors.Is(ret.(error), CaughtGfunctionException) {
+						} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 							f.PC += 1
 							goto frameInterpreter
 						}
@@ -2515,7 +2514,7 @@ frameInterpreter:
 			var className string
 			if CPentry.Type == classloader.ClassRef {
 				nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]
-				className = *stringPool.GetStringPointer(uint32(nameStringPoolIndex))
+				className = *stringPool.GetStringPointer(nameStringPoolIndex)
 			}
 
 			ref, err := InstantiateClass(className, fs)
@@ -2585,7 +2584,7 @@ frameInterpreter:
 			var refTypeName = ""
 			if refType.Type == classloader.ClassRef {
 				refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
-				refTypeName = *stringPool.GetStringPointer(uint32(refNameStringPoolIndex))
+				refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
 			}
 
 			arrayPtr := object.Make1DimRefArray(&refTypeName, size)
@@ -2853,7 +2852,7 @@ frameInterpreter:
 			}
 
 			// if it is castable, do nothing.
-			/* // CODE to review for use in runUtils.go
+			/* // TODO CODE to review for use in runUtils.go
 			if CPentry.Type == classloader.ClassRef {
 				// slot of ClassRef points to a CP entry for a UTF8 record w/ name of class
 				var className string
@@ -3273,7 +3272,7 @@ func createAndInitNewFrame(
 
 		if arrayDimensions > 1 { // a multidimensional array
 			// if the array is multidimensional, then we are
-			// passing in an pointer to an array of references
+			// passing in a pointer to an array of references
 			// to objects (lower arrays) regardless of the
 			// lowest level of primitive in the array
 			arg := pop(f).(*object.Object)

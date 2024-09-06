@@ -134,7 +134,7 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 
 // Log the existing stack
 // Could be called for tracing -or- supply info for an error section
-func logTraceStack(f *frames.Frame) {
+func LogTraceStack(f *frames.Frame) {
 	var traceInfo, output string
 	if f.TOS == -1 {
 		traceInfo = fmt.Sprintf("%55s %s.%s stack <empty>", "", f.ClName, f.MethName)
@@ -305,7 +305,7 @@ func pop(f *frames.Frame) interface{} {
 
 	f.TOS -= 1 // adjust TOS
 	if MainThread.Trace {
-		logTraceStack(f)
+		LogTraceStack(f)
 	} // trace the resultant stack
 	return value
 }
@@ -335,7 +335,7 @@ func peek(f *frames.Frame) interface{} {
 		}
 	}
 	if MainThread.Trace {
-		logTraceStack(f)
+		LogTraceStack(f)
 	} // trace the stack
 	return f.OpStack[f.TOS]
 }
@@ -400,7 +400,7 @@ func push(f *frames.Frame, x interface{}) {
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
 	if MainThread.Trace {
-		logTraceStack(f)
+		LogTraceStack(f)
 	} // trace the resultant stack
 }
 

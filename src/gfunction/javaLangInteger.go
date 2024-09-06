@@ -78,6 +78,12 @@ func Load_Lang_Integer() {
 			GFunction:  integerNumberOfTrailingZeros,
 		}
 
+	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerParseInt,
+		}
+
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;I)I"] =
 		GMeth{
 			ParamSlots: 2,

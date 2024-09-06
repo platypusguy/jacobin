@@ -4,7 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-package jvm
+package gfunction
 
 import (
 	"container/list"
@@ -14,7 +14,6 @@ import (
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
-	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
@@ -43,15 +42,15 @@ var dummy uint8
 // returned an error but did not throw an exception, or a value if the
 // gfunction returned a value.
 
-func runGfunction(mt classloader.MTentry, fs *list.List,
+func RunGfunction(mt classloader.MTentry, fs *list.List,
 	className, methodName, methodType string,
-	params *[]interface{}, objRef bool) any {
+	params *[]interface{}, objRef bool, tracing bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
 
 	// If the method needs context (i.e., if mt.Meth.NeedsContext == true),
 	// then add pointer to the JVM frame stack to the parameter list here.
-	entry := mt.Meth.(gfunction.GMeth)
+	entry := mt.Meth.(GMeth)
 	if entry.NeedsContext {
 		*params = append(*params, fs)
 	}
@@ -66,11 +65,11 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 
 	// Form the full method name.
 	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("runGfunction: %s, objectRef: %v, paramSlots: %d",
+	if tracing {
+		traceInfo := fmt.Sprintf("RunGfunction: %s, objectRef: %v, paramSlots: %d",
 			fullMethName, objRef, paramCount)
 		_ = log.Log(traceInfo, log.TRACE_INST)
-		logTraceStack(f)
+		// TODO jvm.LogTraceStack(f)
 	}
 
 	// Reverse the parameter order. Last appended will be fetched first.
@@ -81,7 +80,7 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 	// Discern between thread-safe G functions and ordinary ones.
 	// No matter what, ret = the result from the G function.
 	var ret any
-	gmeth := mt.Meth.(gfunction.GMeth)
+	gmeth := mt.Meth.(GMeth)
 	if gmeth.ThreadSafe {
 		var loaded = true
 		// Make sure that an object reference is the first parameter.
@@ -118,9 +117,9 @@ func runGfunction(mt classloader.MTentry, fs *list.List,
 
 	// if an error occured
 	switch ret.(type) {
-	case *gfunction.GErrBlk:
+	case *GErrBlk:
 		// var errorDetails string
-		errBlk := *ret.(*gfunction.GErrBlk)
+		errBlk := *ret.(*GErrBlk)
 
 		var threadName string
 		if f.Thread == 1 {

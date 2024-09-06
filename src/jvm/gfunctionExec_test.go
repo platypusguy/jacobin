@@ -4,6 +4,11 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
+/*
+This set of tests must be run from the JVM package because it calls jvm functions as well as gfunction functions.
+Moving this file to the gfunction package would cause Go circularity errors.
+*/
+
 package jvm
 
 import (
