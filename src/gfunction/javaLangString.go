@@ -158,6 +158,18 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/lang/String.checkBoundsBeginEnd(III)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  stringCheckBoundsBeginEnd,
+		}
+
+	MethodSignatures["java/lang/String.checkBoundsOffCount(III)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  stringCheckBoundsOffCount,
+		}
+
 	MethodSignatures["java/lang/String.codePointAt(I)I"] =
 		GMeth{
 			ParamSlots: 1,
@@ -320,7 +332,12 @@ func Load_Lang_String() {
 
 	// TODO: "java/lang/String.getChars(II[CI)V"
 
-	// TODO: "java/lang/String.hashcode()I"
+	// Compute the Java String.hashCode() value.
+	MethodSignatures["java/lang/String.hashCode()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  stringHashCode,
+		}
 
 	// TODO: "java/lang/String.indent(I)Ljava/lang/String;"
 
@@ -1346,4 +1363,43 @@ func stringIntern(params []interface{}) interface{} {
 	// TODO: Need to add this to the String pool?
 	obj := params[0].(*object.Object)
 	return obj
+}
+
+// "java/lang/String.checkBoundsBeginEnd(III)V"
+func stringCheckBoundsBeginEnd(params []interface{}) interface{} {
+	begin := params[0].(int64)
+	end := params[1].(int64)
+	length := params[2].(int64)
+
+	if begin < 0 || begin > end || end > length {
+		errMsg := fmt.Sprintf("checkBoundsBeginEnd: begin: %d, end: %d, length: %d", begin, end, length)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+
+	return nil
+}
+
+// "java/lang/String.checkBoundsOffCount(III)I"
+func stringCheckBoundsOffCount(params []interface{}) interface{} {
+	offset := params[0].(int64)
+	count := params[1].(int64)
+	length := params[2].(int64)
+
+	if offset < 0 || count < 0 || offset > count || offset > (length-count) {
+		errMsg := fmt.Sprintf("checkBoundsOffCount: offset: %d, count: %d, length: %d", offset, count, length)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+
+	return offset
+}
+
+// "java/lang/String.checkBoundsOffCount(III)I"
+func stringHashCode(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	str := object.GoStringFromStringObject(obj)
+	hash := int32(0)
+	for _, wint32 := range str {
+		hash = 31*hash + int32(wint32)
+	}
+	return int64(hash)
 }
