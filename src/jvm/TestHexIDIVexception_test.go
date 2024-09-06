@@ -112,7 +112,7 @@ func TestHexIDIVException(t *testing.T) {
 	classloader.MethAreaInsert("ThrowIDIVexception", &eKI)
 
 	// Load bytes for ThrowIDIVexception
-	_, err = classloader.ParseAndPostClass(&classloader.BootstrapCL, "ThrowIDIVexception.class", ThrowIDIVexceptionBytes)
+	_, _, err = classloader.ParseAndPostClass(&classloader.BootstrapCL, "ThrowIDIVexception.class", ThrowIDIVexceptionBytes)
 	if err != nil {
 		t.Errorf("Got error from classloader.ParseAndPostCLass: %s", error.Error(err))
 		return

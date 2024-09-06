@@ -3096,7 +3096,7 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	rout, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := ParseAndPostClass(&BootstrapCL, "Class.class", ClassBytes)
+	_, _, err := ParseAndPostClass(&BootstrapCL, "Class.class", ClassBytes)
 	if err != nil {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}
@@ -3133,7 +3133,7 @@ func TestLoadClassByNameOnly(t *testing.T) {
 	rout, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := ParseAndPostClass(&BootstrapCL, "Class.class", ClassBytes)
+	_, _, err := ParseAndPostClass(&BootstrapCL, "Class.class", ClassBytes)
 	if err != nil {
 		t.Errorf("Got unexpected error in ParseAndPost() of Class.class")
 	}

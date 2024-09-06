@@ -34,7 +34,7 @@ func checkClass(t *testing.T, className string, expectedJmod string) bool {
 	t.Logf("checkClass: classloader.GetClassBytes returned a byte array for class %s in jmod %s ok\n", className, expectedJmod)
 
 	// Load class from bytes
-	_, err = loadClassFromBytes(AppCL, className, classBytes)
+	_, _, err = loadClassFromBytes(AppCL, className, classBytes)
 	if err != nil {
 		t.Errorf("checkClass: loadClassFromBytes returned an error: %s\n", error.Error(err))
 		return false

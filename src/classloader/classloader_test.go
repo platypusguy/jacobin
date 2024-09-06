@@ -101,7 +101,7 @@ func TestLoadClassFromFileInvalidName(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	nameIndex, err := LoadClassFromFile(Classloader{}, "noSuchFile")
+	nameIndex, _, err := LoadClassFromFile(Classloader{}, "noSuchFile")
 
 	if nameIndex != types.InvalidStringIndex {
 		t.Errorf("Expected empty filename due to error, got: %s", err.Error())
@@ -216,7 +216,7 @@ func TestGetClassFromInvalidJar(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := LoadClassFromJar(BootstrapCL, "pickle", "gherkin")
+	_, _, err := LoadClassFromJar(BootstrapCL, "pickle", "gherkin")
 	if err == nil {
 		t.Errorf("expected err msg for loading invalid class from invalid JAR, but got none")
 	}
@@ -333,7 +333,7 @@ func TestInvalidMagicNumberViaParseAndPostFunction(t *testing.T) {
 		0xCB, 0xFE, 0xBA, 0xBE,
 	}
 
-	_, err = ParseAndPostClass(&BootstrapCL, "Hello2", testBytes)
+	_, _, err = ParseAndPostClass(&BootstrapCL, "Hello2", testBytes)
 	if err == nil {
 		t.Error("Expected an error, but got none.")
 	}
