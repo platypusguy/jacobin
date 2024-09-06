@@ -1393,7 +1393,7 @@ func stringCheckBoundsOffCount(params []interface{}) interface{} {
 	return offset
 }
 
-// "java/lang/String.checkBoundsOffCount(III)I"
+// "java/lang/String.hashCode()I"
 func stringHashCode(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str := object.GoStringFromStringObject(obj)

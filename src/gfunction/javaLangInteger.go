@@ -11,6 +11,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
+	"math/bits"
 	"strconv"
 	"strings"
 )
@@ -59,10 +60,22 @@ func Load_Lang_Integer() {
 			GFunction:  integerIntLongValue,
 		}
 
-	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;)I"] =
+	MethodSignatures["java/lang/Integer.longValue()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  integerIntLongValue,
+		}
+
+	MethodSignatures["java/lang/Integer.numberOfLeadingZeros(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  integerParseInt,
+			GFunction:  integerNumberOfLeadingZeros,
+		}
+
+	MethodSignatures["java/lang/Integer.numberOfTrailingZeros(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  integerNumberOfTrailingZeros,
 		}
 
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;I)I"] =
@@ -343,4 +356,16 @@ func integerToHexString(params []interface{}) interface{} {
 	str := strconv.FormatInt(argInt64, 16)
 	obj := object.StringObjectFromGoString(str)
 	return obj
+}
+
+// "java/lang/Integer.numberOfTrailingZeros(I)I"
+func integerNumberOfTrailingZeros(params []interface{}) interface{} {
+	arg := uint32(params[0].(int64))
+	return int64(bits.TrailingZeros32(arg))
+}
+
+// "java/lang/Integer.numberOfLeadingZeros(I)I"
+func integerNumberOfLeadingZeros(params []interface{}) interface{} {
+	arg := uint32(params[0].(int64))
+	return int64(bits.LeadingZeros32(arg))
 }
