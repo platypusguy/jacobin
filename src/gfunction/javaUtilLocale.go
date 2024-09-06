@@ -53,6 +53,12 @@ func Load_Util_Locale() {
 			GFunction:  getDefaultLocale, // ignore input
 		}
 
+	MethodSignatures["java/util/Locale.getInstance(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lsun/util/locale/LocaleExtensions;)Ljava/util/Locale;"] =
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  getDefaultLocale,
+		}
+
 }
 
 // "java/util/Locale.<init>(Ljava/lang/String;)V"
