@@ -402,45 +402,46 @@ func GetMainClassFromJar(cl Classloader, jarFileName string) (string, error) {
 	return jar.getMainClass(), nil
 }
 
-func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (uint32, error) {
+func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (uint32, uint32, error) {
 	jar, err := getJarFile(cl, jarFileName)
 
 	if err != nil {
-		return types.InvalidStringIndex, err
+		return types.InvalidStringIndex, types.InvalidStringIndex, err
 	}
 
 	result, err := jar.loadClass(filename)
 
 	if err != nil {
-		return types.InvalidStringIndex, err
+		return types.InvalidStringIndex, types.InvalidStringIndex, err
 	}
 
 	if !result.Success {
-		return types.InvalidStringIndex, fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
+		return types.InvalidStringIndex, types.InvalidStringIndex,
+			fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
 	}
 
 	return ParseAndPostClass(&cl, filename, *result.Data)
 }
 
-func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (uint32, error) {
+func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (uint32, uint32, error) {
 	return ParseAndPostClass(&cl, filename, rawBytes)
 }
 
 // ParseAndPostClass parses a class, presented as a slice of bytes, and
 // if no errors occurred, posts/loads it to the method area.
-func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint32, error) {
+func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint32, uint32, error) {
 
 	_ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.CLASS)
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
-		return types.InvalidStringIndex, fmt.Errorf("parsing error")
+		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
 		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
-		return types.InvalidStringIndex, fmt.Errorf("format-checking error")
+		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
 	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
 
@@ -459,7 +460,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	ClassesLock.Unlock()
 	_ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.CLASS)
 
-	return fullyParsedClass.classNameIndex, nil
+	return fullyParsedClass.classNameIndex, fullyParsedClass.superClassIndex, nil
 }
 
 // load the parsed class into a form suitable for posting to the method area (which is
