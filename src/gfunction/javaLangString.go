@@ -1435,3 +1435,15 @@ func stringStartsWith(params []interface{}) interface{} {
 	}
 	return types.JavaBoolFalse
 }
+
+// "java/lang/String.endsWith(Ljava/lang/String;)Z"
+func stringEndsWith(params []interface{}) interface{} {
+	baseObj := params[0].(*object.Object)
+	baseStr := object.GoStringFromStringObject(baseObj)
+	argObj := params[1].(*object.Object)
+	prefix := object.GoStringFromStringObject(argObj)
+	if strings.HasSuffix(baseStr, prefix) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}

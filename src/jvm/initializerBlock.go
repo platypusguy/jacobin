@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/frames"
+	"jacobin/gfunction"
 	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -126,7 +127,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 }
 
 func runNativeInitializer(mt classloader.MTentry, k *classloader.Klass, fs *list.List) error {
-	_ = runGfunction(mt, fs, k.Data.Name, "<clinit>", "()V", nil, false)
+	_ = gfunction.RunGfunction(mt, fs, k.Data.Name, "<clinit>", "()V", nil, false, false)
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 	return nil
 }
