@@ -26,19 +26,19 @@ func Load_Util_Locale() {
 	MethodSignatures["java/util/Locale.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  localeFromLanguage,
+			GFunction:  trapDeprecated,
 		}
 
 	MethodSignatures["java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  localeFromLanguageCountry,
+			GFunction:  trapDeprecated,
 		}
 
 	MethodSignatures["java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 3,
-			GFunction:  localeFromLanguageCountryVariant,
+			GFunction:  trapDeprecated,
 		}
 
 	MethodSignatures["java/util/Locale.getDefault()Ljava/util/Locale;"] =
@@ -53,58 +53,31 @@ func Load_Util_Locale() {
 			GFunction:  getDefaultLocale, // ignore input
 		}
 
-}
+	MethodSignatures["java/util/Locale.getInstance(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Locale;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  getDefaultLocale, // ignore input
+		}
 
-// "java/util/Locale.<init>(Ljava/lang/String;)V"
-func localeFromLanguage(params []interface{}) interface{} {
-	// params[0]: Locale object to update
-	// params[1]: input language string
-	inObj := params[1].(*object.Object)
-	outObj := params[0].(*object.Object)
-	outObj.FieldTable["value"] = inObj.FieldTable["value"]
-	return nil
-}
+	MethodSignatures["java/util/Locale.getInstance(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lsun/util/locale/LocaleExtensions;)Ljava/util/Locale;"] =
+		GMeth{
+			ParamSlots: 5,
+			GFunction:  getDefaultLocale, // ignore input
+		}
 
-// "java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;)V"
-func localeFromLanguageCountry(params []interface{}) interface{} {
-	// params[0]: Locale object to update
-	// params[1]: input language string
-	// params[2]: input country string
-	langObj := params[1].(*object.Object) // string
-	langStr := object.GoStringFromStringObject(langObj)
+	MethodSignatures["java/util/Locale.getInstance(Lsun/util/locale/BaseLocale;Lsun/util/locale/LocaleExtensions;)Ljava/util/Locale;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  getDefaultLocale, // ignore input
+		}
 
-	countryObj := params[2].(*object.Object) // string
-	countryStr := object.GoStringFromStringObject(countryObj)
-
-	bytes := []byte(langStr + "_" + countryStr)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
-
-	return nil
-}
-
-// "java/util/Locale.<init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-func localeFromLanguageCountryVariant(params []interface{}) interface{} {
-	// params[0]: Locale object to update
-	// params[1]: input language string
-	// params[2]: input country string
-	// params[3]: input variant string
-	langObj := params[1].(*object.Object)
-	langStr := object.GoStringFromStringObject(langObj)
-
-	countryObj := params[2].(*object.Object)
-	countryStr := object.GoStringFromStringObject(countryObj)
-
-	variantObj := params[3].(*object.Object)
-	variantStr := object.GoStringFromStringObject(variantObj)
-
-	bytes := []byte(langStr + "_" + countryStr + "_" + variantStr)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
-
-	return nil
 }
 
 // "java/util/Locale.getDefault()Ljava/util/Locale;"
+// "java/util/Locale.getDefault(Ljava/util/Locale$Category;)Ljava/util/Locale;"
+// "java/util/Locale.getInstance(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lsun/util/locale/LocaleExtensions;)Ljava/util/Locale;"
 func getDefaultLocale([]interface{}) interface{} {
+	// Ignore parameters.
 	langStr := os.Getenv("LANGUAGE")
 	classStr := "java/lang/Locale"
 	obj := object.MakeEmptyObjectWithClassName(&classStr)
