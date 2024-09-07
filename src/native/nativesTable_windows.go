@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 /*
  * Jacobin VM - A Java virtual machine
  * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
