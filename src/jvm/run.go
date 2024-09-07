@@ -19,7 +19,6 @@ import (
 	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/native"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
@@ -2086,15 +2085,6 @@ frameInterpreter:
 
 			className, methodName, methodType :=
 				classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
-			if native.IsUnsupportedNativeMethod(className + "." + methodName) {
-				errMsg := fmt.Sprintf("%s() in %s is an unsupported native function",
-					methodName, className)
-				status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
-				}
-			}
 
 			mtEntry := classloader.MTable[className+"."+methodName+methodType]
 			if mtEntry.Meth == nil { // if the method is not in the method table, find it
