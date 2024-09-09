@@ -1,3 +1,7 @@
+github.com/edsrzf/mmap-go v1.1.0 h1:6EUwBLQ/Mcr1EYLE4Tn1VdW1A4ckqCQWZBw8Hr0kjpQ=
+github.com/edsrzf/mmap-go v1.1.0/go.mod h1:19H/e8pUPLicwkyNgOykDXkJ9F0MHE+Z52B8EIth78Q=
+github.com/omarghader/pefile-go v0.0.0-20170717144148-b1abcb010d7d h1:TTYoR0q0aUD2tb3XVdRR/6RtGeqkQyEMtYEU0rWQsFQ=
+github.com/omarghader/pefile-go v0.0.0-20170717144148-b1abcb010d7d/go.mod h1:tPwXnzaOW2y+AkS/zgHKJHP/OX6gSfxKe5hl6JFqZtU=
 golang.org/x/sys v0.17.0 h1:25cE3gD+tdBA7lp7QfhuV+rJiE9YXTcS3VG1SqssI/Y=
 golang.org/x/sys v0.17.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/term v0.17.0 h1:mkTF7LCd6WGJNL3K1Ad7kwxNfYAW6a8a8QqtMblp/4U=

@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 /*
  * Jacobin VM - A Java virtual machine
