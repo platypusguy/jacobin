@@ -9,14 +9,17 @@ package native
 import (
 	"fmt"
 	"github.com/omarghader/pefile-go/pe"
+	"jacobin/globals"
 	"log"
 	"strings"
 	"testing"
 )
 
 func TestExports(t *testing.T) {
-	err := CreateNativeFunctionTable("E:\\Dropbox\\DevTools\\Java\\JDK21\\bin\\zip.dll")
-	if err != nil && !strings.Contains(err.Error(), "not found") {
+	globals.InitGlobals("test")
+	jh := globals.JavaHome()
+	err := CreateNativeFunctionTable(jh + "\\bin\\zip.dll")
+	if err != nil && !strings.Contains(err.Error(), "java.io.FileNotFoundException") {
 		t.Errorf("Unexpected error: %s", err.Error())
 	}
 }
