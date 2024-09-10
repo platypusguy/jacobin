@@ -10,8 +10,16 @@ import (
 	"fmt"
 	"github.com/omarghader/pefile-go/pe"
 	"log"
+	"strings"
 	"testing"
 )
+
+func TestExports(t *testing.T) {
+	err := CreateNativeFunctionTable("E:\\Dropbox\\DevTools\\Java\\JDK21\\bin\\zip.dll")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Errorf("Unexpected error: %s", err.Error())
+	}
+}
 
 func TestPE(t *testing.T) {
 	log.Println("hello everyone, lets parse your PEFile")

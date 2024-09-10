@@ -11,6 +11,7 @@ package native
 import (
 	"errors"
 	"fmt"
+	"github.com/omarghader/pefile-go/pe"
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"runtime"
@@ -61,5 +62,20 @@ func unloadDll(dllPtr *syscall.DLL) error {
 		return errors.New(errMsg) // only occurs in testing
 	}
 
+	return nil
+}
+
+func CreateNativeFunctionTable(filename string) error {
+	pefile, err := pe.NewPEFile(filename)
+	if err != nil {
+		errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
+		exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
+		return errors.New(errMsg)
+	}
+
+	for _, entry := range pefile.ExportDirectory.Exports {
+		result := fmt.Sprintf("%s,%s", filename, entry.Name)
+		fmt.Println(result)
+	}
 	return nil
 }

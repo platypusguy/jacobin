@@ -89,8 +89,7 @@ func RunNativeFunction(fs *list.List, className, methodName, methodType string, 
 	// - an error returned by the native function (failure)
 	// - a pointer to a NativeErrBlk (exception occurred)
 	// ****************************************************
-	// TODO Integrate this with tables under investigation
-	// by Unka Andoo.
+	// TODO Integrate this with tables under investigation by ALB
 	// ****************************************************
 
 	// Check the type of function completion.
