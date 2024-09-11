@@ -87,4 +87,5 @@ jobs:
         $Env:JACOBIN_EXE = $Env:JACOBIN_TOP
         $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
+        go mod tidy
         go test -v ./...
