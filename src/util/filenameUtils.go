@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -8,6 +8,7 @@ package util
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -55,4 +56,29 @@ func IsFilePartOfJDK(filename *string) bool {
 	return strings.HasPrefix(*filename, "java") ||
 		strings.HasPrefix(*filename, "jdk") ||
 		strings.HasPrefix(*filename, "sun")
+}
+
+// SearchDirByFileExtension searches a directory and its subdirectories for
+// files with the extension. It returns a pointer to a slice of strings
+// containing the path for every qualifying file, or nil if an error has
+// occurred. If no qualifying file is found, the returned pointer points
+// to a slice of length 0.
+func SearchDirByFileExtension(dir, extension string) *[]string {
+	var filenames []string
+
+	// Walk through the directory tree
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		// Check if the file has the searched-for extension
+		if !info.IsDir() && filepath.Ext(info.Name()) == "."+extension {
+			filenames = append(filenames, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	return &filenames
 }

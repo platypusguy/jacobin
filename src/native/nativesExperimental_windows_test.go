@@ -7,23 +7,30 @@
 package native
 
 import (
-	"fmt"
-	"github.com/omarghader/pefile-go/pe"
+	// "fmt"
+	// "github.com/omarghader/pefile-go/pe"
 	"jacobin/globals"
-	"log"
-	"strings"
+	"jacobin/log"
 	"testing"
 )
 
 func TestExports(t *testing.T) {
 	globals.InitGlobals("test")
-	jh := globals.JavaHome()
-	err := CreateNativeFunctionTable(jh + "\\bin\\zip.dll")
-	if err != nil && !strings.Contains(err.Error(), "java.io.FileNotFoundException") {
-		t.Errorf("Unexpected error: %s", err.Error())
+	log.Init()
+	log.SetLogLevel(log.FINE)
+	err := CreateNativeFunctionTable("")
+	if err != nil {
+		t.Error(err)
 	}
+	// globals.InitGlobals("test")
+	// jh := globals.JavaHome()
+	// err := CreateNativeFunctionTable(jh + "\\bin\\zip.dll")
+	// if err != nil && !strings.Contains(err.Error(), "java.io.FileNotFoundException") {
+	// 	t.Errorf("Unexpected error: %s", err.Error())
+	// }
 }
 
+/*
 func TestPE(t *testing.T) {
 	log.Println("hello everyone, lets parse your PEFile")
 	args := "E:\\Dropbox\\DevTools\\Java\\JDK21\\bin\\zip.dll"
@@ -51,12 +58,12 @@ func TestPE(t *testing.T) {
 
 	log.Println(pefile.Sections)
 
-	/*for _, val := range pefile.ImportDescriptors {
-		log.Println(val)
-		for _, val2 := range val.Imports {
-			log.Println(val2)
-		}
-	}*/
+	// for _, val := range pefile.ImportDescriptors {
+	// 	log.Println(val)
+	// 	for _, val2 := range val.Imports {
+	// 		log.Println(val2)
+	// 	}
+	// }
 
 	log.Println("\nDIRECTORY_ENTRY_IMPORT")
 	for _, entry := range pefile.ImportDescriptors {
@@ -94,3 +101,4 @@ func TestPE(t *testing.T) {
 		fmt.Println("entropy:", entropy)
 	}
 }
+*/

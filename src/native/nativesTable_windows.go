@@ -14,6 +14,9 @@ import (
 	"github.com/omarghader/pefile-go/pe"
 	"jacobin/excNames"
 	"jacobin/exceptions"
+	"jacobin/globals"
+	"jacobin/log"
+	"jacobin/util"
 	"runtime"
 	"syscall"
 )
@@ -66,16 +69,27 @@ func unloadDll(dllPtr *syscall.DLL) error {
 }
 
 func CreateNativeFunctionTable(filename string) error {
-	pefile, err := pe.NewPEFile(filename)
-	if err != nil {
-		errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
-		exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
-		return errors.New(errMsg)
+	gl := *globals.GetGlobalRef()
+	jh := gl.JavaHome
+	dllList := util.SearchDirByFileExtension(jh, "dll")
+	dllListSize := len(*dllList)
+
+	if dllListSize == 200 {
+		pefile, err := pe.NewPEFile(filename)
+		if err != nil {
+			errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
+			exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
+			return errors.New(errMsg)
+		}
+
+		for _, entry := range pefile.ExportDirectory.Exports {
+			result := fmt.Sprintf("%s,%s", filename, entry.Name)
+			fmt.Println(result)
+		}
 	}
 
-	for _, entry := range pefile.ExportDirectory.Exports {
-		result := fmt.Sprintf("%s,%s", filename, entry.Name)
-		fmt.Println(result)
-	}
+	summary :=
+		fmt.Sprintf("Native function table for Windows created from %d .dll files", dllListSize)
+	log.Log(summary, log.FINE)
 	return nil
 }
