@@ -17,12 +17,6 @@ import (
 	"slices"
 )
 
-// Native function error block.
-type NativeErrBlk struct {
-	ExceptionType int
-	ErrMsg        string
-}
-
 var CaughtNativeFunctionException = errors.New("caught native function exception")
 
 // Execution of Java native functions.
