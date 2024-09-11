@@ -28,8 +28,8 @@ import (
 var nfuncTable = map[string]uintptr{} // Functions encountered and therefore have a handle
 
 type typeNxref struct {
-	libPath   string
-	libHandle uintptr
+	LibPath   string
+	LibHandle uintptr
 }
 
 var xrefTable = map[string]typeNxref{} // Function-to-library cross reference table
@@ -44,15 +44,15 @@ func getFuncHandle(methodName, methodType string) interface{} {
 	functionKey := methodName + methodType
 	funcHandle, ok := nfuncTable[functionKey]
 	if !ok {
-		libHandle := xrefTable[functionKey].libHandle
+		libHandle := xrefTable[functionKey].LibHandle
 		funcHandle, err := purego.Dlsym(libHandle, methodName)
 		if err != nil {
-			libPath := xrefTable[functionKey].libPath
+			libPath := xrefTable[functionKey].LibPath
 			errMsg := fmt.Sprintf("purego.Dlsym(%s : %s) failed, reason: %s", libPath, functionKey, err.Error())
 			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
 		}
 		if funcHandle == 0 {
-			libPath := xrefTable[functionKey].libPath
+			libPath := xrefTable[functionKey].LibPath
 			errMsg := fmt.Sprintf("purego.Dlsym(%s : %s) function not found", libPath, functionKey)
 			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
 		}
