@@ -73,9 +73,10 @@ func CreateNativeFunctionTable(filename string) error {
 	jh := gl.JavaHome
 	dllList := util.SearchDirByFileExtension(jh, "dll")
 	dllListSize := len(*dllList)
+	var functionListSize = 0
 
-	if dllListSize == 200 {
-		pefile, err := pe.NewPEFile(filename)
+	for _, dllFile := range *dllList {
+		pefile, err := pe.NewPEFile(dllFile)
 		if err != nil {
 			errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
 			exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
@@ -83,13 +84,17 @@ func CreateNativeFunctionTable(filename string) error {
 		}
 
 		for _, entry := range pefile.ExportDirectory.Exports {
-			result := fmt.Sprintf("%s,%s", filename, entry.Name)
-			fmt.Println(result)
+			if entry.Name[0] != '?' { // guessing that natives that start wih ? are not real functions
+				result := fmt.Sprintf("%s,%s", dllFile, entry.Name)
+				fmt.Println(result)
+				functionListSize += 1
+			}
 		}
 	}
 
-	summary :=
-		fmt.Sprintf("Native function table for Windows created from %d .dll files", dllListSize)
+	summary := fmt.Sprintf(
+		"Native function table for Windows created: %d native functions in %d .dll files",
+		functionListSize, dllListSize)
 	log.Log(summary, log.FINE)
 	return nil
 }
