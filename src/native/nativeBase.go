@@ -19,12 +19,6 @@ At run-time, RunNativeFunction will do the following in order to get a native fu
 
 package native
 
-import (
-	"fmt"
-	"github.com/ebitengine/purego"
-	"jacobin/excNames"
-)
-
 var nfuncTable = map[string]uintptr{} // Functions encountered and therefore have a handle
 
 type typeNxref struct {
@@ -40,6 +34,7 @@ type NativeErrBlk struct {
 	ErrMsg        string
 }
 
+/* commented out for the nonce until we decide what to do w.r.t. purego
 func getFuncHandle(methodName, methodType string) interface{} {
 	var funcHandle uintptr
 	var xrefEntry typeNxref
@@ -74,8 +69,11 @@ func getFuncHandle(methodName, methodType string) interface{} {
 
 		// Update nfuncTable with the function handle.
 		nfuncTable[functionKey] = funcHandle
+
+
 	}
 
 	// Return the function handle.
 	return funcHandle
 }
+*/
