@@ -18,6 +18,8 @@ As we progress, we post short explanations of project decisions and explanations
 
 #### Project Posts
 
+[Jacobin at the 3-year mark](https://binstock.blogspot.com/2024/09/at-3-year-mark-brief-look-at-history.html)
+
 [Jacobin at 30 months]( http://binstock.blogspot.com/2024/02/jacobin-jvm-at-30-months.html)
 
 [Jacobin at the 2-year mark](http://binstock.blogspot.com/2023/08/jacobin-at-2-year-mark.html)
