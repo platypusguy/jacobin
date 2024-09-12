@@ -1,14 +1,17 @@
 ## Welcome to Jacobin JVM
 
-Jacobin is an implementation of the [JVM specification for Java 17](https://docs.oracle.com/javase/specs/jvms/se17/html/). It is written entirely in Go with no dependencies. 
+Jacobin is an implementation of the [JVM specification for Java 17](https://docs.oracle.com/javase/specs/jvms/se17/html/). It is written entirely in Go with no non-Go dependencies. 
 
-The goal is to provide a more-than-minimal implementation of the JVM that can run most class files and JARs and deliver the same results as the OpenJDK-based JVMs (that is, the majority of JVM implementations today). A paramount consideration in the design and implementation of Jacobin is the codebase: making it cohesive and containing clear code. The cohesiveness, extensive commenting, and large test suite enable professionals who want to know more about how the JVM works to find the information quickly and in an easily accessible setting. Additional information on the [Jacobin wiki](https://github.com/platypusguy/jacobin/wiki/Jacobin-Documentation-Home) provides more background and insight. Because Jacobin is strictly a JVM, its code is tightly focused on Java program execution. An important factor in reducing the size of the codebase and executable is that Jacobin relies on Go's built-in memory management to perform garbage collection, and so it contains no GC code.
+The goal is to provide a more-than-minimal implementation of the JVM that can run most class files and JARs and deliver the same results as the OpenJDK-based JVMs (that is, the majority of JVM implementations today). A paramount consideration in the design and implementation of Jacobin is the codebase: making it cohesive and containing clear code. The cohesiveness, extensive commenting, and large test suite enable professionals who want to know more about how the JVM works to find the information quickly and in an easily accessible setting. Additional information on the [Jacobin wiki](https://github.com/platypusguy/jacobin/wiki/Jacobin-Documentation-Home) provides more background and insight. 
 
-Due to our desire for an utterly reliable product, Jacobin is heavily tested during development. As of February 2024, the test code is 322% the size of the production code and consists of more than 700 tests. We're committed to increasing these numbers. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
+Eventually, we hope to enable developers to run their code and have a UI that shows the bytecodes executing, along with the contents of the various JVM stacks, heap, and counters. If you want to see how your Java code executes, this end product will show you in real time. (This is difficult to do with OpenJDK-based JVMs due to their very large codebases written in multiple languages.)
+
+
+Due to our desire for a strong, reliable product, Jacobin is heavily tested during development. As of September 2024, the test code is 233% the size of the production code and consists of more than 850 tests. We're committed to increasing these numbers. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
 
 ### Current Status
 
-The current status is shown [here](https://github.com/platypusguy/jacobin). Updates are also posted in realtime on the [Jacobin Twitter account](https://twitter.com/jacobin_jvm).There are currently no packaged releases of Jacobin available (although you can always compile the code). We'll issue releases when Jacobin is mature enough to run classes as expected.
+The current status is shown [here](https://github.com/platypusguy/jacobin). Updates are also posted in realtime on the [Jacobin Twitter account](https://twitter.com/jacobin_jvm).There are currently no packaged releases of Jacobin available (although you can always compile the code). We'll issue releases when Jacobin is mature enough for beta testers to be able to run classes as expected.
 
 At present, all tasks and defects are logged in an instance of JetBrains' [YouTrack](https://www.jetbrains.com/youtrack/) (kindly provided at no cost). The task numbers appear at the start of the comment for every commit and push. The GitHub 'issues' facility is used strictly for issues posted by users. This design allows users to find solutions without needing to dig through numerous unrelated matters. 
 
