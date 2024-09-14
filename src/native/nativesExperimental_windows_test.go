@@ -17,7 +17,7 @@ import (
 func TestExports(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINE)
+	_ = log.SetLogLevel(log.FINE)
 	err := CreateNativeFunctionTable("")
 	if err != nil {
 		t.Error(err)

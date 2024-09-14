@@ -77,6 +77,7 @@ func CreateNativeFunctionTable(filename string) error {
 
 	for _, dllFile := range *dllList {
 		pefile, err := pe.NewPEFile(dllFile)
+
 		if err != nil {
 			errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
 			exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
@@ -90,6 +91,7 @@ func CreateNativeFunctionTable(filename string) error {
 				functionListSize += 1
 			}
 		}
+
 	}
 
 	summary := fmt.Sprintf(
