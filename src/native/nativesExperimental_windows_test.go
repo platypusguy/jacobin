@@ -11,6 +11,7 @@ package native
 import (
 	"jacobin/globals"
 	"jacobin/log"
+	"os"
 	"testing"
 )
 
@@ -19,9 +20,31 @@ import (
 func TestExports(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	log.SetLogLevel(log.FINE)
+
+	// redirect stdout to avoid printing error message to console
+	normalStdout := os.Stdout
+	_, w, _ := os.Pipe()
+	os.Stdout = w
+
+	normalStderr := os.Stderr
+	_, werr, _ := os.Pipe()
+	os.Stderr = werr
+
+	_ = log.SetLogLevel(log.FINE)
 	err := CreateNativeFunctionTable("")
 	if err != nil {
 		t.Error(err)
 	}
+
+	_ = w.Close()
+	// msg, _ := io.ReadAll(r)
+	os.Stdout = normalStdout // restore stdout
+
+	_ = werr.Close()
+	// msgErr, _ := io.ReadAll(rerr)
+	os.Stderr = normalStderr
+
+	// if string(msg) == "" {
+	// 	t.Error("expected list of DLL files, but got none")
+	// }
 }
