@@ -15,7 +15,6 @@ import (
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/util"
 	"runtime"
 	"syscall"
@@ -71,17 +70,19 @@ func unloadDll(dllPtr *syscall.DLL) error {
 func CreateNativeFunctionTable(path string) error {
 	var topDir string
 
-	if path == "" {
+	if path == "" { // if no path specified, get it from JAVA_HOME
 		gl := *globals.GetGlobalRef()
 		topDir = gl.JavaHome
 	} else {
 		topDir = path
 	}
 
+	// directory walk looking for DLL files
 	dllList := util.SearchDirByFileExtension(topDir, "dll")
 	dllListSize := len(*dllList)
 	var functionListSize = 0
 
+	// for every DLL get a list of the functions it exports
 	for _, dllFile := range *dllList {
 		pefile, err := pe.NewPEFile(dllFile)
 
@@ -103,6 +104,6 @@ func CreateNativeFunctionTable(path string) error {
 	summary := fmt.Sprintf(
 		"Native function table for Windows created: %d native functions in %d .dll files",
 		functionListSize, dllListSize)
-	log.Log(summary, log.FINE)
+	fmt.Println(summary)
 	return nil
 }
