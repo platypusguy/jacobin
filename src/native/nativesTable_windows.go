@@ -68,10 +68,17 @@ func unloadDll(dllPtr *syscall.DLL) error {
 	return nil
 }
 
-func CreateNativeFunctionTable(filename string) error {
-	gl := *globals.GetGlobalRef()
-	jh := gl.JavaHome
-	dllList := util.SearchDirByFileExtension(jh, "dll")
+func CreateNativeFunctionTable(path string) error {
+	var topDir string
+
+	if path == "" {
+		gl := *globals.GetGlobalRef()
+		topDir = gl.JavaHome
+	} else {
+		topDir = path
+	}
+
+	dllList := util.SearchDirByFileExtension(topDir, "dll")
 	dllListSize := len(*dllList)
 	var functionListSize = 0
 
@@ -79,7 +86,7 @@ func CreateNativeFunctionTable(filename string) error {
 		pefile, err := pe.NewPEFile(dllFile)
 
 		if err != nil {
-			errMsg := fmt.Sprintf("error parsing DLL file %s", filename)
+			errMsg := fmt.Sprintf("error parsing DLL file %s", dllFile)
 			exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
 			return errors.New(errMsg)
 		}
@@ -91,7 +98,6 @@ func CreateNativeFunctionTable(filename string) error {
 				functionListSize += 1
 			}
 		}
-
 	}
 
 	summary := fmt.Sprintf(
