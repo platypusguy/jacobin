@@ -1,19 +1,8 @@
 /*
-
-During initialization,
-* The NfLibXrefTable is built by either a POSIX loader or a Windows loader. Note that both the library path and handle are populated.
-* The nfToTmplTable remains nil.
-
-At run-time, RunNativeFunction will do the following in order to get (1) a native function handle
-and (2) the corresponding template function address:
-* Look up the funcName in the nfToTmplTable.
-* If not found,
-     - Look up funcName in nfToLibTable. Not found ---> error.
-     - Derive the template function to use for this methodName based on the methodType.
-     - Store the template function handle in nfToTmplTable.
-* Call the template function (by address) with arguments: library handle and the function name.
-
-*/
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
+ */
 
 package native
 
