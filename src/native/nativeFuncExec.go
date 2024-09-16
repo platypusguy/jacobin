@@ -17,15 +17,14 @@ import (
 	"slices"
 )
 
-var CaughtNativeFunctionException = errors.New("caught native function exception")
-
 // Execution of Java native functions.
 // Called by the INVOKE* op codes in run.go.
 // This effort begins with the JACOBIN-582 task.
 //
 // Parameters:
 // * fs : the frame stack of the current thread
-// * className, methodName : class and method names
+// * className : class name
+// * functionName : function name (method name in the jvm package)
 // * methodType : parameters and return value expressed as (parameter-types)value-type
 // * params : a slice of parameters being passed to the method
 // * tracing : a boolean such that when true, trace-prints should be performed
@@ -44,7 +43,7 @@ var CaughtNativeFunctionException = errors.New("caught native function exception
 //      return errors.New(errMsg) // applies only if in test
 // }
 
-func RunNativeFunction(fs *list.List, className, methodName, methodType string, params *[]interface{}, tracing bool) any {
+func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType string, params *[]interface{}, tracing bool) any {
 
 	f := fs.Front().Value.(*frames.Frame)
 
@@ -57,11 +56,11 @@ func RunNativeFunction(fs *list.List, className, methodName, methodType string, 
 	}
 
 	// Form the full method name.
-	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
+	fullMethName := fmt.Sprintf("%s.%s%s", className, nativeFunctionName, methodType)
 	if tracing {
-		traceInfo := fmt.Sprintf("RunNativefunction: %s, paramSlots: %d", fullMethName, paramCount)
+		traceInfo := fmt.Sprintf("RunNativeFunction: %s, paramSlots: %d", fullMethName, paramCount)
 		_ = log.Log(traceInfo, log.TRACE_INST)
-		// TODO jvm.LogTraceStack(f)
+		// TODO jvm.LogTraceStack(templateFunction)
 	}
 
 	// Reverse the parameter order. Last appended will be fetched first.
@@ -73,23 +72,61 @@ func RunNativeFunction(fs *list.List, className, methodName, methodType string, 
 	// No matter what, ret = the result from the G function.
 	var ret any
 
-	// ****************************************************
-	// TODO Figure out how to call the native function.
-	// ****************************************************
-	// Select a template function based on method type.
-	// Each template function uses purego and can return
-	// one of the following:
-	// - a value computed by the native function (success)
-	// - an error returned by the native function (failure)
-	// - a pointer to a NativeErrBlk (exception occurred)
-	// ****************************************************
-	// TODO Integrate this with tables under investigation by ALB
-	// ****************************************************
+	/*
+
+	   During initialization (not part of this function),
+	   * The NfLibXrefTable is built by either a POSIX loader or a Windows loader. Note that both the library path and handle are populated.
+	   * The nfToTmplTable remains nil.
+
+	   At run-time, RunNativeFunction will do the following in order to get (1) a native function handle
+	   and (2) the corresponding template function address:
+	   * Look up the funcName in the nfToTmplTable.
+	   * If not found,
+	        - Look up funcName in nfToLibTable. Not found ---> error.
+	        - Derive the template function to use for this methodName based on the methodType.
+	        - Store the template function handle in nfToTmplTable.
+	   * Call the template function (by address) with arguments: library handle and the function name.
+
+	*/
+
+	var templateFunction typeTemplateFunction
+	var libHandle uintptr
+	var ok bool
+
+	// Get the library handle.
+	libHandle, ok = nfToLibTable[nativeFunctionName]
+	if !ok {
+		errMsg := fmt.Sprintf("RunNativeFunction: Function %s is not in the function-to-library-table", nativeFunctionName)
+		return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
+	}
+
+	// Get the template function handle.
+	templateFunction, ok = nfToTmplTable[nativeFunctionName]
+	if !ok {
+
+		// Does not yet have a template function handle.
+		// Get the template function handle.
+		mapResult := mapToTemplateHandle(methodType)
+		switch mapResult.(type) {
+		case typeTemplateFunction:
+			templateFunction = mapResult.(typeTemplateFunction)
+		default:
+			errMsg := fmt.Sprintf("RunNativeFunction: mapToTemplateHandle(%s) not found", methodType)
+			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
+		}
+
+		// Update nfToTmplTable with the template function handle for the next time.
+		nfToTmplTable[nativeFunctionName] = templateFunction
+
+	}
+
+	// Call the template function.
+	ret = templateFunction(libHandle, nativeFunctionName, *params)
 
 	// Check the type of function completion.
 	switch ret.(type) {
 
-	case *NativeErrBlk:
+	case *NativeErrBlk: // Native error block was returned.
 		// Convenience capture of the error block.
 		errBlk := *ret.(*NativeErrBlk)
 
@@ -112,7 +149,7 @@ func RunNativeFunction(fs *list.List, className, methodName, methodType string, 
 			return CaughtNativeFunctionException
 		}
 
-	case error:
+	case error: // Go error object returned.
 		// Build the error message for the native function failure and return it.
 		errMsg := (ret.(error)).Error()
 		status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)

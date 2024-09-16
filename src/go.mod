@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 )

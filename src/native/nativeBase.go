@@ -1,32 +1,35 @@
 /*
 
 During initialization,
-* The xrefTable is built by either a POSIX loader or a Windows loader. Note that both the library path and handle are populated.
-* The methodsTable remains nil.
+* The NfLibXrefTable is built by either a POSIX loader or a Windows loader. Note that both the library path and handle are populated.
+* The nfToTmplTable remains nil.
 
-At run-time, RunNativeFunction will do the following in order to get a native function handle:
-* Form the functionKey = methodName concatenated with methodType.
-* Look up the functionKey in the nfuncTable.
+At run-time, RunNativeFunction will do the following in order to get (1) a native function handle
+and (2) the corresponding template function address:
+* Look up the funcName in the nfToTmplTable.
 * If not found,
-     - Look up functionKey in xrefTable.
-     - Not found ---> error.
-     - Use the libHandle to get the function handle.
-     - Failure (E.g. not found) ---> error.
-     - Store the function handle in nfuncTable.
-* Use the function handle for the function call.
+     - Look up funcName in nfToLibTable. Not found ---> error.
+     - Derive the template function to use for this methodName based on the methodType.
+     - Store the template function handle in nfToTmplTable.
+* Call the template function (by address) with arguments: library handle and the function name.
 
 */
 
 package native
 
-var nfuncTable = map[string]uintptr{} // Functions encountered and therefore have a handle
+import "errors"
 
-type typeNxref struct {
-	LibPath   string
-	LibHandle uintptr
-}
+var CaughtNativeFunctionException = errors.New("caught native function exception")
 
-var xrefTable = map[string]typeNxref{} // Function-to-library cross reference table
+// Native function to library handle table
+// Input: Native function name.
+// Output: Library file handle.
+var nfToLibTable = map[string]uintptr{}
+
+// Native function to template function handle table
+// Input: Native function name.
+// Output: Template function handle.
+var nfToTmplTable = map[string]typeTemplateFunction{}
 
 // Native function error block.
 type NativeErrBlk struct {
@@ -34,46 +37,15 @@ type NativeErrBlk struct {
 	ErrMsg        string
 }
 
-/* commented out for the nonce until we decide what to do w.r.t. purego
-func getFuncHandle(methodName, methodType string) interface{} {
-	var funcHandle uintptr
-	var xrefEntry typeNxref
-	var ok bool
-	var err error
+// Type definition for all the template functions
+type typeTemplateFunction func(libHandle uintptr, functionName string, params []interface{}) interface{}
 
-	// Form the key for nfuncTable.
-	functionKey := methodName + methodType
-	funcHandle, ok = nfuncTable[functionKey]
-	if !ok {
-
-		// Not yet registered in nfuncTable.
-		// Get the library handle. This should be already available.
-		xrefEntry, ok = xrefTable[functionKey]
-		if !ok {
-			errMsg := fmt.Sprintf("Function %s is not in the XREF", functionKey)
-			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
-		}
-
-		// Get the function handle.
-		funcHandle, err = purego.Dlsym(xrefEntry.LibHandle, methodName)
-		if err != nil { // Purego detected an error.
-			libPath := xrefEntry.LibPath
-			errMsg := fmt.Sprintf("purego.Dlsym(%s : %s) failed, reason: %s", libPath, functionKey, err.Error())
-			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
-		}
-		if funcHandle == 0 { // Purego could not find the function name.
-			libPath := xrefEntry.LibPath
-			errMsg := fmt.Sprintf("purego.Dlsym(%s : %s) function not found", libPath, functionKey)
-			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
-		}
-
-		// Update nfuncTable with the function handle.
-		nfuncTable[functionKey] = funcHandle
-
-
-	}
-
-	// Return the function handle.
-	return funcHandle
-}
-*/
+// Argument types for template functions.
+type NFboolean uint8
+type NFbyte uint8
+type NFchar uint16
+type NFshort int16
+type NFint int32
+type NFlong int64
+type NFfloat float32
+type NFdouble float64

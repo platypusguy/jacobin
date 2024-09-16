@@ -510,7 +510,7 @@ java.base/share/classes/java/lang/reflect/Array.java:415:    native void setInt(
 java.base/share/classes/java/lang/reflect/Array.java:435:    native void setLong(Object array, int index, long l)
 
 ### (Ljava/lang/Object;IF)V
-java.base/share/classes/java/lang/reflect/Array.java:455:    native void setFloat(Object array, int index, float f)
+java.base/share/classes/java/lang/reflect/Array.java:455:    native void setFloat(Object array, int index, float templateFunction)
 
 ### (Ljava/lang/Object;ID)V
 java.base/share/classes/java/lang/reflect/Array.java:475:    native void setDouble(Object array, int index, double d)
