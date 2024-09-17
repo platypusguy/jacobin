@@ -6,7 +6,11 @@
 
 package native
 
-import "errors"
+import (
+	"errors"
+	"os"
+	"unsafe"
+)
 
 var CaughtNativeFunctionException = errors.New("caught native function exception")
 
@@ -27,14 +31,43 @@ type NativeErrBlk struct {
 }
 
 // Type definition for all the template functions
-type typeTemplateFunction func(libHandle uintptr, functionName string, params []interface{}) interface{}
+type typeTemplateFunction func(libHandle uintptr, functionName string, params []interface{}, tracing bool) interface{}
 
 // Argument types for template functions.
-type NFboolean uint8
-type NFbyte uint8
-type NFchar uint16
-type NFshort int16
-type NFint int32
-type NFlong int64
-type NFfloat float32
-type NFdouble float64
+type (
+	NFboolean   uint8
+	NFbyte      uint8
+	NFchar      uint16
+	NFshort     int16
+	NFint       int32
+	NFuint      uint32
+	NFlong      int64
+	NFfloat     float32
+	NFdouble    float64
+	NFbyteArray unsafe.Pointer
+	NFobject    unsafe.Pointer
+)
+
+// Struct for CreateJvm.
+type t_JavaVMInitArgs struct {
+	version            NFint
+	nOptions           NFint
+	JavaVMOption       uintptr
+	ignoreUnrecognized NFboolean
+}
+
+// JVM initialisation parameters.
+var JavaVMInitArgs = t_JavaVMInitArgs{version: 0x00090000, nOptions: 0, JavaVMOption: 0, ignoreUnrecognized: 0}
+
+// O/S stuff.
+var OperSys string                           // One of: "darwin", "linux", "unix", "windows"
+var WindowsOS = false                        // true only if OperSys = "windows"
+var PathDirLibs string                       // Directory of the more common JVM libraries (E.g. libzip.so)
+var PathLibjvm string                        // Full path of libjvm.so
+var PathLibjava string                       // Full path of libjava.so
+var FileExt string                           // File extension of a library file: "so" (Linux and Unix), "dll" (Windows), "dylib" (MacOS)
+var SepPathString = string(os.PathSeparator) // ";" (Windows) or ":" (everybody else)
+var HandleLibjvm uintptr                     // Handle of the open libjvm
+var HandleLibjava uintptr                    // Handle of the open libjava
+var HandleJVM uintptr                        // Handle of the created JVM
+var HandleENV uintptr                        // Handle of the JNI environment

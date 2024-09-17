@@ -27,25 +27,25 @@ import (
 	"github.com/ebitengine/purego"
 )
 
-func mapToTemplateHandle(methodType string) interface{} {
+func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	switch methodType {
 	case "(II)I":
 		var templateFunction = template_II_I
-		return templateFunction
+		return templateFunction, true
 	}
-	return nil
+	return nil, false
 }
 
-func template_II_I(libHandle uintptr, nativeFunctionName string, params []interface{}) interface{} {
+func template_II_I(libHandle uintptr, nativeFunctionName string, params []interface{}, tracing bool) interface{} {
 	// Register the native function.
-	var fn func(arg1, arg2 NFint) NFint
+	var fn func(env, class uintptr, arg1, arg2 NFint) NFint
 	purego.RegisterLibFunc(&fn, libHandle, nativeFunctionName)
 
 	// Get arguments.
-	arg1 := NFint(params[0].(int64))
-	arg2 := NFint(params[1].(int64))
+	arg1 := params[0].(NFint)
+	arg2 := params[1].(NFint)
 
 	// Compute result and return it.
-	out := fn(arg1, arg2)
-	return int64(out)
+	out := fn(HandleENV, 0, arg1, arg2)
+	return out
 }

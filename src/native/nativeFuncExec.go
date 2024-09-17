@@ -43,9 +43,9 @@ import (
 //      return errors.New(errMsg) // applies only if in test
 // }
 
-func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType string, params *[]interface{}, tracing bool) any {
+func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType string, params *[]interface{}, tracing bool) interface{} {
 
-	f := fs.Front().Value.(*frames.Frame)
+	frame := fs.Front().Value.(*frames.Frame)
 
 	// Compute the parameter count.
 	var paramCount int
@@ -106,11 +106,8 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 
 		// Does not yet have a template function handle.
 		// Get the template function handle.
-		mapResult := mapToTemplateHandle(methodType)
-		switch mapResult.(type) {
-		case typeTemplateFunction:
-			templateFunction = mapResult.(typeTemplateFunction)
-		default:
+		templateFunction, ok = mapToTemplateHandle(methodType)
+		if !ok {
 			errMsg := fmt.Sprintf("RunNativeFunction: mapToTemplateHandle(%s) not found", methodType)
 			return NativeErrBlk{ExceptionType: excNames.VirtualMachineError, ErrMsg: errMsg}
 		}
@@ -121,7 +118,7 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 	}
 
 	// Call the template function.
-	ret = templateFunction(libHandle, nativeFunctionName, *params)
+	ret = templateFunction(libHandle, nativeFunctionName, *params, tracing)
 
 	// Check the type of function completion.
 	switch ret.(type) {
@@ -132,16 +129,16 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 
 		// Get the thread name.
 		var threadName string
-		if f.Thread == 1 {
+		if frame.Thread == 1 {
 			threadName = "main"
 		} else {
-			threadName = fmt.Sprintf("%d", f.Thread)
+			threadName = fmt.Sprintf("%d", frame.Thread)
 		}
 
 		// Build the exception message and return it.
 		errMsg := fmt.Sprintf("%s in thread: %s, method: %s",
 			errBlk.ErrMsg, threadName, fullMethName)
-		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
+		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, frame)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
 		} else {
@@ -152,7 +149,7 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 	case error: // Go error object returned.
 		// Build the error message for the native function failure and return it.
 		errMsg := (ret.(error)).Error()
-		status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
+		status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, frame)
 		if status != exceptions.Caught {
 			return ret.(error) // applies only if in test
 		} else {
