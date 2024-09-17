@@ -2,7 +2,6 @@ package native
 
 import (
 	"fmt"
-	"github.com/ebitengine/purego"
 	"jacobin/globals"
 	"jacobin/log"
 	"runtime"
@@ -55,6 +54,8 @@ func nativeInit() bool {
 	infoMsg = fmt.Sprintf("nativeInit: connect to %s ok", PathLibjava)
 	_ = log.Log(infoMsg, log.TRACE_INST)
 
+	/*****
+
 	// Register the JVM creator library function.
 	funcName := "JNI_CreateJavaVM"
 	var JvmEnv uintptr
@@ -64,7 +65,6 @@ func nativeInit() bool {
 	_ = log.Log(infoMsg, log.TRACE_INST)
 
 	// Create the JVM.
-
 	ret := createJvm(&HandleJVM, &JvmEnv, &JavaVMInitArgs)
 	if ret < 0 {
 		_ = log.Log("nativeInit: Cannot create a JVM. Exiting.", log.SEVERE)
@@ -85,7 +85,10 @@ func nativeInit() bool {
 		_ = log.Log("nativeInit: Cannot get the JNI environment pointer. Exiting.", log.SEVERE)
 		return false
 	}
-	_ = log.Log("nativeInit: End, got JNI env handle", log.TRACE_INST)
+	_ = log.Log("nativeInit: Got JNI env handle", log.TRACE_INST)
+	*****/
+
+	_ = log.Log("nativeInit: End", log.TRACE_INST)
 
 	return true
 

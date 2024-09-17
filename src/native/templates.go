@@ -46,6 +46,7 @@ func template_II_I(libHandle uintptr, nativeFunctionName string, params []interf
 	arg2 := NFint(params[1].(int64))
 
 	// Compute result and return it.
-	out := fn(HandleENV, 0, arg1, arg2)
+	//out := fn(HandleENV, 0, arg1, arg2)
+	out := fn(0, 0, arg1, arg2)
 	return int64(out)
 }
