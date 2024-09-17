@@ -64,13 +64,13 @@ func Test_II_I(t *testing.T) {
 
 	// Call RunNativeFunction.
 	params := make([]interface{}, 2)
-	params[1] = NFint(0)
-	params[0] = NFint('A')
+	params[1] = int64(0)
+	params[0] = int64('A')
 	expected := NFuint(0xd3d99e8b)
 	ret := RunNativeFunction(fs, "CRC32", "Java_java_util_zip_CRC32_update", "(II)I", &params, tracing)
 	switch ret.(type) {
-	case NFint:
-		observed := NFuint(ret.(NFint))
+	case int64:
+		observed := NFuint(ret.(int64))
 		if observed != expected {
 			t.Errorf("Oops, expected: 0x%08x, observed: 0x%08x\n", expected, NFuint(observed))
 		} else {

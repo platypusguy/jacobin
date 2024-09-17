@@ -42,10 +42,10 @@ func template_II_I(libHandle uintptr, nativeFunctionName string, params []interf
 	purego.RegisterLibFunc(&fn, libHandle, nativeFunctionName)
 
 	// Get arguments.
-	arg1 := params[0].(NFint)
-	arg2 := params[1].(NFint)
+	arg1 := NFint(params[0].(int64))
+	arg2 := NFint(params[1].(int64))
 
 	// Compute result and return it.
 	out := fn(HandleENV, 0, arg1, arg2)
-	return out
+	return int64(out)
 }
