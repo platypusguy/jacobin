@@ -16,5 +16,5 @@ func ConnectLibrary(libPath string) uintptr {
 		_ = log.Log(errMsg, log.SEVERE)
 		handle = 0
 	}
-	return handle
+	return uintptr(handle)
 }
