@@ -1,0 +1,17 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
+ * ------------------------------------------------------------------------
+ *
+ *  This directory contains various docs and notes the developers want to share
+ *  but keep with the source code.
+ *
+ *  The contents might change unexpectedly, so do not depend on these files
+ *  in any way. They're just scribbles, brainstorming, and miscellany.
+ *
+ *  For documents relating to the Jacobin JVM code base and its operations,
+ *  consult the Jacobin JVM Wiki at: https://github.com/platypusguy/jacobin/wiki
+ *
+ *  --the Jacobin Authors
+ */
