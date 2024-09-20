@@ -14,12 +14,12 @@ A more-than-minimal JVM written in Go.
 
 # Status
 ## Intended feature set:
-* Java 17 functionality, but...
+* Runs Java 21 classes, but...
 * No JNI (Oracle intends to replace it; see [JEP 389](https://openjdk.java.net/jeps/389))
 * No security manager (Oracle intends to remove it; see [JEP 411](https://openjdk.java.net/jeps/411))
 * No JIT
 * Somewhat less stringent bytecode verification
-* Does not enforce Java 17's sealed classes
+* Does not enforce sealed classes
 
 ## What we've done so far and what we need to do:
 ### Command-line parsing
@@ -58,9 +58,10 @@ A more-than-minimal JVM written in Go.
 * Running native functions (written in go). [Details here.](https://github.com/platypusguy/jacobin/wiki/Native-golang-functions-methods )
   
 **To do:**
-* invokedynamic
+* Method handles
 * Calls to superclasses
 * Inner and nested classes
+* invokedynamic bytecode 
 * Annotations
 
 ### Instrumentation
@@ -69,6 +70,7 @@ A more-than-minimal JVM written in Go.
 
 **To do:**
 * Emit instrumented data to a port, for reading/display by a separate program.
+* Write a UI component to watch the bytecodes executing and the changes in the various stacks
 
 ## Garbage Collection
 GC is handled by the golang runtime, which has its own GC
