@@ -52,6 +52,8 @@ func Test_II_I(t *testing.T) {
 	if !storeLibHandle(t, "net", "bananas") {
 		t.Error("storeLibHandle() failed")
 	}
+
+	// tell purego that zip lib/DLL contains Java_java_util_zi_CRC32_udpate()
 	if !storeLibHandle(t, "zip", "Java_java_util_zip_CRC32_update") {
 		t.Error("storeLibHandle() failed")
 	}
@@ -64,9 +66,15 @@ func Test_II_I(t *testing.T) {
 
 	// Call RunNativeFunction.
 	params := make([]interface{}, 2)
-	params[1] = int64(0)
-	params[0] = int64('A')
+	params[1] = int64(0)   // starting point for the CRC computation
+	params[0] = int64('A') // 'A' the value we want the CRC computed for
 	expected := NFuint(0xd3d99e8b)
+	// fs = frame stack,
+	// "CRC32" stand-in for the actual class name
+	// "Java_java_util_zip_CRC32_update" native function name
+	// (II)I native function type
+	// ptr param array
+	// tracing parameter for Jacobin's tracing purposes
 	ret := RunNativeFunction(fs, "CRC32", "Java_java_util_zip_CRC32_update", "(II)I", &params, tracing)
 	switch ret.(type) {
 	case int64:

@@ -29,6 +29,7 @@ import (
 
 func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	switch methodType {
+	// to add a new function, add the template here as a new case statement
 	case "(II)I":
 		var templateFunction = template_II_I
 		return templateFunction, true
@@ -37,7 +38,10 @@ func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 }
 
 func template_II_I(libHandle uintptr, nativeFunctionName string, params []interface{}, tracing bool) interface{} {
-	// Register the native function.
+	// Register the native function prototype
+	// env = JNI environment
+	// class = a reference to the object whose method is being called
+	// arg1, arg2 are the II that we're passing in
 	var fn func(env, class uintptr, arg1, arg2 NFint) NFint
 	purego.RegisterLibFunc(&fn, libHandle, nativeFunctionName)
 
@@ -46,7 +50,7 @@ func template_II_I(libHandle uintptr, nativeFunctionName string, params []interf
 	arg2 := NFint(params[1].(int64))
 
 	// Compute result and return it.
-	//out := fn(HandleENV, 0, arg1, arg2)
+	// out := fn(HandleENV, 0, arg1, arg2)
 	out := fn(0, 0, arg1, arg2)
 	return int64(out)
 }
