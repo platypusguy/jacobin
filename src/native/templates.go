@@ -27,6 +27,20 @@ import (
 	"github.com/ebitengine/purego"
 )
 
+/*
+Map a method type to a template function handle.
+Input:
+
+	Java language method type string E.g. (II)I
+
+Return:
+  - Reference to a template function if successful; else nil
+  - Ok-boolean = true if successful; else false
+
+Methodology:
+
+	Brute-force switch (gasp!)
+*/
 func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	switch methodType {
 	// to add a new function, add the template here as a new case statement
@@ -37,6 +51,10 @@ func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	return nil, false
 }
 
+/*
+Template function for method type (II)I
+E.g. Java_java_util_zip_CRC32_update
+*/
 func template_II_I(libHandle uintptr, nativeFunctionName string, params []interface{}, tracing bool) interface{} {
 	// Register the native function prototype
 	// env = JNI environment
