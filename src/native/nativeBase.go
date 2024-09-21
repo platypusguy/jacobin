@@ -8,6 +8,8 @@ package native
 
 import (
 	"errors"
+	"fmt"
+	"jacobin/log"
 	"os"
 	"unsafe"
 )
@@ -68,6 +70,28 @@ var PathLibjava string                       // Full path of libjava.so
 var FileExt string                           // File extension of a library file: "so" (Linux and Unix), "dll" (Windows), "dylib" (MacOS)
 var SepPathString = string(os.PathSeparator) // ";" (Windows) or ":" (everybody else)
 var HandleLibjvm uintptr                     // Handle of the open libjvm
-var HandleLibjava uintptr                    // Handle of the open libjava
-var HandleJVM uintptr                        // Handle of the created JVM
-var HandleENV uintptr                        // Handle of the JNI environment
+
+/*
+Store the library handle in the native function -to- library table.
+*/
+func storeLibHandle(argLib, argFunction string) bool {
+	var lib string
+	if WindowsOS {
+		lib = PathDirLibs + SepPathString + argLib + "." + FileExt
+	} else {
+		lib = PathDirLibs + SepPathString + "lib" + argLib + "." + FileExt // POSIX O/Ses take a "lib" prefix
+	}
+
+	// Connect library through either osBridgeWindows.go or osBridgePosix.go.
+	handle := ConnectLibrary(lib)
+	if handle == 0 {
+		return false // Bad news!
+	}
+
+	// Done! Trace and store handle.
+	infoMsg := fmt.Sprintf("storeLibHandle: lib: %s, function: %s\n", lib, argFunction)
+	log.Log(infoMsg, log.TRACE_INST)
+	nfToLibTable[argFunction] = handle
+
+	return true // Good news!
+}
