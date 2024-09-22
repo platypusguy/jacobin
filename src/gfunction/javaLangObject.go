@@ -42,18 +42,18 @@ func Load_Lang_Object() {
 // this is not a faithful reproduction of the OpenJDK version, but rather
 // the one we use in Jacobin
 type javaLangClass struct {
-	accessFlags    uint16
-	name           string // thisClassName
+	accessFlags    classloader.AccessFlags
+	name           string
 	superClassName string
 	interfaceNames []string
 	constantPool   classloader.CPool
-	// fields            []*Field
-	// methods           []*Method
-	loader     string
-	superClass string
-	// interfaces        []*Class
-	instanceSlotCount uint
-	staticSlotCount   uint
+	fields         []classloader.Field
+	methods        map[string]*classloader.Method
+	loader         string
+	superClass     string
+	interfaces     []uint16 // indices into UTF8Refs
+	// instanceSlotCount uint
+	// staticSlotCount   uint
 	// staticVars        Slots
 }
 
@@ -74,8 +74,11 @@ func objectGetClass(params []interface{}) interface{} {
 	objData := *obj.Data
 	jlc.constantPool = objData.CP
 	jlc.superClass = object.GoStringFromStringPoolIndex(objData.SuperclassIndex)
-
-	return jlc
+	jlc.fields = objData.Fields
+	jlc.interfaces = objData.Interfaces
+	jlc.methods = objData.MethodTable
+	jlc.accessFlags = objData.Access
+	return &jlc
 }
 
 // "java/lang/Object.toString()Ljava/lang/String;"
