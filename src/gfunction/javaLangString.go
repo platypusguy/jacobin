@@ -34,7 +34,7 @@ func Load_Lang_String() {
 			GFunction:  stringClinit,
 		}
 
-	// String(byte[] bytes) - instantiate a String from a byte array
+	// String(byte[] bytes) - instantiate an empty String
 	MethodSignatures["java/lang/String.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -55,7 +55,7 @@ func Load_Lang_String() {
 			GFunction:  trapDeprecated,
 		}
 
-	// String(byte[] bytes, int offset, int length)	- instantiate a String from a byte array SUBSET
+	// String(byte[] bytes, int offset, int length)	- instantiate a String from a subset of a byte array
 	MethodSignatures["java/lang/String.<init>([BII)V"] =
 		GMeth{
 			ParamSlots: 3,
@@ -97,12 +97,14 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
+	// Instantiate a String from a character array
 	MethodSignatures["java/lang/String.<init>([C)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  newStringFromChars,
 		}
 
+	// Instantiate a String from a subset of a character array
 	MethodSignatures["java/lang/String.<init>([CII)V"] =
 		GMeth{
 			ParamSlots: 3,
@@ -130,7 +132,7 @@ func Load_Lang_String() {
 			GFunction:  newStringFromString,
 		}
 
-	// Not in API: Latin1?
+	// Not in API: Is the String Latin1?
 	MethodSignatures["java/lang/String.isLatin1()Z"] =
 		GMeth{
 			ParamSlots: 0,
@@ -144,50 +146,58 @@ func Load_Lang_String() {
 			GFunction:  newStringFromString,
 		}
 
-	// ==== METHOD FUNCTIONS (in alpha order by their Java names) ====
+	// ==== METHOD FUNCTIONS (in alphabetical order by their function names) ====
 
+	// Returns the char value at the specified index.
 	MethodSignatures["java/lang/String.charAt(I)C"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringCharAt,
 		}
 
+	// Returns a stream of int zero-extending the char values from this sequence.
 	MethodSignatures["java/lang/String.chars()Ljava/util/stream/IntStream;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
+	// Internal
 	MethodSignatures["java/lang/String.checkBoundsBeginEnd(III)V"] =
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  stringCheckBoundsBeginEnd,
 		}
 
+	// Internal
 	MethodSignatures["java/lang/String.checkBoundsOffCount(III)I"] =
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  stringCheckBoundsOffCount,
 		}
 
+	// Returns the character (Unicode code point) at the specified index.
 	MethodSignatures["java/lang/String.codePointAt(I)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
+	// Returns the character (Unicode code point) before the specified index.
 	MethodSignatures["java/lang/String.codePointBefore(I)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
+	// Returns the number of Unicode code points in the specified text range of this String.
 	MethodSignatures["java/lang/String.codePointCount(II)I"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
 
+	// Returns a stream of code point values from this sequence.
 	MethodSignatures["java/lang/String.codePoints()Ljava/util/stream/IntStream;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -214,27 +224,32 @@ func Load_Lang_String() {
 			GFunction:  stringCompareToIgnoreCase,
 		}
 
+	// Concatenates the specified string to the end of this string.
 	MethodSignatures["java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringConcat,
 		}
+
+	// Returns true if and only if this string contains the specified sequence of char values.
 	MethodSignatures["java/lang/String.contains(Ljava/lang/CharSequence;)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringContains,
 		}
 
+	// Compares this string to the specified CharSequence.
 	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/CharSequence;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  javaLangStringContentEqualsL,
+			GFunction:  javaLangStringContentEquals,
 		}
 
+	// Compares this string to the specified StringBuffer.
 	MethodSignatures["java/lang/String.contentEquals(Ljava/lang/StringBuffer;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  javaLangStringContentEqualsL,
+			GFunction:  javaLangStringContentEquals,
 		}
 
 	// Return a string representing a char array.
@@ -251,6 +266,7 @@ func Load_Lang_String() {
 			GFunction:  newStringFromCharsSubset,
 		}
 
+	// Returns an Optional containing the nominal descriptor for this instance, which is the instance itself.
 	MethodSignatures["java/lang/String.describeConstable()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -258,13 +274,16 @@ func Load_Lang_String() {
 		}
 
 	// OpenJDK JVM "java/lang/String.endsWith(Ljava/lang/String;)Z" works with the jacobin String object.
+	// Tests if this string ends with the specified suffix.
 
+	// Compares this string to the specified object.
 	MethodSignatures["java/lang/String.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  stringEquals,
 		}
 
+	// Compares this String to another String, ignoring case considerations.
 	MethodSignatures["java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"] =
 		GMeth{
 			ParamSlots: 1,
@@ -294,7 +313,7 @@ func Load_Lang_String() {
 			GFunction:  sprintf,
 		}
 
-	// get the bytes from a string
+	// Encodes this String into a sequence of bytes using the default charset, storing the result into a new byte array.
 	MethodSignatures["java/lang/String.getBytes()[B"] =
 		GMeth{
 			ParamSlots: 0,
@@ -315,7 +334,7 @@ func Load_Lang_String() {
 			GFunction:  trapFunction,
 		}
 
-	// get the bytes from a string, given the Charset string name ************************ CHARSET
+	// Encodes this String into a sequence of bytes using the named charset, storing the result into a new byte array. ************************ CHARSET
 	MethodSignatures["java/lang/String.getBytes(Ljava/lang/String;)[B"] =
 		GMeth{
 			ParamSlots: 1,
@@ -330,7 +349,12 @@ func Load_Lang_String() {
 			GFunction:  stringGetBytesBIIBI,
 		}
 
-	// TODO: "java/lang/String.getChars(II[CI)V"
+	// Copies characters from this string into the destination character array.
+	MethodSignatures["java/lang/String.getChars(II[CI)V"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  stringGetChars,
+		}
 
 	// Compute the Java String.hashCode() value.
 	MethodSignatures["java/lang/String.hashCode()I"] =
@@ -339,13 +363,57 @@ func Load_Lang_String() {
 			GFunction:  stringHashCode,
 		}
 
-	// TODO: "java/lang/String.indent(I)Ljava/lang/String;"
+	// Adjusts the indentation of each line of this string based on the value of n, and normalizes line termination characters.
+	MethodSignatures["java/lang/String.indent(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
 
-	// TODO: "java/lang/String.indexOf(I)I"
+	// Returns the index within this string of the first occurrence of the specified character.
+	MethodSignatures["java/lang/String.indexOf(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringIndexOfCh,
+		}
 
-	// TODO: "java/lang/String.indexOf(II)I"
+	// Returns the index within this string of the first occurrence of the specified character,
+	// starting the search at the specified index.
+	MethodSignatures["java/lang/String.indexOf(II)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  stringIndexOfCh,
+		}
 
-	// TODO: "java/lang/String.indexOf(Ljava/lang/String;)I"
+	// Returns the index within this string of the first occurrence of the specified character,
+	// starting the search at beginIndex and stopping before endIndex.
+	MethodSignatures["java/lang/String.indexOf(III)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  stringIndexOfCh,
+		}
+
+	// Returns the index within this string of the first occurrence of the specified substring.
+	MethodSignatures["java/lang/String.indexOf(Ljava/lang/String;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  stringIndexOfString,
+		}
+
+	// Returns the index within this string of the first occurrence of the specified substring,
+	// starting at the specified index.
+	MethodSignatures["java/lang/String.indexOf(Ljava/lang/String;I)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  stringIndexOfString,
+		}
+
+	// Returns the index of the first occurrence of the specified substring within the specified index range of this string.
+	MethodSignatures["java/lang/String.indexOf(Ljava/lang/String;II)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  stringIndexOfString,
+		}
 
 	// TODO: "java/lang/String.intern()Ljava/lang/String;"
 
@@ -819,7 +887,7 @@ func stringContains(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-func javaLangStringContentEqualsL(params []interface{}) interface{} {
+func javaLangStringContentEquals(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
 	obj = params[1].(*object.Object)
@@ -1446,4 +1514,190 @@ func stringEndsWith(params []interface{}) interface{} {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+/*
+void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
+
+Copies characters from the base string into the destination character array.
+* The first character to be copied is at index srcBegin.
+* The last character to be copied is at index = srcEnd - 1.
+* The total number of characters to be copied = srcEnd - srcBegin.
+* The characters are copied into the subarray of dst starting at index dstBegin and ending at index = dstBegin + (srcEnd - srcBegin) - 1.
+*
+* NOTE: The API says that getChars can throw an IndexOutOfBoundsException
+*       but the JVM actually throws a StringIndexOutOfBoundsException.
+*/
+
+func stringGetChars(params []interface{}) interface{} {
+	// params[0] = base object (the string)
+	// params[1] = srcBegin
+	// params[2] = srcEnd
+	// params[3] = object holding the char array
+	// params[4] = dstBegin
+	// Return nil
+	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
+	if !ok {
+		errMsg := fmt.Sprintf("Missing value field in base object")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	srcBytes, ok := srcFld.Fvalue.([]byte)
+	if !ok {
+		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get source substring start offset and end offset.
+	srcBegin := params[1].(int64)
+	srcEnd := params[2].(int64)
+
+	// Compute total length of base byte array.
+	srcLength := int64(len(srcBytes))
+
+	// Get destination char array.
+	dstObj := params[3].(*object.Object)
+	dstFld, ok := dstObj.FieldTable["value"]
+	if !ok {
+		errMsg := fmt.Sprintf("Missing value field in char array object")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	dstChars, ok := dstFld.Fvalue.([]int64)
+	if !ok {
+		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in char array object", dstFld.Ftype, dstFld.Fvalue)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get char array start offset.
+	dstBegin := params[4].(int64)
+
+	// Compute chara array length.
+	dstLength := int64(len(dstChars))
+
+	// Validate boundaries.
+	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength || dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
+		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", srcLength, srcBegin, srcEnd)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	}
+
+	// Update destination character array.
+	ix := dstBegin
+	for _, xbyte := range srcBytes[srcBegin:srcEnd] {
+		dstChars[ix] = int64(xbyte)
+		ix += 1
+	}
+	dstFld.Fvalue = dstChars
+	dstObj.FieldTable["value"] = dstFld
+
+	return nil
+
+}
+
+/*
+Returns the index within this string of the first occurrence of the specified character,
+starting the search at beginIndex,
+and stopping before endIndex.
+*/
+func stringIndexOfCh(params []interface{}) interface{} {
+	// Get field of base object.
+	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
+	if !ok {
+		errMsg := fmt.Sprintf("Missing value field in base object")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get base object byte array.
+	srcBytes, ok := srcFld.Fvalue.([]byte)
+	if !ok {
+		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Get search argument and set up switch.
+	arg := byte(params[1].(int64))
+	var beginIndex int64
+	var endIndex int64
+	lenSrcBytes := int64(len(srcBytes))
+
+	// There are 3 slightly different functions requested.
+	switch len(params) - 1 {
+	case 1: // int indexOf(int ch)
+		beginIndex = 0
+		endIndex = lenSrcBytes
+	case 2: // int indexOf(int ch, int fromIndex)
+		beginIndex = params[2].(int64)
+		if beginIndex < 0 {
+			beginIndex = 0
+		}
+		if beginIndex >= lenSrcBytes {
+			return int64(-1)
+		}
+		endIndex = lenSrcBytes
+	case 3: // int indexOf(int ch, int beginIndex, int endIndex)
+		beginIndex = params[2].(int64)
+		if beginIndex < 0 || beginIndex >= lenSrcBytes {
+			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenSrcBytes, beginIndex)
+			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+		}
+		endIndex = params[3].(int64)
+		if endIndex > lenSrcBytes || beginIndex > endIndex {
+			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenSrcBytes, endIndex)
+			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+		}
+	}
+
+	// Search for argument in base byte array.
+	for ix := beginIndex; ix < endIndex; ix++ {
+		if arg == srcBytes[ix] {
+			return ix // Found it. Return the index.
+		}
+	}
+	return int64(-1) // Did not find it.
+}
+
+func stringIndexOfString(params []interface{}) interface{} {
+	// Get field of base object.
+	baseString := object.GoStringFromStringObject(params[0].(*object.Object))
+
+	// Get base object byte array.
+	argString := object.GoStringFromStringObject(params[1].(*object.Object))
+
+	// Set up for switch.
+	lenOrigBaseString := int64(len(baseString))
+	var beginIndex int64
+	var endIndex int64
+
+	// There are 3 slightly different functions requested.
+	switch len(params) - 1 {
+	case 1: // int indexOf(String str)
+		beginIndex = 0
+		endIndex = lenOrigBaseString
+	case 2: // int indexOf(String str, int fromIndex)
+		beginIndex = params[2].(int64)
+		if beginIndex < 0 {
+			beginIndex = 0
+		}
+		if beginIndex >= lenOrigBaseString {
+			return int64(-1)
+		}
+		endIndex = lenOrigBaseString
+	case 3: // int indexOf(String str, int beginIndex, int endIndex)
+		beginIndex = params[2].(int64)
+		if beginIndex < 0 || beginIndex >= lenOrigBaseString {
+			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenOrigBaseString, beginIndex)
+			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+		}
+		endIndex = params[3].(int64)
+		if endIndex > lenOrigBaseString || beginIndex > endIndex {
+			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenOrigBaseString, endIndex)
+			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+		}
+	}
+
+	// Search for argument in subsetted base string.
+	ii := int64(strings.Index(baseString[beginIndex:endIndex], argString))
+	if ii > 0 {
+		ii = ii + beginIndex // relative to original base string
+	}
+	return ii // >= 0 if success, -1 if failure
 }

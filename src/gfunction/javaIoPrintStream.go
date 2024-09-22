@@ -91,6 +91,54 @@ func Load_Io_PrintStream() {
 			GFunction:  PrintlnObject,
 		}
 
+	MethodSignatures["java/io/PrintStream.println([B)V"] = // println byte array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([C)V"] = // println char array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([D)V"] = // println double array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([F)V"] = // println float array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([I)V"] = // println int array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([J)V"] = // println long array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([S)V"] = // println int array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([Z)V"] = // println boolean array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintlnObject,
+		}
+
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
 		GMeth{
 			ParamSlots: 1, // [0] =  StringConst to print
@@ -142,6 +190,54 @@ func Load_Io_PrintStream() {
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // print object
 		GMeth{
 			ParamSlots: 1, // 1 slot for the Object
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([B)V"] = // print byte array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([C)V"] = // print char array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([D)V"] = // print double array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([F)V"] = // print float array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([I)V"] = // print int array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([J)V"] = // print long array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([S)V"] = // print int array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([Z)V"] = // print boolean array
+		GMeth{
+			ParamSlots: 1, // 1 slot for the array
 			GFunction:  PrintObject,
 		}
 
