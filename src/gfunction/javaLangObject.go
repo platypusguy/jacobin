@@ -8,8 +8,10 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/types"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -36,12 +38,44 @@ func Load_Lang_Object() {
 
 }
 
+// === the internal representation of a java.lang.Class() instance ===
+// this is not a faithful reproduction of the OpenJDK version, but rather
+// the one we use in Jacobin
+type javaLangClass struct {
+	accessFlags    uint16
+	name           string // thisClassName
+	superClassName string
+	interfaceNames []string
+	constantPool   classloader.CPool
+	// fields            []*Field
+	// methods           []*Method
+	loader     string
+	superClass string
+	// interfaces        []*Class
+	instanceSlotCount uint
+	staticSlotCount   uint
+	// staticVars        Slots
+}
+
 // "java/lang/Object.getClass()Ljava/lang/Class;"
 func objectGetClass(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	wint := obj.KlassName
-	name := object.GoStringFromStringPoolIndex(wint)
-	return object.StringObjectFromGoString("class " + name)
+	objPtr := params[0].(*object.Object)
+	if objPtr == nil || objPtr.KlassName == types.InvalidStringIndex {
+		errMsg := fmt.Sprintf("Invalid object in objectGetClass(): %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	jlc := javaLangClass{}
+	jlc.name = object.GoStringFromStringPoolIndex(objPtr.KlassName)
+
+	obj := *classloader.MethAreaFetch(jlc.name)
+	jlc.loader = obj.Loader
+
+	objData := *obj.Data
+	jlc.constantPool = objData.CP
+	jlc.superClass = object.GoStringFromStringPoolIndex(objData.SuperclassIndex)
+
+	return jlc
 }
 
 // "java/lang/Object.toString()Ljava/lang/String;"
