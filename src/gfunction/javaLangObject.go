@@ -68,9 +68,20 @@ func objectGetClass(params []interface{}) interface{} {
 	jlc := javaLangClass{}
 	jlc.name = object.GoStringFromStringPoolIndex(objPtr.KlassName)
 
-	obj := *classloader.MethAreaFetch(jlc.name)
+	// get a pointer to the class contents from the method area
+	o := classloader.MethAreaFetch(jlc.name)
+	if o == nil {
+		errMsg := fmt.Sprintf("Class %s not loaded", jlc.name)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
+	}
+
+	// syntactic sugar
+	obj := *o
+
+	// create the empty java.lang.Class structure
 	jlc.loader = obj.Loader
 
+	// fill in the jlc
 	objData := *obj.Data
 	jlc.constantPool = objData.CP
 	jlc.superClass = object.GoStringFromStringPoolIndex(objData.SuperclassIndex)
