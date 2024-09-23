@@ -97,6 +97,12 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/util/Regex.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
