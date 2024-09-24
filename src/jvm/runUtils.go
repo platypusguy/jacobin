@@ -172,6 +172,12 @@ func LogTraceStack(f *frames.Frame) {
 	}
 }
 
+// Generate a trace of a field ID (static or non-static).
+func emitTraceFieldID(opcode, fld string) {
+	traceInfo := fmt.Sprintf("%65s fieldName: %s", opcode, fld)
+	_ = log.Log(traceInfo, log.TRACE_INST)
+}
+
 // the generation and formatting of trace data for each executed bytecode.
 // Returns the formatted data for output to logging, console, or other uses.
 func emitTraceData(f *frames.Frame) string {
