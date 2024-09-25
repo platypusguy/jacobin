@@ -288,126 +288,130 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 		})
 	}
 }
+func TestLastIndexOfCharacter(t *testing.T) {
+	tests := []struct {
+		name       string
+		base       string
+		searchChar int64
+		start      int64
+		want       int64
+	}{
+		{
+			"Find character, from start",
+			"Hello World!",
+			108, // ASCII for 'l'
+			11,
+			9,
+		},
+		{
+			"Find non-existent character, from start",
+			"Hello World!",
+			102, // ASCII for 'f'
+			5,
+			-1,
+		},
+	}
 
-// for the moment commented out due matters noted in JACOBIN-555
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			baseObject := &object.Object{
+				KlassName: types.StringPoolStringIndex,
+				FieldTable: map[string]object.Field{
+					"value": {Fvalue: []byte(tt.base)},
+				},
+			}
 
-// func TestLastIndexOfCharacter(t *testing.T) {
-// 	tests := []struct {
-// 		name       string
-// 		base       string
-// 		searchChar int64
-// 		start      int64
-// 		want       int64
-// 	}{
-// 		{
-// 			"Find character, from start",
-// 			"Hello World!",
-// 			108, // ASCII for 'l'
-// 			0,
-// 			9,
-// 		},
-// 		{
-// 			"Find non-existent character, from start",
-// 			"Hello World!",
-// 			101, // ASCII for 'e'
-// 			5,
-// 			-1,
-// 		},
-// 	}
-//
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			baseObject := &object.Object{
-// 				FieldTable: map[string]object.Field{
-// 					"value": {Fvalue: []byte(tt.base)},
-// 				},
-// 			}
-//
-// 			if got := lastIndexOfCharacter([]interface{}{baseObject, tt.searchChar, tt.start}); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("lastIndexOfCharacter() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+			if got := lastIndexOfCharacter([]interface{}{baseObject, tt.searchChar, tt.start}); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("lastIndexOfCharacter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
-// func TestLastIndexOfString(t *testing.T) {
-// 	str := "Hello, World!"
-// 	searchString := "World"
-// 	start := int64(0)
-// 	want := int64(7)
-//
-// 	strObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(str)},
-// 		},
-// 	}
-//
-// 	searchObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(searchString)},
-// 		},
-// 	}
-//
-// 	if got := lastIndexOfString([]interface{}{strObject, searchObject, start}); got != want {
-// 		t.Errorf("lastIndexOfString() = %v, want %v", got, want)
-// 	}
-// }
-//
-// func TestStringRegionMatchesWithoutIgnoreCase(t *testing.T) {
-// 	baseStr := "Hello, World!"
-// 	baseOffset := int64(0)
-//
-// 	compareStr := "Hello, Go!"
-// 	compareOffset := int64(0)
-//
-// 	regionLength := int64(5) // Compare the first 5 characters of both strings
-//
-// 	baseStringObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(baseStr)},
-// 		},
-// 	}
-//
-// 	compareStringObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(compareStr)},
-// 		},
-// 	}
-//
-// 	want := types.JavaBoolTrue // because the first 5 characters of both strings are "Hello"
-//
-// 	if got := stringRegionMatches([]interface{}{baseStringObject, baseOffset, compareStringObject, compareOffset, regionLength}); got != want {
-// 		t.Errorf("stringRegionMatches() = %v, want %v", got, want)
-// 	}
-// }
-//
-// func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
-// 	baseStr := "HELLO, WORLD!"
-// 	baseOffset := int64(0)
-//
-// 	compareStr := "hello, go!"
-// 	compareOffset := int64(0)
-//
-// 	regionLength := int64(5) // Compare the first 5 characters of both strings
-//
-// 	baseStringObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(baseStr)},
-// 		},
-// 	}
-//
-// 	compareStringObject := &object.Object{
-// 		FieldTable: map[string]object.Field{
-// 			"value": {Fvalue: []byte(compareStr)},
-// 		},
-// 	}
-//
-// 	want := types.JavaBoolTrue // because the first 5 characters of both strings are "hello" ignoring cases
-//
-// 	got := stringRegionMatches(
-// 		[]interface{}{baseStringObject, types.JavaBoolTrue, baseOffset,
-// 			compareStringObject, compareOffset, regionLength})
-// 	if got != want {
-// 		t.Errorf("stringRegionMatches() = %v, want %v", got, want)
-// 	}
-// }
+func TestLastIndexOfString(t *testing.T) {
+	str := "Hello, World!"
+	searchString := "World"
+	start := int64(12)
+	want := int64(7)
+
+	strObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(str)},
+		},
+	}
+
+	searchObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(searchString)},
+		},
+	}
+
+	if got := lastIndexOfString([]interface{}{strObject, searchObject, start}); got != want {
+		t.Errorf("lastIndexOfString() = %v, want %v", got, want)
+	}
+}
+
+func TestStringRegionMatchesWithoutIgnoreCase(t *testing.T) {
+	baseStr := "Hello, World!"
+	baseOffset := int64(0)
+
+	compareStr := "Hello, Go!"
+	compareOffset := int64(0)
+
+	regionLength := int64(5) // Compare the first 5 characters of both strings
+
+	baseStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseStr)},
+		},
+	}
+
+	compareStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareStr)},
+		},
+	}
+
+	want := types.JavaBoolTrue // because the first 5 characters of both strings are "Hello"
+
+	if got := stringRegionMatches([]interface{}{baseStringObject, baseOffset, compareStringObject, compareOffset, regionLength}); got != want {
+		t.Errorf("stringRegionMatches() = %v, want %v", got, want)
+	}
+}
+
+func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
+	baseStr := "HELLO, WORLD!"
+	baseOffset := int64(0)
+
+	compareStr := "hello, go!"
+	compareOffset := int64(0)
+
+	regionLength := int64(5) // Compare the first 5 characters of both strings
+
+	baseStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseStr)},
+		},
+	}
+
+	compareStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareStr)},
+		},
+	}
+
+	want := types.JavaBoolTrue // because the first 5 characters of both strings are "hello" ignoring cases
+
+	got := stringRegionMatches(
+		[]interface{}{baseStringObject, types.JavaBoolTrue, baseOffset,
+			compareStringObject, compareOffset, regionLength})
+	if got != want {
+		t.Errorf("stringRegionMatches() = %v, want %v", got, want)
+	}
+}
