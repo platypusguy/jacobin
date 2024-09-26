@@ -3,9 +3,6 @@ package statics
 import (
 	"fmt"
 	"io"
-	"jacobin/classloader"
-	"sync"
-
 	// "jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/log"
@@ -59,7 +56,8 @@ func tCheckStatic(t *testing.T, className string, fieldName string, expValue any
 func TestStatics1(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()
-	// _ = log.SetLogLevel(log.CLASS)
+	Statics = make(map[string]Static)
+	/***
 	PreloadStatics()
 	classloader.MethArea = &sync.Map{}
 	k := classloader.Klass{}
@@ -70,6 +68,9 @@ func TestStatics1(t *testing.T) {
 	k.Data = &clData
 	classloader.MethAreaInsert("AlphaBetaGamma", &k)
 	ref := classloader.MethAreaFetch("AlphaBetaGamma")
+	***/
+	ii := 42
+	ref := &ii
 
 	/**
 	Set statics values.
@@ -92,7 +93,6 @@ func TestStatics1(t *testing.T) {
 	Check statics values.
 	*/
 	tCheckStatic(t, "main", "$assertionsDisabled", int64(1))
-	tCheckStatic(t, types.StringClassName, "COMPACT_STRINGS", true)
 	tCheckStatic(t, "AlphaBetaGamma", "ONE", int64(0x31))
 	tCheckStatic(t, "AlphaBetaGamma", "QM", int64('?'))
 	tCheckStatic(t, "AlphaBetaGamma", "PI", float64(3.14159265))

@@ -8,8 +8,10 @@ package shutdown
 
 import (
 	"fmt"
+	"jacobin/config"
 	"jacobin/globals"
 	"jacobin/log"
+	"jacobin/statics"
 	"os"
 )
 
@@ -26,8 +28,8 @@ const (
 	UNKNOWN_ERROR
 )
 
-// Shutdown is the exit function. Later on, this will check a list of JVM Shutdown hooks
-// before closing down in order to have an orderly exit
+// This is the exit-to-O/S function.
+// TODO: Check a list of JVM Shutdown hooks before closing down in order to have an orderly exit.
 func Exit(errorCondition ExitStatus) int {
 	globals.LoaderWg.Wait()
 	g := globals.GetGlobalRef()
@@ -50,6 +52,10 @@ func Exit(errorCondition ExitStatus) int {
 		return 1
 	}
 
+	if errorCondition != OK {
+		statics.DumpStatics()
+		config.DumpConfig(os.Stderr)
+	}
 	os.Exit(errorCondition)
 
 	return 0 // required by go
