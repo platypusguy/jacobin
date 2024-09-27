@@ -107,8 +107,6 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	err = runThread(&MainThread)
 	if err != nil {
-		statics.DumpStatics()
-		config.DumpConfig(os.Stderr)
 		return err
 	}
 
@@ -132,8 +130,6 @@ func runThread(t *thread.ExecThread) error {
 			exceptions.ShowPanicCause(r)
 			exceptions.ShowFrameStack(t)
 			exceptions.ShowGoStackTrace(nil)
-			statics.DumpStatics()
-			config.DumpConfig(os.Stderr)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
