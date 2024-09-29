@@ -416,6 +416,64 @@ func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
 	}
 }
 
+// test the variants of String.equals()
+func TestStringEquals(t *testing.T) {
+	baseStr := "Hello"
+	baseStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseStr)},
+		},
+	}
+
+	compareStr := "Hello"
+	compareStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareStr)},
+		},
+	}
+
+	if result := stringEquals([]interface{}{
+		baseStringObject, compareStringObject}); result != types.JavaBoolTrue {
+		t.Fatalf("The strings do not match when they should")
+	}
+
+	compareStr = "World"
+	compareStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareStr)},
+		},
+	}
+
+	if result := stringEquals([]interface{}{
+		baseStringObject, compareStringObject}); result != types.JavaBoolFalse {
+		t.Fatalf("The strings match when they shouldn't")
+	}
+
+	referenceStr := ""
+	baseStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(referenceStr)},
+		},
+	}
+
+	compareToStr := ""
+	compareStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareToStr)},
+		},
+	}
+
+	if result := stringEquals([]interface{}{
+		baseStringObject, compareStringObject}); result != types.JavaBoolTrue {
+		t.Fatalf("The empty strings do not match when they should")
+	}
+}
+
 // test the variants of index of string
 func TestStringIndexOfString(t *testing.T) {
 	baseStr := "hello world"
