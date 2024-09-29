@@ -415,3 +415,55 @@ func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
 		t.Errorf("stringRegionMatches() = %v, want %v", got, want)
 	}
 }
+
+// test the variants of index of string
+func TestStringIndexOfString(t *testing.T) {
+	baseStr := "hello world"
+	baseStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseStr)},
+		},
+	}
+
+	argStr := "world"
+	argStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(argStr)},
+		},
+	}
+
+	// Test "int indexOf(String str)"
+	res := stringIndexOfString([]interface{}{
+		baseStringObject, argStringObject})
+	if res != int64(6) {
+		t.Errorf("Expected 6 but received %d", res)
+	}
+
+	// Test "int indexOf(String str, int fromIndex)"
+	res = stringIndexOfString([]interface{}{
+		baseStringObject, argStringObject, int64(0)})
+	if res != int64(6) {
+		t.Errorf("Expected 6 but received %d", res)
+	}
+
+	res = stringIndexOfString([]interface{}{
+		baseStringObject, argStringObject, int64(7)})
+	if res != int64(-1) {
+		t.Errorf("Expected -1 but received %d", res)
+	}
+
+	// Test "int indexOf(String str, int beginIndex, int endIndex)"
+	res = stringIndexOfString([]interface{}{
+		baseStringObject, argStringObject, int64(0), int64(11)})
+	if res != int64(6) {
+		t.Errorf("Expected 6 but received %d", res)
+	}
+
+	res = stringIndexOfString([]interface{}{
+		baseStringObject, argStringObject, int64(7), int64(11)})
+	if res != int64(-1) {
+		t.Errorf("Expected -1 but received %d", res)
+	}
+}
