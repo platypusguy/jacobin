@@ -474,6 +474,77 @@ func TestStringEquals(t *testing.T) {
 	}
 }
 
+func TestStringEqualsIgnoreCase(t *testing.T) {
+	// test same string, different case
+	referenceStr := "hello"
+	baseStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(referenceStr)},
+		},
+	}
+
+	compareToStr := "HELLO"
+	compareStringObject := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareToStr)},
+		},
+	}
+
+	want := types.JavaBoolTrue
+	if got := stringEqualsIgnoreCase([]interface{}{
+		baseStringObject, compareStringObject}); got != want {
+		t.Errorf("stringEqualsIgnoreCase() = %v, want %v", got, want)
+	}
+
+	// test same string, same case
+	referenceStr = "hello"
+	baseStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(referenceStr)},
+		},
+	}
+
+	compareToStr = "hello"
+	compareStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareToStr)},
+		},
+	}
+
+	want = types.JavaBoolTrue
+	if got := stringEqualsIgnoreCase([]interface{}{
+		baseStringObject, compareStringObject}); got != want {
+		t.Errorf("stringEqualsIgnoreCase() = %v, want %v", got, want)
+	}
+
+	// test unequal strings
+	referenceStr = "hello"
+	baseStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(referenceStr)},
+		},
+	}
+
+	compareToStr = "world"
+	compareStringObject = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(compareToStr)},
+		},
+	}
+
+	want = types.JavaBoolFalse
+	if got := stringEqualsIgnoreCase([]interface{}{
+		baseStringObject, compareStringObject}); got != want {
+		t.Errorf("stringEqualsIgnoreCase() = %v, want %v", got, want)
+	}
+}
+
 // test the variants of index of string
 func TestStringIndexOfString(t *testing.T) {
 	baseStr := "hello world"
