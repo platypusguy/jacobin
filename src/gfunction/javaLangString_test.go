@@ -596,3 +596,81 @@ func TestStringIndexOfString(t *testing.T) {
 		t.Errorf("Expected -1 but received %d", res)
 	}
 }
+
+func TestStringStartsWith(t *testing.T) {
+	baseLiteral := "helloWorld"
+	baseStr := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	prefixLiteral := "hello"
+	prefix := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(prefixLiteral)},
+		},
+	}
+
+	// single param startswith positive test
+	result := stringStartsWith([]interface{}{baseStr, prefix})
+	if result != types.JavaBoolTrue {
+		t.Errorf("In TestStringStartsWith(), expected true but got false")
+	}
+
+	prefixLiteral = "World"
+	prefix = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(prefixLiteral)},
+		},
+	}
+	// single param startswith Negative test
+	result = stringStartsWith([]interface{}{baseStr, prefix})
+	if result != types.JavaBoolFalse {
+		t.Errorf("In TestStringStartsWith() expected false but got true")
+	}
+}
+
+func TestStringStartsWithUsingOffset(t *testing.T) {
+	baseLiteral := "helloWorld"
+	baseStr := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	offset := int64(3)
+	prefixLiteral := "loW"
+	prefix := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(prefixLiteral)},
+		},
+	}
+
+	// with offset startswith positive test
+	result := stringStartsWith([]interface{}{baseStr, prefix, offset})
+	if result != types.JavaBoolTrue {
+		t.Errorf(
+			"In TestStringStartsWithUsingOffset() expected true but got false")
+	}
+
+	offset = int64(5)
+	prefixLiteral = "Hello"
+	prefix = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(prefixLiteral)},
+		},
+	}
+	// with offset startswith negative test
+	result = stringStartsWith([]interface{}{baseStr, prefix, offset})
+	if result != types.JavaBoolFalse {
+		t.Errorf(
+			"In TestStringStartsWithUsingOffset() expected false but got true")
+	}
+}
