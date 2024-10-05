@@ -674,6 +674,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 			"In TestStringStartsWithUsingOffset() expected false but got true")
 	}
 }
+
 func TestStringStripLeading(t *testing.T) {
 	baseLiteral := "    Hello, World!"
 	baseStr := &object.Object{
@@ -689,32 +690,39 @@ func TestStringStripLeading(t *testing.T) {
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
-	/*
-		input = &Object{"Hello, World!   "}
-		expected = &Object{"Hello, World!   "}
-		output = stringStripLeading([]interface{}{input})
 
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
+	// ---
 
-		input = &Object{"Hello, World!"}
-		expected = &Object{"Hello, World!"}
-		output = stringStripLeading([]interface{}{input})
+	baseLiteral = "Hello, World!   "
+	baseStr = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
 
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
+	expected = "Hello, World!   "
+	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
 
-		input = &Object{"     "}
-		expected = &Object{""}
-		output = stringStripLeading([]interface{}{input})
+	// ---
+	baseLiteral = "Hello, World!"
+	baseStr = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
 
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
-
-	*/
+	expected = "Hello, World!"
+	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
 }
 
 func TestStringStripTrailing(t *testing.T) {
