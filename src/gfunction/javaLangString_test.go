@@ -674,6 +674,48 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 			"In TestStringStartsWithUsingOffset() expected false but got true")
 	}
 }
+func TestStringStripLeading(t *testing.T) {
+	baseLiteral := "    Hello, World!"
+	baseStr := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	expected := "Hello, World!"
+	outputObj := stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output := string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
+	/*
+		input = &Object{"Hello, World!   "}
+		expected = &Object{"Hello, World!   "}
+		output = stringStripLeading([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+		input = &Object{"Hello, World!"}
+		expected = &Object{"Hello, World!"}
+		output = stringStripLeading([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+		input = &Object{"     "}
+		expected = &Object{""}
+		output = stringStripLeading([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+	*/
+}
 
 func TestStringStripTrailing(t *testing.T) {
 	inputLiteral := "Hello, World!   "
