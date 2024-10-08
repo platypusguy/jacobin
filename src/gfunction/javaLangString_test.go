@@ -674,3 +674,100 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 			"In TestStringStartsWithUsingOffset() expected false but got true")
 	}
 }
+
+func TestStringStripLeading(t *testing.T) {
+	baseLiteral := "    Hello, World!"
+	baseStr := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	expected := "Hello, World!"
+	outputObj := stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output := string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
+
+	// ---
+
+	baseLiteral = "Hello, World!   "
+	baseStr = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	expected = "Hello, World!   "
+	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
+
+	// ---
+	baseLiteral = "Hello, World!"
+	baseStr = &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(baseLiteral)},
+		},
+	}
+
+	expected = "Hello, World!"
+	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
+	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	if output != expected {
+		t.Errorf("Expected '%s' but got '%s'", expected, output)
+	}
+}
+
+func TestStringStripTrailing(t *testing.T) {
+	inputLiteral := "Hello, World!   "
+	input := &object.Object{
+		KlassName: types.StringPoolStringIndex,
+		FieldTable: map[string]object.Field{
+			"value": {Fvalue: []byte(inputLiteral)},
+		},
+	}
+
+	expected := "Hello, World!"
+
+	outputRaw := stringStripTrailing([]interface{}{input})
+
+	output := *outputRaw.(*object.Object)
+	strippedString := string(output.FieldTable["value"].Fvalue.([]byte))
+	if strippedString != expected {
+		t.Errorf("Expected '%s' but got '%s'",
+			expected, strippedString)
+	}
+	/*
+		input = &Object{"   Hello, World!"}
+		expected = &Object{"   Hello, World!"}
+		output = stringStripTrailing([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+		input = &Object{"Hello, World!"}
+		expected = &Object{"Hello, World!"}
+		output = stringStripTrailing([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+		input = &Object{"     "}
+		expected = &Object{""}
+		output = stringStripTrailing([]interface{}{input})
+
+		if output.(*Object).Str != expected.Str {
+			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
+		}
+
+	*/
+}
