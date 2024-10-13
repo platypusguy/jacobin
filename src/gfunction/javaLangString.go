@@ -476,7 +476,7 @@ func Load_Lang_String() {
 			GFunction:  lastIndexOfString,
 		}
 
-	//Returns the index within this string of the last occurrence of the specified substring, searching backward starting at the specified index.
+	// Returns the index within this string of the last occurrence of the specified substring, searching backward starting at the specified index.
 	MethodSignatures["java/lang/String.lastIndexOf(Ljava/lang/String;I)I"] =
 		GMeth{
 			ParamSlots: 2,
@@ -1968,6 +1968,7 @@ func stringSplitLimit(params []interface{}) interface{} {
 
 }
 
+// >>>
 func stringStrip(params []interface{}) interface{} {
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimSpace(input)

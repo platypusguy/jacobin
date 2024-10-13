@@ -675,6 +675,52 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	}
 }
 
+// >>>>>>>> resume here
+
+func TestStringStrip(t *testing.T) {
+	// First, we would create inputs that we would want to test
+	testInputString := "    Hello, world!    "
+	testObject := object.StringObjectFromGoString(testInputString)
+	testInput := []interface{}{testObject}
+
+	// Expected output for the input is trimmed string
+	expectedOutput := "Hello, world!"
+
+	output := object.GoStringFromStringObject(
+		stringStrip(testInput).(*object.Object))
+
+	// Check if the returned output matches the expected output
+	if output != expectedOutput {
+		t.Errorf("stringStrip(%v) = %v; wanted %v", testInputString, output, expectedOutput)
+	}
+
+	// Test with an empty string
+	emptyInput := "                  "
+	emptyObject := object.StringObjectFromGoString(emptyInput)
+	emptyTestInput := []interface{}{emptyObject}
+	expectedEmptyOutput := ""
+
+	emptyOutput := object.GoStringFromStringObject(
+		stringStrip(emptyTestInput).(*object.Object))
+
+	if emptyOutput != expectedEmptyOutput {
+		t.Errorf("stringStrip(%s) = %s; wanted %s", emptyInput, emptyOutput, expectedEmptyOutput)
+	}
+
+	// Test with no leading or trailing spaces
+	noSpaceInput := "NoSpace"
+	noSpaceObject := object.StringObjectFromGoString(noSpaceInput)
+	noSpaceTestInput := []interface{}{noSpaceObject}
+	expectedNoSpaceOutput := "NoSpace"
+
+	noSpaceOutput := object.GoStringFromStringObject(
+		stringStrip(noSpaceTestInput).(*object.Object))
+
+	if noSpaceOutput != expectedNoSpaceOutput {
+		t.Errorf("stringStrip(%s) = %s; wanted %s", noSpaceInput, noSpaceOutput, expectedNoSpaceOutput)
+	}
+}
+
 func TestStringStripLeading(t *testing.T) {
 	baseLiteral := "    Hello, World!"
 	baseStr := &object.Object{
@@ -744,30 +790,4 @@ func TestStringStripTrailing(t *testing.T) {
 		t.Errorf("Expected '%s' but got '%s'",
 			expected, strippedString)
 	}
-	/*
-		input = &Object{"   Hello, World!"}
-		expected = &Object{"   Hello, World!"}
-		output = stringStripTrailing([]interface{}{input})
-
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
-
-		input = &Object{"Hello, World!"}
-		expected = &Object{"Hello, World!"}
-		output = stringStripTrailing([]interface{}{input})
-
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
-
-		input = &Object{"     "}
-		expected = &Object{""}
-		output = stringStripTrailing([]interface{}{input})
-
-		if output.(*Object).Str != expected.Str {
-			t.Errorf("Expected '%s' but got '%s'", expected.Str, output.(*Object).Str)
-		}
-
-	*/
 }
