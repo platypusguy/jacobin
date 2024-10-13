@@ -118,6 +118,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Security_AccessController()
 
 	// java/util/*
+	Load_Util_Zip_Adler32()
+	Load_Util_Zip_Crc32_Crc32c()
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_HashMap()
