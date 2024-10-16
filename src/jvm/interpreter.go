@@ -14,6 +14,7 @@
 package jvm
 
 import (
+	"errors"
 	"jacobin/frames"
 	"jacobin/object"
 )
@@ -22,7 +23,7 @@ import (
 // each slot being a pointer to a function that accepts a pointer to the
 // current frame and an int parameter. It returns an int that indicates
 // how much to increase that frame's PC (program counter) by.
-type BytecodeFunc func(*frames.Frame, int64) int
+type BytecodeFunc func(*frames.Frame, int64) error
 
 var DispatchTable = [256]BytecodeFunc{
 	doNop,        // NOP         0x00
@@ -44,40 +45,43 @@ var DispatchTable = [256]BytecodeFunc{
 }
 
 // the functions, listed here in numerical order of the bytecode
-func doNop(_ *frames.Frame, _ int64) int { return 1 }
-func doAconstNull(f *frames.Frame, _ int64) int {
+func doNop(_ *frames.Frame, _ int64) error { return nil }
+func doAconstNull(f *frames.Frame, _ int64) error {
 	push(f, object.Null)
-	return 1
+	return nil
 }
 
-func doIconstM1(f *frames.Frame, _ int64) int { return pushInt(f, int64(-1)) }
-func doIconst0(f *frames.Frame, _ int64) int  { return pushInt(f, int64(0)) }
-func doIconst1(f *frames.Frame, _ int64) int  { return pushInt(f, int64(1)) }
-func doIconst2(f *frames.Frame, _ int64) int  { return pushInt(f, int64(2)) }
-func doIconst3(f *frames.Frame, _ int64) int  { return pushInt(f, int64(3)) }
-func doIconst4(f *frames.Frame, _ int64) int  { return pushInt(f, int64(4)) }
-func doIconst5(f *frames.Frame, _ int64) int  { return pushInt(f, int64(5)) }
-func doLconst0(f *frames.Frame, _ int64) int  { return pushInt(f, int64(0)) }
-func doLconst1(f *frames.Frame, _ int64) int  { return pushInt(f, int64(1)) }
-func doFconst0(f *frames.Frame, _ int64) int  { return pushFloat(f, int64(0)) }
-func doFconst1(f *frames.Frame, _ int64) int  { return pushFloat(f, int64(1)) }
-func doFconst2(f *frames.Frame, _ int64) int  { return pushFloat(f, int64(2)) }
-func doDconst0(f *frames.Frame, _ int64) int  { return pushFloat(f, int64(0)) }
-func doDconst1(f *frames.Frame, _ int64) int  { return pushFloat(f, int64(1)) }
+func doIconstM1(f *frames.Frame, _ int64) error { f.PC++; return pushInt(f, int64(-1)) }
+func doIconst0(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(0)) }
+func doIconst1(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(1)) }
+func doIconst2(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(2)) }
+func doIconst3(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(3)) }
+func doIconst4(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(4)) }
+func doIconst5(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(5)) }
+func doLconst0(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(0)) }
+func doLconst1(f *frames.Frame, _ int64) error  { f.PC++; return pushInt(f, int64(1)) }
+func doFconst0(f *frames.Frame, _ int64) error  { f.PC++; return pushFloat(f, int64(0)) }
+func doFconst1(f *frames.Frame, _ int64) error  { f.PC++; return pushFloat(f, int64(1)) }
+func doFconst2(f *frames.Frame, _ int64) error  { f.PC++; return pushFloat(f, int64(2)) }
+func doDconst0(f *frames.Frame, _ int64) error  { f.PC++; return pushFloat(f, int64(0)) }
+func doDconst1(f *frames.Frame, _ int64) error  { f.PC++; return pushFloat(f, int64(1)) }
 
 // the functions call by the dispatched functions
-func pushInt(f *frames.Frame, intToPush int64) int {
+func pushInt(f *frames.Frame, intToPush int64) error {
 	push(f, intToPush)
-	return 1
+	return nil
 }
 
-func pushFloat(f *frames.Frame, intToPush int64) int {
+func pushFloat(f *frames.Frame, intToPush int64) error {
 	push(f, float64(intToPush))
-	return 1
+	return nil
 }
 
-func interpretBytecodes(bytecode int, f *frames.Frame) int {
-	PC := DispatchTable[bytecode](f, 0)
-	println("PC after call to DispatchTable[", bytecode, "] = ", PC)
-	return PC
+func interpretBytecodes(bytecode int, f *frames.Frame) error {
+	err := DispatchTable[bytecode](f, 0)
+	if err != nil {
+		errMsg := "Oiy vey!"
+		return errors.New(errMsg) // applies only if in test
+	}
+	return nil
 }
