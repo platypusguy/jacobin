@@ -183,7 +183,7 @@ frameInterpreter:
 			break
 		case opcodes.ACONST_NULL: // 0x01   (push null onto opStack)
 			push(f, object.Null)
-		case opcodes.ICONST_M1: //	x02	(push -1 onto opStack)
+		case opcodes.ICONST_M1: //	0x02	(push -1 onto opStack)
 			push(f, int64(-1))
 		case opcodes.ICONST_0: // 	0x03	(push int 0 onto opStack)
 			push(f, int64(0))
@@ -212,7 +212,7 @@ frameInterpreter:
 		case opcodes.DCONST_0: // 0x0E
 			push(f, 0.0)
 			push(f, 0.0)
-		case opcodes.DCONST_1: // 0xoF
+		case opcodes.DCONST_1: // 0x0F
 			push(f, 1.0)
 			push(f, 1.0)
 		case opcodes.BIPUSH: //	0x10	(push the following byte as an int onto the stack)
