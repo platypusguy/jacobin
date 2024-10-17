@@ -37,18 +37,19 @@ func ftag(f *Frame) string {
 // without manipulation at this width. (However, there will still be need for the dummy
 // second stack entry for these data items.
 type Frame struct {
-	Thread      int
-	MethName    string        // method name
-	MethType    string        // method type (signature)
-	ClName      string        // class name
-	Meth        []byte        // bytecode of method
-	CP          interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
-	Locals      []interface{} // local variables
-	OpStack     []interface{} // operand stack
-	TOS         int           // top of the operand stack
-	PC          int           // program counter (index into the bytecode of the method)
-	Ftype       byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
-	ExceptionPC int           // program counter at the moment the PC threw an exception
+	Thread       int
+	MethName     string        // method name
+	MethType     string        // method type (signature)
+	ClName       string        // class name
+	Meth         []byte        // bytecode of method
+	CP           interface{}   // will hold a *classloader.CPool (constant pool ptr) but due to circularity must be done this way
+	Locals       []interface{} // local variables
+	OpStack      []interface{} // operand stack
+	TOS          int           // top of the operand stack
+	PC           int           // program counter (index into the bytecode of the method)
+	Ftype        byte          // type of method in frame: 'J' = java, 'G' = Golang, 'N' = native
+	ExceptionPC  int           // program counter at the moment the PC threw an exception
+	WideInEffect bool          // WideInEffect indicates if the wide instruction is in effect in the current frame
 }
 
 // CreateFrameStack creates a stack of frames. Implemented as a list in which
@@ -76,6 +77,7 @@ func CreateFrame(opStackSize int) *Frame {
 
 	fram.PC = 0
 	fram.ExceptionPC = -1
+	fram.WideInEffect = false
 	return &fram
 }
 
