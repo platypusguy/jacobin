@@ -69,7 +69,8 @@ type Globals struct {
 	JacobinBuildData map[string]string
 
 	// ---- special switches ----
-	StrictJDK bool // hew closely to actions and error messages of the JDK
+	StrictJDK      bool // hew closely to actions and error messages of the JDK
+	NewInterpreter bool // use the new experimental interpreter
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
@@ -136,6 +137,7 @@ func InitGlobals(progName string) Globals {
 		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
 		JacobinBuildData:     nil,
 		StrictJDK:            false,
+		NewInterpreter:       false,
 		ArrayAddressList:     InitArrayAddressList(),
 		JmodBaseBytes:        nil,
 		ErrorGoStack:         "",
