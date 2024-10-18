@@ -2,14 +2,13 @@
  * Jacobin VM - A Java virtual machine
  * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
+ *
+ * ================================================
+ * THIS IS AN EXPERIMENTAL ALTERNATIVE TO run.go
+ * The chages it makes:
+ *  - Uses an array of functions rather than a switch for each bytecode
+ *  - Does only one push and pull for 64-bit values (longs and doubles)
  */
-
-/* ================================================
-   THIS IS AN EXPERIMENTAL ALTERNATIVE TO run.go
-   The chages it makes:
-   * Uses an array of functions rather than a switch for each bytecode
-   * Does only one push and pull for 64-bit values (longs and doubles)
-*/
 
 package jvm
 
