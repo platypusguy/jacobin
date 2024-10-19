@@ -52,10 +52,10 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // FLOAD           0x17
 	notImplemented, // DLOAD           0x18
 	notImplemented, // ALOAD           0x19
-	notImplemented, // ILOAD_0         0x1A
-	notImplemented, // ILOAD_1         0x1B
-	notImplemented, // ILOAD_2         0x1C
-	notImplemented, // ILOAD_3         0x1D
+	doIload0,       // ILOAD_0         0x1A
+	doIload1,       // ILOAD_1         0x1B
+	doIload2,       // ILOAD_2         0x1C
+	doIload3,       // ILOAD_3         0x1D
 	notImplemented, // LLOAD_0         0x1E
 	notImplemented, // LLOAD_1         0x1F
 	notImplemented, // LLOAD_2         0x20
@@ -279,6 +279,11 @@ func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
 func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
 
+func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
+func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
+func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
+func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
+
 func notImplemented(_ *frames.Frame, _ int64) int {
 	return 1
 }
@@ -296,6 +301,11 @@ func pushFloat(fr *frames.Frame, intToPush int64) int {
 
 func storeInt(fr *frames.Frame, local int64) int {
 	fr.Locals[local] = pop(fr)
+	return 1
+}
+
+func loadInt(fr *frames.Frame, local int64) int {
+	push(fr, fr.Locals[local])
 	return 1
 }
 
