@@ -8,15 +8,25 @@
  * The chages it makes:
  *  - Uses an array of functions rather than a switch for each bytecode
  *  - Does only one push and pull for 64-bit values (longs and doubles)
+ *  - All severe errors use ThrowEx() to throw an exception. No errors based on return values.
  */
 
 package jvm
 
 import (
 	"container/list"
+	"fmt"
+	"jacobin/classloader"
+	"jacobin/excNames"
+	"jacobin/exceptions"
 	"jacobin/frames"
+	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/object"
+	"jacobin/statics"
+	"jacobin/stringPool"
+	"jacobin/types"
+	"runtime/debug"
 )
 
 // set up a DispatchTable with 203 slots that correspond to the bytecodes
@@ -204,7 +214,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // DRETURN         0xAF
 	notImplemented, // ARETURN         0xB0
 	notImplemented, // RETURN          0xB1
-	notImplemented, // GETSTATIC       0xB2
+	doGetStatic,    // GETSTATIC       0xB2
 	notImplemented, // PUTSTATIC       0xB3
 	notImplemented, // GETFIELD        0xB4
 	notImplemented, // PUTFIELD        0xB5
@@ -233,6 +243,10 @@ var DispatchTable = [203]BytecodeFunc{
 
 func interpret(fs *list.List) {
 	fr := fs.Front().Value.(*frames.Frame)
+	if fr.FrameStack == nil { // make sure the can reference the frame stack
+		fr.FrameStack = fs
+	}
+
 	for fr.PC < len(fr.Meth) {
 		if MainThread.Trace {
 			traceInfo := emitTraceData(fr)
@@ -295,6 +309,87 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int {
 	} else {
 		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
 	}
+}
+
+func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	// f.PC += 2
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
+			"location %d in method %s of class %s\n",
+			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
+		exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+	}
+
+	// get the field entry
+	field := CP.FieldRefs[CPentry.Slot]
+
+	// get the class entry from the field entry for this field. It's the class name.
+	classRef := field.ClassIndex
+	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+	classNamePtr := stringPool.GetStringPointer(classNameIndex)
+	className := *classNamePtr
+
+	// process the name and type entry for this field
+	nAndTindex := field.NameAndType
+	nAndTentry := CP.CpIndex[nAndTindex]
+	nAndTslot := nAndTentry.Slot
+	nAndT := CP.NameAndTypes[nAndTslot]
+	fieldNameIndex := nAndT.NameIndex
+	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	fieldName = className + "." + fieldName
+	if MainThread.Trace {
+		emitTraceFieldID("GETSTATIC", fieldName)
+	}
+
+	// was this static field previously loaded? Is so, get its location and move on.
+	prevLoaded, ok := statics.Statics[fieldName]
+	if !ok { // if field is not already loaded, then
+		// the class has not been instantiated, so
+		// instantiate the class
+		_, err := InstantiateClass(className, fr.FrameStack)
+		if err == nil {
+			prevLoaded, ok = statics.Statics[fieldName]
+		} else {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
+			_ = log.Log(errMsg, log.SEVERE)
+			exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
+		}
+	}
+
+	// if the field can't be found even after instantiating the
+	// containing class, something is wrong so get out of here.
+	if !ok {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
+			"\n", fieldName, className)
+		exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+	}
+
+	switch prevLoaded.Value.(type) {
+	case bool:
+		// a boolean, which might
+		// be stored as a boolean, a byte (in an array), or int64
+		// We want all forms normalized to int64
+		value := prevLoaded.Value.(bool)
+		prevLoaded.Value =
+			types.ConvertGoBoolToJavaBool(value)
+		push(fr, prevLoaded.Value)
+	case byte:
+		value := prevLoaded.Value.(byte)
+		prevLoaded.Value = int64(value)
+		push(fr, prevLoaded.Value)
+	case int:
+		value := prevLoaded.Value.(int)
+		push(fr, int64(value))
+	default:
+		push(fr, prevLoaded.Value)
+	}
+	return 3 // 2 for the CP slot + 1 for the next bytecode
 }
 
 func notImplemented(_ *frames.Frame, _ int64) int {
