@@ -84,7 +84,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // DSTORE          0x39
 	notImplemented, // ASTORE          0x3A
 	notImplemented, // ISTORE_0        0x3B
-	notImplemented, // ISTORE_1        0x3C
+	doIstore1,      // ISTORE_1        0x3C
 	notImplemented, // ISTORE_2        0x3D
 	notImplemented, // ISTORE_3        0x3E
 	notImplemented, // LSTORE_0        0x3F
@@ -259,18 +259,25 @@ func doBiPush(fr *frames.Frame, _ int64) int {
 	return 2
 }
 
+func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
+
 func notImplemented(_ *frames.Frame, _ int64) int {
 	return 1
 }
 
 // the functions call by the dispatched functions
-func pushInt(f *frames.Frame, intToPush int64) int {
-	push(f, intToPush)
+func pushInt(fr *frames.Frame, intToPush int64) int {
+	push(fr, intToPush)
 	return 1
 }
 
-func pushFloat(f *frames.Frame, intToPush int64) int {
-	push(f, float64(intToPush))
+func pushFloat(fr *frames.Frame, intToPush int64) int {
+	push(fr, float64(intToPush))
+	return 1
+}
+
+func storeInt(fr *frames.Frame, local int64) int {
+	fr.Locals[local] = pop(fr)
 	return 1
 }
 
