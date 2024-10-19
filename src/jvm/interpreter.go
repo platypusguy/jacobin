@@ -188,7 +188,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // IF_ICMPEQ       0x9F
 	notImplemented, // IF_ICMPNE       0xA0
 	notImplemented, // IF_ICMPLT       0xA1
-	notImplemented, // IF_ICMPGE       0xA2
+	doIfIcmpge,     // IF_ICMPGE       0xA2
 	notImplemented, // IF_ICMPGT       0xA3
 	notImplemented, // IF_ICMPLE       0xA4
 	notImplemented, // IF_ACMPEQ       0xA5
@@ -283,6 +283,19 @@ func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
 func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
+
+func doIfIcmpge(fr *frames.Frame, _ int64) int {
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if val1 >= val2 { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
+	}
+}
 
 func notImplemented(_ *frames.Frame, _ int64) int {
 	return 1
