@@ -3228,6 +3228,7 @@ func createAndInitNewFrame(
 
 	fram := frames.CreateFrame(stackSize)
 	fram.Thread = currFrame.Thread
+	fram.FrameStack = currFrame.FrameStack
 	fram.ClName = className
 	fram.MethName = methodName
 	fram.MethType = methodType
