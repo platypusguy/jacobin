@@ -13,9 +13,12 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/thread"
+	"math"
 	"runtime/debug"
 	"strings"
 )
+
+var ERROR_OCCURRED = math.MaxInt32
 
 // routines for formatting error data when an error occurs inside the JVM
 

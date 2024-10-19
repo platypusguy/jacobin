@@ -26,6 +26,7 @@ import (
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"jacobin/util"
 	"runtime/debug"
 )
 
@@ -54,9 +55,9 @@ var DispatchTable = [203]BytecodeFunc{
 	doDconst1,      // DCONST_1    0x0F
 	doBiPush,       // BIPUSH      0x10
 	notImplemented, // SIPUSH      0x11
-	notImplemented, // LDC         0x12
-	notImplemented, // LDC_W       0x13
-	notImplemented, // LDC2_W      0x14
+	doLdc,          // LDC             0x12
+	doLdcw,         // LDC_W           0x13
+	notImplemented, // LDC2_W          0x14
 	notImplemented, // ILOAD           0x15
 	notImplemented, // LLOAD           0x16
 	notImplemented, // FLOAD           0x17
@@ -241,6 +242,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // BREAKPOINT      0xCA
 }
 
+// the main interpreter loop
 func interpret(fs *list.List) {
 	fr := fs.Front().Value.(*frames.Frame)
 	if fr.FrameStack == nil { // make sure the can reference the frame stack
@@ -254,18 +256,24 @@ func interpret(fs *list.List) {
 		}
 
 		opcode := fr.Meth[fr.PC]
-		fr.PC += DispatchTable[opcode](fr, 0)
+		ret := DispatchTable[opcode](fr, 0)
+		if ret == exceptions.ERROR_OCCURRED { // occurs only in tests
+			break
+		} else {
+			fr.PC += ret
+		}
 	}
 }
 
 // the functions, listed here in numerical order of the bytecode
-func doNop(_ *frames.Frame, _ int64) int { return 1 }
+func doNop(_ *frames.Frame, _ int64) int { return 1 } // 0x00
 
-func doAconstNull(fr *frames.Frame, _ int64) int {
+func doAconstNull(fr *frames.Frame, _ int64) int { // 0x01 ACONST_NULL push null onto stack
 	push(fr, object.Null)
 	return 1
 }
 
+// 0x02 - 0x0A ICONST and LCONST, push int or long onto stack
 func doIconstM1(fr *frames.Frame, _ int64) int { return pushInt(fr, int64(-1)) }
 func doIconst0(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(0)) }
 func doIconst1(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(1)) }
@@ -281,13 +289,18 @@ func doFconst2(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(2)) 
 func doDconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
 func doDconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
 
-func doBiPush(fr *frames.Frame, _ int64) int {
+func doBiPush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byte onto stack
 	wbyte := fr.Meth[fr.PC+1]
 	wint64 := byteToInt64(wbyte)
 	push(fr, wint64)
 	return 2
 }
 
+// 0x12, 0x13 LDC functions
+func doLdc(fr *frames.Frame, _ int64) int  { return ldc(fr, 1) }
+func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
+
+// 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
 func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
 func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
@@ -298,7 +311,7 @@ func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
 
-func doIfIcmpge(fr *frames.Frame, _ int64) int {
+func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -396,7 +409,56 @@ func notImplemented(_ *frames.Frame, _ int64) int {
 	return 1
 }
 
-// the functions call by the dispatched functions
+// === helper methods--that is, functions called by dispatched methods (in alpha order) ===
+
+func loadInt(fr *frames.Frame, local int64) int {
+	push(fr, fr.Locals[local])
+	return 1
+}
+
+func ldc(fr *frames.Frame, width int) int {
+	var idx int
+	if width == 1 { // LDC uses a 1-byte index into the CP, LDC_W uses a 2-byte index
+		idx = int(fr.Meth[fr.PC+1])
+	} else {
+		idx = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+	}
+
+	CPe := classloader.FetchCPentry(fr.CP.(*classloader.CPool), idx)
+	if CPe.EntryType == 0 || // 0 = error
+		// Note: an invalid CP entry causes a java.lang.Verify error and
+		//       is caught before execution of the program begins.
+		// This bytecode does not load longs or doubles
+		CPe.EntryType == classloader.DoubleConst ||
+		CPe.EntryType == classloader.LongConst {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, LDC: Invalid type for bytecode operand",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	// if no error
+	switch CPe.RetType {
+	case classloader.IS_INT64:
+		push(fr, CPe.IntVal)
+	case classloader.IS_FLOAT64:
+		push(fr, CPe.FloatVal)
+	case classloader.IS_STRUCT_ADDR:
+		push(fr, CPe.AddrVal)
+	case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
+		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
+		push(fr, stringAddr)
+	}
+
+	if width == 1 {
+		return 2 // 1 for the index + 1 for the next bytecode
+	} else {
+		return 3 // 2 for the index + 1 for the next bytecode
+	}
+}
+
 func pushInt(fr *frames.Frame, intToPush int64) int {
 	push(fr, intToPush)
 	return 1
@@ -410,15 +472,4 @@ func pushFloat(fr *frames.Frame, intToPush int64) int {
 func storeInt(fr *frames.Frame, local int64) int {
 	fr.Locals[local] = pop(fr)
 	return 1
-}
-
-func loadInt(fr *frames.Frame, local int64) int {
-	push(fr, fr.Locals[local])
-	return 1
-}
-
-func interpretBytecodes(bytecode int, f *frames.Frame) int {
-	PC := DispatchTable[bytecode](f, 0)
-	println("PC after call to DispatchTable[", bytecode, "] = ", PC)
-	return PC
 }

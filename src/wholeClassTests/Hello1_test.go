@@ -49,7 +49,6 @@ import (
  *       line 5: 16
  *       line 7: 22
  *
- *
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
