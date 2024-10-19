@@ -136,14 +136,18 @@ func runThread(t *thread.ExecThread) error {
 	}()
 
 	for t.Stack.Len() > 0 {
-		err := runFrame(t.Stack)
-		if err != nil {
-			exceptions.ShowFrameStack(t)
-			if globals.GetGlobalRef().GoStackShown == false {
-				exceptions.ShowGoStackTrace(nil)
-				globals.GetGlobalRef().GoStackShown = true
+		if globals.GetGlobalRef().NewInterpreter {
+			interpret(t.Stack)
+		} else {
+			err := runFrame(t.Stack)
+			if err != nil {
+				exceptions.ShowFrameStack(t)
+				if globals.GetGlobalRef().GoStackShown == false {
+					exceptions.ShowGoStackTrace(nil)
+					globals.GetGlobalRef().GoStackShown = true
+				}
+				return err
 			}
-			return err
 		}
 
 		if t.Stack.Len() == 1 { // true when the last executed frame was main()

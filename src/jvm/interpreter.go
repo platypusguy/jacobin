@@ -13,7 +13,9 @@
 package jvm
 
 import (
+	"container/list"
 	"jacobin/frames"
+	"jacobin/log"
 	"jacobin/object"
 )
 
@@ -227,6 +229,19 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented, // GOTO_W          0xC8
 	notImplemented, // JSR_W           0xC9
 	notImplemented, // BREAKPOINT      0xCA
+}
+
+func interpret(fs *list.List) {
+	fr := fs.Front().Value.(*frames.Frame)
+	for fr.PC < len(fr.Meth) {
+		if MainThread.Trace {
+			traceInfo := emitTraceData(fr)
+			_ = log.Log(traceInfo, log.TRACE_INST)
+		}
+
+		opcode := fr.Meth[fr.PC]
+		fr.PC += DispatchTable[opcode](fr, 0)
+	}
 }
 
 // the functions, listed here in numerical order of the bytecode
