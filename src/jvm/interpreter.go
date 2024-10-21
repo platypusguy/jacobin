@@ -206,7 +206,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // IF_ICMPLE       0xA4
 	notImplemented,  // IF_ACMPEQ       0xA5
 	notImplemented,  // IF_ACMPNE       0xA6
-	notImplemented,  // GOTO            0xA7
+	doGoto,          // GOTO            0xA7
 	notImplemented,  // JSR             0xA8
 	notImplemented,  // RET             0xA9
 	notImplemented,  // TABLESWITCH     0xAA
@@ -346,6 +346,11 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints 
 	} else {
 		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
 	}
+}
+
+func doGoto(fr *frames.Frame, _ int64) int { // 0xA7 GOTO unconditional jump within method
+	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
 }
 
 func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
