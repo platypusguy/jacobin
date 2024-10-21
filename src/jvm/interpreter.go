@@ -171,7 +171,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // LOR             0x81
 	notImplemented,  // IXOR            0x82
 	notImplemented,  // LXOR            0x83
-	notImplemented,  // IINC            0x84
+	doIinc,          // IINC            0x84
 	notImplemented,  // I2L             0x85
 	notImplemented,  // I2F             0x86
 	notImplemented,  // I2D             0x87
@@ -317,6 +317,24 @@ func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
 
+func doIinc(fr *frames.Frame, _ int64) int {
+	var index int
+	var increment int64
+	var PCtoSkip int
+	if fr.WideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		increment = int64(fr.Meth[fr.PC+1])*256 + int64(fr.Meth[fr.PC+2])
+		PCtoSkip = 4
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		increment = byteToInt64(fr.Meth[fr.PC+2])
+		PCtoSkip = 2
+	}
+	orig := fr.Locals[index].(int64)
+	fr.Locals[index] = orig + increment
+	return PCtoSkip + 1
+}
 func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
