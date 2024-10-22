@@ -222,7 +222,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // GETFIELD        0xB4
 	notImplemented,  // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
-	notImplemented,  // INVOKESPECIAL   0xB7
+	doInvokeSpecial, // INVOKESPECIAL   0xB7
 	doInvokestatic,  // INVOKESTATIC    0xB8
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
@@ -576,6 +576,89 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED
+}
+
+func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	// f.PC += 2
+	CP := fr.CP.(*classloader.CPool)
+	className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
+	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
+	// that function simply returns. So test for it here and if it is, skip the rest
+	fullConstructorName := className + "." + methodName + methodType
+	if fullConstructorName == "java/lang/Object.<init>()V" {
+		return 3 // 2 for the CPslot + 1 for next bytecode
+	}
+
+	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
+	if err != nil || mtEntry.Meth == nil {
+		// TODO: search the classpath and retry
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	if mtEntry.MType == 'G' { // it's a golang method
+		// get the parameters/args, if any, off the stack
+		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		paramCount := gmethData.ParamSlots
+		var params []interface{}
+		for i := 0; i < paramCount; i++ {
+			// This is not problematic because the params count in the gfunction definition
+			// counts slots, rather than items, so doubles and longs are listed as two slots.
+			params = append(params, pop(fr))
+		}
+
+		// now get the objectRef (the object whose method we're invoking)
+		objRef := pop(fr).(*object.Object)
+		params = append(params, objRef)
+
+		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+		if ret != nil {
+			switch ret.(type) {
+			case error:
+				if globals.GetGlobalRef().JacobinName == "test" {
+					return exceptions.ERROR_OCCURRED
+				}
+				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+					fr.PC += 1 // point to the next executable bytecode
+					goto frameInterpreter
+				}
+			default: // if it's not an error, then it's a legitimate return value, which we simply push
+				push(fr, ret)
+			}
+			// any exception will already have been handled.
+		}
+	} else if mtEntry.MType == 'J' {
+		// The arguments are correctly handled in createAndInitNewFrame()
+		m := mtEntry.Meth.(classloader.JmEntry)
+		if m.AccessFlags&0x0100 > 0 {
+			// Native code
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
+			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
+		if err != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
+			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+
+		fr.PC += 1                    // point to the next bytecode for when we return from the invoked method.
+		fr.FrameStack.PushFront(fram) // push the new frame
+		return 0
+	}
 }
 
 func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
