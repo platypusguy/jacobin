@@ -81,7 +81,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DLOAD_1         0x27
 	notImplemented,  // DLOAD_2         0x28
 	notImplemented,  // DLOAD_3         0x29
-	notImplemented,  // ALOAD_0         0x2A
+	doAload0,        // ALOAD_0         0x2A
 	notImplemented,  // ALOAD_1         0x2B
 	notImplemented,  // ALOAD_2         0x2C
 	notImplemented,  // ALOAD_3         0x2D
@@ -216,7 +216,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // FRETURN         0xAE
 	notImplemented,  // DRETURN         0xAF
 	notImplemented,  // ARETURN         0xB0
-	notImplemented,  // RETURN          0xB1
+	doReturn,        // RETURN          0xB1
 	doGetStatic,     // GETSTATIC       0xB2
 	notImplemented,  // PUTSTATIC       0xB3
 	notImplemented,  // GETFIELD        0xB4
@@ -244,7 +244,12 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // BREAKPOINT      0xCA
 }
 
-// the main interpreter loop
+// the main interpreter loop. This loop takes responsibility for
+// pushing a new frame for a called method onto the stack, and for
+// popping the current frame when a bytecode of the RETURN family
+// is encountered. In both cases, interpret() returns and the
+// runThread() loop goes to the top of the frame stack and calls
+// interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
 	fr := fs.Front().Value.(*frames.Frame)
 	if fr.FrameStack == nil { // make sure the can reference the frame stack
@@ -260,12 +265,14 @@ func interpret(fs *list.List) {
 		opcode := fr.Meth[fr.PC]
 		ret := DispatchTable[opcode](fr, 0)
 		switch ret {
-		case 0: // shows that a new frame has been pushed, so execute it
-			fr = fs.Front().Value.(*frames.Frame)
-			fr.PC = 0
+		case 0:
+			// exiting will either end program or call this function again
+			// pointing to the top of the loop
+			return
 		case exceptions.ERROR_OCCURRED: // occurs only in tests
 			break
 		default:
+
 			fr.PC += ret
 		}
 	}
@@ -305,6 +312,11 @@ func doBiPush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byt
 // 0x12, 0x13 LDC functions
 func doLdc(fr *frames.Frame, _ int64) int  { return ldc(fr, 1) }
 func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
+
+func doAload0(fr *frames.Frame, _ int64) int {
+	push(fr, fr.Locals[0])
+	return 1
+}
 
 // 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
 func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
@@ -395,7 +407,13 @@ func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
 	push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
-	return 1
+	fr.FrameStack.Remove(fr.FrameStack.Front())
+	return 0
+}
+
+func doReturn(fr *frames.Frame, _ int64) int { // 0xB1 RETURN return from void methodjav
+	fr.FrameStack.Remove(fr.FrameStack.Front())
+	return 0
 }
 
 func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
