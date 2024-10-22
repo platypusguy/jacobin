@@ -211,7 +211,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // RET             0xA9
 	notImplemented,  // TABLESWITCH     0xAA
 	notImplemented,  // LOOKUPSWITCH    0xAB
-	notImplemented,  // IRETURN         0xAC
+	doIreturn,       // IRETURN         0xAC
 	notImplemented,  // LRETURN         0xAD
 	notImplemented,  // FRETURN         0xAE
 	notImplemented,  // DRETURN         0xAF
@@ -381,6 +381,13 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints 
 func doGoto(fr *frames.Frame, _ int64) int { // 0xA7 GOTO unconditional jump within method
 	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
+}
+
+func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 from method call
+	valToReturn := pop(fr)
+	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
+	push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
+	return 1
 }
 
 func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
