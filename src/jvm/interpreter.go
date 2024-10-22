@@ -437,7 +437,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
 func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	fr.PC += 2
+	// fr.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
@@ -526,7 +526,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 			}
 		}
 
-		fr.PC += 1                    // move to next bytecode before exiting
+		fr.PC += 3                    // 2 for PC slot, move to next bytecode before exiting
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
