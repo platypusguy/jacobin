@@ -150,10 +150,16 @@ func runThread(t *thread.ExecThread) error {
 			}
 		}
 
-		if t.Stack.Len() == 1 { // true when the last executed frame was main()
-			return nil
+		if globals.GetGlobalRef().NewInterpreter {
+			if t.Stack.Len() == 0 { // true when the last executed frame was main()
+				return nil
+			}
 		} else {
-			t.Stack.Remove(t.Stack.Front()) // pop the frame off
+			if t.Stack.Len() == 1 { // true when the last executed frame was main()
+				return nil
+			} else {
+				t.Stack.Remove(t.Stack.Front()) // pop the frame off
+			}
 		}
 	}
 	return nil
