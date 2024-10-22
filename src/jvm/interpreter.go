@@ -575,7 +575,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
-	return exceptions.ERROR_OCCURRED
+	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
 func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
@@ -596,7 +596,7 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
@@ -626,39 +626,43 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
 				}
 				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 					fr.PC += 1 // point to the next executable bytecode
-					goto frameInterpreter
+					return 3   // 2 for CP slot + 1 for next bytecode
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
 			}
 			// any exception will already have been handled.
 		}
-	} else if mtEntry.MType == 'J' {
+		return 3 // 2 for CP slot + 1 for next bytecode
+	}
+
+	if mtEntry.MType == 'J' {
 		// The arguments are correctly handled in createAndInitNewFrame()
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&0x0100 > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
+			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
-		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, f)
+		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
-			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
 
-		fr.PC += 1                    // point to the next bytecode for when we return from the invoked method.
+		fr.PC += 3                    // point to the next bytecode for when we return from the invoked method.
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
+	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
 func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
