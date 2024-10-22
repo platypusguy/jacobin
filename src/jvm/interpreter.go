@@ -143,7 +143,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // LSUB            0x65
 	notImplemented,  // FSUB            0x66
 	notImplemented,  // DSUB            0x67
-	notImplemented,  // IMUL            0x68
+	doImul,          // IMUL            0x68
 	notImplemented,  // LMUL            0x69
 	notImplemented,  // FMUL            0x6A
 	notImplemented,  // DMUL            0x6B
@@ -325,11 +325,19 @@ func doIadd(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract ints from the op stack
+func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract int64s from the op stack
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	diff := subtract(i1, i2)
 	push(fr, diff)
+	return 1
+}
+
+func doImul(fr *frames.Frame, _ int64) int { // 0x68 IMUL multiply two int64s
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	product := multiply(i1, i2)
+	push(fr, product)
 	return 1
 }
 
