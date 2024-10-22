@@ -102,6 +102,13 @@ type Globals struct {
 	FuncFillInStackTrace func([]any) any
 }
 
+// ---- trace categories
+var TraceInit bool
+var TraceCloadi bool
+var TraceInst bool
+var TraceClass bool
+var TraceVerbose bool
+
 // ----- String Pool
 var StringPoolTable map[string]uint32
 var StringPoolList []string
