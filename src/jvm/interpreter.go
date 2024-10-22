@@ -139,7 +139,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // LADD            0x61
 	notImplemented,  // FADD            0x62
 	notImplemented,  // DADD            0x63
-	notImplemented,  // ISUB            0x64
+	doIsub,          // ISUB            0x64
 	notImplemented,  // LSUB            0x65
 	notImplemented,  // FSUB            0x66
 	notImplemented,  // DSUB            0x67
@@ -223,7 +223,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
 	notImplemented,  // INVOKESPECIAL   0xB7
-	notImplemented,  // INVOKESTATIC    0xB8
+	doInvokestatic,  // INVOKESTATIC    0xB8
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
 	notImplemented,  // NEW             0xBB
@@ -317,7 +317,15 @@ func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
 
-func doIinc(fr *frames.Frame, _ int64) int {
+func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract ints from the op stack
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	diff := subtract(i1, i2)
+	push(fr, diff)
+	return 1
+}
+
+func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
 	var index int
 	var increment int64
 	var PCtoSkip int
@@ -335,6 +343,7 @@ func doIinc(fr *frames.Frame, _ int64) int {
 	fr.Locals[index] = orig + increment
 	return PCtoSkip + 1
 }
+
 func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
@@ -531,6 +540,95 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED
+}
+
+func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+
+	className, methodName, methodType :=
+		classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
+	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
+	if err != nil || mtEntry.Meth == nil {
+		// TODO: search the classpath and retry
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// before we can run the method, we need to either instantiate the class and/or
+	// make sure that its static intializer block (if any) has been run. At this point,
+	// all we know is that the class exists and has been loaded.
+	k := classloader.MethAreaFetch(className)
+	if k.Data.ClInit == types.ClInitNotRun {
+		err = runInitializationBlock(k, nil, fr.FrameStack)
+		if err != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
+				className+"."+methodName+methodType)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+	}
+
+	if mtEntry.MType == 'G' {
+		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		paramCount := gmethData.ParamSlots
+		var params []interface{}
+		for i := 0; i < paramCount; i++ {
+			params = append(params, pop(fr))
+		}
+
+		// fr.PC += 2 // advance PC for the first two bytes of this bytecode
+		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, MainThread.Trace)
+		if ret != nil {
+			switch ret.(type) {
+			case error:
+				if globals.GetGlobalRef().JacobinName == "test" {
+					return exceptions.ERROR_OCCURRED
+				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+					return 3
+				}
+			default: // if it's not an error, then it's a legitimate return value, which we simply push
+				push(fr, ret)
+				return 3
+			}
+		}
+		// any exception will already have been handled.
+	} else if mtEntry.MType == 'J' {
+		m := mtEntry.Meth.(classloader.JmEntry)
+		if m.AccessFlags&0x0100 > 0 {
+			// Native code
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
+			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		fram, err := createAndInitNewFrame(
+			className, methodName, methodType, &m, false, fr)
+		if err != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKESTATIC: Error creating frame in: " + className + "." + methodName + methodType
+			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+
+		fr.PC += 2                    // 2 == initial PC advance in this bytecode (see above)
+		fr.PC += 1                    // to point to the next bytecode before exiting
+		fr.FrameStack.PushFront(fram) // push the new frame
+		return 0
+	}
+	return exceptions.ERROR_OCCURRED // in theory, unreachable code
 }
 
 func notImplemented(_ *frames.Frame, _ int64) int {
