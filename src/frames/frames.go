@@ -38,6 +38,7 @@ func ftag(f *Frame) string {
 // second stack entry for these data items.
 type Frame struct {
 	Thread       int
+	FrameStack   *list.List    // points to the frame stack
 	MethName     string        // method name
 	MethType     string        // method type (signature)
 	ClName       string        // class name

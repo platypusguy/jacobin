@@ -26,6 +26,29 @@ import (
  *		}
  *	}
  *
+ * The bytecode for main:
+ *   public static void main(java.lang.String[]);
+ *   descriptor: ([Ljava/lang/String;)V
+ *   flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+ *   Code:
+ *     stack=2, locals=2, args_size=1
+ *        0: iconst_0
+ *        1: istore_1
+ *        2: iload_1
+ *        3: bipush        10
+ *        5: if_icmpge     22
+ *        8: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+ *       11: ldc           #3                  // String Hello from Hello.main!
+ *       13: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+ *       16: iinc          1, 1
+ *       19: goto          2
+ *       22: return
+ *     LineNumberTable:
+ *       line 5: 0
+ *       line 6: 8
+ *       line 5: 16
+ *       line 7: 22
+ *
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 

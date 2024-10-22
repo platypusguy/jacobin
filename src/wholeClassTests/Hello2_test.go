@@ -31,6 +31,27 @@ import (
  *		    return j + k;
  *	    }
  *
+ * The bytecode for this is:
+ *
+ * stack=3, locals=3, args_size=1
+ *        0: iconst_0
+ *        1: istore_2
+ *        2: goto          23
+ *        5: iload_2
+ *        6: iload_2
+ *        7: iconst_1
+ *        8: isub
+ *        9: invokestatic  #16                 // Method addTwo:(II)I
+ *       12: istore_1
+ *       13: getstatic     #20                 // Field java/lang/System.out:Ljava/io/PrintStream;
+ *       16: iload_1
+ *       17: invokevirtual #26                 // Method java/io/PrintStream.println:(I)V
+ *       20: iinc          2, 1
+ *       23: iload_2
+ *       24: bipush        10
+ *       26: if_icmplt     5
+ *       29: return
+ *
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 

@@ -39,7 +39,7 @@ import (
 // an entry in the Option table, except for these options:
 // 		-h, -help, --help, and -?
 // because these have been handled prior to the use of this table.
-
+//
 // ==== How to add new options to Jacobin:
 // 1) Create an entry in LoadOptionsTable:
 //    * x := globalOptions {
@@ -86,6 +86,9 @@ func LoadOptionsTable(Global globals.Globals) {
 	jarFile := globals.Option{true, false, 4, getJarFilename}
 	Global.Options["-jar"] = jarFile
 	jarFile.Set = true
+
+	newInterpreter := globals.Option{true, false, 0, newInterpeter}
+	Global.Options["-new"] = newInterpreter
 
 	showversion := globals.Option{true, false, 0, showVersionStderr}
 	Global.Options["-showversion"] = showversion
@@ -224,6 +227,12 @@ func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) 
 	if log.Level == log.FINEST {
 		execdata.PrintJacobinBuildData(gl)
 	}
+	return pos, nil
+}
+
+func newInterpeter(pos int, name string, gl *globals.Globals) (int, error) {
+	gl.NewInterpreter = true
+	setOptionToSeen("-new", gl)
 	return pos, nil
 }
 

@@ -4,8 +4,4 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
- // THIS FILE IS MACHINE GENERATED. DO NOT EDIT!
-
-package config
-
-var BuildNo = 3092
+package jvm
