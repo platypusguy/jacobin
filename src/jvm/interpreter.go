@@ -200,7 +200,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // IFLE            0x9E
 	notImplemented,  // IF_ICMPEQ       0x9F
 	notImplemented,  // IF_ICMPNE       0xA0
-	notImplemented,  // IF_ICMPLT       0xA1
+	doIficmplt,      // IF_ICMPLT       0xA1
 	doIfIcmpge,      // IF_ICMPGE       0xA2
 	notImplemented,  // IF_ICMPGT       0xA3
 	notImplemented,  // IF_ICMPLE       0xA4
@@ -342,6 +342,19 @@ func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
 	orig := fr.Locals[index].(int64)
 	fr.Locals[index] = orig + increment
 	return PCtoSkip + 1
+}
+
+func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints for <
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if val1 < val2 { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
+	}
 }
 
 func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
