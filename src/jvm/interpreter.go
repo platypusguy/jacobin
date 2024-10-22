@@ -135,7 +135,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DUP2_X1         0x5D
 	notImplemented,  // DUP2_X2         0x5E
 	notImplemented,  // SWAP            0x5F
-	notImplemented,  // IADD            0x60
+	doIadd,          // IADD            0x60
 	notImplemented,  // LADD            0x61
 	notImplemented,  // FADD            0x62
 	notImplemented,  // DADD            0x63
@@ -316,6 +316,14 @@ func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
 func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
+
+func doIadd(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	sum := add(i1, i2)
+	push(fr, sum)
+	return 1
+}
 
 func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract ints from the op stack
 	i2 := pop(fr).(int64)
