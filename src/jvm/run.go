@@ -171,12 +171,12 @@ func runThread(t *thread.ExecThread) error {
 // place through a giant switch statement.
 func runFrame(fs *list.List) error {
 	glob := globals.GetGlobalRef()
-	wideInEffect := false
 
 frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
+	f.WideInEffect = false
 
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
@@ -315,10 +315,10 @@ frameInterpreter:
 			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
 			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -326,10 +326,10 @@ frameInterpreter:
 			push(f, f.Locals[index])
 		case opcodes.LLOAD: // 0x16 (push long from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -339,10 +339,10 @@ frameInterpreter:
 			push(f, val) // push twice due to item being 64 bits wide
 		case opcodes.DLOAD: // 0x18 (push double from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -575,10 +575,10 @@ frameInterpreter:
 		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -594,10 +594,10 @@ frameInterpreter:
 
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -606,10 +606,10 @@ frameInterpreter:
 
 		case opcodes.DSTORE: //  0x39 (store popped top of stack double into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -619,10 +619,10 @@ frameInterpreter:
 			f.Locals[index+1] = pop(f).(float64)
 		case opcodes.ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -1271,12 +1271,12 @@ frameInterpreter:
 		case opcodes.IINC: // 	0x84    (increment local variable by a signed constant)
 			var index int
 			var increment int64
-			if wideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
+			if f.WideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
 				increment = int64(f.Meth[f.PC+1])*256 + int64(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				increment = byteToInt64(f.Meth[f.PC+2])
@@ -1562,9 +1562,9 @@ frameInterpreter:
 
 		case opcodes.RET: // 0xA9     (return by jumping to a return address in a local--used mostly with JSR)
 			var index int64
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (byteToInt64(f.Meth[f.PC+1]) * 256) + byteToInt64(f.Meth[f.PC+2])
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = byteToInt64(f.Meth[f.PC+1])
 			}
@@ -3032,7 +3032,7 @@ frameInterpreter:
 
 		case opcodes.WIDE: // 0xC4 Make some bytecodes operate on larger sized operands
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.wide
-			wideInEffect = true
+			f.WideInEffect = true
 
 		case opcodes.MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
