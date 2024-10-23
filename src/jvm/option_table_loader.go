@@ -7,14 +7,14 @@
 package jvm
 
 import (
-	"errors"
 	"fmt"
-	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/statics"
 	"jacobin/types"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // This set of routines loads the globPtr.Options table with the various
@@ -30,7 +30,7 @@ import (
 //	        argStyle  int16     // what is the format for the argument values to this option?
 //                              // 0 = no argument      1 = value follows a :
 //                              // 2 = value follows =  4 = value follows a space
-//                              // 8 = option has multiple values separated by a ; (such as -cp)
+//                              // 8 = option has multiple values separated by a filepath.ListSeparator (such as in -cp)
 //	        action  func(position int, name string, gl pointer to globasl) error
 //                              // which is the action to perform when this option found.
 //      }
@@ -99,11 +99,8 @@ func LoadOptionsTable(Global globals.Globals) {
 	strictJdk := globals.Option{true, false, 0, strictJDK}
 	Global.Options["-strictJDK"] = strictJdk
 
-	traceInstruction := globals.Option{true, false, 1, enableTraceInstructions}
+	traceInstruction := globals.Option{true, false, 10, enableTrace}
 	Global.Options["-trace"] = traceInstruction
-
-	verboseClass := globals.Option{true, false, 1, verbosityLevel}
-	Global.Options["-verbose"] = verboseClass
 
 	version := globals.Option{true, false, 1, versionStderrThenExit}
 	Global.Options["-version"] = version
@@ -189,8 +186,26 @@ func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, erro
 	return pos, nil
 }
 
-func enableTraceInstructions(pos int, argValue string, gl *globals.Globals) (int, error) {
+func enableTrace(pos int, argValue string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-trace", gl)
+	array := strings.Split(argValue, string(filepath.ListSeparator))
+	for i := 0; i < len(array); i++ {
+		switch array[i] {
+		case "class":
+			globals.TraceClass = true
+		case "cloadi":
+			globals.TraceCloadi = true
+		case "init":
+			globals.TraceInit = true
+		case "inst":
+			globals.TraceInst = true
+		case "verbose":
+			globals.TraceVerbose = true
+			globals.TraceInst = true
+		default:
+			return 0, fmt.Errorf("unknown -trace option: %s", array[i])
+		}
+	}
 	return pos, nil
 }
 
@@ -198,35 +213,6 @@ func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-ea", gl)
 	statics.AddStatic("main.$assertionsDisabled",
 		statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
-	return pos, nil
-}
-
-// set verbosity level. Note Jacobin starts up at WARNING level, so there is no
-// need to set it to that level. You cannot set the level to coarser than WARNING
-// which is why there is no way to set the verbosity to SEVERE only.
-func verbosityLevel(pos int, argValue string, gl *globals.Globals) (int, error) {
-	switch argValue {
-	case "class":
-		log.Level = log.CLASS
-		log.Log("Logging level set to CLASS", log.INFO)
-	case "info":
-		log.Level = log.INFO
-		log.Log("Logging level set to log.INFO", log.INFO)
-	case "fine":
-		log.Level = log.FINE
-		log.Log("Logging level set to FINE", log.INFO)
-	case "finest":
-		log.Level = log.FINEST
-		log.Log("Logging level set to FINEST", log.INFO)
-	default:
-		log.Log("Error: "+argValue+" is not a valid verbosity option. Ignored.", log.WARNING)
-		return pos, errors.New("Invalid logging level specified: " + argValue)
-	}
-	setOptionToSeen("-verbose", gl) // mark the -verbose option as having been specified
-
-	if log.Level == log.FINEST {
-		execdata.PrintJacobinBuildData(gl)
-	}
 	return pos, nil
 }
 
