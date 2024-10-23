@@ -235,7 +235,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // INSTANCEOF      0xC1
 	notImplemented,  // MONITORENTER    0xC2
 	notImplemented,  // MONITOREXIT     0xC3
-	notImplemented,  // WIDE            0xC4
+	doWide,          // WIDE            0xC4
 	notImplemented,  // MULTIANEWARRAY  0xC5
 	notImplemented,  // IFNULL          0xC6
 	notImplemented,  // IFNONNULL       0xC7
@@ -770,6 +770,11 @@ func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+}
+
+func doWide(fr *frames.Frame, _ int64) int { // 0xC4 use wide versions of bytecode arguments
+	fr.WideInEffect = true
+	return 1
 }
 
 func notImplemented(_ *frames.Frame, _ int64) int {
