@@ -17,6 +17,7 @@ import (
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 )
@@ -138,7 +139,9 @@ func JVMrun() int {
 
 	// begin execution
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-	_ = log.Log("Starting execution with: "+*mainClass, log.INFO)
+	if globals.TraceInit {
+		trace.Trace("Starting execution with: " + *mainClass)
+	}
 	status = StartExec(*mainClass, &MainThread, globPtr)
 
 	if status != nil {

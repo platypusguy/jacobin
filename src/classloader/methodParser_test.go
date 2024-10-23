@@ -20,17 +20,6 @@ import (
 // test a valid Code attribute of a method
 func TestValidCodeMethodAttribute(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
 
 	// variables we'll need.
 	klass := ParsedClass{}
@@ -70,16 +59,6 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 		t.Error("Unexpected error in processing valid Exceptions attribute of method")
 	}
 
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	// out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	// msg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
 	if len(meth.codeAttr.code) != 2 {
 		t.Error("Expected code length of 2. Got: " + strconv.Itoa(len(meth.codeAttr.code)))
 	}
@@ -95,6 +74,7 @@ func TestValidCodeMethodAttribute(t *testing.T) {
 		t.Error("Expected 0 attributes of Code attribute. Got: " + strconv.Itoa(len(meth.codeAttr.attributes)))
 	}
 }
+
 func Test1ValidMethodExceptionsAttribute(t *testing.T) {
 	globals.InitGlobals("test")
 	log.Init()

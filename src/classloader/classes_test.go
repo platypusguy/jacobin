@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
@@ -22,8 +21,7 @@ import (
 func TestInsertValid(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -73,8 +71,7 @@ func TestInsertValid(t *testing.T) {
 func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -126,8 +123,7 @@ func TestInvalidLookupOfMethod_Test0(t *testing.T) {
 func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -179,8 +175,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -284,8 +279,7 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 func TestInvalidMainMethod(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -326,8 +320,7 @@ func TestInvalidMainMethod(t *testing.T) {
 
 func TestInvalidClassName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
