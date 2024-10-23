@@ -23,10 +23,12 @@ var mutex = sync.Mutex{}
 
 // StartTime is the start time of this instance of the Jacoby VM.
 var StartTime time.Time
+var okStderr bool
 
 // Initialize the trace frame.
 func Init() {
 	StartTime = time.Now()
+	okStderr = true
 }
 
 // Trace is the principal tracing function. Note that it currently
@@ -45,14 +47,14 @@ func Trace(msg string) {
 	var millis = duration.Milliseconds()
 
 	// Lock access to the logging stream to prevent inter-thread overwrite issues
-	mutex.Lock()
-	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
-	mutex.Unlock()
-
-	// Report on stdout if stderr failed
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stdout, "[%3d.%03ds] *** stderr failed, err: %v\n", millis/1000, millis%1000, err)
-		_, _ = fmt.Fprintf(os.Stdout, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
+	if okStderr {
+		mutex.Lock()
+		_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stdout, "[%3d.%03ds] *** stderr failed, err: %v\n", millis/1000, millis%1000, err)
+			okStderr = false
+		}
+		mutex.Unlock()
 	}
 
 }
