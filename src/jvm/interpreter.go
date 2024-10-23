@@ -93,8 +93,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // BALOAD          0x33
 	notImplemented,  // CALOAD          0x34
 	notImplemented,  // SALOAD          0x35
-	notImplemented,  // ISTORE          0x36
-	notImplemented,  // LSTORE          0x37
+	doIstore,        // ISTORE          0x36
+	doIstore,        // LSTORE          0x37
 	notImplemented,  // FSTORE          0x38
 	notImplemented,  // DSTORE          0x39
 	notImplemented,  // ASTORE          0x3A
@@ -316,6 +316,23 @@ func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
 func doAload0(fr *frames.Frame, _ int64) int {
 	push(fr, fr.Locals[0])
 	return 1
+}
+
+func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
+	var index int
+	var PCadvance int    // how much to advance fr.PC, the program counter
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		PCadvance = 2
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		PCadvance = 1
+	}
+
+	popped := pop(fr)
+	fr.Locals[index] = convertInterfaceToInt64(popped) // TODO: conversion needed?
+	return PCadvance + 1
 }
 
 // 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
