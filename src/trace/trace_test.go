@@ -40,8 +40,8 @@ func TestEmptyTraceMessage(t *testing.T) {
 	outString := string(outBytes[:])
 
 	// What we expected?
-	if !strings.Contains(outString, EmptyMsg) { // No
-		t.Errorf("Empty trace message failed: expected [%s] as a subset of [%s]\n", EmptyMsg, outString)
+	if !strings.Contains(outString, "Zero-length trace argument") { // No
+		t.Errorf("Empty trace message failed: expected zero-length trace argument diagnostic but saw [%s]\n", outString)
 	}
 
 }
@@ -70,7 +70,7 @@ func TestValidTraceMessage(t *testing.T) {
 
 	// What we expected?
 	if !strings.Contains(outString, expected) { // No
-		t.Errorf("Nonempty trace message failed: expected [%s] as a subset of [%s]\n", EmptyMsg, outString)
+		t.Errorf("Nonempty trace message failed: expected [%s] as a subset of [%s]\n", expected, outString)
 	}
 
 }

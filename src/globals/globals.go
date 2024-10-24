@@ -156,6 +156,12 @@ func InitGlobals(progName string) Globals {
 		FuncThrowException:   fakeThrowEx,
 	}
 
+	TraceInit = false
+	TraceCloadi = false
+	TraceInst = false
+	TraceClass = false
+	TraceVerbose = false
+
 	// ----- String Pool and other values
 	InitStringPool()
 
