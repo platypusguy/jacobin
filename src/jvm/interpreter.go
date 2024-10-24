@@ -102,10 +102,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore1,       // ISTORE_1        0x3C
 	doIstore2,       // ISTORE_2        0x3D
 	doIstore3,       // ISTORE_3        0x3E
-	notImplemented,  // LSTORE_0        0x3F
-	notImplemented,  // LSTORE_1        0x40
-	notImplemented,  // LSTORE_2        0x41
-	notImplemented,  // LSTORE_3        0x42
+	doIstore0,       // LSTORE_0        0x3F
+	doIstore1,       // LSTORE_1        0x40
+	doIstore2,       // LSTORE_2        0x41
+	doIstore3,       // LSTORE_3        0x42
 	notImplemented,  // FSTORE_0        0x43
 	notImplemented,  // FSTORE_1        0x44
 	notImplemented,  // FSTORE_2        0x45
@@ -381,6 +381,7 @@ func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
 // 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
+// 0x3F - 0x42 LSTORE_0 thru _3:    "    "     "
 func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
 func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
