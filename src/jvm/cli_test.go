@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -172,113 +173,10 @@ func TestShow__VersionUsingOptionTable(t *testing.T) {
 	}
 }
 
-func TestChangeLoggingLevels(t *testing.T) {
-	global := globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
-	LoadOptionsTable(global)
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// to avoid cluttering the test results, redirect stdout and stderr
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
-
-	args := []string{"jacobin", "-verbose:info", " class"}
-	_ = HandleCli(args, &global)
-
-	// reset stdout and stderr to what they were before redirection
-	_ = w.Close()
-	_ = wout.Close()
-	os.Stdout = normalStdout
-	os.Stderr = normalStderr
-
-	if log.Level != log.INFO {
-		t.Error("Setting log level to INFO via command line failed")
-	}
-
-	// --- now test with FINE
-
-	_ = log.SetLogLevel(log.WARNING)
-
-	normalStdout = os.Stdout
-	_, wout, _ = os.Pipe()
-	os.Stdout = wout
-
-	normalStderr = os.Stderr
-	_, w, _ = os.Pipe()
-	os.Stderr = w
-
-	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:fine", " class"}
-	_ = HandleCli(args, &global)
-
-	_ = w.Close()
-	_ = wout.Close()
-	os.Stdout = normalStdout
-	os.Stderr = normalStderr
-
-	if log.Level != log.FINE {
-		t.Error("Setting log level to FINE via command line failed")
-	}
-
-	// --- now try with FINEST
-
-	_ = log.SetLogLevel(log.WARNING)
-
-	normalStdout = os.Stdout
-	_, wout, _ = os.Pipe()
-	os.Stdout = wout
-
-	normalStderr = os.Stderr
-	_, w, _ = os.Pipe()
-	os.Stderr = w
-
-	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:finest", " class"}
-	_ = HandleCli(args, &global)
-
-	_ = w.Close()
-	_ = wout.Close()
-	os.Stdout = normalStdout
-	os.Stderr = normalStderr
-
-	if log.Level != log.FINEST {
-		t.Error("Setting log level to FINEST via command line failed")
-	}
-
-	// --- finally test with CLASS
-
-	_ = log.SetLogLevel(log.WARNING)
-
-	normalStdout = os.Stdout
-	_, wout, _ = os.Pipe()
-	os.Stdout = wout
-
-	normalStderr = os.Stderr
-	_, w, _ = os.Pipe()
-	os.Stderr = w
-
-	LoadOptionsTable(global)
-	args = []string{"jacobin", "-verbose:class", " class"}
-	_ = HandleCli(args, &global)
-
-	_ = w.Close()
-	_ = wout.Close()
-	os.Stdout = normalStdout
-	os.Stderr = normalStderr
-
-	if log.Level != log.CLASS {
-		t.Error("Setting log level to CLASS via command line failed")
-	}
-}
-
-func TestInvalidLoggingLevel(t *testing.T) {
+func TestInvalidTraceSelection(t *testing.T) {
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
-	_ = log.SetLogLevel(log.WARNING)
+	var err error
 
 	// to avoid cluttering the test results, redirect stdout and stderr
 	normalStdout := os.Stdout
@@ -286,19 +184,55 @@ func TestInvalidLoggingLevel(t *testing.T) {
 	os.Stdout = wout
 
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
+	_, werr, _ := os.Pipe()
+	os.Stderr = werr
 
-	_, err := verbosityLevel(0, "severe", &global)
+	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "mickey"
+	args := []string{"jacobin", options}
+	err = HandleCli(args, &global)
 
-	_ = w.Close()
+	_ = werr.Close()
 	_ = wout.Close()
 	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
 	if err == nil {
-		t.Error("Setting log level to SEVERE via command line did not generate expected error")
+		t.Errorf("%s failed to generate the expected error", options)
 	}
+	t.Logf("HandleCli err: %v\n", err)
+}
+
+func TestValidTraceSelection(t *testing.T) {
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+	var err error
+
+	// to avoid cluttering the test results, redirect stdout and stderr
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	normalStderr := os.Stderr
+	_, werr, _ := os.Pipe()
+	os.Stderr = werr
+
+	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "inst"
+	args := []string{"jacobin", options}
+	err = HandleCli(args, &global)
+
+	_ = werr.Close()
+	_ = wout.Close()
+	os.Stdout = normalStdout
+	os.Stderr = normalStderr
+
+	if err != nil {
+		t.Errorf("HandleCli err: %v\n", err)
+	}
+	if globals.TraceInst && globals.TraceClass && (!globals.TraceVerbose) {
+		return
+	}
+	t.Errorf("globals.TraceInst = %t (true), globals.TraceClass = %t (true), globals.TraceVerbose = %t (false)\n",
+		globals.TraceInst, globals.TraceClass, globals.TraceVerbose)
 }
 
 func TestSpecifyClientVM(t *testing.T) {

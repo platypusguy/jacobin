@@ -12,7 +12,6 @@ import (
 	"jacobin/execdata"
 	"jacobin/globals"
 	"jacobin/log"
-	"jacobin/shutdown"
 	"os"
 	"strings"
 )
@@ -55,7 +54,8 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		}
 
 		if err != nil {
-			continue // skip the arg if there was a problem. (Might want to revisit this.)
+			_, _ = fmt.Fprintf(os.Stderr, "getOptionRootAndArgs detected an error in %s. Exiting. Err: %v\n", args[i], err)
+			return err
 		}
 
 		// if the option is the name of the class to execute, note that then get
@@ -70,10 +70,14 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
 		opt, ok := Global.Options[option]
 		if ok {
-			i, _ = opt.Action(i, arg, Global)
+			_, err = opt.Action(i, arg, Global)
+			if err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Parameter %s has errors. Exiting. Err: %v\n", args[i], err)
+				return err
+			}
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Exiting.\n", args[i])
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			_, _ = fmt.Fprintf(os.Stderr, "Parameter %s is not a recognized option. Exiting.\n", args[i])
+			return err
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
@@ -91,11 +95,8 @@ func getOptionRootAndArgs(option string) (string, string, error) {
 		return "", "", errors.New("empty option error")
 	}
 
-	// if the option has an embedded arg value, it'll come after a : or an =
-	argMarker := strings.Index(option, ":")
-	if argMarker == -1 {
-		argMarker = strings.Index(option, "=")
-	}
+	// if the option has an embedded arg value, it'll come after the first =
+	argMarker := strings.Index(option, "=")
 
 	// if there's no embedded : or = then the option doesn't contain an arg value
 	if argMarker == -1 {
@@ -151,10 +152,6 @@ are passed as the arguments to main class.
 
 where options include:
 	-client       to select the "client" VM
-	-verbose:[class|info|fine|finest]  enable verbose output
-                  info, fine, finest are Jacobin-specific options providing
-                    increasing amounts of detail. The finest level is used
-                    primarily for performance analysis.
 	-? -h -help   print this help message to the error stream
 	--help        print this help message to the output stream
 	-version      print product version to the error stream and exit
@@ -164,8 +161,14 @@ where options include:
 				  print product version to the output stream and continue
 
 Jacobin-specific options:
-	-strictJDK    make user messages conform closely to the JDK's format
-	-trace:inst   display instruction-level tracing data to the console`
+	-strictJDK          make user messages conform closely to the JDK's format
+	-trace=selections   display selected tracing to the console
+                        where the selections are one or more of the following:
+                        * init - process initilization
+                        * cloadi - classloader initialization
+                        * inst - bytecode interpreter trace
+                        * class - class & method support for the interpreter
+                        * verbose - inst, class, and more details of the interpreter `
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }

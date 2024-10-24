@@ -10,13 +10,14 @@ package trace
 // At some future point, might allow the user to specify where logging should go.
 import (
 	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
+	"jacobin/shutdown"
 	"os"
+	"runtime/debug"
 	"sync"
 	"time"
 )
-
-// Should never see an indication of an empty trace message!
-const EmptyMsg = "*** EMPTY LOGGING MESSAGE !!!"
 
 // Mutex for protecting the Log function during multithreading.
 var mutex = sync.Mutex{}
@@ -36,7 +37,9 @@ func Trace(msg string) {
 	var err error
 
 	if len(msg) == 0 {
-		msg = EmptyMsg
+		errMsg := fmt.Sprintf("Zero-length trace argument")
+		abruptEnd(excNames.IllegalArgumentException, errMsg)
+		return
 	}
 
 	// if the message is more low-level than a WARNING,
@@ -47,12 +50,28 @@ func Trace(msg string) {
 	// Lock access to the logging stream to prevent inter-thread overwrite issues
 	mutex.Lock()
 	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
+	if err != nil {
+		errMsg := fmt.Sprintf("*** stderr failed, err: %v", err)
+		abruptEnd(excNames.IOError, errMsg)
+	}
 	mutex.Unlock()
 
-	// Report on stdout if stderr failed
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stdout, "[%3d.%03ds] *** stderr failed, err: %v\n", millis/1000, millis%1000, err)
-		_, _ = fmt.Fprintf(os.Stdout, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
-	}
+}
 
+// Duplicated from minimalAbort in the exceptions package exceptions.go due to a Go-diagnosed cycle.
+func abruptEnd(whichException int, msg string) {
+	var stack string
+	bytes := debug.Stack()
+	if len(bytes) > 0 {
+		stack = string(bytes)
+	} else {
+		stack = ""
+	}
+	glob := globals.GetGlobalRef()
+	glob.ErrorGoStack = stack
+	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
+	_, _ = fmt.Fprintln(os.Stderr, errMsg)
+	//exceptions.ShowGoStackTrace(nil) <---------------- causes Go-diagnosed cycle: classloader >exceptions > classloader
+	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
+	//os.Exit(1)
 }

@@ -9,17 +9,13 @@ package classloader
 import (
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/types"
 	"math"
-	"os"
 	"testing"
 )
 
 func TestMeInfoFromMethRefInvalid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
 
 	// set up a class with a constant pool containing entries
 	// that will fail the following tests
@@ -49,13 +45,6 @@ func TestMeInfoFromMethRefInvalid(t *testing.T) {
 
 func TestMeInfoFromMethRefValid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	log.SetLogLevel(log.WARNING)
-
-	// redirect stderr so as not to pollute the test output with the expected error message
-	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
-	os.Stderr = w
 
 	// Initialize classloaders and method area
 	err := Init()
@@ -100,9 +89,6 @@ func TestMeInfoFromMethRefValid(t *testing.T) {
 		t.Errorf("Expect to get a method: <init>()V, got %s%s", s2, s2)
 	}
 
-	// restore stderr
-	_ = w.Close()
-	os.Stderr = normalStderr
 }
 
 func TestGetClassNameFromCPclassref(t *testing.T) {

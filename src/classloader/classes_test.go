@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
@@ -18,116 +17,10 @@ import (
 	"testing"
 )
 
-// test insertion of klass into the method area (called MethArea[])
-func TestInsertValid(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	MethArea = &sync.Map{}
-	currLen := MethAreaSize()
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass"
-	k.Loader = "testLoader"
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	newLen := MethAreaSize()
-	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
-			currLen+1, newLen)
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	if !strings.Contains(msg, "Method area insert: testClass, loader: testLoader") {
-		t.Errorf("Expecting log message containing 'testClass', got: %s", msg)
-	}
-}
-
-// TODO: This test does not appear to test what it contends. Further note:
-// the coverage of the missing main() method is tested below and is the test
-// responsible for code coverage of the missing main() method, not this one.
-func TestInvalidLookupOfMethod_Test0(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	MethArea = &sync.Map{}
-	currLen := MethAreaSize()
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass"
-	k.Loader = ""
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	newLen := MethAreaSize()
-	if newLen != currLen+1 {
-		t.Errorf("Expected post-insertion MethArea[] to have length of %d, got: %d",
-			currLen+1, newLen)
-	}
-
-	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
-	if err == nil {
-		t.Errorf("Expecting an err msg for invalid MethAreaFetch in MTable, but got none")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	if !strings.Contains(msg, "Method area insert: testClass, loader:") {
-		t.Errorf("Expecting log message containing 'Class: testClass', got: %s", msg)
-	}
-}
-
 func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -179,8 +72,7 @@ func TestInvalidLookupOfMethod_Test1(t *testing.T) {
 func TestInvalidLookupOfMethod_Test2(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -284,8 +176,7 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 func TestInvalidMainMethod(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -326,8 +217,7 @@ func TestInvalidMainMethod(t *testing.T) {
 
 func TestInvalidClassName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

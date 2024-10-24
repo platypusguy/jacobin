@@ -12,6 +12,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"sort"
 	"sync"
@@ -88,8 +89,10 @@ func MethAreaInsert(name string, klass *Klass) {
 	methAreaSize++
 	MethAreaMutex.Unlock()
 
-	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
-		_ = log.Log("Method area insert: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
+	if globals.TraceClass {
+		if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
+			trace.Trace("Method area insert: " + klass.Data.Name + ", loader: " + klass.Loader)
+		}
 	}
 }
 

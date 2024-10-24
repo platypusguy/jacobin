@@ -17,6 +17,7 @@ import (
 	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
 	"os"
@@ -454,7 +455,9 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
-	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+	if globals.TraceClass {
+		trace.Trace("Class " + fullyParsedClass.className + " has been format-checked.")
+	}
 
 	// prepare the class for posting
 	classToPost := convertToPostableClass(&fullyParsedClass)
