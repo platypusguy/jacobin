@@ -59,7 +59,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // SIPUSH      0x11
 	doLdc,           // LDC             0x12
 	doLdcw,          // LDC_W           0x13
-	notImplemented,  // LDC2_W          0x14
+	doLdc2w,         // LDC2_W          0x14
 	doLoad,          // ILOAD           0x15
 	doLoad,          // LLOAD           0x16
 	doLoad,          // FLOAD           0x17
@@ -312,6 +312,27 @@ func doBiPush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byt
 // 0x12, 0x13 LDC functions
 func doLdc(fr *frames.Frame, _ int64) int  { return ldc(fr, 1) }
 func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
+
+// 0x14 LDC2_W (push long or double from CP indexed by next two bytes)
+func doLdc2w(fr *frames.Frame, _ int64) int {
+	idx := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+
+	CPe := classloader.FetchCPentry(fr.CP.(*classloader.CPool), idx)
+	if CPe.RetType == classloader.IS_INT64 { // push value twice (due to 64-bit width)
+		push(fr, CPe.IntVal)
+	} else if CPe.RetType == classloader.IS_FLOAT64 {
+		push(fr, CPe.FloatVal)
+	} else {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, LDC2_W: Invalid type for bytecode operand",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	return 3 // 2 for idx + 1 for next bytecode
+}
 
 func doAload0(fr *frames.Frame, _ int64) int {
 	push(fr, fr.Locals[0])
