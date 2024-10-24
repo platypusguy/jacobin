@@ -60,11 +60,11 @@ var DispatchTable = [203]BytecodeFunc{
 	doLdc,           // LDC             0x12
 	doLdcw,          // LDC_W           0x13
 	notImplemented,  // LDC2_W          0x14
-	notImplemented,  // ILOAD           0x15
-	notImplemented,  // LLOAD           0x16
-	notImplemented,  // FLOAD           0x17
-	notImplemented,  // DLOAD           0x18
-	notImplemented,  // ALOAD           0x19
+	doLoad,          // ILOAD           0x15
+	doLoad,          // LLOAD           0x16
+	doLoad,          // FLOAD           0x17
+	doLoad,          // DLOAD           0x18
+	doLoad,          // ALOAD           0x19
 	doIload0,        // ILOAD_0         0x1A
 	doIload1,        // ILOAD_1         0x1B
 	doIload2,        // ILOAD_2         0x1C
@@ -318,6 +318,28 @@ func doAload0(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
+// 0x15 - 0x19: ILOAD, LLOAD, FLOAD, ALOAD
+func doLoad(fr *frames.Frame, _ int64) int {
+	var index int
+	var PCadvance int    // how much to advance fr.PC, the program counter
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		PCadvance = 2
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		PCadvance = 1
+	}
+	push(fr, fr.Locals[index])
+	return PCadvance + 1
+}
+
+// 0x1A - 0x1D push variable from local 0-3
+func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
+func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
+func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
+func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
+
 func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
 	var index int
 	var PCadvance int    // how much to advance fr.PC, the program counter
@@ -340,11 +362,6 @@ func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
 func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
 func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
-
-func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
-func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
-func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
-func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
 
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
