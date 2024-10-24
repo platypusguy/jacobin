@@ -69,10 +69,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doIload1,        // ILOAD_1         0x1B
 	doIload2,        // ILOAD_2         0x1C
 	doIload3,        // ILOAD_3         0x1D
-	notImplemented,  // LLOAD_0         0x1E
-	notImplemented,  // LLOAD_1         0x1F
-	notImplemented,  // LLOAD_2         0x20
-	notImplemented,  // LLOAD_3         0x21
+	doIload0,        // LLOAD_0         0x1E
+	doIload1,        // LLOAD_1         0x1F
+	doIload2,        // LLOAD_2         0x20
+	doIload3,        // LLOAD_3         0x21
 	notImplemented,  // FLOAD_0         0x22
 	notImplemented,  // FLOAD_1         0x23
 	notImplemented,  // FLOAD_2         0x24
@@ -82,9 +82,9 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DLOAD_2         0x28
 	notImplemented,  // DLOAD_3         0x29
 	doAload0,        // ALOAD_0         0x2A
-	notImplemented,  // ALOAD_1         0x2B
-	notImplemented,  // ALOAD_2         0x2C
-	notImplemented,  // ALOAD_3         0x2D
+	doAload1,        // ALOAD_1         0x2B
+	doAload2,        // ALOAD_2         0x2C
+	doAload3,        // ALOAD_3         0x2D
 	notImplemented,  // IALOAD          0x2E
 	notImplemented,  // LALOAD          0x2F
 	notImplemented,  // FALOAD          0x30
@@ -334,11 +334,6 @@ func doLdc2w(fr *frames.Frame, _ int64) int {
 	return 3 // 2 for idx + 1 for next bytecode
 }
 
-func doAload0(fr *frames.Frame, _ int64) int {
-	push(fr, fr.Locals[0])
-	return 1
-}
-
 // 0x15 - 0x19: ILOAD, LLOAD, FLOAD, ALOAD
 func doLoad(fr *frames.Frame, _ int64) int {
 	var index int
@@ -355,11 +350,12 @@ func doLoad(fr *frames.Frame, _ int64) int {
 	return PCadvance + 1
 }
 
-// 0x1A - 0x1D push variable from local 0-3
-func doIload0(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(0)) }
-func doIload1(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(1)) }
-func doIload2(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(2)) }
-func doIload3(fr *frames.Frame, _ int64) int { return loadInt(fr, int64(3)) }
+// 0x1A - 0x1D ILOAD_x push int from local x
+// 0x1E - 0x2b LLOAD_x push long from local x
+func doIload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
+func doIload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
+func doIload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
+func doIload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
 func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
 	var index int
@@ -377,6 +373,12 @@ func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
 	fr.Locals[index] = convertInterfaceToInt64(popped) // TODO: conversion needed?
 	return PCadvance + 1
 }
+
+// 0x2A - 0x2D ALOAD_x push reference value from locals[x]
+func doAload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
+func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
+func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
+func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
 // 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
 func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
@@ -838,7 +840,7 @@ func notImplemented(_ *frames.Frame, _ int64) int {
 
 // === helper methods--that is, functions called by dispatched methods (in alpha order) ===
 
-func loadInt(fr *frames.Frame, local int64) int {
+func load(fr *frames.Frame, local int64) int {
 	push(fr, fr.Locals[local])
 	return 1
 }
