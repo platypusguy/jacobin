@@ -11,6 +11,7 @@ import (
 	"jacobin/globals"
 	"jacobin/log"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -186,7 +187,8 @@ func TestInvalidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	args := []string{"jacobin", "-trace=inst:class:mickey"}
+	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "mickey"
+	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 
 	_ = werr.Close()
@@ -195,7 +197,7 @@ func TestInvalidTraceSelection(t *testing.T) {
 	os.Stderr = normalStderr
 
 	if err == nil {
-		t.Error("-trace=inst:class:mickey failed to generate the expected error")
+		t.Errorf("%s failed to generate the expected error", options)
 	}
 	t.Logf("HandleCli err: %v\n", err)
 }
@@ -214,7 +216,8 @@ func TestValidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	args := []string{"jacobin", "-trace=inst:class"}
+	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "inst"
+	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 
 	_ = werr.Close()
