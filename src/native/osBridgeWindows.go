@@ -5,7 +5,6 @@ package native
 import (
 	"fmt"
 	"golang.org/x/sys/windows"
-	"jacobin/log"
 )
 
 func ConnectLibrary(libPath string) uintptr {
@@ -13,7 +12,7 @@ func ConnectLibrary(libPath string) uintptr {
 	if err != nil {
 		errMsg := fmt.Sprintf("ConnectLibrary: windows.LoadLibrary for [%s] failed, reason: [%s]",
 			libPath, err.Error())
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		handle = 0
 	}
 	return uintptr(handle)

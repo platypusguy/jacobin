@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"jacobin/execdata"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"os"
 	"strings"
 )
@@ -21,7 +21,9 @@ import (
 // func HandleCli(osArgs []string, globPtr *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
-	_ = log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
+	if globals.TraceInit {
+		trace.Trace("HandleCli: Java environment variables: " + javaEnvOptions)
+	}
 
 	// JAVA_HOME and JACOBIN_HOME were obtained in the init of globals.go. Here we just log them.
 	showJavaHomeArgs(Global)
@@ -32,7 +34,9 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		cliArgs += v + " "
 	}
 	Global.CommandLine = strings.TrimSpace(cliArgs)
-	_ = log.Log("Commandline: "+Global.CommandLine, log.FINE)
+	if globals.TraceInit {
+		trace.Trace("HandleCli: Commandline: " + Global.CommandLine)
+	}
 
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
@@ -54,7 +58,8 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		}
 
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "getOptionRootAndArgs detected an error in %s. Exiting. Err: %v\n", args[i], err)
+			errMsg := fmt.Sprintf("HandleCli: getOptionRootAndArgs detected an error in %s, err: %v", args[i], err)
+			trace.ErrorMsg(errMsg)
 			return err
 		}
 
@@ -72,11 +77,13 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		if ok {
 			_, err = opt.Action(i, arg, Global)
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "Parameter %s has errors. Exiting. Err: %v\n", args[i], err)
+				errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
+				trace.ErrorMsg(errMsg)
 				return err
 			}
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "Parameter %s is not a recognized option. Exiting.\n", args[i])
+			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
+			trace.ErrorMsg(errMsg)
 			return err
 		}
 
@@ -127,13 +134,19 @@ func getEnvArgs() string {
 	return strings.TrimSpace(envArgs)
 }
 
-// log the two environmental variables from which we'll load base classes, if log level allows.
+// log the two environmental variables from which we'll load base classes.
 func showJavaHomeArgs(Global *globals.Globals) {
-	if Global.JavaHome != "" {
-		_ = log.Log("JAVA_HOME: "+Global.JavaHome, log.FINE)
-	}
-	if Global.JacobinHome != "" {
-		_ = log.Log("JACOBIN_HOME: "+Global.JacobinHome, log.FINE)
+	if globals.TraceVerbose {
+		if Global.JavaHome != "" {
+			trace.Trace("JAVA_HOME: " + Global.JavaHome)
+		} else {
+			trace.Trace("JAVA_HOME: nil")
+		}
+		if Global.JacobinHome != "" {
+			trace.Trace("JACOBIN_HOME: " + Global.JacobinHome)
+		} else {
+			trace.Trace("JACOBIN_HOME: nil")
+		}
 	}
 }
 

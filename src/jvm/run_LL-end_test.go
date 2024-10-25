@@ -13,11 +13,11 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -253,7 +253,6 @@ func TestLrem(t *testing.T) {
 // LREM: long modulo -- divide by zero
 func TestLremDivideByZero(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	// hide the error message to stderr
 	normalStderr := os.Stderr
@@ -631,7 +630,7 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
 
 	stringPool.PreloadArrayClassesToStringPool()
-	log.Init()
+	trace.Init()
 
 	err := classloader.Init()
 	if err != nil {
@@ -755,7 +754,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
 
 	stringPool.PreloadArrayClassesToStringPool()
-	log.Init()
+	trace.Init()
 
 	err := classloader.Init()
 	if err != nil {
@@ -838,7 +837,6 @@ func TestPopBytecodrUnderflow(t *testing.T) {
 
 // POP2: pop two items
 func TestPop2(t *testing.T) {
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
@@ -862,7 +860,6 @@ func TestPop2(t *testing.T) {
 
 // POP2: pop two items off stack -- make sure tracing doesn't affect the output
 func TestPop2WithTrace(t *testing.T) {
-	_ = log.SetLogLevel(log.WARNING)
 	f := newFrame(opcodes.POP2)
 	push(&f, int64(34)) // push three different values; 34 at bottom
 	push(&f, int64(21))
@@ -931,7 +928,7 @@ func TestPushWithStackOverflow(t *testing.T) {
 	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
 
 	stringPool.PreloadArrayClassesToStringPool()
-	log.Init()
+	trace.Init()
 
 	err := classloader.Init()
 	if err != nil {
@@ -1193,7 +1190,6 @@ func TestPutStaticInvalid(t *testing.T) {
 // the other WIDE bytecodes
 func TestRET(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.RET)
 	f.Meth = append(f.Meth, 0x02) // index pointing to local variable 2
@@ -1269,7 +1265,6 @@ func TestSipushNegative(t *testing.T) {
 // SWAP: Swap top two items on stack
 func TestSwap(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.SWAP)
 	push(&f, int64(34)) // push two different values
@@ -1298,7 +1293,6 @@ func TestSwap(t *testing.T) {
 // WIDE version of DLOAD
 func TestWideDLOAD(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.DLOAD)
@@ -1323,7 +1317,6 @@ func TestWideDLOAD(t *testing.T) {
 // WIDE version of DSTORE
 func TestWideDSTORE(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.DSTORE)
@@ -1351,7 +1344,6 @@ func TestWideDSTORE(t *testing.T) {
 // WIDE version of IINC
 func TestWideIINC(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.IINC)
@@ -1371,7 +1363,6 @@ func TestWideIINC(t *testing.T) {
 // WIDE version of ILOAD (covers FLOAD AND ALOAD as well b/c they use the same logic)
 func TestWideILOAD(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.ILOAD)
@@ -1390,7 +1381,6 @@ func TestWideILOAD(t *testing.T) {
 // WIDE version of ISTORE
 func TestWideISTORE(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.ISTORE)
@@ -1412,7 +1402,6 @@ func TestWideISTORE(t *testing.T) {
 // WIDE version of LLOAD
 func TestWideLLOAD(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.LLOAD)
@@ -1437,7 +1426,6 @@ func TestWideLLOAD(t *testing.T) {
 // WIDE version of LSTORE
 func TestWideLSTORE(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.LSTORE)
@@ -1465,7 +1453,6 @@ func TestWideLSTORE(t *testing.T) {
 // WIDE version of RET
 func TestWideRET(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	f := newFrame(opcodes.WIDE)
 	f.Meth = append(f.Meth, opcodes.RET)
@@ -1484,7 +1471,6 @@ func TestWideRET(t *testing.T) {
 func TestInvalidInstruction(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	Global := globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 	LoadOptionsTable(Global)
 
 	// to avoid cluttering the test results, redirect stdout

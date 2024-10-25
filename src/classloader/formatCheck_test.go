@@ -9,8 +9,8 @@ package classloader
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"os"
 	"strings"
 	"testing"
@@ -62,8 +62,7 @@ import (
 // Note: generates an error if the klass.cpCount of entries does not match the actual number
 func TestInvalidCPsize(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -105,8 +104,7 @@ func TestInvalidCPsize(t *testing.T) {
 
 func TestMissingInitialDummyEntry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -146,8 +144,7 @@ func TestMissingInitialDummyEntry(t *testing.T) {
 
 func TestInvalidIndexInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -189,8 +186,7 @@ func TestInvalidIndexInUTF8Entry(t *testing.T) {
 
 func TestInvalidStringInUTF8Entry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -233,8 +229,7 @@ func TestInvalidStringInUTF8Entry(t *testing.T) {
 
 func TestIntConsts(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -284,8 +279,7 @@ func TestIntConsts(t *testing.T) {
 
 func TestFloatConsts(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -336,8 +330,7 @@ func TestFloatConsts(t *testing.T) {
 // tests LongConst and the entry afterwards (which should be a dummy entry)
 func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -387,8 +380,7 @@ func TestMissingDummyEntryAfterLongConst(t *testing.T) {
 
 func TestDoubleConst(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -441,8 +433,7 @@ func TestDoubleConst(t *testing.T) {
 // sure they actually point to an actual entry in utf8Refs
 func TestStringConsts(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -492,8 +483,7 @@ func TestStringConsts(t *testing.T) {
 
 func TestInvalidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -538,8 +528,7 @@ func TestInvalidFieldRef(t *testing.T) {
 
 func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -588,8 +577,7 @@ func TestFieldRefWithInvalidNameAndTypeIndex(t *testing.T) {
 // a < then it must be <init>. This test makes sure of this latter part.
 func TestMethodRefWithInvalidMethodName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -646,8 +634,7 @@ func TestMethodRefWithInvalidMethodName(t *testing.T) {
 // this test validates both InterfaceRefs and NameAndType refs.
 func TestValidInterfaceRefEntry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -709,8 +696,7 @@ func TestValidInterfaceRefEntry(t *testing.T) {
 // when a valid MethodHandle entry is run through it.
 func TestValidMethodHandleEntry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -781,8 +767,7 @@ func TestValidMethodHandleEntry(t *testing.T) {
 // this test checks that an error is generated when that's not the case
 func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -852,8 +837,7 @@ func TestMethodHandle4PointsToFieldRef(t *testing.T) {
 // Java versions above and below 52 (that is, Java 8)
 func TestValidMethodHandlePointingToInterface(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -944,8 +928,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 //
 // func TestMethodHandleIndex8ButInvalidName(t *testing.T) {
 // 	globals.InitGlobals("test")
-// 	log.Init()
-// 	_ = log.SetLogLevel(log.CLASS)
+// 	trace.Init()
 //
 // 	// redirect stderr & stdout to capture results from stderr
 // 	normalStderr := os.Stderr
@@ -1013,8 +996,7 @@ func TestValidMethodHandlePointingToInterface(t *testing.T) {
 
 func TestInvalidMethodHandleRefKind9(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1081,8 +1063,7 @@ func TestInvalidMethodHandleRefKind9(t *testing.T) {
 
 func TestValidMethodType(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1138,8 +1119,7 @@ func TestValidMethodType(t *testing.T) {
 
 func TestDynamics(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1246,8 +1226,7 @@ func TestDynamics(t *testing.T) {
 
 func TestValidInvokeDynamic(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1347,8 +1326,7 @@ func TestValidInvokeDynamic(t *testing.T) {
 // This is simply to proof the fix in JACOBIN-81
 func TestInvalidInvokeDynamic(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1387,8 +1365,7 @@ func TestInvalidInvokeDynamic(t *testing.T) {
 
 func TestModuleNames_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1425,8 +1402,7 @@ func TestModuleNames_Test0(t *testing.T) {
 
 func TestModuleNames_Test1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1473,8 +1449,7 @@ func TestModuleNames_Test1(t *testing.T) {
 
 func TestCPModuleNames(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1514,8 +1489,7 @@ func TestCPModuleNames(t *testing.T) {
 
 func TestCPPackageNames(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1555,8 +1529,7 @@ func TestCPPackageNames(t *testing.T) {
 
 func TestPackageName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1607,8 +1580,7 @@ func TestPackageName(t *testing.T) {
 // error messages are different.
 func TestModuleName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1652,8 +1624,7 @@ func TestModuleName(t *testing.T) {
 func TestInvalidFieldNames(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1708,8 +1679,7 @@ func TestInvalidFieldNames(t *testing.T) {
 func TestInvalidFieldDescription(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1777,8 +1747,7 @@ func TestMethodDescription(t *testing.T) {
 
 func TestCheckStructure(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr
@@ -1868,8 +1837,7 @@ func TestUnqualifiedName(t *testing.T) {
 func TestStructuralValidation(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to avoid noisy output
 	normalStderr := os.Stderr

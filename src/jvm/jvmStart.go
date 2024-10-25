@@ -12,7 +12,6 @@ import (
 	"jacobin/exceptions"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
@@ -55,7 +54,7 @@ func JVMrun() int {
 		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
 		stringPool.PreloadArrayClassesToStringPool()
-		log.Init()
+		trace.Init()
 	}
 	globPtr = globals.GetGlobalRef()
 
@@ -64,7 +63,9 @@ func JVMrun() int {
 	globPtr.FuncThrowException = exceptions.ThrowExNil
 	globPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 
-	_ = log.Log("running program: "+globPtr.JacobinName, log.FINE)
+	if globals.TraceInit {
+		trace.Trace("running program: " + globPtr.JacobinName)
+	}
 
 	var status error
 
@@ -94,12 +95,14 @@ func JVMrun() int {
 		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, globPtr.StartingJar)
 
 		if err != nil {
-			_ = log.Log(err.Error(), log.INFO)
+			errMsg := fmt.Sprintf("JVMrun: GetMainClassFromJar(%s) failed, err: %v", globPtr.StartingJar, err)
+			trace.ErrorMsg(errMsg)
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		if manifestClass == "" {
-			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", globPtr.StartingJar), log.INFO)
+			errMsg := fmt.Sprintf("JVMrun: no main manifest attribute in %s", globPtr.StartingJar)
+			trace.ErrorMsg(errMsg)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		mainClassNameIndex, _, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
@@ -112,7 +115,7 @@ func JVMrun() int {
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	} else {
-		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
+		trace.ErrorMsg("JVMrun: No starting class from a class file nor a jar")
 		ShowUsage(os.Stdout)
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}

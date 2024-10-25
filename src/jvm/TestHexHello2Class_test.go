@@ -11,8 +11,8 @@ import (
 	"jacobin/classloader"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/trace"
 	"os"
 	"strconv"
 	"strings"
@@ -98,9 +98,8 @@ func TestHexHello2ValidClass(t *testing.T) {
 
 	// Initialise global, logging, classloader
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
-	t.Logf("globals.InitGlobals and log.Init ok\n")
+	trace.Init()
+	t.Logf("globals.InitGlobals and trace.Init ok\n")
 
 	// Initialise classloader
 	err = classloader.Init()
@@ -176,8 +175,7 @@ func TestHexHello2InvalidMagicNumber(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	err := classloader.Init()
 
 	testBytes := Hello2Bytes[0:2]
@@ -210,8 +208,7 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	err := classloader.Init()
 
 	var testBytes = Hello2Bytes[0:8]

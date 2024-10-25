@@ -9,8 +9,8 @@ package jvm
 import (
 	"fmt"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/statics"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"path/filepath"
@@ -125,7 +125,9 @@ func getJarFilename(pos int, name string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-jar", gl)
 	if len(gl.Args) > pos+1 {
 		gl.StartingJar = gl.Args[pos+1]
-		log.Log("Starting with JAR file: "+gl.StartingJar, log.FINE)
+		if globals.TraceVerbose {
+			trace.Trace("Starting with JAR file: " + gl.StartingJar)
+		}
 		for i := pos + 2; i < len(gl.Args); i++ {
 			gl.AppArgs = append(gl.AppArgs, gl.Args[i])
 		}

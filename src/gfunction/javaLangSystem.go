@@ -11,11 +11,11 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"os/user"
@@ -122,7 +122,7 @@ func clinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
 		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {

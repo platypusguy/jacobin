@@ -9,7 +9,7 @@ package classloader
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"os"
 	"strconv"
 	"strings"
@@ -19,7 +19,7 @@ import (
 func TestGetIntFrom2BytesInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -48,7 +48,7 @@ func TestGetIntFrom2BytesInvalid(t *testing.T) {
 func TestGetIntFrom2BytesValid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -76,7 +76,7 @@ func TestGetIntFrom2BytesValid(t *testing.T) {
 
 func TestGetU16fromTwoBytesInvalid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -105,7 +105,7 @@ func TestGetU16fromTwoBytesInvalid(t *testing.T) {
 func TestGetIntFrom4BytesValid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -134,7 +134,7 @@ func TestGetIntFrom4BytesValid(t *testing.T) {
 func TestGetIntFrom4BytesInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -162,7 +162,7 @@ func TestGetIntFrom4BytesInvalid(t *testing.T) {
 
 func TestFetchValidUTF8string_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -197,7 +197,7 @@ func TestFetchValidUTF8string_Test0(t *testing.T) {
 
 func TestFetchInvalidUTF8string_Test1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr and to
 	// prevent error message from showing up in the test results
@@ -237,7 +237,7 @@ func TestFetchInvalidUTF8string_Test1(t *testing.T) {
 
 func TestFetchInvalidUTF8string_Test2(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr and to
 	// prevent error message from showing up in the test results
@@ -276,7 +276,7 @@ func TestFetchInvalidUTF8string_Test2(t *testing.T) {
 // the class file.
 func TestFetchValidAttribute(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -337,7 +337,7 @@ func TestFetchValidAttribute(t *testing.T) {
 
 func TestFetchInvalidUTF8Slot_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -376,7 +376,7 @@ func TestFetchInvalidUTF8Slot_Test0(t *testing.T) {
 
 func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -415,7 +415,7 @@ func TestFetchInvalidUTF8Slot_Test1(t *testing.T) {
 
 func TestFetchInvalidAttribute_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -457,7 +457,7 @@ func TestFetchInvalidAttribute_Test0(t *testing.T) {
 
 func TestFetchInvalidAttribute_Test1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -498,7 +498,7 @@ func TestFetchInvalidAttribute_Test1(t *testing.T) {
 
 func TestFetchInvalidCFmethodRef_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr and to
 	// prevent error message from showing up in the test results
@@ -535,7 +535,7 @@ func TestFetchInvalidCFmethodRef_Test0(t *testing.T) {
 
 func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -575,7 +575,7 @@ func TestFetchInvalidCFmethodRef_Test1(t *testing.T) {
 
 func TestResolveCPnameAndType(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr and to
 	// prevent error message from showing up in the test results

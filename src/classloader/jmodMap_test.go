@@ -7,7 +7,7 @@ package classloader
 
 import (
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"testing"
@@ -41,8 +41,7 @@ func TestJmodMapHomeTempdir(t *testing.T) {
 	_ = os.RemoveAll(tempDir) // in case that it pre-exists
 	t.Setenv("JACOBIN_HOME", tempDir)
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	tStart := time.Now()
 	JmodMapInit()
@@ -76,13 +75,12 @@ func TestJmodMapHomeDefault(t *testing.T) {
 		_ = os.Unsetenv("JACOBIN_HOME")
 	}
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	JmodMapInit() // Create gob file if it does not yet exist.
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	JmodMapInit() // Process a pre-existing gob file.
-	_ = log.SetLogLevel(log.WARNING)
 
 	if !JmodMapFoundGob() {
 		t.Errorf("Expected gob found but one was not found")

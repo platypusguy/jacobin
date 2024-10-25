@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/shutdown"
+	"jacobin/trace"
 	"os"
 )
 
@@ -30,38 +30,26 @@ func GetBaseJmodBytes() {
 	global := globals.GetGlobalRef()
 	jmodBasePath := global.JavaHome + string(os.PathSeparator) + "jmods" + string(os.PathSeparator) + BaseJmodFileName
 
-	// Stat the base jmod file
-	//jmodStat, err := os.Stat(jmodBasePath)
-	//if err != nil {
-	//	msg := fmt.Sprintf("GetBaseJmodBytes: os.Stat(%s) failed", jmodBasePath)
-	//	_ = log.Log(msg, log.SEVERE)
-	//	_ = log.Log(err.Error(), log.SEVERE)
-	//	shutdown.Exit(shutdown.JVM_EXCEPTION)
-	//}
-
-	// Allocate byte array, JmodBaseBytes
-	//global.JmodBaseBytes = make([]byte, jmodStat.Size())
-
 	// Read the entire base jmod file contents (huge!)
 	global.JmodBaseBytes, err = os.ReadFile(jmodBasePath)
 	if err != nil {
-		msg := fmt.Sprintf("GetBaseJmodBytes: os.ReadFile(%s) failed", jmodBasePath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("GetBaseJmodBytes: os.ReadFile(%s) failed, err: %v", jmodBasePath, err)
+		trace.ErrorMsg(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
 	// Validate the file's magic number
 	fileMagicNumber := binary.BigEndian.Uint16(global.JmodBaseBytes[:2])
 	if fileMagicNumber != ExpectedMagicNumber {
-		msg := fmt.Sprintf("GetBaseJmodBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s", jmodBasePath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("GetBaseJmodBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s, err: %v", jmodBasePath, err)
+		trace.ErrorMsg(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
-	msg := fmt.Sprintf("GetBaseJmodBytes: jmodPath %s is loaded, %d bytes", jmodBasePath, len(global.JmodBaseBytes))
-	_ = log.Log(msg, log.CLASS)
+	if globals.TraceCloadi {
+		infoMsg := fmt.Sprintf("GetBaseJmodBytes: jmodPath %s is loaded, %d bytes", jmodBasePath, len(global.JmodBaseBytes))
+		trace.Trace(infoMsg)
+	}
 
 }
 
@@ -88,18 +76,16 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 		// Read entire jmod file contents
 		jmodBytes, err = os.ReadFile(jmodPath)
 		if err != nil {
-			msg := fmt.Sprintf("GetClassBytes: os.ReadFile(%s) failed", jmodPath)
-			_ = log.Log(msg, log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
+			errMsg := fmt.Sprintf("GetClassBytes: os.ReadFile(%s) failed, err: %v", jmodPath, err)
+			trace.ErrorMsg(errMsg)
 			return nil, err
 		}
 
 		// Validate the file's magic number
 		fileMagicNumber := binary.BigEndian.Uint16(jmodBytes[:2])
 		if fileMagicNumber != ExpectedMagicNumber {
-			msg := fmt.Sprintf("GetClassBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s", jmodPath)
-			_ = log.Log(msg, log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
+			errMsg := fmt.Sprintf("GetClassBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s", jmodPath)
+			trace.ErrorMsg(errMsg)
 			return nil, err
 		}
 
@@ -113,33 +99,28 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	//fmt.Printf("DEBUG GetClassBytes: zip.NewReader newReaderLength=%d\n", newReaderLength)
 	zipReader, err := zip.NewReader(ioReader, newReaderLength)
 	if err != nil {
-		msg := fmt.Sprintf("GetClassBytes: zip.NewReader(%s) failed", jmodPath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("GetClassBytes: zip.NewReader(%s) failed, err: %v", jmodPath, err)
+		trace.ErrorMsg(errMsg)
 		return nil, err
 	}
 
 	// Open the file within the zip archive
 	fileHandle, err := zipReader.Open(classFileName)
 	if err != nil {
-		msg := fmt.Sprintf("GetClassBytes: zipReader.Open(class file %s in jmod file %s) failed", classFileName, jmodPath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("GetClassBytes: zipReader.Open(class file %s in jmod file %s) failed, err: %v", classFileName, jmodPath, err)
+		trace.ErrorMsg(errMsg)
 		return nil, err
 	}
 
 	// Read entire class file contents
 	classBytes, err := io.ReadAll(fileHandle)
 	if err != nil {
-		msg := fmt.Sprintf("GetClassBytes: os.ReadAll(class file %s in jmod file %s) failed", classFileName, jmodPath)
-		_ = log.Log(msg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("GetClassBytes: os.ReadAll(class file %s in jmod file %s) failed, err: %v", classFileName, jmodPath, err)
+		trace.ErrorMsg(errMsg)
 		return nil, err
 	}
 
 	// Success!
-	msg := fmt.Sprintf("GetClassBytes: jmodPath %s, className %s was loaded", jmodPath, className)
-	_ = log.Log(msg, log.CLASS)
 	return classBytes, nil
 
 }

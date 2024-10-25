@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"jacobin/config"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/statics"
+	"jacobin/trace"
 	"os"
 )
 
@@ -41,9 +41,9 @@ func Exit(errorCondition ExitStatus) int {
 		}
 	}
 
-	msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
-	if log.Log(msg, log.INFO) != nil {
-		errorCondition = UNKNOWN_ERROR
+	if globals.TraceVerbose {
+		msg := fmt.Sprintf("shutdown.Exit(%d) requested", errorCondition)
+		trace.Trace(msg)
 	}
 
 	if errorCondition == TEST_OK {

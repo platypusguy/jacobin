@@ -9,7 +9,6 @@ package shutdown
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"os"
 	"strings"
 	"testing"
@@ -19,8 +18,7 @@ func TestShutdownOK(t *testing.T) {
 	globals.InitGlobals("test")
 	gl := globals.GetGlobalRef()
 	gl.JacobinName = "test"
-
-	_ = log.SetLogLevel(log.FINE)
+	globals.TraceVerbose = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -52,8 +50,6 @@ func TestShutdownReturn(t *testing.T) {
 	globals.InitGlobals("test")
 	gl := globals.GetGlobalRef()
 	gl.JacobinName = "test"
-
-	_ = log.SetLogLevel(log.FINE)
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

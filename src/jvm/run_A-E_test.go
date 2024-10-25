@@ -10,9 +10,9 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/trace"
 	"jacobin/types"
 	"math"
 	"os"
@@ -330,7 +330,7 @@ func TestCheckcastOfString(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
@@ -373,7 +373,7 @@ func TestCheckcastOfNil(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
@@ -405,7 +405,7 @@ func TestCheckcastOfNull(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	f := newFrame(opcodes.CHECKCAST)
 	push(&f, object.Null) // this should cause the error
@@ -428,8 +428,7 @@ func TestCheckcastOfInvalidReference(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
-	log.SetLogLevel(log.SEVERE)
+	trace.Init()
 
 	// redirect stderr to avoid printing error message to console
 	normalStderr := os.Stderr

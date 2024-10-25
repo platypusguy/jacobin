@@ -9,7 +9,7 @@ package classloader
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"os"
 	"sync"
 	"testing"
@@ -3065,8 +3065,7 @@ var ClassBytes = []byte{
 
 func TestLoadFullyParsedClass_Class(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	fullyParsedClass, err := parse(ClassBytes)
 	if err != nil {
@@ -3080,8 +3079,7 @@ func TestLoadFullyParsedClass_Class(t *testing.T) {
 
 func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	_ = Init()
 	MethArea = &sync.Map{}
 	if MethAreaSize() != 8 { // for the 8 synthetic array classes that are preloaded
@@ -3117,8 +3115,7 @@ func TestParseAndPostFunctionWithClass_Class(t *testing.T) {
 
 func TestLoadClassByNameOnly(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	_ = Init()
 
 	if MethAreaSize() != 8 { // 8 synthetic array entries are preloaded to the methArea

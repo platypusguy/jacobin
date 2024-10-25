@@ -9,8 +9,8 @@ package classloader
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strconv"
@@ -22,7 +22,7 @@ import (
 func TestInvalidMagicNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -51,7 +51,7 @@ func TestInvalidMagicNumber(t *testing.T) {
 func TestTooShortMagicNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -80,7 +80,7 @@ func TestTooShortMagicNumber(t *testing.T) {
 func TestValidMagicNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -105,7 +105,7 @@ func TestValidMagicNumber(t *testing.T) {
 func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -133,7 +133,7 @@ func TestParseOfInvalidJavaVersionNumber(t *testing.T) {
 
 func TestParseValidJavaVersion_Test0(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	bytesToTest := []byte{0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x30}
 	err := parseJavaVersionNumber(bytesToTest, &ParsedClass{})
@@ -145,7 +145,7 @@ func TestParseValidJavaVersion_Test0(t *testing.T) {
 func TestParseValidJavaVersion_Test1(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -165,7 +165,7 @@ func TestParseValidJavaVersion_Test1(t *testing.T) {
 
 func TestConstantPoolCountValid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	pClass := ParsedClass{}
 
@@ -183,7 +183,7 @@ func TestConstantPoolCountValid(t *testing.T) {
 
 func TestConstantPoolCountInvalid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -212,11 +212,10 @@ func TestConstantPoolCountInvalid(t *testing.T) {
 // Access flags consist of a 2-byte integer. In the parsing, a variety of booleans are set in
 // the parsed class to show what access is allowed by the access flags. Both the retrieval of
 // the value and setting of the booleans is tested here.
-func TestAccessFlags_Test0(t *testing.T) {
+func TestAccessFlags_Test1(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0xFF, 0xFF}
@@ -243,55 +242,10 @@ func TestAccessFlags_Test0(t *testing.T) {
 	}
 }
 
-// Verifying the logging output for the various access flags.
-func TestAccessFlags_Test1(t *testing.T) {
-
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.FINEST)
-
-	// redirect stderr to inspect output
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	pc := ParsedClass{}
-	bytes := []byte{0x00, 0xFF, 0xFF}
-	loc, err := parseAccessFlags(bytes, 0, &pc)
-
-	if err != nil {
-		t.Error("Unexpected error occurred testing parse of Access flags")
-	}
-
-	if loc != 2 {
-		t.Error("Expected location from parse of Access flags to be 2. Got: " + strconv.Itoa(loc))
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-
-	out, _ := io.ReadAll(r)
-	msg := string(out[:])
-	os.Stderr = normalStderr
-
-	if !strings.Contains(msg, "public") ||
-		!strings.Contains(msg, "final") ||
-		!strings.Contains(msg, "super") ||
-		!strings.Contains(msg, "interface") ||
-		!strings.Contains(msg, "abstract") ||
-		!strings.Contains(msg, "synthetic") ||
-		!strings.Contains(msg, "annotation") ||
-		!strings.Contains(msg, "enum") ||
-		!strings.Contains(msg, "module") {
-		t.Errorf("Did not get the expected logging output for the attribute")
-	}
-}
-
 func TestAccessFlags_Test2(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr to inspect output
 	normalStderr := os.Stderr
@@ -324,8 +278,7 @@ func TestClassNameInvalidLocation(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x00, 0x10}
@@ -355,8 +308,7 @@ func TestClassNameInvalidIndex(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	bytes := []byte{0x00, 0x00, 0x10}
@@ -380,8 +332,7 @@ func TestClassNameInvalidIndex(t *testing.T) {
 func TestClassNameValidName(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -414,8 +365,7 @@ func TestClassNameValidName(t *testing.T) {
 func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -463,8 +413,7 @@ func TestClassNameWhenDoesNotPointToClassRef(t *testing.T) {
 func TestClassNameWithMissingUTF8(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	pc.cpCount = 3
@@ -500,8 +449,7 @@ func TestClassNameWithMissingUTF8(t *testing.T) {
 func TestClassNameWithConflictingExistingClassName(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -545,8 +493,7 @@ func TestClassNameWithConflictingExistingClassName(t *testing.T) {
 func TestSuperclassNameEmpty(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 	pc.cpCount = 5
@@ -598,8 +545,7 @@ func TestSuperclassNameEmpty(t *testing.T) {
 // Test that when the class is java.lang.Object that the superclass is empty
 func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -640,8 +586,7 @@ func TestSuperclassNameValidEmptyDueToItBeingObjectClass(t *testing.T) {
 }
 func TestSuperclassNameInvalidOffset(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -677,8 +622,7 @@ func TestSuperclassNameInvalidOffset(t *testing.T) {
 func TestSuperclassNameInvalidIndex(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -717,8 +661,7 @@ func TestSuperclassNameInvalidIndex(t *testing.T) {
 func TestSuperclassNameNotClassref(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -761,8 +704,7 @@ func TestSuperclassNameNotClassref(t *testing.T) {
 func TestSuperclassNameNoneButNotObectClass(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -806,8 +748,7 @@ func TestSuperclassNameNoneButNotObectClass(t *testing.T) {
 func TestInterfaceCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	pc := ParsedClass{}
 
@@ -828,8 +769,7 @@ func TestInterfaceCountValid(t *testing.T) {
 func TestInterfaceCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -861,7 +801,7 @@ func TestInterfaceCountInvalid(t *testing.T) {
 
 func TestInterfaceValid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -906,7 +846,7 @@ func TestInterfaceValid(t *testing.T) {
 
 func TestInterfaceInvalid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -950,8 +890,7 @@ func TestInterfaceInvalid(t *testing.T) {
 func TestFieldCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -989,8 +928,7 @@ func TestFieldCountValid(t *testing.T) {
 func TestFieldCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1027,7 +965,7 @@ func TestFieldCountInvalid(t *testing.T) {
 
 func TestFieldWithFaultyNameIndex(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1066,7 +1004,7 @@ func TestFieldWithFaultyNameIndex(t *testing.T) {
 
 func TestFieldWithNoAttributes(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1132,8 +1070,7 @@ func TestFieldWithNoAttributes(t *testing.T) {
 func TestMethodCountValid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1171,8 +1108,7 @@ func TestMethodCountValid(t *testing.T) {
 func TestMethodCountInvalid(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1209,7 +1145,7 @@ func TestMethodCountInvalid(t *testing.T) {
 
 func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to prevent error message from showing up in the test results
 	normalStderr := os.Stderr
@@ -1253,7 +1189,7 @@ func TestParseClassAttributeCountFor2Attributes(t *testing.T) {
 
 func TestValidBootstrapClassAttribute(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -1304,7 +1240,7 @@ func TestValidBootstrapClassAttribute(t *testing.T) {
 
 func TestDeprecatedClassAttribute(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

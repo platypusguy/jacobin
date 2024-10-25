@@ -9,7 +9,6 @@ package classloader
 import (
 	"encoding/binary"
 	"fmt"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"math"
 	"os"
@@ -266,10 +265,6 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 		str := klass.utf8Refs[h].content
 		strIndex := stringPool.GetStringIndex(&str)
 		klass.classRefs = append(klass.classRefs, strIndex)
-	}
-
-	if log.Level == log.FINEST {
-		printCP(klass)
 	}
 
 	return pos, nil

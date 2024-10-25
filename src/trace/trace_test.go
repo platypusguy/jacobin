@@ -19,7 +19,7 @@ func initialize() {
 	Init()
 }
 
-func TestEmptyTraceMessage(t *testing.T) {
+func TestErrorMessage(t *testing.T) {
 
 	initialize()
 
@@ -29,7 +29,7 @@ func TestEmptyTraceMessage(t *testing.T) {
 	// Capture the writing done to stderr in a pipe
 	rdr, wrtr, _ := os.Pipe()
 	os.Stderr = wrtr
-	Trace("")
+	ErrorMsg("Woe is me!")
 	_ = wrtr.Close()
 
 	// Restore stderr to what it was before
@@ -40,7 +40,7 @@ func TestEmptyTraceMessage(t *testing.T) {
 	outString := string(outBytes[:])
 
 	// What we expected?
-	if !strings.Contains(outString, "Zero-length trace argument") { // No
+	if !strings.Contains(outString, "ERROR") { // No
 		t.Errorf("Empty trace message failed: expected zero-length trace argument diagnostic but saw [%s]\n", outString)
 	}
 

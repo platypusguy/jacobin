@@ -9,7 +9,8 @@ package native
 import (
 	"errors"
 	"fmt"
-	"jacobin/log"
+	"jacobin/globals"
+	"jacobin/trace"
 	"os"
 	"unsafe"
 )
@@ -89,8 +90,10 @@ func storeLibHandle(argLib, argFunction string) bool {
 	}
 
 	// Done! Trace and store handle.
-	infoMsg := fmt.Sprintf("storeLibHandle: lib: %s, function: %s\n", lib, argFunction)
-	log.Log(infoMsg, log.TRACE_INST)
+	if globals.TraceVerbose {
+		infoMsg := fmt.Sprintf("storeLibHandle: lib: %s, function: %s\n", lib, argFunction)
+		trace.Trace(infoMsg)
+	}
 	nfToLibTable[argFunction] = handle
 
 	return true // Good news!

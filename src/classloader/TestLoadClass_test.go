@@ -7,7 +7,6 @@ package classloader
 
 import (
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/types"
 	"testing"
 )
@@ -50,7 +49,6 @@ func TestJmodToClass(t *testing.T) {
 
 	// Initialise global and logging
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	t.Logf("globals.InitGlobals(test) ok\n")
 

@@ -17,9 +17,9 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/opcodes"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"os"
 	"strings"
 	"testing"
@@ -27,7 +27,7 @@ import (
 
 func TestGfunctionExecValid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
@@ -135,7 +135,7 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 
 	globals.InitGlobals("test")
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	rerr, werr, _ := os.Pipe()
