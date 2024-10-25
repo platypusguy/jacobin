@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -71,7 +71,7 @@ func abruptEnd(whichException int, msg string) {
 	glob.ErrorGoStack = stack
 	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
 	_, _ = fmt.Fprintln(os.Stderr, errMsg)
-	//exceptions.ShowGoStackTrace(nil) <---------------- causes Go-diagnosed cycle: classloader >exceptions > classloader
+	// exceptions.ShowGoStackTrace(nil) <---------------- causes Go-diagnosed cycle: classloader >exceptions > classloader
 	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-	//os.Exit(1)
+	// os.Exit(1)
 }
