@@ -80,7 +80,6 @@ func TestHexIDIVException(t *testing.T) {
 	// Initialize global, logging, classloader
 	// globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
 	globals.InitGlobals("test")
-	// globals.InitGlobals("TestHexIDIVException")
 	trace.Init()
 	globPtr = globals.GetGlobalRef()
 	globPtr.FuncInstantiateClass = InstantiateClass

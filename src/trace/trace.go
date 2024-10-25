@@ -38,12 +38,6 @@ func Trace(msg string) {
 
 	var err error
 
-	if len(msg) == 0 {
-		errMsg := fmt.Sprintf("Zero-length trace argument")
-		abruptEnd(excNames.IllegalArgumentException, errMsg)
-		return
-	}
-
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
 	duration := time.Since(StartTime)

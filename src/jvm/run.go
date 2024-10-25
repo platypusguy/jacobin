@@ -137,7 +137,7 @@ func runThread(t *thread.ExecThread) error {
 
 	for t.Stack.Len() > 0 {
 		if globals.GetGlobalRef().NewInterpreter {
-			interpret(t.Stack)
+			runFrame(t.Stack)
 		} else {
 			err := runFrame(t.Stack)
 			if err != nil {

@@ -36,7 +36,7 @@ func TestThrowExNil(t *testing.T) {
 }
 
 func TestThrowExWithNilFrame(t *testing.T) {
-	globals.InitGlobals("testWithoutShutdown")
+	globals.InitGlobals("test")
 
 	// to inspect log messages, redirect stderr
 	normalStderr := os.Stderr
