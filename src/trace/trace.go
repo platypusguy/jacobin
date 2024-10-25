@@ -34,7 +34,7 @@ func Init() {
 
 // Trace is the principal tracing function. Note that it currently
 // writes to stderr. At some future point, this might become an option.
-func Trace(msg string) {
+func Trace(argMsg string) {
 
 	var err error
 
@@ -45,18 +45,26 @@ func Trace(msg string) {
 
 	// Lock access to the logging stream to prevent inter-thread overwrite issues
 	mutex.Lock()
-	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
+	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, argMsg)
 	mutex.Unlock()
 	if err != nil {
-		errMsg := fmt.Sprintf("*** stderr failed, err: %v", err)
+		errMsg := fmt.Sprintf("Trace: *** stderr failed, err: %v", err)
 		abruptEnd(excNames.IOError, errMsg)
 	}
 
 }
 
-// An error message is just a prefix-decorated message.
-func ErrorMsg(msg string) {
-	Trace("*** ERROR *** " + msg)
+// An error message is a prefix-decorated message that has no time-stamp.
+func ErrorMsg(argMsg string) {
+	var err error
+	errMsg := "*** ERROR *** " + argMsg
+	mutex.Lock()
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", errMsg)
+	mutex.Unlock()
+	if err != nil {
+		errMsg := fmt.Sprintf("ErrorMsg: *** stderr failed, err: %v", err)
+		abruptEnd(excNames.IOError, errMsg)
+	}
 }
 
 // Duplicated from minimalAbort in the exceptions package exceptions.go due to a Go-diagnosed cycle.
