@@ -350,7 +350,7 @@ func doLoad(fr *frames.Frame, _ int64) int {
 }
 
 // 0x1A - 0x1D ILOAD_x push int from local x
-// 0x1E - 0x2b LLOAD_x push long from local x
+// 0x1E - 0x2B LLOAD_x push long from local x
 func doIload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
 func doIload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
