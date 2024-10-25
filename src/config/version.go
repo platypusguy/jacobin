@@ -10,7 +10,7 @@ import "strconv"
 
 // v 0.6.0 begun 8/31/24 at 3,012 GitHub commits
 
-var JacobinVersion = "0.6.018"
+var JacobinVersion = "0.6.019"
 
 // GetJacobinVersion returns a manually updated version number and an
 // automatically updated build #. The latter being updated by bumpbuildno.go
