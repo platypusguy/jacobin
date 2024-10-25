@@ -9,7 +9,7 @@ package native
 import (
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"testing"
 )
 
@@ -19,10 +19,7 @@ func Test_II_I(t *testing.T) {
 
 	// Initialize jacobin and set up a dummy frame stack.
 	globals.InitGlobals("test")
-	log.Init()
-	if tracing {
-		log.SetLogLevel(log.TRACE_INST)
-	}
+	trace.Init()
 
 	// Perform native initialisation.
 	if !nativeInit() {

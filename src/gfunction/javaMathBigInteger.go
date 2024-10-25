@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
+	"jacobin/trace"
 	"jacobin/types"
 	"math/big"
 	"math/bits"
@@ -441,7 +441,7 @@ func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(bigIntegerClassName)
 	if klass == nil {
 		errMsg := fmt.Sprintf("BigInteger<clinit>: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {

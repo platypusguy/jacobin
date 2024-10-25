@@ -10,7 +10,7 @@ import (
 	"errors"
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -27,7 +27,6 @@ import (
 func TestInitOfClassloaders(t *testing.T) {
 	globals.InitGlobals("test")
 	// set the logger to low granularity, so that logging messages are not also captured in this test
-	_ = log.SetLogLevel(log.WARNING)
 
 	_ = Init()
 
@@ -138,8 +137,7 @@ func TestNormalizingClassReference(t *testing.T) {
 func TestConvertToPostableClassStringRefs(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// set up a class with a constant pool containing the one
 	// StringConst we want to make sure is converted to a UTF8
@@ -169,8 +167,7 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 
 func TestGetInvalidJar(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -196,15 +193,14 @@ func TestGetInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Invalid or corrupt jarfile") {
+	if !strings.Contains(msg, "inaccessible jarfile") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
 
 func TestGetClassFromInvalidJar(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -230,15 +226,14 @@ func TestGetClassFromInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Invalid or corrupt jarfile") {
+	if !strings.Contains(msg, "inaccessible jarfile") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
 
 func TestMainClassFromInvalidJar(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -264,7 +259,7 @@ func TestMainClassFromInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "Invalid or corrupt jarfile") {
+	if !strings.Contains(msg, "inaccessible jarfile") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
@@ -280,8 +275,8 @@ func TestInvalidMagicNumberViaParseAndPostFunction(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
+
 	err := Init()
 
 	testBytes := []byte{
@@ -354,8 +349,7 @@ var Hello2Bytes = []byte{
 
 func TestLoadFullyParsedClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	fullyParsedClass, err := parse(Hello2Bytes)
 	if err != nil {

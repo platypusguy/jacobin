@@ -9,7 +9,6 @@ package frames
 import (
 	"container/list"
 	"fmt"
-	"jacobin/log"
 	"unsafe"
 )
 
@@ -88,15 +87,6 @@ func PushFrame(fs *list.List, f *Frame) error {
 		fmt.Printf("DEBUG PushFrame %s ClName=%s, MethName=%s TOS=%d, PC=%d\n", ftag(f), f.ClName, f.MethName, f.TOS, f.PC)
 	}
 	fs.PushFront(f)
-	// TODO: move this to instrumentation system
-	if log.Level == log.FINEST {
-		var s string
-		for e := fs.Front(); e != nil; e = e.Next() {
-			fr := e.Value.(*Frame)
-			s = s + "\n" + "> " + fr.MethName
-		}
-		_ = log.Log("Present stack frame:"+s, log.FINEST)
-	}
 	return nil
 }
 

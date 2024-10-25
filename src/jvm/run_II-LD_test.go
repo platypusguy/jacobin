@@ -10,10 +10,10 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -228,7 +228,7 @@ func TestInstanceofString(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	_ = classloader.Init()
 	// classloader.LoadBaseClasses()

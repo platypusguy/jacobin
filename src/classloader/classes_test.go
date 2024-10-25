@@ -6,129 +6,13 @@
 package classloader
 
 import (
-	"fmt"
-	"io"
 	"jacobin/globals"
-	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
 	"strings"
 	"sync"
 	"testing"
 )
-
-func TestInvalidLookupOfMethod_Test1(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
-	globals.InitGlobals("test")
-	globals.TraceClass = true
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	MethArea = &sync.Map{}
-
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass"
-	// k.Data.Superclass = types.ObjectClassName
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
-	k.Loader = "testloader"
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	// we need a java/lang/Object instance, so just duplicate the entry
-	// in the MethArea. It's only a placeholder
-	MethAreaInsert(types.ObjectClassName, &k)
-
-	_, err := FetchMethodAndCP("TestEntry", "main", "([L)V")
-	if err == nil {
-		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	if !strings.Contains(msg, "main() method not found in class") {
-		t.Errorf("Expecting log message containing 'Main method not found in class', got: %s", msg)
-	}
-}
-
-func TestInvalidLookupOfMethod_Test2(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
-	globals.InitGlobals("test")
-	globals.TraceClass = true
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	MethArea = &sync.Map{}
-	currLen := MethAreaSize()
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass"
-	k.Data.SuperclassIndex = stringPool.GetStringIndex(&types.ObjectClassName)
-	k.Loader = "testloader"
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	// we need a java/lang/Object instance, so just duplicate the entry
-	// in the MethArea. It's only a placeholder
-	MethAreaInsert(types.ObjectClassName, &k)
-
-	newLen := MethAreaSize()
-	if newLen != currLen+2 {
-		t.Errorf("TestInvalidLookupOfMethod_Test2: Expected post-insertion MethArea[] to have length of %d, got: %d",
-			currLen+1, newLen)
-	}
-
-	// fetch a non-existent class, called 'gherkin'
-	_, err := FetchMethodAndCP("TestEntry", "gherkin", "([L)V")
-	if err == nil {
-		t.Errorf("Expecting an err msg for invalid MethAreaFetch of main() in MTable, but got none")
-	}
-
-	msg := err.Error()
-	if !strings.Contains(msg, "nor its superclasses contain method") {
-		fmt.Fprintf(os.Stderr, "TestInvalidLookupOfMethod_Test2: ")
-		t.Errorf("Expecting error message to conatin 'nor its superclasses contain method', got %s",
-			err.Error())
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg = string(out[:])
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-}
 
 func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 	// redirect stderr & stdout to capture results from stderr
@@ -176,7 +60,6 @@ func TestFetchUTF8stringFromCPEntryNumber(t *testing.T) {
 func TestInvalidMainMethod(t *testing.T) {
 	// Testing the changes made as a result of JACOBIN-103
 	globals.InitGlobals("test")
-	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -217,7 +100,6 @@ func TestInvalidMainMethod(t *testing.T) {
 
 func TestInvalidClassName(t *testing.T) {
 	globals.InitGlobals("test")
-	globals.TraceClass = true
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

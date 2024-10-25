@@ -3,13 +3,15 @@ package native
 import (
 	"fmt"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"runtime"
 )
 
 func nativeInit() bool {
 
-	_ = log.Log("nativeInit: Begin", log.TRACE_INST)
+	if globals.TraceInit {
+		trace.Trace("nativeInit: Begin")
+	}
 
 	// Set up library file extension and library path string as a function of O/S.
 	OperSys = runtime.GOOS
@@ -23,7 +25,7 @@ func nativeInit() bool {
 		WindowsOS = true
 	default:
 		errMsg := fmt.Sprintf("nativeInit: Unsupported O/S: %s", OperSys)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		return false
 	}
 
@@ -43,8 +45,10 @@ func nativeInit() bool {
 	if HandleLibjvm == 0 {
 		return false
 	}
-	infoMsg := fmt.Sprintf("nativeInit: End, connect to %s ok", PathLibjvm)
-	_ = log.Log(infoMsg, log.TRACE_INST)
+	if globals.TraceInit {
+		infoMsg := fmt.Sprintf("nativeInit: End, connected to %s", PathLibjvm)
+		trace.Trace(infoMsg)
+	}
 
 	return true
 

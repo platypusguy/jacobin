@@ -18,13 +18,13 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
@@ -46,9 +46,9 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	MainThread = *mainThread
 	// set tracing, if any
 	tracing := false
-	trace, exists := globals.Options["-trace"]
+	traceKw, exists := globals.Options["-trace"]
 	if exists {
-		tracing = trace.Set
+		tracing = traceKw.Set
 	}
 	MainThread.Trace = tracing
 
@@ -89,7 +89,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -102,7 +102,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
 	err = runThread(&MainThread)
@@ -112,7 +112,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	if MainThread.Trace {
 		statics.DumpStatics()
-		config.DumpConfig(os.Stderr)
+		_ = config.DumpConfig(os.Stderr)
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func runThread(t *thread.ExecThread) error {
 
 	for t.Stack.Len() > 0 {
 		if globals.GetGlobalRef().NewInterpreter {
-			interpret(t.Stack)
+			runFrame(t.Stack)
 		} else {
 			err := runFrame(t.Stack)
 			if err != nil {
@@ -183,7 +183,7 @@ frameInterpreter:
 	for f.PC < len(f.Meth) {
 		if MainThread.Trace {
 			traceInfo := emitTraceData(f)
-			_ = log.Log(traceInfo, log.TRACE_INST)
+			trace.Trace(traceInfo)
 		}
 
 		opcode := f.Meth[f.PC]
@@ -1693,7 +1693,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1729,7 +1729,7 @@ frameInterpreter:
 				} else {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 					return errors.New(errMsg)
 				}
 			}
@@ -1740,7 +1740,7 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1780,7 +1780,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1816,7 +1816,7 @@ frameInterpreter:
 				} else {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 					return errors.New(errMsg)
 				}
 			}
@@ -1826,7 +1826,7 @@ frameInterpreter:
 			if !ok {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1901,7 +1901,7 @@ frameInterpreter:
 				default:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 					return errors.New(errMsg)
 				}
 			}
@@ -1922,7 +1922,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1946,7 +1946,7 @@ frameInterpreter:
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1994,7 +1994,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
@@ -2021,7 +2021,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTFIELD: Expected an object ref, but observed type %T in "+
 					"location %d in method %s of class %s, previously popped a value(type %T):\n%v\n",
 					ref, f.PC, f.MethName, f.ClName, value, value)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
@@ -2061,7 +2061,7 @@ frameInterpreter:
 				if !ok {
 					errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
 						fieldName, f.ClName, f.MethName)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
@@ -2071,7 +2071,7 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
@@ -2688,11 +2688,11 @@ frameInterpreter:
 				// in the Throwable object or subclass (which is generally the specific exception class).
 
 				// start by printing out the name of the exception/error and the thread it occurred on
-				msg := ""
+				errMsg := ""
 				if f.Thread == 1 { // if it's thread #1, use its name, "main"
-					msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
+					errMsg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
 				} else {
-					msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
+					errMsg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
 				}
 
 				appMsg := objectRef.FieldTable["detailMessage"].Fvalue
@@ -2700,21 +2700,21 @@ frameInterpreter:
 					switch appMsg.(type) {
 					case []uint8:
 						st := appMsg.([]uint8)
-						msg += fmt.Sprintf(": %s", string(st))
+						errMsg += fmt.Sprintf(": %s", string(st))
 					case *object.Object:
 						st := appMsg.(*object.Object)
 						value := st.FieldTable["value"].Fvalue
 						switch value.(type) {
 						case []byte:
-							msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+							errMsg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
 						case uint32:
 							str := stringPool.GetStringPointer(value.(uint32))
-							msg += fmt.Sprintf(": %s", *str)
+							errMsg += fmt.Sprintf(": %s", *str)
 						}
 
 					}
 				}
-				_ = log.Log(msg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 
 				steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
 				rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
@@ -2732,24 +2732,24 @@ frameInterpreter:
 
 					sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
 
-					var s string
+					var errMsg string
 					if sourceLine != "" {
-						s = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
+						errMsg = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
 							methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
 					} else {
-						s = fmt.Sprintf("\tat %s.%s(%s)", className,
+						errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
 							methodName, ste.FieldTable["fileName"].Fvalue)
 					}
-					_ = log.Log(s, log.SEVERE)
+					trace.ErrorMsg(errMsg)
 				}
 
 				// show Jacobin's JVM stack info if -strictJDK is not set
 				if glob.StrictJDK == false {
-					_ = log.Log(" ", log.SEVERE)
+					trace.Trace(" ")
 					for _, frameData := range *glob.JVMframeStack {
 						colon := strings.Index(frameData, ":")
 						shortenedFrameData := frameData[colon+1:]
-						_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+						trace.Trace("\tat" + shortenedFrameData)
 					}
 				}
 
@@ -2819,7 +2819,7 @@ frameInterpreter:
 			} else {
 				objData := classloader.MethAreaFetch(objName)
 				if objData == nil || objData.Data == nil {
-					classloader.LoadClassFromNameOnly(objName)
+					_ = classloader.LoadClassFromNameOnly(objName)
 					objData = classloader.MethAreaFetch(objName)
 				}
 				if objData.Data.Access.ClassIsInterface {
@@ -2855,6 +2855,121 @@ frameInterpreter:
 				}
 			}
 
+			// if it is castable, do nothing.
+			/* // TODO CODE to review for use in runUtils.go
+			if CPentry.Type == classloader.ClassRef {
+				// slot of ClassRef points to a CP entry for a UTF8 record w/ name of class
+				var className string
+				classNamePtr = classloader.FetchCPentry(CP, CPslot)
+				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
+					glob.ErrorGoStack = string(debug.Stack())
+					errMsg := fmt.Sprintf("CHECKCAST: Invalid classRef found, classNamePtr.RetType=%d", classNamePtr.RetType)
+					trace.ErrorMsg(errMsg)
+					return errors.New(errMsg)
+				} else {
+					errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+					status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, f)
+					if status != exceptions.Caught {
+						return errors.New(errMsg) // applies only if in test
+					}
+				}
+
+				// we now know we point to a valid class, array, or interface. We handle classes and arrays here.
+				className = *(classNamePtr.StringVal)
+				if MainThread.Trace {
+					var traceInfo string
+					if strings.HasPrefix(className, "[") {
+						traceInfo = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
+					} else {
+						traceInfo = fmt.Sprintf("CHECKCAST: className = %s", className)
+					}
+					trace.Trace(traceInfo)
+				}
+			*/
+			/* we now have the resolved class (className) and the objectref (obj)
+			    The rules for identifying obj can be cast to classname are (from the JVM 17 spec):
+
+				If objectref can be cast to the resolved class, array, or interface type, the operand stack is
+			    unchanged; otherwise, the checkcast instruction throws a ClassCastException.
+
+				S = obj
+				T = className
+
+				If S is the type of the object referred to by objectref, and T is the resolved class, array, or
+				interface type, then checkcast determines whether objectref can be cast to type T as follows:
+
+				If S is a class type, then:
+				* If T is a class type, then S must be the same class as T, or S must be a subclass of T;
+				* If T is an interface type, then S must implement interface T.
+
+				If S is an array type SC[], that is, an array of components of type SC, then:
+				* If T is a class type, then T must be Object.
+				* If T is an interface type, then T must be one of the interfaces implemented by arrays (JLS §4.10.3).
+				* If T is an array type TC[], that is, an array of components of type TC, then one of the following
+				  must be true:
+					> TC and SC are the same primitive type.
+					> TC and SC are reference types, and type SC can be cast to TC by
+				      recursive application of these rules. */
+
+			// if strings.HasPrefix(className, "[") { // the object being checked is an array
+			// 	if obj.KlassName != types.InvalidStringIndex {
+			// 		sptr := stringPool.GetStringPointer(obj.KlassName)
+			// 		// for the nonce if they're both the same type of arrays, we're good
+			// 		// TODO: if both are arrays of reference, check the leaf types
+			// 		if *sptr == className || strings.HasPrefix(className, *sptr) {
+			// 			break // exit this bytecode processing
+			// 		} else {
+			// 			/*** TODO: bypass this Throw action. Right thing to do?
+			// 			  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
+			// 			  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
+			// 			  if status != exceptions.Caught {
+			// 			  	return errors.New(errMsg) // applies only if in test
+			// 			  }
+			// 			  ***/
+			// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
+			// 			trace.Trace(warnMsg)
+			// 		}
+			// 	} else {
+			// 		glob.ErrorGoStack = string(debug.Stack())
+			// 		errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
+			// 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+			// 		if status != exceptions.Caught {
+			// 			return errors.New(errMsg) // applies only if in test
+			// 		}
+			// 	}
+			// } else {
+			// // the object being checked is a class
+			// classPtr := classloader.MethAreaFetch(className)
+			// if classPtr == nil { // class wasn't loaded, so load it now
+			// 	if classloader.LoadClassFromNameOnly(className) != nil {
+			// 		glob.ErrorGoStack = string(debug.Stack())
+			// 		return errors.New("CHECKCAST: Could not load class: " + className)
+			// 	}
+			// 	classPtr = classloader.MethAreaFetch(className)
+			// }
+			//
+			// // if classPtr does not point to the entry for the same class, then examine superclasses
+			// if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+			// 	if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
+			// 		goto checkcastOK
+			// 	}
+			//
+			// 	glob.ErrorGoStack = string(debug.Stack())
+			// 	errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+			// 		className, classPtr.Data.Name)
+			// 	status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
+			// 	if status != exceptions.Caught {
+			// 		return errors.New(errMsg) // applies only if in test
+			// 	}
+			// } else {
+			// 	goto checkcastOK // they both point to the same class, so perforce castable
+			// }
+			// } // end of checking an object that's not an array
+			// }
+		// checkcastOK:
+		// 	f.PC += 1
+		// 	continue // if CHECKCAST succeeds, do nothing
+
 		case opcodes.INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
 			// because this uses similar logic to CHECKCAST, any change here should
 			// likely be made to CHECKCAST as well
@@ -2884,13 +2999,13 @@ frameInterpreter:
 						if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := "INSTANCEOF: Invalid classRef found"
-							_ = log.Log(errMsg, log.SEVERE)
+							trace.ErrorMsg(errMsg)
 							return errors.New(errMsg)
 						} else {
 							className = *(classNamePtr.StringVal)
 							if MainThread.Trace {
 								traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
-								_ = log.Log(traceInfo, log.TRACE_INST)
+								trace.Trace(traceInfo)
 							}
 						}
 						classPtr := classloader.MethAreaFetch(className)
@@ -2898,7 +3013,7 @@ frameInterpreter:
 							if classloader.LoadClassFromNameOnly(className) != nil {
 								glob.ErrorGoStack = string(debug.Stack())
 								errMsg := "INSTANCEOF: Could not load class: " + className
-								_ = log.Log(errMsg, log.SEVERE)
+								trace.ErrorMsg(errMsg)
 								return errors.New(errMsg)
 							}
 							classPtr = classloader.MethAreaFetch(className)
@@ -2974,7 +3089,7 @@ frameInterpreter:
 			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.ErrorMsg(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -2995,8 +3110,7 @@ frameInterpreter:
 			for i := range dimSizes {
 				if dimSizes[i] == 0 {
 					dimSizes = dimSizes[i+1:] // lop off the prev dims
-					_ = log.Log("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.",
-						log.WARNING)
+					trace.ErrorMsg("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
 					break
 				}
 			}
@@ -3070,7 +3184,7 @@ frameInterpreter:
 			glob.ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in class %s() method %s%s\n",
 				missingOpCode, f.PC, f.ClName, f.MethName, f.MethType)
-			_ = log.Log(errMsg, log.SEVERE)
+			trace.ErrorMsg(errMsg)
 			return errors.New("invalid bytecode encountered")
 		}
 		f.PC += 1
@@ -3107,7 +3221,7 @@ func createAndInitNewFrame(
 	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
 			className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
 	f := currFrame
@@ -3241,7 +3355,7 @@ func createAndInitNewFrame(
 	if MainThread.Trace {
 		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
 			lenArgList, lenLocals, stackSize)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
 	for j := lenArgList - 1; j >= 0; j-- {

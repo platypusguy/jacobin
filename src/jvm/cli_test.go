@@ -9,7 +9,6 @@ package jvm
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,7 +49,6 @@ func TestGetJVMenvVariablesWhenTwoArePresent(t *testing.T) {
 func TestHandleUsageMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	global := globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 	LoadOptionsTable(global)
 
 	// to avoid cluttering the test results, redirect stdout
@@ -89,7 +87,6 @@ func TestHandleUsageMessage(t *testing.T) {
 func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	global := globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 	LoadOptionsTable(global)
 
 	// to avoid cluttering the test results, redirect stdout and stderr
@@ -115,7 +112,6 @@ func TestShowUsageMessageExitsProperlyWith__Help(t *testing.T) {
 func TestShowVersionMessage(t *testing.T) {
 	// set the logger to low granularity, so that logging messages are not also captured in this test
 	global := globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	// to avoid cluttering the test results, redirect stdout
 	normalStdout := os.Stdout
@@ -299,8 +295,6 @@ func TestShowCopyrightInVersion(t *testing.T) {
 	globals.InitGlobals("test")
 	g.StrictJDK = false // Copyright is shown in a run only when not in strictJDK mode
 
-	_ = log.SetLogLevel(log.WARNING)
-
 	normalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
@@ -326,8 +320,6 @@ func TestShowCopyrightWithStrictJDKswitch(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.StrictJDK = true // Copyright is shown in a run only when not in strictJDK mode
-
-	_ = log.SetLogLevel(log.WARNING)
 
 	normalStdout := os.Stdout
 	r, w, _ := os.Pipe()

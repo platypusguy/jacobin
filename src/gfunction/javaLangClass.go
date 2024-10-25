@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/trace"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -112,7 +112,7 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 			errClassName = "<empty string>"
 		}
 		errMsg := fmt.Sprintf("Failed to load class %s by name, reason: %s", errClassName, err.Error())
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
 	} else {

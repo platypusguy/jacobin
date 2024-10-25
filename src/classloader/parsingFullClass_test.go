@@ -9,8 +9,8 @@ package classloader
 import (
 	"fmt"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"strconv"
 	"testing"
@@ -53,7 +53,7 @@ import (
 
 func TestASimpleValidClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	classBytes := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00, 0x00, 0x37, 0x00, 0x28, 0x0A, 0x00, 0x0A, 0x00, 0x1C, 0x07,

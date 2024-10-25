@@ -9,7 +9,7 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"testing"
 )
 
@@ -19,7 +19,7 @@ func f3([]interface{}) interface{} { return nil }
 
 func TestMTableLoadLib(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	libMeths := make(map[string]GMeth)
 	libMeths["test.f1()V"] = GMeth{ParamSlots: 0, GFunction: f1}
 	libMeths["test.f2(I)V"] = GMeth{ParamSlots: 1, GFunction: f2}

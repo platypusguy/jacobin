@@ -11,10 +11,10 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"strings"
 	"testing"
@@ -43,8 +43,7 @@ func TestJavaLangThrowableClinit(t *testing.T) {
 
 func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.SEVERE)
+	trace.Init()
 
 	params := []interface{}{1}
 	err := FillInStackTrace(params)
@@ -68,8 +67,7 @@ func TestJavaLangThrowableFillInStackTraceWrongParmCount(t *testing.T) {
 
 func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.SEVERE)
+	trace.Init()
 
 	classloader.InitMethodArea()
 
@@ -149,8 +147,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 /*
 	func TestMinimalThrowEx(t *testing.T) {
 		globals.InitGlobals("test")
-		log.Init()
-		_ = log.SetLogLevel(log.SEVERE)
+		trace.Init()
 
 		classloader.InitMethodArea()
 

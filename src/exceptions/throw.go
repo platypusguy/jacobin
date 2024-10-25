@@ -11,10 +11,10 @@ import (
 	"jacobin/excNames"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/util"
 	"os"
 	"runtime/debug"
@@ -43,8 +43,10 @@ func ThrowExNil(which int, msg string) bool {
 // Important: if you change the name of this function, you need to update
 // exceptions.ShowGoStackTrace(), which explicitly tests for this function name.
 func ThrowEx(which int, msg string, f *frames.Frame) bool {
-	traceMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
-	_ = log.Log(traceMsg, log.TRACE_INST)
+	if globals.TraceVerbose {
+		infoMsg := fmt.Sprintf("[ThrowEx] %s, msg: %s", excNames.JVMexceptionNames[which], msg)
+		trace.Trace(infoMsg)
+	}
 
 	// If in a unit test, log a severe message and return.
 	glob := globals.GetGlobalRef()
@@ -98,8 +100,10 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		// 1. creating a new objRef for the exception
 		// 2. pushing the objRef on the op stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
-		caughtMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
-		_ = log.Log(caughtMsg, log.TRACE_INST)
+		if globals.TraceVerbose {
+			infoMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
+			trace.Trace(infoMsg)
+		}
 
 		th = glob.Threads[f.Thread].(*thread.ExecThread)
 		fs = th.Stack

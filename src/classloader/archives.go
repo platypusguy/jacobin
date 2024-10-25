@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2024 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 package classloader
@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"jacobin/log"
+	"jacobin/trace"
 	"strings"
 )
 
@@ -57,13 +57,12 @@ func NewJarFile(filename string) (*Archive, error) {
 
 func (archive *Archive) scanArchive() error {
 	reader, err := zip.OpenReader(archive.Filename)
-
 	if reader != nil {
 		defer reader.Close()
 	}
 
 	if reader == nil || err != nil {
-		_ = log.Log("Error: Invalid or corrupt jarfile "+archive.Filename, log.SEVERE)
+		trace.ErrorMsg("Invalid, corrupt, or inaccessible jarfile " + archive.Filename)
 		return err
 	}
 

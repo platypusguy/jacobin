@@ -8,7 +8,6 @@ package classloader
 
 import (
 	"fmt"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/util"
 	"sort"
@@ -74,13 +73,6 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		// The Code attribute has sub-attributes that are important to right execution
 		// The following code goes through those sub-attributes and processes them.
 
-		if attrCount > 1 {
-			_ = log.Log(
-				"Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
-					klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+" attributes",
-				log.FINEST)
-		}
-
 		for j := 0; j < attrCount; j++ {
 			attrib, location, err5 := fetchAttribute(klass, bytes, pos)
 			pos = location
@@ -89,26 +81,16 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 				// switch on the name of the attribute (listed here in alpha order)
 				switch klass.utf8Refs[attrib.attrName].content {
 				case "Code":
-					if attrCount > 1 {
-						_ = log.Log("    Attribute: Code", log.FINEST)
-					} else {
-						_ = log.Log("Method: "+klass.utf8Refs[nameSlot].content+" Desc: "+
-							klass.utf8Refs[descSlot].content+" has "+strconv.Itoa(attrCount)+
-							" attribute: Code", log.FINEST)
-					}
 					if parseCodeAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "Deprecated":
 					meth.deprecated = true
-					_ = log.Log("    Attribute: Deprecated", log.FINEST)
 				case "Exceptions":
-					_ = log.Log("    Attribute: Exceptions", log.FINEST)
 					if parseExceptionsMethodAttribute(attrib, &meth, klass) != nil {
 						return pos, cfe("") // error msg will already have been shown to user
 					}
 				case "MethodParameters":
-					_ = log.Log("    Attribute: MethodParameters", log.FINEST)
 					// JACOBIN-577: Removed because JDK 21 causes something in the parsing
 					// of this attribute to become unhinged. As this attribute is not needed in
 					// the execution of a class, we've temporarily chosen to block this call.
@@ -118,8 +100,6 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 					// if parseMethodParametersAttribute(attrib, &meth, klass) != nil {
 					// 	return pos, cfe("") // error msg will already have been shown to user
 					// }
-				default:
-					_ = log.Log("    Attribute: "+klass.utf8Refs[attrib.attrName].content, log.FINEST)
 				}
 
 			} else {
@@ -171,8 +151,6 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	}
 
 	if exceptionCount > 0 {
-		_ = log.Log("        Method: "+methodName+" throws "+strconv.Itoa(exceptionCount)+" exception(s)",
-			log.FINEST)
 		for k := 0; k < exceptionCount; k++ {
 			ex := exception{}
 			ex.startPc, _ = intFrom2Bytes(att.attrContent, pos+1)
@@ -193,10 +171,6 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 				if catchType.entryType != ClassRef {
 					return cfe("Invalid catchType in method " + methodName +
 						" in " + klass.className)
-				} else {
-					_ = log.Log("        Method: "+methodName+
-						" throws exception: "+klass.utf8Refs[catchType.slot].content,
-						log.FINEST)
 				}
 			}
 			ca.exceptions = append(ca.exceptions, ex)
@@ -212,8 +186,6 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 	}
 
 	if attrCount > 0 {
-		_ = log.Log("        Code attribute has "+strconv.Itoa(attrCount)+
-			" attributes: ", log.FINEST)
 		for m := 0; m < attrCount; m++ {
 			subAttr, loc, err2 := fetchAttribute(klass, att.attrContent, pos)
 			if err2 != nil {
@@ -221,7 +193,6 @@ func parseCodeAttribute(att attr, meth *method, klass *ParsedClass) error {
 					"() of " + klass.className)
 			}
 			pos = loc
-			_ = log.Log("        "+klass.utf8Refs[subAttr.attrName].content, log.FINEST)
 			if klass.utf8Refs[subAttr.attrName].content == "LineNumberTable" &&
 				!util.IsFilePartOfJDK(&klass.className) {
 				buildLineNumberTable(&ca, &subAttr, methodName)
@@ -345,7 +316,6 @@ func parseExceptionsMethodAttribute(attrib attr, meth *method, klass *ParsedClas
 
 		// store the slot # of the utf8 entries into the method exceptions slice
 		meth.exceptions = append(meth.exceptions, exceptionClassRef)
-		_ = log.Log("        "+*exceptionName, log.FINEST)
 	}
 	return nil
 }
@@ -382,12 +352,6 @@ func parseMethodParametersAttribute(att attr, meth *method, klass *ParsedClass) 
 			return cfe("Error getting name of MethodParameters attribute #" +
 				strconv.Itoa(k+1) + " in " + klass.utf8Refs[meth.name].content)
 		}
-
-		logName := "{none}"
-		if mpAttrib.name != "" {
-			logName = mpAttrib.name
-		}
-		_ = log.Log("        "+logName, log.FINEST)
 
 		accessFlags, err := intFrom2Bytes(att.attrContent, pos)
 		if err != nil {

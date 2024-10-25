@@ -11,8 +11,8 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
-	"jacobin/log"
 	"jacobin/object"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -162,7 +162,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		if !checkKey(key) {
 			errMsg := fmt.Sprintf("loadlib: Invalid key=%s", key)
-			log.Log(errMsg, log.SEVERE)
+			trace.ErrorMsg(errMsg)
 			ok = false
 		}
 		gme := GMeth{}

@@ -13,7 +13,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
-	"jacobin/log"
+	"jacobin/trace"
 	"slices"
 )
 
@@ -58,8 +58,8 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 	// Form the full method name.
 	fullMethName := fmt.Sprintf("%s.%s%s", className, nativeFunctionName, methodType)
 	if tracing {
-		traceInfo := fmt.Sprintf("RunNativeFunction: %s, paramSlots: %d", fullMethName, paramCount)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		infoMsg := fmt.Sprintf("RunNativeFunction: %s, paramSlots: %d", fullMethName, paramCount)
+		trace.Trace(infoMsg)
 		// TODO jvm.LogTraceStack(templateFunction)
 	}
 

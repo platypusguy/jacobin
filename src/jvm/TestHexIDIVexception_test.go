@@ -11,8 +11,8 @@ import (
 	"jacobin/classloader"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/trace"
 	"os"
 	"strings"
 	"testing"
@@ -80,9 +80,7 @@ func TestHexIDIVException(t *testing.T) {
 	// Initialize global, logging, classloader
 	// globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
 	globals.InitGlobals("test")
-	// globals.InitGlobals("TestHexIDIVException")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	globPtr = globals.GetGlobalRef()
 	globPtr.FuncInstantiateClass = InstantiateClass
 

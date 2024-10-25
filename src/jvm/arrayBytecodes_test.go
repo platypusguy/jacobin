@@ -11,11 +11,11 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -114,7 +114,6 @@ func TestAaload(t *testing.T) {
 // AALOAD: Test with a nil
 func TestAaloadWithNil(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	fs := frames.CreateFrameStack()
 
@@ -204,8 +203,8 @@ func TestAastoreInvalid1(t *testing.T) {
 	push(&f, int64(30))             // the index into the array
 	push(&f, obj)                   // the value to insert
 
-	log.Init()
 	globals.InitGlobals("test")
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -242,7 +241,7 @@ func TestAastoreInvalid2(t *testing.T) {
 	push(&f, int64(5)) // the index into the array
 	push(&f, o)        // the value to insert
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -280,7 +279,7 @@ func TestAastoreInvalid3(t *testing.T) {
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
 	push(&f, o)         // the value to insert
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -717,7 +716,7 @@ func TestBaload(t *testing.T) {
 // BALOAD: Test exception on nil array address
 func TestBaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -754,7 +753,7 @@ func TestBaloadInvalidSubscript(t *testing.T) {
 	os.Stderr = w
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -881,7 +880,7 @@ func TestBastoreInvalid1(t *testing.T) {
 	push(&f, int64(30))             // the index into the array
 	push(&f, int64(20))             // the value to insert
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -919,7 +918,7 @@ func TestBastoreInvalid2(t *testing.T) {
 	push(&f, int64(30)) // the index into the array
 	push(&f, int64(20)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -958,7 +957,7 @@ func TestBastoreInvalid3(t *testing.T) {
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
 	push(&f, int64(20)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1090,7 +1089,7 @@ func TestDaload(t *testing.T) {
 // DALOAD: Test exception on nil array address
 func TestDaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1127,7 +1126,7 @@ func TestLaDoadInvalidSubscript(t *testing.T) {
 	os.Stderr = w
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1216,7 +1215,7 @@ func TestDastoreInvalid1(t *testing.T) {
 	push(&f, float64(20.0))         // the value to insert
 	push(&f, float64(20.0))
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1254,7 +1253,7 @@ func TestDastoreInvalid2(t *testing.T) {
 	push(&f, float64(20.0)) // the value to insert
 	push(&f, float64(20.0))
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1293,7 +1292,7 @@ func TestDastoreInvalid3(t *testing.T) {
 	push(&f, float64(20.0)) // the value to insert
 	push(&f, float64(20.0))
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1373,7 +1372,7 @@ func TestFaload(t *testing.T) {
 // FALOAD: Test exception on nil array address
 func TestFaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1410,7 +1409,7 @@ func TestFaloadInvalidSubscript(t *testing.T) {
 	os.Stderr = w
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1493,7 +1492,7 @@ func TestFastoreInvalid1(t *testing.T) {
 	push(&f, int64(30))             // the index into the array
 	push(&f, float64(20.0))         // the value to insert
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1531,7 +1530,7 @@ func TestFastoreInvalid2(t *testing.T) {
 	push(&f, int64(30))     // the index into the array
 	push(&f, float64(20.0)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1568,7 +1567,7 @@ func TestFastoreInvalid3(t *testing.T) {
 	push(&f, int64(30))     // the index into the array: it's too big, causing error
 	push(&f, float64(20.0)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1648,7 +1647,7 @@ func TestIaload(t *testing.T) {
 // IALOAD: Test exception on nil array address
 func TestIaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1685,7 +1684,7 @@ func TestIaloadInvalidSubscript(t *testing.T) {
 	os.Stderr = w
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -1784,7 +1783,7 @@ func TestIastoreInvalid1(t *testing.T) {
 	push(&f, int64(30))             // the index into the array
 	push(&f, int64(20))             // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1822,7 +1821,7 @@ func TestIastoreInvalid2(t *testing.T) {
 	push(&f, int64(30)) // the index into the array
 	push(&f, int64(20)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1860,7 +1859,7 @@ func TestIastoreInvalid3(t *testing.T) {
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
 	push(&f, int64(20)) // the value to insert
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -1942,7 +1941,7 @@ func TestLaload(t *testing.T) {
 // LALOAD: Test exception on nil array address
 func TestLaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1979,7 +1978,7 @@ func TestLaloadInvalidSubscript(t *testing.T) {
 	os.Stderr = w
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	_ = runFrame(fs)
@@ -2066,7 +2065,7 @@ func TestLastoreInvalid1(t *testing.T) {
 	push(&f, int64(20))             // the value to insert
 	push(&f, int64(20))
 
-	log.Init()
+	trace.Init()
 	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -2106,7 +2105,7 @@ func TestLastoreInvalid2(t *testing.T) {
 	push(&f, int64(20)) // the value to insert
 	push(&f, int64(20))
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -2145,7 +2144,7 @@ func TestLastoreInvalid3(t *testing.T) {
 	push(&f, int64(20)) // the value to insert
 	push(&f, int64(20))
 
-	log.Init()
+	trace.Init()
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -2219,7 +2218,6 @@ func Test2DimArrayKlassField(t *testing.T) {
 func Test3DimArray1(t *testing.T) {
 	g := globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	_ = log.SetLogLevel(log.SEVERE)
 
 	// create the constant pool we'll point to
 	CP := classloader.CPool{}
@@ -2302,7 +2300,6 @@ func Test3DimArray1(t *testing.T) {
 func Test3DimArray2(t *testing.T) {
 	g := globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	_ = log.SetLogLevel(log.SEVERE)
 
 	// create the constant pool we'll point to
 	CP := classloader.CPool{}

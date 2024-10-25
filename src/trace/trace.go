@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/shutdown"
 	"os"
 	"runtime/debug"
 	"sync"
@@ -25,6 +24,9 @@ var mutex = sync.Mutex{}
 // StartTime is the start time of this instance of the Jacoby VM.
 var StartTime time.Time
 
+// Identical to shutdown.UNKNOWN_ERROR (avoiding a cycle)
+const UNKNOWN_ERROR = 5
+
 // Initialize the trace frame.
 func Init() {
 	StartTime = time.Now()
@@ -36,12 +38,6 @@ func Trace(msg string) {
 
 	var err error
 
-	if len(msg) == 0 {
-		errMsg := fmt.Sprintf("Zero-length trace argument")
-		abruptEnd(excNames.IllegalArgumentException, errMsg)
-		return
-	}
-
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
 	duration := time.Since(StartTime)
@@ -50,12 +46,17 @@ func Trace(msg string) {
 	// Lock access to the logging stream to prevent inter-thread overwrite issues
 	mutex.Lock()
 	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
+	mutex.Unlock()
 	if err != nil {
 		errMsg := fmt.Sprintf("*** stderr failed, err: %v", err)
 		abruptEnd(excNames.IOError, errMsg)
 	}
-	mutex.Unlock()
 
+}
+
+// An error message is just a prefix-decorated message.
+func ErrorMsg(msg string) {
+	Trace("*** ERROR *** " + msg)
 }
 
 // Duplicated from minimalAbort in the exceptions package exceptions.go due to a Go-diagnosed cycle.
@@ -71,7 +72,7 @@ func abruptEnd(whichException int, msg string) {
 	glob.ErrorGoStack = stack
 	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
 	_, _ = fmt.Fprintln(os.Stderr, errMsg)
-	// exceptions.ShowGoStackTrace(nil) <---------------- causes Go-diagnosed cycle: classloader >exceptions > classloader
-	_ = shutdown.Exit(shutdown.APP_EXCEPTION)
-	// os.Exit(1)
+	// exceptions.ShowGoStackTrace(nil) <------------ causes Go-diagnosed cycle: classloader > exceptions > classloader
+	// _ = shutdown.Exit(shutdown.APP_EXCEPTION) <--- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
+	os.Exit(UNKNOWN_ERROR)
 }

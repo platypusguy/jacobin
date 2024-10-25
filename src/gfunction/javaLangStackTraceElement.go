@@ -14,9 +14,9 @@ import (
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
+	"jacobin/trace"
 	"jacobin/util"
 	"sort"
 	"strings"
@@ -76,7 +76,7 @@ func of(params []interface{}) interface{} {
 	jvmStackRef := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
 	if jvmStackRef == nil {
 		errMsg := "java/lang/StackTraceElement.of: Nil parameter for 'frameStackRef' in Throwable, found in StackTraceElement.of()"
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 

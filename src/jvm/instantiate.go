@@ -11,11 +11,12 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
-	"jacobin/log"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"strings"
 	"unsafe"
@@ -53,14 +54,14 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	if k == nil {
-		errMsg := "Class is nil after loading, class: " + classname
-		_ = log.Log(errMsg, log.SEVERE)
+		errMsg := "InstantiateClass: Class is nil after loading, class: " + classname
+		trace.ErrorMsg(errMsg)
 		return nil, errors.New(errMsg)
 	}
 
 	if k.Data == nil {
-		errMsg := "class.Data is nil, class: " + classname
-		_ = log.Log(errMsg, log.SEVERE)
+		errMsg := "InstantiateClass: class.Data is nil, class: " + classname
+		trace.ErrorMsg(errMsg)
 		return nil, errors.New(errMsg)
 	}
 
@@ -108,13 +109,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
 			f := k.Data.Fields[i]
-			desc := k.Data.CP.Utf8Refs[f.Desc]
 			name := k.Data.CP.Utf8Refs[f.Name]
-			if log.Level == log.FINE {
-				reciteField := fmt.Sprintf("Class: %s field[%d] name: %s, type: %s", k.Data.Name, i,
-					name, desc)
-				_ = log.Log(reciteField, log.FINE)
-			}
 
 			fieldToAdd, err := createField(f, k, classname)
 			if err != nil {
@@ -138,20 +133,13 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		superclassName := superclasses[j]
 		c := classloader.MethAreaFetch(superclassName)
 		if c == nil {
-			errMsg := fmt.Sprintf("Error in class instantiation, cannot find superclass: %s",
-				superclassName)
-			_ = log.Log(errMsg, log.SEVERE)
+			errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
+			trace.ErrorMsg(errMsg)
 			return nil, errors.New(errMsg)
 		}
 		for i := 0; i < len(c.Data.Fields); i++ {
 			f := c.Data.Fields[i]
-			desc := c.Data.CP.Utf8Refs[f.Desc]
 			name := c.Data.CP.Utf8Refs[f.Name]
-			if log.Level == log.FINE {
-				reciteField := fmt.Sprintf("Class: %s field[%d] name: %s, type: %s", k.Data.Name, i,
-					name, desc)
-				_ = log.Log(reciteField, log.FINE)
-			}
 
 			fieldToAdd, err := createField(f, c, classname)
 			if err != nil {
@@ -169,8 +157,8 @@ runInitializer:
 	if ok && k.Data.ClInit == types.ClInitNotRun {
 		err := runInitializationBlock(k, superclasses, frameStack)
 		if err != nil {
-			errMsg := fmt.Sprintf("error encountered running %s.<clinit>()", classname)
-			_ = log.Log(errMsg, log.SEVERE)
+			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()", classname)
+			trace.ErrorMsg(errMsg)
 			return nil, err
 		}
 	}
@@ -181,11 +169,6 @@ runInitializer:
 // creates a field for insertion into the object representation
 func createField(f classloader.Field, k *classloader.Klass, classname string) (*object.Field, error) {
 	desc := k.Data.CP.Utf8Refs[f.Desc]
-	name := k.Data.CP.Utf8Refs[f.Name]
-	if log.Level == log.FINE {
-		reciteField := fmt.Sprintf("Class: %s field name: %s, type: %s", k.Data.Name, name, desc)
-		_ = log.Log(reciteField, log.FINE)
-	}
 
 	fieldToAdd := new(object.Field)
 	fieldToAdd.Ftype = desc
@@ -197,9 +180,9 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	case types.Double, types.Float:
 		fieldToAdd.Fvalue = 0.0
 	default:
-		errMsg := fmt.Sprintf("error creating field in: %s,  Invalid type: %s",
+		errMsg := fmt.Sprintf("createField: error creating field in: %s,  Invalid type: %s",
 			classname, fieldToAdd.Ftype)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.ErrorMsg(errMsg)
 		return nil, classloader.CFE(errMsg)
 	}
 
@@ -236,8 +219,8 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 					fieldToAdd.Fvalue = object.StringObjectFromGoString(str)
 				default:
 					errMsg := fmt.Sprintf(
-						"Unexpected ConstantValue type in instantiate: %d", valueType)
-					_ = log.Log(errMsg, log.SEVERE)
+						"createField: Unexpected ConstantValue type in instantiate: %d", valueType)
+					trace.ErrorMsg(errMsg)
 					return nil, errors.New(errMsg)
 				} // end of ConstantValue type switch
 			} // end of ConstantValue attribute processing
@@ -270,24 +253,19 @@ func loadThisClass(className string) error {
 	// Try to load class by name
 	err := classloader.LoadClassFromNameOnly(className)
 	if err != nil {
-		var errClassName = className
-		if className == "" {
-			errClassName = "<empty string>"
-		}
-		errMsg := "instantiateClass: Failed to load class " + errClassName
-		_ = log.Log(errMsg, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
-		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
+		return errors.New(err.Error()) // needed for testing, which does not shutdown on failure
 	}
 	// Success in loaded by name
-	_ = log.Log("loadThisClass: Success in LoadClassFromNameOnly("+className+")", log.TRACE_INST)
+	if globals.TraceCloadi {
+		trace.Trace("loadThisClass: Success in LoadClassFromNameOnly(" + className + ")")
+	}
 
 	// at this point the class has been loaded into the method area (MethArea). Wait for it to be ready.
 	err = classloader.WaitForClassStatus(className)
 	if err != nil {
-		errMsg := fmt.Sprintf("Error occurred in loadThisClass(): %s", err.Error())
-		_ = log.Log(errMsg, log.SEVERE)
+		errMsg := fmt.Sprintf("loadThisClass: WaitForClassStatus(%s) failed, err: %v", className, err)
+		trace.ErrorMsg(errMsg)
 		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	}
 	return nil
