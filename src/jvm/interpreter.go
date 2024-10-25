@@ -106,14 +106,14 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore1,       // LSTORE_1        0x40
 	doIstore2,       // LSTORE_2        0x41
 	doIstore3,       // LSTORE_3        0x42
-	notImplemented,  // FSTORE_0        0x43
-	notImplemented,  // FSTORE_1        0x44
-	notImplemented,  // FSTORE_2        0x45
-	notImplemented,  // FSTORE_3        0x46
-	notImplemented,  // DSTORE_0        0x47
-	notImplemented,  // DSTORE_1        0x48
-	notImplemented,  // DSTORE_2        0x49
-	notImplemented,  // DSTORE_3        0x4A
+	doFstore0,       // FSTORE_0        0x43
+	doFstore1,       // FSTORE_1        0x44
+	doFstore2,       // FSTORE_2        0x45
+	doFstore3,       // FSTORE_3        0x46
+	doFstore0,       // DSTORE_0        0x47
+	doFstore1,       // DSTORE_1        0x48
+	doFstore2,       // DSTORE_2        0x49
+	doFstore3,       // DSTORE_3        0x4A
 	notImplemented,  // ASTORE_0        0x4B
 	notImplemented,  // ASTORE_1        0x4C
 	notImplemented,  // ASTORE_2        0x4D
@@ -389,10 +389,18 @@ func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
-func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
-func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
-func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
-func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
+func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
+func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
+func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
+func doIstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
+
+// 0x43 - 0x 4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
+// These are the same as the ISTORE_x functions. However, at some point,
+// we might want to verify or handle floats differently from ints.
+func doFstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
+func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
+func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
+func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
@@ -906,7 +914,7 @@ func pushFloat(fr *frames.Frame, intToPush int64) int {
 	return 1
 }
 
-func storeInt(fr *frames.Frame, local int64) int {
+func store(fr *frames.Frame, local int64) int {
 	fr.Locals[local] = pop(fr)
 	return 1
 }
