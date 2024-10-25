@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -24,6 +24,9 @@ var mutex = sync.Mutex{}
 // StartTime is the start time of this instance of the Jacoby VM.
 var StartTime time.Time
 
+// Identical to shutdown.UNKNOWN_ERROR (avoiding a cycle)
+const UNKNOWN_ERROR = 5
+
 // Initialize the trace frame.
 func Init() {
 	StartTime = time.Now()
@@ -36,7 +39,8 @@ func Trace(msg string) {
 	var err error
 
 	if len(msg) == 0 {
-		ErrorMsg("Zero-length trace argument")
+		errMsg := fmt.Sprintf("Zero-length trace argument")
+		abruptEnd(excNames.IllegalArgumentException, errMsg)
 		return
 	}
 
@@ -47,18 +51,16 @@ func Trace(msg string) {
 
 	// Lock access to the logging stream to prevent inter-thread overwrite issues
 	mutex.Lock()
-	wrMsg := fmt.Sprintf("[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
-	_, err = (os.Stderr).WriteString(wrMsg)
+	_, err = fmt.Fprintf(os.Stderr, "[%3d.%03ds] %s\n", millis/1000, millis%1000, msg)
 	mutex.Unlock()
 	if err != nil {
-		errMsg := fmt.Sprintf("*** stderr failed, wrMsg: %s, err: %s", wrMsg, err.Error())
+		errMsg := fmt.Sprintf("*** stderr failed, err: %v", err)
 		abruptEnd(excNames.IOError, errMsg)
-		//fmt.Println(errMsg)
 	}
 
 }
 
-// Like Trace but decorated for an error.
+// An error message is just a prefix-decorated message.
 func ErrorMsg(msg string) {
 	Trace("*** ERROR *** " + msg)
 }
@@ -75,8 +77,8 @@ func abruptEnd(whichException int, msg string) {
 	glob := globals.GetGlobalRef()
 	glob.ErrorGoStack = stack
 	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
-	_, _ = fmt.Fprintln(os.Stdout, errMsg)
-	//exceptions.ShowGoStackTrace(nil) <---------------- causes Go-diagnosed cycle: classloader >exceptions > classloader
-	//_ = shutdown.Exit(shutdown.APP_EXCEPTION) <------- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
-	os.Exit(1)
+	_, _ = fmt.Fprintln(os.Stderr, errMsg)
+	// exceptions.ShowGoStackTrace(nil) <------------ causes Go-diagnosed cycle: classloader > exceptions > classloader
+	// _ = shutdown.Exit(shutdown.APP_EXCEPTION) <--- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
+	os.Exit(UNKNOWN_ERROR)
 }

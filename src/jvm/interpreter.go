@@ -73,14 +73,14 @@ var DispatchTable = [203]BytecodeFunc{
 	doIload1,        // LLOAD_1         0x1F
 	doIload2,        // LLOAD_2         0x20
 	doIload3,        // LLOAD_3         0x21
-	notImplemented,  // FLOAD_0         0x22
-	notImplemented,  // FLOAD_1         0x23
-	notImplemented,  // FLOAD_2         0x24
-	notImplemented,  // FLOAD_3         0x25
-	notImplemented,  // DLOAD_0         0x26
-	notImplemented,  // DLOAD_1         0x27
-	notImplemented,  // DLOAD_2         0x28
-	notImplemented,  // DLOAD_3         0x29
+	doFload0,        // FLOAD_0         0x22
+	doFload1,        // FLOAD_1         0x23
+	doFload2,        // FLOAD_2         0x24
+	doFload3,        // FLOAD_3         0x25
+	doFload0,        // DLOAD_0         0x26
+	doFload1,        // DLOAD_1         0x27
+	doFload2,        // DLOAD_2         0x28
+	doFload3,        // DLOAD_3         0x29
 	doAload0,        // ALOAD_0         0x2A
 	doAload1,        // ALOAD_1         0x2B
 	doAload2,        // ALOAD_2         0x2C
@@ -106,14 +106,14 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore1,       // LSTORE_1        0x40
 	doIstore2,       // LSTORE_2        0x41
 	doIstore3,       // LSTORE_3        0x42
-	notImplemented,  // FSTORE_0        0x43
-	notImplemented,  // FSTORE_1        0x44
-	notImplemented,  // FSTORE_2        0x45
-	notImplemented,  // FSTORE_3        0x46
-	notImplemented,  // DSTORE_0        0x47
-	notImplemented,  // DSTORE_1        0x48
-	notImplemented,  // DSTORE_2        0x49
-	notImplemented,  // DSTORE_3        0x4A
+	doFstore0,       // FSTORE_0        0x43
+	doFstore1,       // FSTORE_1        0x44
+	doFstore2,       // FSTORE_2        0x45
+	doFstore3,       // FSTORE_3        0x46
+	doFstore0,       // DSTORE_0        0x47
+	doFstore1,       // DSTORE_1        0x48
+	doFstore2,       // DSTORE_2        0x49
+	doFstore3,       // DSTORE_3        0x4A
 	notImplemented,  // ASTORE_0        0x4B
 	notImplemented,  // ASTORE_1        0x4C
 	notImplemented,  // ASTORE_2        0x4D
@@ -266,13 +266,12 @@ func interpret(fs *list.List) {
 		ret := DispatchTable[opcode](fr, 0)
 		switch ret {
 		case 0:
-			// exiting will either end program or call this function again
-			// pointing to the top of the loop
+			// exiting will either end program or call this function
+			// again for the frame on the top of the frame stack
 			return
 		case exceptions.ERROR_OCCURRED: // occurs only in tests
 			break
 		default:
-
 			fr.PC += ret
 		}
 	}
@@ -351,7 +350,7 @@ func doLoad(fr *frames.Frame, _ int64) int {
 }
 
 // 0x1A - 0x1D ILOAD_x push int from local x
-// 0x1E - 0x2b LLOAD_x push long from local x
+// 0x1E - 0x2B LLOAD_x push long from local x
 func doIload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
 func doIload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
@@ -374,18 +373,34 @@ func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
 	return PCadvance + 1
 }
 
+// 0x22 - 0x29 FLOAD_x and DLOAD_x push float from locals[x]
+// These are the same as the ILOAD_x functions. However, at some point,
+// we might want to verify or handle floats differently from ints.
+func doFload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
+func doFload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
+func doFload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
+func doFload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
+
 // 0x2A - 0x2D ALOAD_x push reference value from locals[x]
 func doAload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
 func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
-// 0x3B - 0x3E ISTORE_0 thru _3: Store popped TOS into locals specified as 0-3 in bytecode name
-// 0x3F - 0x42 LSTORE_0 thru _3:    "    "     "
-func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
-func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
-func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
-func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
+// 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
+// 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
+func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
+func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
+func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
+func doIstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
+
+// 0x43 - 0x 4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
+// These are the same as the ISTORE_x functions. However, at some point,
+// we might want to verify or handle floats differently from ints.
+func doFstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
+func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
+func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
+func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
@@ -899,7 +914,7 @@ func pushFloat(fr *frames.Frame, intToPush int64) int {
 	return 1
 }
 
-func storeInt(fr *frames.Frame, local int64) int {
+func store(fr *frames.Frame, local int64) int {
 	fr.Locals[local] = pop(fr)
 	return 1
 }
