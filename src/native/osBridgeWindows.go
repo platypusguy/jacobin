@@ -5,6 +5,7 @@ package native
 import (
 	"fmt"
 	"golang.org/x/sys/windows"
+	"jacobin/trace"
 )
 
 func ConnectLibrary(libPath string) uintptr {
