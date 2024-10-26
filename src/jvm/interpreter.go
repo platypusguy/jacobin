@@ -228,7 +228,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // INVOKEDYNAMIC   0xBA
 	notImplemented,  // NEW             0xBB
 	notImplemented,  // NEWARRAY        0xBC
-	notImplemented,  // ANEWARRAY       0xBD
+	doAnewarray,     // ANEWARRAY       0xBD
 	notImplemented,  // ARRAYLENGTH     0xBE
 	notImplemented,  // ATHROW          0xBF
 	notImplemented,  // CHECKCAST       0xC0
@@ -843,6 +843,42 @@ func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+}
+
+func doAnewarray(fr *frames.Frame, _ int64) int {
+	size := pop(fr).(int64)
+	if size < 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "ANEWARRAY: Invalid size for array"
+		status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	refType := CP.CpIndex[refTypeSlot]
+	if refType.Type != classloader.ClassRef && refType.Type != classloader.Interface {
+		// TODO: it could also point to an array, per the JVM spec
+		errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var refTypeName = ""
+	if refType.Type == classloader.ClassRef {
+		refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
+		refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
+	}
+
+	arrayPtr := object.Make1DimRefArray(&refTypeName, size)
+	g := globals.GetGlobalRef()
+	g.ArrayAddressList.PushFront(arrayPtr)
+	push(fr, arrayPtr)
+	return 3 // 2 for RefTypeSlot + 1 for next bytecode
 }
 
 func doWide(fr *frames.Frame, _ int64) int { // 0xC4 use wide versions of bytecode arguments
