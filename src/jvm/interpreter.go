@@ -15,6 +15,7 @@ package jvm
 
 import (
 	"container/list"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"jacobin/classloader"
@@ -57,8 +58,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doFconst2,       // FCONST_2    0x0D
 	doDconst0,       // DCONST_0    0x0E
 	doDconst1,       // DCONST_1    0x0F
-	doBiPush,        // BIPUSH      0x10
-	notImplemented,  // SIPUSH      0x11
+	doBipush,        // BIPUSH      0x10
+	doSipush,        // SIPUSH      0x11
 	doLdc,           // LDC             0x12
 	doLdcw,          // LDC_W           0x13
 	doLdc2w,         // LDC2_W          0x14
@@ -303,11 +304,31 @@ func doFconst2(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(2)) 
 func doDconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
 func doDconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
 
-func doBiPush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byte onto stack
+func doBipush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byte onto stack
 	wbyte := fr.Meth[fr.PC+1]
 	wint64 := byteToInt64(wbyte)
 	push(fr, wint64)
 	return 2
+}
+
+func doSipush(fr *frames.Frame, _ int64) int { // 0x11 SIPUSH create int from next 2 bytes and push it
+	wbyte1 := fr.Meth[fr.PC+1]
+	wbyte2 := fr.Meth[fr.PC+2]
+	var wint64 int64
+	if (wbyte1 & 0x80) == 0x80 { // Negative wbyte1 (left-most bit on)?
+		// Negative wbyte1 : form wbytes = 6 0xFFs concatenated with the wbyte1 and wbyte2
+		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}
+		wbytes[6] = wbyte1
+		wbytes[7] = wbyte2
+		// Form an int64 from the wbytes array
+		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
+		wint64 = int64(binary.BigEndian.Uint64(wbytes))
+	} else {
+		// Not negative (left-most bit off) : just cast wbyte as an int64
+		wint64 = (int64(wbyte1) * 256) + int64(wbyte2)
+	}
+	push(fr, wint64)
+	return 3
 }
 
 // 0x12, 0x13 LDC functions
