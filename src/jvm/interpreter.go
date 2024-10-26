@@ -128,7 +128,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // SASTORE         0x56
 	notImplemented,  // POP             0x57
 	notImplemented,  // POP2            0x58
-	notImplemented,  // DUP             0x59
+	doDup,           // DUP             0x59
 	notImplemented,  // DUP_X1          0x5A
 	notImplemented,  // DUP_X2          0x5B
 	notImplemented,  // DUP2            0x5C
@@ -402,7 +402,12 @@ func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
-func doIadd(fr *frames.Frame, _ int64) int {
+func doDup(fr *frames.Frame, _ int64) int { // 0x59 DUP duplicate item at TOS
+	tosItem := peek(fr)
+	push(fr, tosItem)
+	return 1
+}
+func doIadd(fr *frames.Frame, _ int64) int { // 0x60 IADD integer addition
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	sum := add(i1, i2)
@@ -845,7 +850,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
 }
 
-func doAnewarray(fr *frames.Frame, _ int64) int {
+func doAnewarray(fr *frames.Frame, _ int64) int { // 0xBD ANEWARRAY create an array of pointers
 	size := pop(fr).(int64)
 	if size < 0 {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
