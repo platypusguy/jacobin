@@ -29,6 +29,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/types"
 	"jacobin/util"
+	"math"
 	"runtime/debug"
 	"strings"
 )
@@ -150,8 +151,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DMUL            0x6B
 	notImplemented,  // IDIV            0x6C
 	notImplemented,  // LDIV            0x6D
-	notImplemented,  // FDIV            0x6E
-	notImplemented,  // DDIV            0x6F
+	doFdiv,          // FDIV            0x6E
+	doFdiv,          // DDIV            0x6F
 	notImplemented,  // IREM            0x70
 	notImplemented,  // LREM            0x71
 	notImplemented,  // FREM            0x72
@@ -516,6 +517,23 @@ func doImul(fr *frames.Frame, _ int64) int { // 0x68 IMUL multiply two int64s
 	i1 := pop(fr).(int64)
 	product := multiply(i1, i2)
 	push(fr, product)
+	return 1
+}
+
+func doFdiv(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(float64)
+	val2 := pop(fr).(float64)
+	if val1 == 0.0 {
+		if val2 == 0.0 {
+			push(fr, math.NaN())
+		} else if math.Signbit(val1) { // this test for negative zero
+			push(fr, math.Inf(-1)) // but alas there is no -0 in golang (as of 1.20)
+		} else {
+			push(fr, math.Inf(1))
+		}
+	} else {
+		push(fr, val2/val1)
+	}
 	return 1
 }
 
