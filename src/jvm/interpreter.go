@@ -189,7 +189,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // I2B             0x91
 	notImplemented,  // I2C             0x92
 	notImplemented,  // I2S             0x93
-	notImplemented,  // LCMP            0x94
+	doLcmp,          // LCMP            0x94
 	notImplemented,  // FCMPL           0x95
 	notImplemented,  // FCMPG           0x96
 	notImplemented,  // DCMPL           0x97
@@ -559,6 +559,19 @@ func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
 func doL2f(fr *frames.Frame, _ int64) int { // 0x89, 8A L2F, L2D long to float/double
 	longVal := pop(fr).(int64)
 	push(fr, float64(longVal))
+	return 1
+}
+
+func doLcmp(fr *frames.Frame, _ int64) int { // 0x94 LCMP (compare two longs, push int -1, 0, or 1, depending on result)
+	value2 := pop(fr).(int64)
+	value1 := pop(fr).(int64)
+	if value1 == value2 {
+		push(fr, int64(0))
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else {
+		push(fr, int64(-1))
+	}
 	return 1
 }
 
