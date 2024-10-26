@@ -479,7 +479,7 @@ func doPop(fr *frames.Frame, _ int64) int { // 0x57 POP pop item off op stack
 }
 
 func doPop2(fr *frames.Frame, _ int64) int { // 0x58 POP2 pop 2 items off op stack
-	if fr.TOS < 0 {
+	if fr.TOS < 1 {
 		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
