@@ -30,6 +30,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"runtime/debug"
+	"strings"
 )
 
 // set up a DispatchTable with 203 slots that correspond to the bytecodes
@@ -95,8 +96,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // SALOAD          0x35
 	doIstore,        // ISTORE          0x36
 	doIstore,        // LSTORE          0x37
-	notImplemented,  // FSTORE          0x38
-	notImplemented,  // DSTORE          0x39
+	doFstore,        // FSTORE          0x38
+	doFstore,        // DSTORE          0x39
 	notImplemented,  // ASTORE          0x3A
 	doIstore0,       // ISTORE_0        0x3B
 	doIstore1,       // ISTORE_1        0x3C
@@ -122,7 +123,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // LASTORE         0x50
 	notImplemented,  // FASTORE         0x51
 	notImplemented,  // DASTORE         0x52
-	notImplemented,  // AASTORE         0x53
+	doAastore,       // AASTORE         0x53
 	notImplemented,  // BASTORE         0x54
 	notImplemented,  // CASTORE         0x55
 	notImplemented,  // SASTORE         0x56
@@ -387,6 +388,22 @@ func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
+// 0x38, 0x39 FSTORE and DSTORE Store popped TOS into specified local
+func doFstore(fr *frames.Frame, _ int64) int {
+	var index int
+	var PCadvance int    // how much to advance fr.PC, the program counter
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		PCadvance = 2
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		PCadvance = 1
+	}
+	fr.Locals[index] = pop(fr).(float64)
+	return PCadvance + 1
+}
+
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
 func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
@@ -394,13 +411,58 @@ func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doIstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
-// 0x43 - 0x 4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
+// 0x43 - 0x4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
 // These are the same as the ISTORE_x functions. However, at some point,
 // we might want to verify or handle floats differently from ints.
 func doFstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
 func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
+
+func doAastore(fr *frames.Frame, _ int64) int { // 0x53 AASTORE store a ref in a ref array
+	value := pop(fr).(*object.Object)    // reference we're inserting
+	index := pop(fr).(int64)             // index into the array
+	arrayRef := pop(fr).(*object.Object) // ptr to the array object
+
+	if arrayRef == nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference to an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	arrayObj := *arrayRef
+	rawArrayObj := arrayObj.FieldTable["value"]
+
+	if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: field type must start with '[L', got %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, rawArrayObj.Ftype)
+		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// get pointer to the actual array
+	rawArray := rawArrayObj.Fvalue.([]*object.Object)
+	size := int64(len(rawArray))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	rawArray[index] = value
+	return 1
+}
 
 func doDup(fr *frames.Frame, _ int64) int { // 0x59 DUP duplicate item at TOS
 	tosItem := peek(fr)
