@@ -177,8 +177,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // I2F             0x86
 	notImplemented,  // I2D             0x87
 	notImplemented,  // L2I             0x88
-	notImplemented,  // L2F             0x89
-	notImplemented,  // L2D             0x8A
+	doL2f,           // L2F             0x89
+	doL2f,           // L2D             0x8A
 	notImplemented,  // F2I             0x8B
 	notImplemented,  // F2L             0x8C
 	notImplemented,  // F2D             0x8D
@@ -536,6 +536,12 @@ func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
 	orig := fr.Locals[index].(int64)
 	fr.Locals[index] = orig + increment
 	return PCtoSkip + 1
+}
+
+func doL2f(fr *frames.Frame, _ int64) int { // 0x89, 8A L2F, L2D long to float/double
+	longVal := pop(fr).(int64)
+	push(fr, float64(longVal))
+	return 1
 }
 
 func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints for <
