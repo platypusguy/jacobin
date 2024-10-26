@@ -141,7 +141,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // FADD            0x62
 	notImplemented,  // DADD            0x63
 	doIsub,          // ISUB            0x64
-	notImplemented,  // LSUB            0x65
+	doIsub,          // LSUB            0x65
 	notImplemented,  // FSUB            0x66
 	notImplemented,  // DSUB            0x67
 	doImul,          // IMUL            0x68
