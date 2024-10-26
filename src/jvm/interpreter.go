@@ -127,8 +127,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // BASTORE         0x54
 	notImplemented,  // CASTORE         0x55
 	notImplemented,  // SASTORE         0x56
-	notImplemented,  // POP             0x57
-	notImplemented,  // POP2            0x58
+	doPop,           // POP             0x57
+	doPop2,          // POP2            0x58
 	doDup,           // DUP             0x59
 	notImplemented,  // DUP_X1          0x5A
 	notImplemented,  // DUP_X2          0x5B
@@ -461,6 +461,32 @@ func doAastore(fr *frames.Frame, _ int64) int { // 0x53 AASTORE store a ref in a
 	}
 
 	rawArray[index] = value
+	return 1
+}
+
+func doPop(fr *frames.Frame, _ int64) int { // 0x57 POP pop item off op stack
+	if fr.TOS < 0 {
+		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	fr.TOS -= 1
+	return 1
+}
+
+func doPop2(fr *frames.Frame, _ int64) int { // 0x58 POP2 pop 2 items off op stack
+	if fr.TOS < 0 {
+		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	fr.TOS -= 2
 	return 1
 }
 
