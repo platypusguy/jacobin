@@ -156,8 +156,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doFdiv,          // DDIV            0x6F
 	notImplemented,  // IREM            0x70
 	notImplemented,  // LREM            0x71
-	notImplemented,  // FREM            0x72
-	notImplemented,  // DREM            0x73
+	doFrem,          // FREM            0x72
+	doFrem,          // DREM            0x73
 	notImplemented,  // INEG            0x74
 	notImplemented,  // LNEG            0x75
 	notImplemented,  // FNEG            0x76
@@ -569,7 +569,7 @@ func doFmul(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x6C, 0x6D IDIV, LDIV divide ints
+// 0x6C, 0x6D IDIV, LDIV divide TOS into TOS-1
 func doIdiv(fr *frames.Frame, _ int64) int { // 0x6C IDIV integer division
 	val1 := pop(fr).(int64) // divisor
 	val2 := pop(fr).(int64) // dividend
@@ -582,7 +582,7 @@ func doIdiv(fr *frames.Frame, _ int64) int { // 0x6C IDIV integer division
 		errMsg := fmt.Sprintf("in %s.%s %s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
-		if status != exceptions.Caught {
+		if status == exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	} else {
@@ -609,7 +609,16 @@ func doFdiv(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
+// 0x72, 0x73 FREM, DREM get remainder of floating-point division
+func doFrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(float64)
+	val1 := pop(fr).(float64)
+	push(fr, float64(float32(math.Remainder(val1, val2))))
+	return 1
+}
+
+// 0x84 IINC increment int variable
+func doIinc(fr *frames.Frame, _ int64) int {
 	var index int
 	var increment int64
 	var PCtoSkip int
