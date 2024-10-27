@@ -140,12 +140,12 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // SWAP            0x5F
 	doIadd,          // IADD            0x60
 	doIadd,          // LADD            0x61
-	notImplemented,  // FADD            0x62
-	notImplemented,  // DADD            0x63
+	doFadd,          // FADD            0x62
+	doFadd,          // DADD            0x63
 	doIsub,          // ISUB            0x64
 	doIsub,          // LSUB            0x65
-	notImplemented,  // FSUB            0x66
-	notImplemented,  // DSUB            0x67
+	doFsub,          // FSUB            0x66
+	doFsub,          // DSUB            0x67
 	doImul,          // IMUL            0x68
 	doImul,          // LMUL            0x69
 	notImplemented,  // FMUL            0x6A
@@ -517,11 +517,30 @@ func doDup(fr *frames.Frame, _ int64) int { // 0x59 DUP duplicate item at TOS
 	push(fr, tosItem)
 	return 1
 }
-func doIadd(fr *frames.Frame, _ int64) int { // 0x60 IADD integer addition
+
+// 0x60 IADD, LADD integer addition, push result
+func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
-	sum := add(i1, i2)
+	sum := i1 + i2
 	push(fr, sum)
+	return 1
+}
+
+// 0x62, 0x63 FADD, DADD float addition, push result
+func doFadd(fr *frames.Frame, _ int64) int {
+	lhs := float32(pop(fr).(float64))
+	rhs := float32(pop(fr).(float64))
+	push(fr, float64(lhs+rhs))
+	return 1
+}
+
+// 0x66, 0x67 FSUB, DSUB subtrace TOS-1 from TOS
+func doFsub(fr *frames.Frame, _ int64) int {
+	rhs := pop(fr).(float64)
+	lhs := pop(fr).(float64)
+	diff := lhs - rhs
+	push(fr, diff)
 	return 1
 }
 
