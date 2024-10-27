@@ -100,7 +100,7 @@ func doubleByteValue(params []interface{}) interface{} {
 // "java/lang/Double.compare(DD)I"
 func doubleCompare(params []interface{}) interface{} {
 	dd1 := params[0].(float64)
-	dd2 := params[1].(float64)
+	dd2 := params[2].(float64)
 	if dd1 == dd2 {
 		return int64(0)
 	}
