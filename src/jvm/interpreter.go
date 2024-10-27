@@ -150,8 +150,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doImul,          // LMUL            0x69
 	doFmul,          // FMUL            0x6A
 	doFmul,          // DMUL            0x6B
-	notImplemented,  // IDIV            0x6C
-	notImplemented,  // LDIV            0x6D
+	doIdiv,          // IDIV            0x6C
+	doIdiv,          // LDIV            0x6D
 	doFdiv,          // FDIV            0x6E
 	doFdiv,          // DDIV            0x6F
 	notImplemented,  // IREM            0x70
@@ -566,6 +566,28 @@ func doFmul(fr *frames.Frame, _ int64) int {
 	rhs := pop(fr).(float64)
 	product := lhs * rhs
 	push(fr, product)
+	return 1
+}
+
+// 0x6C, 0x6D IDIV, LDIV divide ints
+func doIdiv(fr *frames.Frame, _ int64) int { // 0x6C IDIV integer division
+	val1 := pop(fr).(int64) // divisor
+	val2 := pop(fr).(int64) // dividend
+	if val1 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IDIV or LDIV: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	} else {
+		push(fr, val2/val1)
+	}
 	return 1
 }
 
