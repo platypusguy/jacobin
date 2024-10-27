@@ -240,8 +240,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // MONITOREXIT     0xC3
 	doWide,          // WIDE            0xC4
 	notImplemented,  // MULTIANEWARRAY  0xC5
-	notImplemented,  // IFNULL          0xC6
-	notImplemented,  // IFNONNULL       0xC7
+	doIfnull,        // IFNULL          0xC6
+	doIfnonnull,     // IFNONNULL       0xC7
 	notImplemented,  // GOTO_W          0xC8
 	notImplemented,  // JSR_W           0xC9
 	notImplemented,  // BREAKPOINT      0xCA
@@ -1132,6 +1132,29 @@ func doAnewarray(fr *frames.Frame, _ int64) int { // 0xBD ANEWARRAY create an ar
 func doWide(fr *frames.Frame, _ int64) int { // 0xC4 use wide versions of bytecode arguments
 	fr.WideInEffect = true
 	return 1
+}
+
+// 0xC6 IFNULL jump if TOS holds a null address
+func doIfnull(fr *frames.Frame, _ int64) int {
+	// null = nil or object.Null (a pointer to nil)
+	value := pop(fr)
+	if object.IsNull(value.(*object.Object)) {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0xC7 IFNONNULL jump if TOS does not hold a null address
+func doIfnonnull(fr *frames.Frame, _ int64) int {
+	value := pop(fr)
+	if object.IsNull(value.(*object.Object)) { // if == null, move along
+		return 3
+	} else { // it's not nil nor a null pointer--so do the jump
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	}
 }
 
 func notImplemented(_ *frames.Frame, _ int64) int {
