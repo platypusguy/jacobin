@@ -42,24 +42,24 @@ import (
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
-	doNop,           // NOP         0x00
-	doAconstNull,    // ACONST_NULL 0x01
-	doIconstM1,      // ICONST_M1   0x02
-	doIconst0,       // ICONST_0    0x03
-	doIconst1,       // ICONST_1    0x04
-	doIconst2,       // ICONST_2    0x05
-	doIconst3,       // ICONST_3    0x06
-	doIconst4,       // ICONST_4    0x07
-	doIconst5,       // ICONST_5    0x08
-	doLconst0,       // LCONST_0    0x09
-	doLconst1,       // LCONST_1    0x0A
-	doFconst0,       // FCONST_0    0x0B
-	doFconst1,       // FCONST_1    0x0C
-	doFconst2,       // FCONST_2    0x0D
-	doDconst0,       // DCONST_0    0x0E
-	doDconst1,       // DCONST_1    0x0F
-	doBipush,        // BIPUSH      0x10
-	doSipush,        // SIPUSH      0x11
+	doNop,           // NOP             0x00
+	doAconstNull,    // ACONST_NULL     0x01
+	doIconstM1,      // ICONST_M1       0x02
+	doIconst0,       // ICONST_0        0x03
+	doIconst1,       // ICONST_1        0x04
+	doIconst2,       // ICONST_2        0x05
+	doIconst3,       // ICONST_3        0x06
+	doIconst4,       // ICONST_4        0x07
+	doIconst5,       // ICONST_5        0x08
+	doLconst0,       // LCONST_0        0x09
+	doLconst1,       // LCONST_1        0x0A
+	doFconst0,       // FCONST_0        0x0B
+	doFconst1,       // FCONST_1        0x0C
+	doFconst2,       // FCONST_2        0x0D
+	doDconst0,       // DCONST_0        0x0E
+	doDconst1,       // DCONST_1        0x0F
+	doBipush,        // BIPUSH          0x10
+	doSipush,        // SIPUSH          0x11
 	doLdc,           // LDC             0x12
 	doLdcw,          // LDC_W           0x13
 	doLdc2w,         // LDC2_W          0x14
@@ -197,10 +197,10 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DCMPG           0x98
 	doIfeq,          // IFEQ            0x99
 	doIfne,          // IFNE            0x9A
-	notImplemented,  // IFLT            0x9B
-	notImplemented,  // IFGE            0x9C
-	notImplemented,  // IFGT            0x9D
-	notImplemented,  // IFLE            0x9E
+	doIflt,          // IFLT            0x9B
+	doIfge,          // IFGE            0x9C
+	doIfgt,          // IFGT            0x9D
+	doIfle,          // IFLE            0x9E
 	notImplemented,  // IF_ICMPEQ       0x9F
 	notImplemented,  // IF_ICMPNE       0xA0
 	doIficmplt,      // IF_ICMPLT       0xA1
@@ -304,14 +304,16 @@ func doFconst2(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(2)) 
 func doDconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
 func doDconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
 
-func doBipush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byte onto stack
+// 0x10 BIPUSH push following byte onto stack
+func doBipush(fr *frames.Frame, _ int64) int {
 	wbyte := fr.Meth[fr.PC+1]
 	wint64 := byteToInt64(wbyte)
 	push(fr, wint64)
 	return 2
 }
 
-func doSipush(fr *frames.Frame, _ int64) int { // 0x11 SIPUSH create int from next 2 bytes and push it
+// 0x11 SIPUSH create int from next 2 bytes and push it
+func doSipush(fr *frames.Frame, _ int64) int {
 	wbyte1 := fr.Meth[fr.PC+1]
 	wbyte2 := fr.Meth[fr.PC+2]
 	var wint64 int64
@@ -331,7 +333,7 @@ func doSipush(fr *frames.Frame, _ int64) int { // 0x11 SIPUSH create int from ne
 	return 3
 }
 
-// 0x12, 0x13 LDC functions
+// 0x12, 0x13 LDC, LDC_W load constants
 func doLdc(fr *frames.Frame, _ int64) int  { return ldc(fr, 1) }
 func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
 
@@ -441,7 +443,8 @@ func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
-func doAastore(fr *frames.Frame, _ int64) int { // 0x53 AASTORE store a ref in a ref array
+// 0x53 AASTORE store a ref in a ref array
+func doAastore(fr *frames.Frame, _ int64) int {
 	value := pop(fr).(*object.Object)    // reference we're inserting
 	index := pop(fr).(int64)             // index into the array
 	arrayRef := pop(fr).(*object.Object) // ptr to the array object
@@ -486,7 +489,8 @@ func doAastore(fr *frames.Frame, _ int64) int { // 0x53 AASTORE store a ref in a
 	return 1
 }
 
-func doPop(fr *frames.Frame, _ int64) int { // 0x57 POP pop item off op stack
+// 0x57 POP pop item off op stack
+func doPop(fr *frames.Frame, _ int64) int {
 	if fr.TOS < 0 {
 		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -499,7 +503,8 @@ func doPop(fr *frames.Frame, _ int64) int { // 0x57 POP pop item off op stack
 	return 1
 }
 
-func doPop2(fr *frames.Frame, _ int64) int { // 0x58 POP2 pop 2 items off op stack
+// 0x58 POP2 pop 2 items off op stack
+func doPop2(fr *frames.Frame, _ int64) int {
 	if fr.TOS < 1 {
 		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -512,7 +517,8 @@ func doPop2(fr *frames.Frame, _ int64) int { // 0x58 POP2 pop 2 items off op sta
 	return 1
 }
 
-func doDup(fr *frames.Frame, _ int64) int { // 0x59 DUP duplicate item at TOS
+// 0x59 DUP duplicate item at TOS
+func doDup(fr *frames.Frame, _ int64) int {
 	tosItem := peek(fr)
 	push(fr, tosItem)
 	return 1
@@ -544,7 +550,8 @@ func doFsub(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract int64s from the op stack
+// Ox64 ISUB subtract int64s from the op stack
+func doIsub(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	diff := subtract(i1, i2)
@@ -552,7 +559,8 @@ func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract int64s from t
 	return 1
 }
 
-func doImul(fr *frames.Frame, _ int64) int { // 0x68 IMUL multiply two int64s
+// 0x68 IMUL multiply two int64s
+func doImul(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	product := multiply(i1, i2)
@@ -570,7 +578,7 @@ func doFmul(fr *frames.Frame, _ int64) int {
 }
 
 // 0x6C, 0x6D IDIV, LDIV divide TOS into TOS-1
-func doIdiv(fr *frames.Frame, _ int64) int { // 0x6C IDIV integer division
+func doIdiv(fr *frames.Frame, _ int64) int {
 	val1 := pop(fr).(int64) // divisor
 	val2 := pop(fr).(int64) // dividend
 	if val1 == 0 {
@@ -723,7 +731,63 @@ func doIfne(fr *frames.Frame, _ int64) int {
 	}
 }
 
-// 0xA1 IF_ICMPLT Compare ints for <
+// 0x9B IFLT pop int, if it's < 0, go to the jump location
+func doIflt(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value < 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9C IFGE pop int, if it's >= 0, go to the jump location
+func doIfge(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value >= 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9D IFGT pop int, if it's > 0, go to the jump location
+func doIfgt(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value > 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9A IFLE pop int, if it's <!>= 0, go to the jump location
+func doIfle(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value <= 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0xA1 IF_ICMPLT Compare popped ints for <
 func doIficmplt(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
