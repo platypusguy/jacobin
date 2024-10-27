@@ -13,7 +13,6 @@ import (
 	"jacobin/trace"
 	"jacobin/types"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -30,7 +29,7 @@ import (
 //	        argStyle  int16     // what is the format for the argument values to this option?
 //                              // 0 = no argument      1 = value follows a :
 //                              // 2 = value follows =  4 = value follows a space
-//                              // 8 = option has multiple values separated by a filepath.ListSeparator (such as in -cp)
+//                              // 8 = option has multiple values separated by a single character (such as in -trace and -cp)
 //	        action  func(position int, name string, gl pointer to globasl) error
 //                              // which is the action to perform when this option found.
 //      }
@@ -188,9 +187,11 @@ func versionStdoutThenExit(pos int, name string, gl *globals.Globals) (int, erro
 	return pos, nil
 }
 
+const TraceSep = ","
+
 func enableTrace(pos int, argValue string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-trace", gl)
-	array := strings.Split(argValue, string(filepath.ListSeparator))
+	array := strings.Split(argValue, TraceSep)
 	for i := 0; i < len(array); i++ {
 		switch array[i] {
 		case "class":
