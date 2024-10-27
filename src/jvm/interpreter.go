@@ -196,7 +196,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DCMPL           0x97
 	notImplemented,  // DCMPG           0x98
 	doIfeq,          // IFEQ            0x99
-	notImplemented,  // IFNE            0x9A
+	doIfne,          // IFNE            0x9A
 	notImplemented,  // IFLT            0x9B
 	notImplemented,  // IFGE            0x9C
 	notImplemented,  // IFGT            0x9D
@@ -695,6 +695,34 @@ func doLcmp(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
+// 0x99 IFEQ pop int, if it's == 0, go to the jump location
+func doIfeq(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value == 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9A IFNE pop int, if it's != 0, go to the jump location
+func doIfne(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value != 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
 // 0xA1 IF_ICMPLT Compare ints for <
 func doIficmplt(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
@@ -1141,7 +1169,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 	return 3 // 2 for RefTypeSlot + 1 for next bytecode
 }
 
-// 0xC4 use wide versions of bytecode arguments
+// 0xC4 WIDE use wide versions of bytecode arguments
 func doWide(fr *frames.Frame, _ int64) int {
 	fr.WideInEffect = true
 	return 1
