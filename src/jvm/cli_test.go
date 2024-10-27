@@ -10,7 +10,6 @@ import (
 	"io"
 	"jacobin/globals"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -183,7 +182,7 @@ func TestInvalidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "mickey"
+	options := "-trace=inst" + TraceSep + "class" + TraceSep + "mickey"
 	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 
@@ -212,7 +211,7 @@ func TestValidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	options := "-trace=inst" + string(filepath.ListSeparator) + "class" + string(filepath.ListSeparator) + "inst"
+	options := "-trace=inst" + TraceSep + "class" + TraceSep + "inst"
 	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 

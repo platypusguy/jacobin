@@ -164,24 +164,23 @@ Arguments following the main class, source file, -jar <jarfile>,
 are passed as the arguments to main class.
 
 where options include:
-	-client       to select the "client" VM
-	-? -h -help   print this help message to the error stream
-	--help        print this help message to the output stream
-	-version      print product version to the error stream and exit
-	--version     print product version to the output stream and exit
-	-showversion  print product version to the error stream and continue
-	--show-version
-				  print product version to the output stream and continue
+	-client         to select the "client" VM
+	-? -h -help     print this help message to the error stream
+	--help          print this help message to the output stream
+	-version        print product version to the error stream and exit
+	--version       print product version to the output stream and exit
+	-showversion    print product version to the error stream and continue
+	--show-version  print product version to the output stream and continue
 
 Jacobin-specific options:
-	-strictJDK          make user messages conform closely to the JDK's format
-	-trace=selections   display selected tracing to the console
-                        where the selections are one or more of the following:
-                        * init - process initilization
-                        * cloadi - classloader initialization
-                        * inst - bytecode interpreter trace
-                        * class - class & method support for the interpreter
-                        * verbose - inst, class, and more details of the interpreter `
+    -strictJDK            make user messages conform closely to the JDK's format
+    -trace=<selections>   display selected tracing to the console
+                          where the <selections> are one or more of the following separated by commas (,):
+                          * init - process initilization
+                          * cloadi - classloader initialization
+                          * inst - bytecode interpreter trace
+                          * class - class & method support for the interpreter
+                          * verbose - inst, class, and more details of the interpreter `
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }
