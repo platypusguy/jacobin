@@ -158,10 +158,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doIrem,          // LREM            0x71
 	doFrem,          // FREM            0x72
 	doFrem,          // DREM            0x73
-	notImplemented,  // INEG            0x74
-	notImplemented,  // LNEG            0x75
-	notImplemented,  // FNEG            0x76
-	notImplemented,  // DNEG            0x77
+	doIneg,          // INEG            0x74
+	doIneg,          // LNEG            0x75
+	doFneg,          // FNEG            0x76
+	doFneg,          // DNEG            0x77
 	notImplemented,  // ISHL            0x78
 	notImplemented,  // LSHL            0x79
 	notImplemented,  // ISHR            0x7A
@@ -591,7 +591,7 @@ func doIdiv(fr *frames.Frame, _ int64) int { // 0x6C IDIV integer division
 	return 1
 }
 
-// 0x6E FDIV, DDIV
+// 0x6E, 0x6F FDIV, DDIV floating-point division
 func doFdiv(fr *frames.Frame, _ int64) int {
 	val1 := pop(fr).(float64)
 	val2 := pop(fr).(float64)
@@ -637,6 +637,20 @@ func doFrem(fr *frames.Frame, _ int64) int {
 	val2 := pop(fr).(float64)
 	val1 := pop(fr).(float64)
 	push(fr, float64(float32(math.Remainder(val1, val2))))
+	return 1
+}
+
+// 0x74, 0x75 INEG, LNEG negate integer at TOS
+func doIneg(fr *frames.Frame, _ int64) int {
+	val := pop(fr).(int64)
+	push(fr, -val)
+	return 1
+}
+
+// 0x76, 0x77 FNEG, DNEG negate floating-point at TOS
+func doFneg(fr *frames.Frame, _ int64) int {
+	val := pop(fr).(float64)
+	push(fr, -val)
 	return 1
 }
 
