@@ -15,6 +15,7 @@ package jvm
 
 import (
 	"container/list"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"jacobin/classloader"
@@ -29,7 +30,9 @@ import (
 	"jacobin/stringPool"
 	"jacobin/types"
 	"jacobin/util"
+	"math"
 	"runtime/debug"
+	"strings"
 )
 
 // set up a DispatchTable with 203 slots that correspond to the bytecodes
@@ -39,24 +42,24 @@ import (
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
-	doNop,           // NOP         0x00
-	doAconstNull,    // ACONST_NULL 0x01
-	doIconstM1,      // ICONST_M1   0x02
-	doIconst0,       // ICONST_0    0x03
-	doIconst1,       // ICONST_1    0x04
-	doIconst2,       // ICONST_2    0x05
-	doIconst3,       // ICONST_3    0x06
-	doIconst4,       // ICONST_4    0x07
-	doIconst5,       // ICONST_5    0x08
-	doLconst0,       // LCONST_0    0x09
-	doLconst1,       // LCONST_1    0x0A
-	doFconst0,       // FCONST_0    0x0B
-	doFconst1,       // FCONST_1    0x0C
-	doFconst2,       // FCONST_2    0x0D
-	doDconst0,       // DCONST_0    0x0E
-	doDconst1,       // DCONST_1    0x0F
-	doBiPush,        // BIPUSH      0x10
-	notImplemented,  // SIPUSH      0x11
+	doNop,           // NOP             0x00
+	doAconstNull,    // ACONST_NULL     0x01
+	doIconstM1,      // ICONST_M1       0x02
+	doIconst0,       // ICONST_0        0x03
+	doIconst1,       // ICONST_1        0x04
+	doIconst2,       // ICONST_2        0x05
+	doIconst3,       // ICONST_3        0x06
+	doIconst4,       // ICONST_4        0x07
+	doIconst5,       // ICONST_5        0x08
+	doLconst0,       // LCONST_0        0x09
+	doLconst1,       // LCONST_1        0x0A
+	doFconst0,       // FCONST_0        0x0B
+	doFconst1,       // FCONST_1        0x0C
+	doFconst2,       // FCONST_2        0x0D
+	doDconst0,       // DCONST_0        0x0E
+	doDconst1,       // DCONST_1        0x0F
+	doBipush,        // BIPUSH          0x10
+	doSipush,        // SIPUSH          0x11
 	doLdc,           // LDC             0x12
 	doLdcw,          // LDC_W           0x13
 	doLdc2w,         // LDC2_W          0x14
@@ -95,8 +98,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // SALOAD          0x35
 	doIstore,        // ISTORE          0x36
 	doIstore,        // LSTORE          0x37
-	notImplemented,  // FSTORE          0x38
-	notImplemented,  // DSTORE          0x39
+	doFstore,        // FSTORE          0x38
+	doFstore,        // DSTORE          0x39
 	notImplemented,  // ASTORE          0x3A
 	doIstore0,       // ISTORE_0        0x3B
 	doIstore1,       // ISTORE_1        0x3C
@@ -122,13 +125,13 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // LASTORE         0x50
 	notImplemented,  // FASTORE         0x51
 	notImplemented,  // DASTORE         0x52
-	notImplemented,  // AASTORE         0x53
+	doAastore,       // AASTORE         0x53
 	notImplemented,  // BASTORE         0x54
 	notImplemented,  // CASTORE         0x55
 	notImplemented,  // SASTORE         0x56
-	notImplemented,  // POP             0x57
-	notImplemented,  // POP2            0x58
-	notImplemented,  // DUP             0x59
+	doPop,           // POP             0x57
+	doPop2,          // POP2            0x58
+	doDup,           // DUP             0x59
 	notImplemented,  // DUP_X1          0x5A
 	notImplemented,  // DUP_X2          0x5B
 	notImplemented,  // DUP2            0x5C
@@ -136,29 +139,29 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // DUP2_X2         0x5E
 	notImplemented,  // SWAP            0x5F
 	doIadd,          // IADD            0x60
-	notImplemented,  // LADD            0x61
-	notImplemented,  // FADD            0x62
-	notImplemented,  // DADD            0x63
+	doIadd,          // LADD            0x61
+	doFadd,          // FADD            0x62
+	doFadd,          // DADD            0x63
 	doIsub,          // ISUB            0x64
-	notImplemented,  // LSUB            0x65
-	notImplemented,  // FSUB            0x66
-	notImplemented,  // DSUB            0x67
+	doIsub,          // LSUB            0x65
+	doFsub,          // FSUB            0x66
+	doFsub,          // DSUB            0x67
 	doImul,          // IMUL            0x68
-	notImplemented,  // LMUL            0x69
-	notImplemented,  // FMUL            0x6A
-	notImplemented,  // DMUL            0x6B
-	notImplemented,  // IDIV            0x6C
-	notImplemented,  // LDIV            0x6D
-	notImplemented,  // FDIV            0x6E
-	notImplemented,  // DDIV            0x6F
-	notImplemented,  // IREM            0x70
-	notImplemented,  // LREM            0x71
-	notImplemented,  // FREM            0x72
-	notImplemented,  // DREM            0x73
-	notImplemented,  // INEG            0x74
-	notImplemented,  // LNEG            0x75
-	notImplemented,  // FNEG            0x76
-	notImplemented,  // DNEG            0x77
+	doImul,          // LMUL            0x69
+	doFmul,          // FMUL            0x6A
+	doFmul,          // DMUL            0x6B
+	doIdiv,          // IDIV            0x6C
+	doIdiv,          // LDIV            0x6D
+	doFdiv,          // FDIV            0x6E
+	doFdiv,          // DDIV            0x6F
+	doIrem,          // IREM            0x70
+	doIrem,          // LREM            0x71
+	doFrem,          // FREM            0x72
+	doFrem,          // DREM            0x73
+	doIneg,          // INEG            0x74
+	doIneg,          // LNEG            0x75
+	doFneg,          // FNEG            0x76
+	doFneg,          // DNEG            0x77
 	notImplemented,  // ISHL            0x78
 	notImplemented,  // LSHL            0x79
 	notImplemented,  // ISHR            0x7A
@@ -176,8 +179,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // I2F             0x86
 	notImplemented,  // I2D             0x87
 	notImplemented,  // L2I             0x88
-	notImplemented,  // L2F             0x89
-	notImplemented,  // L2D             0x8A
+	doL2f,           // L2F             0x89
+	doL2f,           // L2D             0x8A
 	notImplemented,  // F2I             0x8B
 	notImplemented,  // F2L             0x8C
 	notImplemented,  // F2D             0x8D
@@ -187,17 +190,17 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // I2B             0x91
 	notImplemented,  // I2C             0x92
 	notImplemented,  // I2S             0x93
-	notImplemented,  // LCMP            0x94
+	doLcmp,          // LCMP            0x94
 	notImplemented,  // FCMPL           0x95
 	notImplemented,  // FCMPG           0x96
 	notImplemented,  // DCMPL           0x97
 	notImplemented,  // DCMPG           0x98
-	notImplemented,  // IFEQ            0x99
-	notImplemented,  // IFNE            0x9A
-	notImplemented,  // IFLT            0x9B
-	notImplemented,  // IFGE            0x9C
-	notImplemented,  // IFGT            0x9D
-	notImplemented,  // IFLE            0x9E
+	doIfeq,          // IFEQ            0x99
+	doIfne,          // IFNE            0x9A
+	doIflt,          // IFLT            0x9B
+	doIfge,          // IFGE            0x9C
+	doIfgt,          // IFGT            0x9D
+	doIfle,          // IFLE            0x9E
 	notImplemented,  // IF_ICMPEQ       0x9F
 	notImplemented,  // IF_ICMPNE       0xA0
 	doIficmplt,      // IF_ICMPLT       0xA1
@@ -228,7 +231,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // INVOKEDYNAMIC   0xBA
 	notImplemented,  // NEW             0xBB
 	notImplemented,  // NEWARRAY        0xBC
-	notImplemented,  // ANEWARRAY       0xBD
+	doAnewarray,     // ANEWARRAY       0xBD
 	notImplemented,  // ARRAYLENGTH     0xBE
 	notImplemented,  // ATHROW          0xBF
 	notImplemented,  // CHECKCAST       0xC0
@@ -237,8 +240,8 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // MONITOREXIT     0xC3
 	doWide,          // WIDE            0xC4
 	notImplemented,  // MULTIANEWARRAY  0xC5
-	notImplemented,  // IFNULL          0xC6
-	notImplemented,  // IFNONNULL       0xC7
+	doIfnull,        // IFNULL          0xC6
+	doIfnonnull,     // IFNONNULL       0xC7
 	notImplemented,  // GOTO_W          0xC8
 	notImplemented,  // JSR_W           0xC9
 	notImplemented,  // BREAKPOINT      0xCA
@@ -301,14 +304,36 @@ func doFconst2(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(2)) 
 func doDconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
 func doDconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
 
-func doBiPush(fr *frames.Frame, _ int64) int { // 0x10 BIPUSH push following byte onto stack
+// 0x10 BIPUSH push following byte onto stack
+func doBipush(fr *frames.Frame, _ int64) int {
 	wbyte := fr.Meth[fr.PC+1]
 	wint64 := byteToInt64(wbyte)
 	push(fr, wint64)
 	return 2
 }
 
-// 0x12, 0x13 LDC functions
+// 0x11 SIPUSH create int from next 2 bytes and push it
+func doSipush(fr *frames.Frame, _ int64) int {
+	wbyte1 := fr.Meth[fr.PC+1]
+	wbyte2 := fr.Meth[fr.PC+2]
+	var wint64 int64
+	if (wbyte1 & 0x80) == 0x80 { // Negative wbyte1 (left-most bit on)?
+		// Negative wbyte1 : form wbytes = 6 0xFFs concatenated with the wbyte1 and wbyte2
+		var wbytes = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}
+		wbytes[6] = wbyte1
+		wbytes[7] = wbyte2
+		// Form an int64 from the wbytes array
+		// If you know C, this is equivalent to memcpy(&wint64, &wbytes, 8)
+		wint64 = int64(binary.BigEndian.Uint64(wbytes))
+	} else {
+		// Not negative (left-most bit off) : just cast wbyte as an int64
+		wint64 = (int64(wbyte1) * 256) + int64(wbyte2)
+	}
+	push(fr, wint64)
+	return 3
+}
+
+// 0x12, 0x13 LDC, LDC_W load constants
 func doLdc(fr *frames.Frame, _ int64) int  { return ldc(fr, 1) }
 func doLdcw(fr *frames.Frame, _ int64) int { return ldc(fr, 2) }
 
@@ -387,6 +412,22 @@ func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
+// 0x38, 0x39 FSTORE and DSTORE Store popped TOS into specified local
+func doFstore(fr *frames.Frame, _ int64) int {
+	var index int
+	var PCadvance int    // how much to advance fr.PC, the program counter
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		PCadvance = 2
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		PCadvance = 1
+	}
+	fr.Locals[index] = pop(fr).(float64)
+	return PCadvance + 1
+}
+
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
 func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
@@ -394,7 +435,7 @@ func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doIstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
-// 0x43 - 0x 4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
+// 0x43 - 0x4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
 // These are the same as the ISTORE_x functions. However, at some point,
 // we might want to verify or handle floats differently from ints.
 func doFstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
@@ -402,15 +443,115 @@ func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
+// 0x53 AASTORE store a ref in a ref array
+func doAastore(fr *frames.Frame, _ int64) int {
+	value := pop(fr).(*object.Object)    // reference we're inserting
+	index := pop(fr).(int64)             // index into the array
+	arrayRef := pop(fr).(*object.Object) // ptr to the array object
+
+	if arrayRef == nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference to an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	arrayObj := *arrayRef
+	rawArrayObj := arrayObj.FieldTable["value"]
+
+	if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: field type must start with '[L', got %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, rawArrayObj.Ftype)
+		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// get pointer to the actual array
+	rawArray := rawArrayObj.Fvalue.([]*object.Object)
+	size := int64(len(rawArray))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	rawArray[index] = value
+	return 1
+}
+
+// 0x57 POP pop item off op stack
+func doPop(fr *frames.Frame, _ int64) int {
+	if fr.TOS < 0 {
+		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	fr.TOS -= 1
+	return 1
+}
+
+// 0x58 POP2 pop 2 items off op stack
+func doPop2(fr *frames.Frame, _ int64) int {
+	if fr.TOS < 1 {
+		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	fr.TOS -= 2
+	return 1
+}
+
+// 0x59 DUP duplicate item at TOS
+func doDup(fr *frames.Frame, _ int64) int {
+	tosItem := peek(fr)
+	push(fr, tosItem)
+	return 1
+}
+
+// 0x60 IADD, LADD integer addition, push result
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
-	sum := add(i1, i2)
+	sum := i1 + i2
 	push(fr, sum)
 	return 1
 }
 
-func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract int64s from the op stack
+// 0x62, 0x63 FADD, DADD float addition, push result
+func doFadd(fr *frames.Frame, _ int64) int {
+	lhs := float32(pop(fr).(float64))
+	rhs := float32(pop(fr).(float64))
+	push(fr, float64(lhs+rhs))
+	return 1
+}
+
+// 0x66, 0x67 FSUB, DSUB subtrace TOS-1 from TOS
+func doFsub(fr *frames.Frame, _ int64) int {
+	rhs := pop(fr).(float64)
+	lhs := pop(fr).(float64)
+	diff := lhs - rhs
+	push(fr, diff)
+	return 1
+}
+
+// Ox64 ISUB subtract int64s from the op stack
+func doIsub(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	diff := subtract(i1, i2)
@@ -418,7 +559,8 @@ func doIsub(fr *frames.Frame, _ int64) int { // Ox64 ISUB subtract int64s from t
 	return 1
 }
 
-func doImul(fr *frames.Frame, _ int64) int { // 0x68 IMUL multiply two int64s
+// 0x68 IMUL multiply two int64s
+func doImul(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	product := multiply(i1, i2)
@@ -426,7 +568,102 @@ func doImul(fr *frames.Frame, _ int64) int { // 0x68 IMUL multiply two int64s
 	return 1
 }
 
-func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
+// 0x6A, 0x6B FMUL, DMUL multiply floats/doubles
+func doFmul(fr *frames.Frame, _ int64) int {
+	lhs := pop(fr).(float64)
+	rhs := pop(fr).(float64)
+	product := lhs * rhs
+	push(fr, product)
+	return 1
+}
+
+// 0x6C, 0x6D IDIV, LDIV divide TOS into TOS-1
+func doIdiv(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64) // divisor
+	val2 := pop(fr).(int64) // dividend
+	if val1 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IDIV or LDIV: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status == exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	} else {
+		push(fr, val2/val1)
+	}
+	return 1
+}
+
+// 0x6E, 0x6F FDIV, DDIV floating-point division
+func doFdiv(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(float64)
+	val2 := pop(fr).(float64)
+	if val1 == 0.0 {
+		if val2 == 0.0 {
+			push(fr, math.NaN())
+		} else if math.Signbit(val1) { // this test for negative zero
+			push(fr, math.Inf(-1)) // but alas there is no -0 in golang (as of 1.20)
+		} else {
+			push(fr, math.Inf(1))
+		}
+	} else {
+		push(fr, val2/val1)
+	}
+	return 1
+}
+
+// 0x70, 0x71 IREM, LREM get remainder of integer division
+func doIrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	if val2 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IREM or LREM: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	} else {
+		res := val1 % val2
+		push(fr, res)
+	}
+	return 1
+}
+
+// 0x72, 0x73 FREM, DREM get remainder of floating-point division
+func doFrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(float64)
+	val1 := pop(fr).(float64)
+	push(fr, float64(float32(math.Remainder(val1, val2))))
+	return 1
+}
+
+// 0x74, 0x75 INEG, LNEG negate integer at TOS
+func doIneg(fr *frames.Frame, _ int64) int {
+	val := pop(fr).(int64)
+	push(fr, -val)
+	return 1
+}
+
+// 0x76, 0x77 FNEG, DNEG negate floating-point at TOS
+func doFneg(fr *frames.Frame, _ int64) int {
+	val := pop(fr).(float64)
+	push(fr, -val)
+	return 1
+}
+
+// 0x84 IINC increment int variable
+func doIinc(fr *frames.Frame, _ int64) int {
 	var index int
 	var increment int64
 	var PCtoSkip int
@@ -445,7 +682,113 @@ func doIinc(fr *frames.Frame, _ int64) int { // 0x84 IINC increment int varialbe
 	return PCtoSkip + 1
 }
 
-func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints for <
+// 0x89, 8A L2F, L2D long to float/double
+func doL2f(fr *frames.Frame, _ int64) int {
+	longVal := pop(fr).(int64)
+	push(fr, float64(longVal))
+	return 1
+}
+
+// 0x94 LCMP (compare two longs, push int -1, 0, or 1, depending on result)
+func doLcmp(fr *frames.Frame, _ int64) int {
+	value2 := pop(fr).(int64)
+	value1 := pop(fr).(int64)
+	if value1 == value2 {
+		push(fr, int64(0))
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else {
+		push(fr, int64(-1))
+	}
+	return 1
+}
+
+// 0x99 IFEQ pop int, if it's == 0, go to the jump location
+func doIfeq(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value == 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9A IFNE pop int, if it's != 0, go to the jump location
+func doIfne(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value != 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9B IFLT pop int, if it's < 0, go to the jump location
+func doIflt(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value < 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9C IFGE pop int, if it's >= 0, go to the jump location
+func doIfge(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value >= 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9D IFGT pop int, if it's > 0, go to the jump location
+func doIfgt(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value > 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0x9A IFLE pop int, if it's <!>= 0, go to the jump location
+func doIfle(fr *frames.Frame, _ int64) int {
+	// bools are treated in the JVM as ints, so convert here if bool;
+	// otherwise, values should be int64's
+	popValue := pop(fr)
+	value := convertInterfaceToInt64(popValue)
+	if value <= 0 {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0xA1 IF_ICMPLT Compare popped ints for <
+func doIficmplt(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -458,7 +801,8 @@ func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints 
 	}
 }
 
-func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
+// 0xA2 IF_ICMPGE Compare ints for >=
+func doIfIcmpge(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -471,12 +815,14 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints 
 	}
 }
 
-func doGoto(fr *frames.Frame, _ int64) int { // 0xA7 GOTO unconditional jump within method
+// 0xA7 GOTO unconditional jump within method
+func doGoto(fr *frames.Frame, _ int64) int {
 	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
 }
 
-func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 from method call
+// 0xAC IRETURN return an int64 from method call
+func doIreturn(fr *frames.Frame, _ int64) int {
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
 	push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
@@ -484,12 +830,14 @@ func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 
 	return 0
 }
 
-func doReturn(fr *frames.Frame, _ int64) int { // 0xB1 RETURN return from void methodjav
+// 0xB1 RETURN return from void methodjav
+func doReturn(fr *frames.Frame, _ int64) int {
 	fr.FrameStack.Remove(fr.FrameStack.Front())
 	return 0
 }
 
-func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
+// 0xB2 GETSTATIC
+func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
@@ -570,7 +918,8 @@ func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
 	return 3 // 2 for the CP slot + 1 for the next bytecode
 }
 
-func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
+// 0xB6 INVOKEVIRTUAL
+func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// fr.PC += 2
@@ -669,7 +1018,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
-func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
+// OxB7 INVOKESPECIAL
+func doInvokeSpecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
@@ -756,7 +1106,8 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
 	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
-func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
+// 0xB8 INVOKESTATIC
+func doInvokestatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
@@ -845,9 +1196,70 @@ func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
 }
 
-func doWide(fr *frames.Frame, _ int64) int { // 0xC4 use wide versions of bytecode arguments
+// 0xBD ANEWARRAY create an array of pointers
+func doAnewarray(fr *frames.Frame, _ int64) int {
+	size := pop(fr).(int64)
+	if size < 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "ANEWARRAY: Invalid size for array"
+		status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	refType := CP.CpIndex[refTypeSlot]
+	if refType.Type != classloader.ClassRef && refType.Type != classloader.Interface {
+		// TODO: it could also point to an array, per the JVM spec
+		errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var refTypeName = ""
+	if refType.Type == classloader.ClassRef {
+		refNameStringPoolIndex := CP.ClassRefs[refType.Slot]
+		refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
+	}
+
+	arrayPtr := object.Make1DimRefArray(&refTypeName, size)
+	g := globals.GetGlobalRef()
+	g.ArrayAddressList.PushFront(arrayPtr)
+	push(fr, arrayPtr)
+	return 3 // 2 for RefTypeSlot + 1 for next bytecode
+}
+
+// 0xC4 WIDE use wide versions of bytecode arguments
+func doWide(fr *frames.Frame, _ int64) int {
 	fr.WideInEffect = true
 	return 1
+}
+
+// 0xC6 IFNULL jump if TOS holds a null address
+func doIfnull(fr *frames.Frame, _ int64) int {
+	// null = nil or object.Null (a pointer to nil)
+	value := pop(fr)
+	if object.IsNull(value.(*object.Object)) {
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3
+	}
+}
+
+// 0xC7 IFNONNULL jump if TOS does not hold a null address
+func doIfnonnull(fr *frames.Frame, _ int64) int {
+	value := pop(fr)
+	if object.IsNull(value.(*object.Object)) { // if == null, move along
+		return 3
+	} else { // it's not nil nor a null pointer--so do the jump
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	}
 }
 
 func notImplemented(_ *frames.Frame, _ int64) int {
