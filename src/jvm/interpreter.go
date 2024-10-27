@@ -117,10 +117,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doFstore1,       // DSTORE_1        0x48
 	doFstore2,       // DSTORE_2        0x49
 	doFstore3,       // DSTORE_3        0x4A
-	notImplemented,  // ASTORE_0        0x4B
-	notImplemented,  // ASTORE_1        0x4C
-	notImplemented,  // ASTORE_2        0x4D
-	notImplemented,  // ASTORE_3        0x4E
+	doIstore0,       // ASTORE_0        0x4B
+	doIstore1,       // ASTORE_1        0x4C
+	doIstore2,       // ASTORE_2        0x4D
+	doIstore3,       // ASTORE_3        0x4E
 	notImplemented,  // IASTORE         0x4F
 	notImplemented,  // LASTORE         0x50
 	notImplemented,  // FASTORE         0x51
@@ -430,6 +430,7 @@ func doFstore(fr *frames.Frame, _ int64) int {
 
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
+// 0x4B - 0x4E ASTORE_x:    "    "     "   "     "
 func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
 func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
@@ -541,20 +542,20 @@ func doFadd(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x66, 0x67 FSUB, DSUB subtrace TOS-1 from TOS
-func doFsub(fr *frames.Frame, _ int64) int {
-	rhs := pop(fr).(float64)
-	lhs := pop(fr).(float64)
-	diff := lhs - rhs
+// Ox64, 0x65 ISUB, LSUB subtract subtract TOS-1 from TOS
+func doIsub(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	diff := i1 - i2
 	push(fr, diff)
 	return 1
 }
 
-// Ox64 ISUB subtract int64s from the op stack
-func doIsub(fr *frames.Frame, _ int64) int {
-	i2 := pop(fr).(int64)
-	i1 := pop(fr).(int64)
-	diff := subtract(i1, i2)
+// 0x66, 0x67 FSUB, DSUB subtract TOS-1 from TOS
+func doFsub(fr *frames.Frame, _ int64) int {
+	rhs := pop(fr).(float64)
+	lhs := pop(fr).(float64)
+	diff := lhs - rhs
 	push(fr, diff)
 	return 1
 }
