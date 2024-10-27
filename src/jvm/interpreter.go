@@ -195,7 +195,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // FCMPG           0x96
 	notImplemented,  // DCMPL           0x97
 	notImplemented,  // DCMPG           0x98
-	notImplemented,  // IFEQ            0x99
+	doIfeq,          // IFEQ            0x99
 	notImplemented,  // IFNE            0x9A
 	notImplemented,  // IFLT            0x9B
 	notImplemented,  // IFGE            0x9C
@@ -674,13 +674,15 @@ func doIinc(fr *frames.Frame, _ int64) int {
 	return PCtoSkip + 1
 }
 
-func doL2f(fr *frames.Frame, _ int64) int { // 0x89, 8A L2F, L2D long to float/double
+// 0x89, 8A L2F, L2D long to float/double
+func doL2f(fr *frames.Frame, _ int64) int {
 	longVal := pop(fr).(int64)
 	push(fr, float64(longVal))
 	return 1
 }
 
-func doLcmp(fr *frames.Frame, _ int64) int { // 0x94 LCMP (compare two longs, push int -1, 0, or 1, depending on result)
+// 0x94 LCMP (compare two longs, push int -1, 0, or 1, depending on result)
+func doLcmp(fr *frames.Frame, _ int64) int {
 	value2 := pop(fr).(int64)
 	value1 := pop(fr).(int64)
 	if value1 == value2 {
@@ -693,7 +695,8 @@ func doLcmp(fr *frames.Frame, _ int64) int { // 0x94 LCMP (compare two longs, pu
 	return 1
 }
 
-func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints for <
+// 0xA1 IF_ICMPLT Compare ints for <
+func doIficmplt(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -706,7 +709,8 @@ func doIficmplt(fr *frames.Frame, _ int64) int { // 0xA1 IF_ICMPLT Compare ints 
 	}
 }
 
-func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints for >=
+// 0xA2 IF_ICMPGE Compare ints for >=
+func doIfIcmpge(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -719,12 +723,14 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int { // 0xA2 IF_ICMPGE Compare ints 
 	}
 }
 
-func doGoto(fr *frames.Frame, _ int64) int { // 0xA7 GOTO unconditional jump within method
+// 0xA7 GOTO unconditional jump within method
+func doGoto(fr *frames.Frame, _ int64) int {
 	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
 }
 
-func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 from method call
+// 0xAC IRETURN return an int64 from method call
+func doIreturn(fr *frames.Frame, _ int64) int {
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
 	push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
@@ -732,12 +738,14 @@ func doIreturn(fr *frames.Frame, _ int64) int { // 0xAC IRETURN return an int64 
 	return 0
 }
 
-func doReturn(fr *frames.Frame, _ int64) int { // 0xB1 RETURN return from void methodjav
+// 0xB1 RETURN return from void methodjav
+func doReturn(fr *frames.Frame, _ int64) int {
 	fr.FrameStack.Remove(fr.FrameStack.Front())
 	return 0
 }
 
-func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
+// 0xB2 GETSTATIC
+func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
@@ -818,7 +826,8 @@ func doGetStatic(fr *frames.Frame, _ int64) int { // 0xB2 GETSTATIC
 	return 3 // 2 for the CP slot + 1 for the next bytecode
 }
 
-func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
+// 0xB6 INVOKEVIRTUAL
+func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// fr.PC += 2
@@ -917,7 +926,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int { // 0xB6 INVOKEVIRTUAL
 	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
-func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
+// OxB7 INVOKESPECIAL
+func doInvokeSpecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
@@ -1004,7 +1014,8 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int { // OxB7 INVOKESPECIAL
 	return exceptions.ERROR_OCCURRED // in theory, unreachable
 }
 
-func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
+// 0xB8 INVOKESTATIC
+func doInvokestatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
@@ -1093,7 +1104,8 @@ func doInvokestatic(fr *frames.Frame, _ int64) int { // 0xB8 INVOKESTATIC
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
 }
 
-func doAnewarray(fr *frames.Frame, _ int64) int { // 0xBD ANEWARRAY create an array of pointers
+// 0xBD ANEWARRAY create an array of pointers
+func doAnewarray(fr *frames.Frame, _ int64) int {
 	size := pop(fr).(int64)
 	if size < 0 {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -1129,7 +1141,8 @@ func doAnewarray(fr *frames.Frame, _ int64) int { // 0xBD ANEWARRAY create an ar
 	return 3 // 2 for RefTypeSlot + 1 for next bytecode
 }
 
-func doWide(fr *frames.Frame, _ int64) int { // 0xC4 use wide versions of bytecode arguments
+// 0xC4 use wide versions of bytecode arguments
+func doWide(fr *frames.Frame, _ int64) int {
 	fr.WideInEffect = true
 	return 1
 }
