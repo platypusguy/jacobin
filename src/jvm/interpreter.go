@@ -154,8 +154,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIdiv,          // LDIV            0x6D
 	doFdiv,          // FDIV            0x6E
 	doFdiv,          // DDIV            0x6F
-	notImplemented,  // IREM            0x70
-	notImplemented,  // LREM            0x71
+	doIrem,          // IREM            0x70
+	doIrem,          // LREM            0x71
 	doFrem,          // FREM            0x72
 	doFrem,          // DREM            0x73
 	notImplemented,  // INEG            0x74
@@ -605,6 +605,29 @@ func doFdiv(fr *frames.Frame, _ int64) int {
 		}
 	} else {
 		push(fr, val2/val1)
+	}
+	return 1
+}
+
+// 0x70, 0x71 IREM, LREM get remainder of integer division
+func doIrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	if val2 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IREM or LREM: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	} else {
+		res := val1 % val2
+		push(fr, res)
 	}
 	return 1
 }
