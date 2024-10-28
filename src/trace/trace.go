@@ -40,6 +40,7 @@ func Trace(argMsg string) {
 
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
+	// check duration accuracy: time.Sleep(100 * time.Millisecond)
 	duration := time.Since(StartTime)
 	var millis = duration.Milliseconds()
 

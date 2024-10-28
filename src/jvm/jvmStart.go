@@ -29,6 +29,8 @@ var globPtr *globals.Globals
 // instead an int is returned (because calling exit() during testing exits the testing run as well).
 func JVMrun() int {
 
+	trace.Init()
+
 	// capture any panics and print diagnostic data
 	defer func() int {
 		if r := recover(); r != nil {
