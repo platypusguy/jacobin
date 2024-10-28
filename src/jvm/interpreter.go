@@ -135,10 +135,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doDup,           // DUP             0x59
 	doDupx1,         // DUP_X1          0x5A
 	doDupx2,         // DUP_X2          0x5B
-	notImplemented,  // DUP2            0x5C
+	doDup2,          // DUP2            0x5C
 	notImplemented,  // DUP2_X1         0x5D
 	notImplemented,  // DUP2_X2         0x5E
-	notImplemented,  // SWAP            0x5F
+	doSwap,          // SWAP            0x5F
 	doIadd,          // IADD            0x60
 	doIadd,          // LADD            0x61
 	doFadd,          // FADD            0x62
@@ -610,6 +610,25 @@ func doDupx2(fr *frames.Frame, _ int64) int {
 	push(fr, third)
 	push(fr, next)
 	push(fr, top)
+	return 1
+}
+
+// 0x5C	DUP2 Duplicate the top two stack values
+func doDup2(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := peek(fr)
+	push(fr, top)
+	push(fr, next)
+	push(fr, top)
+	return 1
+}
+
+// 0x5F SWAP swap top two items on stack
+func doSwap(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := pop(fr)
+	push(fr, top)
+	push(fr, next)
 	return 1
 }
 
