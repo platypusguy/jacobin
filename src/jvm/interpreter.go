@@ -24,7 +24,6 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
@@ -991,8 +990,10 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		} else {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
-			_ = log.Log(errMsg, log.SEVERE)
-			exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
+			status := exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
 		}
 	}
 
@@ -1002,7 +1003,10 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 			"\n", fieldName, className)
-		exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
 	}
 
 	switch prevLoaded.Value.(type) {
