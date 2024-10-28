@@ -41,16 +41,9 @@ var MainThread thread.ExecThread
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
-func StartExec(className string, mainThread *thread.ExecThread, globals *globals.Globals) error {
+func StartExec(className string, mainThread *thread.ExecThread, globalStruct *globals.Globals) error {
 
 	MainThread = *mainThread
-	// set tracing, if any
-	tracing := false
-	traceKw, exists := globals.Options["-trace"]
-	if exists {
-		tracing = traceKw.Set
-	}
-	MainThread.Trace = tracing
 
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
@@ -73,7 +66,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	// Create an array of string objects in locals[0].
 	var objArray []*object.Object
-	for _, str := range globals.AppArgs {
+	for _, str := range globalStruct.AppArgs {
 		// sobj := object.NewStringFromGoString(str) // deprecated by JACOBIN-480
 		sobj := object.StringObjectFromGoString(str)
 		objArray = append(objArray, sobj)
@@ -83,8 +76,6 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// create the first thread and place its first frame on it
 	MainThread.Stack = frames.CreateFrameStack()
 	mainThread.Stack = MainThread.Stack
-	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
-	MainThread.Trace = tracing
 
 	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
 	if frames.PushFrame(MainThread.Stack, f) != nil {
@@ -99,7 +90,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 		return errors.New("Error instantiating: " + className + ".main()")
 	}
 
-	if MainThread.Trace {
+	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
 		trace.Trace(traceInfo)
@@ -110,7 +101,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 		return err
 	}
 
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		statics.DumpStatics()
 		_ = config.DumpConfig(os.Stderr)
 	}
@@ -181,7 +172,7 @@ frameInterpreter:
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
-		if MainThread.Trace {
+		if globals.TraceInst {
 			traceInfo := emitTraceData(f)
 			trace.Trace(traceInfo)
 		}
@@ -1714,7 +1705,7 @@ frameInterpreter:
 			fieldNameIndex := nAndT.NameIndex
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
-			if MainThread.Trace {
+			if globals.TraceVerbose {
 				emitTraceFieldID("GETSTATIC", fieldName)
 			}
 
@@ -1801,7 +1792,7 @@ frameInterpreter:
 			fieldNameIndex := nAndT.NameIndex
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
-			if MainThread.Trace {
+			if globals.TraceVerbose {
 				emitTraceFieldID("PUTSTATIC", fieldName)
 			}
 
@@ -1934,7 +1925,7 @@ frameInterpreter:
 			nameCPIndex := nameAndType.NameIndex
 			nameCPentry := CP.CpIndex[nameCPIndex]
 			fieldName := CP.Utf8Refs[nameCPentry.Slot]
-			if MainThread.Trace {
+			if globals.TraceVerbose {
 				emitTraceFieldID("GETFIELD", fieldName)
 			}
 
@@ -2053,7 +2044,7 @@ frameInterpreter:
 				nameCPIndex := nameAndType.NameIndex
 				nameCPentry := CP.CpIndex[nameCPIndex]
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
-				if MainThread.Trace {
+				if globals.TraceVerbose {
 					emitTraceFieldID("PUTFIELD", fieldName)
 				}
 
@@ -2132,7 +2123,11 @@ frameInterpreter:
 				popped := pop(f)
 				params = append(params, popped)
 
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, globals.TraceVerbose)
 				// if err != nil {
 				if ret != nil {
 					switch ret.(type) {
@@ -2224,7 +2219,11 @@ frameInterpreter:
 				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2316,7 +2315,11 @@ frameInterpreter:
 				}
 
 				f.PC += 2 // advance PC for the first two bytes of this bytecode
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, false, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, false, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2479,7 +2482,11 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2876,7 +2883,7 @@ frameInterpreter:
 
 				// we now know we point to a valid class, array, or interface. We handle classes and arrays here.
 				className = *(classNamePtr.StringVal)
-				if MainThread.Trace {
+				if globals.TraceVerbose {
 					var traceInfo string
 					if strings.HasPrefix(className, "[") {
 						traceInfo = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
@@ -3003,7 +3010,7 @@ frameInterpreter:
 							return errors.New(errMsg)
 						} else {
 							className = *(classNamePtr.StringVal)
-							if MainThread.Trace {
+							if globals.TraceVerbose {
 								traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
 								trace.Trace(traceInfo)
 							}
@@ -3218,8 +3225,8 @@ func createAndInitNewFrame(
 	includeObjectRef bool,
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
+	if globals.TraceInst {
+		traceInfo := fmt.Sprintf("createAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
 			className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
 		trace.Trace(traceInfo)
 	}
@@ -3352,7 +3359,7 @@ func createAndInitNewFrame(
 		lenLocals++                                 // There is 1 more local needed
 	}
 
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
 			lenArgList, lenLocals, stackSize)
 		trace.Trace(traceInfo)

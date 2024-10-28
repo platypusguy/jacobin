@@ -273,7 +273,7 @@ func pop(f *frames.Frame) interface{} {
 
 	// we show trace info of the TOS *before* we change its value--
 	// all traces show TOS before the instruction is executed.
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		var traceInfo string
 		if f.TOS == -1 {
 			traceInfo = fmt.Sprintf("%74s", "POP           TOS:  -")
@@ -310,7 +310,7 @@ func pop(f *frames.Frame) interface{} {
 	}
 
 	f.TOS -= 1 // adjust TOS
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		LogTraceStack(f)
 	} // trace the resultant stack
 	return value
@@ -327,7 +327,7 @@ func peek(f *frames.Frame) interface{} {
 		}
 	}
 
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		var traceInfo string
 		value := f.OpStack[f.TOS]
 		switch value.(type) {
@@ -339,10 +339,9 @@ func peek(f *frames.Frame) interface{} {
 				"PEEK          TOS:%3d %T %v", f.TOS, value, value)
 			trace.Trace(traceInfo)
 		}
-	}
-	if MainThread.Trace {
+		// Trace the stack
 		LogTraceStack(f)
-	} // trace the stack
+	}
 	return f.OpStack[f.TOS]
 }
 
@@ -359,7 +358,7 @@ func push(f *frames.Frame, x interface{}) {
 
 	// we show trace info of the TOS *before* we change its value--
 	// all traces show TOS before the instruction is executed.
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		var traceInfo string
 
 		if f.TOS == -1 {
@@ -405,7 +404,7 @@ func push(f *frames.Frame, x interface{}) {
 	// the actual push
 	f.TOS += 1
 	f.OpStack[f.TOS] = x
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		LogTraceStack(f)
 	} // trace the resultant stack
 }
