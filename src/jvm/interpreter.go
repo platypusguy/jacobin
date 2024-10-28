@@ -100,7 +100,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore,        // LSTORE          0x37
 	doFstore,        // FSTORE          0x38
 	doFstore,        // DSTORE          0x39
-	notImplemented,  // ASTORE          0x3A
+	doAstore,        // ASTORE          0x3A
 	doIstore0,       // ISTORE_0        0x3B
 	doIstore1,       // ISTORE_1        0x3C
 	doIstore2,       // ISTORE_2        0x3D
@@ -381,7 +381,22 @@ func doIload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doIload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doIload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
 
-func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
+// 0x22 - 0x29 FLOAD_x and DLOAD_x push float from locals[x]
+// These are the same as the ILOAD_x functions. However, at some point,
+// we might want to verify or handle floats differently from ints.
+func doFload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
+func doFload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
+func doFload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
+func doFload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
+
+// 0x2A - 0x2D ALOAD_x push reference value from locals[x]
+func doAload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
+func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
+func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
+func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
+
+// 0x36, 0x37 ISTORE/LSTORE store TOS int into a local
+func doIstore(fr *frames.Frame, _ int64) int {
 	var index int
 	var PCadvance int    // how much to advance fr.PC, the program counter
 	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
@@ -398,20 +413,6 @@ func doIstore(fr *frames.Frame, _ int64) int { // 0x36, 0x37 ISTORE/LSTORE
 	return PCadvance + 1
 }
 
-// 0x22 - 0x29 FLOAD_x and DLOAD_x push float from locals[x]
-// These are the same as the ILOAD_x functions. However, at some point,
-// we might want to verify or handle floats differently from ints.
-func doFload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
-func doFload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
-func doFload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
-func doFload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
-
-// 0x2A - 0x2D ALOAD_x push reference value from locals[x]
-func doAload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
-func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
-func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
-func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
-
 // 0x38, 0x39 FSTORE and DSTORE Store popped TOS into specified local
 func doFstore(fr *frames.Frame, _ int64) int {
 	var index int
@@ -425,6 +426,24 @@ func doFstore(fr *frames.Frame, _ int64) int {
 		PCadvance = 1
 	}
 	fr.Locals[index] = pop(fr).(float64)
+	return PCadvance + 1
+}
+
+// 0x3A ASTORE store popped TOS ref into localc[index]
+func doAstore(fr *frames.Frame, _ int64) int {
+	var index int
+	var PCadvance int    // how much to advance fr.PC, the program counter
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+		PCadvance = 2
+		fr.WideInEffect = false
+	} else {
+		index = int(fr.Meth[fr.PC+1])
+		PCadvance = 1
+	}
+
+	popped := pop(fr)
+	fr.Locals[index] = popped
 	return PCadvance + 1
 }
 
