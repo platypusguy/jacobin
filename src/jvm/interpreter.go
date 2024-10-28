@@ -261,9 +261,9 @@ func interpret(fs *list.List) {
 	}
 
 	for fr.PC < len(fr.Meth) {
-		if MainThread.Trace {
+		if globals.TraceInst {
 			traceInfo := emitTraceData(fr)
-			_ = log.Log(traceInfo, log.TRACE_INST)
+			trace.Trace(traceInfo)
 		}
 
 		opcode := fr.Meth[fr.PC]
@@ -271,7 +271,7 @@ func interpret(fs *list.List) {
 		switch ret {
 		case 0:
 			// exiting will either end program or call this function
-			// again for the frame on the top of the frame stack
+			// again for the frame at the top of the frame stack
 			return
 		case exceptions.ERROR_OCCURRED: // occurs only in tests
 			break

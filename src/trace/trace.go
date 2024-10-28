@@ -51,7 +51,6 @@ func Trace(argMsg string) {
 		errMsg := fmt.Sprintf("Trace: *** stderr failed, err: %v", err)
 		abruptEnd(excNames.IOError, errMsg)
 	}
-
 }
 
 // An error message is a prefix-decorated message that has no time-stamp.
