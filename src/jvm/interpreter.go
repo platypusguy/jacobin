@@ -133,8 +133,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doPop,           // POP             0x57
 	doPop2,          // POP2            0x58
 	doDup,           // DUP             0x59
-	notImplemented,  // DUP_X1          0x5A
-	notImplemented,  // DUP_X2          0x5B
+	doDupx1,         // DUP_X1          0x5A
+	doDupx2,         // DUP_X2          0x5B
 	notImplemented,  // DUP2            0x5C
 	notImplemented,  // DUP2_X1         0x5D
 	notImplemented,  // DUP2_X2         0x5E
@@ -588,6 +588,28 @@ func doPop2(fr *frames.Frame, _ int64) int {
 func doDup(fr *frames.Frame, _ int64) int {
 	tosItem := peek(fr)
 	push(fr, tosItem)
+	return 1
+}
+
+// 0x5A	DUP_X1	Duplicate the top stack value and insert two slots down
+func doDupx1(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := pop(fr)
+	push(fr, top)
+	push(fr, next)
+	push(fr, top)
+	return 1
+}
+
+// 0x5B	DUP_X2	Duplicate the top stack value and insert three slots down
+func doDupx2(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := pop(fr)
+	third := pop(fr)
+	push(fr, top)
+	push(fr, third)
+	push(fr, next)
+	push(fr, top)
 	return 1
 }
 
