@@ -89,14 +89,14 @@ var DispatchTable = [203]BytecodeFunc{
 	doAload1,        // ALOAD_1         0x2B
 	doAload2,        // ALOAD_2         0x2C
 	doAload3,        // ALOAD_3         0x2D
-	notImplemented,  // IALOAD          0x2E
-	notImplemented,  // LALOAD          0x2F
+	doIaload,        // IALOAD          0x2E
+	doIaload,        // LALOAD          0x2F
 	notImplemented,  // FALOAD          0x30
 	notImplemented,  // DALOAD          0x31
 	notImplemented,  // AALOAD          0x32
 	notImplemented,  // BALOAD          0x33
-	notImplemented,  // CALOAD          0x34
-	notImplemented,  // SALOAD          0x35
+	doIaload,        // CALOAD          0x34
+	doIaload,        // SALOAD          0x35
 	doIstore,        // ISTORE          0x36
 	doIstore,        // LSTORE          0x37
 	doFstore,        // FSTORE          0x38
@@ -395,6 +395,52 @@ func doAload0(fr *frames.Frame, _ int64) int { return load(fr, int64(0)) }
 func doAload1(fr *frames.Frame, _ int64) int { return load(fr, int64(1)) }
 func doAload2(fr *frames.Frame, _ int64) int { return load(fr, int64(2)) }
 func doAload3(fr *frames.Frame, _ int64) int { return load(fr, int64(3)) }
+
+// 0x2E, 0x2F IALOAD, LALOAD push contents of an int/long array element
+// 0x34, 0x35 CALOAD, SALOAD push contents of a char/short array element
+func doIaload(fr *frames.Frame, _ int64) int {
+	var array []int64
+	index := pop(fr).(int64)
+	ref := pop(fr)
+	switch ref.(type) {
+	case *object.Object:
+		obj := ref.(*object.Object)
+		if object.IsNull(obj) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		array = obj.FieldTable["value"].Fvalue.([]int64)
+	case []int64:
+		array = ref.([]int64)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	if index >= int64(len(array)) {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid array subscript",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var value = array[index]
+	push(fr, value)
+	return 1
+}
 
 // 0x36, 0x37 ISTORE/LSTORE store TOS int into a local
 func doIstore(fr *frames.Frame, _ int64) int {
