@@ -28,6 +28,7 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
@@ -215,13 +216,13 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // TABLESWITCH     0xAA
 	notImplemented,  // LOOKUPSWITCH    0xAB
 	doIreturn,       // IRETURN         0xAC
-	notImplemented,  // LRETURN         0xAD
-	notImplemented,  // FRETURN         0xAE
-	notImplemented,  // DRETURN         0xAF
-	notImplemented,  // ARETURN         0xB0
+	doIreturn,       // LRETURN         0xAD
+	doIreturn,       // FRETURN         0xAE
+	doIreturn,       // DRETURN         0xAF
+	doIreturn,       // ARETURN         0xB0
 	doReturn,        // RETURN          0xB1
 	doGetStatic,     // GETSTATIC       0xB2
-	notImplemented,  // PUTSTATIC       0xB3
+	doPutStatic,     // PUTSTATIC       0xB3
 	notImplemented,  // GETFIELD        0xB4
 	notImplemented,  // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
@@ -841,16 +842,17 @@ func doGoto(fr *frames.Frame, _ int64) int {
 	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
 }
 
-// 0xAC IRETURN return an int64 from method call
+// 0xAC - 0xB0 IRETURN, LRETURN, DRETURN, FRETURN, ARETURN
+// return a value from method call
 func doIreturn(fr *frames.Frame, _ int64) int {
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
-	push(f, valToReturn) // TODO: check what happens when main() ends on IRETURN
+	push(f, valToReturn)
 	fr.FrameStack.Remove(fr.FrameStack.Front())
 	return 0
 }
 
-// 0xB1 RETURN return from void methodjav
+// 0xB1 RETURN return from void method
 func doReturn(fr *frames.Frame, _ int64) int {
 	fr.FrameStack.Remove(fr.FrameStack.Front())
 	return 0
@@ -936,6 +938,144 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		push(fr, prevLoaded.Value)
 	}
 	return 3 // 2 for the CP slot + 1 for the next bytecode
+}
+
+// 0xB3 PUTSTATIC
+func doPutStatic(fr *frames.Frame, _ int64) int {
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
+			"location %d in method %s of class %s\n",
+			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
+		trace.ErrorMsg(errMsg)
+		return exceptions.ERROR_OCCURRED
+	}
+
+	// get the field entry
+	field := CP.FieldRefs[CPentry.Slot]
+
+	// get the class entry from the field entry for this field. It's the class name.
+	classRef := field.ClassIndex
+	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+	classNamePtr := stringPool.GetStringPointer(classNameIndex)
+	className := *classNamePtr
+
+	// process the name and type entry for this field
+	nAndTindex := field.NameAndType
+	nAndTentry := CP.CpIndex[nAndTindex]
+	nAndTslot := nAndTentry.Slot
+	nAndT := CP.NameAndTypes[nAndTslot]
+	fieldNameIndex := nAndT.NameIndex
+	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	fieldName = className + "." + fieldName
+	if MainThread.Trace {
+		emitTraceFieldID("PUTSTATIC", fieldName)
+	}
+
+	// was this static field previously loaded? Is so, get its location and move on.
+	prevLoaded, ok := statics.Statics[fieldName]
+	if !ok { // if field is not already loaded, then
+		// the class has not been instantiated, so
+		// instantiate the class
+		_, err := InstantiateClass(className, fr.FrameStack)
+		if err == nil {
+			prevLoaded, ok = statics.Statics[fieldName]
+		} else {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
+			trace.ErrorMsg(errMsg)
+			return exceptions.ERROR_OCCURRED
+		}
+	}
+
+	// if the field can't be found even after instantiating the
+	// containing class, something is wrong so get out of here.
+	if !ok {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
+		trace.ErrorMsg(errMsg)
+		return exceptions.ERROR_OCCURRED
+	}
+
+	var value interface{}
+	switch prevLoaded.Type {
+	case types.Bool:
+		// a boolean, which might
+		// be stored as a boolean, a byte (in an array), or int64
+		// We want all forms normalized to int64
+		value = pop(fr).(int64) & 0x01
+		statics.Statics[fieldName] = statics.Static{
+			Type:  prevLoaded.Type,
+			Value: value,
+		}
+	case types.Char, types.Short, types.Int, types.Long:
+		value = pop(fr).(int64)
+		statics.Statics[fieldName] = statics.Static{
+			Type:  prevLoaded.Type,
+			Value: value,
+		}
+	case types.Byte:
+		var val byte
+		v := pop(fr)
+		switch v.(type) { // could be passed a byte or an integral type for a value
+		case int64:
+			newVal := v.(int64)
+			val = byte(newVal)
+		case byte:
+			val = v.(byte)
+		}
+		statics.Statics[fieldName] = statics.Static{
+			Type:  prevLoaded.Type,
+			Value: val,
+		}
+	case types.Float, types.Double:
+		value = pop(fr).(float64)
+		statics.Statics[fieldName] = statics.Static{
+			Type:  prevLoaded.Type,
+			Value: value,
+		}
+
+	default:
+		// if it's not a primitive or a pointer to a class,
+		// then it should be a pointer to an object or to
+		// a loaded class
+		value = pop(fr)
+		if value == nil {
+			value = object.Null
+		}
+		switch value.(type) {
+		case *object.Object:
+			statics.Statics[fieldName] = statics.Static{
+				Type:  prevLoaded.Type,
+				Value: value,
+			}
+		case *classloader.Klass:
+			// convert to an *object.Object
+			kPtr := value.(*classloader.Klass)
+			obj := object.MakeEmptyObject()
+			obj.KlassName = stringPool.GetStringIndex(&kPtr.Data.Name)
+			objField := object.Field{
+				Ftype:  "L" + kPtr.Data.Name + ";",
+				Fvalue: kPtr,
+			}
+
+			obj.FieldTable[fieldName] = objField
+
+			statics.Statics[fieldName] = statics.Static{
+				Type:  objField.Ftype,
+				Value: value,
+			}
+		default:
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
+			trace.ErrorMsg(errMsg)
+			return exceptions.ERROR_OCCURRED
+		}
+	}
+	return 3 // 2 for the CP slot + 1 for next bytecode
 }
 
 // 0xB6 INVOKEVIRTUAL
