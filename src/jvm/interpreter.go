@@ -229,7 +229,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doInvokestatic,  // INVOKESTATIC    0xB8
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
-	notImplemented,  // NEW             0xBB
+	doNew,           // NEW             0xBB
 	notImplemented,  // NEWARRAY        0xBC
 	doAnewarray,     // ANEWARRAY       0xBD
 	notImplemented,  // ARRAYLENGTH     0xBE
@@ -1770,6 +1770,40 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+}
+
+// 0xBB NEW create a new object
+func doNew(fr *frames.Frame, _ int64) int {
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != classloader.ClassRef && CPentry.Type != classloader.Interface {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("NEW: Invalid type for new object")
+		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// the classref points to a UTF8 record with the name of the class to instantiate
+	var className string
+	if CPentry.Type == classloader.ClassRef {
+		nameStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+		className = *stringPool.GetStringPointer(nameStringPoolIndex)
+	}
+
+	ref, err := InstantiateClass(className, fr.FrameStack)
+	if err != nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("NEW: could not load class %s", className)
+		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	push(fr, ref.(*object.Object))
+	return 3 // 2 for CPslot + 1 for next bytecode
 }
 
 // 0xBD ANEWARRAY create an array of pointers
