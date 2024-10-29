@@ -1299,7 +1299,7 @@ frameInterpreter:
 			pop(f)
 			float32Val := float32(longVal) //
 			float64Val := float64(float32Val)
-			push(f, float64Val) // floats tke up only 1 slot in the JVM
+			push(f, float64Val) // floats take up only 1 slot in the JVM
 		case opcodes.L2D: // 	0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
