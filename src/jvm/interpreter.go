@@ -135,8 +135,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doDupx1,         // DUP_X1          0x5A
 	doDupx2,         // DUP_X2          0x5B
 	doDup2,          // DUP2            0x5C
-	notImplemented,  // DUP2_X1         0x5D
-	notImplemented,  // DUP2_X2         0x5E
+	doDup2x1,        // DUP2_X1         0x5D
+	doDup2x2,        // DUP2_X2         0x5E
 	doSwap,          // SWAP            0x5F
 	doIadd,          // IADD            0x60
 	doIadd,          // LADD            0x61
@@ -617,6 +617,34 @@ func doDup2(fr *frames.Frame, _ int64) int {
 	top := pop(fr)
 	next := peek(fr)
 	push(fr, top)
+	push(fr, next)
+	push(fr, top)
+	return 1
+}
+
+// 0x5D	DUP2_X1	 Duplicate the top two values, three slots down
+func doDup2x1(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := pop(fr)
+	third := pop(fr)
+	push(fr, next) // so: top-next-third -> top-next-third->top->next
+	push(fr, top)
+	push(fr, third)
+	push(fr, next)
+	push(fr, top)
+	return 1
+}
+
+// 0x5E	DUP2_X2	Duplicate the top two values, four slots down
+func doDup2x2(fr *frames.Frame, _ int64) int {
+	top := pop(fr)
+	next := pop(fr)
+	third := pop(fr)
+	fourth := pop(fr)
+	push(fr, next) // so: top-next-third-fourth -> top-next-third-fourth-top-next
+	push(fr, top)
+	push(fr, fourth)
+	push(fr, third)
 	push(fr, next)
 	push(fr, top)
 	return 1
