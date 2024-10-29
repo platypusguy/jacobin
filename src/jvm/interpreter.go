@@ -42,7 +42,7 @@ import (
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
-	doNop,           // NOP             0x00
+	doNothing,       // NOP             0x00
 	doAconstNull,    // ACONST_NULL     0x01
 	doIconstM1,      // ICONST_M1       0x02
 	doIconst0,       // ICONST_0        0x03
@@ -175,10 +175,10 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // IXOR            0x82
 	notImplemented,  // LXOR            0x83
 	doIinc,          // IINC            0x84
-	notImplemented,  // I2L             0x85
+	doNothing,       // I2L             0x85
 	notImplemented,  // I2F             0x86
 	notImplemented,  // I2D             0x87
-	notImplemented,  // L2I             0x88
+	doNothing,       // L2I             0x88
 	doL2f,           // L2F             0x89
 	doL2f,           // L2D             0x8A
 	notImplemented,  // F2I             0x8B
@@ -281,7 +281,7 @@ func interpret(fs *list.List) {
 }
 
 // the functions, listed here in numerical order of the bytecode
-func doNop(_ *frames.Frame, _ int64) int { return 1 } // 0x00
+func doNothing(_ *frames.Frame, _ int64) int { return 1 } // 0x00
 
 func doAconstNull(fr *frames.Frame, _ int64) int { // 0x01 ACONST_NULL push null onto stack
 	push(fr, object.Null)
