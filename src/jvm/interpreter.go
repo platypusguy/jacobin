@@ -123,8 +123,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore3,       // ASTORE_3        0x4E
 	doIastore,       // IASTORE         0x4F
 	doIastore,       // LASTORE         0x50
-	notImplemented,  // FASTORE         0x51
-	notImplemented,  // DASTORE         0x52
+	doFastore,       // FASTORE         0x51
+	doFastore,       // DASTORE         0x52
 	doAastore,       // AASTORE         0x53
 	notImplemented,  // BASTORE         0x54
 	doIastore,       // CASTORE         0x55
@@ -691,6 +691,62 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
+	array[index] = value
+	return 1
+}
+
+// 0x51, 0x52 FASTORE, DASTORE store a float, double in a float/doubles array
+func doFastore(fr *frames.Frame, _ int64) int {
+	var array []float64
+	value := pop(fr).(float64)
+	index := pop(fr).(int64)
+	ref := pop(fr)
+	switch ref.(type) {
+	case *object.Object:
+		obj := ref.(*object.Object)
+		if object.IsNull(obj) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, F/DASTORE: Invalid (null) reference to an array",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.FloatArray {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: field type expected=[F, observed=%s",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
+			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		array = fld.Fvalue.([]float64)
+	case []float64:
+		array = ref.([]float64)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: unexpected reference type: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
+		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	size := int64(len(array))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
 	array[index] = value
 	return 1
 }
