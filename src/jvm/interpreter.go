@@ -25,6 +25,7 @@ import (
 	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/opcodes"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/trace"
@@ -201,8 +202,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIfge,          // IFGE            0x9C
 	doIfgt,          // IFGT            0x9D
 	doIfle,          // IFLE            0x9E
-	notImplemented,  // IF_ICMPEQ       0x9F
-	notImplemented,  // IF_ICMPNE       0xA0
+	doIficmpeq,      // IF_ICMPEQ       0x9F
+	doIficmpne,      // IF_ICMPNE       0xA0
 	doIficmplt,      // IF_ICMPLT       0xA1
 	doIfIcmpge,      // IF_ICMPGE       0xA2
 	notImplemented,  // IF_ICMPGT       0xA3
@@ -1205,7 +1206,7 @@ func doIfgt(fr *frames.Frame, _ int64) int {
 	}
 }
 
-// 0x9A IFLE pop int, if it's <!>= 0, go to the jump location
+// 0x9E IFLE pop int, if it's <!>= 0, go to the jump location
 func doIfle(fr *frames.Frame, _ int64) int {
 	// bools are treated in the JVM as ints, so convert here if bool;
 	// otherwise, values should be int64's
@@ -1216,6 +1217,34 @@ func doIfle(fr *frames.Frame, _ int64) int {
 		return int(jumpTo)
 	} else {
 		return 3
+	}
+}
+
+// 0x9F IF_ICMPEQ  jump if two popped ints are equal
+func doIficmpeq(fr *frames.Frame, _ int64) int {
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if int32(val1) == int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
+	}
+}
+
+// 0xA0 IF_ICMPNE jump if two popped ints are not equal
+func doIficmpne(fr *frames.Frame, _ int64) int {
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if int32(val1) != int32(val2) { // if comp fails, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
 	}
 }
 
@@ -2136,8 +2165,12 @@ func doIfnonnull(fr *frames.Frame, _ int64) int {
 	}
 }
 
-func notImplemented(_ *frames.Frame, _ int64) int {
-	return 1
+func notImplemented(fr *frames.Frame, _ int64) int {
+	opcode := fr.Meth[fr.PC]
+	opcodeName := opcodes.BytecodeNames[opcode]
+	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
+	_ = exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+	return exceptions.ERROR_OCCURRED
 }
 
 // === helper methods--that is, functions called by dispatched methods (in alpha order) ===
