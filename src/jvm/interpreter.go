@@ -126,7 +126,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doFastore,       // FASTORE         0x51
 	doFastore,       // DASTORE         0x52
 	doAastore,       // AASTORE         0x53
-	notImplemented,  // BASTORE         0x54
+	doBastore,       // BASTORE         0x54
 	doIastore,       // CASTORE         0x55
 	doIastore,       // SASTORE         0x56
 	doPop,           // POP             0x57
@@ -793,6 +793,61 @@ func doAastore(fr *frames.Frame, _ int64) int {
 		}
 	}
 
+	rawArray[index] = value
+	return 1
+}
+
+// 0x54 BASTORE store a boolean or byte in byte array
+func doBastore(fr *frames.Frame, _ int64) int {
+	value := convertInterfaceToByte(pop(fr))
+	index := pop(fr).(int64)
+	var rawArray []byte
+	arrayRef := pop(fr)
+	switch arrayRef.(type) {
+	case *object.Object:
+		obj := arrayRef.(*object.Object)
+		if object.IsNull(obj) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, BASTORE: Invalid (null) reference to an array",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.ByteArray {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected=%s, observed=%s",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, types.ByteArray, fld.Ftype)
+			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		rawArray = fld.Fvalue.([]byte)
+	case []byte:
+		rawArray = arrayRef.([]byte)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BASTORE: unexpected reference type: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, arrayRef)
+		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	size := int64(len(rawArray))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BASTORE: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
 	rawArray[index] = value
 	return 1
 }
