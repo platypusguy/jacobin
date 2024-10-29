@@ -90,8 +90,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doAload3,        // ALOAD_3         0x2D
 	doIaload,        // IALOAD          0x2E
 	doIaload,        // LALOAD          0x2F
-	notImplemented,  // FALOAD          0x30
-	notImplemented,  // DALOAD          0x31
+	doFaload,        // FALOAD          0x30
+	doFaload,        // DALOAD          0x31
 	notImplemented,  // AALOAD          0x32
 	notImplemented,  // BALOAD          0x33
 	doIaload,        // CALOAD          0x34
@@ -429,6 +429,51 @@ func doIaload(fr *frames.Frame, _ int64) int {
 	if index >= int64(len(array)) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid array subscript",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var value = array[index]
+	push(fr, value)
+	return 1
+}
+
+// 0x30, 0x31 FALOAD, DALOAD push contents of a float/double array element
+func doFaload(fr *frames.Frame, _ int64) int {
+	var array []float64
+	index := pop(fr).(int64)
+	ref := pop(fr)
+	switch ref.(type) {
+	case []float64:
+		array = ref.([]float64)
+	case *object.Object:
+		obj := ref.(*object.Object)
+		if object.IsNull(obj) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid object pointer (nil)",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		array = (*obj).FieldTable["value"].Fvalue.([]float64)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid reference type of an array: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	if index >= int64(len(array)) {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid array subscript",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
