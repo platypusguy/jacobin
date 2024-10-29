@@ -222,7 +222,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doReturn,        // RETURN          0xB1
 	doGetStatic,     // GETSTATIC       0xB2
 	doPutStatic,     // PUTSTATIC       0xB3
-	notImplemented,  // GETFIELD        0xB4
+	doGetfield,      // GETFIELD        0xB4
 	notImplemented,  // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
 	doInvokeSpecial, // INVOKESPECIAL   0xB7
@@ -1492,6 +1492,78 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		}
 	}
 	return 3 // 2 for the CP slot + 1 for next bytecode
+}
+
+// 0xB4 GETFIELD get field in a pointed-to-object
+func doGetfield(fr *frames.Frame, _ int64) int {
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	fieldEntry := CP.CpIndex[CPslot]
+	if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
+			"location %d in method %s of class %s\n",
+			fieldEntry.Type, fr.PC, fr.MethName, fr.ClName)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// Get field name.
+	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+	nameAndTypeCPIndex := fullFieldEntry.NameAndType
+	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+	nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+	nameCPIndex := nameAndType.NameIndex
+	nameCPentry := CP.CpIndex[nameCPIndex]
+	fieldName := CP.Utf8Refs[nameCPentry.Slot]
+	if globals.TraceVerbose {
+		emitTraceFieldID("GETFIELD", fieldName)
+	}
+
+	// Get object reference from stack.
+	ref := pop(fr)
+	switch ref.(type) {
+	case *object.Object:
+		break
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// Extract field.
+	obj := *ref.(*object.Object)
+	var fieldType string
+	var fieldValue interface{}
+
+	objField, ok := obj.FieldTable[fieldName]
+	if !ok {
+		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable for %s.%s%s",
+			fr.PC, fieldName, fr.ClName, fr.MethName, fr.MethType)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	fieldType = objField.Ftype
+	if fieldType == types.StringIndex {
+		fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
+	} else if fieldType == types.StringClassRef {
+		// if the field type is String pointer and value is a byte array, convert it to a string
+		valueType, ok := objField.Fvalue.([]byte)
+		if ok {
+			fieldValue = object.StringObjectFromByteArray(valueType)
+		}
+	} else { // not an index to the string pool, nor a String pointer with a byte array
+		fieldValue = objField.Fvalue
+	}
+	push(fr, fieldValue)
+	return 3 // 2 for CPslot + 1 for next bytecode
 }
 
 // 0xB6 INVOKEVIRTUAL
