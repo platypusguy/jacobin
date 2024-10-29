@@ -121,14 +121,14 @@ var DispatchTable = [203]BytecodeFunc{
 	doIstore1,       // ASTORE_1        0x4C
 	doIstore2,       // ASTORE_2        0x4D
 	doIstore3,       // ASTORE_3        0x4E
-	notImplemented,  // IASTORE         0x4F
-	notImplemented,  // LASTORE         0x50
+	doIastore,       // IASTORE         0x4F
+	doIastore,       // LASTORE         0x50
 	notImplemented,  // FASTORE         0x51
 	notImplemented,  // DASTORE         0x52
 	doAastore,       // AASTORE         0x53
 	notImplemented,  // BASTORE         0x54
-	notImplemented,  // CASTORE         0x55
-	notImplemented,  // SASTORE         0x56
+	doIastore,       // CASTORE         0x55
+	doIastore,       // SASTORE         0x56
 	doPop,           // POP             0x57
 	doPop2,          // POP2            0x58
 	doDup,           // DUP             0x59
@@ -638,6 +638,62 @@ func doFstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
 func doFstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
 func doFstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
 func doFstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
+
+// 0x4F, 0x50 IASTORE, LASTORE store an int, long into an array
+// 0x55, 0x56 CASTORE, SASTORE store an char, short into an array
+func doIastore(fr *frames.Frame, _ int64) int {
+	var array []int64
+	value := pop(fr).(int64)
+	index := pop(fr).(int64)
+	ref := pop(fr)
+	switch ref.(type) {
+	case *object.Object:
+		obj := ref.(*object.Object)
+		if object.IsNull(obj) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: Invalid (null) reference to an array",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		fld := obj.FieldTable["value"]
+		if fld.Ftype != types.IntArray {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: field type expected=[I, observed=%s",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
+			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		array = fld.Fvalue.([]int64)
+	case []int64:
+		array = ref.([]int64)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: unexpected reference type: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
+		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	size := int64(len(array))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	array[index] = value
+	return 1
+}
 
 // 0x53 AASTORE store a ref in a ref array
 func doAastore(fr *frames.Frame, _ int64) int {
