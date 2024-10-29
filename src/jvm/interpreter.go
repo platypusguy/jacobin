@@ -230,7 +230,7 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
 	doNew,           // NEW             0xBB
-	notImplemented,  // NEWARRAY        0xBC
+	doNewarray,      // NEWARRAY        0xBC
 	doAnewarray,     // ANEWARRAY       0xBD
 	notImplemented,  // ARRAYLENGTH     0xBE
 	notImplemented,  // ATHROW          0xBF
@@ -1804,6 +1804,37 @@ func doNew(fr *frames.Frame, _ int64) int {
 	}
 	push(fr, ref.(*object.Object))
 	return 3 // 2 for CPslot + 1 for next bytecode
+}
+
+// 0xBC NEWARRAY create a new array of primitives
+func doNewarray(fr *frames.Frame, _ int64) int {
+	size := pop(fr).(int64)
+	if size < 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "NEWARRAY: Invalid size for array"
+		status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	arrayType := int(fr.Meth[fr.PC+1])
+
+	actualType := object.JdkArrayTypeToJacobinType(arrayType)
+	if actualType == object.ERROR || actualType == object.REF {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "NEWARRAY: Invalid array type specified"
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	arrayPtr := object.Make1DimArray(uint8(actualType), size)
+	g := globals.GetGlobalRef()
+	g.ArrayAddressList.PushFront(arrayPtr)
+	push(fr, arrayPtr)
+	return 2 // 1 for the array type + 1 for next byte
 }
 
 // 0xBD ANEWARRAY create an array of pointers
