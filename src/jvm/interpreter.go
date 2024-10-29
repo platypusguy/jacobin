@@ -232,7 +232,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doNew,           // NEW             0xBB
 	doNewarray,      // NEWARRAY        0xBC
 	doAnewarray,     // ANEWARRAY       0xBD
-	notImplemented,  // ARRAYLENGTH     0xBE
+	doArraylength,   // ARRAYLENGTH     0xBE
 	notImplemented,  // ATHROW          0xBF
 	notImplemented,  // CHECKCAST       0xC0
 	notImplemented,  // INSTANCEOF      0xC1
@@ -1872,6 +1872,64 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 	g.ArrayAddressList.PushFront(arrayPtr)
 	push(fr, arrayPtr)
 	return 3 // 2 for RefTypeSlot + 1 for next bytecode
+}
+
+// 0xBE ARRAYLENGTH get size of an array
+func doArraylength(fr *frames.Frame, _ int64) int {
+	ref := pop(fr) // pointer to the array
+	if ref == nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var size int64
+	switch ref.(type) {
+	// the type of array reference can vary. For many instances,
+	// it will be a pointer to an array object. In other cases,
+	// such as inside Java String class, the actual primitive
+	// array of bytes will be extracted as a field and passed
+	// to this function, so we need to accommodate all types--
+	// hence, the switch on type.
+	case []uint8:
+		array := ref.([]uint8)
+		size = int64(len(array))
+	case []float64:
+		array := ref.([]float64)
+		size = int64(len(array))
+	case []int64:
+		array := ref.([]int64)
+		size = int64(len(array))
+	case *[]uint8: // = go byte
+		array := *ref.(*[]uint8)
+		size = int64(len(array))
+	case []*object.Object:
+		array := ref.([]*object.Object)
+		size = int64(len(array))
+	case *object.Object:
+		r := ref.(*object.Object)
+		if object.IsNull(r) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+		size = object.ArrayLength(r)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	push(fr, size)
+	return 1
 }
 
 // 0xC4 WIDE use wide versions of bytecode arguments
