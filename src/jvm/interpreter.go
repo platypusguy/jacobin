@@ -223,7 +223,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doGetStatic,     // GETSTATIC       0xB2
 	doPutStatic,     // PUTSTATIC       0xB3
 	doGetfield,      // GETFIELD        0xB4
-	notImplemented,  // PUTFIELD        0xB5
+	doPutfield,      // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
 	doInvokeSpecial, // INVOKESPECIAL   0xB7
 	doInvokestatic,  // INVOKESTATIC    0xB8
@@ -1563,6 +1563,109 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		fieldValue = objField.Fvalue
 	}
 	push(fr, fieldValue)
+	return 3 // 2 for CPslot + 1 for next bytecode
+}
+
+// 0xB5 PUTFIELD place value into an object's field
+func doPutfield(fr *frames.Frame, _ int64) int {
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	fr.PC += 2
+	CP := fr.CP.(*classloader.CPool)
+	fieldEntry := CP.CpIndex[CPslot]
+	if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
+			"location %d in method %s of class %s\n",
+			fieldEntry.Type, fr.PC, fr.MethName, fr.ClName)
+		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var ref interface{} // pointer to object we're updating
+	value := pop(fr)    // the value we're placing in the field
+	ref = pop(fr)       // on non-long, non-double values, this will be a
+	// reference to the object. On longs and doubles
+	// it will be the second pop of the value field,
+	// so we check for this.
+
+	switch ref.(type) {
+	case int64, float64: // if it is a float or double, then pop
+		// once more to get the pointer to object. If it's an int64,
+		// we know it's a long (likewise a float64 shows a double)
+		// because that's the only reason a second pop would find
+		// identical value types pushed twice. So pop once more to
+		// get the object reference.
+		ref = pop(fr).(*object.Object)
+	case *object.Object:
+		// Handle the Object after this switch
+	default:
+		// *** unexpected type of ref ***
+		errMsg := fmt.Sprintf("PUTFIELD: Expected an object ref, but observed type %T in "+
+			"location %d in method %s of class %s, previously popped a value(type %T):\n%v\n",
+			ref, fr.PC, fr.MethName, fr.ClName, value, value)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// Get Object struct.
+	obj := *(ref.(*object.Object))
+
+	// if the value we're inserting is a reference to an
+	// array object, we have to modify it to point directly
+	// to the array of primitives, rather than to the array
+	// object
+	switch value.(type) {
+	case *object.Object:
+		if !object.IsNull(value.(*object.Object)) {
+			v := *(value.(*object.Object))
+			o, ok := v.FieldTable["value"]
+			if ok && strings.HasPrefix(o.Ftype, types.Array) {
+				value = v.FieldTable["value"].Fvalue
+			}
+		}
+	}
+
+	// otherwise look up the field name in the CP and find it in the FieldTable, then do the update
+	if len(obj.FieldTable) != 0 {
+		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
+		nameAndTypeCPIndex := fullFieldEntry.NameAndType
+		nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+		nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+		nameCPIndex := nameAndType.NameIndex
+		nameCPentry := CP.CpIndex[nameCPIndex]
+		fieldName := CP.Utf8Refs[nameCPentry.Slot]
+		if globals.TraceVerbose {
+			emitTraceFieldID("PUTFIELD", fieldName)
+		}
+
+		objField, ok := obj.FieldTable[fieldName]
+		if !ok {
+			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
+				fieldName, fr.ClName, fr.MethName)
+			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+
+		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
+		if strings.HasPrefix(objField.Ftype, types.Static) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
+				fr.ClName, fr.MethName)
+			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		}
+
+		objField.Fvalue = value
+		obj.FieldTable[fieldName] = objField
+	}
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
 
