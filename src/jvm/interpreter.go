@@ -92,8 +92,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIaload,        // LALOAD          0x2F
 	doFaload,        // FALOAD          0x30
 	doFaload,        // DALOAD          0x31
-	notImplemented,  // AALOAD          0x32
-	notImplemented,  // BALOAD          0x33
+	doAaload,        // AALOAD          0x32
+	doBaload,        // BALOAD          0x33
 	doIaload,        // CALOAD          0x34
 	doIaload,        // SALOAD          0x35
 	doIstore,        // ISTORE          0x36
@@ -483,6 +483,91 @@ func doFaload(fr *frames.Frame, _ int64) int {
 
 	var value = array[index]
 	push(fr, value)
+	return 1
+}
+
+// 0x32 AALOAD push contents of a reference array element
+func doAaload(fr *frames.Frame, _ int64) int {
+	index := pop(fr).(int64)
+	rAref := pop(fr) // the array object. Can't be cast to *Object b/c might be nil
+	if rAref == nil {
+		errMsg := fmt.Sprintf("in %s.%s, AALOAD: Invalid (null) reference to an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
+	array := fvalue.([]*object.Object)
+
+	size := int64(len(array))
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AALOAD: Invalid array subscript: %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var value = array[index]
+	push(fr, value)
+	return 1
+}
+
+// 0x33 BALOAD push contents of a byte/boolean array element
+func doBaload(fr *frames.Frame, _ int64) int {
+	index := pop(fr).(int64)
+	ref := pop(fr) // the array object
+	if ref == nil || ref == object.Null {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid (null) reference to an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var bAref *object.Object
+	var array []byte
+	switch ref.(type) {
+	case *object.Object:
+		bAref = ref.(*object.Object)
+		if object.IsNull(bAref) {
+			array = make([]byte, 0)
+		} else {
+			array = bAref.FieldTable["value"].Fvalue.([]byte)
+		}
+	case *[]uint8:
+		array = *(ref.(*[]uint8))
+	case []uint8:
+		array = ref.([]uint8)
+	default:
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid  type of object ref: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	size := int64(len(array))
+
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	var value = array[index]
+	push(fr, int64(value))
 	return 1
 }
 
