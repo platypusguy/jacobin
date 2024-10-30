@@ -1320,13 +1320,16 @@ frameInterpreter:
 			floatVal := pop(f).(float64)
 			push(f, floatVal)
 			push(f, floatVal)
-		case opcodes.D2I: // 0xBE
+		case opcodes.D2I: // 0x8E
+			doubleVal := pop(f).(float64)
 			pop(f)
-			fallthrough
+			push(f, int64(math.Trunc(doubleVal)))
 		case opcodes.D2L: // 	0x8F convert double to long
+			doubleVal := pop(f).(float64)
 			pop(f)
-			fallthrough
-
+			l := int64(math.Trunc(doubleVal))
+			push(f, l)
+			push(f, l)
 		case opcodes.D2F: // 	0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
