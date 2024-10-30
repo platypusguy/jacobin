@@ -1208,7 +1208,7 @@ frameInterpreter:
 				push(f, val1>>(shiftBy&0x1F))
 			}
 		case opcodes.LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
-			opcodes.LUSHR: // 	0x70
+			opcodes.LUSHR: // 	0x7D
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)

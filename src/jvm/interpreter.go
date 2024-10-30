@@ -163,12 +163,12 @@ var DispatchTable = [203]BytecodeFunc{
 	doIneg,          // LNEG            0x75
 	doFneg,          // FNEG            0x76
 	doFneg,          // DNEG            0x77
-	notImplemented,  // ISHL            0x78
-	notImplemented,  // LSHL            0x79
-	notImplemented,  // ISHR            0x7A
-	notImplemented,  // LSHR            0x7B
-	notImplemented,  // IUSHR           0x7C
-	notImplemented,  // LUSHR           0x7D
+	doIshl,          // ISHL            0x78
+	doIshl,          // LSHL            0x79
+	doIshr,          // ISHR            0x7A
+	doIshr,          // LSHR            0x7B
+	doIushr,         // IUSHR           0x7C
+	doIushr,         // LUSHR           0x7D
 	notImplemented,  // IAND            0x7E
 	notImplemented,  // LAND            0x7F
 	notImplemented,  // IOR             0x80
@@ -1092,6 +1092,42 @@ func doIneg(fr *frames.Frame, _ int64) int {
 func doFneg(fr *frames.Frame, _ int64) int {
 	val := pop(fr).(float64)
 	push(fr, -val)
+	return 1
+}
+
+// 0x78, 0x79 ISHL, LSHL shift int/long to the left
+func doIshl(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
+	val1 := pop(fr).(int64)
+	pop(fr)
+	val2 := val1 << ushiftBy
+	push(fr, val2)
+	return 1
+}
+
+// 0x7A, 0x7B ISHR, LSHR shift int/long to the right
+func doIshr(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	var val2 int64
+	if val1 < 0 { // if neg, shift as pos, then make neg
+		val2 = (-val1) >> (shiftBy & 0x1F) // only the bottom five bits are used
+		push(fr, -val2)
+	} else {
+		push(fr, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
+	}
+	return 1
+}
+
+// 0x7C, 0x7D IUSHR, LUSHR unsigned shift right of int/long
+func doIushr(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
+	val1 := pop(fr).(int64)
+	pop(fr)
+	val3 := val1 >> ushiftBy
+	push(fr, val3)
 	return 1
 }
 
