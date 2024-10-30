@@ -208,8 +208,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIficmpge,      // IF_ICMPGE       0xA2
 	doIficmpgt,      // IF_ICMPGT       0xA3
 	doIficmple,      // IF_ICMPLE       0xA4
-	notImplemented,  // IF_ACMPEQ       0xA5
-	notImplemented,  // IF_ACMPNE       0xA6
+	doIfacmpeq,      // IF_ACMPEQ       0xA5
+	doIfacmpne,      // IF_ACMPNE       0xA6
 	doGoto,          // GOTO            0xA7
 	notImplemented,  // JSR             0xA8
 	notImplemented,  // RET             0xA9
@@ -1297,6 +1297,30 @@ func doIficmple(fr *frames.Frame, _ int64) int {
 	popValue = pop(fr)
 	val1 := convertInterfaceToInt64(popValue)
 	if int32(val1) <= int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
+	}
+}
+
+// 0xA5 IF_ACMPEQ  jump if two addresses are equal
+func doIfacmpeq(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr)
+	val1 := pop(fr)
+	if val1 == val2 { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
+	}
+}
+
+// 0xA6 IF_ACMPNE  jump if two addresses are equal
+func doIfacmpne(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr)
+	val1 := pop(fr)
+	if val1 != val2 { // if comp fails, next 2 bytes hold instruction index
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	} else {
