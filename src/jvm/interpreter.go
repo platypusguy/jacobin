@@ -237,15 +237,15 @@ var DispatchTable = [203]BytecodeFunc{
 	notImplemented,  // ATHROW          0xBF
 	notImplemented,  // CHECKCAST       0xC0
 	notImplemented,  // INSTANCEOF      0xC1
-	notImplemented,  // MONITORENTER    0xC2
-	notImplemented,  // MONITOREXIT     0xC3
+	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
+	doPop,           // MONITOREXIT     0xC3  "       "       "    "     "      '
 	doWide,          // WIDE            0xC4
 	notImplemented,  // MULTIANEWARRAY  0xC5
 	doIfnull,        // IFNULL          0xC6
 	doIfnonnull,     // IFNONNULL       0xC7
 	notImplemented,  // GOTO_W          0xC8
 	notImplemented,  // JSR_W           0xC9
-	notImplemented,  // BREAKPOINT      0xCA
+	notImplemented,  // BREAKPOINT      0xCA not implemented
 }
 
 // the main interpreter loop. This loop takes responsibility for
