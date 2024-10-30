@@ -1276,13 +1276,15 @@ frameInterpreter:
 			orig := f.Locals[index].(int64)
 			f.Locals[index] = orig + increment
 
-		case opcodes.I2F: //	0x86 	( convert int to float)
-			intVal := pop(f).(int64)
-			push(f, float64(intVal))
 		case opcodes.I2L: // 	0x85     (convert int to long)
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
 			push(f, val)           // push the int a second time
+
+		case opcodes.I2F: //	0x86 	( convert int to float)
+			intVal := pop(f).(int64)
+			push(f, float64(intVal))
+
 		case opcodes.I2D: // 	0x87	(convert int to double)
 			intVal := pop(f).(int64)
 			dval := float64(intVal)

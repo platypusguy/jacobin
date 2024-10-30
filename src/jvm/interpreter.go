@@ -177,8 +177,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIxor,          // LXOR            0x83
 	doIinc,          // IINC            0x84
 	doNothing,       // I2L             0x85
-	notImplemented,  // I2F             0x86
-	notImplemented,  // I2D             0x87
+	doI2f,           // I2F             0x86
+	doI2f,           // I2D             0x87
 	doNothing,       // L2I             0x88
 	doL2f,           // L2F             0x89
 	doL2f,           // L2D             0x8A
@@ -1173,6 +1173,13 @@ func doIinc(fr *frames.Frame, _ int64) int {
 	orig := fr.Locals[index].(int64)
 	fr.Locals[index] = orig + increment
 	return PCtoSkip + 1
+}
+
+// 0x86, 0x87 I2L, I2F convert int to float/double
+func doI2f(fr *frames.Frame, _ int64) int {
+	intVal := pop(fr).(int64)
+	push(fr, float64(intVal))
+	return 1
 }
 
 // 0x89, 8A L2F, L2D long to float/double
