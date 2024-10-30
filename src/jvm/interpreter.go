@@ -205,9 +205,9 @@ var DispatchTable = [203]BytecodeFunc{
 	doIficmpeq,      // IF_ICMPEQ       0x9F
 	doIficmpne,      // IF_ICMPNE       0xA0
 	doIficmplt,      // IF_ICMPLT       0xA1
-	doIfIcmpge,      // IF_ICMPGE       0xA2
-	notImplemented,  // IF_ICMPGT       0xA3
-	notImplemented,  // IF_ICMPLE       0xA4
+	doIficmpge,      // IF_ICMPGE       0xA2
+	doIficmpgt,      // IF_ICMPGT       0xA3
+	doIficmple,      // IF_ICMPLE       0xA4
 	notImplemented,  // IF_ACMPEQ       0xA5
 	notImplemented,  // IF_ACMPNE       0xA6
 	doGoto,          // GOTO            0xA7
@@ -1258,12 +1258,12 @@ func doIficmplt(fr *frames.Frame, _ int64) int {
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	} else {
-		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
+		return 3 // 2 bytes for the jumpTo + 1 byte to next bytecode
 	}
 }
 
 // 0xA2 IF_ICMPGE Compare ints for >=
-func doIfIcmpge(fr *frames.Frame, _ int64) int {
+func doIficmpge(fr *frames.Frame, _ int64) int {
 	popValue := pop(fr)
 	val2 := convertInterfaceToInt64(popValue)
 	popValue = pop(fr)
@@ -1272,7 +1272,35 @@ func doIfIcmpge(fr *frames.Frame, _ int64) int {
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	} else {
-		return 3 // the 2 bytes forming the unused jumpTo + 1 byte to next bytecode
+		return 3 // 2 bytes for the jumpTo + 1 byte to next bytecode
+	}
+}
+
+// 0xA3 IF_ICMPGT  jump if popped int > int at TOS
+func doIficmpgt(fr *frames.Frame, _ int64) int {
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if int32(val1) > int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
+	}
+}
+
+// 0xA4 IF_ICMPLE  jump if popped int <= int at TOS
+func doIficmple(fr *frames.Frame, _ int64) int {
+	popValue := pop(fr)
+	val2 := convertInterfaceToInt64(popValue)
+	popValue = pop(fr)
+	val1 := convertInterfaceToInt64(popValue)
+	if int32(val1) <= int32(val2) { // if comp succeeds, next 2 bytes hold instruction index
+		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+		return int(jumpTo)
+	} else {
+		return 3 // 2 for the jumpTo + 1 for next bytecode
 	}
 }
 
