@@ -169,12 +169,12 @@ var DispatchTable = [203]BytecodeFunc{
 	doIshr,          // LSHR            0x7B
 	doIushr,         // IUSHR           0x7C
 	doIushr,         // LUSHR           0x7D
-	notImplemented,  // IAND            0x7E
-	notImplemented,  // LAND            0x7F
-	notImplemented,  // IOR             0x80
-	notImplemented,  // LOR             0x81
-	notImplemented,  // IXOR            0x82
-	notImplemented,  // LXOR            0x83
+	doIand,          // IAND            0x7E
+	doIand,          // LAND            0x7F
+	doIor,           // IOR             0x80
+	doIor,           // LOR             0x81
+	doIxor,          // IXOR            0x82
+	doIxor,          // LXOR            0x83
 	doIinc,          // IINC            0x84
 	doNothing,       // I2L             0x85
 	notImplemented,  // I2F             0x86
@@ -1128,6 +1128,30 @@ func doIushr(fr *frames.Frame, _ int64) int {
 	pop(fr)
 	val3 := val1 >> ushiftBy
 	push(fr, val3)
+	return 1
+}
+
+// 0x7E, 0x7F IAND, LAND logical AND of two ints/longs, push result
+func doIand(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
+	push(fr, val1&val2)
+	return 1
+}
+
+// 0x80, 0x81 IOR, LOR logical OR of two ints/longs, push result
+func doIor(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
+	push(fr, val1|val2)
+	return 1
+}
+
+// 0x82, 0x83 IXOR, LXOR logical XOR of two ints/longs, push result
+func doIxor(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
+	push(fr, val1^val2)
 	return 1
 }
 
