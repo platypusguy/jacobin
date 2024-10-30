@@ -187,10 +187,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doNothing,       // F2D             0x8D
 	doD2i,           // D2I             0x8E
 	doD2i,           // D2L             0x8F
-	notImplemented,  // D2F             0x90
-	notImplemented,  // I2B             0x91
-	notImplemented,  // I2C             0x92
-	notImplemented,  // I2S             0x93
+	doNothing,       // D2F             0x90
+	doI2b,           // I2B             0x91
+	doI2c,           // I2C             0x92
+	doI2s,           // I2S             0x93
 	doLcmp,          // LCMP            0x94
 	notImplemented,  // FCMPL           0x95
 	notImplemented,  // FCMPG           0x96
@@ -1200,6 +1200,34 @@ func doF2i(fr *frames.Frame, _ int64) int {
 func doD2i(fr *frames.Frame, _ int64) int {
 	doubleVal := pop(fr).(float64)
 	push(fr, int64(math.Trunc(doubleVal)))
+	return 1
+}
+
+// 0x91 I2B convert int to byte, preserving sign
+func doI2b(fr *frames.Frame, _ int64) int {
+	intVal := pop(fr).(int64)
+	byteVal := intVal & 0xFF
+	if !(intVal > 0 && byteVal > 0) &&
+		!(intVal < 0 && byteVal < 0) {
+		byteVal = -byteVal
+	}
+	push(fr, byteVal)
+	return 1
+}
+
+// 0x92 I2C convert int to 16-bit char
+func doI2c(fr *frames.Frame, _ int64) int {
+	intVal := pop(fr).(int64)
+	charVal := uint16(intVal) // Java chars are 16-bit unsigned values
+	push(fr, int64(charVal))
+	return 1
+}
+
+// 0x93 I2S convert int to short (16-bits)
+func doI2s(fr *frames.Frame, _ int64) int {
+	intVal := pop(fr).(int64)
+	shortVal := int16(intVal) // Java shorts are 16-bit signed values
+	push(fr, int64(shortVal))
 	return 1
 }
 

@@ -1334,7 +1334,7 @@ frameInterpreter:
 			floatVal := float32(pop(f).(float64))
 			pop(f)
 			push(f, float64(floatVal))
-		case opcodes.I2B: //	0x91 convert into to byte preserving sign
+		case opcodes.I2B: //	0x91 convert int     to byte preserving sign
 			intVal := pop(f).(int64)
 			byteVal := intVal & 0xFF
 			if !(intVal > 0 && byteVal > 0) &&
