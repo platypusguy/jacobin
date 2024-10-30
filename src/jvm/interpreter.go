@@ -182,8 +182,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doNothing,       // L2I             0x88
 	doL2f,           // L2F             0x89
 	doL2f,           // L2D             0x8A
-	notImplemented,  // F2I             0x8B
-	notImplemented,  // F2L             0x8C
+	doF2i,           // F2I             0x8B
+	doF2i,           // F2L             0x8C
 	notImplemented,  // F2D             0x8D
 	notImplemented,  // D2I             0x8E
 	notImplemented,  // D2L             0x8F
@@ -1182,10 +1182,17 @@ func doI2f(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x89, 8A L2F, L2D long to float/double
+// 0x89, 0x8A L2F, L2D long to float/double
 func doL2f(fr *frames.Frame, _ int64) int {
 	longVal := pop(fr).(int64)
 	push(fr, float64(longVal))
+	return 1
+}
+
+// 0x8B, 0x8C F2I, F2L convert float to int/long
+func doF2i(fr *frames.Frame, _ int64) int {
+	floatVal := pop(fr).(float64)
+	push(fr, int64(math.Trunc(floatVal)))
 	return 1
 }
 
