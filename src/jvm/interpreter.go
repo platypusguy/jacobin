@@ -192,10 +192,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doI2c,           // I2C             0x92
 	doI2s,           // I2S             0x93
 	doLcmp,          // LCMP            0x94
-	notImplemented,  // FCMPL           0x95
-	notImplemented,  // FCMPG           0x96
-	notImplemented,  // DCMPL           0x97
-	notImplemented,  // DCMPG           0x98
+	doFcmpl,         // FCMPL           0x95
+	doFcmpl,         // FCMPG           0x96
+	doFcmpl,         // DCMPL           0x97
+	doFcmpl,         // DCMPG           0x98
 	doIfeq,          // IFEQ            0x99
 	doIfne,          // IFNE            0x9A
 	doIflt,          // IFLT            0x9B
@@ -1241,6 +1241,28 @@ func doLcmp(fr *frames.Frame, _ int64) int {
 		push(fr, int64(1))
 	} else {
 		push(fr, int64(-1))
+	}
+	return 1
+}
+
+// 0x95, 0x96 FCMPL, FCMPG float comparison differing only in handling NaN
+// 0x97, 0x98 DCMPL, DCMPG double  "          "        "    "  "        "
+func doFcmpl(fr *frames.Frame, _ int64) int {
+	value2 := pop(fr).(float64)
+	value1 := pop(fr).(float64)
+	if math.IsNaN(value1) || math.IsNaN(value2) {
+		if fr.Meth[fr.PC] == opcodes.FCMPG ||
+			fr.Meth[fr.PC] == opcodes.DCMPG { // TODO: check this points to right byecode
+			push(fr, int64(1))
+		} else {
+			push(fr, int64(-1))
+		}
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else if value1 < value2 {
+		push(fr, int64(-1))
+	} else {
+		push(fr, int64(0))
 	}
 	return 1
 }
