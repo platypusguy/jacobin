@@ -213,7 +213,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doGoto,          // GOTO            0xA7
 	doJsr,           // JSR             0xA8
 	doRet,           // RET             0xA9
-	notImplemented,  // TABLESWITCH     0xAA
+	doTableswitch,   // TABLESWITCH     0xAA
 	notImplemented,  // LOOKUPSWITCH    0xAB
 	doIreturn,       // IRETURN         0xAC
 	doIreturn,       // LRETURN         0xAD
@@ -1482,6 +1482,47 @@ func doRet(fr *frames.Frame, _ int64) int {
 	}
 	newPC := fr.Locals[index].(int64)
 	return int(newPC)
+}
+
+// 0xAA TABLESWITCH switch based on table of offsets
+func doTableswitch(fr *frames.Frame, _ int64) int {
+	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.tableswitch
+	basePC := fr.PC // where we are when the processing begins
+
+	paddingBytes := 4 - ((fr.PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	fr.PC += paddingBytes
+
+	defaultJump := fourBytesToInt64( // the jump if the value is not in the table
+		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+	fr.PC += 4
+	lowValue := fourBytesToInt64( // the lowest value in the table
+		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+	fr.PC += 4
+	highValue := fourBytesToInt64( // the highest value in the table
+		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+	fr.PC += 4
+
+	index := pop(fr).(int64) // the value we're looking to match
+	// "The value low must be less than or equal to high"
+	// We did not check to see if lowValue > highValue? Exception?
+
+	// Compute PC for jump.
+	jumpOffset := 0 //
+	for value := lowValue; value <= highValue; value++ {
+		if value == index {
+			fr.PC += jumpOffset
+			jumpPC := fourBytesToInt64(
+				fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+			return basePC + int(jumpPC)
+		}
+		jumpOffset += 4
+	}
+
+	// Default case.
+	return basePC + int(defaultJump) // 1 will be added to f.PC at the end of this loop.
 }
 
 // 0xAC - 0xB0 IRETURN, LRETURN, DRETURN, FRETURN, ARETURN
