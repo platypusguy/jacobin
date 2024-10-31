@@ -26,6 +26,7 @@ import (
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/trace"
@@ -234,7 +235,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doNewarray,      // NEWARRAY        0xBC
 	doAnewarray,     // ANEWARRAY       0xBD
 	doArraylength,   // ARRAYLENGTH     0xBE
-	notImplemented,  // ATHROW          0xBF
+	doAthrow,        // ATHROW          0xBF
 	notImplemented,  // CHECKCAST       0xC0
 	notImplemented,  // INSTANCEOF      0xC1
 	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
@@ -2417,6 +2418,131 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	}
 	push(fr, size)
 	return 1
+}
+
+// 0xBF ATHROW throw an exception
+func doAthrow(fr *frames.Frame, _ int64) int {
+	// objRef points to an instance of the error/exception class that's being thrown
+	objectRef := pop(fr).(*object.Object)
+	if object.IsNull(objectRef) {
+		errMsg := "ATHROW: Invalid (null) reference to an exception/error class to throw"
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// capture the golang stack
+	stack := string(debug.Stack())
+	globals.GetGlobalRef().ErrorGoStack = stack
+
+	// capture the JVM frame stack
+	globals.GetGlobalRef().JVMframeStack = exceptions.GrabFrameStack(fr.FrameStack)
+
+	// get the name of the exception in the format used by HotSpot
+	exceptionClass := *(stringPool.GetStringPointer(objectRef.KlassName))
+	exceptionName := strings.Replace(exceptionClass, "/", ".", -1)
+
+	// get the PC of the exception and check for any catch blocks
+	// if f.ExceptionPC == -1 {
+	//	f.ExceptionPC = f.PC
+	// }
+
+	// find the frame with a valid catch block for this exception, if any
+	catchFrame, handlerBytecode := exceptions.FindCatchFrame(fr.FrameStack, exceptionName, fr.ExceptionPC)
+	// if there is no catch block, then print out the data we have (conforming
+	// with whether we want the standard JDK info as elected with the -strictJDK
+	// command-line option)
+	if catchFrame == nil {
+		// if the exception is not caught, then print the data from the stackTraceElements (STEs)
+		// in the Throwable object or subclass (which is generally the specific exception class).
+
+		// start by printing out the name of the exception/error and the thread it occurred on
+		errMsg := ""
+		if fr.Thread == 1 { // if it's thread #1, use its name, "main"
+			errMsg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
+		} else {
+			errMsg = fmt.Sprintf("Exception in thread %d %s", fr.Thread, exceptionName)
+		}
+
+		appMsg := objectRef.FieldTable["detailMessage"].Fvalue
+		if appMsg != nil {
+			switch appMsg.(type) {
+			case []uint8:
+				st := appMsg.([]uint8)
+				errMsg += fmt.Sprintf(": %s", string(st))
+			case *object.Object:
+				st := appMsg.(*object.Object)
+				value := st.FieldTable["value"].Fvalue
+				switch value.(type) {
+				case []byte:
+					errMsg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+				case uint32:
+					str := stringPool.GetStringPointer(value.(uint32))
+					errMsg += fmt.Sprintf(": %s", *str)
+				}
+
+			}
+		}
+		trace.ErrorMsg(errMsg)
+
+		steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
+		rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
+		for i := 0; i < len(rawSteArray); i++ {
+			ste := rawSteArray[i]
+			methodName := ste.FieldTable["methodName"].Fvalue.(string)
+			if methodName == "<init>" { // don't show constructors
+				continue
+			}
+			rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
+			if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
+				continue
+			}
+			className := strings.Replace(rawClassName, "/", ".", -1)
+
+			sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
+
+			var errMsg string
+			if sourceLine != "" {
+				errMsg = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
+					methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
+			} else {
+				errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
+					methodName, ste.FieldTable["fileName"].Fvalue)
+			}
+			trace.ErrorMsg(errMsg)
+		}
+
+		// show Jacobin's JVM stack info if -strictJDK is not set
+		if globals.GetGlobalRef().StrictJDK == false {
+			trace.Trace(" ")
+			for _, frameData := range *globals.GetGlobalRef().JVMframeStack {
+				colon := strings.Index(frameData, ":")
+				shortenedFrameData := frameData[colon+1:]
+				trace.Trace("\tat" + shortenedFrameData)
+			}
+		}
+
+		// all exceptions that got this far are untrapped, so shutdown with an error code
+		shutdown.Exit(shutdown.APP_EXCEPTION)
+
+	} else { // perform the catch operation. We know the frame and the starting bytecode for the handler
+		for f := fr.FrameStack.Front(); fr != nil; f = f.Next() {
+			var frm = f.Value.(*frames.Frame)
+			// f.ExceptionTable = &m.Exceptions
+			if frm == catchFrame {
+				// frm.Meth = f.Meth[handlerBytecode:]
+				frm.TOS = -1
+				push(frm, objectRef)
+				// frm.PC = 0
+				frm.PC = handlerBytecode
+				// make the frame with the catch block active
+				fr.FrameStack.Front().Value = frm
+				return 0
+			}
+		}
+	}
+	return 1 // should not be reached, in theory
 }
 
 // 0xC4 WIDE use wide versions of bytecode arguments
