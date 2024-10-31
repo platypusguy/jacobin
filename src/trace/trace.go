@@ -57,9 +57,21 @@ func Trace(argMsg string) {
 // An error message is a prefix-decorated message that has no time-stamp.
 func ErrorMsg(argMsg string) {
 	var err error
-	errMsg := "*** ERROR *** " + argMsg
+	errMsg := "ERROR: " + argMsg
 	mutex.Lock()
 	_, err = fmt.Fprintf(os.Stderr, "%s\n", errMsg)
+	mutex.Unlock()
+	if err != nil {
+		errMsg := fmt.Sprintf("ErrorMsg: *** stderr failed, err: %v", err)
+		abruptEnd(excNames.IOError, errMsg)
+	}
+}
+
+// Similar to ErrorMsg, except it's a warning, not an error.
+func Warning(argMsg string) {
+	errMsg := "WARNING: " + argMsg
+	mutex.Lock()
+	_, err := fmt.Fprintf(os.Stderr, "%s\n", errMsg)
 	mutex.Unlock()
 	if err != nil {
 		errMsg := fmt.Sprintf("ErrorMsg: *** stderr failed, err: %v", err)
