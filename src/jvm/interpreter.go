@@ -246,7 +246,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doIfnonnull,     // IFNONNULL       0xC7
 	doGotow,         // GOTO_W          0xC8
 	doJsrw,          // JSR_W           0xC9
-	notImplemented,  // BREAKPOINT      0xCA not implemented
+	doWarninvalid,   // BREAKPOINT      0xCA not implemented, generates warning, not exception
 }
 
 // the main interpreter loop. This loop takes responsibility for
@@ -2848,6 +2848,14 @@ func notImplemented(fr *frames.Frame, _ int64) int {
 	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
 	_ = exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 	return exceptions.ERROR_OCCURRED
+}
+
+func doWarninvalid(fr *frames.Frame, _ int64) int {
+	opcode := fr.Meth[fr.PC]
+	opcodeName := opcodes.BytecodeNames[opcode]
+	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
+	trace.Warning(errMsg)
+	return 1
 }
 
 // === helper methods--that is, functions called by dispatched methods (in alpha order) ===
