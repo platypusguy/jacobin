@@ -25,7 +25,7 @@ func nativeInit() bool {
 		WindowsOS = true
 	default:
 		errMsg := fmt.Sprintf("nativeInit: Unsupported O/S: %s", OperSys)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return false
 	}
 

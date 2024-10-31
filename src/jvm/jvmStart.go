@@ -98,13 +98,13 @@ func JVMrun() int {
 
 		if err != nil {
 			errMsg := fmt.Sprintf("JVMrun: GetMainClassFromJar(%s) failed, err: %v", globPtr.StartingJar, err)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		if manifestClass == "" {
 			errMsg := fmt.Sprintf("JVMrun: no main manifest attribute in %s", globPtr.StartingJar)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		mainClassNameIndex, _, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
@@ -117,7 +117,7 @@ func JVMrun() int {
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	} else {
-		trace.ErrorMsg("JVMrun: No starting class from a class file nor a jar")
+		trace.Error("JVMrun: No starting class from a class file nor a jar")
 		ShowUsage(os.Stdout)
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}

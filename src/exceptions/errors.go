@@ -84,9 +84,9 @@ func ShowPanicCause(reason any) {
 	// show the event that caused the panic
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
-		trace.ErrorMsg("go panic because of: " + cause + "")
+		trace.Error("go panic because of: " + cause + "")
 	} else {
-		trace.ErrorMsg("go panic -- cause unknown")
+		trace.Error("go panic -- cause unknown")
 	}
 	globals.GetGlobalRef().PanicCauseShown = true
 }

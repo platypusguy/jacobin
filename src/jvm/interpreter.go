@@ -1679,7 +1679,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
 			"location %d in method %s of class %s\n",
 			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return exceptions.ERROR_OCCURRED
 	}
 
@@ -1715,7 +1715,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		} else {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
 		}
 	}
@@ -1725,7 +1725,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return exceptions.ERROR_OCCURRED
 	}
 
@@ -1800,7 +1800,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
 		}
 	}
@@ -2484,7 +2484,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 
 			}
 		}
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 
 		steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
 		rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
@@ -2510,7 +2510,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 				errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
 					methodName, ste.FieldTable["fileName"].Fvalue)
 			}
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 		}
 
 		// show Jacobin's JVM stack info if -strictJDK is not set
@@ -2774,7 +2774,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	for i := range dimSizes {
 		if dimSizes[i] == 0 {
 			dimSizes = dimSizes[i+1:] // lop off the prev dims
-			trace.ErrorMsg("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
+			trace.Error("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
 			break
 		}
 	}

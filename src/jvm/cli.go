@@ -59,7 +59,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
 		if err != nil {
 			errMsg := fmt.Sprintf("HandleCli: getOptionRootAndArgs detected an error in %s, err: %v", args[i], err)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return err
 		}
 
@@ -78,12 +78,12 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 			_, err = opt.Action(i, arg, Global)
 			if err != nil {
 				errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
-				trace.ErrorMsg(errMsg)
+				trace.Error(errMsg)
 				return err
 			}
 		} else {
 			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return err
 		}
 

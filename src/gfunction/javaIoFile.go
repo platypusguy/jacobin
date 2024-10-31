@@ -163,7 +163,7 @@ func fileDelete(params []interface{}) interface{} {
 	err := os.Remove(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("fileDelete: Failed to remove file %s, reason: %s", pathStr, err.Error())
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return int64(0)
 	}
 	return int64(1)
@@ -183,7 +183,7 @@ func fileCreate(params []interface{}) interface{} {
 	osFile, err := os.Create(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("fileCreate: Failed to create file %s, reason: %s", pathStr, err.Error())
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return int64(0)
 	}
 

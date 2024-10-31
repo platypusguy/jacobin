@@ -238,6 +238,6 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// None of the above.
 	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	trace.ErrorMsg(errMsg)
+	trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }

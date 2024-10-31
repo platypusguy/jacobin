@@ -29,7 +29,7 @@ func TestErrorMessage(t *testing.T) {
 	// Capture the writing done to stderr in a pipe
 	rdr, wrtr, _ := os.Pipe()
 	os.Stderr = wrtr
-	ErrorMsg("Woe is me!")
+	Error("Only YOU can prevent forest fires!")
 	_ = wrtr.Close()
 
 	// Restore stderr to what it was before
@@ -41,7 +41,34 @@ func TestErrorMessage(t *testing.T) {
 
 	// What we expected?
 	if !strings.Contains(outString, "ERROR") { // No
-		t.Errorf("Empty trace message failed: expected zero-length trace argument diagnostic but saw [%s]\n", outString)
+		t.Errorf("Empty trace message failed: expected an error message but saw [%s]\n", outString)
+	}
+
+}
+
+func TestWarningMessage(t *testing.T) {
+
+	initialize()
+
+	// Save existing stderr
+	savedStderr := os.Stderr
+
+	// Capture the writing done to stderr in a pipe
+	rdr, wrtr, _ := os.Pipe()
+	os.Stderr = wrtr
+	Warning("Woe is me!")
+	_ = wrtr.Close()
+
+	// Restore stderr to what it was before
+	os.Stderr = savedStderr
+
+	// Collect stderr output bytes --> string
+	outBytes, _ := io.ReadAll(rdr)
+	outString := string(outBytes[:])
+
+	// What we expected?
+	if !strings.Contains(outString, "WARNING") { // No
+		t.Errorf("Empty trace message failed: expected a warning message but saw [%s]\n", outString)
 	}
 
 }

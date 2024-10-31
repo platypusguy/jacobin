@@ -183,7 +183,7 @@ func cfe(msg string) error {
 		errMsg = errMsg + "\n  detected by file: " + filepath.Base(fileName) +
 			", line: " + strconv.Itoa(fileLine)
 	}
-	trace.ErrorMsg(errMsg)
+	trace.Error(errMsg)
 	return errors.New(errMsg)
 }
 
@@ -200,7 +200,7 @@ func LoadBaseClasses() {
 	err := WalkBaseJmod()
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadBaseClasses: Error loading jmod file classes %s, err: %v", jmodFilePath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
@@ -261,7 +261,7 @@ loadAclass:
 
 	if className == "" {
 		errMsg := "LoadClassFromNameOnly(): null class name is invalid"
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -271,7 +271,7 @@ loadAclass:
 
 	if strings.HasSuffix(className, ";") {
 		errMsg := fmt.Sprintf("LoadClassFromNameOnly: invalid class name: %s", className)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -283,7 +283,7 @@ loadAclass:
 		classBytes, err := GetClassBytes(jmodFileName, className)
 		if err != nil {
 			errMsg := "LoadClassFromNameOnly: GetClassBytes className=" + className + " from jmodFileName=" + jmodFileName + " failed, err: " + err.Error()
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 		}
 		_, _, err = loadClassFromBytes(AppCL, className, classBytes)
 		return err
@@ -298,7 +298,7 @@ loadAclass:
 		_, _, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
 			errMsg := "LoadClassFromNameOnly: LoadClassFromJar " + validName + " failed, err: " + err.Error()
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 		}
 		return err
 	}
@@ -335,7 +335,7 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	}
 	if filename == ".class" || strings.HasSuffix(filename, ";.class") {
 		errMsg := "LoadClassFromFile: class name" + fname + " is invalid"
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		debug.PrintStack()
 		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg)
 	}
@@ -414,13 +414,13 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	}
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
-		trace.ErrorMsg("ParseAndPostClass: file " + filename + ", err: " + err.Error())
+		trace.Error("ParseAndPostClass: file " + filename + ", err: " + err.Error())
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
-		trace.ErrorMsg("ParseAndPostClass: format-checking " + filename)
+		trace.Error("ParseAndPostClass: format-checking " + filename)
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
 	if globals.TraceClass {

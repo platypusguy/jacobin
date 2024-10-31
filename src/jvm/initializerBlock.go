@@ -107,7 +107,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 
 	if frames.PushFrame(fs, f) != nil {
 		errMsg := "memory exception allocating frame in runJavaInitializer()"
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
