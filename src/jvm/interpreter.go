@@ -236,8 +236,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doAnewarray,     // ANEWARRAY       0xBD
 	doArraylength,   // ARRAYLENGTH     0xBE
 	doAthrow,        // ATHROW          0xBF
-	notImplemented,  // CHECKCAST       0xC0
-	notImplemented,  // INSTANCEOF      0xC1
+	doCheckcast,     // CHECKCAST       0xC0
+	doInstanceof,    // INSTANCEOF      0xC1
 	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
 	doPop,           // MONITOREXIT     0xC3  "       "       "    "     "      '
 	doWide,          // WIDE            0xC4
@@ -2543,6 +2543,148 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		}
 	}
 	return 1 // should not be reached, in theory
+}
+
+// 0xC0 CHECKCAST same as INSTANCEOF but does nothing on null,
+func doCheckcast(fr *frames.Frame, _ int64) int {
+	// and doesn't change the stack if the cast is legal.
+	// Because this uses the same logic as INSTANCEOF, any change here should
+	// be made to INSTANCEOF
+
+	ref := peek(fr) // peek b/c the objectRef is *not* removed from the op stack
+	if ref == nil { // if ref is nil, just carry on
+		return 3 // move past two bytes pointing to comp object + 1 for next bytecode
+	}
+
+	var obj *object.Object
+	var objName string
+	switch ref.(type) {
+	case *object.Object:
+		if object.IsNull(ref) { // if ref is null, just carry on
+			return 3
+		} else {
+			obj = (ref).(*object.Object)
+			objName = *(stringPool.GetStringPointer(obj.KlassName))
+		}
+	default: // objectRef must be a reference to an object
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("CHECKCAST: Invalid class reference, type=%T", ref)
+		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// at this point, we know we have a non-nil, non-null pointer to an object;
+	// now, get the class we're casting the object to.
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+	CP := fr.CP.(*classloader.CPool)
+	// CPentry := CP.CpIndex[CPslot]
+	classNamePtr := classloader.FetchCPentry(CP, CPslot)
+
+	var objClassType = types.Error
+	if strings.HasPrefix(objName, "[") {
+		objClassType = types.Array
+	} else {
+		objData := classloader.MethAreaFetch(objName)
+		if objData == nil || objData.Data == nil {
+			_ = classloader.LoadClassFromNameOnly(objName)
+			objData = classloader.MethAreaFetch(objName)
+		}
+		if objData.Data.Access.ClassIsInterface {
+			objClassType = types.Interface
+		} else {
+			objClassType = types.NonArrayObject
+		}
+	}
+
+	var checkcastStatus bool
+	switch objClassType {
+	case types.NonArrayObject:
+		checkcastStatus = checkcastNonArrayObject(obj, *(classNamePtr.StringVal))
+	case types.Array:
+		checkcastStatus = checkcastArray(obj, *(classNamePtr.StringVal))
+	case types.Interface:
+		checkcastStatus = checkcastInterface(obj, *(classNamePtr.StringVal))
+	default:
+		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	if checkcastStatus == false {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
+			*(stringPool.GetStringPointer(obj.KlassName)), *(classNamePtr.StringVal))
+		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+	return 3 // 2 for CPslot + 1 for next byte
+}
+
+//	 0xC1 INSTANCEOF validate the type of object (if not nil or null)
+//		Because this uses similar logic to CHECKCAST, any change here
+//		should likely be made to CHECKCAST as well
+func doInstanceof(fr *frames.Frame, _ int64) int {
+	ref := pop(fr)
+	if ref == nil || ref == object.Null {
+		push(fr, int64(0))
+		return 3 // 2 to move past index bytes to comp object + 1 for next bytecode
+	}
+
+	switch ref.(type) {
+	case *object.Object:
+		if ref == object.Null {
+			push(fr, int64(0))
+			return 3 // 2 move past index bytes + 1 for next bytecode
+		} else {
+			obj := *ref.(*object.Object)
+			CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
+			CP := fr.CP.(*classloader.CPool)
+			CPentry := CP.CpIndex[CPslot]
+			if CPentry.Type == classloader.ClassRef { // slot of ClassRef points to
+				// a CP entry for a stringPool entry for name of class
+				var className string
+				classNamePtr := classloader.FetchCPentry(CP, CPslot)
+				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
+					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+					errMsg := "INSTANCEOF: Invalid classRef found"
+					status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+					if status != exceptions.Caught {
+						return exceptions.ERROR_OCCURRED // applies only if in test
+					}
+				} else {
+					className = *(classNamePtr.StringVal)
+					if globals.TraceVerbose {
+						traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
+						trace.Trace(traceInfo)
+					}
+				}
+				classPtr := classloader.MethAreaFetch(className)
+				if classPtr == nil { // class wasn't loaded, so load it now
+					if classloader.LoadClassFromNameOnly(className) != nil {
+						globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+						errMsg := "INSTANCEOF: Could not load class: " + className
+						status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+						if status != exceptions.Caught {
+							return exceptions.ERROR_OCCURRED // applies only if in test
+						}
+					}
+					classPtr = classloader.MethAreaFetch(className)
+				}
+				if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+					push(fr, int64(1))
+				} else {
+					push(fr, int64(0))
+				}
+			}
+		}
+	}
+	return 3 // 2 for CP slot + 1 for next bytecode
 }
 
 // 0xC4 WIDE use wide versions of bytecode arguments
