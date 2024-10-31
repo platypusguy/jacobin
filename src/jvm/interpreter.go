@@ -211,8 +211,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doIfacmpeq,      // IF_ACMPEQ       0xA5
 	doIfacmpne,      // IF_ACMPNE       0xA6
 	doGoto,          // GOTO            0xA7
-	notImplemented,  // JSR             0xA8
-	notImplemented,  // RET             0xA9
+	doJsr,           // JSR             0xA8
+	doRet,           // RET             0xA9
 	notImplemented,  // TABLESWITCH     0xAA
 	notImplemented,  // LOOKUPSWITCH    0xAB
 	doIreturn,       // IRETURN         0xAC
@@ -1463,6 +1463,25 @@ func doIfacmpne(fr *frames.Frame, _ int64) int {
 func doGoto(fr *frames.Frame, _ int64) int {
 	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 	return int(jumpTo) // note the value can be negative to jump to earlier bytecode
+}
+
+// 0xA8 JSR jump to a bytecode in the method at jumpTo bytes
+func doJsr(fr *frames.Frame, _ int64) int {
+	jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
+	return int(jumpTo)
+}
+
+// 0xA9 RET return by jumping to a return address stored in a local
+func doRet(fr *frames.Frame, _ int64) int {
+	var index int64
+	if fr.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+		index = (byteToInt64(fr.Meth[fr.PC+1]) * 256) + byteToInt64(fr.Meth[fr.PC+2])
+		fr.WideInEffect = false
+	} else {
+		index = byteToInt64(fr.Meth[fr.PC+1])
+	}
+	newPC := fr.Locals[index].(int64)
+	return int(newPC)
 }
 
 // 0xAC - 0xB0 IRETURN, LRETURN, DRETURN, FRETURN, ARETURN
