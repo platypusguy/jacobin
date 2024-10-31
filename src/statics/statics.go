@@ -53,7 +53,7 @@ var staticsMutex = sync.RWMutex{}
 func AddStatic(name string, s Static) error {
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 	staticsMutex.RLock()
@@ -127,7 +127,7 @@ func GetStaticValue(className string, fieldName string) any {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 

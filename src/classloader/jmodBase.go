@@ -26,7 +26,7 @@ func WalkBaseJmod() error {
 	zipReader, err := zip.NewReader(ioReader, int64(len(global.JmodBaseBytes)-4))
 	if err != nil {
 		errMsg := fmt.Sprintf("WalkBaseJmod: zip.NewReader failed, err: %v", err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return err
 	}
 
@@ -89,14 +89,14 @@ func getClasslist(reader zip.Reader) map[string]struct{} {
 	classlist, err := reader.Open("lib/classlist")
 	if err != nil {
 		errMsg := fmt.Sprintf("getClasslist: reader.Open(lib/classlist) failed, err: %v", err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return classSet
 	}
 
 	classlistContent, err := io.ReadAll(classlist)
 	if err != nil {
 		errMsg := fmt.Sprintf("getClasslist: io.ReadAll(classList) failed, err: %v", err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return classSet
 	}
 

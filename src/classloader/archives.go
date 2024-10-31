@@ -62,7 +62,7 @@ func (archive *Archive) scanArchive() error {
 	}
 
 	if reader == nil || err != nil {
-		trace.ErrorMsg("Invalid, corrupt, or inaccessible jarfile " + archive.Filename)
+		trace.Error("Invalid, corrupt, or inaccessible jarfile " + archive.Filename)
 		return err
 	}
 

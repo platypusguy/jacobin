@@ -441,7 +441,7 @@ func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(bigIntegerClassName)
 	if klass == nil {
 		errMsg := fmt.Sprintf("BigInteger<clinit>: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {

@@ -34,7 +34,7 @@ func GetBaseJmodBytes() {
 	global.JmodBaseBytes, err = os.ReadFile(jmodBasePath)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetBaseJmodBytes: os.ReadFile(%s) failed, err: %v", jmodBasePath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
@@ -42,7 +42,7 @@ func GetBaseJmodBytes() {
 	fileMagicNumber := binary.BigEndian.Uint16(global.JmodBaseBytes[:2])
 	if fileMagicNumber != ExpectedMagicNumber {
 		errMsg := fmt.Sprintf("GetBaseJmodBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s, err: %v", jmodBasePath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
@@ -77,7 +77,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 		jmodBytes, err = os.ReadFile(jmodPath)
 		if err != nil {
 			errMsg := fmt.Sprintf("GetClassBytes: os.ReadFile(%s) failed, err: %v", jmodPath, err)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return nil, err
 		}
 
@@ -85,7 +85,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 		fileMagicNumber := binary.BigEndian.Uint16(jmodBytes[:2])
 		if fileMagicNumber != ExpectedMagicNumber {
 			errMsg := fmt.Sprintf("GetClassBytes: fileMagicNumber != ExpectedMagicNumber in jmod file %s", jmodPath)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return nil, err
 		}
 
@@ -100,7 +100,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	zipReader, err := zip.NewReader(ioReader, newReaderLength)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetClassBytes: zip.NewReader(%s) failed, err: %v", jmodPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, err
 	}
 
@@ -108,7 +108,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	fileHandle, err := zipReader.Open(classFileName)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetClassBytes: zipReader.Open(class file %s in jmod file %s) failed, err: %v", classFileName, jmodPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, err
 	}
 
@@ -116,7 +116,7 @@ func GetClassBytes(jmodFileName string, className string) ([]byte, error) {
 	classBytes, err := io.ReadAll(fileHandle)
 	if err != nil {
 		errMsg := fmt.Sprintf("GetClassBytes: os.ReadAll(class file %s in jmod file %s) failed, err: %v", classFileName, jmodPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, err
 	}
 

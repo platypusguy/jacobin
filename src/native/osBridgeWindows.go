@@ -13,7 +13,7 @@ func ConnectLibrary(libPath string) uintptr {
 	if err != nil {
 		errMsg := fmt.Sprintf("ConnectLibrary: windows.LoadLibrary for [%s] failed, reason: [%s]",
 			libPath, err.Error())
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		handle = 0
 	}
 	return uintptr(handle)

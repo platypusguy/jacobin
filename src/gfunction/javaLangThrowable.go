@@ -121,7 +121,7 @@ func FillInStackTrace(params []interface{}) interface{} {
 	// get our parameters vetted and ready for use, then call getOurStackTrace()
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("FillInStackTrace: expected two parameters, got: %d", len(params))
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return errors.New(errMsg) // needed only for testing b/c shutdown.Exit() doesn't exit in tests
 	}

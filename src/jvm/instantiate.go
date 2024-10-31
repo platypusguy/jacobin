@@ -55,13 +55,13 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if k == nil {
 		errMsg := "InstantiateClass: Class is nil after loading, class: " + classname
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, errors.New(errMsg)
 	}
 
 	if k.Data == nil {
 		errMsg := "InstantiateClass: class.Data is nil, class: " + classname
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, errors.New(errMsg)
 	}
 
@@ -134,7 +134,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		c := classloader.MethAreaFetch(superclassName)
 		if c == nil {
 			errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return nil, errors.New(errMsg)
 		}
 		for i := 0; i < len(c.Data.Fields); i++ {
@@ -158,7 +158,7 @@ runInitializer:
 		err := runInitializationBlock(k, superclasses, frameStack)
 		if err != nil {
 			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()", classname)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return nil, err
 		}
 	}
@@ -182,7 +182,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 	default:
 		errMsg := fmt.Sprintf("createField: error creating field in: %s,  Invalid type: %s",
 			classname, fieldToAdd.Ftype)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return nil, classloader.CFE(errMsg)
 	}
 
@@ -220,7 +220,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 				default:
 					errMsg := fmt.Sprintf(
 						"createField: Unexpected ConstantValue type in instantiate: %d", valueType)
-					trace.ErrorMsg(errMsg)
+					trace.Error(errMsg)
 					return nil, errors.New(errMsg)
 				} // end of ConstantValue type switch
 			} // end of ConstantValue attribute processing
@@ -265,7 +265,7 @@ func loadThisClass(className string) error {
 	err = classloader.WaitForClassStatus(className)
 	if err != nil {
 		errMsg := fmt.Sprintf("loadThisClass: WaitForClassStatus(%s) failed, err: %v", className, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return errors.New(errMsg) // needed for testing, which does not shutdown on failure
 	}
 	return nil

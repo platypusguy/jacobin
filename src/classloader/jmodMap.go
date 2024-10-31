@@ -53,7 +53,7 @@ func JmodMapFetch(className string) string {
 	jmodMapMutex.Unlock() // Immediately unlock.
 	if jmodMapSize == 0 {
 		errMsg := fmt.Sprintf("JmodMapFetch: JMODMAP size = 0 detected when key=%s", className)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 	jmodFile := JMODMAP[className+".class"]
@@ -84,7 +84,7 @@ func JmodMapInit() {
 	dirOpened, err := os.Open(global.JacobinHome)
 	if err != nil {
 		errMsg := fmt.Sprintf("JmodMapInit: os.Open(%s) failed, err: %v", global.JacobinHome, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -93,7 +93,7 @@ func JmodMapInit() {
 	names, err := dirOpened.Readdirnames(0) // get all entries
 	if err != nil {
 		errMsg := fmt.Sprintf("JmodMapInit: Readdirnames(%s) failed, err: %v", global.JacobinHome, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -143,7 +143,7 @@ func buildMapFromGob(gobFilePath string) bool {
 	inFile, err := os.Open(gobFilePath)
 	if err != nil {
 		errMsg := fmt.Sprintf("buildMapFromGob: os.Open(%s) failed, err: %v", gobFilePath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -154,7 +154,7 @@ func buildMapFromGob(gobFilePath string) bool {
 	err = decoder.Decode(&JMODMAP)
 	if err != nil {
 		errMsg := fmt.Sprintf("buildMapFromGob: gob Decode(%s) failed, err: %v", gobFilePath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -163,7 +163,7 @@ func buildMapFromGob(gobFilePath string) bool {
 	jmodMapSize, err = strconv.Atoi(gobSize)
 	if err != nil {
 		errMsg := fmt.Sprintf("buildMapFromGob: Element (%s) is missing or misformatted, err: %v", counterElementName, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -192,7 +192,7 @@ func buildMapFromJmods() {
 	dirOpened, err := os.Open(dirPath)
 	if err != nil {
 		errMsg := fmt.Sprintf("buildMapFromJmods: os.Open(%s) failed, err: %v", dirPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -201,7 +201,7 @@ func buildMapFromJmods() {
 	names, err := dirOpened.Readdirnames(0) // get all entries
 	if err != nil {
 		errMsg := fmt.Sprintf("buildMapFromJmods: Readdirnames(jmods directory) failed, err: %v", err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -231,7 +231,7 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 	_, err := os.Open(jmodFullPath)
 	if err != nil {
 		errMsg := fmt.Sprintf("processJmodFile: os.Open(%s) failed, err: %v", jmodFullPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -240,7 +240,7 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 	jmodBytes, err := os.ReadFile(jmodFullPath)
 	if err != nil {
 		errMsg := fmt.Sprintf("processJmodFile: os.ReadFile(%s) failed, err: %v", jmodFullPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -249,7 +249,7 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 	fileMagicNumber := binary.BigEndian.Uint16(jmodBytes[:2])
 	if fileMagicNumber != expectedMagicNumber {
 		errMsg := fmt.Sprintf("processJmodFile: fileMagicNumber != ExpectedMagicNumber in %s", jmodFullPath)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -261,7 +261,7 @@ func processJmodFile(jmodFileName string, jmodFullPath string) bool {
 	zipReader, err := zip.NewReader(offsetReader, int64(len(jmodBytes)-4))
 	if err != nil {
 		errMsg := fmt.Sprintf("processJmodFile: zip.NewReader failed(%s) failed, err: %v", jmodFullPath, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return false
 	}
@@ -306,7 +306,7 @@ func saveMapToGob() {
 	outFile, err := os.Create(gobFile)
 	if err != nil {
 		errMsg := fmt.Sprintf("saveMapToGob: os.Create(%s) failed, err: %v", gobFile, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -316,7 +316,7 @@ func saveMapToGob() {
 	err = encoder.Encode(JMODMAP)
 	if err != nil {
 		errMsg := fmt.Sprintf("saveMapToGob: gob Encode(%s) failed, err: %v", gobFile, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 		return
 	}
@@ -325,7 +325,7 @@ func saveMapToGob() {
 	err = outFile.Close()
 	if err != nil {
 		errMsg := fmt.Sprintf("saveMapToGob: close(%s) failed, err: %v", gobFile, err)
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		jmodMapSize = 0
 	}
 }

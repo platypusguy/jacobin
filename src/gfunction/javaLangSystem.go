@@ -122,7 +122,7 @@ func clinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
 		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {

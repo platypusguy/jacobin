@@ -162,7 +162,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		if !checkKey(key) {
 			errMsg := fmt.Sprintf("loadlib: Invalid key=%s", key)
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			ok = false
 		}
 		gme := GMeth{}

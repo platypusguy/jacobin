@@ -220,7 +220,7 @@ func mathClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
 		errMsg := "Math<clinit>: Expected java/lang/Math to be in the MethodArea, but it was not"
-		trace.ErrorMsg(errMsg)
+		trace.Error(errMsg)
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
 	return nil

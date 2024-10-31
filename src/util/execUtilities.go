@@ -51,7 +51,7 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 			}
 			if j >= paramLen {
 				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case 'L': failed to find final ';'")
-				trace.ErrorMsg(errMsg)
+				trace.Error(errMsg)
 				return make([]string, 0)
 			}
 		case '[': // arrays
@@ -62,12 +62,12 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 			}
 			if i >= paramLen {
 				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': unending '[' repetitions")
-				trace.ErrorMsg(errMsg)
+				trace.Error(errMsg)
 				return make([]string, 0)
 			}
 			if paramChars[i] == ')' {
 				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': no array type specified")
-				trace.ErrorMsg(errMsg)
+				trace.Error(errMsg)
 				return make([]string, 0)
 			}
 			// i is now pointing to the type-character of the array
@@ -85,13 +85,13 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 				}
 				if j >= paramLen {
 					errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': failed to find final ';'")
-					trace.ErrorMsg(errMsg)
+					trace.Error(errMsg)
 					return make([]string, 0)
 				}
 			}
 		default:
 			errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString default: illegal character '%c'", paramChars[i])
-			trace.ErrorMsg(errMsg)
+			trace.Error(errMsg)
 			return make([]string, 0)
 		}
 	}
