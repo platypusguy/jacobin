@@ -214,7 +214,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doJsr,           // JSR             0xA8
 	doRet,           // RET             0xA9
 	doTableswitch,   // TABLESWITCH     0xAA
-	notImplemented,  // LOOKUPSWITCH    0xAB
+	doLookupswitch,  // LOOKUPSWITCH    0xAB
 	doIreturn,       // IRETURN         0xAC
 	doIreturn,       // LRETURN         0xAD
 	doIreturn,       // FRETURN         0xAE
@@ -1487,7 +1487,6 @@ func doRet(fr *frames.Frame, _ int64) int {
 // 0xAA TABLESWITCH switch based on table of offsets
 func doTableswitch(fr *frames.Frame, _ int64) int {
 	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.tableswitch
-	basePC := fr.PC // where we are when the processing begins
 
 	paddingBytes := 4 - ((fr.PC + 1) % 4)
 	if paddingBytes == 4 {
@@ -1507,7 +1506,7 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 
 	index := pop(fr).(int64) // the value we're looking to match
 	// "The value low must be less than or equal to high"
-	// We did not check to see if lowValue > highValue? Exception?
+	// We do not check to see if lowValue > highValue? Exception?
 
 	// Compute PC for jump.
 	jumpOffset := 0 //
@@ -1516,13 +1515,54 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 			fr.PC += jumpOffset
 			jumpPC := fourBytesToInt64(
 				fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
-			return basePC + int(jumpPC)
+			return int(jumpPC)
 		}
 		jumpOffset += 4
 	}
 
 	// Default case.
-	return basePC + int(defaultJump) // 1 will be added to f.PC at the end of this loop.
+	return int(defaultJump)
+}
+
+// 0xAB LOOKUPSWITCH switch using lookup table
+func doLookupswitch(fr *frames.Frame, _ int64) int {
+	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.lookupswitch
+
+	paddingBytes := 4 - ((fr.PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	fr.PC += paddingBytes
+
+	// get the jump size for the default branch
+	defaultJump := int64(binary.BigEndian.Uint32(
+		[]byte{fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4]}))
+	fr.PC += 4
+
+	// how many branches in this switch (other than default)
+	npairs := binary.BigEndian.Uint32(
+		[]byte{fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4]})
+	fr.PC += 4
+
+	jumpTable := make(map[int64]int)
+	for i := 0; i < int(npairs); i++ {
+		// get the jump size for each case branch
+		caseValue := fourBytesToInt64(
+			fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+		fr.PC += 4
+		jumpOffset := fourBytesToInt64(fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+		fr.PC += 4
+		jumpTable[caseValue] = int(jumpOffset)
+	}
+
+	// now get the value we're switching on and find the distance to jump
+	key := pop(fr).(int64)
+	jumpDistance, present := jumpTable[key]
+	if present {
+		return jumpDistance
+	} else {
+		return int(defaultJump)
+	}
 }
 
 // 0xAC - 0xB0 IRETURN, LRETURN, DRETURN, FRETURN, ARETURN
