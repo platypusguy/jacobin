@@ -241,7 +241,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
 	doPop,           // MONITOREXIT     0xC3  "       "       "    "     "      '
 	doWide,          // WIDE            0xC4
-	notImplemented,  // MULTIANEWARRAY  0xC5
+	doMultinewarray, // MULTIANEWARRAY  0xC5
 	doIfnull,        // IFNULL          0xC6
 	doIfnonnull,     // IFNONNULL       0xC7
 	notImplemented,  // GOTO_W          0xC8
@@ -2691,6 +2691,117 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 func doWide(fr *frames.Frame, _ int64) int {
 	fr.WideInEffect = true
 	return 1
+}
+
+// 0xC5 MULTINEWARRAY create a multi-dimensional array
+func doMultinewarray(fr *frames.Frame, _ int64) int {
+	var arrayDesc string
+	var arrayType uint8
+
+	// The first two bytes after the bytecode point to a classref entry in the CP.
+	// In turn, it points to a string describing the array of the form [[L or
+	// similar, in which one [ is present for every array dimension, followed by a
+	// single letter describing the type of primitive in the leaf dimension of the array.
+	// The letters are the usual ones used in the JVM for primitives, etc.
+	// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // point to CP entry
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != classloader.ClassRef {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "MULTIANEWARRAY: multi-dimensional array presently supports classes only"
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	} else {
+		// utf8Index := CP.ClassRefs[CPentry.Slot]
+		// arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
+		arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+		arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
+	}
+
+	var rawArrayType uint8
+	for i := 0; i < len(arrayDesc); i++ {
+		if arrayDesc[i] != '[' {
+			rawArrayType = arrayDesc[i]
+			break
+		}
+	}
+
+	switch rawArrayType {
+	case 'B', 'Z':
+		arrayType = object.BYTE
+	case 'F', 'D':
+		arrayType = object.FLOAT
+	case 'L':
+		arrayType = object.REF
+	default:
+		arrayType = object.INT
+	}
+
+	// get the number of dimensions, then pop off the operand
+	// stack an int for every dimension, giving the size of that
+	// dimension and put them into a slice that starts with
+	// the highest dimension first. So a two-dimensional array
+	// such as x[4][3], would have entries of 4 and 3 respectively
+	// in the dimsizes slice.
+	dimensionCount := int(fr.Meth[fr.PC+1])
+
+	if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	dimSizes := make([]int64, dimensionCount)
+
+	// the values on the operand stack give the last dimension
+	// first when popped off the stack, so, they're stored here
+	// in reverse order, so that dimSizes[0] will hold the first
+	// dimenion.
+	for i := dimensionCount - 1; i >= 0; i-- {
+		dimSizes[i] = pop(fr).(int64)
+	}
+
+	// A dimension of zero ends the dimensions, so we check
+	// and cut off the dimensions below and includingthe 0-sized
+	// one. Because this is almost certainly an error, we also
+	// issue a warning.
+	for i := range dimSizes {
+		if dimSizes[i] == 0 {
+			dimSizes = dimSizes[i+1:] // lop off the prev dims
+			trace.ErrorMsg("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
+			break
+		}
+	}
+
+	// Because of the possibility of a zero-sized dimension
+	// affecting the valid number of dimensions, dimensionCount
+	// can no longer be considered reliable. Use len(dimSizes).
+	if len(dimSizes) == 3 {
+		multiArr := object.Make1DimArray(object.REF, dimSizes[0])
+		actualArray := multiArr.FieldTable["value"].Fvalue.([]*object.Object)
+		for i := 0; i < len(actualArray); i++ {
+			actualArray[i], _ = object.Make2DimArray(dimSizes[1],
+				dimSizes[2], arrayType)
+		}
+		push(fr, multiArr)
+
+	} else if len(dimSizes) == 2 { // 2-dim array is a special, trivial case
+		multiArr, _ := object.Make2DimArray(dimSizes[0], dimSizes[1], arrayType)
+		push(fr, multiArr)
+		// It's possible due to a zero-length dimension, that we
+		// need to create a single-dimension array.
+	} else if len(dimSizes) == 1 {
+		oneDimArr := object.Make1DimArray(arrayType, dimSizes[0])
+		push(fr, oneDimArr)
+
+	}
+	return 4 // 2 for CPslot + 1 for dimensions + 1 for next bytecode
 }
 
 // 0xC6 IFNULL jump if TOS holds a null address
