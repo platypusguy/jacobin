@@ -244,8 +244,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doMultinewarray, // MULTIANEWARRAY  0xC5
 	doIfnull,        // IFNULL          0xC6
 	doIfnonnull,     // IFNONNULL       0xC7
-	notImplemented,  // GOTO_W          0xC8
-	notImplemented,  // JSR_W           0xC9
+	doGotow,         // GOTO_W          0xC8
+	doJsrw,          // JSR_W           0xC9
 	notImplemented,  // BREAKPOINT      0xCA not implemented
 }
 
@@ -2825,6 +2825,21 @@ func doIfnonnull(fr *frames.Frame, _ int64) int {
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	}
+}
+
+// 0xC8 GOTO_W jump to a four-byte offset
+func doGotow(fr *frames.Frame, _ int64) int {
+	jumpTo := fourBytesToInt64(
+		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+	return int(jumpTo)
+}
+
+// 0xC9 JSR_W jump to a four-byte offset
+func doJsrw(fr *frames.Frame, _ int64) int {
+	jumpTo := fourBytesToInt64(
+		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+	push(fr, jumpTo) // JSR and JSR_W both push the jump offset and jump to it
+	return int(jumpTo)
 }
 
 func notImplemented(fr *frames.Frame, _ int64) int {
