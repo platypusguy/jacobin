@@ -275,7 +275,7 @@ func interpret(fs *list.List) {
 			// again for the frame at the top of the frame stack
 			return
 		case exceptions.ERROR_OCCURRED: // occurs only in tests
-			break
+			return
 		default:
 			fr.PC += ret
 		}
@@ -1593,7 +1593,10 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
 			"location %d in method %s of class %s\n",
 			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
 	}
 
 	// get the field entry
