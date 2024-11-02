@@ -1567,7 +1567,9 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 }
 
 // 0xAC - 0xB0 IRETURN, LRETURN, DRETURN, FRETURN, ARETURN
-// return a value from method call
+// return a value from method call. Important note:
+// This implementation pops off the current frame and tells the
+// interpreter loop to resume execution in the previous frame.
 func doIreturn(fr *frames.Frame, _ int64) int {
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
