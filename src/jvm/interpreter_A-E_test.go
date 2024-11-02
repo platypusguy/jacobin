@@ -18,6 +18,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"unsafe"
 )
 
 // ACONST_NULL: Load null onto opStack
@@ -135,29 +136,29 @@ func TestNewAload3(t *testing.T) {
 }
 
 // ARETURN: Return a long from a function
-// func TestNewAreturn(t *testing.T) {
-// 	f0 := newFrame(0)
-// 	push(&f0, unsafe.Pointer(&f0))
-//
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f0)
-//
-// 	// create a new frame which does an ARETURN of pointer to f1
-// 	f1 := newFrame(opcodes.ARETURN)
-// 	push(&f1, unsafe.Pointer(&f1))
-// 	fs.PushFront(&f1)
-// 	interpret(fs)
-//
-// 	// now that the ARETURN has completed, pop that frame (the one that did the ARETURN)
-// 	_ = frames.PopFrame(fs)
-//
-// 	// and see whether the pointer at the frame's top of stack points to f1
-// 	f2 := fs.Front().Value.(*frames.Frame)
-// 	newVal := pop(f2).(unsafe.Pointer)
-// 	if newVal != unsafe.Pointer(&f1) {
-// 		t.Error("ARETURN: did not get expected value of reference")
-// 	}
-// }
+func TestNewAreturn(t *testing.T) {
+	f0 := newFrame(0)
+	push(&f0, unsafe.Pointer(&f0))
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f0)
+
+	// create a new frame which does an ARETURN of pointer to f1
+	f1 := newFrame(opcodes.ARETURN)
+	push(&f1, unsafe.Pointer(&f1))
+	fs.PushFront(&f1)
+	interpret(fs)
+
+	// now that the ARETURN has completed, pop that frame (the one that did the ARETURN)
+	// _ = frames.PopFrame(fs)
+
+	// and see whether the pointer at the frame's top of stack points to f1
+	f2 := fs.Front().Value.(*frames.Frame)
+	newVal := pop(f2).(unsafe.Pointer)
+	if newVal != unsafe.Pointer(&f1) {
+		t.Error("ARETURN: did not get expected value of reference")
+	}
+}
 
 // ASTORE: Store reference in local var specified by following byte.
 func TestNewAstore(t *testing.T) {
@@ -939,27 +940,27 @@ func TestNewDrem(t *testing.T) {
 }
 
 // DRETURN: Return a long from a function
-// func TestNewDreturn(t *testing.T) {
-// 	f0 := newFrame(0)
-// 	push(&f0, float64(20))
-// 	fs := frames.CreateFrameStack()
-// 	fs.PushFront(&f0)
-// 	f1 := newFrame(opcodes.DRETURN)
-// 	push(&f1, float64(21))
-// 	fs.PushFront(&f1)
-// 	interpret(fs)
-// 	_ = frames.PopFrame(fs)
-// 	f3 := fs.Front().Value.(*frames.Frame)
-// 	newVal := pop(f3).(float64)
-// 	if newVal != 21.0 {
-// 		t.Errorf("After DRETURN, expected a value of 21 in previous frame, got: %f", newVal)
-// 	}
-//
-// 	prevVal := pop(f3).(float64)
-// 	if prevVal != 20 {
-// 		t.Errorf("After DRETURN, expected a value of 20 in 2nd place of previous frame, got: %f", prevVal)
-// 	}
-// }
+func TestNewDreturn(t *testing.T) {
+	f0 := newFrame(0)
+	push(&f0, float64(20))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f0)
+	f1 := newFrame(opcodes.DRETURN)
+	push(&f1, float64(21))
+	fs.PushFront(&f1)
+	interpret(fs)
+
+	f3 := fs.Front().Value.(*frames.Frame)
+	newVal := pop(f3).(float64)
+	if newVal != 21.0 {
+		t.Errorf("After DRETURN, expected a value of 21 in previous frame, got: %f", newVal)
+	}
+
+	prevVal := pop(f3).(float64)
+	if prevVal != 20 {
+		t.Errorf("After DRETURN, expected a value of 20 in 2nd place of previous frame, got: %f", prevVal)
+	}
+}
 
 // DSTORE: Store double from stack into local specified by following byte.
 func TestNewDstore(t *testing.T) {
