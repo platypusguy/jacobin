@@ -2037,6 +2037,11 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		popped := pop(fr)
 		params = append(params, popped)
 
+		if globals.TraceInst {
+			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+			trace.Trace(infoMsg)
+		}
+
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
 		// if err != nil {
 		if ret != nil {
