@@ -1885,7 +1885,6 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 // 0xB5 PUTFIELD place value into an object's field
 func doPutfield(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	fr.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	fieldEntry := CP.CpIndex[CPslot]
 	if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
