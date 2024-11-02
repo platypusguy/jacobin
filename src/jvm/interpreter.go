@@ -2765,7 +2765,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// the highest dimension first. So a two-dimensional array
 	// such as x[4][3], would have entries of 4 and 3 respectively
 	// in the dimsizes slice.
-	dimensionCount := int(fr.Meth[fr.PC+1])
+	dimensionCount := int(fr.Meth[fr.PC+3])
 
 	if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
