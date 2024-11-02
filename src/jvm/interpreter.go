@@ -2130,6 +2130,11 @@ func doInvokeSpecial(fr *frames.Frame, _ int64) int {
 		objRef := pop(fr).(*object.Object)
 		params = append(params, objRef)
 
+		if globals.TraceInst {
+			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+			trace.Trace(infoMsg)
+		}
+
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
 		if ret != nil {
 			switch ret.(type) {
@@ -2220,6 +2225,11 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		var params []interface{}
 		for i := 0; i < paramCount; i++ {
 			params = append(params, pop(fr))
+		}
+
+		if globals.TraceInst {
+			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+			trace.Trace(infoMsg)
 		}
 
 		// fr.PC += 2 // advance PC for the first two bytes of this bytecode
