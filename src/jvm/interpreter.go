@@ -628,10 +628,10 @@ func doAstore(fr *frames.Frame, _ int64) int {
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
 // 0x4B - 0x4E ASTORE_x:    "    "     "   "     "
-func doIstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
-func doIstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
-func doIstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
-func doIstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
+func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
+func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
+func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
+func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
 
 // 0x43 - 0x4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
 // These are the same as the ISTORE_x functions. However, at some point,
@@ -2939,5 +2939,12 @@ func pushFloat(fr *frames.Frame, intToPush int64) int {
 
 func store(fr *frames.Frame, local int64) int {
 	fr.Locals[local] = pop(fr)
+	return 1
+}
+
+func storeInt(fr *frames.Frame, local int64) int {
+	// because we could be storing a byte, boolean, short, etc.
+	// we must convert the interface to an int64.
+	fr.Locals[local] = convertInterfaceToInt64(pop(fr))
 	return 1
 }
