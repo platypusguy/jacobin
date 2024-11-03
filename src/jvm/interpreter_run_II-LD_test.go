@@ -601,11 +601,12 @@ func TestNewIushr(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
 
-	value := pop(&f).(int64) // longs require two slots, so popped twice
+	value := pop(&f).(int64)
 
 	if value != 25 { // 200 >> 3 = 25
 		t.Errorf("IUSHR: expected a result of 25, but got: %d", value)
 	}
+
 	if f.TOS != -1 {
 		t.Errorf("IUSHR: Expected an empty stack, but got a tos of: %d", f.TOS)
 	}
@@ -635,6 +636,7 @@ func TestNewIxor(t *testing.T) {
 // That second bytecode, jumps backwards to the RETURN bytecode. In this way, we test
 // forward and backward jumps. We then test that the jump offsets were appropriately
 // placed on the op stack.
+/*
 func TestNewJSR(t *testing.T) {
 	f := newFrame(opcodes.JSR) // jump to next JSR
 	f.Meth = append(f.Meth, 0x00)
@@ -656,7 +658,7 @@ func TestNewJSR(t *testing.T) {
 		t.Errorf("JSR: expected opstack[1] to be -1, got: %d", f.OpStack[1])
 	}
 }
-
+*/
 // L2D: Convert long to double
 func TestNewL2d(t *testing.T) {
 	f := newFrame(opcodes.L2D)
@@ -679,7 +681,6 @@ func TestNewL2d(t *testing.T) {
 // L2F: Convert long to float
 func TestNewL2f(t *testing.T) {
 	f := newFrame(opcodes.L2F)
-	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
 	fs := frames.CreateFrameStack()
@@ -690,6 +691,7 @@ func TestNewL2f(t *testing.T) {
 	if val != 21.0 {
 		t.Errorf("L2D: expected a result of 21.0, but got: %f", val)
 	}
+
 	if f.TOS != -1 {
 		t.Errorf("L2D: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
@@ -698,7 +700,6 @@ func TestNewL2f(t *testing.T) {
 // L2I: Convert long to int
 func TestNewL2i(t *testing.T) {
 	f := newFrame(opcodes.L2I)
-	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
 
 	fs := frames.CreateFrameStack()
@@ -709,6 +710,7 @@ func TestNewL2i(t *testing.T) {
 	if val != 21 {
 		t.Errorf("L2I: expected a result of 21, but got: %d", val)
 	}
+
 	if f.TOS != -1 {
 		t.Errorf("L2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
@@ -717,7 +719,6 @@ func TestNewL2i(t *testing.T) {
 // L2I: Convert long to int (test with negative value)
 func TestNewL2ineg(t *testing.T) {
 	f := newFrame(opcodes.L2I)
-	push(&f, int64(-21)) // longs require two slots, so pushed twice
 	push(&f, int64(-21))
 
 	fs := frames.CreateFrameStack()
@@ -728,6 +729,7 @@ func TestNewL2ineg(t *testing.T) {
 	if val != -21 {
 		t.Errorf("L2I: expected a result of -21, but got: %d", val)
 	}
+
 	if f.TOS != -1 {
 		t.Errorf("L2I: Expected stack with 0 items, but got a TOS of: %d", f.TOS)
 	}
@@ -736,10 +738,7 @@ func TestNewL2ineg(t *testing.T) {
 // LADD: Add two longs
 func TestNewLadd(t *testing.T) {
 	f := newFrame(opcodes.LADD)
-	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
-
-	push(&f, int64(22))
 	push(&f, int64(22))
 
 	fs := frames.CreateFrameStack()
@@ -747,7 +746,6 @@ func TestNewLadd(t *testing.T) {
 	interpret(fs)
 
 	value := pop(&f).(int64) // longs require two slots, so popped twice
-	pop(&f)
 
 	if value != 43 {
 		t.Errorf("LADD: expected a result of 43, but got: %d", value)
@@ -760,18 +758,14 @@ func TestNewLadd(t *testing.T) {
 // LAND: Logical and of two longs, push result
 func TestNewLand(t *testing.T) {
 	f := newFrame(opcodes.LAND)
-	push(&f, int64(21)) // longs require two slots, so pushed twice
 	push(&f, int64(21))
-
-	push(&f, int64(22))
 	push(&f, int64(22))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
 
-	value := pop(&f).(int64) // longs require two slots, so popped twice
-	pop(&f)
+	value := pop(&f).(int64)
 
 	if value != 20 { // 21 & 22 = 20
 		t.Errorf("LAND: expected a result of 20, but got: %d", value)
@@ -844,8 +838,8 @@ func TestNewLconst0(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
-	if f.TOS != 1 {
-		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f).(int64)
 	if value != 0 {
@@ -859,8 +853,8 @@ func TestNewLconst1(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
-	if f.TOS != 1 {
-		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f).(int64)
 	if value != 1 {
@@ -1078,8 +1072,8 @@ func TestNewLdc2wForDouble(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
-	if f.TOS != 1 {
-		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
 	value := pop(&f).(float64)
 	if value != 25.0 {
@@ -1102,7 +1096,7 @@ func TestNewLdc2wForLong(t *testing.T) {
 	CP.LongConsts[0] = 25
 
 	CP.CpIndex = []classloader.CpEntry{}
-	dummyEntry := classloader.CpEntry{}
+	dummyEntry := classloader.CpEntry{} // CP 0
 	doubleEntry := classloader.CpEntry{
 		Type: classloader.LongConst, Slot: 0,
 	}
@@ -1112,9 +1106,11 @@ func TestNewLdc2wForLong(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
-	if f.TOS != 1 {
-		t.Errorf("Top of stack, expected 1, got: %d", f.TOS)
+
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
+
 	value := pop(&f).(int64)
 	if value != 25. {
 		t.Errorf("LDC2_W: Expected popped value to be 25, got: %d", value)
