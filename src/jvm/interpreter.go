@@ -1126,9 +1126,11 @@ func doIushr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
 	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 	val1 := pop(fr).(int64)
-	pop(fr)
-	val3 := val1 >> ushiftBy
-	push(fr, val3)
+	if val1 < 0 { // per spec, cancel the negative sign
+		val1 = -val1
+	}
+	shiftedVal := val1 >> ushiftBy
+	push(fr, shiftedVal)
 	return 1
 }
 
