@@ -587,7 +587,7 @@ func doIstore(fr *frames.Frame, _ int64) int {
 	}
 
 	popped := pop(fr)
-	fr.Locals[index] = convertInterfaceToInt64(popped) // TODO: conversion needed?
+	fr.Locals[index] = convertInterfaceToInt64(popped)
 	return PCadvance + 1
 }
 
@@ -1164,7 +1164,7 @@ func doIinc(fr *frames.Frame, _ int64) int {
 	var PCtoSkip int
 	if fr.WideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
 		index = (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
-		increment = int64(fr.Meth[fr.PC+1])*256 + int64(fr.Meth[fr.PC+2])
+		increment = int64(fr.Meth[fr.PC+3])*256 + int64(fr.Meth[fr.PC+4])
 		PCtoSkip = 4
 		fr.WideInEffect = false
 	} else {
