@@ -275,6 +275,7 @@ func interpret(fs *list.List) {
 			// again for the frame at the top of the frame stack
 			return
 		case exceptions.ERROR_OCCURRED: // occurs only in tests
+			fr.PC = exceptions.ERROR_OCCURRED // allows for testing
 			return
 		default:
 			fr.PC += ret
