@@ -1101,7 +1101,6 @@ func doIshl(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
 	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 	val1 := pop(fr).(int64)
-	pop(fr)
 	val2 := val1 << ushiftBy
 	push(fr, val2)
 	return 1
