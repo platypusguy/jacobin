@@ -15,7 +15,7 @@ import (
 )
 
 // Performs the format check on a fully parsed class. The requirements are listed
-// here: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8
+// here: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.8
 // They are:
 //  1. must start with 0xCAFEBABE -- this is verified in the parsing, so not done here
 //  2. most predefined attributes must be the right length -- verified during parsing
@@ -372,7 +372,7 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 				}
 			}
 
-			//trace.Trace("formatCheckConstantPool: ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
+			// trace.Trace("formatCheckConstantPool: ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
 			//	" is:"+methodName)
 
 		case MethodType:
