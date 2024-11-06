@@ -671,8 +671,8 @@ func TestGetFieldWithLong(t *testing.T) {
 		t.Errorf("GETFIELD: expected popped value of 222, got: %d", ret)
 	}
 
-	if f.TOS != 0 {
-		t.Errorf("GETFIELD: Expected 1 remaining value op stack, got TOS: %d", f.TOS)
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD: Expected 0 remaining value op stack, got TOS: %d", f.TOS)
 	}
 }
 
