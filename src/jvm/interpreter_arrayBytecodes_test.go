@@ -51,6 +51,11 @@ func TestNewNewJdkArrayTypeToJacobinType(t *testing.T) {
 // AALOAD: Test fetching and pushing the value of an element in a reference array
 // The logic here is effectively identical to IALOAD. This code also tests AASTORE.
 func TestNewAaload(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
 
 	f := newFrame(opcodes.ANEWARRAY)
 	push(&f, int64(30)) // make an array of 30 elements
@@ -67,7 +72,6 @@ func TestNewAaload(t *testing.T) {
 	CP.ClassRefs = append(CP.ClassRefs, types.StringPoolStringIndex) // use string pool
 	f.CP = &CP
 
-	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
@@ -101,6 +105,8 @@ func TestNewAaload(t *testing.T) {
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)    // execute the bytecode
 
+	os.Stderr = normalStderr
+
 	res := pop(&f)
 	if res != oPtr {
 		t.Errorf("AALOAD: Expected loaded array value = %v, got: %v", oPtr, res)
@@ -114,6 +120,9 @@ func TestNewAaload(t *testing.T) {
 // AALOAD: Test with a nil
 func TestNewAaloadWithNil(t *testing.T) {
 	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
 
 	fs := frames.CreateFrameStack()
 
@@ -121,14 +130,19 @@ func TestNewAaloadWithNil(t *testing.T) {
 	push(&f, nil)       // push the reference to the array -- here nil
 	push(&f, int64(20)) // index to array[20]
 	fs = frames.CreateFrameStack()
-	fs.PushFront(&f)    // push the new frame
-	err := runFrame(fs) // execute the bytecode
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("AALOAD: Expecting error for nil refernce, but got none")
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid (null) reference") {
 		t.Errorf("AALOAD: Did not get expected error msg, got: %s", errMsg)
 	}
@@ -402,19 +416,28 @@ func TestNewAnewrrayKlassField(t *testing.T) {
 // ANEWARRAY: creation of array for references; test invalid array size
 func TestNewAnewrrayInvalidSize(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	push(&f, int64(-1)) // make the array an invalid size
 
 	globals.InitGlobals("test")
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
-	if err == nil {
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg == "" {
 		t.Errorf("ANEWARRAY: Did not get expected error")
 	}
 
-	msg := err.Error()
-	if !(msg == "ANEWARRAY: Invalid size for array") {
+	if !strings.Contains(errMsg, "java.lang.NegativeArraySizeException") {
 		t.Errorf("ANEWARRAY: Expecting different error msg, got %s", msg)
 	}
 }
@@ -608,15 +631,27 @@ func TestNewRefArrayLength(t *testing.T) {
 
 // ARRAYLENGTH: Test length of raw byte array
 func TestNewRawByteArrayLength(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	array := []byte{'a', 'b', 'c'}
 	f := newFrame(opcodes.ARRAYLENGTH)
 	push(&f, &array) // push the reference to the array
 	fs := frames.CreateFrameStack()
-	fs.PushFront(&f)    // push the new frame
-	err := runFrame(fs) // execute the bytecode
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
 
-	if err != nil {
-		t.Errorf("ARRAYLENGTH: Got unexpected error message: %s", err.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Errorf("ARRAYLENGTH: Got unexpected error message: %s", errMsg)
 	}
 
 	length := pop(&f).(int64)
@@ -627,15 +662,26 @@ func TestNewRawByteArrayLength(t *testing.T) {
 
 // ARRAYLENGTH: Test length of raw int8 array
 func TestNewRawInt8ArrayLength(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	array := []uint8{'a', 'b', 'c'}
 	f := newFrame(opcodes.ARRAYLENGTH)
 	push(&f, &array) // push the reference to the array
 	fs := frames.CreateFrameStack()
-	fs.PushFront(&f)    // push the new frame
-	err := runFrame(fs) // execute the bytecode
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
 
-	if err != nil {
-		t.Errorf("TestRawInt8ArrayLength: Got unexpected error message: %s", err.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Errorf("TestRawInt8ArrayLength: Got unexpected error message: %s", errMsg)
 	}
 
 	length := pop(&f).(int64)
@@ -647,18 +693,27 @@ func TestNewRawInt8ArrayLength(t *testing.T) {
 // ARRAYLENGTH: Test length of nil array -- should return an error
 func TestNewNilArrayLength(t *testing.T) {
 	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.ARRAYLENGTH)
 	push(&f, nil) // push the reference to the array
 	fs := frames.CreateFrameStack()
-	fs.PushFront(&f)    // push the new frame
-	err := runFrame(fs) // execute the bytecode
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("ARRAYLENGTH: Expecting an error message, but got none")
 	}
 
-	errMsg := err.Error()
-	if errMsg != "ARRAYLENGTH: Invalid (null) reference to an array" {
+	if !strings.Contains(errMsg, "ARRAYLENGTH: Invalid (null) reference to an array") {
 		t.Errorf("ARRAYLENGTH: Expecting different error msg, got: %s", errMsg)
 	}
 }
@@ -2290,6 +2345,10 @@ func TestNew3DimArray2(t *testing.T) {
 	g := globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
 
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
 	// create the constant pool we'll point to
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -2314,6 +2373,10 @@ func TestNew3DimArray2(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)    // execute the bytecode
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
 	if f.TOS != 0 {
 		t.Errorf("MULTIANEWARRAY: Top of stack, expected 0, got: %d", f.TOS)
 	}
@@ -2369,6 +2432,11 @@ func TestNewNewrray(t *testing.T) {
 
 // NEWARRAY: Create new array of 13 bytes
 func TestNewNewrrayForByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(13))                    // size
 	f.Meth = append(f.Meth, object.T_BYTE) // make it an array of bytes
@@ -2377,10 +2445,16 @@ func TestNewNewrrayForByteArray(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err != nil {
-		t.Errorf("NEWARRAY: Got unexpected error: %s", err.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Errorf("NEWARRAY: Got unexpected error: %s", errMsg)
 	}
 
 	arrayPtr := pop(&f).(*object.Object)
@@ -2391,7 +2465,12 @@ func TestNewNewrrayForByteArray(t *testing.T) {
 }
 
 // NEWARRAY: Create new array -- test with invalid size
-func TestNewNewrrayInvalidSize(t *testing.T) {
+func TestNewNewArrayInvalidSize(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(-13))                   // invalid size (less than 0)
 	f.Meth = append(f.Meth, object.T_LONG) // make it an array of longs
@@ -2400,13 +2479,18 @@ func TestNewNewrrayInvalidSize(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("NEWARRAY: Expected an error message, but got none")
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid size for array") {
 		t.Errorf("NEWARRAY: Got unexpected error message: %s", errMsg)
 	}
@@ -2414,6 +2498,11 @@ func TestNewNewrrayInvalidSize(t *testing.T) {
 
 // NEWARRAY: Create new array -- test with invalid type ERROR
 func TestNewNewrrayInvalidTypeError(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(13))                   // size
 	f.Meth = append(f.Meth, object.ERROR) // invalid type
@@ -2422,13 +2511,18 @@ func TestNewNewrrayInvalidTypeError(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("TestNewrrayInvalidTypeError: Expected an error message, but got none")
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid array type specified") {
 		t.Errorf("TestNewrrayInvalidTypeError: Got unexpected error message: %s", errMsg)
 	}
@@ -2436,6 +2530,11 @@ func TestNewNewrrayInvalidTypeError(t *testing.T) {
 
 // NEWARRAY: Create new array -- test with invalid type T_REF
 func TestNewNewrrayInvalidTypeRef(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.NEWARRAY)
 	push(&f, int64(13))                   // size
 	f.Meth = append(f.Meth, object.T_REF) // invalid type
@@ -2444,14 +2543,19 @@ func TestNewNewrrayInvalidTypeRef(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("TestNewrrayInvalidTypeRef: Expected an error message, but got none")
 		return
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid array type specified") {
 		t.Errorf("TestNewrrayInvalidTypeRef: Got unexpected error message: %s", errMsg)
 	}
