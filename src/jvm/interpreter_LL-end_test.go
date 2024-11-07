@@ -749,22 +749,23 @@ func TestNewPopBytecodrUnderflow(t *testing.T) {
 
 	// hide the error message to stderr
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.POP)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	ret := runFrame(fs)
+	interpret(fs)
 
-	// restore stderr
 	_ = w.Close()
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
-	if !strings.Contains(ret.Error(), "stack underflow in POP") {
-		t.Errorf("Did not get expected error from invalide POP, got: %s", ret.Error())
-	}
+	errMsg := string(msg)
 
+	if !strings.Contains(errMsg, "stack underflow in POP") {
+		t.Errorf("Did not get expected error from invalide POP, got: %s", errMsg)
+	}
 }
 
 // POP2: pop two items
@@ -819,27 +820,28 @@ func TestNewPop2WithTrace(t *testing.T) {
 }
 
 // POP2: Test underflow error
-func TestNewPo2Underflow(t *testing.T) {
+func TestNewPop2Underflow(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// hide the error message to stderr
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.POP2)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	ret := runFrame(fs)
+	interpret(fs)
 
-	// restore stderr
 	_ = w.Close()
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
-	if !strings.Contains(ret.Error(), "stack underflow in POP2") {
-		t.Errorf("Did not get expected error from invalide POP, got: %s", ret.Error())
-	}
+	errMsg := string(msg)
 
+	if !strings.Contains(errMsg, "stack underflow in POP2") {
+		t.Errorf("Did not get expected error from invalid POP, got: %s", errMsg)
+	}
 }
 
 // PUSH: Push a value on the op stack
@@ -918,6 +920,12 @@ func TestNewPushWithStackOverflow(t *testing.T) {
 
 // PUTFIELD: Update a non-static field
 func TestNewPutFieldSimpleInt(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -953,10 +961,16 @@ func TestNewPutFieldSimpleInt(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err != nil {
-		t.Errorf("PUTFIELD: Got unexpected error msg: %s", err.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Errorf("PUTFIELD: Got unexpected error msg: %s", errMsg)
 	}
 
 	res := obj.FieldTable["value"].Fvalue.(int64)
@@ -967,6 +981,12 @@ func TestNewPutFieldSimpleInt(t *testing.T) {
 
 // PUTFIELD for a double
 func TestNewPutFieldDouble(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -1004,10 +1024,16 @@ func TestNewPutFieldDouble(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err != nil {
-		t.Errorf("PUTFIELD: Got unexpected error msg: %s", err.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Errorf("PUTFIELD: Got unexpected error msg: %s", errMsg)
 	}
 
 	res := obj.FieldTable["value"].Fvalue.(float64)
@@ -1018,6 +1044,12 @@ func TestNewPutFieldDouble(t *testing.T) {
 
 // PUTFIELD: Update a field in an object -- error doesn't point to a field
 func TestNewPutFieldNonFieldCPentry(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -1032,16 +1064,27 @@ func TestNewPutFieldNonFieldCPentry(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	msg := err.Error()
-	if !strings.Contains(msg, "PUTFIELD: Expected a field ref, but") {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "PUTFIELD: Expected a field ref, but") {
 		t.Errorf("PUTFIELD: Did not get expected error msg: %s", msg)
 	}
 }
 
 // PUTFIELD: Error: attempt to update a static field (which should be done by PUTSTATIC, not PUTFIELD)
 func TestNewPutFieldErrorUpdatingStatic(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.PUTFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -1077,13 +1120,18 @@ func TestNewPutFieldErrorUpdatingStatic(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("PUTFIELD: Expected error message but got none")
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "invalid attempt to update a static variable") {
 		t.Errorf("PUTFIELD: Did not get expected error message, got %s", errMsg)
 	}
@@ -1091,6 +1139,12 @@ func TestNewPutFieldErrorUpdatingStatic(t *testing.T) {
 
 // PUTSTATIC: Update a static field -- invalid b/c does not point to a field ref in the CP
 func TestNewPutStaticInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.PUTSTATIC)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -1106,12 +1160,17 @@ func TestNewPutStaticInvalid(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("PUTSTATIC: Expected error but did not get one.")
 	} else {
-		errMsg := err.Error()
 		if !strings.Contains(errMsg, "Expected a field ref, but got") {
 			t.Errorf("PUTSTATIC: Did not get expected error message, got: %s", errMsg)
 		}
@@ -1138,16 +1197,28 @@ func TestNewRET(t *testing.T) {
 
 // RETURN: Does a function return correctly?
 func TestNewReturn(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.RETURN)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	ret := runFrame(fs)
+	interpret(fs)
 	if f.TOS != -1 {
 		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
 	}
 
-	if ret != nil {
-		t.Error("RETURN: Expected popped value to be nil, got: " + ret.Error())
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		t.Error("RETURN: Expected popped value to be nil, got: " + errMsg)
 	}
 }
 
@@ -1385,38 +1456,24 @@ func TestNewWideRET(t *testing.T) {
 	}
 }
 func TestNewInvalidInstruction(t *testing.T) {
-	// set the logger to low granularity, so that logging messages are not also captured in this test
-	Global := globals.InitGlobals("test")
-	LoadOptionsTable(Global)
+	globals.InitGlobals("test")
 
-	// to avoid cluttering the test results, redirect stdout
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	// to inspect usage message, redirect stderr
+	// redirect stderr
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	f := newFrame(252)
+	f := newFrame(252) // an invalid bytecode
 
 	MainThread = thread.CreateThread()
 	MainThread.Stack = frames.CreateFrameStack()
 	MainThread.Stack.PushFront(&f) // push the new frame
 	MainThread.Trace = false       // turn off tracing
-	ret := runFrame(MainThread.Stack)
-
-	if ret == nil {
-		t.Errorf("Invalid instruction: Expected an error returned, but got nil.")
-	}
+	interpret(MainThread.Stack)
 
 	// restore stderr to what it was before
 	_ = w.Close()
 	out, _ := io.ReadAll(r)
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
 	os.Stderr = normalStderr
 
 	msg := string(out[:])
