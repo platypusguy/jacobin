@@ -506,6 +506,12 @@ func TestNewMonitorExit(t *testing.T) {
 
 // NEW: Instantiate object -- here with an error
 func TestNewNewWithError(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	f := newFrame(opcodes.NEW)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -521,13 +527,18 @@ func TestNewNewWithError(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	if err == nil {
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("NEW: Expected error message, but got none")
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "Invalid type for new object") {
 		t.Errorf("NEW: got unexpected error message: %s", errMsg)
 	}

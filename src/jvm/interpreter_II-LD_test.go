@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"io"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
@@ -940,7 +941,7 @@ func TestNewLdcInvalidDouble(t *testing.T) {
 
 	// hide the error message to stderr
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.LDC)
@@ -964,15 +965,17 @@ func TestNewLdcInvalidDouble(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	ret := runFrame(fs)
+	interpret(fs)
 
-	// restore stderr
 	_ = w.Close()
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
-	if ret != nil {
-		if !strings.Contains(ret.Error(), "LDC: Invalid type") {
-			t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		if !strings.Contains(errMsg, "LDC: Invalid type") {
+			t.Errorf("Did not get expected error from LDC with double value, got: %s", errMsg)
 		}
 	} else {
 		t.Errorf("Did not get expected error from LDC with double value")
@@ -1123,7 +1126,7 @@ func TestNewLdc2wInvalidForString(t *testing.T) {
 
 	// hide the error message to stderr
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.LDC2_W)
@@ -1148,15 +1151,17 @@ func TestNewLdc2wInvalidForString(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	ret := runFrame(fs)
+	interpret(fs)
 
-	// restore stderr
 	_ = w.Close()
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
 
-	if ret != nil {
-		if !strings.Contains(ret.Error(), "LDC2_W: Invalid type") {
-			t.Errorf("Did not get expected error from LDC with double value, got: %s", ret.Error())
+	errMsg := string(msg)
+
+	if errMsg != "" {
+		if !strings.Contains(errMsg, "LDC2_W: Invalid type") {
+			t.Errorf("Did not get expected error from LDC with double value, got: %s", errMsg)
 		}
 	} else {
 		t.Errorf("Did not get expected error message in TestLdc2wInvalidForString()")

@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"io"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
@@ -404,7 +405,7 @@ func TestNewCheckcastOfInvalidReference(t *testing.T) {
 
 	// redirect stderr to avoid printing error message to console
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.CHECKCAST)
@@ -412,11 +413,15 @@ func TestNewCheckcastOfInvalidReference(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	os.Stderr = normalStderr // restore stderr
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
 
-	if err == nil {
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("CHECKCAST: Expected an error, but did not get one")
 	}
 
@@ -424,7 +429,6 @@ func TestNewCheckcastOfInvalidReference(t *testing.T) {
 		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "CHECKCAST: Invalid class reference") {
 		t.Errorf("CHECKCAST: Expected different error message. Got: %s", errMsg)
 	}
