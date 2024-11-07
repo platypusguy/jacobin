@@ -256,6 +256,8 @@ var DispatchTable = [203]BytecodeFunc{
 // runThread() loop goes to the top of the frame stack and calls
 // interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
+	const maxBytecode = byte(len(DispatchTable) - 1)
+
 	fr := fs.Front().Value.(*frames.Frame)
 	if fr.FrameStack == nil { // make sure the can reference the frame stack
 		fr.FrameStack = fs
@@ -268,18 +270,41 @@ func interpret(fs *list.List) {
 		}
 
 		opcode := fr.Meth[fr.PC]
-		ret := DispatchTable[opcode](fr, 0)
-		switch ret {
-		case 0:
-			// exiting will either end program or call this function
-			// again for the frame at the top of the frame stack
-			return
-		case exceptions.ERROR_OCCURRED: // occurs only in tests
-			fr.PC = exceptions.ERROR_OCCURRED // allows for testing
-			return
-		default:
-			fr.PC += ret
+		if opcode <= maxBytecode {
+			ret := DispatchTable[opcode](fr, 0)
+			switch ret {
+			case 0:
+				// exiting will either end program or call this function
+				// again for the frame at the top of the frame stack
+				return
+			case exceptions.ERROR_OCCURRED: // occurs only in tests
+				fr.PC = exceptions.ERROR_OCCURRED // allows for testing
+				return
+			default:
+				fr.PC += ret
+			}
+		} else {
+			errMsg := fmt.Sprintf("Invalid bytecode: %d", opcode)
+			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
+			if status != exceptions.Caught { // will only happen in test
+				globals.InitGlobals("test")
+				return
+			}
 		}
+
+		defer func() int {
+			// only an untrapped panic gets us here
+			if r := recover(); r != nil {
+				stack := string(debug.Stack())
+				glob := globals.GetGlobalRef()
+				glob.ErrorGoStack = stack
+				exceptions.ShowPanicCause(r)
+				exceptions.ShowFrameStack(fs)
+				exceptions.ShowGoStackTrace(nil)
+				return shutdown.Exit(shutdown.APP_EXCEPTION)
+			}
+			return shutdown.OK
+		}()
 	}
 }
 
@@ -872,7 +897,7 @@ func doPop(fr *frames.Frame, _ int64) int {
 // 0x58 POP2 pop 2 items off op stack
 func doPop2(fr *frames.Frame, _ int64) int {
 	if fr.TOS < 1 {
-		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+		errMsg := fmt.Sprintf("stack underflow in POP2 in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
 		if status != exceptions.Caught {
