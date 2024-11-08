@@ -22,6 +22,34 @@ import (
 	"unsafe"
 )
 
+// These tests test the individual bytecode instructions. They are presented
+// here in alphabetical order of the instruction name.
+// THIS FILE CONTAINS TESTS FOR ALL BYTECODES THROUGH DUP2_X2.
+// All other bytecodes are in interpreter_*_test.go files except
+// for array bytecodes, which are located in arrayBytecodes_test.go
+
+// set up function to create a frame with a method with the single instruction
+// that's being tested
+func newFrame(code byte) frames.Frame {
+	f := frames.CreateFrame(6)
+	f.Ftype = 'J'
+	f.Meth = append(f.Meth, code)
+	return *f
+}
+
+var zero = int64(0)
+var zerof = float64(0)
+
+var maxFloatDiff = .00001
+
+func validateFloatingPoint(t *testing.T, op string, expected float64, actual float64) {
+	if math.Abs(expected-actual) > maxFloatDiff {
+		t.Errorf("%s: expected a result of %f, but got: %f", op, expected, actual)
+	}
+}
+
+// =============================================================================================//
+
 // ACONST_NULL: Load null onto opStack
 func TestNewAconstNull(t *testing.T) {
 	f := newFrame(opcodes.ACONST_NULL)
