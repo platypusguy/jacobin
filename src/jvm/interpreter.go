@@ -222,16 +222,16 @@ var DispatchTable = [203]BytecodeFunc{
 	doIreturn,       // DRETURN         0xAF
 	doIreturn,       // ARETURN         0xB0
 	doReturn,        // RETURN          0xB1
-	doGetStatic,     // GETSTATIC       0xB2
-	doPutStatic,     // PUTSTATIC       0xB3
+	nil,             // GETSTATIC       0xB2 initialized in initializeDispatchTable()
+	nil,             // PUTSTATIC       0xB3 initialized in initializeDispatchTable()
 	doGetfield,      // GETFIELD        0xB4
 	doPutfield,      // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
 	doInvokeSpecial, // INVOKESPECIAL   0xB7
-	doInvokestatic,  // INVOKESTATIC    0xB8
+	nil,             // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
-	doNew,           // NEW             0xBB
+	nil,             // NEW             0xBB initialized in initializeDispatchTable()
 	doNewarray,      // NEWARRAY        0xBC
 	doAnewarray,     // ANEWARRAY       0xBD
 	doArraylength,   // ARRAYLENGTH     0xBE
@@ -247,6 +247,27 @@ var DispatchTable = [203]BytecodeFunc{
 	doGotow,         // GOTO_W          0xC8
 	doJsrw,          // JSR_W           0xC9
 	doWarninvalid,   // BREAKPOINT      0xCA not implemented, generates warning, not exception
+}
+
+// initializeDispatchTable initializes a few bytecodes that call interpret(). If they were
+// initialized to their respective functions directly in the table above, golang gives a
+// circularity error:
+// jvm\interpreter.go:46:5: DispatchTable refers to
+//
+//	jvm\interpreter.go:1621:6: doGetStatic refers to
+//	jvm\instantiate.go:36:6: InstantiateClass refers to
+//	jvm\initializerBlock.go:28:6: runInitializationBlock refers to
+//	jvm\initializerBlock.go:89:6: runJavaInitializer refers to
+//	jvm\interpreter.go:264:6: interpret refers to
+//	jvm\interpreter.go:46:5: DispatchTable
+//
+// By initializing those bytecodes with their methods here, the circularity
+// issue goes away. Golang can't tell that the circularity will never occur.
+func initializeDispatchTable() {
+	DispatchTable[opcodes.GETSTATIC] = doGetStatic
+	DispatchTable[opcodes.PUTSTATIC] = doPutStatic
+	DispatchTable[opcodes.INVOKESTATIC] = doInvokestatic
+	DispatchTable[opcodes.NEW] = doNew
 }
 
 // the main interpreter loop. This loop takes responsibility for
@@ -1654,6 +1675,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	if !ok { // if field is not already loaded, then
 		// the class has not been instantiated, so
 		// instantiate the class
+		// _, err := instantiateClass(className, fr.FrameStack)
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
 			prevLoaded, ok = statics.Statics[fieldName]
