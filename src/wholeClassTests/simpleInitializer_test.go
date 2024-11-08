@@ -38,7 +38,7 @@ func initVarsSimpleInit() error {
 	}
 
 	_JACOBIN = os.Getenv("JACOBIN_EXE") // returns "" if JACOBIN_EXE has not been specified.
-	_JVM_ARGS = ""
+	_JVM_ARGS = "-new"
 	_TESTCLASS = "SimpleStaticInit.class" // the class to test
 	_APP_ARGS = ""
 
