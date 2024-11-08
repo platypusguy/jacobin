@@ -117,11 +117,8 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 		trace.Trace(infoMsg)
 	}
 
-	err := runFrame(fs)
+	interpret(fs)                   // if an error occurs, ThrowEx() will break us out of here
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
-	if err != nil {
-		return err
-	}
 
 	frames.PopFrame(fs)
 	return nil
