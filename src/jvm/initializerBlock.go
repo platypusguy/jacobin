@@ -120,7 +120,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	interpret(fs)                   // if an error occurs, ThrowEx() will break us out of here
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 
-	frames.PopFrame(fs)
+	// frames.PopFrame(fs)
 	return nil
 }
 
