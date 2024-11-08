@@ -278,6 +278,9 @@ func initializeDispatchTable() {
 // interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
 	const maxBytecode = byte(len(DispatchTable) - 1)
+	if DispatchTable[opcodes.NEW] == nil { // test whether the table is fully initialized
+		initializeDispatchTable()
+	}
 
 	fr := fs.Front().Value.(*frames.Frame)
 	if fr.FrameStack == nil { // make sure the can reference the frame stack
