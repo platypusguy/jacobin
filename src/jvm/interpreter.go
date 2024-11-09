@@ -1579,6 +1579,7 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 // 0xAB LOOKUPSWITCH switch using lookup table
 func doLookupswitch(fr *frames.Frame, _ int64) int {
 	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.lookupswitch
+	basePC := fr.PC // where we are when the processing begins
 
 	paddingBytes := 4 - ((fr.PC + 1) % 4)
 	if paddingBytes == 4 {
@@ -1608,6 +1609,7 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 	}
 
 	// now get the value we're switching on and find the distance to jump
+	fr.PC = basePC
 	key := pop(fr).(int64)
 	jumpDistance, present := jumpTable[key]
 	if present {
