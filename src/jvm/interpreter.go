@@ -1539,6 +1539,7 @@ func doRet(fr *frames.Frame, _ int64) int {
 // 0xAA TABLESWITCH switch based on table of offsets
 func doTableswitch(fr *frames.Frame, _ int64) int {
 	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.tableswitch
+	basePC := fr.PC // where we are when the processing begins
 
 	paddingBytes := 4 - ((fr.PC + 1) % 4)
 	if paddingBytes == 4 {
@@ -1567,12 +1568,14 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 			fr.PC += jumpOffset
 			jumpPC := fourBytesToInt64(
 				fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+			fr.PC = basePC
 			return int(jumpPC)
 		}
 		jumpOffset += 4
 	}
 
 	// Default case.
+	fr.PC = basePC
 	return int(defaultJump)
 }
 
