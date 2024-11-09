@@ -129,16 +129,16 @@ func runThread(t *thread.ExecThread) error {
 	for t.Stack.Len() > 0 {
 		if globals.GetGlobalRef().NewInterpreter {
 			interpret(t.Stack)
-		} else {
-			err := runFrame(t.Stack)
-			if err != nil {
-				exceptions.ShowFrameStack(t)
-				if globals.GetGlobalRef().GoStackShown == false {
-					exceptions.ShowGoStackTrace(nil)
-					globals.GetGlobalRef().GoStackShown = true
-				}
-				return err
-			}
+			// } else {
+			// 	err := runFrame(t.Stack)
+			// 	if err != nil {
+			// 		exceptions.ShowFrameStack(t)
+			// 		if globals.GetGlobalRef().GoStackShown == false {
+			// 			exceptions.ShowGoStackTrace(nil)
+			// 			globals.GetGlobalRef().GoStackShown = true
+			// 		}
+			// 		return err
+			// 	}
 		}
 
 		if globals.GetGlobalRef().NewInterpreter {
@@ -1763,7 +1763,7 @@ frameInterpreter:
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if types.UsesTwoSlots(prevLoaded.Type) {
+			if UsesTwoSlots(prevLoaded.Type) {
 				push(f, prevLoaded.Value)
 			}
 
@@ -1905,7 +1905,7 @@ frameInterpreter:
 
 			// doubles and longs consume two slots on the op stack,
 			// so push a second time
-			if types.UsesTwoSlots(prevLoaded.Type) {
+			if UsesTwoSlots(prevLoaded.Type) {
 				pop(f)
 			}
 
@@ -3210,6 +3210,15 @@ func multiply[N frames.Number](num1, num2 N) N {
 
 func subtract[N frames.Number](num1, num2 N) N {
 	return num1 - num2
+}
+
+// UsesTwoSlots identifies longs and doubles -- the two data items
+// that occupy two slots on the op stack and elsewhere
+func UsesTwoSlots(t string) bool {
+	if t == types.Double || t == types.Long || t == types.StaticDouble || t == types.StaticLong {
+		return true
+	}
+	return false
 }
 
 // create a new frame and load up the local variables with the passed
