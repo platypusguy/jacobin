@@ -69,8 +69,6 @@ func JVMrun() int {
 		trace.Trace("running program: " + globPtr.JacobinName)
 	}
 
-	var status error
-
 	// load static variables. Needs to be here b/c CLI might modify their values
 	statics.PreloadStatics()
 
@@ -147,10 +145,16 @@ func JVMrun() int {
 	if globals.TraceInit {
 		trace.Trace("Starting execution with: " + *mainClass)
 	}
-	status = StartExec(*mainClass, &MainThread, globPtr)
 
-	if status != nil {
-		return shutdown.Exit(shutdown.APP_EXCEPTION)
-	}
+	// StartExec() runs the main thread. It does not return an error because all errors
+	// will be handled one of three ways: 1) trapped in an exception, which shutsdown the
+	// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
+	// down after processing the error; 3) a undeferred go panic, which should never occur.
+	// Consequently, if StartExec() finishes, no errors were encountered.
+	//
+	// To test for errors, trap stderr, as do many of the unit tests.
+
+	StartExec(*mainClass, &MainThread, globPtr)
+
 	return shutdown.Exit(shutdown.OK)
 }

@@ -41,13 +41,14 @@ var MainThread thread.ExecThread
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
-func StartExec(className string, mainThread *thread.ExecThread, globalStruct *globals.Globals) error {
+func StartExec(className string, mainThread *thread.ExecThread, globalStruct *globals.Globals) {
 
 	MainThread = *mainThread
 
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
-		return errors.New("Class not found: " + className + ".main()")
+		errMsg := "Class not found: " + className + ".main()"
+		exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, nil)
 	}
 
 	m := me.Meth.(classloader.JmEntry)
@@ -80,14 +81,14 @@ func StartExec(className string, mainThread *thread.ExecThread, globalStruct *gl
 	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
-		trace.Error(errMsg)
-		return errors.New(errMsg)
+		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := InstantiateClass(className, MainThread.Stack)
 	if instantiateError != nil {
-		return errors.New("Error instantiating: " + className + ".main()")
+		errMsg := "Error instantiating: " + className + ".main()"
+		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
 	if globals.TraceInst {
@@ -97,16 +98,11 @@ func StartExec(className string, mainThread *thread.ExecThread, globalStruct *gl
 	}
 
 	err = runThread(&MainThread)
-	if err != nil {
-		return err
-	}
 
 	if globals.TraceVerbose {
 		statics.DumpStatics()
 		_ = config.DumpConfig(os.Stderr)
 	}
-
-	return nil
 }
 
 // Point the thread to the top of the frame stack and tell it to run from there.
@@ -129,6 +125,9 @@ func runThread(t *thread.ExecThread) error {
 	for t.Stack.Len() > 0 {
 		// if globals.GetGlobalRef().NewInterpreter {
 		interpret(t.Stack)
+		// if t.Stack.Front().Value.(*frames.Frame).PC == exceptions.ERROR_OCCURRED {
+		// 	return errors.New("error occurred")
+		// }
 		// } else {
 		// 	err := runFrame(t.Stack)
 		// 	if err != nil {
