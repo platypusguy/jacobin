@@ -127,31 +127,31 @@ func runThread(t *thread.ExecThread) error {
 	}()
 
 	for t.Stack.Len() > 0 {
-		if globals.GetGlobalRef().NewInterpreter {
-			interpret(t.Stack)
-			// } else {
-			// 	err := runFrame(t.Stack)
-			// 	if err != nil {
-			// 		exceptions.ShowFrameStack(t)
-			// 		if globals.GetGlobalRef().GoStackShown == false {
-			// 			exceptions.ShowGoStackTrace(nil)
-			// 			globals.GetGlobalRef().GoStackShown = true
-			// 		}
-			// 		return err
-			// 	}
-		}
+		// if globals.GetGlobalRef().NewInterpreter {
+		interpret(t.Stack)
+		// } else {
+		// 	err := runFrame(t.Stack)
+		// 	if err != nil {
+		// 		exceptions.ShowFrameStack(t)
+		// 		if globals.GetGlobalRef().GoStackShown == false {
+		// 			exceptions.ShowGoStackTrace(nil)
+		// 			globals.GetGlobalRef().GoStackShown = true
+		// 		}
+		// 		return err
+		// 	}
+	}
 
-		if globals.GetGlobalRef().NewInterpreter {
-			if t.Stack.Len() == 0 { // true when the last executed frame was main()
-				return nil
-			}
-		} else {
-			if t.Stack.Len() == 1 { // true when the last executed frame was main()
-				return nil
-			} else {
-				t.Stack.Remove(t.Stack.Front()) // pop the frame off
-			}
-		}
+	// if globals.GetGlobalRef().NewInterpreter {
+	if t.Stack.Len() == 0 { // true when the last executed frame was main()
+		return nil
+		// 	}
+		// } else {
+		// 	if t.Stack.Len() == 1 { // true when the last executed frame was main()
+		// 		return nil
+		// 	} else {
+		// 		t.Stack.Remove(t.Stack.Front()) // pop the frame off
+		// 	}
+		// }
 	}
 	return nil
 }
