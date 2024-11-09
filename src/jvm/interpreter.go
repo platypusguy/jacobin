@@ -119,10 +119,10 @@ var DispatchTable = [203]BytecodeFunc{
 	doFstore1,       // DSTORE_1        0x48
 	doFstore2,       // DSTORE_2        0x49
 	doFstore3,       // DSTORE_3        0x4A
-	doIstore0,       // ASTORE_0        0x4B
-	doIstore1,       // ASTORE_1        0x4C
-	doIstore2,       // ASTORE_2        0x4D
-	doIstore3,       // ASTORE_3        0x4E
+	doAstore0,       // ASTORE_0        0x4B
+	doAstore1,       // ASTORE_1        0x4C
+	doAstore2,       // ASTORE_2        0x4D
+	doAstore3,       // ASTORE_3        0x4E
 	doIastore,       // IASTORE         0x4F
 	doIastore,       // LASTORE         0x50
 	doFastore,       // FASTORE         0x51
@@ -677,11 +677,16 @@ func doAstore(fr *frames.Frame, _ int64) int {
 
 // 0x3B - 0x3E ISTORE_x: Store popped TOS into locals[x]
 // 0x3F - 0x42 LSTORE_x:    "    "     "   "     "
-// 0x4B - 0x4E ASTORE_x:    "    "     "   "     "
 func doIstore0(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(0)) }
 func doIstore1(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(1)) }
 func doIstore2(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(2)) }
 func doIstore3(fr *frames.Frame, _ int64) int { return storeInt(fr, int64(3)) }
+
+// 0x4B - 0x4E ASTORE_x: Store popped address into locals[x]
+func doAstore0(fr *frames.Frame, _ int64) int { return store(fr, int64(0)) }
+func doAstore1(fr *frames.Frame, _ int64) int { return store(fr, int64(1)) }
+func doAstore2(fr *frames.Frame, _ int64) int { return store(fr, int64(2)) }
+func doAstore3(fr *frames.Frame, _ int64) int { return store(fr, int64(3)) }
 
 // 0x43 - 0x4A FSTORE_x and DSTORE_x: Store popped TOS into locals[x]
 // These are the same as the ISTORE_x functions. However, at some point,
