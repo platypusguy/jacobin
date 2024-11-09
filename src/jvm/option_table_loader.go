@@ -86,8 +86,8 @@ func LoadOptionsTable(Global globals.Globals) {
 	Global.Options["-jar"] = jarFile
 	jarFile.Set = true
 
-	newInterpreter := globals.Option{true, false, 0, newInterpeter}
-	Global.Options["-new"] = newInterpreter
+	// newInterpreter := globals.Option{true, false, 0, newInterpeter}
+	// Global.Options["-new"] = newInterpreter
 
 	showversion := globals.Option{true, false, 0, showVersionStderr}
 	Global.Options["-showversion"] = showversion
@@ -219,11 +219,11 @@ func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-func newInterpeter(pos int, name string, gl *globals.Globals) (int, error) {
-	gl.NewInterpreter = true
-	setOptionToSeen("-new", gl)
-	return pos, nil
-}
+// func newInterpeter(pos int, name string, gl *globals.Globals) (int, error) {
+// 	gl.NewInterpreter = true
+// 	setOptionToSeen("-new", gl)
+// 	return pos, nil
+// }
 
 // Marks the given option as having been 'set' that is, specified on the command line
 func setOptionToSeen(optionKey string, gl *globals.Globals) {
