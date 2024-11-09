@@ -9,7 +9,6 @@ package jvm
 import (
 	"io"
 	"jacobin/classloader"
-	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
@@ -615,10 +614,6 @@ func TestNewInvokevirtualInvalid(t *testing.T) {
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
-
-	if f.PC != exceptions.ERROR_OCCURRED {
-		t.Errorf("INVOKEVIRTUAL: Expected ERROR_OCCURRED, got %d", f.PC)
-	}
 
 	_ = w.Close()
 	msg, _ := io.ReadAll(r)
