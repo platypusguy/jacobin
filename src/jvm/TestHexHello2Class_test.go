@@ -142,13 +142,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	mainThread := thread.CreateThread()
-	err = StartExec("Hello2", &mainThread, globals.GetGlobalRef())
-	if err != nil {
-		t.Errorf("Got error from StartExec(): %s", error.Error(err))
-		return
-	}
-
-	t.Logf("StartExec(Hello2) succeeded\n")
+	StartExec("Hello2", &mainThread, globals.GetGlobalRef())
 
 	if redirecting {
 		_ = werr.Close()
@@ -157,9 +151,14 @@ func TestHexHello2ValidClass(t *testing.T) {
 		msgStdout, _ := io.ReadAll(rout)
 		os.Stderr = normalStderr
 		os.Stdout = normalStdout
+
 		if !strings.Contains(string(msgStdout), "-1") {
 			t.Errorf("Error in output: expected to contain in part '-1', but saw stdout & stderr as follows:\nstdout: %s\nstderr: %s\n",
 				string(msgStdout), string(msgStderr))
+		}
+
+		if string(msgStderr) != "" {
+			t.Errorf("Error in output: expected stderr to be empty, but saw:\n%s\n", string(msgStderr))
 		}
 	}
 }

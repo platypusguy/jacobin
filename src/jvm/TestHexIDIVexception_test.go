@@ -121,15 +121,7 @@ func TestHexIDIVException(t *testing.T) {
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	mainThread := thread.CreateThread()
 	mainThread.AddThreadToTable(globPtr)
-	err = StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
-	if err == nil {
-		t.Errorf("No error returned from StartExec()")
-		return
-	}
-	if !strings.Contains(err.Error(), "division by zero") {
-		t.Errorf("Got unexpected error from StartExec(). Expected: \"%s\", observed: \"%s\" !!!", "IDIV error", err.Error())
-		return
-	}
+	StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
 
 	_ = werr.Close()
 	_ = wout.Close()
@@ -137,7 +129,12 @@ func TestHexIDIVException(t *testing.T) {
 
 	os.Stderr = normalStderr
 	os.Stdout = normalStdout
-	msgExpected := "IDIV: division by zero"
+
+	if string(msgStderr) == "" {
+		t.Errorf("Should have received error message but got none\n")
+	}
+
+	msgExpected := "IDIV or LDIV: division by zero"
 	if !strings.Contains(string(msgStderr), msgExpected) {
 		t.Errorf("Error expected error message to contain \"%s\", got: \"%s\"\n",
 			msgExpected, string(msgStderr))
