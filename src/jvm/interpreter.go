@@ -302,7 +302,7 @@ func interpret(fs *list.List) {
 				// again for the frame at the top of the frame stack
 				return
 			case exceptions.ERROR_OCCURRED: // occurs only in tests
-				fr.PC = exceptions.ERROR_OCCURRED // allows for testing
+				fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
 				return
 			default:
 				fr.PC += ret
@@ -1079,7 +1079,7 @@ func doIdiv(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("in %s.%s %s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
-		if status == exceptions.Caught {
+		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	} else {
