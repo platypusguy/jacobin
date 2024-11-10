@@ -3315,8 +3315,6 @@ func createAndInitNewFrame(
 		case 'D': // double
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
-			argList = append(argList, arg)
-			pop(f)
 		case 'F': // float
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
@@ -3330,8 +3328,6 @@ func createAndInitNewFrame(
 		case 'J': // long
 			arg := pop(f).(int64)
 			argList = append(argList, arg)
-			argList = append(argList, arg)
-			pop(f)
 		case 'L': // pointer/reference
 			arg := pop(f) // can't be *Object b/c the arg could be nil, which would panic
 			argList = append(argList, arg)
