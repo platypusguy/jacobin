@@ -1404,10 +1404,9 @@ func bigIntegerToStringRadix(params []interface{}) interface{} {
 
 // "java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"
 func bigIntegerValueOf(params []interface{}) interface{} {
-	// params[0]:  base object (ignored)
-	// params[1]:  long value for returned big.Int object
+	// params[0]:  long value for returned big.Int object
 
-	argValue := params[1].(int64)
+	argValue := params[0].(int64)
 	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
 	initBigIntegerField(obj, argValue)
 
