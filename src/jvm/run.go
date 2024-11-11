@@ -3346,9 +3346,16 @@ func createAndInitNewFrame(
 		trace.Trace(traceInfo)
 	}
 
+	ptpx := 0
 	for j := lenArgList - 1; j >= 0; j-- {
 		fram.Locals[destLocal] = argList[j]
-		destLocal += 1
+		switch paramsToPass[ptpx] {
+		case "D", "J":
+			destLocal += 2
+		default:
+			destLocal += 1
+		}
+		ptpx++
 	}
 
 	fram.TOS = -1
