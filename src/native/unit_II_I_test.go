@@ -9,35 +9,17 @@ package native
 import (
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"testing"
 )
 
-func storeLibHandle(t *testing.T, argLib, argFunction string) bool {
-	var lib string
-	if WindowsOS {
-		lib = PathDirLibs + SepPathString + argLib + "." + FileExt
-	} else {
-		lib = PathDirLibs + SepPathString + "lib" + argLib + "." + FileExt
-	}
-	handle := ConnectLibrary(lib)
-	if handle == 0 {
-		return false
-	}
-	t.Logf("storeLibHandle: lib: %s, function: %s\n", lib, argFunction)
-	nfToLibTable[argFunction] = handle
-	return true
-}
-
 func Test_II_I(t *testing.T) {
 	tracing := true
+	functionName := "Java_java_util_zip_CRC32_update"
 
 	// Initialize jacobin and set up a dummy frame stack.
 	globals.InitGlobals("test")
-	log.Init()
-	if tracing {
-		log.SetLogLevel(log.TRACE_INST)
-	}
+	trace.Init()
 
 	// Perform native initialisation.
 	if !nativeInit() {
@@ -46,13 +28,15 @@ func Test_II_I(t *testing.T) {
 	t.Log("nativeInit ok")
 
 	// SIMULATION: Store some library handles.
-	if !storeLibHandle(t, "awt", "apples") {
+	if !storeLibHandle("awt", "apples") {
 		t.Error("storeLibHandle() failed")
 	}
-	if !storeLibHandle(t, "net", "bananas") {
+	if !storeLibHandle("net", "bananas") {
 		t.Error("storeLibHandle() failed")
 	}
-	if !storeLibHandle(t, "zip", "Java_java_util_zip_CRC32_update") {
+
+	// tell purego that zip lib/DLL contains functionName
+	if !storeLibHandle("zip", functionName) {
 		t.Error("storeLibHandle() failed")
 	}
 
@@ -64,10 +48,16 @@ func Test_II_I(t *testing.T) {
 
 	// Call RunNativeFunction.
 	params := make([]interface{}, 2)
-	params[1] = int64(0)
-	params[0] = int64('A')
+	params[1] = int64(0)   // starting point for the CRC computation
+	params[0] = int64('A') // 'A' the value we want the CRC computed for
 	expected := NFuint(0xd3d99e8b)
-	ret := RunNativeFunction(fs, "CRC32", "Java_java_util_zip_CRC32_update", "(II)I", &params, tracing)
+	// fs = frame stack,
+	// "CRC32" stand-in for the actual class name
+	// "Java_java_util_zip_CRC32_update" native function name
+	// (II)I native function type
+	// ptr param array
+	// tracing parameter for Jacobin's tracing purposes
+	ret := RunNativeFunction(fs, "java/util/CRC32", functionName, "(II)I", &params, tracing)
 	switch ret.(type) {
 	case int64:
 		observed := NFuint(ret.(int64))

@@ -7,14 +7,10 @@
 package classloader
 
 import (
-	"encoding/hex"
 	"errors"
-	"fmt"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"jacobin/types"
-	"os"
 	"strconv"
 )
 
@@ -144,7 +140,6 @@ func parseJavaVersionNumber(bytes []byte, klass *ParsedClass) error {
 	}
 
 	klass.javaVersion = version
-	_ = log.Log("Java version: "+strconv.Itoa(version), log.FINEST)
 	return nil
 }
 
@@ -161,7 +156,6 @@ func getConstantPoolCount(bytes []byte, klass *ParsedClass) error {
 	}
 
 	klass.cpCount = cpEntryCount
-	_ = log.Log("Number of CP entries: "+strconv.Itoa(cpEntryCount), log.FINEST)
 	return nil
 }
 
@@ -203,37 +197,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		if accessFlags&0x8000 > 0 {
 			klass.classIsModule = true
 		}
-		_ = log.Log("Access flags: 0x"+hex.EncodeToString(bytes[pos-1:pos+1]), log.FINEST)
 
-		if log.Level == log.FINEST {
-			if klass.classIsPublic {
-				_, _ = fmt.Fprintf(os.Stderr, "access: public\n")
-			}
-			if klass.classIsFinal {
-				_, _ = fmt.Fprintf(os.Stderr, "access: final\n")
-			}
-			if klass.classIsSuper {
-				_, _ = fmt.Fprintf(os.Stderr, "access: super\n")
-			}
-			if klass.classIsInterface {
-				_, _ = fmt.Fprintf(os.Stderr, "access: interface\n")
-			}
-			if klass.classIsAbstract {
-				_, _ = fmt.Fprintf(os.Stderr, "access: abstract\n")
-			}
-			if klass.classIsSynthetic {
-				_, _ = fmt.Fprintf(os.Stderr, "access: synthetic\n")
-			}
-			if klass.classIsAnnotation {
-				_, _ = fmt.Fprintf(os.Stderr, "access: annotation\n")
-			}
-			if klass.classIsEnum {
-				_, _ = fmt.Fprintf(os.Stderr, "access: enum\n")
-			}
-			if klass.classIsModule {
-				_, _ = fmt.Fprintf(os.Stderr, "access: module\n")
-			}
-		}
 		return pos, nil
 	}
 }
@@ -272,8 +236,6 @@ func parseClassName(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		return pos, errors.New("") // the error msg has already been show to user
 	}
 
-	_ = log.Log("class name: "+*classNamePtr, log.FINEST)
-
 	if len(klass.className) > 0 {
 		return pos, cfe("Class appears to have two names: " + klass.className + " and: " + *classNamePtr)
 	}
@@ -299,7 +261,6 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 			return pos, cfe("invaild index for superclass name. Got: 0," +
 				" but class is not java/lang/Object")
 		} else {
-			_ = log.Log("superclass name: [none]", log.FINEST)
 			klass.superClassIndex = stringPool.GetStringIndex(nil)
 			return pos, nil
 		}
@@ -331,7 +292,6 @@ func parseSuperClassName(bytes []byte, loc int, klass *ParsedClass) (int, error)
 		return pos, cfe("invalid empty string for superclass name")
 	}
 
-	_ = log.Log("superclass name: "+*superclassNamePtr, log.FINEST)
 	if klass.superClassIndex != stringPool.GetStringIndex(nil) {
 		return pos, cfe("Class can only have 1 superclass, found two: " +
 			*stringPool.GetStringPointer(klass.superClassIndex) + " and: " + *superclassNamePtr)
@@ -351,7 +311,6 @@ func parseInterfaceCount(bytes []byte, loc int, klass *ParsedClass) (int, error)
 		return pos, cfe("Invalid fetch of interface count")
 	}
 
-	_ = log.Log("interface count: "+strconv.Itoa(interfaceCount), log.FINEST)
 	klass.interfaceCount = interfaceCount
 	return pos, nil
 }
@@ -383,18 +342,11 @@ func parseInterfaces(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		// get the class entry from classRefs slice
 		classEntry := klass.classRefs[classref.slot]
 
-		// // use the class entry's index field to look up the UTF-8 string
-		// interfaceName, err := FetchUTF8string(klass, classEntry)
-		// if err != nil {
-		// 	return pos, errors.New("") // error msg has already been shown
-		// }
-
+		// get interface name
 		interfaceNamePtr := stringPool.GetStringPointer(classEntry)
 		if interfaceNamePtr == nil {
 			return pos, errors.New("invalid interface name") // the error msg has already been show to user
 		}
-
-		_ = log.Log("Interface class: "+*interfaceNamePtr, log.FINEST)
 
 		// klass.interfaces is a slice that holds the index into the stringpool
 		// for each of the interface class names. This avoids duplicating the name
@@ -414,7 +366,6 @@ func parseFieldCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		return pos, cfe("Invalid fetch of field count")
 	}
 
-	_ = log.Log("field count: "+strconv.Itoa(fieldCount), log.FINEST)
 	klass.fieldCount = fieldCount
 	return pos, nil
 }
@@ -563,20 +514,6 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 
 		klass.fields = append(klass.fields, f)
 
-		if log.Level == log.FINEST {
-			_, _ = fmt.Fprintf(os.Stderr, "\tField %s, desc: %s has %d attributes, access flags: %X.",
-				klass.utf8Refs[f.name].content, klass.utf8Refs[f.description].content,
-				len(f.attributes), accessFlags)
-			if log.Level == log.FINEST && f.isStatic == true {
-				_, _ = fmt.Fprintln(os.Stderr, " Field is static")
-			}
-			if len(f.attributes) > 0 {
-				_, _ = fmt.Fprintf(os.Stderr, "First attrib: %s\n",
-					klass.utf8Refs[f.attributes[0].attrName].content)
-			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "\n")
-			}
-		}
 	}
 	return pos, nil
 }
@@ -590,7 +527,6 @@ func parseMethodCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 		return pos, cfe("Invalid fetch of method count")
 	}
 
-	_ = log.Log("method count: "+strconv.Itoa(methodCount), log.FINEST)
 	klass.methodCount = methodCount
 	return pos, nil
 }
@@ -605,7 +541,6 @@ func parseClassAttributeCount(bytes []byte, loc int, klass *ParsedClass) (int, e
 		return pos, cfe("Invalid fetch of class attribute count")
 	}
 
-	_ = log.Log("Class attribute count: "+strconv.Itoa(attributeCount), log.FINEST)
 	klass.attribCount = attributeCount
 	return pos, nil
 }
@@ -621,9 +556,6 @@ func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error
 			return pos, cfe("Error fetching class attribute in class: " +
 				klass.className)
 		}
-
-		_ = log.Log("Class: "+klass.className+", attribute: "+klass.utf8Refs[attrib.attrName].content,
-			log.FINEST)
 
 		switch klass.utf8Refs[attrib.attrName].content {
 		case "BootstrapMethods":
@@ -657,7 +589,6 @@ func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error
 				}
 				klass.bootstraps = append(klass.bootstraps, bsm)
 			}
-			_ = log.Log("    "+strconv.Itoa(klass.bootstrapCount)+" bootstrap method(s)", log.FINEST)
 
 		case "Deprecated":
 			klass.deprecated = true
@@ -667,7 +598,6 @@ func parseClassAttributes(bytes []byte, loc int, klass *ParsedClass) (int, error
 			utf8slot := klass.cpIndex[sourceNameIndex].slot
 			sourceFile := klass.utf8Refs[utf8slot].content // points to the name of the source file
 			klass.sourceFile = sourceFile
-			_ = log.Log("Source file: "+sourceFile, log.FINEST)
 		}
 	}
 	return pos, nil

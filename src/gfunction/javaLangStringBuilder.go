@@ -78,7 +78,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.append(D)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 		}
 
@@ -96,7 +96,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.append(J)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 		}
 
@@ -246,7 +246,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.insert(ID)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  stringBuilderInsert,
 		}
 
@@ -264,7 +264,7 @@ func Load_Lang_StringBuilder() {
 
 	MethodSignatures["java/lang/StringBuilder.insert(IJ)Ljava/lang/StringBuilder;"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  stringBuilderInsert,
 		}
 
@@ -439,8 +439,21 @@ func stringBuilderInitString(params []any) any {
 	return nil
 }
 
-// Append the second parameter to the bytes in the StringBuilder that is
-// passed in the objectRef parameter (the first param).
+/*** 
+    Append the second parameter to the bytes in the StringBuilder that is passed in the objectRef parameter (the first param).
+    If a character array with offset and size parameters, there is special handling.
+    
+    Method parameter types:
+    [C                          int64 array
+    [CII                        int64 array, offset, size
+    D                           float64
+    F                           float64
+    I                           int64
+    J                           int64
+    Ljava/lang/Object;          *object.Object [diagnosed with an error]
+    Ljava/lang/String;          *object.Object
+    Ljava/lang/StringBuffer;    *object.Object
+***/
 func stringBuilderAppend(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
@@ -450,14 +463,17 @@ func stringBuilderAppend(params []any) any {
 	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
 	objOut.FieldTable = objBase.FieldTable
 
+    // Resolved parameter byte array, regardless of parameters:
 	var parmArray []byte
+	
+	// Process based primarily on the params[0] type.
 	switch params[1].(type) {
-	case *object.Object: // char array, String, StringBuffer, or StringBuilder
+	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder
 		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
 		switch fvalue.(type) {
-		case []byte: // String, StringBuffer, or StringBuilder
+		case []byte: // byte array, String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]byte)
-		case []int64: // char array
+		case []int64: // char array, int array
 			if len(params) == 4 {
 				int64Array := fvalue.([]int64)
 				len64Array := int64(len(int64Array))
@@ -480,7 +496,7 @@ func stringBuilderAppend(params []any) any {
 			errMsg := fmt.Sprintf("Object value field value type (%T) is not a byte array nor a char array", params[1])
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-	case int64: // integer, long
+	case int64: // int, long, short
 		str := fmt.Sprintf("%d", params[1].(int64))
 		parmArray = []byte(str)
 	case float64: // float, double

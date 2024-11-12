@@ -85,7 +85,7 @@ func Load_Lang_StringBuffer() {
 
 	MethodSignatures["java/lang/StringBuffer.append(D)Ljava/lang/StringBuffer;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 			ThreadSafe: true,
 		}
@@ -106,7 +106,7 @@ func Load_Lang_StringBuffer() {
 
 	MethodSignatures["java/lang/StringBuffer.append(J)Ljava/lang/StringBuffer;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  stringBuilderAppend,
 			ThreadSafe: true,
 		}
@@ -281,7 +281,7 @@ func Load_Lang_StringBuffer() {
 
 	MethodSignatures["java/lang/StringBuffer.insert(ID)Ljava/lang/StringBuffer;"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  stringBuilderInsert,
 			ThreadSafe: true,
 		}
@@ -302,7 +302,7 @@ func Load_Lang_StringBuffer() {
 
 	MethodSignatures["java/lang/StringBuffer.insert(IJ)Ljava/lang/StringBuffer;"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  stringBuilderInsert,
 			ThreadSafe: true,
 		}

@@ -14,10 +14,10 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"os"
 	"strings"
 	"testing"
@@ -63,7 +63,7 @@ func RunTestFuncWith0or1Strings(params TestVars) error {
 	// set up the environment
 
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 
 	// redirect stderr and stdout
 	normalStderr := os.Stderr
@@ -223,7 +223,7 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			// set up the environment
 
 			globals.InitGlobals("test")
-			log.Init()
+			trace.Init()
 
 			// redirect stderr and stdout
 			normalStderr := os.Stderr

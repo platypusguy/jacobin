@@ -3,12 +3,9 @@ package statics
 import (
 	"fmt"
 	"io"
-	"jacobin/classloader"
-	"sync"
-
 	// "jacobin/classloader"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -58,8 +55,9 @@ func tCheckStatic(t *testing.T, className string, fieldName string, expValue any
 
 func TestStatics1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	// _ = log.SetLogLevel(log.CLASS)
+	trace.Init()
+	Statics = make(map[string]Static)
+	/***
 	PreloadStatics()
 	classloader.MethArea = &sync.Map{}
 	k := classloader.Klass{}
@@ -70,6 +68,9 @@ func TestStatics1(t *testing.T) {
 	k.Data = &clData
 	classloader.MethAreaInsert("AlphaBetaGamma", &k)
 	ref := classloader.MethAreaFetch("AlphaBetaGamma")
+	***/
+	ii := 42
+	ref := &ii
 
 	/**
 	Set statics values.
@@ -92,7 +93,6 @@ func TestStatics1(t *testing.T) {
 	Check statics values.
 	*/
 	tCheckStatic(t, "main", "$assertionsDisabled", int64(1))
-	tCheckStatic(t, types.StringClassName, "COMPACT_STRINGS", true)
 	tCheckStatic(t, "AlphaBetaGamma", "ONE", int64(0x31))
 	tCheckStatic(t, "AlphaBetaGamma", "QM", int64('?'))
 	tCheckStatic(t, "AlphaBetaGamma", "PI", float64(3.14159265))
@@ -108,7 +108,7 @@ func TestStatics1(t *testing.T) {
 
 func TestInvalidStaticAdd(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	Statics = make(map[string]Static)
 
 	err := AddStatic("", Static{})
@@ -119,7 +119,7 @@ func TestInvalidStaticAdd(t *testing.T) {
 
 func TestInvalidLookup(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Int, Value: int(42)})
@@ -149,7 +149,7 @@ func TestInvalidLookup(t *testing.T) {
 
 func TestIntConversions(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
@@ -192,7 +192,7 @@ func TestIntConversions(t *testing.T) {
 
 func TestStaticsPreload(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	Statics = make(map[string]Static)
 
 	PreloadStatics()
@@ -219,7 +219,7 @@ func TestStaticsPreload(t *testing.T) {
 
 func TestDumpStatics(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
+	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})

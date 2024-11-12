@@ -10,7 +10,6 @@ import (
 	"io"
 	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/log"
 	"os"
 	"strings"
 	"testing"
@@ -18,7 +17,6 @@ import (
 
 func TestThrowExNil(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	// to inspect log messages, redirect stderr
 	normalStderr := os.Stderr
@@ -38,8 +36,7 @@ func TestThrowExNil(t *testing.T) {
 }
 
 func TestThrowExWithNilFrame(t *testing.T) {
-	globals.InitGlobals("testWithoutShutdown")
-	_ = log.SetLogLevel(log.WARNING)
+	globals.InitGlobals("test")
 
 	// to inspect log messages, redirect stderr
 	normalStderr := os.Stderr
@@ -60,7 +57,6 @@ func TestThrowExWithNilFrame(t *testing.T) {
 
 func TestMinimalThrow(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
 
 	// to inspect log messages, redirect stderr
 	normalStderr := os.Stderr

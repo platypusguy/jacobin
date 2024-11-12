@@ -11,11 +11,15 @@ import (
 	"fmt"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/trace"
+	"math"
 	"runtime/debug"
 	"strings"
 )
+
+var ERROR_OCCURRED = math.MaxInt32
+var RESUME_HERE = math.MinInt32
 
 // routines for formatting error data when an error occurs inside the JVM
 
@@ -32,14 +36,14 @@ func ShowFrameStack(source interface{}) {
 		}
 
 		if len(*entries) == 0 {
-			_ = log.Log("no further data available", log.SEVERE)
+			trace.Trace("ShowFrameStack: no further data available")
 			return
 		}
 
 		// step through the list-based stack of called methods and print contents
 		literals := *entries
 		for i := 0; i < len(literals); i++ {
-			_ = log.Log(literals[i], log.SEVERE)
+			trace.Trace(literals[i])
 		}
 		globals.GetGlobalRef().JvmFrameStackShown = true
 	}
@@ -81,9 +85,9 @@ func ShowPanicCause(reason any) {
 	// show the event that caused the panic
 	if reason != nil {
 		cause := fmt.Sprintf("%v", reason)
-		_ = log.Log("\nerror: go panic because of: "+cause+"", log.SEVERE)
+		trace.Error("go panic because of: " + cause + "")
 	} else {
-		_ = log.Log("\nerror: go panic -- cause unknown", log.SEVERE)
+		trace.Error("go panic -- cause unknown")
 	}
 	globals.GetGlobalRef().PanicCauseShown = true
 }
@@ -115,7 +119,7 @@ func ShowGoStackTrace(stackInfo any) {
 	}
 	entries := strings.Split(stack, "\n")
 
-	_ = log.Log(" ", log.SEVERE) // print a blank line
+	trace.Trace("   ") // print a blank line
 
 	// print the remaining strings in the golang stack trace
 	var i = 0
@@ -127,7 +131,7 @@ func ShowGoStackTrace(stackInfo any) {
 				i += 2 // skip over runtime traces, we just want app data
 				continue
 			}
-			_ = log.Log(entries[i], log.SEVERE)
+			trace.Trace(entries[i])
 			i += 1
 		} else {
 			break

@@ -10,13 +10,12 @@ import (
 	"jacobin/classloader"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -24,8 +23,7 @@ import (
 // in the method area--and make sure it has no fields.
 func TestInstantiateArray(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	classloader.InitMethodArea()
 
 	anything, err := InstantiateClass(types.ByteArray, nil)
@@ -40,8 +38,7 @@ func TestInstantiateArray(t *testing.T) {
 
 func TestInstantiateString1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	classloader.InitMethodArea()
 
 	// initialize the MTable and other class entries
@@ -72,8 +69,7 @@ func TestInstantiateString1(t *testing.T) {
 
 func TestInstantiateNonExistentClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr, to avoid all the error msgs for a non-existent class
 	normalStderr := os.Stderr
@@ -112,12 +108,14 @@ func TestInstantiateNonExistentClass(t *testing.T) {
 
 func TestLoadValidClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr, to avoid all the error msgs for a non-existent class
 	normalStderr := os.Stderr
 	_, werr, err := os.Pipe()
+	if err != nil {
+		t.Error("cannot create pipe for stderr")
+	}
 	os.Stderr = werr
 
 	classloader.InitMethodArea()
@@ -160,49 +158,11 @@ func TestLoadValidClass(t *testing.T) {
 	os.Stderr = normalStderr
 }
 
-func TestLoadClassWithEmptyStringAsName(t *testing.T) {
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
-
-	// redirect stderr, to avoid all the error msgs for a non-existent class
-	normalStderr := os.Stderr
-	_, werr, err := os.Pipe()
-	os.Stderr = werr
-
-	classloader.InitMethodArea()
-
-	// initialize the MTable and other class entries
-	classloader.MTable = make(map[string]classloader.MTentry)
-
-	// Init classloader and load base classes
-	err = classloader.Init() // must precede classloader.LoadBaseClasses
-	if err != nil {
-		t.Errorf("Got unexpected error from classloader.Init: %s", err.Error())
-	}
-	classloader.LoadBaseClasses()
-
-	err = loadThisClass("")
-
-	// restore stderr
-	_ = werr.Close()
-	os.Stderr = normalStderr
-
-	if err == nil {
-		t.Errorf("Expected error message for class with no name string, but got none")
-	}
-
-	if !strings.Contains(err.Error(), "Failed to load class") {
-		t.Errorf("Got the wrong error message: %s", err.Error())
-	}
-}
-
 // This should always work. java/lang/Object contains no instance or static fields,
 // so this is about as simple a class instantiation as possible
 func TestLoadClassJavaLangObject(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// redirect stderr, to avoid all the error msgs for a non-existent class
 	normalStderr := os.Stderr

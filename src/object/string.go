@@ -20,8 +20,8 @@ package object
 
 import (
 	"fmt"
-	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"strconv"
 	"strings"
@@ -167,18 +167,14 @@ func IsStringObject(unknown any) bool {
 
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
-	// If null, return a 0-length string.
+	// If null, return "null".
 	if IsNull(obj) {
-		warnMsg := "ObjectFieldToString: object is null. Returning \"null\""
-		_ = log.Log(warnMsg, log.FINE)
 		return "null"
 	}
 
-	// If the field is missing, give a warning (if tracing) and return a 0-length string.
+	// If the field is missing, return "null".
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
-		warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" was not found. Returning \"null\"", fieldName)
-		_ = log.Log(warnMsg, log.FINE)
 		return "null"
 	}
 
@@ -240,8 +236,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	}
 
 	// None of the above.
-	warnMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
+	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	_ = log.Log(warnMsg, log.FINE)
+	trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }

@@ -7,13 +7,10 @@
 package classloader
 
 import (
-	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
-	"os"
+	"jacobin/trace"
 	"strconv"
-	"strings"
 	"testing"
 )
 
@@ -42,8 +39,7 @@ import (
 // (CP[0]) is a dummy entry as it should be.
 func TestDummyEntry(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -68,8 +64,7 @@ func TestDummyEntry(t *testing.T) {
 func TestCPvalidUTF8Ref(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -107,8 +102,7 @@ func TestCPvalidUTF8Ref(t *testing.T) {
 func TestCPvalidIntConst(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -146,8 +140,7 @@ func TestCPvalidIntConst(t *testing.T) {
 func TestCPvalidLongConst(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -186,8 +179,7 @@ func TestCPvalidLongConst(t *testing.T) {
 
 func TestCPvalidFloatConst(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -225,8 +217,7 @@ func TestCPvalidFloatConst(t *testing.T) {
 
 func TestCPvalidDoubleConst(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -265,8 +256,7 @@ func TestCPvalidDoubleConst(t *testing.T) {
 func TestCPvalidClassRef(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -305,8 +295,7 @@ func TestCPvalidClassRef(t *testing.T) {
 func TestCPvalidStringConstRef(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -343,8 +332,7 @@ func TestCPvalidStringConstRef(t *testing.T) {
 func TestCPvalidFieldRef(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -385,8 +373,7 @@ func TestCPvalidFieldRef(t *testing.T) {
 func TestCPvalidMethodRef(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -427,8 +414,7 @@ func TestCPvalidMethodRef(t *testing.T) {
 func TestCPvalidInterface(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -473,8 +459,7 @@ func TestCPvalidInterface(t *testing.T) {
 func TestCPvalidNameAndTypeEntry(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -515,8 +500,7 @@ func TestCPvalidNameAndTypeEntry(t *testing.T) {
 func TestCPvalidMethodHandle(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -562,8 +546,7 @@ func TestCPvalidMethodHandle(t *testing.T) {
 func TestCPvalidMethodType(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -604,8 +587,7 @@ func TestCPvalidMethodType(t *testing.T) {
 func TestCPvalidInvokeDynamic(t *testing.T) {
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	bytesToTest := []byte{
 		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
@@ -646,241 +628,4 @@ func TestCPvalidInvokeDynamic(t *testing.T) {
 	if len(pc.cpIndex) != 3 {
 		t.Error("Was expecting pc.cpIndex to have 3 entries, but instead got: " + strconv.Itoa(len(pc.cpIndex)))
 	}
-}
-
-// test whether the info logged to when logging set to FINEST is correct
-// This test captures stderr and then does searches on the saved output for
-// logging contents. The size of saved stderr output is quite limited and the
-// CP logging of all possible entry types exceeds this space, so this test is
-// broken up into two tests, of which this is the first.
-func TestPrintOfCPpart1(t *testing.T) {
-
-	globals.InitGlobals("test")
-	log.Init()
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	_ = log.SetLogLevel(log.FINEST)
-
-	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
-		0x00, 0xFF, 0xF0, 0x00, 0x00,
-		0x01,       // UTF8 entry
-		0x00, 0x04, //		length of UTF8 string
-		'J', 'A', //  	contents of UTF8 string
-		'C', 'O',
-
-		0x03,       // Integer constant
-		0x00, 0x00, // 		value of int (four bytes)
-		0x01, 0x02, //  	should = 258
-
-		0x04,       // Float Constant
-		0x41, 0x42, //		value of float comprises 4 bytes
-		0x43, 0x44,
-
-		0x05,       // Long constant
-		0x50, 0x50, //  	value consists of 8 bytes
-		0x50, 0x51,
-		0x50, 0x52,
-		0x50, 0x53,
-
-		0x06,       // Double constant
-		0x61, 0x60, //  	value consists of 8 bytes
-		0x61, 0x61,
-		0x61, 0x62,
-		0x61, 0x63,
-
-		0x07,       // Classref
-		0x00, 0x01, // 		value consists of 2 bytes points to UTF8 entry above
-
-		0x08,       // StringConst
-		0x84, 0x85, // 		value consists of 2 bytes
-
-		0x09,       // FieldRef
-		0x91, 0x92, //		class index (2 bytes)
-		0x93, 0x94, //		name and type index (2 bytes)
-
-		0x0A,       // MethodRef (10)
-		0xA0, 0xA1, //		class index (2 bytes)
-		0xA2, 0xA3, //		name and type index (2 bytes)
-
-		0x0B,       // Interface (11)
-		0xB0, 0xB1, //		class index (2 bytes)
-		0xB2, 0xB3, //		name and type index (2 bytes)
-
-		0x0C,       // Name and Type entry (12)
-		0xC0, 0xC4, //		value consists of 4 bytes
-		0xC1, 0xC1,
-
-		0x0F,       // Method Handle (15)
-		0xF1, 0xF2, //		reference kind (2 bytes)
-		0xF3, 0xF4, //		reference index (2bytes)
-
-	}
-
-	pc := ParsedClass{}
-	pc.cpCount = 15 // Dummy entry/entries plus the number of entries above
-
-	// this parses the CP and logs it to stderr b/c logging is set to FINEST
-	_, err := parseConstantPool(bytesToTest, &pc)
-	if err != nil {
-		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	logMsg := string(out[:])
-
-	if !strings.Contains(logMsg, "(dummy entry)") {
-		t.Error("Dummy CP entry did not appear in logging of CP contents")
-	}
-
-	if !strings.Contains(logMsg, "(UTF-8 string) ") {
-		t.Error("UTF8 string CP entry did not appear in logging of CP contents")
-	}
-
-	if !strings.Contains(logMsg, "(int constant)") || !strings.Contains(logMsg, "258") {
-		t.Error("IntConst CP entry with value 258 did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(long constant)") {
-		t.Error("LongConst CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(double constant)") {
-		t.Error("DoubleConst CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(class ref)") {
-		t.Error("ClassRef CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(string const ref)") {
-		t.Error("StringConst CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(field ref)") {
-		t.Error("FieldRef CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(method ref)") {
-		t.Error("MethodRef CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(interface ref)") {
-		t.Error("InterfaceRef CP entry did not appear correctly in CP logging")
-	}
-
-	if !strings.Contains(logMsg, "(name and type) ") {
-		t.Error("Name and type CP entry did not appear in logging of CP contents")
-	}
-
-	if !strings.Contains(logMsg, "(method handle)") {
-		t.Error("Method Handle CP entry did not appear in logging of CP contents")
-	}
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-}
-
-// see the comment for part 1 of this test
-func TestPrintOfCPpart2(t *testing.T) {
-
-	globals.InitGlobals("test")
-	log.Init()
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	_ = log.SetLogLevel(log.FINEST)
-
-	bytesToTest := []byte{
-		0xCA, 0xFE, 0xBA, 0xBE, 0x00,
-		0x00, 0xFF, 0xF0, 0x00, 0x00,
-
-		0x10,       // Method Type (16)
-		0x11, 0x12, //		description index (2 bytes)
-
-		0x12,       // InvokeDynamic (18)
-		0x12, 0x08, // 		Bootstrap index
-		0x12, 0x01, // 		name and type entry
-
-		0x01,       // UTF-8 String (1)
-		0x00, 0x06, //		length of UTF8 string
-		'M', 'o', //  	contents of UTF8 string
-		'd', 'u',
-		'l', 'e',
-
-		0x13,       // Module name (19)
-		0x00, 0x03, // CP[3] -> UTF8 rec with name of module: "Module"
-
-		0x14,       // Package name (20)
-		0x00, 0x03, // CP[3] -> UTF8 rec with name of package: "Module"
-
-		// The following entries and the assertions they correspond to below are
-		// commented out due to the problem described in JACOBIN-86.
-
-		0x11,       // Dynamic (17)
-		0x12, 0x08, // 		Bootstrap index
-		0x12, 0x01, // 		name and type entry
-		//
-		// The following UTF8 record was added during the attempt to diagnose the
-		// problem with JACOBIN-86. It is not otherwise needed and can be deleted.
-		0x01,       // UTF-8 String (1)
-		0x00, 0x05, //		length of UTF8 string
-		'H', 'e', //  	contents of UTF8 string
-		'l', 'l', // added to see whether it solves the missing 'dynamic' entry on GitHub
-		'o',
-	}
-
-	pc := ParsedClass{}
-	pc.cpCount = 6 // Dummy entry/entries plus the number of entries above
-
-	pc.javaVersion = 55 // Java 11
-	pc.moduleName = "Module"
-
-	// this parses the CP and logs it to stderr b/c logging is set to FINEST
-	_, err := parseConstantPool(bytesToTest, &pc)
-	if err != nil {
-		t.Error("Unexpected error in parsing CP in testPrintOfCP()")
-	}
-
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-
-	logMsg := string(out[:])
-
-	if !strings.Contains(logMsg, "(method type) ") {
-		t.Error("MethodType CP entry did not appear in logging of CP contents")
-	}
-
-	if !strings.Contains(logMsg, "(invokedynamic) ") {
-		t.Error("invokedynamic CP entry did not appear in logging of CP contents")
-	}
-
-	if !strings.Contains(logMsg, "(package name) ") {
-		t.Error("package name CP entry did not appear in logging of CP contents" +
-			"Output: " + logMsg)
-	}
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-	os.Stderr = normalStderr
 }

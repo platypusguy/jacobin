@@ -1,0 +1,22 @@
+This code will trap output to stderr for later examination. It's
+used extensively in unit tests
+
+
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+
+    // run test here
+
+
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	// test content of errMsg

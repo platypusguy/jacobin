@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"sort"
 	"sync"
@@ -73,23 +73,22 @@ func MethAreaFetch(key string) *Klass {
 	v, _ := MethArea.Load(key)
 	MethAreaMutex.RUnlock()
 	if v == nil {
-		_ = log.Log("MethAreaFetch: key("+key+") --> nil", log.CLASS)
 		return nil
 	}
-	_ = log.Log("MethAreaFetch: key("+key+") --> not nil", log.CLASS)
 	return v.(*Klass)
 }
 
 // MethAreaInsert adds a class to the method area, using a pointer to the parsed class.
 func MethAreaInsert(name string, klass *Klass) {
-	_ = log.Log("MethAreaInsert: key("+name+")", log.CLASS)
 	MethAreaMutex.Lock()
 	MethArea.Store(name, klass)
 	methAreaSize++
 	MethAreaMutex.Unlock()
 
-	if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
-		_ = log.Log("Method area insert: "+klass.Data.Name+", loader: "+klass.Loader, log.CLASS)
+	if globals.TraceClass {
+		if klass.Status == 'F' || klass.Status == 'V' || klass.Status == 'L' {
+			trace.Trace("Method area insert: " + klass.Data.Name + ", loader: " + klass.Loader)
+		}
 	}
 }
 
@@ -117,7 +116,6 @@ func MethAreaDelete(key string) {
 // Wait for klass.Status to no longer be 'I' (I = initializing)
 // TODO: must be a better way to do this!
 func WaitForClassStatus(className string) error {
-	_ = log.Log("WaitForClassStatus: class name: "+className, log.CLASS)
 	klass := MethAreaFetch(className)
 	if klass == nil { // class not there yet
 		time.Sleep(globals.SleepMsecs * time.Millisecond) // sleep awhile
@@ -142,7 +140,6 @@ func WaitForClassStatus(className string) error {
 // used only for testing/debugging
 func MethAreaDump() {
 	var entries []string
-	_ = log.Log("MethAreaDump: ", log.CLASS)
 
 	MethArea.Range(func(key, value interface{}) bool {
 		entries = append(entries, key.(string))

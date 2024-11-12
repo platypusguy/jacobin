@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -249,12 +248,6 @@ func TestIsStringObject(t *testing.T) {
 
 func TestObjectFieldToStringInvalidFieldName(t *testing.T) {
 	globals.InitGlobals("test")
-	log.SetLogLevel(log.FINE)
-
-	// to inspect usage message, redirect stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
 
 	obj := StringObjectFromGoString("a little lamb")
 	ret := ObjectFieldToString(obj, "non-existentField")
@@ -263,20 +256,10 @@ func TestObjectFieldToStringInvalidFieldName(t *testing.T) {
 		t.Errorf("Expected null, got %s", ret)
 	}
 
-	// restore stderr to what it was before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-	msg := string(out[:])
-
-	if !strings.Contains(msg, "was not found") {
-		t.Errorf("Expected 'was not found' in error message, got %s", msg)
-	}
 }
 
 func TestObjectFieldToStringForIntArray(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.FINE)
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr
@@ -303,7 +286,6 @@ func TestObjectFieldToStringForIntArray(t *testing.T) {
 
 func TestObjectFieldToStringForUnknownType(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.FINE)
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr
@@ -334,7 +316,6 @@ func TestObjectFieldToStringForUnknownType(t *testing.T) {
 
 func TestObjectFieldToStringForFileHandle(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.FINE)
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr
@@ -359,7 +340,6 @@ func TestObjectFieldToStringForFileHandle(t *testing.T) {
 
 func TestObjectFieldToStringForStaticBool(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.FINE)
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr

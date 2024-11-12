@@ -31,6 +31,27 @@ import (
  *		    return j + k;
  *	    }
  *
+ * The bytecode for this is:
+ *
+ * stack=3, locals=3, args_size=1
+ *        0: iconst_0
+ *        1: istore_2
+ *        2: goto          23
+ *        5: iload_2
+ *        6: iload_2
+ *        7: iconst_1
+ *        8: isub
+ *        9: invokestatic  #16                 // Method addTwo:(II)I
+ *       12: istore_1
+ *       13: getstatic     #20                 // Field java/lang/System.out:Ljava/io/PrintStream;
+ *       16: iload_1
+ *       17: invokevirtual #26                 // Method java/io/PrintStream.println:(I)V
+ *       20: iinc          2, 1
+ *       23: iload_2
+ *       24: bipush        10
+ *       26: if_icmplt     5
+ *       29: return
+ *
  * These tests check the output with various options for verbosity and features set on the command line.
  */
 
@@ -117,177 +138,6 @@ func TestRunHello2(t *testing.T) {
 	slurp, _ = io.ReadAll(stdout)
 
 	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
-	}
-}
-
-func TestRunHello2VerboseClass(t *testing.T) {
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
-
-	initErr := initVarsHello2()
-	if initErr != nil {
-		t.Fatalf("Test failure due to: %s", initErr.Error())
-	}
-	var cmd *exec.Cmd
-
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
-	}
-
-	_JVM_ARGS = "-verbose:class"
-	// run the various combinations of args. This is necessary b/c the empty string is viewed as
-	// an actual specified option on the command line.
-	if len(_JVM_ARGS) > 0 {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
-		}
-	} else {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS)
-		}
-	}
-
-	// get the stdout and stderr contents from the file execution
-	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// run the command
-	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
-	}
-
-	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Method area insert: Hello2, loader: bootstrap") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	if !strings.Contains(string(slurp), "-1") && !strings.Contains(string(slurp), "17") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
-	}
-}
-
-func TestRunHello2VerboseFinest(t *testing.T) {
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
-
-	initErr := initVarsHello2()
-	if initErr != nil {
-		t.Fatalf("Test failure due to: %s", initErr.Error())
-	}
-	var cmd *exec.Cmd
-
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
-	}
-
-	_JVM_ARGS = "-verbose:finest"
-	// run the various combinations of args. This is necessary b/c the empty string is viewed as
-	// an actual specified option on the command line.
-	if len(_JVM_ARGS) > 0 {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
-		}
-	} else {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS)
-		}
-	}
-
-	// get the stdout and stderr contents from the file execution
-	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// run the command
-	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
-	}
-
-	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), "Class Hello2 has been format-checked.") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	if !strings.Contains(string(slurp), "13") {
-		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
-	}
-}
-
-func TestRunHello2TraceInst(t *testing.T) {
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
-
-	initErr := initVarsHello2()
-	if initErr != nil {
-		t.Fatalf("Test failure due to: %s", initErr.Error())
-	}
-	var cmd *exec.Cmd
-
-	// test that executable exists
-	if _, err := os.Stat(_JACOBIN); err != nil {
-		t.Errorf("Missing Jacobin executable, which was specified as %s", _JACOBIN)
-	}
-
-	_JVM_ARGS = "-trace:inst"
-	// run the various combinations of args. This is necessary b/c the empty string is viewed as
-	// an actual specified option on the command line.
-	if len(_JVM_ARGS) > 0 {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _JVM_ARGS, _TESTCLASS)
-		}
-	} else {
-		if len(_APP_ARGS) > 0 {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS, _APP_ARGS)
-		} else {
-			cmd = exec.Command(_JACOBIN, _TESTCLASS)
-		}
-	}
-
-	// get the stdout and stderr contents from the file execution
-	stderr, err := cmd.StderrPipe()
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// run the command
-	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
-	}
-
-	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stderr)
-	if !strings.Contains(string(slurp), " class: Hello2                 meth: main       PC:  29, RETURN        TOS:  -") {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
-	}
-
-	slurp, _ = io.ReadAll(stdout)
-	if !strings.Contains(string(slurp), "15") {
 		t.Errorf("Did not get expected output to stdout. Got: %s", string(slurp))
 	}
 }

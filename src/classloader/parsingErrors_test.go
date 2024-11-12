@@ -9,7 +9,7 @@ package classloader
 import (
 	"io"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"os"
 	"strings"
 	"testing"
@@ -70,8 +70,7 @@ var classBytes = []byte{
 
 func TestLoadBarebonesClass(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	_, err := parse(classBytes)
 	if err != nil {
@@ -81,8 +80,7 @@ func TestLoadBarebonesClass(t *testing.T) {
 
 func TestBarebonesClassWithInvalidMagicNumber(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -116,8 +114,7 @@ func TestBarebonesClassWithInvalidMagicNumber(t *testing.T) {
 
 func TestBarebonesClassWithInvalidJavaVersion(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -151,8 +148,7 @@ func TestBarebonesClassWithInvalidJavaVersion(t *testing.T) {
 
 func TestBarebonesClassWithInvalidCPcount(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr

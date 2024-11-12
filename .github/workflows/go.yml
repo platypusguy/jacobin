@@ -30,7 +30,7 @@ jobs:
       uses: actions/setup-java@main
       with:
         distribution: 'oracle'
-        java-version: '17'
+        java-version: '21'
 
     - name: Build
       run: |
@@ -45,7 +45,7 @@ jobs:
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
         export JACOBIN_EXE=`pwd`/jacobin 
-        go test -v ./...
+        go test -v -timeout 3m ./...
 
   windows-build-and-test:
     strategy:
@@ -66,7 +66,7 @@ jobs:
       uses: actions/setup-java@main
       with:
         distribution: 'oracle'
-        java-version: '17'
+        java-version: '21'
 
     - name: Build
       run: |
@@ -88,4 +88,4 @@ jobs:
         $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
         go mod tidy
-        go test -v ./...
+        go test -v -timeout 3m ./...

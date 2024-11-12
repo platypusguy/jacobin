@@ -13,8 +13,9 @@ import (
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/gfunction"
-	"jacobin/log"
+	"jacobin/globals"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 )
 
@@ -106,23 +107,20 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 
 	if frames.PushFrame(fs, f) != nil {
 		errMsg := "memory exception allocating frame in runJavaInitializer()"
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("Start init: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
+	if globals.TraceVerbose {
+		infoMsg := fmt.Sprintf("Start init: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, meth.MaxStack, meth.MaxLocals, len(meth.Code))
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(infoMsg)
 	}
 
-	err := runFrame(fs)
+	interpret(fs)                   // if an error occurs, ThrowEx() will break us out of here
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
-	if err != nil {
-		return err
-	}
 
-	frames.PopFrame(fs)
+	// frames.PopFrame(fs)
 	return nil
 }
 

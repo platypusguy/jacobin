@@ -11,8 +11,8 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
-	"jacobin/log"
 	"jacobin/object"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -118,6 +118,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Security_AccessController()
 
 	// java/util/*
+	Load_Util_Zip_Adler32()
+	Load_Util_Zip_Crc32_Crc32c()
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_HashMap()
@@ -160,7 +162,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 	for key, val := range libMeths {
 		if !checkKey(key) {
 			errMsg := fmt.Sprintf("loadlib: Invalid key=%s", key)
-			log.Log(errMsg, log.SEVERE)
+			trace.Error(errMsg)
 			ok = false
 		}
 		gme := GMeth{}

@@ -1,18 +1,19 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
- * Licensed under Mozilla Public License 2.0 (MPL 2.0)
+ * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
 package jvm
 
 import (
+	"io"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/trace"
 	"jacobin/types"
 	"math"
 	"os"
@@ -23,8 +24,8 @@ import (
 
 // These tests test the individual bytecode instructions. They are presented
 // here in alphabetical order of the instruction name.
-// THIS FILE CONTAINS TESTS FOR ALL BYTECODES UP TO DUP2_X1.
-// All other bytecodes are in run_*_test.go files except
+// THIS FILE CONTAINS TESTS FOR ALL BYTECODES THROUGH DUP2_X2.
+// All other bytecodes are in interpreter_*_test.go files except
 // for array bytecodes, which are located in arrayBytecodes_test.go
 
 // set up function to create a frame with a method with the single instruction
@@ -47,14 +48,14 @@ func validateFloatingPoint(t *testing.T, op string, expected float64, actual flo
 	}
 }
 
-// ---- tests ----
+// =============================================================================================//
 
 // ACONST_NULL: Load null onto opStack
-func TestAconstNull(t *testing.T) {
+func TestNewAconstNull(t *testing.T) {
 	f := newFrame(opcodes.ACONST_NULL)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := peek(&f)
 	if x != object.Null {
 		t.Errorf("ACONST_NULL: Expecting nil on stack, got: %d", x)
@@ -65,7 +66,7 @@ func TestAconstNull(t *testing.T) {
 }
 
 // ALOAD: test load of reference in locals[index] on to stack
-func TestAload(t *testing.T) {
+func TestNewAload(t *testing.T) {
 	f := newFrame(opcodes.ALOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
 	f.Locals = append(f.Locals, zero)
@@ -76,7 +77,7 @@ func TestAload(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(int64)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
@@ -90,13 +91,13 @@ func TestAload(t *testing.T) {
 }
 
 // ALOAD_0: test load of reference in locals[0] on to stack
-func TestAload0(t *testing.T) {
+func TestNewAload0(t *testing.T) {
 	f := newFrame(opcodes.ALOAD_0)
 	f.Locals = append(f.Locals, int64(0x1234560)) // put value in locals[0]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(int64)
 	if x != 0x1234560 {
 		t.Errorf("ALOAD_0: Expecting 0x1234560 on stack, got: 0x%x", x)
@@ -107,14 +108,14 @@ func TestAload0(t *testing.T) {
 }
 
 // ALOAD_1: test load of reference in locals[1] on to stack
-func TestAload1(t *testing.T) {
+func TestNewAload1(t *testing.T) {
 	f := newFrame(opcodes.ALOAD_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(0x1234561)) // put value in locals[1]
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(int64)
 	if x != 0x1234561 {
 		t.Errorf("ALOAD_1: Expecting 0x1234561 on stack, got: 0x%x", x)
@@ -125,7 +126,7 @@ func TestAload1(t *testing.T) {
 }
 
 // ALOAD_2: test load of reference in locals[2] on to stack
-func TestAload2(t *testing.T) {
+func TestNewAload2(t *testing.T) {
 	f := newFrame(opcodes.ALOAD_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -133,7 +134,7 @@ func TestAload2(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(int64)
 	if x != 0x1234562 {
 		t.Errorf("ALOAD_2: Expecting 0x1234562 on stack, got: 0x%x", x)
@@ -144,7 +145,7 @@ func TestAload2(t *testing.T) {
 }
 
 // ALOAD_3: test load of reference in locals[3] on to stack
-func TestAload3(t *testing.T) {
+func TestNewAload3(t *testing.T) {
 	f := newFrame(opcodes.ALOAD_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -153,7 +154,7 @@ func TestAload3(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(int64)
 	if x != 0x1234563 {
 		t.Errorf("ALOAD_3: Expecting 0x1234563 on stack, got: 0x%x", x)
@@ -164,7 +165,7 @@ func TestAload3(t *testing.T) {
 }
 
 // ARETURN: Return a long from a function
-func TestAreturn(t *testing.T) {
+func TestNewAreturn(t *testing.T) {
 	f0 := newFrame(0)
 	push(&f0, unsafe.Pointer(&f0))
 
@@ -175,10 +176,10 @@ func TestAreturn(t *testing.T) {
 	f1 := newFrame(opcodes.ARETURN)
 	push(&f1, unsafe.Pointer(&f1))
 	fs.PushFront(&f1)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	// now that the ARETURN has completed, pop that frame (the one that did the ARETURN)
-	_ = frames.PopFrame(fs)
+	// _ = frames.PopFrame(fs)
 
 	// and see whether the pointer at the frame's top of stack points to f1
 	f2 := fs.Front().Value.(*frames.Frame)
@@ -189,7 +190,7 @@ func TestAreturn(t *testing.T) {
 }
 
 // ASTORE: Store reference in local var specified by following byte.
-func TestAstore(t *testing.T) {
+func TestNewAstore(t *testing.T) {
 	f := newFrame(opcodes.ASTORE)
 	f.Meth = append(f.Meth, 0x03) // use local var #4
 
@@ -201,7 +202,7 @@ func TestAstore(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[3] != int64(0x22223) {
 		t.Errorf("ASTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
@@ -212,14 +213,14 @@ func TestAstore(t *testing.T) {
 }
 
 // ASTORE_0: test store of reference from stack into locals[0]
-func TestAstore0(t *testing.T) {
+func TestNewAstore0(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_0)
 	f.Locals = append(f.Locals, zero)
 	push(&f, int64(0x22220))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[0] != int64(0x22220) {
 		t.Errorf("ASTORE_0: Expecting 0x22220 on stack, got: 0x%x", f.Locals[0])
@@ -230,7 +231,7 @@ func TestAstore0(t *testing.T) {
 }
 
 // ASTORE_1: test store of reference from stack into locals[1]
-func TestAstore1(t *testing.T) {
+func TestNewAstore1(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -238,7 +239,7 @@ func TestAstore1(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[1] != int64(0x22221) {
 		t.Errorf("ASTORE_1: Expecting 0x22221 on stack, got: 0x%x", f.Locals[0])
@@ -249,7 +250,7 @@ func TestAstore1(t *testing.T) {
 }
 
 // ASTORE_2: test store of reference from stack into locals[2]
-func TestAstore2(t *testing.T) {
+func TestNewAstore2(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -258,7 +259,7 @@ func TestAstore2(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[2] != int64(0x22222) {
 		t.Errorf("ASTORE_2: Expecting 0x22222 on stack, got: 0x%x", f.Locals[0])
@@ -269,7 +270,7 @@ func TestAstore2(t *testing.T) {
 }
 
 // ASTORE3: store of reference from stack into locals[3]
-func TestAstore3(t *testing.T) {
+func TestNewAstore3(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -279,7 +280,7 @@ func TestAstore3(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[3] != int64(0x22223) {
 		t.Errorf("ASTORE_3: Expecting 0x22223 on stack, got: 0x%x", f.Locals[0])
@@ -292,12 +293,12 @@ func TestAstore3(t *testing.T) {
 // BASTORE is tested in arrayBytecodes_test.go
 
 // BIPUSH
-func TestBipush(t *testing.T) {
+func TestNewBipush(t *testing.T) {
 	f := newFrame(opcodes.BIPUSH)
 	f.Meth = append(f.Meth, 0x05)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	if f.TOS != 0 {
 		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.TOS)
 	}
@@ -308,13 +309,13 @@ func TestBipush(t *testing.T) {
 }
 
 // BIPUSH with negative value
-func TestBipushNeg(t *testing.T) {
+func TestNewBipushNeg(t *testing.T) {
 	f := newFrame(opcodes.BIPUSH)
 	val := -5
 	f.Meth = append(f.Meth, byte(val))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	if f.TOS != 0 {
 		t.Errorf("BIPUSH: Top of stack, expected 0, got: %d", f.TOS)
 	}
@@ -326,11 +327,11 @@ func TestBipushNeg(t *testing.T) {
 
 // CHECKCAST: This bytecode uses similar logic to INSTANCEOF, except how
 // it handles exceptional conditions.
-func TestCheckcastOfString(t *testing.T) {
+func TestNewCheckcastOfString(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
@@ -360,7 +361,7 @@ func TestCheckcastOfString(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(*object.Object)
 	if value != s { // if the stack is unchanged, we got a match
@@ -369,11 +370,11 @@ func TestCheckcastOfString(t *testing.T) {
 }
 
 // CHECKCAST: Test for nil. This should simply move the PC forward by 3 bytes. Nothing else.
-func TestCheckcastOfNil(t *testing.T) {
+func TestNewCheckcastOfNil(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	classloader.Init()
 	// classloader.LoadBaseClasses()
@@ -389,7 +390,7 @@ func TestCheckcastOfNil(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 0 {
 		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
@@ -401,18 +402,18 @@ func TestCheckcastOfNil(t *testing.T) {
 }
 
 // CHECKCAST: Test for null -- this should simply move the PC forward by 3 bytes. Nothing else.
-func TestCheckcastOfNull(t *testing.T) {
+func TestNewCheckcastOfNull(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
+	trace.Init()
 
 	f := newFrame(opcodes.CHECKCAST)
 	push(&f, object.Null) // this should cause the error
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 0 {
 		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
@@ -424,16 +425,15 @@ func TestCheckcastOfNull(t *testing.T) {
 }
 
 // CHECKCAST: Test for non-object pointer -- this should result in an exception
-func TestCheckcastOfInvalidReference(t *testing.T) {
+func TestNewCheckcastOfInvalidReference(t *testing.T) {
 	g := globals.GetGlobalRef()
 	globals.InitGlobals("test")
 	g.JacobinName = "test" // prevents a shutdown when the exception hits.
-	log.Init()
-	log.SetLogLevel(log.SEVERE)
+	trace.Init()
 
 	// redirect stderr to avoid printing error message to console
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
 	f := newFrame(opcodes.CHECKCAST)
@@ -441,11 +441,15 @@ func TestCheckcastOfInvalidReference(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	err := runFrame(fs)
+	interpret(fs)
 
-	os.Stderr = normalStderr // restore stderr
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
 
-	if err == nil {
+	errMsg := string(msg)
+
+	if errMsg == "" {
 		t.Errorf("CHECKCAST: Expected an error, but did not get one")
 	}
 
@@ -453,21 +457,19 @@ func TestCheckcastOfInvalidReference(t *testing.T) {
 		t.Errorf("CHECKCAST: Expected TOS to be 0, got %d", f.TOS)
 	}
 
-	errMsg := err.Error()
 	if !strings.Contains(errMsg, "CHECKCAST: Invalid class reference") {
 		t.Errorf("CHECKCAST: Expected different error message. Got: %s", errMsg)
 	}
 }
 
 // D2F: test convert double to float
-func TestD2f(t *testing.T) {
+func TestNewD2f(t *testing.T) {
 	f := newFrame(opcodes.D2F)
-	push(&f, 2.9)
 	push(&f, 2.9)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	val := pop(&f).(float64)
 	if math.Abs(val-2.9) > maxFloatDiff {
@@ -479,14 +481,13 @@ func TestD2f(t *testing.T) {
 }
 
 // D2I: test convert double to int, positive
-func TestD2iPositive(t *testing.T) {
+func TestNewD2iPositive(t *testing.T) {
 	f := newFrame(opcodes.D2I)
-	push(&f, 2.9)
 	push(&f, 2.9)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	val := pop(&f).(int64)
 	if val != 2 {
@@ -498,14 +499,13 @@ func TestD2iPositive(t *testing.T) {
 }
 
 // D2I: test convert double to int, negative
-func TestD2iNegative(t *testing.T) {
+func TestNewD2iNegative(t *testing.T) {
 	f := newFrame(opcodes.D2I)
-	push(&f, -2.9)
 	push(&f, -2.9)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	val := pop(&f).(int64)
 	if val != -2 {
@@ -517,16 +517,14 @@ func TestD2iNegative(t *testing.T) {
 }
 
 // D2L: test convert double to long, positive
-func TestD2lPositive(t *testing.T) {
+func TestNewD2lPositive(t *testing.T) {
 	f := newFrame(opcodes.D2L)
-	push(&f, 2.9)
 	push(&f, 2.9)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(int64)
 	if val != 2 {
 		t.Errorf("D2L: expected a result of 2, but got: %d", val)
@@ -537,16 +535,14 @@ func TestD2lPositive(t *testing.T) {
 }
 
 // D2L: test convert double to long, negative
-func TestD2lNegative(t *testing.T) {
+func TestNewD2lNegative(t *testing.T) {
 	f := newFrame(opcodes.D2L)
-	push(&f, -2.9)
 	push(&f, -2.9)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(int64)
 	if val != -2 {
 		t.Errorf("D2L: expected a result of -2, but got: %d", val)
@@ -557,18 +553,15 @@ func TestD2lNegative(t *testing.T) {
 }
 
 // DADD: test add two doubles
-func TestDadd(t *testing.T) {
+func TestNewDadd(t *testing.T) {
 	f := newFrame(opcodes.DADD)
 	push(&f, 15.3)
-	push(&f, 15.3)
-	push(&f, 22.1)
 	push(&f, 22.1)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(float64)
 	validateFloatingPoint(t, "DADD", 37.4, val)
 	if f.TOS != -1 {
@@ -577,18 +570,15 @@ func TestDadd(t *testing.T) {
 }
 
 // DADD: test add two doubles, one is NaN
-func TestDaddNan(t *testing.T) {
+func TestNewDaddNan(t *testing.T) {
 	f := newFrame(opcodes.DADD)
 	push(&f, 15.3)
-	push(&f, 15.3)
-	push(&f, math.NaN())
 	push(&f, math.NaN())
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(float64)
 
 	if !math.IsNaN(val) {
@@ -601,18 +591,15 @@ func TestDaddNan(t *testing.T) {
 }
 
 // DADD: test add two doubles, one is Inf
-func TestDaddInf(t *testing.T) {
+func TestNewDaddInf(t *testing.T) {
 	f := newFrame(opcodes.DADD)
 	push(&f, 15.3)
-	push(&f, 15.3)
-	push(&f, math.Inf(1))
 	push(&f, math.Inf(1))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(float64)
 
 	if !math.IsInf(val, 1) {
@@ -625,16 +612,14 @@ func TestDaddInf(t *testing.T) {
 }
 
 // DCMP0: compare two doubles, 1 on NaN
-func TestDcmpg1(t *testing.T) {
+func TestNewDcmpg1(t *testing.T) {
 	f := newFrame(opcodes.DCMPG)
 	push(&f, 3.0)
-	push(&f, 3.0)
-	push(&f, 2.0)
 	push(&f, 2.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(int64)
 
@@ -648,16 +633,14 @@ func TestDcmpg1(t *testing.T) {
 }
 
 // DCMPG: compare two doubles
-func TestDcmpgMinus1(t *testing.T) {
+func TestNewDcmpgMinus1(t *testing.T) {
 	f := newFrame(opcodes.DCMPG)
 	push(&f, 2.0)
-	push(&f, 2.0)
-	push(&f, 3.0)
 	push(&f, 3.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(int64)
 
@@ -671,16 +654,14 @@ func TestDcmpgMinus1(t *testing.T) {
 }
 
 // DCMP0: compare two doubles
-func TestDcmpg0(t *testing.T) {
+func TestNewDcmpg0(t *testing.T) {
 	f := newFrame(opcodes.DCMPG)
-	push(&f, 3.0)
-	push(&f, 3.0)
 	push(&f, 3.0)
 	push(&f, 3.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(int64)
 
@@ -693,16 +674,14 @@ func TestDcmpg0(t *testing.T) {
 	}
 }
 
-func TestDcmpgNan(t *testing.T) {
+func TestNewDcmpgNan(t *testing.T) {
 	f := newFrame(opcodes.DCMPG)
 	push(&f, math.NaN())
-	push(&f, math.NaN())
-	push(&f, 3.0)
 	push(&f, 3.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(int64)
 
@@ -716,16 +695,14 @@ func TestDcmpgNan(t *testing.T) {
 }
 
 // DCMPL
-func TestDcmplNan(t *testing.T) {
+func TestNewDcmplNan(t *testing.T) {
 	f := newFrame(opcodes.DCMPL)
 	push(&f, math.NaN())
-	push(&f, math.NaN())
-	push(&f, 3.0)
 	push(&f, 3.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(int64)
 
@@ -739,13 +716,12 @@ func TestDcmplNan(t *testing.T) {
 }
 
 // DCONST_0
-func TestDconst0(t *testing.T) {
+func TestNewDconst0(t *testing.T) {
 	f := newFrame(opcodes.DCONST_0)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 
 	if value != 0.0 {
@@ -758,15 +734,13 @@ func TestDconst0(t *testing.T) {
 }
 
 // DCONST_1
-func TestDconst1(t *testing.T) {
+func TestNewDconst1(t *testing.T) {
 	f := newFrame(opcodes.DCONST_1)
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
-
 	if value != 1.0 {
 		t.Errorf("DCONST_1: Expected popped value to be 1.0, got: %f", value)
 	}
@@ -777,18 +751,15 @@ func TestDconst1(t *testing.T) {
 }
 
 // DDIV: double divide of.TOS-1 by tos, push result
-func TestDdiv(t *testing.T) {
+func TestNewDdiv(t *testing.T) {
 	f := newFrame(opcodes.DDIV)
 	push(&f, 3.0)
-	push(&f, 3.0)
-	push(&f, 2.0)
 	push(&f, 2.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 	validateFloatingPoint(t, "DDIV", 1.5, value)
 	if f.TOS != -1 {
@@ -797,17 +768,14 @@ func TestDdiv(t *testing.T) {
 }
 
 // DDIV: with divide zero by zero, should = NaN
-func TestDdivDivideZeroByZero(t *testing.T) {
+func TestNewDdivDivideZeroByZero(t *testing.T) {
 	f := newFrame(opcodes.DDIV)
-	push(&f, float64(0))
-	push(&f, float64(0))
-
 	push(&f, float64(0))
 	push(&f, float64(0))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	ret := pop(&f)
 
 	if !math.IsNaN(ret.(float64)) {
@@ -816,17 +784,14 @@ func TestDdivDivideZeroByZero(t *testing.T) {
 }
 
 // DDIV: with divide positive number by zero, should = +Inf
-func TestDdivDividePosNumberByZero(t *testing.T) {
+func TestNewDdivDividePosNumberByZero(t *testing.T) {
 	f := newFrame(opcodes.DDIV)
 	push(&f, float64(10))
-	push(&f, float64(10))
-
-	push(&f, float64(0))
 	push(&f, float64(0))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	ret := pop(&f)
 
 	if !math.IsInf(ret.(float64), 1) {
@@ -835,7 +800,7 @@ func TestDdivDividePosNumberByZero(t *testing.T) {
 }
 
 // DLOAD: test load of double in locals[index] on to stack
-func TestDload(t *testing.T) {
+func TestNewDload(t *testing.T) {
 	f := newFrame(opcodes.DLOAD)
 	f.Meth = append(f.Meth, 0x04) // use local var #4
 	f.Locals = append(f.Locals, zerof)
@@ -846,9 +811,8 @@ func TestDload(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 	x := pop(&f).(float64)
-	pop(&f) // pop twice due to two entries on op stack due to 64-bit width of data type
 	if x != float64(0x1234562) {
 		t.Errorf("DLOAD: Expecting 0x1234562 on stack, got: 0x%x", x)
 	}
@@ -861,15 +825,14 @@ func TestDload(t *testing.T) {
 }
 
 // DLOAD_0: load of double in locals[0] onto stack
-func TestDload0(t *testing.T) {
+func TestNewDload0(t *testing.T) {
 	f := newFrame(opcodes.DLOAD_0)
 	f.Locals = append(f.Locals, 1.2)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 	validateFloatingPoint(t, "DLOAD_0", 1.2, value)
 
@@ -879,16 +842,15 @@ func TestDload0(t *testing.T) {
 }
 
 // DLOAD_1: load of double in locals[1] onto stack
-func TestDload1(t *testing.T) {
+func TestNewDload1(t *testing.T) {
 	f := newFrame(opcodes.DLOAD_1)
 	f.Locals = append(f.Locals, 1.3)
 	f.Locals = append(f.Locals, 1.2)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 	validateFloatingPoint(t, "DLOAD_1", 1.2, value)
 
@@ -898,7 +860,7 @@ func TestDload1(t *testing.T) {
 }
 
 // DLOAD_2: load of double in locals[2] onto stack
-func TestDload2(t *testing.T) {
+func TestNewDload2(t *testing.T) {
 	f := newFrame(opcodes.DLOAD_2)
 	f.Locals = append(f.Locals, 1.3)
 	f.Locals = append(f.Locals, 1.3)
@@ -906,9 +868,8 @@ func TestDload2(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 	validateFloatingPoint(t, "DLOAD_2", 1.2, value)
 
@@ -918,7 +879,7 @@ func TestDload2(t *testing.T) {
 }
 
 // DLOAD_3: load of double in locals[3] onto stack
-func TestDload3(t *testing.T) {
+func TestNewDload3(t *testing.T) {
 	f := newFrame(opcodes.DLOAD_3)
 	f.Locals = append(f.Locals, 1.3)
 	f.Locals = append(f.Locals, 1.3)
@@ -927,9 +888,8 @@ func TestDload3(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	value := pop(&f).(float64)
 	validateFloatingPoint(t, "DLOAD_3", 1.2, value)
 
@@ -939,18 +899,15 @@ func TestDload3(t *testing.T) {
 }
 
 // DMUL (pop 2 doubles, multiply them, push result)
-func TestDmul(t *testing.T) {
+func TestNewDmul(t *testing.T) {
 	f := newFrame(opcodes.DMUL)
 	push(&f, 1.5)
-	push(&f, 1.5)
-	push(&f, 2.0)
 	push(&f, 2.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	validateFloatingPoint(t, "DMUL", 3.0, pop(&f).(float64))
 
 	if f.TOS != -1 {
@@ -959,16 +916,14 @@ func TestDmul(t *testing.T) {
 }
 
 // DNEG Negate a double
-func TestDneg(t *testing.T) {
+func TestNewDneg(t *testing.T) {
 	f := newFrame(opcodes.DNEG)
-	push(&f, 1.5)
 	push(&f, 1.5)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	validateFloatingPoint(t, "DNEG", -1.5, pop(&f).(float64))
 
 	if f.TOS != -1 {
@@ -977,16 +932,14 @@ func TestDneg(t *testing.T) {
 }
 
 // DNEG Negate a double - infinity
-func TestDnegInf(t *testing.T) {
+func TestNewDnegInf(t *testing.T) {
 	f := newFrame(opcodes.DNEG)
-	push(&f, math.Inf(1))
 	push(&f, math.Inf(1))
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	pop(&f)
 	val := pop(&f).(float64)
 
 	if math.Inf(-1) != val {
@@ -999,19 +952,17 @@ func TestDnegInf(t *testing.T) {
 }
 
 // DREM: remainder of float division (the % operator)
-func TestDrem(t *testing.T) {
+func TestNewDrem(t *testing.T) {
 	f := newFrame(opcodes.DREM)
 	push(&f, 23.5)
-	push(&f, 23.5)
-	push(&f, 3.3)
 	push(&f, 3.3)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
-	if f.TOS != 1 {
-		t.Errorf("DREM, Top of stack, expected 1, got: %d", f.TOS)
+	if f.TOS != 0 {
+		t.Errorf("DREM, Top of stack, expected 0, got: %d", f.TOS)
 	}
 
 	value := pop(&f).(float64)
@@ -1021,23 +972,21 @@ func TestDrem(t *testing.T) {
 }
 
 // DRETURN: Return a long from a function
-func TestDreturn(t *testing.T) {
+func TestNewDreturn(t *testing.T) {
 	f0 := newFrame(0)
 	push(&f0, float64(20))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f0)
 	f1 := newFrame(opcodes.DRETURN)
 	push(&f1, float64(21))
-	push(&f1, float64(21))
 	fs.PushFront(&f1)
-	_ = runFrame(fs)
-	_ = frames.PopFrame(fs)
+	interpret(fs)
+
 	f3 := fs.Front().Value.(*frames.Frame)
 	newVal := pop(f3).(float64)
 	if newVal != 21.0 {
 		t.Errorf("After DRETURN, expected a value of 21 in previous frame, got: %f", newVal)
 	}
-	pop(f3) // popped a second time due to longs taking two slots
 
 	prevVal := pop(f3).(float64)
 	if prevVal != 20 {
@@ -1046,7 +995,7 @@ func TestDreturn(t *testing.T) {
 }
 
 // DSTORE: Store double from stack into local specified by following byte.
-func TestDstore(t *testing.T) {
+func TestNewDstore(t *testing.T) {
 	f := newFrame(opcodes.DSTORE)
 	f.Meth = append(f.Meth, 0x02) // use local var #2
 	f.Locals = append(f.Locals, zerof)
@@ -1054,18 +1003,13 @@ func TestDstore(t *testing.T) {
 	f.Locals = append(f.Locals, zerof)
 	f.Locals = append(f.Locals, zerof)
 
-	push(&f, float64(0x22223)) // pushed twice due to double using two slots
 	push(&f, float64(0x22223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[2] != float64(0x22223) {
 		t.Errorf("DSTORE: Expecting 0x22223 in locals[2], got: 0x%x", f.Locals[2])
-	}
-
-	if f.Locals[3] != float64(0x22223) {
-		t.Errorf("DSTORE: Expecting 0x22223 in locals[3], got: 0x%x", f.Locals[3])
 	}
 
 	if f.TOS != -1 {
@@ -1074,16 +1018,15 @@ func TestDstore(t *testing.T) {
 }
 
 // DSTORE_0: Store double from stack into localVar[0]
-func TestDstore0(t *testing.T) {
+func TestNewDstore0(t *testing.T) {
 	f := newFrame(opcodes.DSTORE_0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
-	push(&f, 1.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[0].(float64) != 1.0 {
 		t.Errorf("DSTORE_0: expected locals[0] to be 1.0, got: %f", f.Locals[0].(float64))
@@ -1095,17 +1038,16 @@ func TestDstore0(t *testing.T) {
 }
 
 // DSTORE_1: Store double from stack into localVar[1]
-func TestDstore1(t *testing.T) {
+func TestNewDstore1(t *testing.T) {
 	f := newFrame(opcodes.DSTORE_1)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
-	push(&f, 1.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[1].(float64) != 1.0 {
 		t.Errorf("DSTORE_1: expected locals[1] to be 1.0, got: %f", f.Locals[1].(float64))
@@ -1117,18 +1059,17 @@ func TestDstore1(t *testing.T) {
 }
 
 // DSTORE_2: Store double from stack into localVar[2]
-func TestDstore2(t *testing.T) {
+func TestNewDstore2(t *testing.T) {
 	f := newFrame(opcodes.DSTORE_2)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
-	push(&f, 1.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[2].(float64) != 1.0 {
 		t.Errorf("DSTORE_2: expected locals[2] to be 1.0, got: %f", f.Locals[2].(float64))
@@ -1140,7 +1081,7 @@ func TestDstore2(t *testing.T) {
 }
 
 // DSTORE_3: Store double from stack into localVar[3]
-func TestDstore3(t *testing.T) {
+func TestNewDstore3(t *testing.T) {
 	f := newFrame(opcodes.DSTORE_3)
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
@@ -1148,11 +1089,10 @@ func TestDstore3(t *testing.T) {
 	f.Locals = append(f.Locals, 0.0)
 	f.Locals = append(f.Locals, 0.0)
 	push(&f, 1.0)
-	push(&f, 1.0)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.Locals[3].(float64) != 1.0 {
 		t.Errorf("DSTORE_3: expected locals[3] to be 1.0, got: %f", f.Locals[3].(float64))
@@ -1164,19 +1104,16 @@ func TestDstore3(t *testing.T) {
 }
 
 // DSUB: double subtraction
-func TestDsub(t *testing.T) {
+func TestNewDsub(t *testing.T) {
 	f := newFrame(opcodes.DSUB)
 	push(&f, 1.0)
-	push(&f, 1.0)
-	push(&f, 0.7)
 	push(&f, 0.7)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	value := pop(&f).(float64)
-	pop(&f)
 
 	if math.Abs(value-0.3) > maxFloatDiff {
 		t.Errorf("DSUB: Expected popped value to be 0.3, got: %f", value)
@@ -1188,12 +1125,12 @@ func TestDsub(t *testing.T) {
 }
 
 // DUP: Push a duplicate of the top item on the stack
-func TestDup(t *testing.T) {
+func TestNewDup(t *testing.T) {
 	f := newFrame(opcodes.DUP)
 	push(&f, int64(0x22223))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS < 1 {
 		t.Errorf("DUP: stack should have two elements with tos > 0, tos was: %d", f.TOS)
@@ -1208,14 +1145,14 @@ func TestDup(t *testing.T) {
 }
 
 // DUP2: Push duplicate of the top two items on the stack
-func TestDup2(t *testing.T) {
+func TestNewDup2(t *testing.T) {
 	f := newFrame(opcodes.DUP2)
 	push(&f, int64(0x22))
 	push(&f, int64(0x11)) // this is TOS
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 3 {
 		t.Errorf("DUP2: stack should have four elements, got tos was: %d", f.TOS)
@@ -1236,14 +1173,14 @@ func TestDup2(t *testing.T) {
 }
 
 // DUP_X1: Duplicate the top stack value and insert it two slots down
-func TestDupX1(t *testing.T) {
+func TestNewDupX1(t *testing.T) {
 	f := newFrame(opcodes.DUP_X1)
 	push(&f, int64(0x3))
 	push(&f, int64(0x2))
 	push(&f, int64(0x1))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 3 {
 		t.Errorf("DUP_X1: Expecting a top of stack = 3 (so stack size 4), got: %d", f.TOS)
@@ -1259,14 +1196,14 @@ func TestDupX1(t *testing.T) {
 }
 
 // DUP_X2: Duplicate the top stack value and insert it three slots down
-func TestDupX2(t *testing.T) {
+func TestNewDupX2(t *testing.T) {
 	f := newFrame(opcodes.DUP_X2)
 	push(&f, int64(0x3))
 	push(&f, int64(0x2))
 	push(&f, int64(0x1)) // this will be the dup'ed value
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 3 {
 		t.Errorf("DUP_X2: Expecting a top of stack = 3 (so stack size 4), got: %d", f.TOS)
@@ -1283,14 +1220,14 @@ func TestDupX2(t *testing.T) {
 }
 
 // DUP2_X1: Duplicate the top 2 stack values and insert them 3 slots down
-func TestDup2X1(t *testing.T) {
+func TestNewDup2X1(t *testing.T) {
 	f := newFrame(opcodes.DUP2_X1)
 	push(&f, int64(0x3))
 	push(&f, int64(0x2))
 	push(&f, int64(0x1)) // this is nowdir TOS
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 4 {
 		t.Errorf("DUP2_X1: Expecting a top of stack = 4 (so stack size 5), got: %d", f.TOS)
@@ -1307,7 +1244,7 @@ func TestDup2X1(t *testing.T) {
 }
 
 // DUP2_X1: Duplicate the top 2 stack values and insert them 4 slots down
-func TestDup2X2(t *testing.T) {
+func TestNewDup2X2(t *testing.T) {
 	f := newFrame(opcodes.DUP2_X2)
 	push(&f, int64(0x4))
 	push(&f, int64(0x3))
@@ -1315,7 +1252,7 @@ func TestDup2X2(t *testing.T) {
 	push(&f, int64(0x1)) // this is now TOS
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	if f.TOS != 5 {
 		t.Errorf("DUP2_X2: Expecting a top of stack = 5 (so stack size 6), got: %d", f.TOS)

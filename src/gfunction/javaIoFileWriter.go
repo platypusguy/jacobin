@@ -22,7 +22,7 @@ func Load_Io_FileWriter() {
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;Z)V"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 2,
 			GFunction:  initFileOutputStreamFileBoolean,
 		}
 
@@ -34,7 +34,7 @@ func Load_Io_FileWriter() {
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/lang/String;Z)V"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 2,
 			GFunction:  initFileOutputStreamStringBoolean,
 		}
 

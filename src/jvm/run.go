@@ -18,13 +18,13 @@ import (
 	"jacobin/frames"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
 	"math"
@@ -41,20 +41,14 @@ var MainThread thread.ExecThread
 // in the method area (it's guaranteed to already be loaded), grabs the executable
 // bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
 // and begins execution.
-func StartExec(className string, mainThread *thread.ExecThread, globals *globals.Globals) error {
+func StartExec(className string, mainThread *thread.ExecThread, globalStruct *globals.Globals) {
 
 	MainThread = *mainThread
-	// set tracing, if any
-	tracing := false
-	trace, exists := globals.Options["-trace"]
-	if exists {
-		tracing = trace.Set
-	}
-	MainThread.Trace = tracing
 
 	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
 	if err != nil {
-		return errors.New("Class not found: " + className + ".main()")
+		errMsg := "Class not found: " + className + ".main()"
+		exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, nil)
 	}
 
 	m := me.Meth.(classloader.JmEntry)
@@ -73,7 +67,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 
 	// Create an array of string objects in locals[0].
 	var objArray []*object.Object
-	for _, str := range globals.AppArgs {
+	for _, str := range globalStruct.AppArgs {
 		// sobj := object.NewStringFromGoString(str) // deprecated by JACOBIN-480
 		sobj := object.StringObjectFromGoString(str)
 		objArray = append(objArray, sobj)
@@ -83,41 +77,32 @@ func StartExec(className string, mainThread *thread.ExecThread, globals *globals
 	// create the first thread and place its first frame on it
 	MainThread.Stack = frames.CreateFrameStack()
 	mainThread.Stack = MainThread.Stack
-	// MainThread.ID = thread.AddThreadToTable(&MainThread, &globals.Threads)
-	MainThread.Trace = tracing
 
 	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
 	if frames.PushFrame(MainThread.Stack, f) != nil {
 		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
-		_ = log.Log(errMsg, log.SEVERE)
-		return errors.New(errMsg)
+		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := InstantiateClass(className, MainThread.Stack)
 	if instantiateError != nil {
-		return errors.New("Error instantiating: " + className + ".main()")
+		errMsg := "Error instantiating: " + className + ".main()"
+		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
-	if MainThread.Trace {
+	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
 	err = runThread(&MainThread)
-	if err != nil {
-		statics.DumpStatics()
-		config.DumpConfig(os.Stderr)
-		return err
-	}
 
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		statics.DumpStatics()
-		config.DumpConfig(os.Stderr)
+		_ = config.DumpConfig(os.Stderr)
 	}
-
-	return nil
 }
 
 // Point the thread to the top of the frame stack and tell it to run from there.
@@ -132,29 +117,17 @@ func runThread(t *thread.ExecThread) error {
 			exceptions.ShowPanicCause(r)
 			exceptions.ShowFrameStack(t)
 			exceptions.ShowGoStackTrace(nil)
-			statics.DumpStatics()
-			config.DumpConfig(os.Stderr)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		return shutdown.OK
 	}()
 
 	for t.Stack.Len() > 0 {
-		err := runFrame(t.Stack)
-		if err != nil {
-			exceptions.ShowFrameStack(t)
-			if globals.GetGlobalRef().GoStackShown == false {
-				exceptions.ShowGoStackTrace(nil)
-				globals.GetGlobalRef().GoStackShown = true
-			}
-			return err
-		}
+		interpret(t.Stack)
+	}
 
-		if t.Stack.Len() == 1 { // true when the last executed frame was main()
-			return nil
-		} else {
-			t.Stack.Remove(t.Stack.Front()) // pop the frame off
-		}
+	if t.Stack.Len() == 0 { // true when the last executed frame was main()
+		return nil
 	}
 	return nil
 }
@@ -165,19 +138,19 @@ func runThread(t *thread.ExecThread) error {
 // place through a giant switch statement.
 func runFrame(fs *list.List) error {
 	glob := globals.GetGlobalRef()
-	wideInEffect := false
 
 frameInterpreter:
 	// the current frame is always the head of the linked list of frames.
 	// the next statement converts the address of that frame to the more readable 'f'
 	f := fs.Front().Value.(*frames.Frame)
+	f.WideInEffect = false
 
 	// the frame's method is not a golang method, so it's Java bytecode, which
 	// is interpreted in the rest of this function.
 	for f.PC < len(f.Meth) {
-		if MainThread.Trace {
+		if globals.TraceInst {
 			traceInfo := emitTraceData(f)
-			_ = log.Log(traceInfo, log.TRACE_INST)
+			trace.Trace(traceInfo)
 		}
 
 		opcode := f.Meth[f.PC]
@@ -187,7 +160,7 @@ frameInterpreter:
 			break
 		case opcodes.ACONST_NULL: // 0x01   (push null onto opStack)
 			push(f, object.Null)
-		case opcodes.ICONST_M1: //	x02	(push -1 onto opStack)
+		case opcodes.ICONST_M1: //	0x02	(push -1 onto opStack)
 			push(f, int64(-1))
 		case opcodes.ICONST_0: // 	0x03	(push int 0 onto opStack)
 			push(f, int64(0))
@@ -216,7 +189,7 @@ frameInterpreter:
 		case opcodes.DCONST_0: // 0x0E
 			push(f, 0.0)
 			push(f, 0.0)
-		case opcodes.DCONST_1: // 0xoF
+		case opcodes.DCONST_1: // 0x0F
 			push(f, 1.0)
 			push(f, 1.0)
 		case opcodes.BIPUSH: //	0x10	(push the following byte as an int onto the stack)
@@ -309,10 +282,10 @@ frameInterpreter:
 			opcodes.FLOAD, //  0x17 (push float from local var, using next byte as index)
 			opcodes.ALOAD: //  0x19 (push ref from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -320,10 +293,10 @@ frameInterpreter:
 			push(f, f.Locals[index])
 		case opcodes.LLOAD: // 0x16 (push long from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -333,10 +306,10 @@ frameInterpreter:
 			push(f, val) // push twice due to item being 64 bits wide
 		case opcodes.DLOAD: // 0x18 (push double from local var, using next byte as index)
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -569,10 +542,10 @@ frameInterpreter:
 		case opcodes.ISTORE, //  0x36 	(store popped top of stack int into local[index])
 			opcodes.LSTORE: //  0x37 (store popped top of stack long into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -588,10 +561,10 @@ frameInterpreter:
 
 		case opcodes.FSTORE: //  0x38 (store popped top of stack float into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -600,10 +573,10 @@ frameInterpreter:
 
 		case opcodes.DSTORE: //  0x39 (store popped top of stack double into local[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -613,10 +586,10 @@ frameInterpreter:
 			f.Locals[index+1] = pop(f).(float64)
 		case opcodes.ASTORE: //  0x3A (store popped top of stack ref into localc[index])
 			var index int
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				f.PC += 1
@@ -1211,7 +1184,7 @@ frameInterpreter:
 				push(f, val1>>(shiftBy&0x1F))
 			}
 		case opcodes.LSHR, // 	0x7B	(shift value1 (long) right by value2 (int) bits)
-			opcodes.LUSHR: // 	0x70
+			opcodes.LUSHR: // 	0x7D
 			shiftBy := pop(f).(int64)
 			ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
 			val1 := pop(f).(int64)
@@ -1265,12 +1238,12 @@ frameInterpreter:
 		case opcodes.IINC: // 	0x84    (increment local variable by a signed constant)
 			var index int
 			var increment int64
-			if wideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
+			if f.WideInEffect { // if wide is in effect, index  and increment are two bytes wide, otherwise one byte each
 				index = (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2])
 				f.PC += 2
 				increment = int64(f.Meth[f.PC+1])*256 + int64(f.Meth[f.PC+2])
 				f.PC += 2
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = int(f.Meth[f.PC+1])
 				increment = byteToInt64(f.Meth[f.PC+2])
@@ -1279,13 +1252,15 @@ frameInterpreter:
 			orig := f.Locals[index].(int64)
 			f.Locals[index] = orig + increment
 
-		case opcodes.I2F: //	0x86 	( convert int to float)
-			intVal := pop(f).(int64)
-			push(f, float64(intVal))
 		case opcodes.I2L: // 	0x85     (convert int to long)
 			// 	ints are already 64-bits, so this just pushes a second instance
 			val := peek(f).(int64) // look without popping
 			push(f, val)           // push the int a second time
+
+		case opcodes.I2F: //	0x86 	( convert int to float)
+			intVal := pop(f).(int64)
+			push(f, float64(intVal))
+
 		case opcodes.I2D: // 	0x87	(convert int to double)
 			intVal := pop(f).(int64)
 			dval := float64(intVal)
@@ -1302,36 +1277,40 @@ frameInterpreter:
 			pop(f)
 			float32Val := float32(longVal) //
 			float64Val := float64(float32Val)
-			push(f, float64Val) // floats tke up only 1 slot in the JVM
+			push(f, float64Val) // floats take up only 1 slot in the JVM
 		case opcodes.L2D: // 	0x8A (convert long to double)
 			longVal := pop(f).(int64)
 			pop(f)
 			dblVal := float64(longVal)
 			push(f, dblVal)
 			push(f, dblVal)
-		case opcodes.D2I: // 0xBE
-			pop(f)
-			fallthrough
 		case opcodes.F2I: // 0x8B
 			floatVal := pop(f).(float64)
 			push(f, int64(math.Trunc(floatVal)))
-		case opcodes.F2D: // 0x8D
-			floatVal := pop(f).(float64)
-			push(f, floatVal)
-			push(f, floatVal)
-		case opcodes.D2L: // 	0x8F convert double to long
-			pop(f)
-			fallthrough
 		case opcodes.F2L: // 	0x8C convert float to long
 			floatVal := pop(f).(float64)
 			truncated := int64(math.Trunc(floatVal))
 			push(f, truncated)
 			push(f, truncated)
+		case opcodes.F2D: // 0x8D
+			floatVal := pop(f).(float64)
+			push(f, floatVal)
+			push(f, floatVal)
+		case opcodes.D2I: // 0x8E
+			doubleVal := pop(f).(float64)
+			pop(f)
+			push(f, int64(math.Trunc(doubleVal)))
+		case opcodes.D2L: // 	0x8F convert double to long
+			doubleVal := pop(f).(float64)
+			pop(f)
+			l := int64(math.Trunc(doubleVal))
+			push(f, l)
+			push(f, l)
 		case opcodes.D2F: // 	0x90 Double to float
 			floatVal := float32(pop(f).(float64))
 			pop(f)
 			push(f, float64(floatVal))
-		case opcodes.I2B: //	0x91 convert into to byte preserving sign
+		case opcodes.I2B: //	0x91 convert int     to byte preserving sign
 			intVal := pop(f).(int64)
 			byteVal := intVal & 0xFF
 			if !(intVal > 0 && byteVal > 0) &&
@@ -1556,9 +1535,9 @@ frameInterpreter:
 
 		case opcodes.RET: // 0xA9     (return by jumping to a return address in a local--used mostly with JSR)
 			var index int64
-			if wideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
+			if f.WideInEffect { // if wide is in effect, index is two bytes wide, otherwise one byte
 				index = (byteToInt64(f.Meth[f.PC+1]) * 256) + byteToInt64(f.Meth[f.PC+2])
-				wideInEffect = false
+				f.WideInEffect = false
 			} else {
 				index = byteToInt64(f.Meth[f.PC+1])
 			}
@@ -1687,7 +1666,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1708,6 +1687,9 @@ frameInterpreter:
 			fieldNameIndex := nAndT.NameIndex
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
+			if globals.TraceVerbose {
+				emitTraceFieldID("GETSTATIC", fieldName)
+			}
 
 			// was this static field previously loaded? Is so, get its location and move on.
 			prevLoaded, ok := statics.Statics[fieldName]
@@ -1720,7 +1702,7 @@ frameInterpreter:
 				} else {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					return errors.New(errMsg)
 				}
 			}
@@ -1731,7 +1713,7 @@ frameInterpreter:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s"+
 					"\n", fieldName, className)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1757,7 +1739,7 @@ frameInterpreter:
 
 			// doubles and longs consume two slots on the op stack
 			// so push a second time
-			if types.UsesTwoSlots(prevLoaded.Type) {
+			if UsesTwoSlots(prevLoaded.Type) {
 				push(f, prevLoaded.Value)
 			}
 
@@ -1771,7 +1753,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					CPentry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1792,6 +1774,9 @@ frameInterpreter:
 			fieldNameIndex := nAndT.NameIndex
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
+			if globals.TraceVerbose {
+				emitTraceFieldID("PUTSTATIC", fieldName)
+			}
 
 			// was this static field previously loaded? Is so, get its location and move on.
 			prevLoaded, ok := statics.Statics[fieldName]
@@ -1804,7 +1789,7 @@ frameInterpreter:
 				} else {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					return errors.New(errMsg)
 				}
 			}
@@ -1814,7 +1799,7 @@ frameInterpreter:
 			if !ok {
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1889,14 +1874,14 @@ frameInterpreter:
 				default:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					return errors.New(errMsg)
 				}
 			}
 
 			// doubles and longs consume two slots on the op stack,
 			// so push a second time
-			if types.UsesTwoSlots(prevLoaded.Type) {
+			if UsesTwoSlots(prevLoaded.Type) {
 				pop(f)
 			}
 
@@ -1910,7 +1895,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1922,9 +1907,8 @@ frameInterpreter:
 			nameCPIndex := nameAndType.NameIndex
 			nameCPentry := CP.CpIndex[nameCPIndex]
 			fieldName := CP.Utf8Refs[nameCPentry.Slot]
-			if MainThread.Trace {
-				traceInfo := fmt.Sprintf("GETFIELD: fieldName = %s", fieldName)
-				_ = log.Log(traceInfo, log.TRACE_INST)
+			if globals.TraceVerbose {
+				emitTraceFieldID("GETFIELD", fieldName)
 			}
 
 			// Get object reference from stack.
@@ -1935,7 +1919,7 @@ frameInterpreter:
 			default:
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -1967,12 +1951,6 @@ frameInterpreter:
 			}
 			push(f, fieldValue)
 
-			// doubles and longs consume two slots on the op stack
-			// so push a second time
-			if types.UsesTwoSlots(fieldType) {
-				push(f, fieldValue)
-			}
-
 		case opcodes.PUTFIELD: // 0xB5 place value into an object's field
 			CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
 			f.PC += 2
@@ -1983,7 +1961,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
 					"location %d in method %s of class %s\n",
 					fieldEntry.Type, f.PC, f.MethName, f.ClName)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
@@ -2010,7 +1988,7 @@ frameInterpreter:
 				errMsg := fmt.Sprintf("PUTFIELD: Expected an object ref, but observed type %T in "+
 					"location %d in method %s of class %s, previously popped a value(type %T):\n%v\n",
 					ref, f.PC, f.MethName, f.ClName, value, value)
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				LogTraceStack(f)
 				return errors.New(errMsg)
 			}
@@ -2042,12 +2020,15 @@ frameInterpreter:
 				nameCPIndex := nameAndType.NameIndex
 				nameCPentry := CP.CpIndex[nameCPIndex]
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
+				if globals.TraceVerbose {
+					emitTraceFieldID("PUTFIELD", fieldName)
+				}
 
 				objField, ok := obj.FieldTable[fieldName]
 				if !ok {
 					errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
 						fieldName, f.ClName, f.MethName)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
@@ -2057,7 +2038,7 @@ frameInterpreter:
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
 						f.ClName, f.MethName)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					LogTraceStack(f)
 					return errors.New(errMsg)
 				}
@@ -2118,7 +2099,11 @@ frameInterpreter:
 				popped := pop(f)
 				params = append(params, popped)
 
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, globals.TraceVerbose)
 				// if err != nil {
 				if ret != nil {
 					switch ret.(type) {
@@ -2210,7 +2195,11 @@ frameInterpreter:
 				objRef := pop(f).(*object.Object)
 				params = append(params, objRef)
 
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2302,7 +2291,11 @@ frameInterpreter:
 				}
 
 				f.PC += 2 // advance PC for the first two bytes of this bytecode
-				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, false, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, className, methodName, methodType, &params, false, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2465,7 +2458,11 @@ frameInterpreter:
 					params = append(params, pop(f))
 				}
 
-				ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, MainThread.Trace)
+				if globals.TraceInst {
+					infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
+					trace.Trace(infoMsg)
+				}
+				ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, globals.TraceVerbose)
 				if ret != nil {
 					switch ret.(type) {
 					case error:
@@ -2674,11 +2671,11 @@ frameInterpreter:
 				// in the Throwable object or subclass (which is generally the specific exception class).
 
 				// start by printing out the name of the exception/error and the thread it occurred on
-				msg := ""
+				errMsg := ""
 				if f.Thread == 1 { // if it's thread #1, use its name, "main"
-					msg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
+					errMsg = fmt.Sprintf("Exception in thread \"main\" %s", exceptionName)
 				} else {
-					msg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
+					errMsg = fmt.Sprintf("Exception in thread %d %s", f.Thread, exceptionName)
 				}
 
 				appMsg := objectRef.FieldTable["detailMessage"].Fvalue
@@ -2686,21 +2683,21 @@ frameInterpreter:
 					switch appMsg.(type) {
 					case []uint8:
 						st := appMsg.([]uint8)
-						msg += fmt.Sprintf(": %s", string(st))
+						errMsg += fmt.Sprintf(": %s", string(st))
 					case *object.Object:
 						st := appMsg.(*object.Object)
 						value := st.FieldTable["value"].Fvalue
 						switch value.(type) {
 						case []byte:
-							msg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+							errMsg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
 						case uint32:
 							str := stringPool.GetStringPointer(value.(uint32))
-							msg += fmt.Sprintf(": %s", *str)
+							errMsg += fmt.Sprintf(": %s", *str)
 						}
 
 					}
 				}
-				_ = log.Log(msg, log.SEVERE)
+				trace.Error(errMsg)
 
 				steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
 				rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
@@ -2718,24 +2715,24 @@ frameInterpreter:
 
 					sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
 
-					var s string
+					var errMsg string
 					if sourceLine != "" {
-						s = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
+						errMsg = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
 							methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
 					} else {
-						s = fmt.Sprintf("\tat %s.%s(%s)", className,
+						errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
 							methodName, ste.FieldTable["fileName"].Fvalue)
 					}
-					_ = log.Log(s, log.SEVERE)
+					trace.Error(errMsg)
 				}
 
 				// show Jacobin's JVM stack info if -strictJDK is not set
 				if glob.StrictJDK == false {
-					_ = log.Log(" ", log.SEVERE)
+					trace.Trace(" ")
 					for _, frameData := range *glob.JVMframeStack {
 						colon := strings.Index(frameData, ":")
 						shortenedFrameData := frameData[colon+1:]
-						_ = log.Log("\tat"+shortenedFrameData, log.SEVERE)
+						trace.Trace("\tat" + shortenedFrameData)
 					}
 				}
 
@@ -2805,7 +2802,7 @@ frameInterpreter:
 			} else {
 				objData := classloader.MethAreaFetch(objName)
 				if objData == nil || objData.Data == nil {
-					classloader.LoadClassFromNameOnly(objName)
+					_ = classloader.LoadClassFromNameOnly(objName)
 					objData = classloader.MethAreaFetch(objName)
 				}
 				if objData.Data.Access.ClassIsInterface {
@@ -2850,7 +2847,7 @@ frameInterpreter:
 				if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 					glob.ErrorGoStack = string(debug.Stack())
 					errMsg := fmt.Sprintf("CHECKCAST: Invalid classRef found, classNamePtr.RetType=%d", classNamePtr.RetType)
-					_ = log.Log(errMsg, log.SEVERE)
+					trace.Error(errMsg)
 					return errors.New(errMsg)
 				} else {
 					errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
@@ -2862,14 +2859,14 @@ frameInterpreter:
 
 				// we now know we point to a valid class, array, or interface. We handle classes and arrays here.
 				className = *(classNamePtr.StringVal)
-				if MainThread.Trace {
+				if globals.TraceVerbose {
 					var traceInfo string
 					if strings.HasPrefix(className, "[") {
 						traceInfo = fmt.Sprintf("CHECKCAST: class is an array = %s", className)
 					} else {
 						traceInfo = fmt.Sprintf("CHECKCAST: className = %s", className)
 					}
-					_ = log.Log(traceInfo, log.TRACE_INST)
+					trace.Trace(traceInfo)
 				}
 			*/
 			/* we now have the resolved class (className) and the objectref (obj)
@@ -2913,7 +2910,7 @@ frameInterpreter:
 			// 			  }
 			// 			  ***/
 			// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
-			// 			_ = log.Log(warnMsg, log.WARNING)
+			// 			trace.Trace(warnMsg)
 			// 		}
 			// 	} else {
 			// 		glob.ErrorGoStack = string(debug.Stack())
@@ -2985,13 +2982,13 @@ frameInterpreter:
 						if classNamePtr.RetType != classloader.IS_STRING_ADDR {
 							glob.ErrorGoStack = string(debug.Stack())
 							errMsg := "INSTANCEOF: Invalid classRef found"
-							_ = log.Log(errMsg, log.SEVERE)
+							trace.Error(errMsg)
 							return errors.New(errMsg)
 						} else {
 							className = *(classNamePtr.StringVal)
-							if MainThread.Trace {
+							if globals.TraceVerbose {
 								traceInfo := fmt.Sprintf("INSTANCEOF: className = %s", className)
-								_ = log.Log(traceInfo, log.TRACE_INST)
+								trace.Trace(traceInfo)
 							}
 						}
 						classPtr := classloader.MethAreaFetch(className)
@@ -2999,7 +2996,7 @@ frameInterpreter:
 							if classloader.LoadClassFromNameOnly(className) != nil {
 								glob.ErrorGoStack = string(debug.Stack())
 								errMsg := "INSTANCEOF: Could not load class: " + className
-								_ = log.Log(errMsg, log.SEVERE)
+								trace.Error(errMsg)
 								return errors.New(errMsg)
 							}
 							classPtr = classloader.MethAreaFetch(className)
@@ -3018,7 +3015,7 @@ frameInterpreter:
 
 		case opcodes.WIDE: // 0xC4 Make some bytecodes operate on larger sized operands
 			// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.wide
-			wideInEffect = true
+			f.WideInEffect = true
 
 		case opcodes.MULTIANEWARRAY: // 0xC5 create multi-dimensional array
 			var arrayDesc string
@@ -3075,7 +3072,7 @@ frameInterpreter:
 			if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
 				glob.ErrorGoStack = string(debug.Stack())
 				errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				return errors.New(errMsg)
 			}
 
@@ -3096,8 +3093,7 @@ frameInterpreter:
 			for i := range dimSizes {
 				if dimSizes[i] == 0 {
 					dimSizes = dimSizes[i+1:] // lop off the prev dims
-					_ = log.Log("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.",
-						log.WARNING)
+					trace.Error("MULTIANEWARRAY: Multidimensional array with one dimension of size 0 encountered.")
 					break
 				}
 			}
@@ -3171,7 +3167,7 @@ frameInterpreter:
 			glob.ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("Invalid bytecode found: %s at location %d in class %s() method %s%s\n",
 				missingOpCode, f.PC, f.ClName, f.MethName, f.MethType)
-			_ = log.Log(errMsg, log.SEVERE)
+			trace.Error(errMsg)
 			return errors.New("invalid bytecode encountered")
 		}
 		f.PC += 1
@@ -3192,6 +3188,15 @@ func subtract[N frames.Number](num1, num2 N) N {
 	return num1 - num2
 }
 
+// UsesTwoSlots identifies longs and doubles -- the two data items
+// that occupy two slots on the op stack and elsewhere
+func UsesTwoSlots(t string) bool {
+	if t == types.Double || t == types.Long || t == types.StaticDouble || t == types.StaticLong {
+		return true
+	}
+	return false
+}
+
 // create a new frame and load up the local variables with the passed
 // arguments, set up the stack, and all the remaining items to begin execution
 // Note: the includeObjectRef parameter is a boolean. When true, it indicates
@@ -3205,10 +3210,10 @@ func createAndInitNewFrame(
 	includeObjectRef bool,
 	currFrame *frames.Frame) (*frames.Frame, error) {
 
-	if MainThread.Trace {
-		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
+	if globals.TraceInst {
+		traceInfo := fmt.Sprintf("createAndInitNewFrame: class=%s, meth=%s%s, includeObjectRef=%v, maxStack=%d, maxLocals=%d",
 			className, methodName, methodType, includeObjectRef, m.MaxStack, m.MaxLocals)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
 	f := currFrame
@@ -3220,6 +3225,7 @@ func createAndInitNewFrame(
 
 	fram := frames.CreateFrame(stackSize)
 	fram.Thread = currFrame.Thread
+	fram.FrameStack = currFrame.FrameStack
 	fram.ClName = className
 	fram.MethName = methodName
 	fram.MethType = methodType
@@ -3286,8 +3292,6 @@ func createAndInitNewFrame(
 		case 'D': // double
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
-			argList = append(argList, arg)
-			pop(f)
 		case 'F': // float
 			arg := pop(f).(float64)
 			argList = append(argList, arg)
@@ -3301,8 +3305,6 @@ func createAndInitNewFrame(
 		case 'J': // long
 			arg := pop(f).(int64)
 			argList = append(argList, arg)
-			argList = append(argList, arg)
-			pop(f)
 		case 'L': // pointer/reference
 			arg := pop(f) // can't be *Object b/c the arg could be nil, which would panic
 			argList = append(argList, arg)
@@ -3338,15 +3340,22 @@ func createAndInitNewFrame(
 		lenLocals++                                 // There is 1 more local needed
 	}
 
-	if MainThread.Trace {
+	if globals.TraceVerbose {
 		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
 			lenArgList, lenLocals, stackSize)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(traceInfo)
 	}
 
+	ptpx := 0
 	for j := lenArgList - 1; j >= 0; j-- {
 		fram.Locals[destLocal] = argList[j]
-		destLocal += 1
+		switch paramsToPass[ptpx] {
+		case "D", "J":
+			destLocal += 2
+		default:
+			destLocal += 1
+		}
+		ptpx++
 	}
 
 	fram.TOS = -1

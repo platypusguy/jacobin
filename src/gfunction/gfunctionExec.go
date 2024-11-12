@@ -15,8 +15,8 @@ import (
 	"jacobin/exceptions"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
+	"jacobin/trace"
 	"slices"
 	"sync"
 	"time"
@@ -66,9 +66,9 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	// Form the full method name.
 	fullMethName := fmt.Sprintf("%s.%s%s", className, methodName, methodType)
 	if tracing {
-		traceInfo := fmt.Sprintf("RunGfunction: %s, objectRef: %v, paramSlots: %d",
+		infoMsg := fmt.Sprintf("RunGfunction: %s, objectRef: %v, paramSlots: %d",
 			fullMethName, objRef, paramCount)
-		_ = log.Log(traceInfo, log.TRACE_INST)
+		trace.Trace(infoMsg)
 		// TODO jvm.LogTraceStack(f)
 	}
 

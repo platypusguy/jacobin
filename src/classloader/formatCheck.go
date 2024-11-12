@@ -9,14 +9,13 @@ package classloader
 import (
 	"errors"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/stringPool"
 	"strconv"
 	"strings"
 )
 
 // Performs the format check on a fully parsed class. The requirements are listed
-// here: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8
+// here: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.8
 // They are:
 //  1. must start with 0xCAFEBABE -- this is verified in the parsing, so not done here
 //  2. most predefined attributes must be the right length -- verified during parsing
@@ -372,18 +371,10 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 						" : " + methodName)
 				}
 			}
-			// The following code is commented out b/c it was emitting errors when Jacobin moved from
-			// JDK 11 to JDK 17. The cause of these errors is unclear--whether something changed in
-			// JDK 17 w.r.t MethodHandles with refKind = 8. Issue #JACOBIN-183 is the reference for this.
-			// else if refKind == 8 {
-			//	if methodName != "<init>" {
-			//		return cfe("Class name for MethodHandle at CP entry #" + strconv.Itoa(j) +
-			//			" should be <init>, but is: " + methodName)
-			//	}
-			// }
 
-			_ = log.Log("ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
-				" is:"+methodName, log.FINEST)
+			// trace.Trace("formatCheckConstantPool: ClassName in MethodRef of MethodHandle at CP entry #"+strconv.Itoa(j)+
+			//	" is:"+methodName)
+
 		case MethodType:
 			// Method types consist of an integer pointing to a CP entry that's a UTF8 description
 			// of the method type, which appears to require an initial opening parenthesis. See

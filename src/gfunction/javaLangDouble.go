@@ -33,7 +33,7 @@ func Load_Lang_Double() {
 
 	MethodSignatures["java/lang/Double.compare(DD)I"] =
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 2,
 			GFunction:  doubleCompare,
 		}
 
@@ -71,19 +71,19 @@ func Load_Lang_Double() {
 
 	MethodSignatures["java/lang/Double.doubleToLongBits(D)J"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  doubleToLongBits,
 		}
 
 	MethodSignatures["java/lang/Double.doubleToRawLongBits(D)J"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  doubleToRawLongBits,
 		}
 
 	MethodSignatures["java/lang/Double.longBitsToDouble(J)D"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  longBitsToDouble,
 		}
 

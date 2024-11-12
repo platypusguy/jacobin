@@ -9,9 +9,9 @@ package classloader
 import (
 	"errors"
 	"fmt"
-	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 )
 
@@ -221,7 +221,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			} else {
 				errMsg := fmt.Sprintf("FetchMethodAndCP: LoadClassFromNameOnly for %s failed: %s",
 					className, err.Error())
-				_ = log.Log(errMsg, log.SEVERE)
+				trace.Error(errMsg)
 				shutdown.Exit(shutdown.JVM_EXCEPTION)
 				return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 			}
@@ -243,7 +243,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
 		}
 		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Meth != nil BUT methEntry.MType is neither J nor G for %s", methFQN)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 
@@ -258,7 +258,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	err := WaitForClassStatus(className)
 	if err != nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: %s", err.Error())
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
@@ -266,17 +266,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	k := MethAreaFetch(className)
 	if k == nil {
 		errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find class %s", className)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 	}
-
-	// Note of 6-Apr-2024: I don't think this is needed. Not sure why it is here.
-	// if k.Loader == "" { // if className is not found, the zero value struct is returned
-	// 	errMsg := "FetchMethodAndCP: Null Loader in className: " + className
-	// 	_ = log.Log(errMsg, log.SEVERE)
-	// 	return MTentry{}, errors.New(errMsg) // dummy return needed for tests
-	// }
 
 	// the class, k, has been found, so check the method table for the method. Then return the
 	// method along with a pointer to the CP
@@ -322,7 +315,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		k = MethAreaFetch(className)
 		if k == nil {
 			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find superclass %s", className)
-			_ = log.Log(errMsg, log.SEVERE)
+			trace.Error(errMsg)
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
@@ -367,7 +360,7 @@ func noMainError(className string) {
 	errMsg := fmt.Sprintf("Error: main() method not found in class %s\n"+
 		"Please define the main method as:\n"+
 		"   public static void main(String[] args)", className)
-	_ = log.Log(errMsg, log.SEVERE)
+	trace.Error(errMsg)
 	shutdown.Exit(shutdown.APP_EXCEPTION)
 }
 
@@ -377,14 +370,14 @@ func FetchUTF8stringFromCPEntryNumber(cp *CPool, entry uint16) string {
 	if entry < 1 || entry >= uint16(len(cp.CpIndex)) {
 		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: entry=%d is out of bounds(1, %d)",
 			entry, uint16(len(cp.CpIndex)))
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		return ""
 	}
 
 	u := cp.CpIndex[entry]
 	if u.Type != UTF8 {
 		errMsg := fmt.Sprintf("FetchUTF8stringFromCPEntryNumber: cp.CpIndex[%d].Type=%d, expected UTF8", entry, u.Type)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		return ""
 	}
 

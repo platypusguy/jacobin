@@ -27,8 +27,23 @@ import (
 	"github.com/ebitengine/purego"
 )
 
+/*
+Map a method type to a template function handle.
+Input:
+
+	Java language method type string E.g. (II)I
+
+Return:
+  - Reference to a template function if successful; else nil
+  - Ok-boolean = true if successful; else false
+
+Methodology:
+
+	Brute-force switch (gasp!)
+*/
 func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	switch methodType {
+	// to add a new function, add the template here as a new case statement
 	case "(II)I":
 		var templateFunction = template_II_I
 		return templateFunction, true
@@ -36,8 +51,15 @@ func mapToTemplateHandle(methodType string) (typeTemplateFunction, bool) {
 	return nil, false
 }
 
+/*
+Template function for method type (II)I
+E.g. Java_java_util_zip_CRC32_update
+*/
 func template_II_I(libHandle uintptr, nativeFunctionName string, params []interface{}, tracing bool) interface{} {
-	// Register the native function.
+	// Register the native function prototype
+	// env = JNI environment
+	// class = a reference to the object whose method is being called
+	// arg1, arg2 are the II that we're passing in
 	var fn func(env, class uintptr, arg1, arg2 NFint) NFint
 	purego.RegisterLibFunc(&fn, libHandle, nativeFunctionName)
 
@@ -46,6 +68,7 @@ func template_II_I(libHandle uintptr, nativeFunctionName string, params []interf
 	arg2 := NFint(params[1].(int64))
 
 	// Compute result and return it.
-	out := fn(HandleENV, 0, arg1, arg2)
+	// out := fn(HandleENV, 0, arg1, arg2)
+	out := fn(0, 0, arg1, arg2)
 	return int64(out)
 }

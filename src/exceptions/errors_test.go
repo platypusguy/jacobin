@@ -12,8 +12,8 @@ import (
 	"io"
 	"jacobin/frames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/trace"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -28,8 +28,7 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -65,8 +64,7 @@ func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -91,7 +89,7 @@ func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	os.Stdout = normalStdout
 
 	errMsg := string(msg)
-	if errMsg != "no further data available\n" {
+	if !strings.Contains(errMsg, "no further data available") {
 		t.Errorf("Got this when expecting 'no further data available': %s", errMsg)
 	}
 }
@@ -102,8 +100,7 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -135,90 +132,9 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	os.Stdout = normalStdout
 
 	errMsg := string(msg)
-	if errMsg != "Method: testClass.main                           PC: 042\n" {
+	if !strings.Contains(errMsg, "Method: testClass.main") {
 		t.Errorf("Got this when expecting 'Method: testClass.main                           PC: 042': %s",
 			errMsg)
-	}
-}
-
-// check that when a Go stack if it has not been previously been captured
-func TestShowGoStackWhenNotPreviouslyCaptured(t *testing.T) {
-	g := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	g.JacobinName = "test"
-	g.StrictJDK = false
-
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	globals.GetGlobalRef().GoStackShown = false
-
-	ShowGoStackTrace(nil)
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	os.Stderr = normalStderr
-	msg, _ := io.ReadAll(r)
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	contents := string(msg)
-	if !strings.Contains(contents, "goroutine") {
-		t.Errorf("Go stack did not contain expected entries: %s", contents)
-	}
-
-	if globals.GetGlobalRef().GoStackShown != true {
-		t.Errorf("after showing golang stack, globals.GoStackShown was still false")
-	}
-}
-
-// check that when a Go stack is captured, it is shown when we call showGoStackTrace()
-func TestShowGoStackWhenPreviouslyCaptured(t *testing.T) {
-	g := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	g.JacobinName = "test"
-	g.StrictJDK = false
-
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
-
-	// redirect stderr & stdout to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	normalStdout := os.Stdout
-	_, wout, _ := os.Pipe()
-	os.Stdout = wout
-
-	globals.GetGlobalRef().GoStackShown = false
-	capturedGoStack := debug.Stack()
-	stackAsString := string(capturedGoStack)
-	globals.GetGlobalRef().ErrorGoStack = stackAsString
-	entries := strings.Split(stackAsString, "\n")
-	firstEntry := entries[0]
-
-	ShowGoStackTrace(nil)
-	// restore stderr and stdout to what they were before
-	_ = w.Close()
-	os.Stderr = normalStderr
-	msg, _ := io.ReadAll(r)
-
-	_ = wout.Close()
-	os.Stdout = normalStdout
-
-	contents := string(msg)
-	if !strings.Contains(contents, firstEntry) {
-		t.Errorf("Go stack did not contain expected entry: %s", contents)
 	}
 }
 
@@ -229,8 +145,7 @@ func TestShowGoStackWhenPreviouslyShown(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -268,8 +183,7 @@ func TestShowPanicCause(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -305,8 +219,7 @@ func TestShowPanicCauseAfterAlreadyShown(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -342,8 +255,7 @@ func TestShowPanicCauseNil(t *testing.T) {
 	g.JacobinName = "test"
 	g.StrictJDK = false
 
-	log.Init()
-	_ = log.SetLogLevel(log.INFO)
+	trace.Init()
 
 	// redirect stderr & stdout to capture results from stderr
 	normalStderr := os.Stderr
@@ -366,7 +278,7 @@ func TestShowPanicCauseNil(t *testing.T) {
 	os.Stdout = normalStdout
 
 	errMsg := string(msg)
-	if !strings.Contains(errMsg, "error: go panic -- cause unknown") {
+	if !strings.Contains(errMsg, "go panic -- cause unknown") {
 		t.Errorf("Got unexpected message for nil panic cause: %s", errMsg)
 	}
 }

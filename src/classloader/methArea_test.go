@@ -7,12 +7,9 @@
 package classloader
 
 import (
-	"io"
 	"jacobin/globals"
-	"jacobin/log"
+	"jacobin/trace"
 	"jacobin/types"
-	"os"
-	"strings"
 	"sync"
 	"testing"
 )
@@ -84,142 +81,6 @@ func TestMethAreadDeleteNonExistentEntry(t *testing.T) {
 	}
 }
 
-func TestMethAreadFetchNonExistentEntry(t *testing.T) {
-	// Testing the changes made as a result of JACOBIN-103
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	MethArea = &sync.Map{}
-	methAreaSize = 0
-	currLen := MethAreaSize()
-	if currLen != 0 {
-		t.Errorf("Expecting MethArea size of 0, got: %d", currLen)
-	}
-
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass1"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
-	k.Loader = "testloader"
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	// fetching a non-entry should not cause an error, shiuld return nil
-	me := MethAreaFetch("NoSuchEntry")
-	if me != nil {
-		t.Errorf("Expected nil return from MethAreaFetch(), got: %v", me)
-	}
-
-	// restore stderr
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-	if !strings.Contains(msg, "--> nil") {
-		t.Errorf("Expected different log message, got: %s", msg)
-	}
-}
-
-func TestWaitFornNonExistentClass(t *testing.T) {
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	MethArea = &sync.Map{}
-
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass1"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
-	k.Loader = "testloader"
-	k.Status = 'F'
-	MethAreaInsert("TestEntry", &k)
-
-	// fetching a non-entry should not cause an error, shiuld return nil
-	me := WaitForClassStatus("NoSuchEntry")
-	if me == nil {
-		t.Errorf("Expected error return from methArea.WaitForClassStatus(), got none")
-	}
-
-	if !strings.Contains(me.Error(), "Timeout waiting for class") {
-		t.Errorf("Expected different log message, got: %s", me)
-	}
-
-	// restore stderr
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-	if !strings.Contains(msg, "--> nil") {
-		t.Errorf("Expected different log message, got: %s", msg)
-	}
-}
-
-// class status 'i' means the class is presently being instantiated and to retry load of the class
-// this tests the failure of the rerty
-func TestWaitFornUnresolvedClassStatus(t *testing.T) {
-	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.CLASS)
-
-	// redirect stderr to capture results from stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	MethArea = &sync.Map{}
-
-	k := Klass{
-		Status: 0,
-		Loader: "",
-		Data:   &ClData{},
-	}
-	k.Data.Name = "testClass1"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
-	k.Loader = "testloader"
-	k.Status = 'I'
-	MethAreaInsert("TestEntry", &k)
-
-	// fetching a non-entry should not cause an error, should return nil
-	me := WaitForClassStatus("testClass1")
-	if me == nil {
-		t.Errorf("Expected error return from methArea.WaitForClassStatus(), got none")
-	}
-
-	if !strings.Contains(me.Error(), "Timeout waiting for class") {
-		t.Errorf("Expected different log message, got: %s", me)
-	}
-
-	// restore stderr
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	msg := string(out[:])
-	if !strings.Contains(msg, "--> nil") {
-		t.Errorf("Expected different log message, got: %s", msg)
-	}
-}
-
 func tryMethod(t *testing.T, class string, methodName string, methodType string) {
 	t.Logf("tryMethod: Input class=%s, methodName=%s, methodType=%s\n", class, methodName, methodType)
 	mte, err := FetchMethodAndCP(class, methodName, methodType)
@@ -231,7 +92,7 @@ func tryMethod(t *testing.T, class string, methodName string, methodType string)
 }
 func TestMethArea42(t *testing.T) {
 	globals.InitGlobals("test")
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialise JMODMAP
 	JmodMapInit()

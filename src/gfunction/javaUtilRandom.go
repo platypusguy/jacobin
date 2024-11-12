@@ -27,7 +27,7 @@ func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.<init>(J)V"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  randomInitLong,
 		}
 
@@ -39,19 +39,19 @@ func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.doubles(DD)Ljava/util/stream/DoubleStream;"] =
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.doubles(J)Ljava/util/stream/DoubleStream;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.doubles(JDD)Ljava/util/stream/DoubleStream;"] =
 		GMeth{
-			ParamSlots: 6,
+			ParamSlots: 3,
 			GFunction:  trapFunction,
 		}
 
@@ -69,13 +69,13 @@ func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.ints(J)Ljava/util/stream/IntStream;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.ints(JII)Ljava/util/stream/IntStream;"] =
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  trapFunction,
 		}
 
@@ -87,19 +87,19 @@ func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.longs(J)Ljava/util/stream/LongStream;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.longs(JJ)Ljava/util/stream/LongStream;"] =
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/Random.longs(JJJ)Ljava/util/stream/LongStream;"] =
 		GMeth{
-			ParamSlots: 6,
+			ParamSlots: 3,
 			GFunction:  trapFunction,
 		}
 
@@ -159,7 +159,7 @@ func Load_Util_Random() {
 
 	MethodSignatures["java/util/Random.setSeed(J)V"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  randomSetSeed,
 		}
 

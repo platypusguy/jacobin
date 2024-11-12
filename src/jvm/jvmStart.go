@@ -12,11 +12,11 @@ import (
 	"jacobin/exceptions"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 )
@@ -28,6 +28,8 @@ var globPtr *globals.Globals
 // it is here returned is because in testing mode, the actual exit() call is side-stepped and
 // instead an int is returned (because calling exit() during testing exits the testing run as well).
 func JVMrun() int {
+
+	trace.Init()
 
 	// capture any panics and print diagnostic data
 	defer func() int {
@@ -54,7 +56,7 @@ func JVMrun() int {
 		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
 		stringPool.PreloadArrayClassesToStringPool()
-		log.Init()
+		trace.Init()
 	}
 	globPtr = globals.GetGlobalRef()
 
@@ -63,9 +65,9 @@ func JVMrun() int {
 	globPtr.FuncThrowException = exceptions.ThrowExNil
 	globPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 
-	_ = log.Log("running program: "+globPtr.JacobinName, log.FINE)
-
-	var status error
+	if globals.TraceInit {
+		trace.Trace("running program: " + globPtr.JacobinName)
+	}
 
 	// load static variables. Needs to be here b/c CLI might modify their values
 	statics.PreloadStatics()
@@ -93,12 +95,14 @@ func JVMrun() int {
 		manifestClass, err := classloader.GetMainClassFromJar(classloader.BootstrapCL, globPtr.StartingJar)
 
 		if err != nil {
-			_ = log.Log(err.Error(), log.INFO)
+			errMsg := fmt.Sprintf("JVMrun: GetMainClassFromJar(%s) failed, err: %v", globPtr.StartingJar, err)
+			trace.Error(errMsg)
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 
 		if manifestClass == "" {
-			_ = log.Log(fmt.Sprintf("no main manifest attribute, in %s", globPtr.StartingJar), log.INFO)
+			errMsg := fmt.Sprintf("JVMrun: no main manifest attribute in %s", globPtr.StartingJar)
+			trace.Error(errMsg)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
 		mainClassNameIndex, _, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
@@ -111,7 +115,7 @@ func JVMrun() int {
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
 		}
 	} else {
-		_ = log.Log("Error: No executable program specified. Exiting.", log.INFO)
+		trace.Error("JVMrun: No starting class from a class file nor a jar")
 		ShowUsage(os.Stdout)
 		return shutdown.Exit(shutdown.APP_EXCEPTION)
 	}
@@ -138,11 +142,19 @@ func JVMrun() int {
 
 	// begin execution
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-	_ = log.Log("Starting execution with: "+*mainClass, log.INFO)
-	status = StartExec(*mainClass, &MainThread, globPtr)
-
-	if status != nil {
-		return shutdown.Exit(shutdown.APP_EXCEPTION)
+	if globals.TraceInit {
+		trace.Trace("Starting execution with: " + *mainClass)
 	}
+
+	// StartExec() runs the main thread. It does not return an error because all errors
+	// will be handled one of three ways: 1) trapped in an exception, which shutsdown the
+	// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
+	// down after processing the error; 3) a undeferred go panic, which should never occur.
+	// Consequently, if StartExec() finishes, no errors were encountered.
+	//
+	// To test for errors, trap stderr, as do many of the unit tests.
+
+	StartExec(*mainClass, &MainThread, globPtr)
+
 	return shutdown.Exit(shutdown.OK)
 }

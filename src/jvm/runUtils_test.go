@@ -9,9 +9,9 @@ package jvm
 import (
 	"jacobin/classloader"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"testing"
 )
 
@@ -105,8 +105,7 @@ func TestDataByteToInt64(t *testing.T) {
 
 func TestIfClassAisAsubclassOfBool(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialize classloaders and method area
 	err := classloader.Init()
@@ -129,8 +128,7 @@ func TestIfClassAisAsubclassOfBool(t *testing.T) {
 
 func TestIfClassAisAsubclassOfBoolInvalid(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialize classloaders and method area
 	err := classloader.Init()
@@ -156,8 +154,7 @@ func TestIfClassAisAsubclassOfBoolInvalid(t *testing.T) {
 // check that if an array is cast to an object, only java/lang/Object works.
 func TestCheckCastArray1(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialize classloaders and method area
 	err := classloader.Init()
@@ -182,8 +179,7 @@ func TestCheckCastArray1(t *testing.T) {
 // check that two identical arrays come back as castable to each other
 func TestCheckCastArray2(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialize classloaders and method area
 	err := classloader.Init()
@@ -204,8 +200,7 @@ func TestCheckCastArray2(t *testing.T) {
 // check that two reference arrays are castable if one is a subclass of the other
 func TestCheckCastArray3(t *testing.T) {
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 
 	// Initialize classloaders and method area
 	err := classloader.Init()

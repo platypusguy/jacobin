@@ -37,7 +37,7 @@ func Load_Lang_Thread() {
 
 	MethodSignatures["java/lang/Thread.sleep(J)V"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  threadSleep,
 		}
 

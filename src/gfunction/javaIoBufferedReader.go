@@ -31,7 +31,7 @@ func Load_Io_BufferedReader() {
 
 	MethodSignatures["java/io/BufferedReader.<init>(Ljava/io/Reader;I)V"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 2,
 			GFunction:  trapFunction,
 		}
 

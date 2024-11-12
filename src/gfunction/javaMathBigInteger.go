@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/statics"
+	"jacobin/trace"
 	"jacobin/types"
 	"math/big"
 	"math/bits"
@@ -253,7 +253,7 @@ func Load_Math_Big_Integer() {
 
 	MethodSignatures["java/math/BigInteger.multiply(J)Ljava/math/BigInteger;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  bigIntegerMultiply,
 		}
 
@@ -379,7 +379,7 @@ func Load_Math_Big_Integer() {
 
 	MethodSignatures["java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  bigIntegerValueOf,
 		}
 
@@ -441,7 +441,7 @@ func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(bigIntegerClassName)
 	if klass == nil {
 		errMsg := fmt.Sprintf("BigInteger<clinit>: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	if klass.Data.ClInit != types.ClInitRun {
@@ -1404,10 +1404,9 @@ func bigIntegerToStringRadix(params []interface{}) interface{} {
 
 // "java/math/BigInteger.valueOf(J)Ljava/math/BigInteger;"
 func bigIntegerValueOf(params []interface{}) interface{} {
-	// params[0]:  base object (ignored)
-	// params[1]:  long value for returned big.Int object
+	// params[0]:  long value for returned big.Int object
 
-	argValue := params[1].(int64)
+	argValue := params[0].(int64)
 	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
 	initBigIntegerField(obj, argValue)
 

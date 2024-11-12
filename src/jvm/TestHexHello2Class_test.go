@@ -11,8 +11,8 @@ import (
 	"jacobin/classloader"
 	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/thread"
+	"jacobin/trace"
 	"os"
 	"strconv"
 	"strings"
@@ -98,9 +98,8 @@ func TestHexHello2ValidClass(t *testing.T) {
 
 	// Initialise global, logging, classloader
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
-	t.Logf("globals.InitGlobals and log.Init ok\n")
+	trace.Init()
+	t.Logf("globals.InitGlobals and trace.Init ok\n")
 
 	// Initialise classloader
 	err = classloader.Init()
@@ -143,13 +142,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	mainThread := thread.CreateThread()
-	err = StartExec("Hello2", &mainThread, globals.GetGlobalRef())
-	if err != nil {
-		t.Errorf("Got error from StartExec(): %s", error.Error(err))
-		return
-	}
-
-	t.Logf("StartExec(Hello2) succeeded\n")
+	StartExec("Hello2", &mainThread, globals.GetGlobalRef())
 
 	if redirecting {
 		_ = werr.Close()
@@ -158,9 +151,14 @@ func TestHexHello2ValidClass(t *testing.T) {
 		msgStdout, _ := io.ReadAll(rout)
 		os.Stderr = normalStderr
 		os.Stdout = normalStdout
+
 		if !strings.Contains(string(msgStdout), "-1") {
 			t.Errorf("Error in output: expected to contain in part '-1', but saw stdout & stderr as follows:\nstdout: %s\nstderr: %s\n",
 				string(msgStdout), string(msgStderr))
+		}
+
+		if string(msgStderr) != "" {
+			t.Errorf("Error in output: expected stderr to be empty, but saw:\n%s\n", string(msgStderr))
 		}
 	}
 }
@@ -176,8 +174,7 @@ func TestHexHello2InvalidMagicNumber(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	err := classloader.Init()
 
 	testBytes := Hello2Bytes[0:2]
@@ -210,8 +207,7 @@ func TestHexHello2InvalidJavaVersion(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("test")
-	log.Init()
-	_ = log.SetLogLevel(log.WARNING)
+	trace.Init()
 	err := classloader.Init()
 
 	var testBytes = Hello2Bytes[0:8]

@@ -10,10 +10,10 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"jacobin/log"
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/trace"
 	"jacobin/types"
 )
 
@@ -121,7 +121,7 @@ func FillInStackTrace(params []interface{}) interface{} {
 	// get our parameters vetted and ready for use, then call getOurStackTrace()
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("FillInStackTrace: expected two parameters, got: %d", len(params))
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return errors.New(errMsg) // needed only for testing b/c shutdown.Exit() doesn't exit in tests
 	}

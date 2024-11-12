@@ -1,0 +1,20 @@
+
+javaIoBufferedReader.go
+javaIoFileInputStream.go
+javaIoFileWriter.go
+javaLangClass.go
+justReturn.go               correct: java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+
+
+javaIoPrintStream.go
+javaLangDouble.go
+javaLangLong.go
+javaLangMath.go             YUGE changes!
+javaLangString.go           valueOf(...)
+javaLangStringBuffer.go     append(...), insert(...)
+javaLangStringBuilder.go    append(...), insert(...)
+javaLangThread.go           sleep(...)
+javaMathBigInteger.go       valueOf(...)
+javaUtilRandom.go           a lot of changes!
+jdkInternalMiscUnsafe.go
+

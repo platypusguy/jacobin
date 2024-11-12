@@ -11,8 +11,7 @@ import (
 	"fmt"
 	"jacobin/execdata"
 	"jacobin/globals"
-	"jacobin/log"
-	"jacobin/shutdown"
+	"jacobin/trace"
 	"os"
 	"strings"
 )
@@ -22,7 +21,9 @@ import (
 // func HandleCli(osArgs []string, globPtr *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	var javaEnvOptions = getEnvArgs()
-	_ = log.Log("Java environment variables: "+javaEnvOptions, log.FINE)
+	if globals.TraceInit {
+		trace.Trace("HandleCli: Java environment variables: " + javaEnvOptions)
+	}
 
 	// JAVA_HOME and JACOBIN_HOME were obtained in the init of globals.go. Here we just log them.
 	showJavaHomeArgs(Global)
@@ -33,7 +34,9 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		cliArgs += v + " "
 	}
 	Global.CommandLine = strings.TrimSpace(cliArgs)
-	_ = log.Log("Commandline: "+Global.CommandLine, log.FINE)
+	if globals.TraceInit {
+		trace.Trace("HandleCli: Commandline: " + Global.CommandLine)
+	}
 
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
@@ -55,7 +58,9 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		}
 
 		if err != nil {
-			continue // skip the arg if there was a problem. (Might want to revisit this.)
+			errMsg := fmt.Sprintf("HandleCli: getOptionRootAndArgs detected an error in %s, err: %v", args[i], err)
+			trace.Error(errMsg)
+			return err
 		}
 
 		// if the option is the name of the class to execute, note that then get
@@ -70,10 +75,16 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
 		opt, ok := Global.Options[option]
 		if ok {
-			i, _ = opt.Action(i, arg, Global)
+			_, err = opt.Action(i, arg, Global)
+			if err != nil {
+				errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
+				trace.Error(errMsg)
+				return err
+			}
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "%s is not a recognized option. Exiting.\n", args[i])
-			shutdown.Exit(shutdown.JVM_EXCEPTION)
+			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
+			trace.Error(errMsg)
+			return err
 		}
 
 		// TODO: check for JAR specified and process the JAR. At present, it will
@@ -91,11 +102,8 @@ func getOptionRootAndArgs(option string) (string, string, error) {
 		return "", "", errors.New("empty option error")
 	}
 
-	// if the option has an embedded arg value, it'll come after a : or an =
-	argMarker := strings.Index(option, ":")
-	if argMarker == -1 {
-		argMarker = strings.Index(option, "=")
-	}
+	// if the option has an embedded arg value, it'll come after the first =
+	argMarker := strings.Index(option, "=")
 
 	// if there's no embedded : or = then the option doesn't contain an arg value
 	if argMarker == -1 {
@@ -126,13 +134,19 @@ func getEnvArgs() string {
 	return strings.TrimSpace(envArgs)
 }
 
-// log the two environmental variables from which we'll load base classes, if log level allows.
+// log the two environmental variables from which we'll load base classes.
 func showJavaHomeArgs(Global *globals.Globals) {
-	if Global.JavaHome != "" {
-		_ = log.Log("JAVA_HOME: "+Global.JavaHome, log.FINE)
-	}
-	if Global.JacobinHome != "" {
-		_ = log.Log("JACOBIN_HOME: "+Global.JacobinHome, log.FINE)
+	if globals.TraceVerbose {
+		if Global.JavaHome != "" {
+			trace.Trace("JAVA_HOME: " + Global.JavaHome)
+		} else {
+			trace.Trace("JAVA_HOME: nil")
+		}
+		if Global.JacobinHome != "" {
+			trace.Trace("JACOBIN_HOME: " + Global.JacobinHome)
+		} else {
+			trace.Trace("JACOBIN_HOME: nil")
+		}
 	}
 }
 
@@ -150,22 +164,23 @@ Arguments following the main class, source file, -jar <jarfile>,
 are passed as the arguments to main class.
 
 where options include:
-	-client       to select the "client" VM
-	-verbose:[class|info|fine|finest]  enable verbose output
-                  info, fine, finest are Jacobin-specific options providing
-                    increasing amounts of detail. The finest level is used
-                    primarily for performance analysis.
-	-? -h -help   print this help message to the error stream
-	--help        print this help message to the output stream
-	-version      print product version to the error stream and exit
-	--version     print product version to the output stream and exit
-	-showversion  print product version to the error stream and continue
-	--show-version
-				  print product version to the output stream and continue
+	-client         to select the "client" VM
+	-? -h -help     print this help message to the error stream
+	--help          print this help message to the output stream
+	-version        print product version to the error stream and exit
+	--version       print product version to the output stream and exit
+	-showversion    print product version to the error stream and continue
+	--show-version  print product version to the output stream and continue
 
 Jacobin-specific options:
-	-strictJDK    make user messages conform closely to the JDK's format
-	-trace:inst   display instruction-level tracing data to the console`
+    -strictJDK            make user messages conform closely to the JDK's format
+    -trace=<selections>   display selected tracing to the console
+                          where the <selections> are one or more of the following separated by commas (,):
+                          * init - process initilization
+                          * cloadi - classloader initialization
+                          * inst - bytecode interpreter trace
+                          * class - class & method support for the interpreter
+                          * verbose - inst, class, and more details of the interpreter `
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }

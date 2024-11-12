@@ -12,8 +12,9 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/frames"
-	"jacobin/log"
+	"jacobin/globals"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/util"
 )
 
@@ -74,8 +75,10 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 
 	method := methEntry.Meth.(classloader.JmEntry)
 	if method.Exceptions == nil {
-		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s has no exception table", fullMethName)
-		_ = log.Log(errMsg, log.TRACE_INST)
+		if globals.TraceVerbose {
+			infoMsg := fmt.Sprintf("locateExceptionFrame: Method %s has no exception table", fullMethName)
+			trace.Trace(infoMsg)
+		}
 		return nil, -1 // no exception handler was found
 	}
 

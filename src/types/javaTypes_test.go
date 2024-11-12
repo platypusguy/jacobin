@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by Jacobin authors. All rights reserved.
+ * Copyright (c) 2023-4 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -31,11 +31,11 @@ func TestTheIsFunctionsValidate(t *testing.T) {
 	}
 
 	if !IsFloatingPoint(Float) {
-		t.Errorf("IsFloatingPoint() returned false for double, should be true")
+		t.Errorf("IsFloatingPoint() returned false for float, should be true")
 	}
 
-	if !UsesTwoSlots(Double) {
-		t.Errorf("UsesTwoSlots() returned false for double, should be true")
+	if !IsFloatingPoint(Double) {
+		t.Errorf("IsFloatingPoint() returned false for double, should be true")
 	}
 
 	if !IsError("0") {
@@ -63,10 +63,6 @@ func TestTheIsFunctionsNegatively(t *testing.T) {
 
 	if IsError(Short) {
 		t.Errorf("Error: Short is incorrectly true in IsError()")
-	}
-
-	if UsesTwoSlots(Int) {
-		t.Errorf("Error: Int is incorrectly true in UsesTwoSlots()")
 	}
 }
 

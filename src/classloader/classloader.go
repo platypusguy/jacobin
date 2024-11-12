@@ -7,16 +7,14 @@
 package classloader
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"io/fs"
 	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/log"
 	"jacobin/shutdown"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
 	"os"
@@ -185,7 +183,7 @@ func cfe(msg string) error {
 		errMsg = errMsg + "\n  detected by file: " + filepath.Base(fileName) +
 			", line: " + strconv.Itoa(fileLine)
 	}
-	_ = log.Log(errMsg, log.SEVERE)
+	trace.Error(errMsg)
 	return errors.New(errMsg)
 }
 
@@ -201,13 +199,15 @@ func LoadBaseClasses() {
 
 	err := WalkBaseJmod()
 	if err != nil {
-		_ = log.Log("LoadBaseClasses: Error loading jmod file classes "+jmodFilePath, log.SEVERE)
-		_ = log.Log(err.Error(), log.SEVERE)
+		errMsg := fmt.Sprintf("LoadBaseClasses: Error loading jmod file classes %s, err: %v", jmodFilePath, err)
+		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
-	msg := fmt.Sprintf("LoadBaseClasses: Bootstrap classes from %s have been loaded", jmodFilePath)
-	_ = log.Log(msg, log.CLASS)
+	if globals.TraceCloadi {
+		infoMsg := fmt.Sprintf("LoadBaseClasses: Bootstrap classes from %s have been loaded", jmodFilePath)
+		trace.Trace(infoMsg)
+	}
 
 }
 
@@ -223,45 +223,6 @@ func walk(s string, d fs.DirEntry, err error) error {
 	}
 	return nil
 }
-
-// LoadReferencedClasses loads the classes referenced in the class named clName.
-// It does this by reading the class entries (ClassRefs=7) in the CP and sending the class names it finds
-// there to a go channel that will load the class.
-// Note that CP refers to the class constant pool = the array of records that a method refers to
-// when accessing fields, methods, values, etc.
-// Reference: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.4
-// Note that The class being loaded has records in the CP that indicate all the other classes it interacts with.
-// Thus, classes are preloaded prior to need.
-//
-// Note: per JACOBIN-327, this parallel processing has been temporarily
-// removed--it's not called by any function. It's likely to be reinstated later.
-/*
-func LoadReferencedClasses(clName string) {
-	err := WaitForClassStatus(clName)
-	if err != nil {
-		msg := fmt.Sprintf("LoadReferencedClasses: %s", err.Error())
-		_ = log.Log(msg, log.SEVERE)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
-	}
-	currClass := MethAreaFetch(clName)
-	cpClassCP := currClass.Data.CP
-	classRefs := cpClassCP.ClassRefs
-
-	loaderChannel := make(chan string, len(classRefs))
-	for _, v := range classRefs {
-		// TODO: needs to be updated to use string pool, whenever we put this function back in service
-		refClassName := FetchUTF8stringFromCPEntryNumber(&cpClassCP, v)
-		name := normalizeClassReference(refClassName)
-		if name == "" {
-			continue
-		}
-		loaderChannel <- name
-	}
-	globals.LoaderWg.Add(1)
-	go LoadFromLoaderChannel(loaderChannel)
-	close(loaderChannel)
-}
-*/
 
 // LoadFromLoaderChannel receives a name of a class to load in /java/lang/String format,
 // determines the classloader, checks if the class is already loaded, and loads it if not.
@@ -300,8 +261,7 @@ loadAclass:
 
 	if className == "" {
 		errMsg := "LoadClassFromNameOnly(): null class name is invalid"
-		_ = log.Log(errMsg, log.SEVERE)
-		debug.PrintStack()
+		trace.Error(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -310,19 +270,20 @@ loadAclass:
 	jmodFileName := JmodMapFetch(className)
 
 	if strings.HasSuffix(className, ";") {
-		msg := fmt.Sprintf("LoadClassFromNameOnly: invalid class name: %s", className)
-		_ = log.Log(msg, log.SEVERE)
-		debug.PrintStack()
-		return errors.New(msg)
+		errMsg := fmt.Sprintf("LoadClassFromNameOnly: invalid class name: %s", className)
+		trace.Error(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Load class from a jmod?
 	if jmodFileName != "" {
-		_ = log.Log("LoadClassFromNameOnly: Load "+className+" from jmod "+jmodFileName, log.CLASS)
+		if globals.TraceClass {
+			trace.Trace("LoadClassFromNameOnly: Load " + className + " from jmod " + jmodFileName)
+		}
 		classBytes, err := GetClassBytes(jmodFileName, className)
 		if err != nil {
-			_ = log.Log("LoadClassFromNameOnly: GetClassBytes className="+className+" from jmodFileName="+jmodFileName+" failed", log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
+			errMsg := "LoadClassFromNameOnly: GetClassBytes className=" + className + " from jmodFileName=" + jmodFileName + " failed, err: " + err.Error()
+			trace.Error(errMsg)
 		}
 		_, _, err = loadClassFromBytes(AppCL, className, classBytes)
 		return err
@@ -331,11 +292,13 @@ loadAclass:
 	// Load class from a jar file?
 	if len(globals.GetGlobalRef().StartingJar) > 0 {
 		validName := util.ConvertToPlatformPathSeparators(className)
-		_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName, log.CLASS)
+		if globals.TraceClass {
+			trace.Trace("LoadClassFromNameOnly: LoadClassFromJar " + validName)
+		}
 		_, _, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
 		if err != nil {
-			_ = log.Log("LoadClassFromNameOnly: LoadClassFromJar "+validName+" failed", log.SEVERE)
-			_ = log.Log(err.Error(), log.SEVERE)
+			errMsg := "LoadClassFromNameOnly: LoadClassFromJar " + validName + " failed, err: " + err.Error()
+			trace.Error(errMsg)
 		}
 		return err
 	}
@@ -343,10 +306,12 @@ loadAclass:
 	// Loading from a local file system class
 	// TODO: classpath
 	validName := util.ConvertToPlatformPathSeparators(className)
-	_ = log.Log("LoadClassFromNameOnly: Loaded class from file "+validName, log.CLASS)
+	if globals.TraceClass {
+		trace.Trace("LoadClassFromNameOnly: Loaded class from file " + validName)
+	}
 	_, superclassIndex, err := LoadClassFromFile(AppCL, validName)
 	if err != nil {
-		errMsg := fmt.Sprintf("LoadClassFromNameOnly for %s failed", className)
+		errMsg := fmt.Sprintf("LoadClassFromNameOnly for %s failed, err: %v", className, err)
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
 		return errors.New(errMsg) // return for tests only
 	}
@@ -369,10 +334,10 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		filename = fname
 	}
 	if filename == ".class" || strings.HasSuffix(filename, ";.class") {
-		msg := "LoadClassFromFile: class name" + fname + " is invalid"
-		_ = log.Log(msg, log.SEVERE)
+		errMsg := "LoadClassFromFile: class name" + fname + " is invalid"
+		trace.Error(errMsg)
 		debug.PrintStack()
-		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(msg)
+		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg)
 	}
 	rawBytes, err := os.ReadFile(filename)
 	if err != nil {
@@ -380,7 +345,9 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
 		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
 	}
-	_ = log.Log("LoadClassFromFile: File "+fname+" was read", log.CLASS)
+	if globals.TraceClass {
+		trace.Trace("LoadClassFromFile: File " + fname + " was read")
+	}
 
 	return loadClassFromBytes(cl, filename, rawBytes)
 }
@@ -442,19 +409,23 @@ func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (uint3
 // if no errors occurred, posts/loads it to the method area.
 func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint32, uint32, error) {
 
-	_ = log.Log("ParseAndPostClass: File "+filename+" to be processed", log.CLASS)
+	if globals.TraceClass {
+		trace.Trace("ParseAndPostClass: File " + filename + " to be processed")
+	}
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
-		_ = log.Log("ParseAndPostClass: error parsing "+filename+". Exiting.", log.SEVERE)
+		trace.Error("ParseAndPostClass: file " + filename + ", err: " + err.Error())
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("parsing error")
 	}
 
 	// format check the class
 	if formatCheckClass(&fullyParsedClass) != nil {
-		_ = log.Log("ParseAndPostClass: error format-checking "+filename+". Exiting.", log.SEVERE)
+		trace.Error("ParseAndPostClass: format-checking " + filename)
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
-	_ = log.Log("Class "+fullyParsedClass.className+" has been format-checked.", log.FINEST)
+	if globals.TraceClass {
+		trace.Trace("Class " + fullyParsedClass.className + " has been format-checked.")
+	}
 
 	// prepare the class for posting
 	classToPost := convertToPostableClass(&fullyParsedClass)
@@ -469,7 +440,9 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	ClassesLock.Lock()
 	cl.ClassCount += 1
 	ClassesLock.Unlock()
-	_ = log.Log("ParseAndPostClass: File "+filename+" fully processed", log.CLASS)
+	if globals.TraceClass {
+		trace.Trace("ParseAndPostClass: File " + filename + " fully processed")
+	}
 
 	return fullyParsedClass.classNameIndex, fullyParsedClass.superClassIndex, nil
 }
@@ -784,12 +757,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
-	if log.Level == log.FINEST {
-		b := new(bytes.Buffer)
-		if gob.NewEncoder(b).Encode(kd) == nil {
-			_ = log.Log("Size of loaded class: "+strconv.Itoa(b.Len()), log.FINEST)
-		}
-	}
 	return kd
 }
 
@@ -840,17 +807,10 @@ func Init() error {
 
 	// Load the base jmod
 	GetBaseJmodBytes()
-	_, err := GetClassBytes("java.base.jmod", types.StringClassName)
-	if err != nil {
-		msg := fmt.Sprintf("classloader.Init: GetClassBytes failed for java/lang/String in java.base.jmod")
-		_ = log.Log(msg, log.SEVERE)
-		shutdown.Exit(shutdown.JVM_EXCEPTION)
-	}
 
 	// initialize the method area
 	InitMethodArea()
 
 	// Success!
-	_ = log.Log("classloader.Init: ok", log.CLASS)
 	return nil
 }

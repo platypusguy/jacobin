@@ -67,7 +67,7 @@ func Load_Io_FileInputStream() {
 
 	MethodSignatures["java/io/FileInputStream.skip(J)J"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  fisSkip,
 		}
 

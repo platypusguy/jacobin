@@ -43,19 +43,19 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 
 	MethodSignatures["jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  unsafeGetIntVolatile,
 		}
 
 	MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"] =
 		GMeth{
-			ParamSlots: 5,
+			ParamSlots: 4,
 			GFunction:  unsafeCompareAndSetInt,
 		}
 
 	MethodSignatures["jdk/internal/misc/Unsafe.getAndAddInt(Ljava/lang/Object;JI)I"] =
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  unsafeCompareAndSetInt,
 		}
 
@@ -67,7 +67,7 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 
 	MethodSignatures["jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J"] =
 		GMeth{
-			ParamSlots: 0,
+			ParamSlots: 2,
 			GFunction:  unsafeObjectFieldOffset1,
 		}
 
@@ -121,7 +121,7 @@ func unsafeGetAndAddInt(params []interface{}) interface{} {
 		hash = int64(obj.Mark.Hash)
 	}
 	offset := params[2].(int64)
-	delta := params[4].(int64)
+	delta := params[3].(int64)
 	wint := hash + offset + delta
 	return wint
 }

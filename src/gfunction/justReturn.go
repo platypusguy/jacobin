@@ -93,7 +93,13 @@ func Load_Just_Return() {
 
 	MethodSignatures["java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
 		GMeth{
-			ParamSlots: 6,
+			ParamSlots: 7,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["java/util/Regex.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
 			GFunction:  justReturn,
 		}
 

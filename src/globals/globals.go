@@ -70,6 +70,7 @@ type Globals struct {
 
 	// ---- special switches ----
 	StrictJDK bool // hew closely to actions and error messages of the JDK
+	// NewInterpreter bool // use the new experimental interpreter
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
@@ -100,6 +101,13 @@ type Globals struct {
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
+
+// ---- trace categories
+var TraceInit bool
+var TraceCloadi bool
+var TraceInst bool
+var TraceClass bool
+var TraceVerbose bool
 
 // ----- String Pool
 var StringPoolTable map[string]uint32
@@ -133,9 +141,10 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    21, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 65, // this value and MaxJavaVersion must *always* be in sync
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
-		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
-		JacobinBuildData:     nil,
-		StrictJDK:            false,
+		ThreadNumber:     0, // first thread will be numbered 1, as increment occurs prior
+		JacobinBuildData: nil,
+		StrictJDK:        false,
+		// NewInterpreter:       false,
 		ArrayAddressList:     InitArrayAddressList(),
 		JmodBaseBytes:        nil,
 		ErrorGoStack:         "",
@@ -146,6 +155,12 @@ func InitGlobals(progName string) Globals {
 		FuncInstantiateClass: fakeInstantiateClass,
 		FuncThrowException:   fakeThrowEx,
 	}
+
+	TraceInit = false
+	TraceCloadi = false
+	TraceInst = false
+	TraceClass = false
+	TraceVerbose = false
 
 	// ----- String Pool and other values
 	InitStringPool()

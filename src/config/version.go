@@ -8,9 +8,11 @@ package config
 
 import "strconv"
 
-// v 0.6.0 begun 8/31/24 at 3,012 GitHub commits
+// v 0.6.000 begun 31 Aug 24 at 3,012 GitHub commits
+// v 0.6.100 made   5 Nov 24 at 3,280 GitHub commits - last version with the original intepreter
+// v 0.6.200 made   6 Nov 24 - first version with the original interpreter removed
 
-var JacobinVersion = "0.6.009"
+var JacobinVersion = "0.6.203"
 
 // GetJacobinVersion returns a manually updated version number and an
 // automatically updated build #. The latter being updated by bumpbuildno.go

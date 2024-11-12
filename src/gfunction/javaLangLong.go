@@ -37,31 +37,31 @@ func Load_Lang_Long() {
 
 	MethodSignatures["java/lang/Long.rotateLeft(JI)J"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  longRotateLeft,
 		}
 
 	MethodSignatures["java/lang/Long.rotateRight(JI)J"] =
 		GMeth{
-			ParamSlots: 3,
+			ParamSlots: 2,
 			GFunction:  longRotateRight,
 		}
 
 	MethodSignatures["java/lang/Long.toHexString(J)Ljava/lang/String;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  longToHexString,
 		}
 
 	MethodSignatures["java/lang/Long.toString(J)Ljava/lang/String;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  longToString,
 		}
 
 	MethodSignatures["java/lang/Long.valueOf(J)Ljava/lang/Long;"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  longValueOf,
 		}
 
@@ -90,7 +90,7 @@ func longParseLong(params []interface{}) interface{} {
 // "java/lang/Long.rotateLeft(JI)J"
 func longRotateLeft(params []interface{}) interface{} {
 	jj := uint64(params[0].(int64))
-	shiftLength := int(params[2].(int64))
+	shiftLength := int(params[1].(int64))
 	value := bits.RotateLeft64(jj, shiftLength)
 	return int64(value)
 }
@@ -98,7 +98,7 @@ func longRotateLeft(params []interface{}) interface{} {
 // "java/lang/Long.rotateRight(JI)J"
 func longRotateRight(params []interface{}) interface{} {
 	jj := uint64(params[0].(int64))
-	shiftLength := int(params[2].(int64))
+	shiftLength := int(params[1].(int64))
 	value := bits.RotateLeft64(jj, -shiftLength)
 	return int64(value)
 }

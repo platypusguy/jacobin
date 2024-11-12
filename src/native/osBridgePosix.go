@@ -5,7 +5,7 @@ package native
 import (
 	"fmt"
 	"github.com/ebitengine/purego"
-	"jacobin/log"
+	"jacobin/trace"
 )
 
 func ConnectLibrary(libPath string) uintptr {
@@ -15,7 +15,7 @@ func ConnectLibrary(libPath string) uintptr {
 	if err != nil {
 		errMsg := fmt.Sprintf("ConnectLibrary: purego.Dlopen for [%s] failed, reason: [%s]",
 			libPath, err.Error())
-		_ = log.Log(errMsg, log.SEVERE)
+		trace.Error(errMsg)
 		handle = 0
 	}
 	return handle

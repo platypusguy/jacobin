@@ -69,31 +69,79 @@ func Load_Io_PrintStream() {
 		}
 	MethodSignatures["java/io/PrintStream.println(J)V"] = // println long
 		GMeth{
-			ParamSlots: 2, // 2 slots for the long
+			ParamSlots: 1,
 			GFunction:  PrintlnLong,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
 		GMeth{
-			ParamSlots: 2, // 2 slots for the double
+			ParamSlots: 1,
 			GFunction:  PrintlnDoubleFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
 		GMeth{
-			ParamSlots: 1, // 1 slot for the float
+			ParamSlots: 1,
 			GFunction:  PrintlnDoubleFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
 		GMeth{
-			ParamSlots: 1, // 1 slot for the Object
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([B)V"] = // println byte array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([C)V"] = // println char array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([D)V"] = // println double array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([F)V"] = // println float array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([I)V"] = // println int array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([J)V"] = // println long array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([S)V"] = // println int array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintlnObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.println([Z)V"] = // println boolean array
+		GMeth{
+			ParamSlots: 1,
 			GFunction:  PrintlnObject,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/String;)V"] = // print string
 		GMeth{
-			ParamSlots: 1, // [0] =  StringConst to print
+			ParamSlots: 1,
 			GFunction:  PrintString,
 		}
 	MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
@@ -123,31 +171,79 @@ func Load_Io_PrintStream() {
 		}
 	MethodSignatures["java/io/PrintStream.print(J)V"] = // print long
 		GMeth{
-			ParamSlots: 2, // 2 slots for the long
+			ParamSlots: 1,
 			GFunction:  PrintLong,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(D)V"] = // print double
 		GMeth{
-			ParamSlots: 2, // 2 slots for the double
+			ParamSlots: 1,
 			GFunction:  PrintDouble,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(F)V"] = // print float
 		GMeth{
-			ParamSlots: 1, // 1 slot for the float
+			ParamSlots: 1,
 			GFunction:  PrintFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.print(Ljava/lang/Object;)V"] = // print object
 		GMeth{
-			ParamSlots: 1, // 1 slot for the Object
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([B)V"] = // print byte array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([C)V"] = // print char array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([D)V"] = // print double array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([F)V"] = // print float array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([I)V"] = // print int array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([J)V"] = // print long array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([S)V"] = // print int array
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  PrintObject,
+		}
+
+	MethodSignatures["java/io/PrintStream.print([Z)V"] = // print boolean array
+		GMeth{
+			ParamSlots: 1,
 			GFunction:  PrintObject,
 		}
 
 	MethodSignatures["java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"] =
 		GMeth{
-			ParamSlots: 2, // the format string, the parameters (if any)
+			ParamSlots: 2,
 			GFunction:  Printf,
 		}
 
