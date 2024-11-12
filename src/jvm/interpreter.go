@@ -304,6 +304,10 @@ func interpret(fs *list.List) {
 			case exceptions.ERROR_OCCURRED: // occurs only in tests
 				fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
 				return
+			case exceptions.RESUME_HERE: // continue processing from the present fr.PC
+				// This primarily occurs when an exception is caught. The catch resets
+				// the PC to the catch code to execute. So, we don't need any update to
+				// the PC.
 			default:
 				fr.PC += ret
 			}
@@ -2106,7 +2110,6 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		}
 
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
-		// if err != nil {
 		if ret != nil {
 			switch ret.(type) {
 			case error: // only occurs in testing
@@ -2114,7 +2117,13 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					return exceptions.ERROR_OCCURRED
 				}
 				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					return 3 // 2 for CP slot + 1 for next bytecode
+					// return 3 // 2 for CP slot + 1 for next bytecode
+					// per JACOBIN-59x, we return exceptions.RESUME_HERE telling
+					// the interpreter that the fr.PC has been set to a new position
+					// from which processing should continue. This is used primarily
+					// when a frame has caught an exception and we're point the
+					// interpreter to the first bytecode in the exception handler.
+					return exceptions.RESUME_HERE
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
