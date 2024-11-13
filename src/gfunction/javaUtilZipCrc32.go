@@ -23,13 +23,13 @@ func Load_Util_Zip_Crc32_Crc32c() {
 	MethodSignatures["java/util/zip/CRC32.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/zip/CRC32C.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/zip/CRC32.<init>()V"] =

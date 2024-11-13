@@ -27,7 +27,7 @@ func Load_Jdk_Internal_Misc_ScopedMemoryAccess() {
 	MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["jdk/internal/misc/ScopedMemoryAccess.registerNatives()V"] =

@@ -19,7 +19,7 @@ func Load_Io_RandomAccessFile() {
 	MethodSignatures["java/io/RandomAccessFile.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/RandomAccessFile.<init>(Ljava/lang/String;Ljava/lang/String;)V"] =

@@ -15,7 +15,7 @@ func Load_Util_Concurrent_Atomic_Atomic_Long() {
 	MethodSignatures["java/util/concurrent/atomic/AtomicLong.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	// Native functions or caller to native functions

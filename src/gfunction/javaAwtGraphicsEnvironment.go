@@ -15,7 +15,7 @@ func Load_Awt_Graphics_Environment() {
 	MethodSignatures["java/awt/GraphicsEnvironment.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/awt/GraphicsEnvironment.isHeadless()Z"] =

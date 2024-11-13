@@ -13,7 +13,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<init>()V"] =

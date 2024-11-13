@@ -20,7 +20,7 @@ func Load_Io_BufferedReader() {
 	MethodSignatures["java/io/BufferedReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/BufferedReader.<init>(Ljava/io/Reader;)V"] =

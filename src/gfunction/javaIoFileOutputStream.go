@@ -19,7 +19,7 @@ func Load_Io_FileOutputStream() {
 	MethodSignatures["java/io/FileOutputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/FileOutputStream.<init>(Ljava/io/File;)V"] =

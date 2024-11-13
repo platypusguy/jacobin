@@ -32,7 +32,7 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 	MethodSignatures["jdk/internal/misc/Unsafe.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array

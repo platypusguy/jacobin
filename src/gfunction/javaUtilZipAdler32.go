@@ -16,7 +16,7 @@ func Load_Util_Zip_Adler32() {
 	MethodSignatures["java/util/zip/Adler32.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/zip/Adler32.<init>()V"] =

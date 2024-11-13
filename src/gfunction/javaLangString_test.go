@@ -33,10 +33,17 @@ func TestStringClinit(t *testing.T) {
 			if gErr.ExceptionType != excNames.ClassNotLoadedException {
 				t.Errorf("TestStringClinit: Unexpected exception type. got %d", gErr.ExceptionType)
 			}
+		case *object.Object:
+			str := object.GoStringFromStringObject(retval.(*object.Object))
+			if str != "stringClinit" {
+				t.Errorf("TestStringClinit: Expected \"stringClinit\", observed %v", str)
+			}
+			return
 		default:
 			t.Errorf("TestStringClinit: Did not get expected error message, got %v", retval)
 		}
 	}
+	t.Error("TestStringClinit: stringClinit() returned nil")
 }
 
 func TestStringToUpperCase(t *testing.T) {

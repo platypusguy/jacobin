@@ -20,7 +20,7 @@ func Load_Util_Locale() {
 	MethodSignatures["java/util/Locale.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/Locale.<init>(Ljava/lang/String;)V"] =

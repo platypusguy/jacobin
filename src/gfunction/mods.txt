@@ -1,20 +1,37 @@
-
-javaIoBufferedReader.go
-javaIoFileInputStream.go
-javaIoFileWriter.go
-javaLangClass.go
-justReturn.go               correct: java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-
-
-javaIoPrintStream.go
-javaLangDouble.go
-javaLangLong.go
-javaLangMath.go             YUGE changes!
-javaLangString.go           valueOf(...)
-javaLangStringBuffer.go     append(...), insert(...)
-javaLangStringBuilder.go    append(...), insert(...)
-javaLangThread.go           sleep(...)
-javaMathBigInteger.go       valueOf(...)
-javaUtilRandom.go           a lot of changes!
-jdkInternalMiscUnsafe.go
+	modified:   gfunction/gfunction.go
+	modified:   gfunction/gfunction_test.go
+	modified:   gfunction/javaAwtGraphicsEnvironment.go
+	modified:   gfunction/javaIoBufferedReader.go
+	modified:   gfunction/javaIoFile.go
+	modified:   gfunction/javaIoFileInputStream.go
+	modified:   gfunction/javaIoFileOutputStream.go
+	modified:   gfunction/javaIoFileReader.go
+	modified:   gfunction/javaIoFileWriter.go
+	modified:   gfunction/javaIoInputStreamReader.go
+	modified:   gfunction/javaIoOutputStreamWriter.go
+	modified:   gfunction/javaIoRandomAccessFile.go
+	modified:   gfunction/javaLangBoolean.go
+	modified:   gfunction/javaLangByte.go
+	modified:   gfunction/javaLangCharacter.go
+	modified:   gfunction/javaLangClass.go
+	modified:   gfunction/javaLangDouble.go
+	modified:   gfunction/javaLangFloat.go
+	modified:   gfunction/javaLangInteger.go
+	modified:   gfunction/javaLangLong.go
+	modified:   gfunction/javaLangObject.go
+	modified:   gfunction/javaLangShort.go
+	modified:   gfunction/javaLangStringBuffer.go
+	modified:   gfunction/javaLangStringBuilder.go
+	modified:   gfunction/javaLangThread.go
+	modified:   gfunction/javaSecurityAccessController.go
+	modified:   gfunction/javaSecuritySecureRandom.go
+	modified:   gfunction/javaUtilConcurrentAtomicAtomicInteger.go
+	modified:   gfunction/javaUtilConcurrentAtomicAtomicLong.go
+	modified:   gfunction/javaUtilLocale.go
+	modified:   gfunction/javaUtilRandom.go
+	modified:   gfunction/javaUtilZipAdler32.go
+	modified:   gfunction/javaUtilZipCrc32.go
+	modified:   gfunction/jdkInternalMiscScopedMemoryAccess.go
+	modified:   gfunction/jdkInternalMiscUnsafe.go
+	modified:   gfunction/justReturn.go
 

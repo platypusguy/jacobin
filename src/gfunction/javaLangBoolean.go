@@ -16,7 +16,7 @@ func Load_Lang_Boolean() {
 	MethodSignatures["java/lang/Boolean.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Boolean.valueOf(Z)Ljava/lang/Boolean;"] =

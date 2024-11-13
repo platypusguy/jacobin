@@ -9,6 +9,7 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/excNames"
+	"jacobin/object"
 	"jacobin/trace"
 	"math"
 	"math/big"
@@ -223,7 +224,7 @@ func mathClinit([]interface{}) interface{} {
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	return nil
+	return object.StringObjectFromGoString("mathClinit")
 }
 
 // Absolute value function for Java float and double

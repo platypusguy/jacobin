@@ -20,7 +20,7 @@ func Load_Io_InputStreamReader() {
 	MethodSignatures["java/io/InputStreamReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;)V"] =
