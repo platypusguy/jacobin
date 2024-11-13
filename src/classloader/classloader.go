@@ -585,7 +585,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if clInitPresent {
 		kd.ClInit = types.ClInitNotRun // there is a clinit, but it's not been run
 	} else {
-		kd.ClInit = types.NoClinit // there is no clinit
+		kd.ClInit = types.NoClInit // there is no clinit
 	}
 
 	if len(fullyParsedClass.attributes) > 0 {
