@@ -11,20 +11,20 @@ func Load_Security_SecureRandom() {
 	MethodSignatures["java/security/SecureRandom.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	/**
 	MethodSignatures["java/security/SecureRandom.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>([B)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/security/SecureRandom.<init>(Ljava.security.SecureRandomSpi;Ljava.security.Provider;)V"] =

@@ -19,17 +19,17 @@ import (
 
 func Load_Lang_Throwable() {
 
+	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  throwableClinit,
+		}
+
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
 			ParamSlots:   0,
 			GFunction:    FillInStackTrace,
 			NeedsContext: true,
-		}
-
-	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  throwableClinit,
 		}
 
 	MethodSignatures["java/lang/Throwable.getOurStackTrace:()[Ljava/lang/StackTraceElement;"] =
@@ -46,7 +46,7 @@ func Load_Lang_Throwable() {
 //  2. for the nonce, Throwable.SUPPRESSED_SENTINEL is set to nil. It's unlikely we'll
 //     ever need it, but if we do, we'll implement it then.
 //
-// So, essentially, we're just initializing several static fields (as expected in clinit())
+// So, essentially, we're just initializing several static fields (as expected in systemClinit())
 //
 // 0:  ldc           #8                  // class java/lang/Throwable
 // 2:  invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
@@ -84,7 +84,7 @@ func throwableClinit([]interface{}) interface{} {
 		Type:  "[Ljava/lang/Throwable",
 		Value: emptyThrowableArray,
 	})
-	return nil
+	return object.StringObjectFromGoString("throwableClinit")
 }
 
 // This function is called by Throwable.<init>().

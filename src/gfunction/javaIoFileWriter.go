@@ -11,7 +11,7 @@ func Load_Io_FileWriter() {
 	MethodSignatures["java/io/FileWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/FileWriter.<init>(Ljava/io/File;)V"] =

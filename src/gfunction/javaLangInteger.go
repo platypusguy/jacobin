@@ -21,7 +21,7 @@ func Load_Lang_Integer() {
 	MethodSignatures["java/lang/Integer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Integer.byteValue()B"] =

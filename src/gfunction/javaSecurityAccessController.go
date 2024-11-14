@@ -11,7 +11,7 @@ func Load_Security_AccessController() {
 	MethodSignatures["java/security/AccessController.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/security/AccessController.doPrivileged(Ljava/security/PrivilegedAction;)Ljava/lang/Object;"] =

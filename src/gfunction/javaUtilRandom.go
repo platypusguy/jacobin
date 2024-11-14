@@ -16,7 +16,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/Random.<init>()V"] =

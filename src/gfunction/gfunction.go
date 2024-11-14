@@ -65,6 +65,16 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 	return &gErrBlk
 }
 
+// do-nothing Go function shared by several source files
+func clinitGeneric([]interface{}) interface{} {
+	return object.StringObjectFromGoString("clinitGeneric")
+}
+
+// do-nothing Go function shared by several source files
+func justReturn([]interface{}) interface{} {
+	return object.StringObjectFromGoString("justReturn")
+}
+
 // MTableLoadGFunctions loads the Go methods from files that contain them. It does this
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
@@ -110,9 +120,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/math/*
 	Load_Math_Big_Integer()
 
-	// java/nio/*
-	Load_Nio_Charset_Charset()
-
 	// java/security/*
 	// Load_Security_SecureRandom() <--------------- TODO
 	Load_Security_AccessController()
@@ -130,8 +137,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Jdk_Internal_Misc_Unsafe()
 	Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
-	// Load functions that invoke justReturn() and do nothing else.
-	Load_Just_Return()
+	// Load functions that invoke clinitGeneric() and do nothing else.
+	Load_Other_methods()
 
 	// Load traps that lead to unconditional error returns.
 	Load_Traps()

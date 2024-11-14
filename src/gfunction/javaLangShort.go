@@ -16,7 +16,7 @@ func Load_Lang_Short() {
 	MethodSignatures["java/lang/Short.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Short.doubleValue()D"] =

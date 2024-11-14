@@ -43,6 +43,12 @@ import (
 
 func Load_Lang_System() {
 
+	MethodSignatures["java/lang/System.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  systemClinit,
+		}
+
 	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
 			ParamSlots: 5,
@@ -85,12 +91,6 @@ func Load_Lang_System() {
 			GFunction:  getConsole,
 		}
 
-	MethodSignatures["java/lang/System.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinit,
-		}
-
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -103,10 +103,16 @@ func Load_Lang_System() {
 			GFunction:  returnFalse,
 		}
 
+	MethodSignatures["java/lang/System.registerNatives()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 }
 
 /*
-		 check whether this clinit() has been previously run. If not, have it duplicate the
+		 check whether this systemClinit() has been previously run. If not, have it duplicate the
 	   following bytecodes from JDK 17 java/lang/System:
 			static {};
 			0: invokestatic  #637                // Method registerNatives:()V
@@ -118,7 +124,7 @@ func Load_Lang_System() {
 			12: putstatic     #384                // Field err:Ljava/io/PrintStream;
 			15: return
 */
-func clinit([]interface{}) interface{} {
+func systemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
 		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
@@ -131,7 +137,7 @@ func clinit([]interface{}) interface{} {
 		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
-	return nil
+	return object.StringObjectFromGoString("systemClinit")
 }
 
 // arrayCopy copies an array or subarray from one array to another, both of which must exist.

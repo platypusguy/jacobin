@@ -23,7 +23,7 @@ func Load_Lang_StringBuilder() {
 	MethodSignatures["java/lang/StringBuilder.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/StringBuilder.<init>()V"] =
@@ -439,21 +439,25 @@ func stringBuilderInitString(params []any) any {
 	return nil
 }
 
-/*** 
-    Append the second parameter to the bytes in the StringBuilder that is passed in the objectRef parameter (the first param).
-    If a character array with offset and size parameters, there is special handling.
-    
-    Method parameter types:
-    [C                          int64 array
-    [CII                        int64 array, offset, size
-    D                           float64
-    F                           float64
-    I                           int64
-    J                           int64
-    Ljava/lang/Object;          *object.Object [diagnosed with an error]
-    Ljava/lang/String;          *object.Object
-    Ljava/lang/StringBuffer;    *object.Object
-***/
+/*
+**
+
+	Append the second parameter to the bytes in the StringBuilder that is passed in the objectRef parameter (the first param).
+	If a character array with offset and size parameters, there is special handling.
+
+	Method parameter types:
+	[C                          int64 array
+	[CII                        int64 array, offset, size
+	D                           float64
+	F                           float64
+	I                           int64
+	J                           int64
+	Ljava/lang/Object;          *object.Object [diagnosed with an error]
+	Ljava/lang/String;          *object.Object
+	Ljava/lang/StringBuffer;    *object.Object
+
+**
+*/
 func stringBuilderAppend(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
@@ -463,9 +467,9 @@ func stringBuilderAppend(params []any) any {
 	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
 	objOut.FieldTable = objBase.FieldTable
 
-    // Resolved parameter byte array, regardless of parameters:
+	// Resolved parameter byte array, regardless of parameters:
 	var parmArray []byte
-	
+
 	// Process based primarily on the params[0] type.
 	switch params[1].(type) {
 	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder

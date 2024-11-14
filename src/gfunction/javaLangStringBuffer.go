@@ -22,7 +22,7 @@ func Load_Lang_StringBuffer() {
 	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.<init>()V"] =

@@ -16,7 +16,7 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	// Native functions or caller to native functions

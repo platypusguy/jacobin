@@ -6,12 +6,7 @@
 
 package gfunction
 
-// do-nothing Go function shared by several source files
-func justReturn([]interface{}) interface{} {
-	return nil
-}
-
-func Load_Just_Return() {
+func Load_Other_methods() {
 
 	MethodSignatures["java/awt/Color.initIDs()V"] =
 		GMeth{
@@ -22,7 +17,7 @@ func Load_Just_Return() {
 	MethodSignatures["java/awt/Toolkit.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/awt/Toolkit.loadLibraries()V"] =
@@ -31,34 +26,10 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/CharacterDataLatin1.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/math/BigDecimal.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
 	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/math/MathContext.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/math/RoundingMode.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
@@ -67,28 +38,48 @@ func Load_Just_Return() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/CharacterDataLatin1.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 	MethodSignatures["java/lang/SecurityManager.checkRead(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  justReturn,
 		}
 
-	MethodSignatures["java/lang/System.registerNatives()V"] =
+	MethodSignatures["java/math/BigDecimal.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
-	// MethodSignatures["java/util/HexFormat.<clinit>()V"] =
-	// 	GMeth{
-	// 		ParamSlots: 0,
-	// 		GFunction:  justReturn,
-	// 	}
+	MethodSignatures["java/math/MathContext.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/math/RoundingMode.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	/***
+	MethodSignatures["java/util/HexFormat.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+		***/
 
 	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
@@ -100,13 +91,13 @@ func Load_Just_Return() {
 	MethodSignatures["java/util/Regex.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 }

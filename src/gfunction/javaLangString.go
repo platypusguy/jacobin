@@ -777,6 +777,17 @@ func Load_Lang_String() {
 
 // ==== INSTANTIATION AND INITIALIZATION FUNCTIONS ====
 
+// "java/lang/String.<clinit>()V" -- String class initialisation
+func stringClinit([]interface{}) interface{} {
+	klass := classloader.MethAreaFetch(types.StringClassName)
+	if klass == nil {
+		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
+	}
+	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+	return object.StringObjectFromGoString("stringClinit")
+}
+
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
@@ -885,17 +896,6 @@ func newStringFromString(params []interface{}) interface{} {
 	// params[1] = String, StringBuilder, or StringBuffer object
 	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
-	return nil
-}
-
-// "java/lang/String.<clinit>()V" -- String class initialisation
-func stringClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(types.StringClassName)
-	if klass == nil {
-		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
-		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
-	}
-	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
 	return nil
 }
 

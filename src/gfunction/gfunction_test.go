@@ -66,14 +66,6 @@ func TestMTableLoadGFunctions(t *testing.T) {
 	}
 }
 
-// make sure that JustReturn in fact does nothing
-func TestJustReturn(t *testing.T) {
-	retVal := justReturn(nil)
-	if retVal != nil {
-		t.Errorf("Expecting nil return value, got: %v", retVal)
-	}
-}
-
 func TestCheckKey(t *testing.T) {
 	if checkKey("java/lang/Object") != false {
 		t.Errorf("invalid key %s was allowed in gfunction", "java/lang/Object")

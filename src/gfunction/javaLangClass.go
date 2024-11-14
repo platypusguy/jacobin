@@ -42,7 +42,7 @@ func Load_Lang_Class() {
 	MethodSignatures["java/lang/Class.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =

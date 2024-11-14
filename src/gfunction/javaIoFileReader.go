@@ -19,7 +19,7 @@ func Load_Io_FileReader() {
 	MethodSignatures["java/io/FileReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/FileReader.<init>(Ljava/io/File;)V"] =

@@ -18,7 +18,7 @@ func Load_Io_OutputStreamWriter() {
 	MethodSignatures["java/io/OutputStreamWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;)V"] =
