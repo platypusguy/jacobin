@@ -2306,17 +2306,19 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 
 		// fr.PC += 2 // advance PC for the first two bytes of this bytecode
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, MainThread.Trace)
-		switch ret.(type) {
-		case error:
-			if globals.GetGlobalRef().JacobinName == "test" {
-				return exceptions.ERROR_OCCURRED
-			} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-				return exceptions.RESUME_HERE // resume at the present PC, which points to the exception code
+		if ret != nil {
+			switch ret.(type) {
+			case error:
+				if globals.GetGlobalRef().JacobinName == "test" {
+					return exceptions.ERROR_OCCURRED
+				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+					return exceptions.RESUME_HERE // resume at the present PC, which points to the exception code
+				}
+			default: // if it's not an error, then it's a legitimate return value, which we simply push
+				push(fr, ret)
 			}
-		default: // if it's not an error, then it's a legitimate return value, which we simply push
-			push(fr, ret)
-			return 3
 		}
+		return 3
 		// any exception will already have been handled.
 	} else if mtEntry.MType == 'J' {
 		m := mtEntry.Meth.(classloader.JmEntry)
