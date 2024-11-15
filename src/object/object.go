@@ -20,9 +20,8 @@ import (
 // that insures that the fields that follow the oops (the mark word and
 // the class pointer) are aligned in memory for maximal performance.
 type Object struct {
-	Mark MarkWord
-	// Klass      *string          // the class name in the method area
-	KlassName  uint32           // the index of the class name
+	Mark       MarkWord
+	KlassName  uint32           // the index of the class name in the string pool
 	FieldTable map[string]Field // map mapping field name to field
 }
 

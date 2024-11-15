@@ -8,4 +8,4 @@
 
 package config
 
-var BuildNo = 3241
+var BuildNo = 3242
