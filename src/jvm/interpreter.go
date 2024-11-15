@@ -2316,9 +2316,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
-				return 3
 			}
 		}
+		return 3
 		// any exception will already have been handled.
 	} else if mtEntry.MType == 'J' {
 		m := mtEntry.Meth.(classloader.JmEntry)
