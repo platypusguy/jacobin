@@ -22,7 +22,7 @@ func Load_Util_HexFormat() {
 // hashMapHash accepts a pointer to an object and returns
 // a uint64 MD5 hash value of the pointed-to thing
 func hexMapClinit(params []interface{}) interface{} {
-	DIGITS := [256]int8{
+	DIGITS := []int8{
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -43,14 +43,14 @@ func hexMapClinit(params []interface{}) interface{} {
 	sDigits := statics.Static{Type: "[B", Value: DIGITS}
 	statics.AddStatic("java/util/HexFormat.DIGITS", sDigits)
 
-	UPPERCASE_DIGITS := [16]int8{
+	UPPERCASE_DIGITS := []int8{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
 	}
 	sUppercaseDigits := statics.Static{Type: "[B", Value: UPPERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.UPPERCASE_DIGITS", sUppercaseDigits)
 
-	LOWERCASE_DIGITS := [16]int8{
+	LOWERCASE_DIGITS := []int8{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 	}
