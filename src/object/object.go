@@ -72,11 +72,8 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 // Make an object for a Java primitive field (byte, int, etc.), given the class and field type.
 func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	objPtr := MakeEmptyObject()
-	// (*objPtr).Klass = &classString
 	(*objPtr).KlassName = stringPool.GetStringIndex(&classString)
-	var field Field
-	field.Ftype = ftype
-	field.Fvalue = arg
+	field := Field{ftype, arg}
 	(*objPtr).FieldTable["value"] = field
 	return objPtr
 }

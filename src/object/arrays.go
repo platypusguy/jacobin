@@ -202,9 +202,9 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		case reflect.Int8:
 			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
 		case reflect.Uint8:
-			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
 		case reflect.Int64:
-			return MakePrimitiveObject(types.IntArray, types.IntArray, rawArray)
+			return MakePrimitiveObject(types.IntArray, types.IntArray, slice)
 		}
 	}
 
