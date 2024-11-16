@@ -3283,7 +3283,6 @@ func createAndInitNewFrame(
 			// return the corresponding object entity.
 			value := pop(f)
 			arg := object.MakeArrayFromRawArray(value)
-			// arg := pop(f).(*object.Object)
 			argList = append(argList, arg)
 			continue
 		}

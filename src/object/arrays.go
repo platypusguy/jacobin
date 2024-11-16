@@ -7,8 +7,11 @@
 package object
 
 import (
+	"fmt"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
+	"reflect"
 )
 
 /*  This file contains some data structures and some primitive
@@ -159,6 +162,12 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 // MakeArrayFromRawArray accepts a raw array (such as []byte) and
 // converts it into an array *object*.
 func MakeArrayFromRawArray(rawArray interface{}) *Object {
+	if rawArray == nil {
+		errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed a nil parameter")
+		trace.Warning(errMsg)
+		return nil
+	}
+
 	switch rawArray.(type) {
 	case *Object: // if it's a ref to an array object, just return it
 		arr := rawArray.(*Object)
@@ -166,12 +175,42 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	case *[]uint8: // an array of bytes
 		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]uint8))
 		return objPtr
-	case []uint8: // an array of bytes
-		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
-		return objPtr
-	default:
-		return nil
 	}
+
+	arrType := reflect.TypeOf(rawArray)
+	if arrType.Kind() == reflect.Slice {
+		switch arrType.Elem().Kind() {
+		case reflect.Int8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray.([]int8))
+		case reflect.Uint8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray.([]uint8))
+		case reflect.Int64:
+			return MakePrimitiveObject(types.IntArray, types.IntArray, rawArray.([]int64))
+		}
+	}
+
+	// This code basically turns an array into a slice.
+	if arrType.Kind() == reflect.Array {
+		slice := make([]interface{}, arrType.Len())
+		arrValue := reflect.ValueOf(rawArray)
+		for i := 0; i < arrValue.Len(); i++ {
+			item := arrValue.Index(i).Interface()
+			slice[i] = item
+		}
+
+		switch arrType.Elem().Kind() {
+		case reflect.Int8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
+		case reflect.Uint8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
+		case reflect.Int64:
+			return MakePrimitiveObject(types.IntArray, types.IntArray, rawArray)
+		}
+	}
+
+	errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed an unsupported type: %T", rawArray)
+	trace.Warning(errMsg)
+	return nil
 }
 
 // ArrayLength returns the length of an array object, when passed a pointer to it

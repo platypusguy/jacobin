@@ -2165,7 +2165,6 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 // OxB7 INVOKESPECIAL
 func doInvokespecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
