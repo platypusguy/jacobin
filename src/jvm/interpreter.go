@@ -227,7 +227,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doGetfield,      // GETFIELD        0xB4
 	doPutfield,      // PUTFIELD        0xB5
 	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
-	doInvokeSpecial, // INVOKESPECIAL   0xB7
+	doInvokespecial, // INVOKESPECIAL   0xB7
 	nil,             // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
 	notImplemented,  // INVOKEINTERFACE 0xB9
 	notImplemented,  // INVOKEDYNAMIC   0xBA
@@ -2163,7 +2163,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 }
 
 // OxB7 INVOKESPECIAL
-func doInvokeSpecial(fr *frames.Frame, _ int64) int {
+func doInvokespecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
