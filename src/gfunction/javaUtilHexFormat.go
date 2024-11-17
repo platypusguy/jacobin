@@ -74,7 +74,37 @@ func Load_Util_HexFormat() {
 	MethodSignatures["java/util/HexFormat.toHexDigits(B)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  hfToHexDigits,
+			GFunction:  hfByteToHexDigits,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(C)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfCharToHexDigits,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(I)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfIntToHexDigits,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(J)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfLongToHexDigits,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(JI)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  hfLongToHexDigits,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(S)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfShortToHexDigits,
 		}
 
 	MethodSignatures["java/util/HexFormat.toString()Ljava/lang/String;"] =
@@ -170,25 +200,101 @@ func hfDelimiter(params []interface{}) interface{} {
 	return object.StringObjectFromByteArray(obj.FieldTable["delimiter"].Fvalue.([]byte))
 }
 
-func hfToHexDigits(params []interface{}) interface{} {
+func hfByteToHexDigits(params []interface{}) interface{} {
+	var str string
 	obj := params[0].(*object.Object)
 	primitive := params[1]
+	input := primitive.(int64) % 256
 	switch primitive.(type) {
-	case int64: //byte, char, int, long
-		input := primitive.(int64) % 256
+	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]byte)
-		var str string
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%X", input)
+			str = fmt.Sprintf("%02X", input)
 		} else { // lowercase
-			str = fmt.Sprintf("%x", input)
+			str = fmt.Sprintf("%02x", input)
 		}
-		if len(params) > 2 {
-			outlen := params[2].(int64)
-			str = str[:outlen]
-		}
-		return object.StringObjectFromGoString(str)
 	default:
 		return trapFunction(params)
 	}
+	return object.StringObjectFromGoString(str)
+}
+
+func hfCharToHexDigits(params []interface{}) interface{} {
+	var str string
+	obj := params[0].(*object.Object)
+	primitive := params[1]
+	input := primitive.(int64) % 256
+	switch primitive.(type) {
+	case int64:
+		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		if digits[15] == 'F' { // uppercase
+			str = fmt.Sprintf("%04X", input)
+		} else { // lowercase
+			str = fmt.Sprintf("%04x", input)
+		}
+	default:
+		return trapFunction(params)
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func hfIntToHexDigits(params []interface{}) interface{} {
+	var str string
+	obj := params[0].(*object.Object)
+	primitive := params[1]
+	input := primitive.(int64)
+	switch primitive.(type) {
+	case int64:
+		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		if digits[15] == 'F' { // uppercase
+			str = fmt.Sprintf("%08X", input)
+		} else { // lowercase
+			str = fmt.Sprintf("%08x", input)
+		}
+	default:
+		return trapFunction(params)
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func hfLongToHexDigits(params []interface{}) interface{} {
+	var str string
+	obj := params[0].(*object.Object)
+	primitive := params[1]
+	input := primitive.(int64)
+	switch primitive.(type) {
+	case int64:
+		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		if digits[15] == 'F' { // uppercase
+			str = fmt.Sprintf("%016X", input)
+		} else { // lowercase
+			str = fmt.Sprintf("%016x", input)
+		}
+		if len(params) > 2 {
+			outlen := int(params[2].(int64))
+			str = str[len(str)-outlen:]
+		}
+	default:
+		return trapFunction(params)
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func hfShortToHexDigits(params []interface{}) interface{} {
+	var str string
+	obj := params[0].(*object.Object)
+	primitive := params[1]
+	input := primitive.(int64)
+	switch primitive.(type) {
+	case int64:
+		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		if digits[15] == 'F' { // uppercase
+			str = fmt.Sprintf("%04X", input)
+		} else { // lowercase
+			str = fmt.Sprintf("%04x", input)
+		}
+	default:
+		return trapFunction(params)
+	}
+	return object.StringObjectFromGoString(str)
 }
