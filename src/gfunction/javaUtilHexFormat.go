@@ -35,6 +35,12 @@ func Load_Util_HexFormat() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/util/HexFormat.formatHex([B)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfFormatHexFromBytes,
+		}
+
 	MethodSignatures["java/util/HexFormat.fromHexDigits(Ljava/lang/CharSequence;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -296,5 +302,24 @@ func hfShortToHexDigits(params []interface{}) interface{} {
 	default:
 		return trapFunction(params)
 	}
+	return object.StringObjectFromGoString(str)
+}
+
+// Format a hex string from a byte slice.
+func hfFormatHexFromBytes(params []interface{}) interface{} {
+	str := ""
+	this := params[0].(*object.Object)
+	digits := this.FieldTable["digits"].Fvalue.([]byte)
+	delimiter := string(this.FieldTable["delimiter"].Fvalue.([]byte))
+	objBytes := params[1].(*object.Object)
+	bytes := objBytes.FieldTable["value"].Fvalue.([]byte)
+	for ix := 0; ix < len(bytes); ix++ {
+		if digits[15] == 'F' { // uppercase
+			str += fmt.Sprintf("%02X%s", bytes[ix], delimiter)
+		} else { // lowercase
+			str += fmt.Sprintf("%02x%s", bytes[ix], delimiter)
+		}
+	}
+	str = str[:len(str)-1]
 	return object.StringObjectFromGoString(str)
 }
