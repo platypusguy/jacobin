@@ -590,6 +590,8 @@ func doBaload(fr *frames.Frame, _ int64) int {
 
 	var bAref *object.Object
 	var array []byte
+	var pushValue int64
+	var pushValueReady bool = false
 	switch ref.(type) {
 	case *object.Object:
 		bAref = ref.(*object.Object)
@@ -602,6 +604,11 @@ func doBaload(fr *frames.Frame, _ int64) int {
 		array = *(ref.(*[]uint8))
 	case []uint8:
 		array = ref.([]uint8)
+	case []int8:
+		arr := ref.([]int8)
+		val := arr[index]
+		pushValue = int64(val)
+		pushValueReady = true
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid  type of object ref: %T",
@@ -611,19 +618,23 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
-	size := int64(len(array))
 
-	if index >= size {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
-		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+	if !pushValueReady { // if pushValue was already set up due to []int8 being handled, skip this
+		size := int64(len(array))
+		if index >= size {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
+			status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
 		}
+		var value = array[index]
+		pushValue = int64(value)
 	}
-	var value = array[index]
-	push(fr, int64(value))
+
+	push(fr, pushValue)
 	return 1
 }
 
