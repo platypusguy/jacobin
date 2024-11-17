@@ -92,4 +92,10 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["jdk/internal/util/ArraysSupport.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 }
