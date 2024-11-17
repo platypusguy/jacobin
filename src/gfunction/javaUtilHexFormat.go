@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
@@ -19,7 +20,7 @@ func Load_Util_HexFormat() {
 	MethodSignatures["java/util/HexFormat.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  hexMapClinit,
+			GFunction:  hexFormatClinit,
 		}
 
 	MethodSignatures["java/util/HexFormat.fromHexDigits(Ljava/lang/CharSequence;)V"] =
@@ -58,10 +59,16 @@ func Load_Util_HexFormat() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/util/HexFormat.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  hfToString,
+		}
+
 }
 
 // <clinit> for class HexFormat
-func hexMapClinit(params []interface{}) interface{} {
+func hexFormatClinit(params []interface{}) interface{} {
 	DIGITS := []uint8{
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -97,7 +104,7 @@ func hexMapClinit(params []interface{}) interface{} {
 	sLowercaseDigits := statics.Static{Type: "[B", Value: LOWERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.LOWERCASE_DIGITS", sLowercaseDigits)
 
-	obj := mkHexFormatObject("", "", "", LOWERCASE_DIGITS)
+	obj := mkHexFormatObject("", "", "", LOWERCASE_DIGITS, false)
 	sHexFormat := statics.Static{Type: "java/util/HexFormat", Value: obj}
 	statics.AddStatic("java/util/HexFormat.HEX_FORMAT", sHexFormat)
 
@@ -108,22 +115,34 @@ func hexMapClinit(params []interface{}) interface{} {
 }
 
 // Make a new HexFormat object and return it to caller.
-func mkHexFormatObject(delimiter, prefix, suffix string, digits []byte) *object.Object {
+func mkHexFormatObject(delimiter, prefix, suffix string, digits []byte, flagUpperCase bool) *object.Object {
 	var fld object.Field
 	className := "java/util/HexFormat"
+	ftypeString := "Ljava/lang/String;"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(delimiter)}
+	fld = object.Field{Ftype: ftypeString, Fvalue: object.StringObjectFromGoString(delimiter)}
 	obj.FieldTable["delimiter"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(prefix)}
+	fld = object.Field{Ftype: ftypeString, Fvalue: object.StringObjectFromGoString(prefix)}
 	obj.FieldTable["prefix"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(suffix)}
+	fld = object.Field{Ftype: ftypeString, Fvalue: object.StringObjectFromGoString(suffix)}
 	obj.FieldTable["suffix"] = fld
 
 	fld = object.Field{Ftype: types.ByteArray, Fvalue: digits}
 	obj.FieldTable["digits"] = fld
 
 	return obj
+}
+
+func hfToString(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	delimiter := obj.FieldTable["delimiter"].Fvalue.([]byte)
+	prefix := obj.FieldTable["prefix"].Fvalue.([]byte)
+	suffix := obj.FieldTable["suffix"].Fvalue.([]byte)
+	digits := obj.FieldTable["digits"].Fvalue.([]byte)
+	uppercase := (digits[15] == 'F')
+	str := fmt.Sprintf("uppercase: %v, delimiter: \"%s\", prefix: \"%s\", suffix: \"%s\"", uppercase, delimiter, prefix, suffix)
+	return object.StringObjectFromGoString(str)
 }
