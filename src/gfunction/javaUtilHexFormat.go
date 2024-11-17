@@ -17,6 +17,43 @@ func Load_Util_HexFormat() {
 			ParamSlots: 0,
 			GFunction:  hexMapClinit,
 		}
+
+	MethodSignatures["java/util/HexFormat.fromHexDigits(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.fromHexDigits(Ljava/lang/CharSequence;II)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.fromHexDigitsToLong(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.fromHexDigitsToLong(Ljava/lang/CharSequence;II)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.parseHex(Ljava/lang/CharSequence;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.parseHex(Ljava/lang/CharSequence;II)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
 }
 
 // hashMapHash accepts a pointer to an object and returns
