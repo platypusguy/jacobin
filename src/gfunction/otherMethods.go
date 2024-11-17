@@ -68,14 +68,6 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
-	/***
-	MethodSignatures["java/util/HexFormat.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
-		}
-		***/
-
 	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

@@ -132,15 +132,19 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	// Class initialisation for Console.
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	// Get the default character set.
 	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
