@@ -23,6 +23,18 @@ func Load_Util_HexFormat() {
 			GFunction:  hexFormatClinit,
 		}
 
+	MethodSignatures["java/util/HexFormat.delimiter()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  hfDelimiter,
+		}
+
+	MethodSignatures["java/util/HexFormat.equals(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/util/HexFormat.fromHexDigits(Ljava/lang/CharSequence;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -57,6 +69,12 @@ func Load_Util_HexFormat() {
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/util/HexFormat.toHexDigits(B)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  hfToHexDigits,
 		}
 
 	MethodSignatures["java/util/HexFormat.toString()Ljava/lang/String;"] =
@@ -145,4 +163,32 @@ func hfToString(params []interface{}) interface{} {
 	uppercase := (digits[15] == 'F')
 	str := fmt.Sprintf("uppercase: %v, delimiter: \"%s\", prefix: \"%s\", suffix: \"%s\"", uppercase, delimiter, prefix, suffix)
 	return object.StringObjectFromGoString(str)
+}
+
+func hfDelimiter(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	return object.StringObjectFromByteArray(obj.FieldTable["delimiter"].Fvalue.([]byte))
+}
+
+func hfToHexDigits(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	primitive := params[1]
+	switch primitive.(type) {
+	case int64: //byte, char, int, long
+		input := primitive.(int64) % 256
+		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		var str string
+		if digits[15] == 'F' { // uppercase
+			str = fmt.Sprintf("%X", input)
+		} else { // lowercase
+			str = fmt.Sprintf("%x", input)
+		}
+		if len(params) > 2 {
+			outlen := params[2].(int64)
+			str = str[:outlen]
+		}
+		return object.StringObjectFromGoString(str)
+	default:
+		return trapFunction(params)
+	}
 }
