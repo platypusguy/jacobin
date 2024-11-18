@@ -33,7 +33,7 @@ func Load_Util_HexFormat() {
 	MethodSignatures["java/util/HexFormat.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  hfEquals,
 		}
 
 	MethodSignatures["java/util/HexFormat.formatHex([B)Ljava/lang/String;"] =
@@ -250,7 +250,7 @@ func hexFormatClinit(params []interface{}) interface{} {
 	statics.AddStatic("java/util/HexFormat.LOWERCASE_DIGITS", sLowercaseDigits)
 
 	obj := mkHexFormatObject([]byte{}, []byte{}, []byte{}, LOWERCASE_DIGITS)
-	sHexFormat := statics.Static{Type: "java/util/HexFormat", Value: obj}
+	sHexFormat := statics.Static{Type: "Ljava/util/HexFormat;", Value: obj}
 	statics.AddStatic("java/util/HexFormat.HEX_FORMAT", sHexFormat)
 
 	sEmptyBytes := statics.Static{Type: types.ByteArray, Value: []byte{}}
@@ -262,7 +262,7 @@ func hexFormatClinit(params []interface{}) interface{} {
 	return nil
 }
 
-// Make a new HexFormat object and return it to caller.
+// Make a new HexFormat object and return the object struct to caller.
 func mkHexFormatObject(delimiter, prefix, suffix, digits []byte) *object.Object {
 	var fld object.Field
 	className := "java/util/HexFormat"
@@ -468,12 +468,24 @@ func hfFromHexDigit(params []interface{}) interface{} {
 }
 
 func hfOf(params []interface{}) interface{} {
-	return statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
+	template := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
+	obj := object.CopyObject(template)
+	fld := obj.FieldTable["delimiter"]
+	fld.Fvalue = []byte{}
+	obj.FieldTable["delimiter"] = fld
+	obj.FieldTable["prefix"] = fld
+	obj.FieldTable["suffix"] = fld
+	digits := statics.GetStaticValue("java/util/HexFormat", "LOWERCASE_DIGITS").([]byte)
+	fld = obj.FieldTable["digits"]
+	fld.Fvalue = digits
+	obj.FieldTable["digits"] = fld
+	return obj
 }
 
 func hfOfDelimiter(params []interface{}) interface{} {
 	delimiter := params[0].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	obj := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
+	template := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
+	obj := object.CopyObject(template)
 	fld := obj.FieldTable["delimiter"]
 	fld.Fvalue = delimiter
 	obj.FieldTable["delimiter"] = fld
@@ -550,4 +562,50 @@ func hfToLowHexDigit(params []interface{}) interface{} {
 	digits := obj.FieldTable["digits"].Fvalue.([]byte)
 	arg := params[1].(int64) % 256
 	return int64(digits[arg&0x0f])
+}
+
+// Helper function for hfEquals.
+func hfEqualsHelper(this, that *object.Object, fieldName string) bool {
+	f1, ok := this.FieldTable[fieldName].Fvalue.([]byte)
+	if !ok {
+		return false
+	}
+	f2, ok := this.FieldTable[fieldName].Fvalue.([]byte)
+	if !ok {
+		return false
+	}
+	if string(f1) != string(f2) {
+		return false
+	}
+	return true
+}
+
+// Returns true if the other object is a HexFormat and the parameters uppercase, delimiter, prefix, and suffix are equal;
+// otherwise false.
+func hfEquals(params []interface{}) interface{} {
+
+	this := params[0].(*object.Object)
+	that := params[1].(*object.Object)
+	if that.KlassName != this.KlassName {
+		return types.JavaBoolFalse
+	}
+	ok := hfEqualsHelper(this, that, "digits")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	ok = hfEqualsHelper(this, that, "prefix")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	ok = hfEqualsHelper(this, that, "suffix")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	ok = hfEqualsHelper(this, that, "delimiter")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+
+	return types.JavaBoolTrue
+
 }
