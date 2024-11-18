@@ -100,6 +100,9 @@ func IsNull(value any) bool {
 
 // Make a replica of an object.
 func CopyObject(oldObject *Object) *Object {
-	newObject := *oldObject
+	var newObject Object
+	newObject.Mark = oldObject.Mark
+	newObject.KlassName = oldObject.KlassName
+	newObject.FieldTable = oldObject.FieldTable
 	return &newObject
 }
