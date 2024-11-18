@@ -77,6 +77,7 @@ type AccessFlags struct {
 
 type Field struct {
 	AccessFlags int
+	NameStr     string
 	Name        uint16 // index of the UTF-8 entry in the CP
 	Desc        uint16 // index of the UTF-8 entry in the CP
 	IsStatic    bool   // is the field static?
