@@ -98,11 +98,20 @@ func IsNull(value any) bool {
 	return value == nil
 }
 
-// Make a replica of an object.
-func CopyObject(oldObject *Object) *Object {
+// Make a replica of an existing object.
+func CloneObject(oldObject *Object) *Object {
+	// Create new empty object.
 	newObject := MakeEmptyObject()
-	newObject.Mark = oldObject.Mark
+	// Mimic the class.
 	newObject.KlassName = oldObject.KlassName
-	newObject.FieldTable = oldObject.FieldTable
+	// Get a slice of keys from the old FieldTable.
+	keys := make([]string, 0, len(oldObject.FieldTable))
+	for key := range oldObject.FieldTable {
+		keys = append(keys, key)
+	}
+	// For each key in the old FieldTable, copy that entry into the new FieldTable.
+	for _, key := range keys {
+		newObject.FieldTable[key] = oldObject.FieldTable[key]
+	}
 	return newObject
 }
