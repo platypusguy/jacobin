@@ -65,3 +65,111 @@ func TestMakeValidPrimitiveDouble(t *testing.T) {
 		t.Errorf("Value should be 0x42.0, got 0x%f", value)
 	}
 }
+
+func TestCloneObject_1(t *testing.T) {
+	globals.InitGlobals("test")
+	obj1 := MakePrimitiveObject("java/lang/Double", types.Double, 42.0)
+	obj2 := CloneObject(obj1)
+
+	// Make sure that the class identifiers are identical.
+	if obj2.KlassName != obj1.KlassName {
+		t.Errorf("KlassName should be the same. obj1: %v, obj2: %v", obj1.KlassName, obj2.KlassName)
+	}
+
+	// Make sure that their hashes are different.
+	if obj2.Mark.Hash == obj1.Mark.Hash {
+		t.Errorf("Mark.Hash should be different. obj1: %v, obj2: %v", obj1.Mark.Hash, obj2.Mark.Hash)
+	}
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they are identical.
+	value1 := obj1.FieldTable["value"].Fvalue.(float64)
+	value2 := obj2.FieldTable["value"].Fvalue.(float64)
+	if value2 != value1 {
+		t.Errorf("value2 should equal value1, expected %f, observed %f", value1, value2)
+		return
+	}
+
+	// Change just the obj2 value.
+	fld := obj2.FieldTable["value"]
+	fld.Fvalue = 43.0
+	obj2.FieldTable["value"] = fld
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they differ in the expected manner.
+	value1 = obj1.FieldTable["value"].Fvalue.(float64)
+	value2 = obj2.FieldTable["value"].Fvalue.(float64)
+	if value1 != 42.0 || value2 != 43.0 {
+		t.Errorf("Expected value1=42.0 and value2=43.0 but observed value1=%f and value2=%f", 42.0, 43.0)
+		return
+	}
+
+}
+
+func TestCloneObject_2(t *testing.T) {
+	globals.InitGlobals("test")
+	obj1 := MakePrimitiveObject("flying/purple/PeopleEater", types.Int, 1958)
+	jthing := [3]int64{1, 2, 3}
+	fthing := [3]float64{4, 5, 6}
+	obj1.FieldTable["jane"] = Field{Ftype: types.LongArray, Fvalue: jthing}
+	obj1.FieldTable["felice"] = Field{Ftype: types.FloatArray, Fvalue: fthing}
+
+	obj2 := CloneObject(obj1)
+
+	// Make sure that the class identifiers are identical.
+	if obj2.KlassName != obj1.KlassName {
+		t.Errorf("KlassName should be the same. obj1: %v, obj2: %v", obj1.KlassName, obj2.KlassName)
+	}
+
+	// Make sure that their hashes are different.
+	if obj2.Mark.Hash == obj1.Mark.Hash {
+		t.Errorf("Mark.Hash should be different. obj1: %v, obj2: %v", obj1.Mark.Hash, obj2.Mark.Hash)
+	}
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they are identical.
+	jane1 := obj1.FieldTable["jane"].Fvalue.([3]int64)
+	jane2 := obj2.FieldTable["jane"].Fvalue.([3]int64)
+	if jane2 != jane1 {
+		t.Errorf("jane2 should equal jane1, expected %v, observed %v", jane1, jane2)
+		return
+	}
+
+	// Change just the obj2 value for jane.
+	fld := obj2.FieldTable["jane"]
+	fld.Fvalue = [3]int64{7, 8, 9}
+	obj2.FieldTable["jane"] = fld
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they differ in the expected manner.
+	jane1 = obj1.FieldTable["jane"].Fvalue.([3]int64)
+	jane2 = obj2.FieldTable["jane"].Fvalue.([3]int64)
+	if jane1 != [3]int64{1, 2, 3} || jane2 != [3]int64{7, 8, 9} {
+		t.Errorf("Expected jane1=[3]int64{1, 2, 3} and jane2=[3]int64{7, 8, 9} but observed jane1=%v and jane2=%v", jane1, jane2)
+		return
+	}
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they are identical.
+	felice1 := obj1.FieldTable["felice"].Fvalue.([3]float64)
+	felice2 := obj2.FieldTable["felice"].Fvalue.([3]float64)
+	if felice2 != felice1 {
+		t.Errorf("felice: felice2 should equal felice1, expected %v, observed %v", felice1, felice2)
+		return
+	}
+
+	// Change just the obj2 value for felice.
+	fld = obj2.FieldTable["felice"]
+	fld.Fvalue = [3]float64{7, 8, 9}
+	obj2.FieldTable["felice"] = fld
+
+	// Capture values for both obj1 and obj2.
+	// Then, make sure they differ in the expected manner.
+	felice1 = obj1.FieldTable["felice"].Fvalue.([3]float64)
+	felice2 = obj2.FieldTable["felice"].Fvalue.([3]float64)
+	if felice1 != [3]float64{4, 5, 6} || felice2 != [3]float64{7, 8, 9} {
+		t.Errorf("felice: Expected felice1=[3]float64{1, 2, 3} and felice2=[3]float64{7, 8, 9} but observed felice1=%v and felice2=%v", felice1, felice2)
+		return
+	}
+
+}
