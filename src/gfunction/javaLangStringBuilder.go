@@ -463,14 +463,10 @@ func stringBuilderAppend(params []any) any {
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
 
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
-
 	// Resolved parameter byte array, regardless of parameters:
 	var parmArray []byte
 
-	// Process based primarily on the params[0] type.
+	// Process based primarily on the params[1] type.
 	switch params[1].(type) {
 	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder
 		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
@@ -516,11 +512,11 @@ func stringBuilderAppend(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Append the second parameter (boolean) to the bytes in the StringBuilder that is
@@ -529,10 +525,6 @@ func stringBuilderAppendBoolean(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
-
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray []byte
 	switch params[1].(type) {
@@ -553,11 +545,11 @@ func stringBuilderAppendBoolean(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Append the second parameter (char) to the bytes in the StringBuilder that is
@@ -566,10 +558,6 @@ func stringBuilderAppendChar(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
 	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
-
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray = make([]byte, 1)
 	switch params[1].(type) {
@@ -585,11 +573,11 @@ func stringBuilderAppendChar(params []any) any {
 	// Set the byte count.
 	byteArray = append(byteArray, parmArray...)
 	count := int64(len(byteArray))
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Extract a character at the given index.
@@ -647,16 +635,12 @@ func stringBuilderDelete(params []any) any {
 	// New length of byte array --> count.
 	count := int64(len(newArray))
 
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
-
 	// Finalize output object.
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Insert the second parameter to the bytes into the StringBuilder
@@ -672,10 +656,6 @@ func stringBuilderInsert(params []any) any {
 		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
-
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray []byte
 	switch params[2].(type) {
@@ -729,11 +709,11 @@ func stringBuilderInsert(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Insert the boolean parameter into the bytes into the StringBuilder
@@ -749,10 +729,6 @@ func stringBuilderInsertBoolean(params []any) any {
 		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
-
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
 
 	var parmArray []byte
 	switch params[2].(type) {
@@ -779,11 +755,11 @@ func stringBuilderInsertBoolean(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Insert the char parameter into the bytes into the StringBuilder
@@ -799,10 +775,6 @@ func stringBuilderInsertChar(params []any) any {
 		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
-
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objBase.FieldTable
 
 	var bb byte
 	switch params[2].(type) {
@@ -823,18 +795,18 @@ func stringBuilderInsertChar(params []any) any {
 	newArray = append(newArray, byteArray[ix:]...)
 	count := int64(len(newArray))
 
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
-	expandCapacity(objOut, count)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: count}
+	expandCapacity(objBase, count)
 
-	return objOut
+	return objBase
 }
 
 // Replace the characters in a substring of this StringBuilder object with characters in the specified String.
 func stringBuilderReplace(params []any) any {
 	// Get byteArray.
-	objIn := params[0].(*object.Object)
-	fld := objIn.FieldTable["value"]
+	objBase := params[0].(*object.Object)
+	fld := objBase.FieldTable["value"]
 	initBytes := fld.Fvalue.([]byte)
 	initLen := int64(len(initBytes))
 
@@ -858,7 +830,7 @@ func stringBuilderReplace(params []any) any {
 
 	// If start = end, return object as-is.
 	if start == end {
-		return objIn
+		return objBase
 	}
 
 	// Copy the left-most retained bytes to a new byte array.
@@ -876,21 +848,18 @@ func stringBuilderReplace(params []any) any {
 	newArray = append(newArray, initBytes[end:]...)
 	newlen := int64(len(newArray))
 
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objIn.FieldTable
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
-	objOut.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
-	expandCapacity(objOut, newlen)
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: newArray}
+	objBase.FieldTable["count"] = object.Field{Ftype: types.Int, Fvalue: newlen}
+	expandCapacity(objBase, newlen)
 
-	return objOut
+	return objBase
 }
 
 // Reverse the order of the byte array.
 func stringBuilderReverse(params []any) any {
 	// Get byteArray.
-	objIn := params[0].(*object.Object)
-	fld := objIn.FieldTable["value"]
+	objBase := params[0].(*object.Object)
+	fld := objBase.FieldTable["value"]
 	byteArray := fld.Fvalue.([]byte)
 
 	// Reverse the bytes in byteArray.
@@ -898,12 +867,9 @@ func stringBuilderReverse(params []any) any {
 		byteArray[ii], byteArray[jj] = byteArray[jj], byteArray[ii]
 	}
 
-	// Initialise the output object.
-	objOut := object.MakeEmptyObjectWithClassName(&classStringBuilder)
-	objOut.FieldTable = objIn.FieldTable
-	objOut.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
+	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
 
-	return objOut
+	return objBase
 }
 
 // Set the char parameter into the bytes into the StringBuilder
