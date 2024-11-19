@@ -469,7 +469,7 @@ func hfFromHexDigit(params []interface{}) interface{} {
 
 func hfOf(params []interface{}) interface{} {
 	template := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
-	obj := object.CopyObject(template)
+	obj := object.CloneObject(template)
 	fld := obj.FieldTable["delimiter"]
 	fld.Fvalue = []byte{}
 	obj.FieldTable["delimiter"] = fld
@@ -485,7 +485,7 @@ func hfOf(params []interface{}) interface{} {
 func hfOfDelimiter(params []interface{}) interface{} {
 	delimiter := params[0].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	template := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
-	obj := object.CopyObject(template)
+	obj := object.CloneObject(template)
 	fld := obj.FieldTable["delimiter"]
 	fld.Fvalue = delimiter
 	obj.FieldTable["delimiter"] = fld
@@ -505,7 +505,7 @@ func hfWithPrefix(params []interface{}) interface{} {
 	prefix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	fld := obj1.FieldTable["prefix"]
 	fld.Fvalue = prefix
-	obj2 := object.CopyObject(obj1)
+	obj2 := object.CloneObject(obj1)
 	obj2.FieldTable["prefix"] = fld
 	return obj2
 }
@@ -515,7 +515,7 @@ func hfWithSuffix(params []interface{}) interface{} {
 	suffix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	fld := obj1.FieldTable["suffix"]
 	fld.Fvalue = suffix
-	obj2 := object.CopyObject(obj1)
+	obj2 := object.CloneObject(obj1)
 	obj2.FieldTable["suffix"] = fld
 	return obj2
 }
@@ -525,7 +525,7 @@ func hfWithDelimiter(params []interface{}) interface{} {
 	delimiter := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
 	fld := obj1.FieldTable["delimiter"]
 	fld.Fvalue = delimiter
-	obj2 := object.CopyObject(obj1)
+	obj2 := object.CloneObject(obj1)
 	obj2.FieldTable["delimiter"] = fld
 	return obj2
 }
@@ -535,7 +535,7 @@ func hfWithUpperCase(params []interface{}) interface{} {
 	fld := obj1.FieldTable["digits"]
 	digits := statics.GetStaticValue("java/util/HexFormat", "UPPERCASE_DIGITS")
 	fld.Fvalue = digits
-	obj2 := object.CopyObject(obj1)
+	obj2 := object.CloneObject(obj1)
 	obj2.FieldTable["digits"] = fld
 	return obj2
 }
@@ -545,7 +545,7 @@ func hfWithLowerCase(params []interface{}) interface{} {
 	fld := obj1.FieldTable["digits"]
 	digits := statics.GetStaticValue("java/util/HexFormat", "LOWERCASE_DIGITS")
 	fld.Fvalue = digits
-	obj2 := object.CopyObject(obj1)
+	obj2 := object.CloneObject(obj1)
 	obj2.FieldTable["digits"] = fld
 	return obj2
 }
