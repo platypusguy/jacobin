@@ -115,3 +115,16 @@ func CloneObject(oldObject *Object) *Object {
 	}
 	return newObject
 }
+
+// Merge all the fields from a source object to a destination object.
+func MergeFields(srcObj, dstObj *Object) {
+	// Get a slice of keys from the old FieldTable.
+	keys := make([]string, 0, len(srcObj.FieldTable))
+	for key := range srcObj.FieldTable {
+		keys = append(keys, key)
+	}
+	// For each key in the old FieldTable, copy that entry into the new FieldTable.
+	for _, key := range keys {
+		dstObj.FieldTable[key] = srcObj.FieldTable[key]
+	}
+}

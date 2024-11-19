@@ -87,6 +87,18 @@ func Load_Lang_Double() {
 			GFunction:  longBitsToDouble,
 		}
 
+	MethodSignatures["java/lang/Double.valueOf(Ljava/lang/String;)Ljava/lang/Double;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  doubleValueOf,
+		}
+
+	MethodSignatures["java/lang/Double.valueOf(D)Ljava/lang/Double;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  doubleValueOf,
+		}
+
 }
 
 // "java/lang/Double.byteValue()B"
@@ -215,4 +227,28 @@ func doubleToLongBits(params []interface{}) interface{} {
 func longBitsToDouble(params []interface{}) interface{} {
 	bits := params[0].(int64)
 	return math.Float64frombits(uint64(bits))
+}
+
+func doubleValueOf(params []interface{}) interface{} {
+	className := "java/lang/Double"
+	obj := object.MakeEmptyObjectWithClassName(&className)
+	switch params[0].(type) {
+	case float64:
+		obj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: params[0].(float64)}
+	case *object.Object:
+		that := params[0].(*object.Object)
+		str := string(that.FieldTable["value"].Fvalue.([]byte))
+		if len(str) < 1 {
+			return getGErrBlk(excNames.NullPointerException, "doubleValueOf: nil string argument")
+		}
+		dbl, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return getGErrBlk(excNames.NumberFormatException, "doubleValueOf: "+err.Error())
+		}
+		obj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: dbl}
+	default:
+		errMsg := fmt.Sprintf("doubleValueOf: unrecognizable parameter type: %T", params[0])
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return obj
 }
