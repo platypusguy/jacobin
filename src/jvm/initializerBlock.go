@@ -94,6 +94,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 		f.Thread = parentFrame.Thread
 	}
 	f.MethName = "<clinit>"
+	f.MethType = "()V"
 	f.ClName = k.Data.Name
 	f.CP = meth.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
