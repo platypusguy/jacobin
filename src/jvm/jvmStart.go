@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -147,12 +147,12 @@ func JVMrun() int {
 	}
 
 	// StartExec() runs the main thread. It does not return an error because all errors
-	// will be handled one of three ways: 1) trapped in an exception, which shutsdown the
+	// will be handled one of three ways: 1) trapped in an exception, which shuts down the
 	// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
 	// down after processing the error; 3) a undeferred go panic, which should never occur.
 	// Consequently, if StartExec() finishes, no errors were encountered.
 	//
-	// To test for errors, trap stderr, as do many of the unit tests.
+	// To test for errors, trap stderr, as many of the unit tests do.
 
 	StartExec(*mainClass, &MainThread, globPtr)
 
