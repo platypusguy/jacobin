@@ -56,7 +56,6 @@ func JVMrun() int {
 		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
 		stringPool.PreloadArrayClassesToStringPool()
-		trace.Init()
 	}
 	globPtr = globals.GetGlobalRef()
 

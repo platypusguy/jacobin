@@ -1,0 +1,86 @@
+Initialisation Steps
+====================
+
+[1] jvm/jvmStart.go JVMrun
+
+    * trace.init()
+    * Not a unit test:
+        - [2] globals.InitGlobals(os.Args[0])
+        - Call stringPool.PreloadArrayClassesToStringPool() to load simple types into the string pool.
+    * Set up global "Func" function pointers to avoid Golang circularity issues.
+    * Call statics.PreloadStatics() to load commonly-referenced static variables.
+    * Call LoadOptionsTable(...) to load Global.Options with all possible jacobin options with their processing function addresses.
+    * Call HandleCli(os.Args, ...) to parse the command-line options based on Global.Options.
+    * Check for early exit after HandleCli.
+    * [3] classloader.Init()
+    * classloader.LoadBaseClasses()
+    * If running from a jar file, process jar initialisation.
+    * If -ea set, add main.$assertionsDisabled = types.JavaBoolFalse to statics.
+    * Initialise classloader.MTable to an empty state.
+    * Load all the G-functions into classloader.MTable.
+    * Create the main thread (0) and add it to the global thread table.
+    * Call StartExec to begin executing the main class method "main".
+    * Exit to O/S normally.
+
+[2] globals/globals.go InitGlobals
+
+    * Set the Globals struct to initial values.
+    * Set the Trace parameters to false.
+    * InitStringPool()
+    * InitJavaHome()
+    * InitJacobinHome()
+    * Validate JAVA_HOME, JACOBIN_HOME
+    * InitArrayAddressList() <---- returns a new list that is currently thrown away!
+    * Set up global.FileEncoding depending on O/S.
+    * Set global.Headless = java.awt.headless flag set/absent in environment.
+    * Initialise global thread table to an empty state.
+    
+[3] classloader/classloader.go Init
+
+    * Initialise the three classloaders BootstrapCL, ExtensionCL, and AppCL.
+    * [4] JmodMapInit()
+    * Call GetBaseJmodBytes() to load global.JmodBaseBytes with the contents of the java.base.jmod file.
+    * [5] InitMethodArea() 
+
+[4] classloader/jmodMap.go JmodMapInit
+
+    * JMODMAP :: contains class-to-Jmod-File relationships for all installed jmod files. No class information is stored. Initially, nil.
+    * Gob file name = (v.v.v.gob) for the JAVA_HOME in use (version v.v.v).
+    * Assume that the gob file will not be found i.e. jmodMapFoundGob = false.
+    * For each file in the JacobinHome directory, try to find the matching gob file.
+    * If found,
+        - Call buildMapFromGob() to build JMODMAP from the gob file.
+        - If that call was unsuccessful (E.g. file corruption), force rebuilding.
+        - Return to JmodMapInit caller.
+    * Not found or forced rebuild: Call buildMapFromJmods() to build JMODMAP from the Java jmod files.
+    * Call saveMapToGob() to save JMODMAP to the gob file.
+
+[5] classloader/methArea.go InitMethodArea, MethAreaPreload
+
+    * MethArea :: sync.Map containing all the loaded classes. Key is the class name in java/lang/Object format. Initially, nil.
+    * Load all the types for primitive arrays (E.g. types.ByteArray). Each entry having a Klass structure like this:
+        - Status: 'N', // N = instantiated
+		- Loader: "bootstrap"
+		- Data.Name: type value (E.g. types.ByteArray)
+		- Data.NameIndex: string pool index of the type value
+		- Data.SuperclassIndex: string pool index of "java/lang/Object"
+
+
+Special Notes about MTable
+==========================
+
+FQN :: combination of class name, method name, and method type (input parameters and output)
+
+MTable :: holds the cached information of every method that the Jacobin interpreter encounters, keyed by FQN. As far as initialisation is concerned, MTable is nil. 
+Post-initialisation, the opcodes INVOKEVIRTUAL, INVOKESPECIAL, and INVOKESTATIC requests MTable entries for methods specified in the current frame.
+The Jacobin function which satisfies these requests is classloader/classes.go FetchMethodAndCP().
+
+The first time a new method is requested by the interpreter, FetchMethodAndCP will not find the FQN in MTable. The entry for that method will be constructed and added to MTable.
+Then, the MTable entry is returned to the interpreter. 
+
+The interpreter uses the MTable entry to execute the new method in one of two ways:
+    - J function: in a new frame.
+    - G function: within the existing frame through gfunctions/gfunctionExec.go RunGfunction().
+
+The second time the same method is requested (same FQN), it is found in MTable by FetchMethodAndCP and passed back to the interpreter. Method execution proceeds as described before.
+

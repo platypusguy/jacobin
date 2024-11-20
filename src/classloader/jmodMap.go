@@ -99,10 +99,11 @@ func JmodMapInit() {
 	}
 
 	// For each JacobinHome file, try to find a matching gob file
+	jmodMapFoundGob = false
 	for ix := range names {
 		name := names[ix]
 		if strings.HasSuffix(name, ".gob") { // Gob file?
-			version := strings.TrimSuffix(name, ".gob") // get rid of trailing .gom
+			version := strings.TrimSuffix(name, ".gob") // get rid of trailing .gob
 			if version == global.JavaVersion {
 				// Got a match!  Build map from it.
 				gobFullPath := global.JacobinHome + string(os.PathSeparator) + name
@@ -119,8 +120,7 @@ func JmodMapInit() {
 		}
 	}
 
-	// No matching gob file
-	jmodMapFoundGob = false
+	// No matching gob file or had gob file trouble (force re-creation).
 	buildMapFromJmods()
 	if jmodMapSize == 0 {
 		return
