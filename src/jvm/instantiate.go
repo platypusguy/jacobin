@@ -108,14 +108,31 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
-			f := k.Data.Fields[i]
-			name := k.Data.CP.Utf8Refs[f.Name]
+			fld := k.Data.Fields[i]
+			fldName := k.Data.CP.Utf8Refs[fld.Name]
 
-			fieldToAdd, err := createField(f, k, classname)
+			fieldToAdd, err := createField(fld, k, classname)
 			if err != nil {
 				return nil, err
 			}
-			obj.FieldTable[name] = *fieldToAdd
+			obj.FieldTable[fldName] = *fieldToAdd
+
+			// prepare the static fields, by inserting them w/ default values in Statics table
+			// See (https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2)
+			if fld.IsStatic {
+				var fldValue any
+				fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
+				switch fldType[0] {
+				case 'B', 'C', 'S', 'I', 'J', 'Z':
+					fldValue = int64(0)
+				case 'F', 'D':
+					fldValue = float64(0.00)
+				case 'L', '[':
+					fldValue = object.Null
+				}
+				statics.AddStatic(classname+"."+fldName,
+					statics.Static{Type: string(fldType[0]), Value: fldValue}) // CURR
+			}
 		} // loop through the fields if any
 		// add the field to the field table for this object
 
