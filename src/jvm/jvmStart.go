@@ -132,7 +132,7 @@ func JVMrun() int {
 	// Likely to be reinstated at some later point
 	// classloader.LoadReferencedClasses(mainClass)
 
-	// initialize the MTable (table caching methods)
+	// initialize the MTable (table caching methods) and load the gfunctions
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
