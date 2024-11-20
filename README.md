@@ -44,12 +44,13 @@ A more-than-minimal JVM written in Go.
 * Handle inner classes
 
 ### Verification, Linking, Preparation, Initialization
-* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.8) of class file.
-* Linking, preparation, and initialization -- minimally and only as needed at execution time
+* Performs [format check](https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.8) of class file.
+* Performs [preparation](https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2) of a loaded class file.
+* Linking and initialization -- minimally and only as needed at execution time
 
 **To do:**
 * Verification
-* Robust preparation and initialization
+* Robust linking and initialization
 
 ### Execution
 * Executes all bytecodes except INVOKEDYNAMIC, including one- and multi-dimensional arrays
