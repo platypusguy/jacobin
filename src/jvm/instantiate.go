@@ -174,7 +174,7 @@ runInitializer:
 	if ok && k.Data.ClInit == types.ClInitNotRun {
 		err := runInitializationBlock(k, superclasses, frameStack)
 		if err != nil {
-			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()", classname)
+			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()V", classname)
 			trace.Error(errMsg)
 			return nil, err
 		}

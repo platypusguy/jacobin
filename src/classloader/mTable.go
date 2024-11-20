@@ -22,7 +22,7 @@ import (
 //
 // When a function is invoked, the lookup mechanism first checks the MTable, and
 // if an entry is found, that entry is what is executed. If no entry is found,
-// the search goes to the class and faiing that to the superclass, etc. Once the
+// the search goes to the class and failing that to the superclass, etc. Once the
 // method is located, it's added to the MTable so that all future invocations will
 // result in fast look-ups in the MTable.
 var MTable = make(MT)

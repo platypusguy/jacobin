@@ -72,18 +72,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/io/FilterInputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

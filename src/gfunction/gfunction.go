@@ -91,6 +91,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Io_FileOutputStream()
 	Load_Io_FileReader()
 	Load_Io_FileWriter()
+	Load_Io_FilterInputStream()
 	Load_Io_InputStreamReader()
 	Load_Io_OutputStreamWriter()
 	Load_Io_PrintStream()
