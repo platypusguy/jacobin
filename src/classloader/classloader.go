@@ -450,9 +450,6 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 // load the parsed class into a form suitable for posting to the method area (which is
 // classloader.MethArea). This mostly involves copying the data, converting most indexes
 // to uint16 and removing some fields we needed in parsing, but which are no longer required.
-//
-// As of JACOBIN-575, methods are no longer included in the MethArea, but are all loaded into
-// the JVM-wide MTable (classloader.mTable).
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd := ClData{}

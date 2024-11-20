@@ -28,22 +28,22 @@ var Statics = make(map[string]Static)
 type Static struct {
 	Type string // see the possible returns in types/javatypes.go
 	// the kind of entity we're dealing with. Can be:
-	/*
-		B	byte signed byte (includes booleans)
-		C	char	Unicode character code point (UTF-16)
-		D	double
-		F	float
-		I	int	integer
-		J	long integer
-		L ClassName ;	reference	an instance of class ClassName
-		S	signed short int
-		Z	boolean
-		[x   array of x, where x is any primitive or a reference
-		plus (Jacobin implementation-specific):
-		G   native method (that is, one written in Go)
-		T	string (ptr to an object, but facilitates processing knowing it's a string)
-		GS  Go I/O stream (os.Stdin, os.Stdout, os.Stderr)
-	*/
+	// B	byte signed byte (includes booleans)
+	// C	char	Unicode character code point (UTF-16)
+	// D	double
+	// F	float
+	// I	int	integer
+	// J	long integer
+	// LClassName;	reference to an instance of an object of class ClassName
+	// S	signed short int
+	// Z	boolean
+	// [x   array of x, where x is any primitive or a reference
+	//
+	// plus (Jacobin implementation-specific):
+	// G   native method (that is, one written in Go)
+	// T   string (ptr to an object, but facilitates processing knowing it's a string)
+	// GS  Go I/O stream (os.Stdin, os.Stdout, os.Stderr)
+
 	Value any
 }
 
@@ -165,6 +165,7 @@ func DumpStatics() {
 	for _, key := range keys {
 		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
 			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
+			
 			_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
 		}
 	}
