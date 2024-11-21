@@ -86,7 +86,9 @@ func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
 
 // Null is the Jacobin implementation of Java's null
 var zero64 = uint64(0)
-var Null *Object = (*Object)(unsafe.Pointer(&zero64))
+
+// var Null *Object = (*Object)(unsafe.Pointer(&zero64))
+var Null *Object = (*Object)(nil)
 
 // determines whether a value is null or not
 func IsNull(value any) bool {
