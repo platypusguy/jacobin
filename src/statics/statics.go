@@ -158,6 +158,8 @@ func DumpStatics() {
 	for key := range Statics {
 		keys = append(keys, key)
 	}
+
+	var value string
 	// Sort the keys.
 	// All the upper case entries precede all the lower case entries.
 	sort.Strings(keys)
@@ -165,8 +167,14 @@ func DumpStatics() {
 	for _, key := range keys {
 		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
 			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
-			
-			_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
+			st := Statics[key]
+			// due to circularity, we can't test directly for object.Null, so we do this.
+			if (st.Type == "L" || st.Type == "[") && st.Value == nil {
+				value = "null"
+			} else {
+				value = fmt.Sprintf("%v", st.Value)
+			}
+			_, _ = fmt.Fprintf(os.Stderr, "%-30s   %-10s{%s %s}\n", key, "", st.Type, value)
 		}
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
