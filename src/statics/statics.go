@@ -168,13 +168,13 @@ func DumpStatics() {
 		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
 			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
 			st := Statics[key]
-			// due to circularity, we can't test directly for object.Null, so we do this.
+			// due to circular dependence on object, we can't test directly for object.Null, so we do this.
 			if (st.Type == "L" || st.Type == "[") && st.Value == nil {
 				value = "null"
 			} else {
 				value = fmt.Sprintf("%v", st.Value)
 			}
-			_, _ = fmt.Fprintf(os.Stderr, "%-30s   %-10s{%s %s}\n", key, "", st.Type, value)
+			_, _ = fmt.Fprintf(os.Stderr, "%-40s   {%s %s}\n", key, st.Type, value)
 		}
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
