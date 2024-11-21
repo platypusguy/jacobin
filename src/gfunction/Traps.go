@@ -120,34 +120,16 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
+	MethodSignatures["java/nio/ByteBuffer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  trapClass,
 		}
 
 	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
-	MethodSignatures["java/rmi/RMISecurityManager.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
+			GFunction:  trapClass,
 		}
 
 	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
@@ -162,28 +144,46 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/rmi/RMISecurityManager.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["sun/security/util/Debug.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
 }
 
 // Generic trap for classes
 func trapClass([]interface{}) interface{} {
-	errMsg := "The requested class is not yet supported"
+	errMsg := "TRAP: The requested class is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for deprecated classes and functions
 func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The requested class or function is deprecated and, therefore, not supported"
+	errMsg := "TRAP: The requested class or function is deprecated and, therefore, not supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for deprecated classes and functions
 func trapUndocumented([]interface{}) interface{} {
-	errMsg := "The requested class or function is undocumented and, therefore, not supported"
+	errMsg := "TRAP: The requested class or function is undocumented and, therefore, not supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for functions
 func trapFunction([]interface{}) interface{} {
-	errMsg := "The requested function is not yet supported"
+	errMsg := "TRAP: The requested function is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }

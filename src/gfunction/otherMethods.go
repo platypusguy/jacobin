@@ -68,6 +68,24 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnCharsetName,
+		}
+
+	MethodSignatures["java/nio/charset/Charset.name()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnCharsetName,
+		}
+
 	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
