@@ -546,6 +546,7 @@ func TestNewNewWithError(t *testing.T) {
 
 // PEEK: test peek, stack underflow
 func TestNewPeekWithStackUnderflow(t *testing.T) {
+	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -575,15 +576,15 @@ func TestNewPeekWithStackUnderflow(t *testing.T) {
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 	classloader.LoadBaseClasses()
 	_ = classloader.LoadClassFromNameOnly("java/lang/Object")
-	classloader.FetchMethodAndCP("java/lang/Object", "wait", "(JI)V")
 
 	th := thread.CreateThread()
 	th.AddThreadToTable(gl)
 
 	f := frames.CreateFrame(1)
-	f.ClName = "java/lang/Object"
-	f.MethName = "wait"
-	f.MethType = "(JI)V"
+	f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
+	f.MethName = "hashCode"       // -------------------------------------------
+	f.MethType = "()I"            // -------------------------------------------
+	_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
 	for i := 0; i < 4; i++ {
 		f.OpStack = append(f.OpStack, int64(0))
 	}
@@ -599,6 +600,7 @@ func TestNewPeekWithStackUnderflow(t *testing.T) {
 	fs.PushFront(f)
 	th.Stack = fs
 
+	//classloader.DumpMTable() // TODO: Comment this out!
 	_ = peek(f)
 
 	_ = w.Close()

@@ -7,6 +7,9 @@
 package classloader
 
 import (
+	"fmt"
+	"os"
+	"sort"
 	"sync"
 )
 
@@ -70,4 +73,25 @@ func AddEntry(tbl *MT, key string, mte MTentry) {
 	MTmutex.Lock()
 	mt[key] = mte
 	MTmutex.Unlock()
+}
+
+// DumpMTable dumps the contents of MTable in sorted order to stderr
+func DumpMTable() {
+	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpMTable BEGIN")
+	// Create an array of keys.
+	keys := make([]string, 0, len(MTable))
+	for key := range MTable {
+		keys = append(keys, key)
+	}
+
+	// Sort the keys (FQNs).
+	// All the upper case entries precede all the lower case entries.
+	sort.Strings(keys)
+
+	// In key sequence order, display the key and its value.
+	for _, key := range keys {
+		entry := MTable[key]
+		_, _ = fmt.Fprintf(os.Stderr, "%s   %s\n", string(entry.MType), key)
+	}
+	_, _ = fmt.Fprintln(os.Stderr, "===== DumpMTable END")
 }

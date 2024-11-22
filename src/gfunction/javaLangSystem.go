@@ -363,8 +363,8 @@ func getProperty(params []interface{}) interface{} {
 		} else {
 			value = "\\n"
 		}
-	case "native.encoding": // hard to find out what this is, so hard-coding to UTF8
-		value = "UTF8"
+	case "native.encoding":
+		value = globals.GetCharsetName()
 	case "os.arch":
 		value = runtime.GOARCH
 	case "os.name":

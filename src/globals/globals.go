@@ -346,3 +346,7 @@ func InitStringPool() {
 
 	StringPoolLock.Unlock()
 }
+
+func GetCharsetName() string {
+	return global.FileEncoding
+}
