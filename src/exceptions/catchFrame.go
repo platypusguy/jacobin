@@ -69,8 +69,7 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	}
 
 	if methEntry.MType != 'J' {
-		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s is a native method", fullMethName)
-		minimalAbort(excNames.InternalException, errMsg)
+		return nil, -1 // G-functions have no exception handlers
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
