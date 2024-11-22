@@ -156,10 +156,16 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["sun/security/util/Debug.<clinit>()V"] =
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
 		}
 
 }

@@ -116,4 +116,10 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["sun/security/util/Debug.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 }
