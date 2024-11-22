@@ -1806,7 +1806,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
+		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s.%s", className, fieldName)
 		trace.Error(errMsg)
 		return exceptions.ERROR_OCCURRED
 	}
@@ -1881,7 +1881,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			}
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
+			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized for %s.%s: %T %v", className, fieldName, value, value)
 			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
 		}
