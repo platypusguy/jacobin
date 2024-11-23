@@ -145,8 +145,12 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// Load traps that lead to unconditional error returns.
 	Load_Traps()
 
+	// jacobin JVM diagnostic routines
+	Load_jj()
+
 	//	now, with the accumulated MethodSignatures maps, load MTable.
 	loadlib(MTable, MethodSignatures)
+
 }
 
 // load the test gfunctions in testGfunctions.go
