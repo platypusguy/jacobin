@@ -29,10 +29,34 @@ func Load_Io_InputStreamReader() {
 			GFunction:  inputStreamReaderInit,
 		}
 
+	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/nio/charset/Charset;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/nio/charset/CharsetDecoder;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/io/InputStreamReader.close()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  isrClose,
+		}
+
+	MethodSignatures["java/io/InputStreamReader.getEncoding()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnCharsetName,
 		}
 
 	MethodSignatures["java/io/InputStreamReader.read()I"] =
@@ -51,34 +75,6 @@ func Load_Io_InputStreamReader() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  isrReady,
-		}
-
-	// -----------------------------------------
-	// Traps that do nothing but return an error
-	// -----------------------------------------
-
-	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/lang.String;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/nio/charset/Charset;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/nio/charset/CharsetDecoder;)Ljava/lang.String;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/io/InputStreamReader.getEncoding()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
 		}
 
 }

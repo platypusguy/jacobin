@@ -29,7 +29,7 @@ func Load_Io_Console() {
 			GFunction:  consoleClinit,
 		}
 
-	// Flushes the console and forces any buffered output to be written immediately.
+	// Returns the Charset object used for the Console.
 	MethodSignatures["java/io/Console.charset()Ljava/nio/charset/Charset;"] =
 		GMeth{
 			ParamSlots: 0,

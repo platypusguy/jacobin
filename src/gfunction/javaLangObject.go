@@ -18,10 +18,30 @@ import (
 
 func Load_Lang_Object() {
 
+	MethodSignatures["java/lang/Object.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 	MethodSignatures["java/lang/Object.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  justReturn,
+		}
+
+	// "java/lang/Object.clone(Ljava/lang/Object;)Ljava/lang/Object;" is PROTECTED
+
+	MethodSignatures["java/lang/Object.equals(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Object.finalize()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
 		}
 
 	MethodSignatures["java/lang/Object.getClass()Ljava/lang/Class;"] =
@@ -30,11 +50,47 @@ func Load_Lang_Object() {
 			GFunction:  objectGetClass,
 		}
 
+	MethodSignatures["java/lang/Object.hashCode()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Object.notify()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Object.notifyAll()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/Object.toString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  objectToString,
 		}
+
+	MethodSignatures["java/lang/Object.wait()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Object.wait(J)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	/*MethodSignatures["java/lang/Object.wait(JI)V"] =
+	GMeth{
+		ParamSlots: 2,
+		GFunction:  trapFunction,
+	}*/
 
 }
 

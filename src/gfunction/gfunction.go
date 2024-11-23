@@ -11,6 +11,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/trace"
 	"jacobin/types"
@@ -73,6 +74,10 @@ func clinitGeneric([]interface{}) interface{} {
 // do-nothing Go function shared by several source files
 func justReturn([]interface{}) interface{} {
 	return object.StringObjectFromGoString("justReturn")
+}
+
+func returnCharsetName([]interface{}) interface{} {
+	return object.StringObjectFromGoString(globals.GetCharsetName())
 }
 
 // MTableLoadGFunctions loads the Go methods from files that contain them. It does this
