@@ -169,10 +169,13 @@ func DumpStatics() {
 			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
 			st := Statics[key]
 			// due to circular dependence on object, we can't test directly for object.Null, so we do this.
-			if (st.Type == "L" || st.Type == "[") && st.Value == nil {
-				value = "null"
+			if (strings.HasPrefix(st.Type, "L") || strings.HasPrefix(st.Type, "[")) && st.Value == nil {
+				value = "<null>"
 			} else {
 				value = fmt.Sprintf("%v", st.Value)
+			}
+			if strings.HasPrefix(st.Type, "X") {
+				st.Type = st.Type[1:] // remove X type prefix, which says field is static
 			}
 			_, _ = fmt.Fprintf(os.Stderr, "%-40s   {%s %s}\n", key, st.Type, value)
 		}
