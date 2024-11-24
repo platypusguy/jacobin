@@ -1806,7 +1806,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
+		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s.%s", className, fieldName)
 		trace.Error(errMsg)
 		return exceptions.ERROR_OCCURRED
 	}
@@ -1881,7 +1881,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			}
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
+			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
 			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
 		}
@@ -1924,8 +1924,17 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		break
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
+		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s.%s", ref, fr.ClName, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// Check reference for a nil pointer.
+	if ref.(*object.Object) == nil {
+		errMsg := fmt.Sprintf("GETFIELD: Invalid (null) reference to a field: %s.%s", fr.ClName, fieldName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
