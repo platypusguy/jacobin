@@ -307,7 +307,9 @@ func interpret(fs *list.List) {
 			case exceptions.RESUME_HERE: // continue processing from the present fr.PC
 				// This primarily occurs when an exception is caught. The catch resets
 				// the PC to the catch code to execute. So, we don't need any update to
-				// the PC.
+				// the PC. However, we have to refresh the current frame b/c the
+				// exception will refresh the topmost frame with any exception handling
+				fr = fs.Front().Value.(*frames.Frame)
 			default:
 				fr.PC += ret
 			}
