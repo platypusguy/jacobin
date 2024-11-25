@@ -73,7 +73,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	}
 
 	// Reverse the parameter order. Last appended will be fetched first.
-	if paramCount > 0 {
+	if paramCount > 1 {
 		slices.Reverse(*params)
 	}
 

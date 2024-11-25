@@ -2363,8 +2363,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			}
 		}
 
-		fr.PC += 2                    // 2 == initial PC advance in this bytecode (see above)
-		fr.PC += 1                    // to point to the next bytecode before exiting
+		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
