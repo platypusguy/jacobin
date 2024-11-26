@@ -1683,18 +1683,20 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	field := CP.FieldRefs[CPentry.Slot]
 
 	// get the class entry from the field entry for this field. It's the class name.
-	classRef := field.ClassIndex
-	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-	classNamePtr := stringPool.GetStringPointer(classNameIndex)
-	className := *classNamePtr
+	// classRef := field.ClassIndex
+	// classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+	// classNamePtr := stringPool.GetStringPointer(classNameIndex)
+	// className := *classNamePtr
+	className := field.ClName
 
 	// process the name and type entry for this field
-	nAndTindex := field.NameAndType
-	nAndTentry := CP.CpIndex[nAndTindex]
-	nAndTslot := nAndTentry.Slot
-	nAndT := CP.NameAndTypes[nAndTslot]
-	fieldNameIndex := nAndT.NameIndex
-	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	// nAndTindex := field.NameAndType
+	// nAndTentry := CP.CpIndex[nAndTindex]
+	// nAndTslot := nAndTentry.Slot
+	// nAndT := CP.NameAndTypes[nAndTslot]
+	// fieldNameIndex := nAndT.NameIndex
+	// fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
 		emitTraceFieldID("GETSTATIC", fieldName)
@@ -1769,18 +1771,20 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	field := CP.FieldRefs[CPentry.Slot]
 
 	// get the class entry from the field entry for this field. It's the class name.
-	classRef := field.ClassIndex
-	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-	classNamePtr := stringPool.GetStringPointer(classNameIndex)
-	className := *classNamePtr
+	// classRef := field.ClassIndex
+	// classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
+	// classNamePtr := stringPool.GetStringPointer(classNameIndex)
+	// className := *classNamePtr
+	className := field.ClName
 
 	// process the name and type entry for this field
-	nAndTindex := field.NameAndType
-	nAndTentry := CP.CpIndex[nAndTindex]
-	nAndTslot := nAndTentry.Slot
-	nAndT := CP.NameAndTypes[nAndTslot]
-	fieldNameIndex := nAndT.NameIndex
-	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	// nAndTindex := field.NameAndType
+	// nAndTentry := CP.CpIndex[nAndTindex]
+	// nAndTslot := nAndTentry.Slot
+	// nAndT := CP.NameAndTypes[nAndTslot]
+	// fieldNameIndex := nAndT.NameIndex
+	// fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
 		emitTraceFieldID("PUTSTATIC", fieldName)
@@ -1907,12 +1911,13 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	// Get field name.
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-	nameAndTypeCPIndex := fullFieldEntry.NameAndType
-	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-	nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-	nameCPIndex := nameAndType.NameIndex
-	nameCPentry := CP.CpIndex[nameCPIndex]
-	fieldName := CP.Utf8Refs[nameCPentry.Slot]
+	// nameAndTypeCPIndex := fullFieldEntry.NameAndType
+	// nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+	// nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+	// nameCPIndex := nameAndType.NameIndex
+	// nameCPentry := CP.CpIndex[nameCPIndex]
+	// fieldName := CP.Utf8Refs[nameCPentry.Slot]
+	fieldName := fullFieldEntry.FldName
 	if globals.TraceVerbose {
 		emitTraceFieldID("GETFIELD", fieldName)
 	}
@@ -2035,12 +2040,13 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	// otherwise look up the field name in the CP and find it in the FieldTable, then do the update
 	if len(obj.FieldTable) != 0 {
 		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-		nameAndTypeCPIndex := fullFieldEntry.NameAndType
-		nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-		nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-		nameCPIndex := nameAndType.NameIndex
-		nameCPentry := CP.CpIndex[nameCPIndex]
-		fieldName := CP.Utf8Refs[nameCPentry.Slot]
+		// nameAndTypeCPIndex := fullFieldEntry.NameAndType
+		// nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
+		// nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
+		// nameCPIndex := nameAndType.NameIndex
+		// nameCPentry := CP.CpIndex[nameCPIndex]
+		// fieldName := CP.Utf8Refs[nameCPentry.Slot]
+		fieldName := fullFieldEntry.FldName
 		if globals.TraceVerbose {
 			emitTraceFieldID("PUTFIELD", fieldName)
 		}

@@ -22,6 +22,7 @@ type Klass struct {
 	Data   *ClData
 }
 
+// the class data, as it's posted to the method area
 type ClData struct {
 	Name            string
 	NameIndex       uint32 // index into StringPool
@@ -39,12 +40,13 @@ type ClData struct {
 	ClInit          byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
 }
 
+// the CP of the loaded class (see above)
 type CPool struct {
 	CpIndex        []CpEntry // the constant pool index to entries
 	ClassRefs      []uint32  // points to a string pool entry = class name
 	Doubles        []float64
 	Dynamics       []DynamicEntry
-	FieldRefs      []FieldRefEntry
+	FieldRefs      []ResolvedFieldEntry
 	Floats         []float32
 	IntConsts      []int32 // 32-bit int containing the actual int value
 	InterfaceRefs  []InterfaceRefEntry
