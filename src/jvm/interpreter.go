@@ -1703,9 +1703,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.Statics[fieldName]
 	if !ok { // if field is not already loaded, then
-		// the class has not been instantiated, so
-		// instantiate the class
-		// _, err := instantiateClass(className, fr.FrameStack)
+		// the class has not been instantiated, so instantiate the class
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
 			prevLoaded, ok = statics.Statics[fieldName]
