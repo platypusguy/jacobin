@@ -7,31 +7,23 @@
 package jvm
 
 import (
-	"container/list"
-	"encoding/binary"
-	"errors"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/config"
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/frames"
-	"jacobin/gfunction"
 	"jacobin/globals"
 	"jacobin/object"
-	"jacobin/opcodes"
 	"jacobin/shutdown"
 	"jacobin/statics"
-	"jacobin/stringPool"
 	"jacobin/thread"
 	"jacobin/trace"
 	"jacobin/types"
 	"jacobin/util"
-	"math"
 	"os"
 	"runtime/debug"
 	"strconv"
-	"strings"
 )
 
 var MainThread thread.ExecThread
@@ -132,6 +124,7 @@ func runThread(t *thread.ExecThread) error {
 	return nil
 }
 
+/*
 // runFrame() is the principal execution function in Jacobin. It first tests for a
 // golang function in the present frame. If it is a golang function, it's sent to
 // a different function for execution. Otherwise, bytecode interpretation takes
@@ -2868,8 +2861,8 @@ frameInterpreter:
 					}
 					trace.Trace(traceInfo)
 				}
-			*/
-			/* we now have the resolved class (className) and the objectref (obj)
+
+			e now have the resolved class (className) and the objectref (obj)
 			    The rules for identifying obj can be cast to classname are (from the JVM 17 spec):
 
 				If objectref can be cast to the resolved class, array, or interface type, the operand stack is
@@ -2892,66 +2885,8 @@ frameInterpreter:
 				  must be true:
 					> TC and SC are the same primitive type.
 					> TC and SC are reference types, and type SC can be cast to TC by
-				      recursive application of these rules. */
+				      recursive application of these rules.
 
-			// if strings.HasPrefix(className, "[") { // the object being checked is an array
-			// 	if obj.KlassName != types.InvalidStringIndex {
-			// 		sptr := stringPool.GetStringPointer(obj.KlassName)
-			// 		// for the nonce if they're both the same type of arrays, we're good
-			// 		// TODO: if both are arrays of reference, check the leaf types
-			// 		if *sptr == className || strings.HasPrefix(className, *sptr) {
-			// 			break // exit this bytecode processing
-			// 		} else {
-			// 			/*** TODO: bypass this Throw action. Right thing to do?
-			// 			  errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s", className, *sptr)
-			// 			  status := exceptions.ThrowEx(exceptions.ClassCastException, errMsg)
-			// 			  if status != exceptions.Caught {
-			// 			  	return errors.New(errMsg) // applies only if in test
-			// 			  }
-			// 			  ***/
-			// 			warnMsg := fmt.Sprintf("CHECKCAST: casting %s to %s might be unpleasant!", className, *sptr)
-			// 			trace.Trace(warnMsg)
-			// 		}
-			// 	} else {
-			// 		glob.ErrorGoStack = string(debug.Stack())
-			// 		errMsg := fmt.Sprintf("CHECKCAST: Klass field for object is nil")
-			// 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-			// 		if status != exceptions.Caught {
-			// 			return errors.New(errMsg) // applies only if in test
-			// 		}
-			// 	}
-			// } else {
-			// // the object being checked is a class
-			// classPtr := classloader.MethAreaFetch(className)
-			// if classPtr == nil { // class wasn't loaded, so load it now
-			// 	if classloader.LoadClassFromNameOnly(className) != nil {
-			// 		glob.ErrorGoStack = string(debug.Stack())
-			// 		return errors.New("CHECKCAST: Could not load class: " + className)
-			// 	}
-			// 	classPtr = classloader.MethAreaFetch(className)
-			// }
-			//
-			// // if classPtr does not point to the entry for the same class, then examine superclasses
-			// if classPtr != classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
-			// 	if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
-			// 		goto checkcastOK
-			// 	}
-			//
-			// 	glob.ErrorGoStack = string(debug.Stack())
-			// 	errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",
-			// 		className, classPtr.Data.Name)
-			// 	status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, f)
-			// 	if status != exceptions.Caught {
-			// 		return errors.New(errMsg) // applies only if in test
-			// 	}
-			// } else {
-			// 	goto checkcastOK // they both point to the same class, so perforce castable
-			// }
-			// } // end of checking an object that's not an array
-			// }
-		// checkcastOK:
-		// 	f.PC += 1
-		// 	continue // if CHECKCAST succeeds, do nothing
 
 		case opcodes.INSTANCEOF: // 0xC1 validate the type of object (if not nil or null)
 			// because this uses similar logic to CHECKCAST, any change here should
@@ -3174,6 +3109,7 @@ frameInterpreter:
 	}
 	return nil
 }
+*/
 
 func add[N frames.Number](num1, num2 N) N {
 	return num1 + num2

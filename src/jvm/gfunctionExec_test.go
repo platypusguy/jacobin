@@ -87,7 +87,7 @@ func TestGfunctionExecValid(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -194,7 +194,7 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	_ = runFrame(fs)
+	interpret(fs)
 
 	// get contents written by stderr and stdout, then
 	// restore stderr and stdout to what they were before the test
