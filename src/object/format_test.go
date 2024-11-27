@@ -58,12 +58,6 @@ func TestDumpObjectFieldTable(t *testing.T) {
 	}
 	obj.FieldTable["myByte"] = myByteField
 
-	myStaticTrueField := Field{
-		Ftype:  types.Static + types.Bool,
-		Fvalue: true,
-	}
-	obj.FieldTable["myStaticTrue"] = myStaticTrueField
-
 	myFalseField := Field{
 		Ftype:  types.Bool,
 		Fvalue: false,
@@ -128,12 +122,6 @@ func TestFormatField(t *testing.T) {
 		Fvalue: 0x61,
 	}
 	obj.FieldTable["myByte"] = myByteField
-
-	myStaticTrueField := Field{
-		Ftype:  types.Static + types.Bool,
-		Fvalue: true,
-	}
-	obj.FieldTable["myStaticTrue"] = myStaticTrueField
 
 	myFalseField := Field{
 		Ftype:  types.Bool,
