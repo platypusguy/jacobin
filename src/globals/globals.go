@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -347,6 +348,15 @@ func InitStringPool() {
 	StringPoolLock.Unlock()
 }
 
+// Get the character set name.
 func GetCharsetName() string {
 	return global.FileEncoding
+}
+
+// Case-insensitive sort.
+// Golang should have provided this!
+func SortCaseInsensitive(ptrSlice *[]string) {
+	slices.SortFunc(*ptrSlice, func(a, b string) int {
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))
+	})
 }

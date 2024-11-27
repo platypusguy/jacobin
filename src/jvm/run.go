@@ -92,7 +92,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globalStruct *gl
 	err = runThread(&MainThread)
 
 	if globals.TraceVerbose {
-		statics.DumpStatics()
+		statics.DumpStatics("StartExec end", statics.SelectUser, "")
 		_ = config.DumpConfig(os.Stderr)
 	}
 }

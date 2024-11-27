@@ -14,7 +14,6 @@ import (
 	"jacobin/types"
 	"os"
 	"runtime/debug"
-	"sort"
 	"strings"
 	"sync"
 )
@@ -50,6 +49,7 @@ type Static struct {
 var staticsMutex = sync.RWMutex{}
 
 // AddStatic adds a static field to the Statics table using a mutex
+// name: className.fieldName
 func AddStatic(name string, s Static) error {
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
@@ -150,35 +150,66 @@ func GetStaticValue(className string, fieldName string) any {
 	return retValue
 }
 
+const SelectAll = int64(1)
+const SelectClass = int64(2)
+const SelectUser = int64(3)
+
 // DumpStatics dumps the contents of the statics table in sorted order to stderr
-func DumpStatics() {
-	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpStatics BEGIN")
-	// Create an array of keys.
+func DumpStatics(from string, selection int64, className string) {
+	_, _ = fmt.Fprintf(os.Stderr, "\n===== DumpStatics BEGIN, from=\"%s\", selection=%d, className=\"%s\"\n",
+		from, selection, className)
+
+	if selection == SelectClass && len(className) < 1 {
+		_, _ = fmt.Fprintln(os.Stderr, "ERROR, no class name specified!\n===== DumpStatics END")
+		return
+	}
+
+	// Create a slice of keys.
 	keys := make([]string, 0, len(Statics))
 	for key := range Statics {
 		keys = append(keys, key)
 	}
 
+	// Sort the keys, case-insensitive.
+	globals.SortCaseInsensitive(&keys)
+
+	// Process the key slice, depending on selection value.
 	var value string
-	// Sort the keys.
-	// All the upper case entries precede all the lower case entries.
-	sort.Strings(keys)
-	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
-			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
-			st := Statics[key]
-			// due to circular dependence on object, we can't test directly for object.Null, so we do this.
-			if (strings.HasPrefix(st.Type, "L") || strings.HasPrefix(st.Type, "[")) && st.Value == nil {
-				value = "<null>"
-			} else {
-				value = fmt.Sprintf("%v", st.Value)
+		st := Statics[key]
+
+		// Filter switch.
+		switch selection {
+		case SelectClass:
+			left := strings.Split(key, ".")
+			if left[0] != className {
+				continue
 			}
-			if strings.HasPrefix(st.Type, "X") {
-				st.Type = st.Type[1:] // remove X type prefix, which says field is static
+		case SelectUser:
+			if strings.HasPrefix(key, "java/") || strings.HasPrefix(key, "jdk/") ||
+				strings.HasPrefix(key, "javax/") || strings.HasPrefix(key, "sun") {
+				continue
 			}
-			_, _ = fmt.Fprintf(os.Stderr, "%-40s   {%s %s}\n", key, st.Type, value)
+		case SelectAll: // passthrough: nothing here to filter
+		default:
+			_, _ = fmt.Fprintf(os.Stderr, "ERROR, illegal selection specified: %d!\n===== DumpStatics END", selection)
+			return
 		}
+
+		// due to circular dependence on object, we can't test directly for object.Null, so we do this.
+		if (strings.HasPrefix(st.Type, "L") || strings.HasPrefix(st.Type, "[")) && st.Value == nil {
+			value = "<null>"
+		} else {
+			value = fmt.Sprintf("%v", st.Value)
+		}
+
+		// Prefix name with statics designation (X).
+		if strings.HasPrefix(st.Type, "X") {
+			st.Type = st.Type[1:] // remove X type prefix, which says field is static
+		}
+
+		// Print it.
+		_, _ = fmt.Fprintf(os.Stderr, "%-40s   {%s %s}\n", key, st.Type, value)
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }
