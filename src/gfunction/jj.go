@@ -27,6 +27,12 @@ func Load_jj() {
 			ParamSlots: 3,
 			GFunction:  jjDumpStatics,
 		}
+
+	MethodSignatures["jj._dumpObject(Ljava/lang/Object;Ljava/lang/String;I)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  jjDumpObject,
+		}
 }
 
 func jjDumpStatics(params []interface{}) interface{} {
@@ -41,5 +47,14 @@ func jjDumpStatics(params []interface{}) interface{} {
 	className := object.ObjectFieldToString(classNameObj, "value")
 
 	statics.DumpStatics(from, selection, className)
+	return nil
+}
+
+func jjDumpObject(params []interface{}) interface{} {
+	this := params[0].(*object.Object)
+	objTitle := params[1].(*object.Object)
+	title := object.ObjectFieldToString(objTitle, "value")
+	indent := params[2].(int64)
+	this.DumpObject(title, int(indent))
 	return nil
 }
