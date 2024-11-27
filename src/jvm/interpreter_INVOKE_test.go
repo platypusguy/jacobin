@@ -593,6 +593,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 // INVOKEVIRTUAL : invoke method -- here testing for error
 func TestNewInvokevirtualInvalid(t *testing.T) {
 	globals.InitGlobals("test")
+
 	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -607,8 +608,13 @@ func TestNewInvokevirtualInvalid(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a method ref
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:  "testClass",
+		FldName: "testField",
+		FldType: "I",
+	}
+	
 	f.CP = &CP
 
 	fs := frames.CreateFrameStack()
