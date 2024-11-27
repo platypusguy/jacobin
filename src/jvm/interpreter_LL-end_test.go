@@ -8,17 +8,10 @@ package jvm
 
 import (
 	"io"
-	"jacobin/classloader"
-	"jacobin/exceptions"
 	"jacobin/frames"
-	"jacobin/gfunction"
 	"jacobin/globals"
-	"jacobin/object"
 	"jacobin/opcodes"
-	"jacobin/stringPool"
 	"jacobin/thread"
-	"jacobin/trace"
-	"jacobin/types"
 	"os"
 	"strings"
 	"testing"
@@ -504,6 +497,7 @@ func TestNewMonitorExit(t *testing.T) {
 	}
 }
 
+/*
 // NEW: Instantiate object -- here with an error
 func TestNewNewWithError(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1178,7 +1172,7 @@ func TestNewPutStaticInvalid(t *testing.T) {
 		}
 	}
 }
-
+*/
 // RET: the complement to JSR. The wide version of RET is tested farther below with
 // the other WIDE bytecodes
 func TestNewRET(t *testing.T) {

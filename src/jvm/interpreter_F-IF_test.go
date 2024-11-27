@@ -14,7 +14,6 @@ import (
 	"jacobin/object"
 	"jacobin/opcodes"
 	"jacobin/statics"
-	"jacobin/stringPool"
 	"jacobin/types"
 	"math"
 	"os"
@@ -590,8 +589,15 @@ func TestNewGetField(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to fieldRef[0]
 
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    false,
+		IsFinal:     false,
+		ClName:      "this",
+		FldName:     "value",
+		FldType:     "Ljava/lang/String;",
+	}
 
 	CP.ClassRefs = make([]uint32, 1, 1)
 	CP.ClassRefs[0] = 0 // classRefs are not used to access a field
@@ -644,23 +650,19 @@ func TestNewGetFieldWithLong(t *testing.T) {
 	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to a fieldRef
 
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
-	f.CP = &CP
-
-	// now create the NameAndType records
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
-	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
-
-	// and finally the UTF8 records pointed to by the NameAndType entry above
-	CP.Utf8Refs = make([]string, 2)
-	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = types.Long
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    false,
+		IsFinal:     false,
+		ClName:      "",
+		FldName:     "value",
+		FldType:     "J",
+	}
 	f.CP = &CP
 
 	// push the string whose field[0] we'll be getting
 	obj := object.MakePrimitiveObject("java/lang/Long", types.Long, int64(222))
-	// obj.DumpObject("TestGetFieldWithLong", 0)
 	push(&f, obj)
 
 	fs := frames.CreateFrameStack()
@@ -745,49 +747,62 @@ func TestNewGetStaticInvalidFieldEntry(t *testing.T) {
 	}
 }
 
-// GETSTATIC: Get a static field's value (here, a boolean in the String class, set to true)
-func TestNewGetStaticBoolean(t *testing.T) {
+// GETSTATIC: Get a static field's value (here, an int)
+func TestGetStaticInt(t *testing.T) {
 	globals.InitGlobals("test")
 
+	// Create a new frame for the GETSTATIC opcode
 	f := newFrame(opcodes.GETSTATIC)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	f.Meth = append(f.Meth, 0x00, 0x01) // Go to slot 0x0001 in the CP
 
-	statics.PreloadStatics() // load the statics table with the String class
-
+	// Set up the constant pool with a static field
 	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
-	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
-	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 2}
-	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
-	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0} // point to fieldRef[0]
 
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 2, 2)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 2, NameAndType: 4}
-
-	CP.Utf8Refs = make([]string, 5, 5)
-	// class = "java/lang/String" in string pool
-	classNameIndex := stringPool.GetStringIndex(&types.StringClassName)
-	CP.Utf8Refs[0] = "COMPACT_STRINGS"
-
-	CP.ClassRefs = make([]uint32, 5, 5)
-	CP.ClassRefs[0] = classNameIndex
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 5, 5)
-	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
-		NameIndex: 5, // field name as UTF8 entry, here the CPindex index
-		DescIndex: 0,
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "TestClass",
+		FldName:     "staticField",
+		FldType:     "I",
 	}
+
+	CP.ClassRefs = make([]uint32, 1)
+	CP.ClassRefs[0] = 0 // classRefs are not used to access a field
+
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{
+		NameIndex: 0, // UTF8: "staticField"
+		DescIndex: 1, // UTF8: "I"
+	}
+
+	CP.Utf8Refs = make([]string, 2)
+	CP.Utf8Refs[0] = "staticField"
+	CP.Utf8Refs[1] = "I"
 	f.CP = &CP
+
+	// Set the static field value
+	_ = statics.AddStatic("TestClass.staticField",
+		statics.Static{Type: types.Int, Value: int64(42)})
+
+	// Push the frame onto the frame stack
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
+
 	interpret(fs)
 
-	retVal := pop(&f).(int64)
-	if retVal != 1 {
-		t.Errorf("GETSTATIC: Expected a return of 1 (true) for a boolean, got: %d", retVal)
+	// Verify the result
+	value := pop(&f).(int64)
+	if value != 42 {
+		t.Errorf("doGetstatic: expected value 42, got %d", value)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("doGetstatic: expected empty stack, got TOS %d", f.TOS)
 	}
 }
 
