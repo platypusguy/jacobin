@@ -3,7 +3,6 @@ package statics
 import (
 	"fmt"
 	"io"
-	// "jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/trace"
 	"jacobin/types"
