@@ -1911,12 +1911,6 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	// Get field name.
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-	// nameAndTypeCPIndex := fullFieldEntry.NameAndType
-	// nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-	// nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-	// nameCPIndex := nameAndType.NameIndex
-	// nameCPentry := CP.CpIndex[nameCPIndex]
-	// fieldName := CP.Utf8Refs[nameCPentry.Slot]
 	fieldName := fullFieldEntry.FldName
 	if globals.TraceVerbose {
 		emitTraceFieldID("GETFIELD", fieldName)
@@ -1959,6 +1953,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
+
 	fieldType = objField.Ftype
 	if fieldType == types.StringIndex {
 		fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
