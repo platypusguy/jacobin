@@ -8,10 +8,17 @@ package jvm
 
 import (
 	"io"
+	"jacobin/classloader"
+	"jacobin/exceptions"
 	"jacobin/frames"
+	"jacobin/gfunction"
 	"jacobin/globals"
+	"jacobin/object"
 	"jacobin/opcodes"
+	"jacobin/stringPool"
 	"jacobin/thread"
+	"jacobin/trace"
+	"jacobin/types"
 	"os"
 	"strings"
 	"testing"
@@ -497,7 +504,6 @@ func TestNewMonitorExit(t *testing.T) {
 	}
 }
 
-/*
 // NEW: Instantiate object -- here with an error
 func TestNewNewWithError(t *testing.T) {
 	globals.InitGlobals("test")
@@ -515,8 +521,8 @@ func TestNewNewWithError(t *testing.T) {
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be class or interface
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{}
 	f.CP = &CP
 
 	fs := frames.CreateFrameStack()
@@ -594,7 +600,6 @@ func TestNewPeekWithStackUnderflow(t *testing.T) {
 	fs.PushFront(f)
 	th.Stack = fs
 
-	//classloader.DumpMTable() // TODO: Comment this out!
 	_ = peek(f)
 
 	_ = w.Close()
@@ -932,17 +937,16 @@ func TestNewPutFieldSimpleInt(t *testing.T) {
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
 
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    false,
+		IsFinal:     false,
+		ClName:      "",
+		FldName:     "value",
+		FldType:     types.Int,
+	}
 
-	// now create the NameAndType records
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
-	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
-
-	// and finally the UTF8 records pointed to by the NameAndType entry above
-	CP.Utf8Refs = make([]string, 2)
-	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = types.Int
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
@@ -993,17 +997,15 @@ func TestNewPutFieldDouble(t *testing.T) {
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
 
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
-
-	// now create the NameAndType records
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
-	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
-
-	// and finally the UTF8 records pointed to by the NameAndType entry above
-	CP.Utf8Refs = make([]string, 2)
-	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = types.Double
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    false,
+		IsFinal:     false,
+		ClName:      "",
+		FldName:     "value",
+		FldType:     types.Double,
+	}
 
 	f.CP = &CP
 
@@ -1054,8 +1056,8 @@ func TestNewPutFieldNonFieldCPentry(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: 8, Slot: 0} // point to non-fieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{}
 	f.CP = &CP
 
 	fs := frames.CreateFrameStack()
@@ -1091,17 +1093,16 @@ func TestNewPutFieldErrorUpdatingStatic(t *testing.T) {
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
 
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "",
+		FldName:     "value",
+		FldType:     types.Static + types.Int,
+	}
 
-	// now create the NameAndType records
-	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 1, 1)
-	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 0, DescIndex: 1}
-
-	// and finally the UTF8 records pointed to by the NameAndType entry above
-	CP.Utf8Refs = make([]string, 2)
-	CP.Utf8Refs[0] = "value"
-	CP.Utf8Refs[1] = types.Static + types.Int
 	f.CP = &CP
 
 	// now create the object we're updating, with one int field
@@ -1149,9 +1150,10 @@ func TestNewPutStaticInvalid(t *testing.T) {
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
 	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a field ref
+
 	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.FieldRefEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.FieldRefEntry{ClassIndex: 0, NameAndType: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{}
 	f.CP = &CP
 
 	fs := frames.CreateFrameStack()
@@ -1172,7 +1174,7 @@ func TestNewPutStaticInvalid(t *testing.T) {
 		}
 	}
 }
-*/
+
 // RET: the complement to JSR. The wide version of RET is tested farther below with
 // the other WIDE bytecodes
 func TestNewRET(t *testing.T) {
