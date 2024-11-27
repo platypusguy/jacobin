@@ -664,6 +664,16 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	if len(fullyParsedClass.nameAndTypes) > 0 {
+		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
+			nat := NameAndTypeEntry{
+				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
+				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
+			}
+			kd.CP.NameAndTypes = append(kd.CP.NameAndTypes, nat)
+		}
+	}
+
 	if len(fullyParsedClass.doubles) > 0 {
 		for i := 0; i < len(fullyParsedClass.doubles); i++ {
 			kd.CP.Doubles = append(kd.CP.Doubles, fullyParsedClass.doubles[i])
@@ -683,26 +693,21 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if len(fullyParsedClass.fieldRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.fieldRefs); i++ {
 			rfe := ResolvedFieldEntry{}
-			clName := FetchUTF8stringFromCPEntryNumber(&kd.CP,
-				uint16(fullyParsedClass.fieldRefs[i].classIndex))
+			clIndex := fullyParsedClass.fieldRefs[i].classIndex
+			clRefIndex := fullyParsedClass.cpIndex[clIndex]
+			clRef := fullyParsedClass.classRefs[clRefIndex.slot]
+			clName := *(stringPool.GetStringPointer(clRef))
 
 			nAndTindex := fullyParsedClass.fieldRefs[i].nameAndTypeIndex
-			nAndTentry := fullyParsedClass.nameAndTypes[nAndTindex]
-			fieldNameIndex := nAndTentry.nameIndex
+			nAndTRefIndex := fullyParsedClass.cpIndex[nAndTindex]
+			nAndTRef := fullyParsedClass.nameAndTypes[nAndTRefIndex.slot]
+
+			fieldNameIndex := nAndTRef.nameIndex
 			fieldName := FetchUTF8stringFromCPEntryNumber(&kd.CP, uint16(fieldNameIndex))
 
-			fieldType := FetchUTF8stringFromCPEntryNumber(&kd.CP, uint16(nAndTentry.descriptorIndex))
-			/*
-				nAndTindex := field.NameAndType
-				nAndTentry := CP.CpIndex[nAndTindex]
-				nAndTslot := nAndTentry.Slot
-				nAndT := CP.NameAndTypes[nAndTslot]
-				fieldNameIndex := nAndT.NameIndex
-				fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
-			*/
+			fieldTypeIndex := nAndTRef.descriptorIndex
+			fieldType := FetchUTF8stringFromCPEntryNumber(&kd.CP, uint16(fieldTypeIndex))
 
-			// ClassIndex:  uint16(fullyParsedClass.fieldRefs[i].classIndex),
-			// NameAndType: uint16(fullyParsedClass.fieldRefs[i].nameAndTypeIndex),
 			rfe.ClName = clName
 			rfe.FldName = fieldName
 			rfe.FldType = fieldType
@@ -771,16 +776,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if len(fullyParsedClass.methodTypes) > 0 {
 		for i := 0; i < len(fullyParsedClass.methodTypes); i++ {
 			kd.CP.MethodTypes = append(kd.CP.MethodTypes, uint16(fullyParsedClass.methodTypes[i]))
-		}
-	}
-
-	if len(fullyParsedClass.nameAndTypes) > 0 {
-		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
-			nat := NameAndTypeEntry{
-				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
-				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
-			}
-			kd.CP.NameAndTypes = append(kd.CP.NameAndTypes, nat)
 		}
 	}
 
