@@ -421,6 +421,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	if globals.TraceClass {
 		trace.Trace("ParseAndPostClass: File " + filename + " to be processed")
 	}
+
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		trace.Error("ParseAndPostClass: file " + filename + ", err: " + err.Error())
@@ -432,6 +433,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 		trace.Error("ParseAndPostClass: format-checking " + filename)
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
+
 	if globals.TraceClass {
 		trace.Trace("Class " + fullyParsedClass.className + " has been format-checked.")
 	}

@@ -400,7 +400,7 @@ func doLdc2w(fr *frames.Frame, _ int64) int {
 	idx := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 
 	CPe := classloader.FetchCPentry(fr.CP.(*classloader.CPool), idx)
-	if CPe.RetType == classloader.IS_INT64 { // push value twice (due to 64-bit width)
+	if CPe.RetType == classloader.IS_INT64 {
 		push(fr, CPe.IntVal)
 	} else if CPe.RetType == classloader.IS_FLOAT64 {
 		push(fr, CPe.FloatVal)
