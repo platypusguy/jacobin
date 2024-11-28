@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-3 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
  */
 
@@ -134,11 +134,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 					statics.Static{Type: string(fldType[0]), Value: fldValue}) // CURR
 			}
 		} // loop through the fields if any
-		// add the field to the field table for this object
-
-		// obj.FieldTable = nil  // removed via JACOBIN-378
 		goto runInitializer
-		// return &obj, nil
 	} // end of handling fields for objects w/ no superclasses
 
 	// in the case of superclasses, we start at the topmost superclass
@@ -169,6 +165,19 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	} // end of handling fields for classes with superclasses other than Object
 
 runInitializer:
+	// check code validity in methods
+	// for _, m := range k.Data.MethodTable {
+	// 	code := m.CodeAttr.Code
+	// 	err := classloader.CheckCodeValidity(code, &k.Data.CP)
+	// 	if err != nil {
+	// 		errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s", classname, m.Name)
+	// 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
+	// 		if status != exceptions.Caught {
+	// 			return nil, errors.New(errMsg) // applies only if in test
+	// 		}
+	// 	}
+	// }
+
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
 	if ok && k.Data.ClInit == types.ClInitNotRun {
