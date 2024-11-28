@@ -12,7 +12,6 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
-	"os"
 )
 
 // jj (Jacobin JVM) functions are functions that can be inserted inside Java programs
@@ -23,22 +22,39 @@ import (
 
 func Load_jj() {
 
-	MethodSignatures["jj._dumpStatics(Ljava/lang/String;)V"] =
+	MethodSignatures["jj._dumpStatics(Ljava/lang/String;ILjava/lang/String;)V"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 3,
 			GFunction:  jjDumpStatics,
+		}
+
+	MethodSignatures["jj._dumpObject(Ljava/lang/Object;Ljava/lang/String;I)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  jjDumpObject,
 		}
 }
 
 func jjDumpStatics(params []interface{}) interface{} {
-	objPtr := params[0].(*object.Object)
-	if objPtr == nil || objPtr.KlassName == types.InvalidStringIndex {
+	fromObj := params[0].(*object.Object)
+	if fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
 		errMsg := fmt.Sprintf("Invalid object in objectGetClass(): %T", params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	from := object.ObjectFieldToString(fromObj, "value")
+	selection := params[1].(int64)
+	classNameObj := params[2].(*object.Object)
+	className := object.ObjectFieldToString(classNameObj, "value")
 
-	str := object.ObjectFieldToString(objPtr, "value")
-	fmt.Fprintf(os.Stderr, "%s: non-JDK statics:\n", str)
-	statics.DumpStatics()
+	statics.DumpStatics(from, selection, className)
+	return nil
+}
+
+func jjDumpObject(params []interface{}) interface{} {
+	this := params[0].(*object.Object)
+	objTitle := params[1].(*object.Object)
+	title := object.ObjectFieldToString(objTitle, "value")
+	indent := params[2].(int64)
+	this.DumpObject(title, int(indent))
 	return nil
 }

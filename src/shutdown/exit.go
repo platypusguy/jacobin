@@ -53,7 +53,7 @@ func Exit(errorCondition ExitStatus) int {
 	}
 
 	if errorCondition != OK {
-		statics.DumpStatics()
+		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
 		config.DumpConfig(os.Stderr)
 	}
 	os.Exit(errorCondition)

@@ -8,6 +8,7 @@ package object
 
 import (
 	"fmt"
+	"jacobin/globals"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -213,7 +214,14 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	nflds := len(obj.FieldTable)
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
-		for fieldName := range obj.FieldTable {
+		// Create a sorted slice of keys.
+		keys := make([]string, 0, len(obj.FieldTable))
+		for key := range obj.FieldTable {
+			keys = append(keys, key)
+		}
+		globals.SortCaseInsensitive(&keys)
+
+		for _, fieldName := range keys {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
 			}
