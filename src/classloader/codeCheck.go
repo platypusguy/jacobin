@@ -8,6 +8,10 @@ package classloader
 
 import (
 	"errors"
+	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
+	"math"
 )
 
 // Here we check the bytecodes of a method. The method is passed as a byte slice.
@@ -227,214 +231,217 @@ var bytecodeSkipTable = map[byte]int{
 	// fmt.Printf("Bytecode: 0x%X, Skip: %d\n", bytecode, skip)
 }
 
-type BytecodeFunc func(cp *CPool) error
+type BytecodeFunc func(cp *CPool) int
 
-var DispatchTable = [203]BytecodeFunc{
-	// checkNop, // NOP             0x00
-	/*	checkAconstNull,      // ACONST_NULL     0x01
-		checkIconstM1,        // ICONST_M1       0x02
-		checkIconst0,         // ICONST_0        0x03
-		checkIconst1,         // ICONST_1        0x04
-		checkIconst2,         // ICONST_2        0x05
-		checkIconst3,         // ICONST_3        0x06
-		checkIconst4,         // ICONST_4        0x07
-		checkIconst5,         // ICONST_5        0x08
-		checkLconst0,         // LCONST_0        0x09
-		checkLconst1,         // LCONST_1        0x0A
-		checkFconst0,         // FCONST_0        0x0B
-		checkFconst1,         // FCONST_1        0x0C
-		checkFconst2,         // FCONST_2        0x0D
-		checkDconst0,         // DCONST_0        0x0E
-		checkDconst1,         // DCONST_1        0x0F
-		checkBipush,          // BIPUSH          0x10
-		checkSipush,          // SIPUSH          0x11
-		checkLdc,             // LDC             0x12
-		checkLdcw,            // LDC_W           0x13
-		checkLdc2w,           // LDC2_W          0x14
-		checkLoad,            // ILOAD           0x15
-		checkLoad,            // LLOAD           0x16
-		checkLoad,            // FLOAD           0x17
-		checkLoad,            // DLOAD           0x18
-		checkLoad,            // ALOAD           0x19
-		checkIload0,          // ILOAD_0         0x1A
-		checkIload1,          // ILOAD_1         0x1B
-		checkIload2,          // ILOAD_2         0x1C
-		checkIload3,          // ILOAD_3         0x1D
-		checkIload0,          // LLOAD_0         0x1E
-		checkIload1,          // LLOAD_1         0x1F
-		checkIload2,          // LLOAD_2         0x20
-		checkIload3,          // LLOAD_3         0x21
-		checkFload0,          // FLOAD_0         0x22
-		checkFload1,          // FLOAD_1         0x23
-		checkFload2,          // FLOAD_2         0x24
-		checkFload3,          // FLOAD_3         0x25
-		checkFload0,          // DLOAD_0         0x26
-		checkFload1,          // DLOAD_1         0x27
-		checkFload2,          // DLOAD_2         0x28
-		checkFload3,          // DLOAD_3         0x29
-		checkAload0,          // ALOAD_0         0x2A
-		checkAload1,          // ALOAD_1         0x2B
-		checkAload2,          // ALOAD_2         0x2C
-		checkAload3,          // ALOAD_3         0x2D
-		checkIaload,          // IALOAD          0x2E
-		checkIaload,          // LALOAD          0x2F
-		checkFaload,          // FALOAD          0x30
-		checkFaload,          // DALOAD          0x31
-		checkAaload,          // AALOAD          0x32
-		checkBaload,          // BALOAD          0x33
-		checkIaload,          // CALOAD          0x34
-		checkIaload,          // SALOAD          0x35
-		checkIstore,          // ISTORE          0x36
-		checkIstore,          // LSTORE          0x37
-		checkFstore,          // FSTORE          0x38
-		checkFstore,          // DSTORE          0x39
-		checkAstore,          // ASTORE          0x3A
-		checkIstore0,         // ISTORE_0        0x3B
-		checkIstore1,         // ISTORE_1        0x3C
-		checkIstore2,         // ISTORE_2        0x3D
-		checkIstore3,         // ISTORE_3        0x3E
-		checkIstore0,         // LSTORE_0        0x3F
-		checkIstore1,         // LSTORE_1        0x40
-		checkIstore2,         // LSTORE_2        0x41
-		checkIstore3,         // LSTORE_3        0x42
-		checkFstore0,         // FSTORE_0        0x43
-		checkFstore1,         // FSTORE_1        0x44
-		checkFstore2,         // FSTORE_2        0x45
-		checkFstore3,         // FSTORE_3        0x46
-		checkFstore0,         // DSTORE_0        0x47
-		checkFstore1,         // DSTORE_1        0x48
-		checkFstore2,         // DSTORE_2        0x49
-		checkFstore3,         // DSTORE_3        0x4A
-		checkAstore0,         // ASTORE_0        0x4B
-		checkAstore1,         // ASTORE_1        0x4C
-		checkAstore2,         // ASTORE_2        0x4D
-		checkAstore3,         // ASTORE_3        0x4E
-		checkIastore,         // IASTORE         0x4F
-		checkIastore,         // LASTORE         0x50
-		checkFastore,         // FASTORE         0x51
-		checkFastore,         // DASTORE         0x52
-		checkAastore,         // AASTORE         0x53
-		checkBastore,         // BASTORE         0x54
-		checkIastore,         // CASTORE         0x55
-		checkIastore,         // SASTORE         0x56
-		checkPop,             // POP             0x57
-		checkPop2,            // POP2            0x58
-		checkDup,             // DUP             0x59
-		checkDupx1,           // DUP_X1          0x5A
-		checkDupx2,           // DUP_X2          0x5B
-		checkDup2,            // DUP2            0x5C
-		checkDup2x1,          // DUP2_X1         0x5D
-		checkDup2x2,          // DUP2_X2         0x5E
-		checkSwap,            // SWAP            0x5F
-		checkIadd,            // IADD            0x60
-		checkIadd,            // LADD            0x61
-		checkFadd,            // FADD            0x62
-		checkFadd,            // DADD            0x63
-		checkIsub,            // ISUB            0x64
-		checkIsub,            // LSUB            0x65
-		checkFsub,            // FSUB            0x66
-		checkFsub,            // DSUB            0x67
-		checkImul,            // IMUL            0x68
-		checkImul,            // LMUL            0x69
-		checkFmul,            // FMUL            0x6A
-		checkFmul,            // DMUL            0x6B
-		checkIdiv,            // IDIV            0x6C
-		checkIdiv,            // LDIV            0x6D
-		checkFdiv,            // FDIV            0x6E
-		checkFdiv,            // DDIV            0x6F
-		checkIrem,            // IREM            0x70
-		checkIrem,            // LREM            0x71
-		checkFrem,            // FREM            0x72
-		checkFrem,            // DREM            0x73
-		checkIneg,            // INEG            0x74
-		checkIneg,            // LNEG            0x75
-		checkFneg,            // FNEG            0x76
-		checkFneg,            // DNEG            0x77
-		checkIshl,            // ISHL            0x78
-		checkIshl,            // LSHL            0x79
-		checkIshr,            // ISHR            0x7A
-		checkIshr,            // LSHR            0x7B
-		checkIushr,           // IUSHR           0x7C
-		checkIushr,           // LUSHR           0x7D
-		checkIand,            // IAND            0x7E
-		checkIand,            // LAND            0x7F
-		checkIor,             // IOR             0x80
-		checkIor,             // LOR             0x81
-		checkIxor,            // IXOR            0x82
-		checkIxor,            // LXOR            0x83
-		checkIinc,            // IINC            0x84
-		checkNothing,         // I2L             0x85
-		checkI2f,             // I2F             0x86
-		checkI2f,             // I2D             0x87
-		checkNothing,         // L2I             0x88
-		checkL2f,             // L2F             0x89
-		checkL2f,             // L2D             0x8A
-		checkF2i,             // F2I             0x8B
-		checkF2i,             // F2L             0x8C
-		checkNothing,         // F2D             0x8D
-		checkD2i,             // D2I             0x8E
-		checkD2i,             // D2L             0x8F
-		checkNothing,         // D2F             0x90
-		checkI2b,             // I2B             0x91
-		checkI2c,             // I2C             0x92
-		checkI2s,             // I2S             0x93
-		checkLcmp,            // LCMP            0x94
-		checkFcmpl,           // FCMPL           0x95
-		checkFcmpl,           // FCMPG           0x96
-		checkFcmpl,           // DCMPL           0x97
-		checkFcmpl,           // DCMPG           0x98
-		checkIfeq,            // IFEQ            0x99
-		checkIfne,            // IFNE            0x9A
-		checkIflt,            // IFLT            0x9B
-		checkIfge,            // IFGE            0x9C
-		checkIfgt,            // IFGT            0x9D
-		checkIfle,            // IFLE            0x9E
-		checkIficmpeq,        // IF_ICMPEQ       0x9F
-		checkIficmpne,        // IF_ICMPNE       0xA0
-		checkIficmplt,        // IF_ICMPLT       0xA1
-		checkIficmpge,        // IF_ICMPGE       0xA2
-		checkIficmpgt,        // IF_ICMPGT       0xA3
-		checkIficmple,        // IF_ICMPLE       0xA4
-		checkIfacmpeq,        // IF_ACMPEQ       0xA5
-		checkIfacmpne,        // IF_ACMPNE       0xA6
-		checkGoto,            // GOTO            0xA7
-		checkJsr,             // JSR             0xA8
-		checkRet,             // RET             0xA9
-		checkTableswitch,     // TABLESWITCH     0xAA
-		checkLookupswitch,    // LOOKUPSWITCH    0xAB
-		checkIreturn,         // IRETURN         0xAC
-		checkIreturn,         // LRETURN         0xAD
-		checkIreturn,         // FRETURN         0xAE
-		checkIreturn,         // DRETURN         0xAF
-		checkIreturn,         // ARETURN         0xB0
-		checkReturn,          // RETURN          0xB1
-		checkGetstatic,       // GETSTATIC       0xB2
-		checkPutstatic,       // PUTSTATIC       0xB3
-		checkGetfield,        // GETFIELD        0xB4
-		checkPutfield,        // PUTFIELD        0xB5
-		checkInvokeVirtual,   // INVOKEVIRTUAL   0xB6
-		checkInvokespecial,   // INVOKESPECIAL   0xB7
-		checkInvokestatic,    // INVOKESTATIC    0xB8
-		checkInvokeinterface, // INVOKEINTERFACE 0xB9
-		checkInvokedynamic,   // INVOKEDYNAMIC   0xBA
-		checkNew,             // NEW             0xBB
-		checkNewarray,        // NEWARRAY        0xBC
-		checkAnewarray,       // ANEWARRAY       0xBD
-		checkArraylength,     // ARRAYLENGTH     0xBE
-		checkAthrow,          // ATHROW          0xBF
-		checkCheckcast,       // CHECKCAST       0xC0
-		checkInstanceof,      // INSTANCEOF      0xC1
-		checkPop,             // MONITORENTER    0xC2
-		checkPop,             // MONITOREXIT     0xC3
-		checkWide,            // WIDE            0xC4
-		checkMultinewarray,   // MULTIANEWARRAY  0xC5
-		checkIfnull,          // IFNULL          0xC6
-		checkIfnonnull,       // IFNONNULL       0xC7
-		checkGotow,           // GOTO_W          0xC8
-		checkJsrw,            // JSR_W           0xC9
-		checkWarninvalid,     // BREAKPOINT      0xCA
+var CheckTable = [203]BytecodeFunc{
+	return1, // NOP             0x00
+	return1, // ACONST_NULL     0x01
+	return1, // ICONST_M1       0x02
+	return1, // ICONST_0        0x03
+	return1, // ICONST_1        0x04
+	return1, // ICONST_2        0x05
+	return1, // ICONST_3        0x06
+	return1, // ICONST_4        0x07
+	return1, // ICONST_5        0x08
+	return1, // LCONST_0        0x09
+	return1, // LCONST_1        0x0A
+	return1, // FCONST_0        0x0B
+	return1, // FCONST_1        0x0C
+	return1, // FCONST_2        0x0D
+	return1, // DCONST_0        0x0E
+	return1, // DCONST_1        0x0F
+	return2, // BIPUSH          0x10
+	return3, // SIPUSH          0x11
+	/*checkLdc,             // LDC             0x12
+	checkLdcw,            // LDC_W           0x13
+	checkLdc2w,           // LDC2_W          0x14
+	checkLoad,            // ILOAD           0x15
+	checkLoad,            // LLOAD           0x16
+	checkLoad,            // FLOAD           0x17
+	checkLoad,            // DLOAD           0x18
+	checkLoad,            // ALOAD           0x19
+	checkIload0,          // ILOAD_0         0x1A
+	checkIload1,          // ILOAD_1         0x1B
+	checkIload2,          // ILOAD_2         0x1C
+	checkIload3,          // ILOAD_3         0x1D
+	checkIload0,          // LLOAD_0         0x1E
+	checkIload1,          // LLOAD_1         0x1F
+	checkIload2,          // LLOAD_2         0x20
+	checkIload3,          // LLOAD_3         0x21
+	checkFload0,          // FLOAD_0         0x22
+	checkFload1,          // FLOAD_1         0x23
+	checkFload2,          // FLOAD_2         0x24
+	checkFload3,          // FLOAD_3         0x25
+	checkFload0,          // DLOAD_0         0x26
+	checkFload1,          // DLOAD_1         0x27
+	checkFload2,          // DLOAD_2         0x28
+	checkFload3,          // DLOAD_3         0x29
+	checkAload0,          // ALOAD_0         0x2A
+	checkAload1,          // ALOAD_1         0x2B
+	checkAload2,          // ALOAD_2         0x2C
+	checkAload3,          // ALOAD_3         0x2D
+	checkIaload,          // IALOAD          0x2E
+	checkIaload,          // LALOAD          0x2F
+	checkFaload,          // FALOAD          0x30
+	checkFaload,          // DALOAD          0x31
+	checkAaload,          // AALOAD          0x32
+	checkBaload,          // BALOAD          0x33
+	checkIaload,          // CALOAD          0x34
+	checkIaload,          // SALOAD          0x35
+	checkIstore,          // ISTORE          0x36
+	checkIstore,          // LSTORE          0x37
+	checkFstore,          // FSTORE          0x38
+	checkFstore,          // DSTORE          0x39
+	checkAstore,          // ASTORE          0x3A
+	checkIstore0,         // ISTORE_0        0x3B
+	checkIstore1,         // ISTORE_1        0x3C
+	checkIstore2,         // ISTORE_2        0x3D
+	checkIstore3,         // ISTORE_3        0x3E
+	checkIstore0,         // LSTORE_0        0x3F
+	checkIstore1,         // LSTORE_1        0x40
+	checkIstore2,         // LSTORE_2        0x41
+	checkIstore3,         // LSTORE_3        0x42
+	checkFstore0,         // FSTORE_0        0x43
+	checkFstore1,         // FSTORE_1        0x44
+	checkFstore2,         // FSTORE_2        0x45
+	checkFstore3,         // FSTORE_3        0x46
+	checkFstore0,         // DSTORE_0        0x47
+	checkFstore1,         // DSTORE_1        0x48
+	checkFstore2,         // DSTORE_2        0x49
+	checkFstore3,         // DSTORE_3        0x4A
+	checkAstore0,         // ASTORE_0        0x4B
+	checkAstore1,         // ASTORE_1        0x4C
+	checkAstore2,         // ASTORE_2        0x4D
+	checkAstore3,         // ASTORE_3        0x4E
+	checkIastore,         // IASTORE         0x4F
+	checkIastore,         // LASTORE         0x50
+	checkFastore,         // FASTORE         0x51
+	checkFastore,         // DASTORE         0x52
+	checkAastore,         // AASTORE         0x53
+	checkBastore,         // BASTORE         0x54
+	checkIastore,         // CASTORE         0x55
+	checkIastore,         // SASTORE         0x56
+	checkPop,             // POP             0x57
+	checkPop2,            // POP2            0x58
+	checkDup,             // DUP             0x59
+	checkDupx1,           // DUP_X1          0x5A
+	checkDupx2,           // DUP_X2          0x5B
+	checkDup2,            // DUP2            0x5C
+	checkDup2x1,          // DUP2_X1         0x5D
+	checkDup2x2,          // DUP2_X2         0x5E
+	checkSwap,            // SWAP            0x5F
+	checkIadd,            // IADD            0x60
+	checkIadd,            // LADD            0x61
+	checkFadd,            // FADD            0x62
+	checkFadd,            // DADD            0x63
+	checkIsub,            // ISUB            0x64
+	checkIsub,            // LSUB            0x65
+	checkFsub,            // FSUB            0x66
+	checkFsub,            // DSUB            0x67
+	checkImul,            // IMUL            0x68
+	checkImul,            // LMUL            0x69
+	checkFmul,            // FMUL            0x6A
+	checkFmul,            // DMUL            0x6B
+	checkIdiv,            // IDIV            0x6C
+	checkIdiv,            // LDIV            0x6D
+	checkFdiv,            // FDIV            0x6E
+	checkFdiv,            // DDIV            0x6F
+	checkIrem,            // IREM            0x70
+	checkIrem,            // LREM            0x71
+	checkFrem,            // FREM            0x72
+	checkFrem,            // DREM            0x73
+	checkIneg,            // INEG            0x74
+	checkIneg,            // LNEG            0x75
+	checkFneg,            // FNEG            0x76
+	checkFneg,            // DNEG            0x77
+	checkIshl,            // ISHL            0x78
+	checkIshl,            // LSHL            0x79
+	checkIshr,            // ISHR            0x7A
+	checkIshr,            // LSHR            0x7B
+	checkIushr,           // IUSHR           0x7C
+	checkIushr,           // LUSHR           0x7D
+	checkIand,            // IAND            0x7E
+	checkIand,            // LAND            0x7F
+	checkIor,             // IOR             0x80
+	checkIor,             // LOR             0x81
+	checkIxor,            // IXOR            0x82
+	checkIxor,            // LXOR            0x83
+	checkIinc,            // IINC            0x84
+	checkNothing,         // I2L             0x85
+	checkI2f,             // I2F             0x86
+	checkI2f,             // I2D             0x87
+	checkNothing,         // L2I             0x88
+	checkL2f,             // L2F             0x89
+	checkL2f,             // L2D             0x8A
+	checkF2i,             // F2I             0x8B
+	checkF2i,             // F2L             0x8C
+	checkNothing,         // F2D             0x8D
+	checkD2i,             // D2I             0x8E
+	checkD2i,             // D2L             0x8F
+	checkNothing,         // D2F             0x90
+	checkI2b,             // I2B             0x91
+	checkI2c,             // I2C             0x92
+	checkI2s,             // I2S             0x93
+	checkLcmp,            // LCMP            0x94
+	checkFcmpl,           // FCMPL           0x95
+	checkFcmpl,           // FCMPG           0x96
+	checkFcmpl,           // DCMPL           0x97
+	checkFcmpl,           // DCMPG           0x98
+	checkIfeq,            // IFEQ            0x99
+	checkIfne,            // IFNE            0x9A
+	checkIflt,            // IFLT            0x9B
+	checkIfge,            // IFGE            0x9C
+	checkIfgt,            // IFGT            0x9D
+	checkIfle,            // IFLE            0x9E
+	checkIficmpeq,        // IF_ICMPEQ       0x9F
+	checkIficmpne,        // IF_ICMPNE       0xA0
+	checkIficmplt,        // IF_ICMPLT       0xA1
+	checkIficmpge,        // IF_ICMPGE       0xA2
+	checkIficmpgt,        // IF_ICMPGT       0xA3
+	checkIficmple,        // IF_ICMPLE       0xA4
+	checkIfacmpeq,        // IF_ACMPEQ       0xA5
+	checkIfacmpne,        // IF_ACMPNE       0xA6
+	checkGoto,            // GOTO            0xA7
+	checkJsr,             // JSR             0xA8
+	checkRet,             // RET             0xA9
+	checkTableswitch,     // TABLESWITCH     0xAA
+	checkLookupswitch,    // LOOKUPSWITCH    0xAB
+	checkIreturn,         // IRETURN         0xAC
+	checkIreturn,         // LRETURN         0xAD
+	checkIreturn,         // FRETURN         0xAE
+	checkIreturn,         // DRETURN         0xAF
+	checkIreturn,         // ARETURN         0xB0
+	checkReturn,          // RETURN          0xB1
+	checkGetstatic,       // GETSTATIC       0xB2
+	checkPutstatic,       // PUTSTATIC       0xB3
+	checkGetfield,        // GETFIELD        0xB4
+	checkPutfield,        // PUTFIELD        0xB5
+	checkInvokeVirtual,   // INVOKEVIRTUAL   0xB6
+	checkInvokespecial,   // INVOKESPECIAL   0xB7
+	checkInvokestatic,    // INVOKESTATIC    0xB8
+	checkInvokeinterface, // INVOKEINTERFACE 0xB9
+	checkInvokedynamic,   // INVOKEDYNAMIC   0xBA
+	checkNew,             // NEW             0xBB
+	checkNewarray,        // NEWARRAY        0xBC
+	checkAnewarray,       // ANEWARRAY       0xBD
+	checkArraylength,     // ARRAYLENGTH     0xBE
+	checkAthrow,          // ATHROW          0xBF
+	checkCheckcast,       // CHECKCAST       0xC0
+	checkInstanceof,      // INSTANCEOF      0xC1
+	checkPop,             // MONITORENTER    0xC2
+	checkPop,             // MONITOREXIT     0xC3
+	checkWide,            // WIDE            0xC4
+	checkMultinewarray,   // MULTIANEWARRAY  0xC5
+	checkIfnull,          // IFNULL          0xC6
+	checkIfnonnull,       // IFNONNULL       0xC7
+	checkGotow,           // GOTO_W          0xC8
+	checkJsrw,            // JSR_W           0xC9
+	checkWarninvalid,     // BREAKPOINT      0xCA
 	*/
 }
+
+var PC int
+var CP *CPool
 
 func CheckCodeValidity(code []byte, cp *CPool) error {
 	// check that the code is valid
@@ -443,11 +450,49 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 		return errors.New(errMsg)
 	}
 
-	CP := *cp
+	CP := cp
 	if len(CP.CpIndex) == 0 {
 		errMsg := "CheckCodeValidity: empty constant pool"
 		return errors.New(errMsg)
 	}
 
+	PC = 0
+	for PC < len(code) {
+		opcode := code[PC]
+		ret := CheckTable[opcode](cp)
+		if ret == math.MaxInt {
+			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
+			status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
+			if status != true { // will only happen in test
+				globals.InitGlobals("test")
+				return errors.New(errMsg)
+			}
+		} else {
+			if ret+PC > len(code) {
+				errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
+				status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
+				if status != true { // will only happen in test
+					globals.InitGlobals("test")
+					return errors.New(errMsg)
+				}
+			}
+			PC += ret
+		}
+	}
 	return nil
+}
+
+// === utility functions ===
+
+// a one-byte opcode that has nothing that can be checked
+func return1(_ *CPool) int {
+	return 1
+}
+
+func return2(_ *CPool) int {
+	return 2
+}
+
+func return3(_ *CPool) int {
+	return 3
 }

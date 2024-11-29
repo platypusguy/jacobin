@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
+	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -166,17 +168,17 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 runInitializer:
 	// check code validity in methods
-	// for _, m := range k.Data.MethodTable {
-	// 	code := m.CodeAttr.Code
-	// 	err := classloader.CheckCodeValidity(code, &k.Data.CP)
-	// 	if err != nil {
-	// 		errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s", classname, m.Name)
-	// 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
-	// 		if status != exceptions.Caught {
-	// 			return nil, errors.New(errMsg) // applies only if in test
-	// 		}
-	// 	}
-	// }
+	for _, m := range k.Data.MethodTable {
+		code := m.CodeAttr.Code
+		err := classloader.CheckCodeValidity(code, &k.Data.CP)
+		if err != nil {
+			errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s", classname, m.Name)
+			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
+			if status != exceptions.Caught {
+				return nil, errors.New(errMsg) // applies only if in test
+			}
+		}
+	}
 
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
