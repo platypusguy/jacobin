@@ -56,6 +56,8 @@ func Exit(errorCondition ExitStatus) int {
 		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
 		config.DumpConfig(os.Stderr)
 	}
+	
+	os.Stderr.Sync() // ensure all output is written before exiting
 	os.Exit(errorCondition)
 
 	return 0 // required by go
