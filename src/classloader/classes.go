@@ -17,9 +17,10 @@ import (
 
 // the definition of the class as it's stored in the method area
 type Klass struct {
-	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
-	Loader string
-	Data   *ClData
+	Status      byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
+	Loader      string
+	Data        *ClData
+	CodeChecked bool // has the code been checked for this class?
 }
 
 // the class data, as it's posted to the method area

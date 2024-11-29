@@ -20,6 +20,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"jacobin/util"
 	"strings"
 	"unsafe"
 )
@@ -167,18 +168,26 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	} // end of handling fields for classes with superclasses other than Object
 
 runInitializer:
-	// check code validity in methods
-	for _, m := range k.Data.MethodTable {
-		code := m.CodeAttr.Code
-		err := classloader.CheckCodeValidity(code, &k.Data.CP)
-		if err != nil {
-			clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
-			errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s",
-				classname, clName)
-			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
-			if status != exceptions.Caught {
-				return nil, errors.New(errMsg) // applies only if in test
+	// check the code for validity before running initialization blocks
+	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
+		for _, m := range k.Data.MethodTable {
+			code := m.CodeAttr.Code
+			err := classloader.CheckCodeValidity(code, &k.Data.CP)
+			if err != nil {
+				clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
+				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s",
+					classname, clName)
+				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
+				if status != exceptions.Caught {
+					return nil, errors.New(errMsg) // applies only if in test
+				}
 			}
+		}
+		// update the Method Area to indicate that the code has been checked
+		k.CodeChecked = true
+		classloader.MethAreaInsert(classname, k)
+		if globals.TraceCloadi {
+			trace.Trace("InstantiateClass: Code checked for class: " + classname)
 		}
 	}
 
