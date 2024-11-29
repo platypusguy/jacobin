@@ -172,7 +172,9 @@ runInitializer:
 		code := m.CodeAttr.Code
 		err := classloader.CheckCodeValidity(code, &k.Data.CP)
 		if err != nil {
-			errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s", classname, m.Name)
+			clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
+			errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed with %s.%s",
+				classname, clName)
 			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
 			if status != exceptions.Caught {
 				return nil, errors.New(errMsg) // applies only if in test

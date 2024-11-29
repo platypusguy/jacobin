@@ -7,6 +7,7 @@
 package classloader
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"jacobin/excNames"
@@ -234,214 +235,214 @@ var bytecodeSkipTable = map[byte]int{
 type BytecodeFunc func(cp *CPool) int
 
 var CheckTable = [203]BytecodeFunc{
-	return1, // NOP             0x00
-	return1, // ACONST_NULL     0x01
-	return1, // ICONST_M1       0x02
-	return1, // ICONST_0        0x03
-	return1, // ICONST_1        0x04
-	return1, // ICONST_2        0x05
-	return1, // ICONST_3        0x06
-	return1, // ICONST_4        0x07
-	return1, // ICONST_5        0x08
-	return1, // LCONST_0        0x09
-	return1, // LCONST_1        0x0A
-	return1, // FCONST_0        0x0B
-	return1, // FCONST_1        0x0C
-	return1, // FCONST_2        0x0D
-	return1, // DCONST_0        0x0E
-	return1, // DCONST_1        0x0F
-	return2, // BIPUSH          0x10
-	return3, // SIPUSH          0x11
-	return2,             // LDC             0x12
-	return3,            // LDC_W           0x13
+	return1,           // NOP             0x00
+	return1,           // ACONST_NULL     0x01
+	return1,           // ICONST_M1       0x02
+	return1,           // ICONST_0        0x03
+	return1,           // ICONST_1        0x04
+	return1,           // ICONST_2        0x05
+	return1,           // ICONST_3        0x06
+	return1,           // ICONST_4        0x07
+	return1,           // ICONST_5        0x08
+	return1,           // LCONST_0        0x09
+	return1,           // LCONST_1        0x0A
+	return1,           // FCONST_0        0x0B
+	return1,           // FCONST_1        0x0C
+	return1,           // FCONST_2        0x0D
+	return1,           // DCONST_0        0x0E
+	return1,           // DCONST_1        0x0F
+	return2,           // BIPUSH          0x10
+	return3,           // SIPUSH          0x11
+	return2,           // LDC             0x12
+	return3,           // LDC_W           0x13
 	return3,           // LDC2_W          0x14
-	return2,            // ILOAD           0x15
-	return2,            // LLOAD           0x16
-	return2,            // FLOAD           0x17
-	return2,            // DLOAD           0x18
-	return2,            // ALOAD           0x19
-	return1,          // ILOAD_0         0x1A
-	return1,          // ILOAD_1         0x1B
-	return1,          // ILOAD_2         0x1C
-	return1,          // ILOAD_3         0x1D
-	return1,          // LLOAD_0         0x1E
-	return1,          // LLOAD_1         0x1F
-	return1,          // LLOAD_2         0x20
-	return1,          // LLOAD_3         0x21
-	return1,          // FLOAD_0         0x22
-	return1,          // FLOAD_1         0x23
-	return1,          // FLOAD_2         0x24
-	return1,          // FLOAD_3         0x25
-	return1,          // DLOAD_0         0x26
-	return1,          // DLOAD_1         0x27
-	return1,          // DLOAD_2         0x28
-	return1,          // DLOAD_3         0x29
-	return1,          // ALOAD_0         0x2A
-	return1,          // ALOAD_1         0x2B
-	return1,          // ALOAD_2         0x2C
-	return1,          // ALOAD_3         0x2D
-	return1,          // IALOAD          0x2E
-	return1,          // LALOAD          0x2F
-	return1,          // FALOAD          0x30
-	return1,          // DALOAD          0x31
-	return1,          // AALOAD          0x32
-	return1,          // BALOAD          0x33
-	return1,          // CALOAD          0x34
-	return1,          // SALOAD          0x35
-	return2,          // ISTORE          0x36
-	return2,          // LSTORE          0x37
-	return2,          // FSTORE          0x38
-	return2,          // DSTORE          0x39
-	return2,          // ASTORE          0x3A
-	return1,         // ISTORE_0        0x3B
-	return1,         // ISTORE_1        0x3C
-	return1,         // ISTORE_2        0x3D
-	return1,         // ISTORE_3        0x3E
-	return1,         // LSTORE_0        0x3F
-	return1,         // LSTORE_1        0x40
-	return1,         // LSTORE_2        0x41
-	return1,         // LSTORE_3        0x42
-	return1,         // FSTORE_0        0x43
-	return1,         // FSTORE_1        0x44
-	return1,         // FSTORE_2        0x45
-	return1,         // FSTORE_3        0x46
-	return1,         // DSTORE_0        0x47
-	return1,         // DSTORE_1        0x48
-	return1,         // DSTORE_2        0x49
-	return1,         // DSTORE_3        0x4A
-	return1,         // ASTORE_0        0x4B
-	return1,         // ASTORE_1        0x4C
-	return1,         // ASTORE_2        0x4D
-	return1,         // ASTORE_3        0x4E
-	return1,         // IASTORE         0x4F
-	return1,         // LASTORE         0x50
-	return1,         // FASTORE         0x51
-	return1,         // DASTORE         0x52
-	return1,         // AASTORE         0x53
-	return1,         // BASTORE         0x54
-	return1,         // CASTORE         0x55
-	return1,         // SASTORE         0x56
-	return1,             // POP             0x57
-	return1,            // POP2            0x58
-	return1,             // DUP             0x59
+	return2,           // ILOAD           0x15
+	return2,           // LLOAD           0x16
+	return2,           // FLOAD           0x17
+	return2,           // DLOAD           0x18
+	return2,           // ALOAD           0x19
+	return1,           // ILOAD_0         0x1A
+	return1,           // ILOAD_1         0x1B
+	return1,           // ILOAD_2         0x1C
+	return1,           // ILOAD_3         0x1D
+	return1,           // LLOAD_0         0x1E
+	return1,           // LLOAD_1         0x1F
+	return1,           // LLOAD_2         0x20
+	return1,           // LLOAD_3         0x21
+	return1,           // FLOAD_0         0x22
+	return1,           // FLOAD_1         0x23
+	return1,           // FLOAD_2         0x24
+	return1,           // FLOAD_3         0x25
+	return1,           // DLOAD_0         0x26
+	return1,           // DLOAD_1         0x27
+	return1,           // DLOAD_2         0x28
+	return1,           // DLOAD_3         0x29
+	return1,           // ALOAD_0         0x2A
+	return1,           // ALOAD_1         0x2B
+	return1,           // ALOAD_2         0x2C
+	return1,           // ALOAD_3         0x2D
+	return1,           // IALOAD          0x2E
+	return1,           // LALOAD          0x2F
+	return1,           // FALOAD          0x30
+	return1,           // DALOAD          0x31
+	return1,           // AALOAD          0x32
+	return1,           // BALOAD          0x33
+	return1,           // CALOAD          0x34
+	return1,           // SALOAD          0x35
+	return2,           // ISTORE          0x36
+	return2,           // LSTORE          0x37
+	return2,           // FSTORE          0x38
+	return2,           // DSTORE          0x39
+	return2,           // ASTORE          0x3A
+	return1,           // ISTORE_0        0x3B
+	return1,           // ISTORE_1        0x3C
+	return1,           // ISTORE_2        0x3D
+	return1,           // ISTORE_3        0x3E
+	return1,           // LSTORE_0        0x3F
+	return1,           // LSTORE_1        0x40
+	return1,           // LSTORE_2        0x41
+	return1,           // LSTORE_3        0x42
+	return1,           // FSTORE_0        0x43
+	return1,           // FSTORE_1        0x44
+	return1,           // FSTORE_2        0x45
+	return1,           // FSTORE_3        0x46
+	return1,           // DSTORE_0        0x47
+	return1,           // DSTORE_1        0x48
+	return1,           // DSTORE_2        0x49
+	return1,           // DSTORE_3        0x4A
+	return1,           // ASTORE_0        0x4B
+	return1,           // ASTORE_1        0x4C
+	return1,           // ASTORE_2        0x4D
+	return1,           // ASTORE_3        0x4E
+	return1,           // IASTORE         0x4F
+	return1,           // LASTORE         0x50
+	return1,           // FASTORE         0x51
+	return1,           // DASTORE         0x52
+	return1,           // AASTORE         0x53
+	return1,           // BASTORE         0x54
+	return1,           // CASTORE         0x55
+	return1,           // SASTORE         0x56
+	return1,           // POP             0x57
+	return1,           // POP2            0x58
+	return1,           // DUP             0x59
 	return1,           // DUP_X1          0x5A
 	return1,           // DUP_X2          0x5B
-	return1,            // DUP2            0x5C
-	return1,          // DUP2_X1         0x5D
-	return1,          // DUP2_X2         0x5E
-	return1,            // SWAP            0x5F
-	return1,            // IADD            0x60
-	return1,            // LADD            0x61
-	return1,            // FADD            0x62
-	return1,            // DADD            0x63
-	return1,            // ISUB            0x64
-	return1,            // LSUB            0x65
-	return1,            // FSUB            0x66
-	return1,            // DSUB            0x67
-	return1,            // IMUL            0x68
-	return1,            // LMUL            0x69
-	return1,            // FMUL            0x6A
-	return1,            // DMUL            0x6B
-	return1,            // IDIV            0x6C
-	return1,            // LDIV            0x6D
-	return1,            // FDIV            0x6E
-	return1,            // DDIV            0x6F
-	return1,            // IREM            0x70
-	return1,            // LREM            0x71
-	return1,            // FREM            0x72
-	return1,            // DREM            0x73
-	return1,            // INEG            0x74
-	return1,            // LNEG            0x75
-	return1,            // FNEG            0x76
-	return1,            // DNEG            0x77
-	return1,            // ISHL            0x78
-	return1,            // LSHL            0x79
-	return1,            // ISHR            0x7A
-	return1,            // LSHR            0x7B
+	return1,           // DUP2            0x5C
+	return1,           // DUP2_X1         0x5D
+	return1,           // DUP2_X2         0x5E
+	return1,           // SWAP            0x5F
+	return1,           // IADD            0x60
+	return1,           // LADD            0x61
+	return1,           // FADD            0x62
+	return1,           // DADD            0x63
+	return1,           // ISUB            0x64
+	return1,           // LSUB            0x65
+	return1,           // FSUB            0x66
+	return1,           // DSUB            0x67
+	return1,           // IMUL            0x68
+	return1,           // LMUL            0x69
+	return1,           // FMUL            0x6A
+	return1,           // DMUL            0x6B
+	return1,           // IDIV            0x6C
+	return1,           // LDIV            0x6D
+	return1,           // FDIV            0x6E
+	return1,           // DDIV            0x6F
+	return1,           // IREM            0x70
+	return1,           // LREM            0x71
+	return1,           // FREM            0x72
+	return1,           // DREM            0x73
+	return1,           // INEG            0x74
+	return1,           // LNEG            0x75
+	return1,           // FNEG            0x76
+	return1,           // DNEG            0x77
+	return1,           // ISHL            0x78
+	return1,           // LSHL            0x79
+	return1,           // ISHR            0x7A
+	return1,           // LSHR            0x7B
 	return1,           // IUSHR           0x7C
 	return1,           // LUSHR           0x7D
-	return1,            // IAND            0x7E
-	return1,            // LAND            0x7F
-	return1,             // IOR             0x80
-	return1,             // LOR             0x81
-	return1,            // IXOR            0x82
-	return1,            // LXOR            0x83
-	return3,            // IINC            0x84
-	return1,         // I2L             0x85
-	return1,             // I2F             0x86
-	return1,             // I2D             0x87
-	return1,         // L2I             0x88
-	return1,             // L2F             0x89
-	return1,             // L2D             0x8A
-	return1,             // F2I             0x8B
-	return1,             // F2L             0x8C
-	return1,         // F2D             0x8D
-	return1,             // D2I             0x8E
-	return1,             // D2L             0x8F
-	return1,         // D2F             0x90
-	return1,             // I2B             0x91
-	return1,             // I2C             0x92
-	return1,             // I2S             0x93
-	return1,            // LCMP            0x94
+	return1,           // IAND            0x7E
+	return1,           // LAND            0x7F
+	return1,           // IOR             0x80
+	return1,           // LOR             0x81
+	return1,           // IXOR            0x82
+	return1,           // LXOR            0x83
+	return3,           // IINC            0x84
+	return1,           // I2L             0x85
+	return1,           // I2F             0x86
+	return1,           // I2D             0x87
+	return1,           // L2I             0x88
+	return1,           // L2F             0x89
+	return1,           // L2D             0x8A
+	return1,           // F2I             0x8B
+	return1,           // F2L             0x8C
+	return1,           // F2D             0x8D
+	return1,           // D2I             0x8E
+	return1,           // D2L             0x8F
+	return1,           // D2F             0x90
+	return1,           // I2B             0x91
+	return1,           // I2C             0x92
+	return1,           // I2S             0x93
+	return1,           // LCMP            0x94
 	return1,           // FCMPL           0x95
 	return1,           // FCMPG           0x96
 	return1,           // DCMPL           0x97
 	return1,           // DCMPG           0x98
-	return3,            // IFEQ            0x99
-	return3,            // IFNE            0x9A
-	return3,            // IFLT            0x9B
-	return3,            // IFGE            0x9C
-	return3,            // IFGT            0x9D
-	return3,            // IFLE            0x9E
-	return3,        // IF_ICMPEQ       0x9F
-	return3,        // IF_ICMPNE       0xA0
-	return3,        // IF_ICMPLT       0xA1
-	return3,        // IF_ICMPGE       0xA2
-	return3,        // IF_ICMPGT       0xA3
-	return3,        // IF_ICMPLE       0xA4
-	return3,        // IF_ACMPEQ       0xA5
-	return3,        // IF_ACMPNE       0xA6
-	return3,            // GOTO            0xA7
-	return3,             // JSR             0xA8
-	return2,             // RET             0xA9
-	return0,     // TABLESWITCH     0xAA  <<<
-	return0,    // LOOKUPSWITCH    0xAB  <<<
-	return1,         // IRETURN         0xAC
-	return1,         // LRETURN         0xAD
-	return1,         // FRETURN         0xAE
-	return1,         // DRETURN         0xAF
-	return1,         // ARETURN         0xB0
-	return1,          // RETURN          0xB1
-	checkGetstatic,       // GETSTATIC       0xB2
-	checkPutstatic,       // PUTSTATIC       0xB3
-	checkGetfield,        // GETFIELD        0xB4
-	checkPutfield,        // PUTFIELD        0xB5
-	checkInvokeVirtual,   // INVOKEVIRTUAL   0xB6
-	checkInvokespecial,   // INVOKESPECIAL   0xB7
-	checkInvokestatic,    // INVOKESTATIC    0xB8
-	checkInvokeinterface, // INVOKEINTERFACE 0xB9
-	checkInvokedynamic,   // INVOKEDYNAMIC   0xBA
-	checkNew,             // NEW             0xBB
-	checkNewarray,        // NEWARRAY        0xBC
-	checkAnewarray,       // ANEWARRAY       0xBD
-	checkArraylength,     // ARRAYLENGTH     0xBE
-	checkAthrow,          // ATHROW          0xBF
-	checkCheckcast,       // CHECKCAST       0xC0
-	checkInstanceof,      // INSTANCEOF      0xC1
-	checkPop,             // MONITORENTER    0xC2
-	checkPop,             // MONITOREXIT     0xC3
-	checkWide,            // WIDE            0xC4
-	checkMultinewarray,   // MULTIANEWARRAY  0xC5
-	checkIfnull,          // IFNULL          0xC6
-	checkIfnonnull,       // IFNONNULL       0xC7
-	checkGotow,           // GOTO_W          0xC8
-	checkJsrw,            // JSR_W           0xC9
-	checkWarninvalid,     // BREAKPOINT      0xCA
-	*/
+	return3,           // IFEQ            0x99
+	return3,           // IFNE            0x9A
+	return3,           // IFLT            0x9B
+	return3,           // IFGE            0x9C
+	return3,           // IFGT            0x9D
+	return3,           // IFLE            0x9E
+	return3,           // IF_ICMPEQ       0x9F
+	return3,           // IF_ICMPNE       0xA0
+	return3,           // IF_ICMPLT       0xA1
+	return3,           // IF_ICMPGE       0xA2
+	return3,           // IF_ICMPGT       0xA3
+	return3,           // IF_ICMPLE       0xA4
+	return3,           // IF_ACMPEQ       0xA5
+	return3,           // IF_ACMPNE       0xA6
+	return3,           // GOTO            0xA7
+	return3,           // JSR             0xA8
+	return2,           // RET             0xA9
+	checkTableswitch,  // TABLESWITCH     0xAA
+	checkLookupswitch, // LOOKUPSWITCH    0xAB
+	return1,           // IRETURN         0xAC
+	return1,           // LRETURN         0xAD
+	return1,           // FRETURN         0xAE
+	return1,           // DRETURN         0xAF
+	return1,           // ARETURN         0xB0
+	return1,           // RETURN          0xB1
+	return3,           // GETSTATIC       0xB2
+	return3,           // PUTSTATIC       0xB3
+	return3,           // GETFIELD        0xB4
+	return3,           // PUTFIELD        0xB5
+	return3,           // INVOKEVIRTUAL   0xB6
+	return3,           // INVOKESPECIAL   0xB7
+	return3,           // INVOKESTATIC    0xB8
+	return5,           // INVOKEINTERFACE 0xB9
+	return5,           // INVOKEDYNAMIC   0xBA
+	return3,           // NEW             0xBB
+	return2,           // NEWARRAY        0xBC
+	return3,           // ANEWARRAY       0xBD
+	return1,           // ARRAYLENGTH     0xBE
+	return1,           // ATHROW          0xBF
+	return3,           // CHECKCAST       0xC0
+	return3,           // INSTANCEOF      0xC1
+	return1,           // MONITORENTER    0xC2
+	return1,           // MONITOREXIT     0xC3
+	return1,           // WIDE            0xC4
+	return4,           // MULTIANEWARRAY  0xC5
+	return3,           // IFNULL          0xC6
+	return3,           // IFNONNULL       0xC7
+	return5,           // GOTO_W          0xC8
+	return5,           // JSR_W           0xC9
+	return1,           // BREAKPOINT      0xCA
 }
 
 var PC int
 var CP *CPool
+var Code []byte
 
 func CheckCodeValidity(code []byte, cp *CPool) error {
 	// check that the code is valid
@@ -456,6 +457,7 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 		return errors.New(errMsg)
 	}
 
+	Code = code
 	PC = 0
 	for PC < len(code) {
 		opcode := code[PC]
@@ -482,7 +484,42 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 	return nil
 }
 
+func checkTableswitch(_ *CPool) int {
+	basePC := PC
+
+	paddingBytes := 4 - ((PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	basePC += paddingBytes
+	basePC += 12 // 4 bytes for default, 4 bytes for low, 4 bytes for high
+	return (basePC - PC) + 1
+}
+
+func checkLookupswitch(_ *CPool) int { // need to check this
+	basePC := PC
+
+	paddingBytes := 4 - ((PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	basePC += paddingBytes
+	basePC += 4 // jump size for default
+
+	npairs := binary.BigEndian.Uint32(
+		[]byte{Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4]})
+
+	basePC += 4
+	basePC += int(npairs) * 8
+
+	return (basePC - PC) + 1
+}
+
 // === utility functions ===
+
+func return0(_ *CPool) int { // bytecodes of variable width
+	return 0
+}
 
 // a one-byte opcode that has nothing that can be checked
 func return1(_ *CPool) int {
@@ -495,4 +532,12 @@ func return2(_ *CPool) int {
 
 func return3(_ *CPool) int {
 	return 3
+}
+
+func return4(_ *CPool) int {
+	return 4
+}
+
+func return5(_ *CPool) int {
+	return 5
 }
