@@ -1569,13 +1569,13 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 	}
 	fr.PC += paddingBytes
 
-	defaultJump := fourBytesToInt64( // the jump if the value is not in the table
+	defaultJump := types.FourBytesToInt64( // the jump if the value is not in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
-	lowValue := fourBytesToInt64( // the lowest value in the table
+	lowValue := types.FourBytesToInt64( // the lowest value in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
-	highValue := fourBytesToInt64( // the highest value in the table
+	highValue := types.FourBytesToInt64( // the highest value in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
 
@@ -1588,7 +1588,7 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 	for value := lowValue; value <= highValue; value++ {
 		if value == index {
 			fr.PC += jumpOffset
-			jumpPC := fourBytesToInt64(
+			jumpPC := types.FourBytesToInt64(
 				fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 			fr.PC = basePC
 			return int(jumpPC)
@@ -1625,10 +1625,10 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 	jumpTable := make(map[int64]int)
 	for i := 0; i < int(npairs); i++ {
 		// get the jump size for each case branch
-		caseValue := fourBytesToInt64(
+		caseValue := types.FourBytesToInt64(
 			fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 		fr.PC += 4
-		jumpOffset := fourBytesToInt64(fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+		jumpOffset := types.FourBytesToInt64(fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 		fr.PC += 4
 		jumpTable[caseValue] = int(jumpOffset)
 	}
@@ -1665,7 +1665,6 @@ func doReturn(fr *frames.Frame, _ int64) int {
 // 0xB2 GETSTATIC
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
@@ -2043,7 +2042,6 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// fr.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
@@ -2904,14 +2902,14 @@ func doIfnonnull(fr *frames.Frame, _ int64) int {
 
 // 0xC8 GOTO_W jump to a four-byte offset
 func doGotow(fr *frames.Frame, _ int64) int {
-	jumpTo := fourBytesToInt64(
+	jumpTo := types.FourBytesToInt64(
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	return int(jumpTo)
 }
 
 // 0xC9 JSR_W jump to a four-byte offset
 func doJsrw(fr *frames.Frame, _ int64) int {
-	jumpTo := fourBytesToInt64(
+	jumpTo := types.FourBytesToInt64(
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	push(fr, jumpTo) // JSR and JSR_W both push the jump offset and jump to it
 	return int(jumpTo)
