@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/globals"
+	"jacobin/types"
 	"math"
 )
 
@@ -232,7 +233,10 @@ var bytecodeSkipTable = map[byte]int{
 	// fmt.Printf("Bytecode: 0x%X, Skip: %d\n", bytecode, skip)
 }
 
-type BytecodeFunc func(cp *CPool) int
+type BytecodeFunc func() int
+
+var ERROR_OCCURRED = math.MaxInt32
+var WideInEffedt = false
 
 var CheckTable = [203]BytecodeFunc{
 	return1,           // NOP             0x00
@@ -402,8 +406,8 @@ var CheckTable = [203]BytecodeFunc{
 	return3,           // IF_ICMPLE       0xA4
 	return3,           // IF_ACMPEQ       0xA5
 	return3,           // IF_ACMPNE       0xA6
-	return3,           // GOTO            0xA7
-	return3,           // JSR             0xA8
+	checkGoto,         // GOTO            0xA7
+	checkGoto,         // JSR             0xA8
 	return2,           // RET             0xA9
 	checkTableswitch,  // TABLESWITCH     0xAA
 	checkLookupswitch, // LOOKUPSWITCH    0xAB
@@ -435,7 +439,7 @@ var CheckTable = [203]BytecodeFunc{
 	return4,           // MULTIANEWARRAY  0xC5
 	return3,           // IFNULL          0xC6
 	return3,           // IFNONNULL       0xC7
-	return5,           // GOTO_W          0xC8
+	checkGotow,        // GOTO_W          0xC8
 	return5,           // JSR_W           0xC9
 	return1,           // BREAKPOINT      0xCA
 }
@@ -461,8 +465,8 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 	PC = 0
 	for PC < len(code) {
 		opcode := code[PC]
-		ret := CheckTable[opcode](cp)
-		if ret == math.MaxInt {
+		ret := CheckTable[opcode]()
+		if ret == ERROR_OCCURRED {
 			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
 			status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
 			if status != true { // will only happen in test
@@ -484,19 +488,24 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 	return nil
 }
 
-func checkTableswitch(_ *CPool) int {
-	basePC := PC
-
-	paddingBytes := 4 - ((PC + 1) % 4)
-	if paddingBytes == 4 {
-		paddingBytes = 0
+// === check functions in alpha order by name of bytecode ===
+func checkGoto() int {
+	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
+	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+		return ERROR_OCCURRED
 	}
-	basePC += paddingBytes
-	basePC += 12 // 4 bytes for default, 4 bytes for low, 4 bytes for high
-	return (basePC - PC) + 1
+	return 3
 }
 
-func checkLookupswitch(_ *CPool) int { // need to check this
+func checkGotow() int {
+	jumpTo := int(types.FourBytesToInt64(Code[PC+1], Code[PC+2], Code[PC+3], Code[PC+4]))
+	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+		return ERROR_OCCURRED
+	}
+	return 5
+}
+
+func checkLookupswitch() int { // need to check this
 	basePC := PC
 
 	paddingBytes := 4 - ((PC + 1) % 4)
@@ -515,29 +524,41 @@ func checkLookupswitch(_ *CPool) int { // need to check this
 	return (basePC - PC) + 1
 }
 
+func checkTableswitch() int {
+	basePC := PC
+
+	paddingBytes := 4 - ((PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	basePC += paddingBytes
+	basePC += 12 // 4 bytes for default, 4 bytes for low, 4 bytes for high
+	return (basePC - PC) + 1
+}
+
 // === utility functions ===
 
-func return0(_ *CPool) int { // bytecodes of variable width
+func return0() int { // bytecodes of variable width
 	return 0
 }
 
 // a one-byte opcode that has nothing that can be checked
-func return1(_ *CPool) int {
+func return1() int {
 	return 1
 }
 
-func return2(_ *CPool) int {
+func return2() int {
 	return 2
 }
 
-func return3(_ *CPool) int {
+func return3() int {
 	return 3
 }
 
-func return4(_ *CPool) int {
+func return4() int {
 	return 4
 }
 
-func return5(_ *CPool) int {
+func return5() int {
 	return 5
 }
