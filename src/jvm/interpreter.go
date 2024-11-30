@@ -2288,7 +2288,6 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 
-		// fr.PC += 2 // advance PC for the first two bytes of this bytecode
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, MainThread.Trace)
 		if ret != nil {
 			switch ret.(type) {

@@ -538,10 +538,6 @@ func checkTableswitch() int {
 
 // === utility functions ===
 
-func return0() int { // bytecodes of variable width
-	return 0
-}
-
 // a one-byte opcode that has nothing that can be checked
 func return1() int {
 	return 1
