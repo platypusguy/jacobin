@@ -225,18 +225,12 @@ var bytecodeSkipTable = map[byte]int{
 	0xC8: 5, // GOTO_W
 	0xC9: 5, // JSR_W
 	0xCA: 1, // BREAKPOINT
-
-	//
-	// // Example usage
-	// bytecode := byte(0x10) // bipush
-	// skip := bytecodeSkipTable[bytecode]
-	// fmt.Printf("Bytecode: 0x%X, Skip: %d\n", bytecode, skip)
 }
 
 type BytecodeFunc func() int
 
 var ERROR_OCCURRED = math.MaxInt32
-var WideInEffedt = false
+var WideInEffect = false
 
 var CheckTable = [203]BytecodeFunc{
 	return1,           // NOP             0x00
