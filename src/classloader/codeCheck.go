@@ -386,20 +386,20 @@ var CheckTable = [203]BytecodeFunc{
 	return1,           // FCMPG           0x96
 	return1,           // DCMPL           0x97
 	return1,           // DCMPG           0x98
-	return3,           // IFEQ            0x99
-	return3,           // IFNE            0x9A
-	return3,           // IFLT            0x9B
-	return3,           // IFGE            0x9C
-	return3,           // IFGT            0x9D
-	return3,           // IFLE            0x9E
-	return3,           // IF_ICMPEQ       0x9F
-	return3,           // IF_ICMPNE       0xA0
-	return3,           // IF_ICMPLT       0xA1
-	return3,           // IF_ICMPGE       0xA2
-	return3,           // IF_ICMPGT       0xA3
-	return3,           // IF_ICMPLE       0xA4
-	return3,           // IF_ACMPEQ       0xA5
-	return3,           // IF_ACMPNE       0xA6
+	checkIf,           // IFEQ            0x99
+	checkIf,           // IFNE            0x9A
+	checkIf,           // IFLT            0x9B
+	checkIf,           // IFGE            0x9C
+	checkIf,           // IFGT            0x9D
+	checkIf,           // IFLE            0x9E
+	checkIf,           // IF_ICMPEQ       0x9F
+	checkIf,           // IF_ICMPNE       0xA0
+	checkIf,           // IF_ICMPLT       0xA1
+	checkIf,           // IF_ICMPGE       0xA2
+	checkIf,           // IF_ICMPGT       0xA3
+	checkIf,           // IF_ICMPLE       0xA4
+	checkIf,           // IF_ACMPEQ       0xA5
+	checkIf,           // IF_ACMPNE       0xA6
 	checkGoto,         // GOTO            0xA7
 	checkGoto,         // JSR             0xA8
 	return2,           // RET             0xA9
@@ -528,6 +528,14 @@ func checkTableswitch() int {
 	basePC += paddingBytes
 	basePC += 12 // 4 bytes for default, 4 bytes for low, 4 bytes for high
 	return (basePC - PC) + 1
+}
+
+func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
+	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
+	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
+		return ERROR_OCCURRED
+	}
+	return 3
 }
 
 // === utility functions ===
