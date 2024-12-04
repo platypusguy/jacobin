@@ -202,10 +202,19 @@ func DumpStatics(from string, selection int64, className string) {
 		} else {
 			switch st.Type {
 			case types.Bool:
-				if st.Value.(int64) == 1 {
-					value = "true"
-				} else {
-					value = "false"
+				switch st.Value.(type) {
+				case bool:
+					if st.Value.(bool) {
+						value = "true"
+					} else {
+						value = "false"
+					}
+				default:
+					if st.Value.(int64) == 1 {
+						value = "true"
+					} else {
+						value = "false"
+					}
 				}
 			case types.Char, types.Rune:
 				value = fmt.Sprintf("'%c'", st.Value)
