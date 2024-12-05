@@ -200,7 +200,30 @@ func DumpStatics(from string, selection int64, className string) {
 		if (strings.HasPrefix(st.Type, "L") || strings.HasPrefix(st.Type, "[")) && st.Value == nil {
 			value = "<null>"
 		} else {
-			value = fmt.Sprintf("%v", st.Value)
+			switch st.Type {
+			case types.Bool:
+				switch st.Value.(type) {
+				case bool:
+					if st.Value.(bool) {
+						value = "true"
+					} else {
+						value = "false"
+					}
+				default:
+					if st.Value.(int64) == 1 {
+						value = "true"
+					} else {
+						value = "false"
+					}
+				}
+			case types.Char, types.Rune:
+				value = fmt.Sprintf("'%c'", st.Value)
+			case "Ljava/lang/String;":
+				value = "\"It's a string but I cannot get its value due to Go statics/object circularity\""
+			default:
+				value = fmt.Sprintf("%v", st.Value)
+			}
+
 		}
 
 		// Prefix name with statics designation (X).

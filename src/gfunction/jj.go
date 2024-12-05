@@ -48,43 +48,45 @@ func Load_jj() {
 		}
 }
 
-func jjStringify(value any) *object.Object {
+func jjStringify(ftype string, fvalue any) *object.Object {
 	var str string
-	switch value.(type) {
-	case bool:
-		if value.(bool) {
+	switch ftype {
+	case types.Bool:
+		if fvalue.(int64) == 1 {
 			str = "true"
 		} else {
 			str = "false"
 		}
-	case byte: // uint8
-		str = fmt.Sprintf("%02x", value.(byte))
-	case int32:
-		str = fmt.Sprintf("%d", value.(int32))
-	case int64:
-		str = fmt.Sprintf("%d", value.(int64))
-	case int:
-		str = fmt.Sprintf("%d", value.(int))
-	case float32:
-		str = strconv.FormatFloat(float64(value.(float32)), 'g', -1, 64)
-	case float64:
-		str = strconv.FormatFloat(value.(float64), 'g', -1, 64)
-	case error:
-		str = value.(error).Error()
-	case *object.Object:
-		if object.IsNull(value.(*object.Object)) {
+	case types.Byte: // uint8
+		str = fmt.Sprintf("%02x", fvalue.(uint8))
+	case types.Char, types.Rune:
+		str = fmt.Sprintf("%c", fvalue.(int64))
+	case types.Double:
+		str = strconv.FormatFloat(fvalue.(float64), 'g', -1, 64)
+	case types.Float:
+		str = strconv.FormatFloat(float64(fvalue.(float64)), 'g', -1, 64)
+	case types.Int:
+		str = fmt.Sprintf("%d", fvalue.(int64))
+	case types.Long:
+		str = fmt.Sprintf("%d", fvalue.(int64))
+	case "Ljava/lang/String;":
+		str = object.GoStringFromStringObject(fvalue.(*object.Object))
+	case types.Ref, types.ByteArray:
+		if object.IsNull(fvalue.(*object.Object)) {
 			str = "null"
 		} else {
-			obj := value.(*object.Object)
+			obj := fvalue.(*object.Object)
 			if obj.KlassName == globals.StringIndexString {
 				// It is a Java String object. Return it as-is.
 				return obj
 			}
 			// Not a Java String object.
-			str = fmt.Sprintf("%v", value)
+			str = fmt.Sprintf("%v", fvalue)
 		}
+	case types.Short:
+		str = fmt.Sprintf("%d", fvalue.(int64))
 	default:
-		str = fmt.Sprintf("%v", value)
+		str = fmt.Sprintf("%v", fvalue)
 	}
 	return object.StringObjectFromGoString(str)
 }
@@ -132,8 +134,8 @@ func jjGetStaticString(params []interface{}) interface{} {
 	fieldName := object.ObjectFieldToString(fieldObj, "value")
 
 	// Convert statics entry to a string object.
-	value := statics.GetStaticValue(className, fieldName)
-	return jjStringify(value)
+	static := statics.Statics[className+"."+fieldName]
+	return jjStringify(static.Type, static.Value)
 }
 
 func jjGetFieldString(params []interface{}) interface{} {
@@ -158,5 +160,5 @@ func jjGetFieldString(params []interface{}) interface{} {
 	if fld.Ftype == "Ljava/lang/String;" {
 		return object.StringObjectFromByteArray(fld.Fvalue.([]byte))
 	}
-	return jjStringify(fld.Fvalue)
+	return jjStringify(fld.Ftype, fld.Fvalue)
 }
