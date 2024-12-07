@@ -902,6 +902,10 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		rawArray = fld.Fvalue.([]byte)
 	case []byte:
 		rawArray = arrayRef.([]byte)
+	case []types.JavaByte: // JavaByte is an alias for int8
+		int8Array := arrayRef.([]types.JavaByte)
+		int8Array[index] = types.JavaByte(value)
+		return 1
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BASTORE: unexpected reference type: %T",
