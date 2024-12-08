@@ -139,6 +139,8 @@ func GetStaticValue(className string, fieldName string) any {
 		retValue = types.ConvertGoBoolToJavaBool(value)
 	case byte:
 		retValue = int64(prevLoaded.Value.(byte))
+	case types.JavaByte:
+		retValue = int64(prevLoaded.Value.(types.JavaByte))
 	case int32:
 		retValue = int64(prevLoaded.Value.(int32))
 	case int:
