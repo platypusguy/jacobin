@@ -12,7 +12,9 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 // jj (Jacobin JVM) functions are functions that can be inserted inside Java programs
@@ -48,7 +50,7 @@ func Load_jj() {
 		}
 }
 
-func jjStringify(ftype string, fvalue any) *object.Object {
+func jjStringifyScalar(ftype string, fvalue any) *object.Object {
 	var str string
 	switch ftype {
 	case types.Bool:
@@ -71,6 +73,8 @@ func jjStringify(ftype string, fvalue any) *object.Object {
 		str = fmt.Sprintf("%d", fvalue.(int64))
 	case "Ljava/lang/String;":
 		str = object.GoStringFromStringObject(fvalue.(*object.Object))
+	case types.Short:
+		str = fmt.Sprintf("%d", fvalue.(int64))
 	case types.Ref, types.ByteArray:
 		if object.IsNull(fvalue.(*object.Object)) {
 			str = "null"
@@ -83,36 +87,29 @@ func jjStringify(ftype string, fvalue any) *object.Object {
 			// Not a Java String object.
 			str = fmt.Sprintf("%v", fvalue)
 		}
-	case types.Short:
-		str = fmt.Sprintf("%d", fvalue.(int64))
 	default:
 		str = fmt.Sprintf("%v", fvalue)
 	}
 	return object.StringObjectFromGoString(str)
 }
 
-func jjDumpStatics(params []interface{}) interface{} {
-	fromObj := params[0].(*object.Object)
-	if fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
-		errMsg := fmt.Sprintf("jjDumpStatics: Invalid from object: %T", params[0])
-		return object.StringObjectFromGoString(errMsg)
+func jjStringifyVector(thing any) *object.Object {
+	var result string = ""
+	var anArray reflect.Value
+	switch thing.(type) {
+	case *object.Object:
+		anArray = reflect.ValueOf(thing.(*object.Object).FieldTable["value"].Fvalue)
+	default:
+		anArray = reflect.ValueOf(thing)
 	}
-	from := object.ObjectFieldToString(fromObj, "value")
-	selection := params[1].(int64)
-	classNameObj := params[2].(*object.Object)
-	className := object.ObjectFieldToString(classNameObj, "value")
-
-	statics.DumpStatics(from, selection, className)
-	return nil
-}
-
-func jjDumpObject(params []interface{}) interface{} {
-	this := params[0].(*object.Object)
-	objTitle := params[1].(*object.Object)
-	title := object.ObjectFieldToString(objTitle, "value")
-	indent := params[2].(int64)
-	this.DumpObject(title, int(indent))
-	return nil
+	for ix := 0; ix < anArray.Len(); ix++ {
+		if ix > 0 {
+			result += "," // comma as a separator between elements
+		}
+		element := anArray.Index(ix).Interface() // Get the element as an interface{}
+		result += fmt.Sprintf("%v", element)
+	}
+	return object.StringObjectFromGoString(result)
 }
 
 func jjGetStaticString(params []interface{}) interface{} {
@@ -135,7 +132,14 @@ func jjGetStaticString(params []interface{}) interface{} {
 
 	// Convert statics entry to a string object.
 	static := statics.Statics[className+"."+fieldName]
-	return jjStringify(static.Type, static.Value)
+
+	// Handle vectors.
+	if strings.HasPrefix(static.Type, types.Array) {
+		return jjStringifyVector(static.Value.(*object.Object))
+	}
+
+	// Handle a scalar.
+	return jjStringifyScalar(static.Type, static.Value)
 }
 
 func jjGetFieldString(params []interface{}) interface{} {
@@ -160,5 +164,35 @@ func jjGetFieldString(params []interface{}) interface{} {
 	if fld.Ftype == "Ljava/lang/String;" {
 		return object.StringObjectFromByteArray(fld.Fvalue.([]byte))
 	}
-	return jjStringify(fld.Ftype, fld.Fvalue)
+
+	// Handle vectors.
+	if strings.HasPrefix(fld.Ftype, types.Array) {
+		return jjStringifyVector(fld.Fvalue)
+	}
+
+	// Handle a scalar.
+	return jjStringifyScalar(fld.Ftype, fld.Fvalue)
+}
+func jjDumpStatics(params []interface{}) interface{} {
+	fromObj := params[0].(*object.Object)
+	if fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
+		errMsg := fmt.Sprintf("jjDumpStatics: Invalid from object: %T", params[0])
+		return object.StringObjectFromGoString(errMsg)
+	}
+	from := object.ObjectFieldToString(fromObj, "value")
+	selection := params[1].(int64)
+	classNameObj := params[2].(*object.Object)
+	className := object.ObjectFieldToString(classNameObj, "value")
+
+	statics.DumpStatics(from, selection, className)
+	return nil
+}
+
+func jjDumpObject(params []interface{}) interface{} {
+	this := params[0].(*object.Object)
+	objTitle := params[1].(*object.Object)
+	title := object.ObjectFieldToString(objTitle, "value")
+	indent := params[2].(int64)
+	this.DumpObject(title, int(indent))
+	return nil
 }
