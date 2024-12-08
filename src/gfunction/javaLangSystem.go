@@ -226,14 +226,14 @@ func arrayCopy(params []interface{}) interface{} {
 
 		switch srcType {
 		case types.ByteArray:
-			sArr := src.FieldTable["value"].Fvalue.([]byte)
-			dArr := dest.FieldTable["value"].Fvalue.([]byte)
+			sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
+			dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
 			for i := int64(0); i < length; i++ {
 				tempArray[i] = sArr[s]
 				s += 1
 			}
 			for i := int64(0); i < length; i++ {
-				dArr[d] = tempArray[i].(byte)
+				dArr[d] = tempArray[i].(types.JavaByte)
 				d += 1
 			}
 

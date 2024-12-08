@@ -9,6 +9,7 @@ package object
 import (
 	"jacobin/globals"
 	"jacobin/stringPool"
+	"jacobin/types"
 	"testing"
 )
 
@@ -67,12 +68,12 @@ func TestMakde1DimByteArray(t *testing.T) {
 		t.Errorf("did not get expected Jacobin type for byte array, got %s", *bArrType)
 	}
 
-	rawArray := bArr.FieldTable["value"].Fvalue.([]byte)
+	rawArray := bArr.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(rawArray) != 10 {
 		t.Errorf("Expecting 10 elements in byte array, got %d", len(rawArray))
 	}
 
-	if rawArray[0] != byte(0) {
+	if rawArray[0] != types.JavaByte(0) {
 		t.Errorf("Expecting byte[0] ==  0, got %d", rawArray[0])
 	}
 }
@@ -150,7 +151,7 @@ func TestMake2DimByteArray(t *testing.T) {
 
 func TestMakeArrayFromRawArray(t *testing.T) {
 	globals.InitGlobals("test")
-	rawArray := make([]byte, 10)
+	rawArray := make([]types.JavaByte, 10)
 	newArr := MakeArrayFromRawArray(rawArray)
 	size := ArrayLength(newArr)
 	if size != 10 {
@@ -160,7 +161,7 @@ func TestMakeArrayFromRawArray(t *testing.T) {
 
 func TestMakeArrayFromRawArrayPtr(t *testing.T) {
 	globals.InitGlobals("test")
-	rawArray := make([]byte, 10)
+	rawArray := make([]types.JavaByte, 10)
 	newArr := MakeArrayFromRawArray(&rawArray)
 	size := ArrayLength(newArr)
 	if size != 10 {

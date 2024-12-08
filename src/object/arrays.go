@@ -124,7 +124,8 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	// contain the actual value rather than a pointer to the value. 2024-02
 	switch arrType {
 	case BYTE:
-		barArr := make([]byte, size)
+		// barArr := make([]byte, size)
+		barArr := make([]types.JavaByte, size)
 		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
 		o.FieldTable["value"] = of
 	case FLOAT: // case 'F', 'D': // float arrays
@@ -172,8 +173,9 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	case *Object: // if it's a ref to an array object, just return it
 		arr := rawArray.(*Object)
 		return arr
-	case *[]uint8: // an array of bytes
-		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]uint8))
+	case *[]types.JavaByte: // an array of bytes
+		objPtr :=
+			MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]types.JavaByte))
 		return objPtr
 	}
 
@@ -220,7 +222,7 @@ func ArrayLength(arrayRef *Object) int64 {
 	arrayType := o.Ftype
 	switch arrayType {
 	case types.ByteArray:
-		array := o.Fvalue.([]byte)
+		array := o.Fvalue.([]types.JavaByte)
 		size = int64(len(array))
 	case types.RefArray:
 		array := o.Fvalue.([]*Object)

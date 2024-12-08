@@ -865,15 +865,15 @@ func TestBastore(t *testing.T) {
 	ptr := pop(&f).(*object.Object)
 
 	f = newFrame(opcodes.BASTORE)
-	push(&f, ptr)       // push the reference to the array
-	push(&f, int64(20)) // in array[20]
-	push(&f, byte(100)) // the value we're storing
+	push(&f, ptr)                 // push the reference to the array
+	push(&f, int64(20))           // in array[20]
+	push(&f, types.JavaByte(100)) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)    // execute the bytecode
 
 	o := ptr.FieldTable["value"]
-	array := o.Fvalue.([]byte) // get the array
+	array := o.Fvalue.([]types.JavaByte) // get the array
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
@@ -916,7 +916,7 @@ func TestBastoreInt64(t *testing.T) {
 	interpret(fs)    // execute the bytecode
 
 	o := ptr.FieldTable["value"]
-	array := o.Fvalue.([]byte) // get the array
+	array := o.Fvalue.([]types.JavaByte) // get the array
 	var sum int64
 	for i := 0; i < 30; i++ {
 		sum += int64(array[i])
@@ -2218,7 +2218,7 @@ func Test2DimArray1(t *testing.T) {
 	}
 
 	oa := arrLevelArrayPtr[0].FieldTable["value"]
-	leafLevelArrayPtr := (oa.Fvalue).([]byte)
+	leafLevelArrayPtr := (oa.Fvalue).([]types.JavaByte)
 	arrLen := len(leafLevelArrayPtr)
 	if arrLen != 4 {
 		t.Errorf("MULTIANEWARRAY: Expected length of leaf array of 4got: %d", arrLen)
@@ -2437,7 +2437,7 @@ func TestNewrrayForByteArray(t *testing.T) {
 	}
 
 	arrayPtr := pop(&f).(*object.Object)
-	array := arrayPtr.FieldTable["value"].Fvalue.([]byte)
+	array := arrayPtr.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(array) != 13 {
 		t.Errorf("NEWARRAY: Got unexpected array size: %d", len(array))
 	}

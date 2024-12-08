@@ -66,16 +66,16 @@ func fourBytesToInt64(b1, b2, b3, b4 byte) int64 {
 }
 
 // converts an interface{} value to int8. Used for BASTORE
-func convertInterfaceToByte(val interface{}) byte {
+func convertInterfaceToByte(val interface{}) types.JavaByte {
 	switch t := val.(type) {
-	case int64:
-		return byte(t)
-	case int:
-		return byte(t)
-	case int8:
-		return byte(t)
 	case byte:
+		return types.JavaByte(t)
+	case int:
+		return types.JavaByte(t)
+	case int8:
 		return t
+	case int64:
+		return types.JavaByte(t)
 	}
 	return 0
 }

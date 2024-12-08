@@ -10,6 +10,7 @@ import (
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/stringPool"
+	"jacobin/types"
 	"strings"
 	"testing"
 )
@@ -61,9 +62,9 @@ func TestArrayCopyOverlappingSameArray(t *testing.T) {
 	src := object.Make1DimArray(object.BYTE, 10)
 	// dest := object.Make1DimArray(object.BYTE, 10)
 
-	rawSrcArray := src.FieldTable["value"].Fvalue.([]byte)
+	rawSrcArray := src.FieldTable["value"].Fvalue.([]types.JavaByte)
 	for i := 0; i < 10; i++ {
-		rawSrcArray[i] = byte(i)
+		rawSrcArray[i] = types.JavaByte(i)
 	}
 
 	params := make([]interface{}, 5)
@@ -82,7 +83,7 @@ func TestArrayCopyOverlappingSameArray(t *testing.T) {
 		t.Errorf("Unexpected error in test of arrayCopy(): %s", error.Error(e))
 	}
 
-	j := byte(0)
+	j := types.JavaByte(0)
 	for i := 0; i < 10; i++ {
 		j += rawSrcArray[i]
 	}

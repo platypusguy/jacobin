@@ -591,21 +591,21 @@ func doBaload(fr *frames.Frame, _ int64) int {
 	}
 
 	var bAref *object.Object
-	var array []byte
+	var array []types.JavaByte
 	var pushValue int64
-	var pushValueReady bool = false
+	var pushValueReady = false
 	switch ref.(type) {
 	case *object.Object:
 		bAref = ref.(*object.Object)
 		if object.IsNull(bAref) {
-			array = make([]byte, 0)
+			array = make([]types.JavaByte, 0)
 		} else {
-			array = bAref.FieldTable["value"].Fvalue.([]byte)
+			array = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
 		}
-	case *[]uint8:
-		array = *(ref.(*[]uint8))
-	case []uint8:
-		array = ref.([]uint8)
+	// case *[]uint8:
+	// 	array = *(ref.(*[]uint8))
+	// case []uint8:
+	// 	array = ref.([]uint8)
 	case []int8:
 		arr := ref.([]int8)
 		val := arr[index]
@@ -875,7 +875,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 func doBastore(fr *frames.Frame, _ int64) int {
 	value := convertInterfaceToByte(pop(fr))
 	index := pop(fr).(int64)
-	var rawArray []byte
+	var rawArray []types.JavaByte
 	arrayRef := pop(fr)
 	switch arrayRef.(type) {
 	case *object.Object:
@@ -899,9 +899,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
-		rawArray = fld.Fvalue.([]byte)
-	case []byte:
-		rawArray = arrayRef.([]byte)
+		rawArray = fld.Fvalue.([]types.JavaByte)
+	// case []byte:
+	// 	rawArray = arrayRef.([]byte)
 	case []types.JavaByte: // JavaByte is an alias for int8
 		int8Array := arrayRef.([]types.JavaByte)
 		int8Array[index] = types.JavaByte(value)
