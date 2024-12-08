@@ -216,10 +216,13 @@ func DumpStatics(from string, selection int64, className string) {
 						value = "false"
 					}
 				}
+			case types.Byte:
+				value = fmt.Sprintf("0x%02x", st.Value)
 			case types.Char, types.Rune:
 				value = fmt.Sprintf("'%c'", st.Value)
 			case "Ljava/lang/String;":
-				value = "\"It's a string but I cannot get its value due to Go statics/object circularity\""
+				// TODO: Avoiding a circularity issue between packages statics and object. What a pity!
+				value = fmt.Sprintf("%v", st.Value)
 			default:
 				value = fmt.Sprintf("%v", st.Value)
 			}
@@ -232,7 +235,7 @@ func DumpStatics(from string, selection int64, className string) {
 		}
 
 		// Print it.
-		_, _ = fmt.Fprintf(os.Stderr, "%-40s   {%s %s}\n", key, st.Type, value)
+		_, _ = fmt.Fprintf(os.Stderr, "%-40s   %s %s\n", key, st.Type, value)
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }
