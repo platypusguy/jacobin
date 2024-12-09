@@ -97,14 +97,18 @@ func GoStringFromStringObject(obj *Object) string {
 	return ""
 }
 
+// JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
+func JavaByteFromStringObject(obj *Object) []types.JavaByte {
+	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+		return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
+	} else {
+		return nil
+	}
+}
+
 // ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []byte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		val := obj.FieldTable["value"]
-		switch val.Fvalue.(type) {
-		case []byte:
-			return val.Fvalue.([]byte)
-		}
 		return obj.FieldTable["value"].Fvalue.([]byte)
 	} else {
 		return nil
@@ -113,6 +117,13 @@ func ByteArrayFromStringObject(obj *Object) []byte {
 
 // StringObjectFromByteArray: convenience method to create a string object from a byte array
 func StringObjectFromByteArray(bytes []byte) *Object {
+	newStr := NewStringObject()
+	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
+	return newStr
+}
+
+// StringObjectFromJavaByteArray: convenience method to create a string object from a JavaByte array
+func StringObjectFromJavaByteArray(bytes []types.JavaByte) *Object {
 	newStr := NewStringObject()
 	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
 	return newStr
