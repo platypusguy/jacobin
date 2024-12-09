@@ -267,3 +267,11 @@ func GoStringFromJavaByteArray(jbarr []types.JavaByte) string {
 	}
 	return sb.String()
 }
+
+func JavaByteArrayFromGoString(str string) []types.JavaByte {
+	jbarr := make([]types.JavaByte, len(str))
+	for i, b := range str {
+		jbarr[i] = types.JavaByte(b)
+	}
+	return jbarr
+}

@@ -376,3 +376,15 @@ func TestGoStringFromJavaByteArray(t *testing.T) {
 		t.Errorf("Expected 'Mary had a little lamb whose fleece was white as snow.', got '%s'", goString)
 	}
 }
+
+// test that a JavaByte array is correctly created from a Go string
+func TestJavaByteArrayFromGoString(t *testing.T) {
+	constStr := "Mary"
+	jba := JavaByteArrayFromGoString(constStr)
+	if len(jba) != 4 {
+		t.Errorf("Expected 4 bytes, got %d", len(jba))
+	}
+	if jba[0] != 0x4d || jba[1] != 0x61 || jba[2] != 0x72 || jba[3] != 0x79 {
+		t.Errorf("Expected [0x4d, 0x61, 0x72, 0x79], got %v", jba)
+	}
+}
