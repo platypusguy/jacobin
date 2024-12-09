@@ -85,19 +85,26 @@ func GoStringFromStringObject(obj *Object) string {
 	if !ok {
 		return ""
 	}
-	bytes, ok := fld.Fvalue.([]byte)
-	if !ok {
-		return ""
+
+	bytes := fld.Fvalue
+	switch bytes.(type) {
+	case []byte:
+		return string(bytes.([]byte))
+	case []types.JavaByte:
+		return GoStringFromJavaByteArray(bytes.([]types.JavaByte))
 	}
-	if len(bytes) > 0 {
-		return string(bytes)
-	}
+
 	return ""
 }
 
 // ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []byte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+		val := obj.FieldTable["value"]
+		switch val.Fvalue.(type) {
+		case []byte:
+			return val.Fvalue.([]byte)
+		}
 		return obj.FieldTable["value"].Fvalue.([]byte)
 	} else {
 		return nil
@@ -240,4 +247,12 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		fieldName, fld.Ftype)
 	trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
+}
+
+func GoStringFromJavaByteArray(jbarr []types.JavaByte) string {
+	var sb strings.Builder
+	for _, b := range jbarr {
+		sb.WriteByte(byte(b))
+	}
+	return sb.String()
 }
