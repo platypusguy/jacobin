@@ -107,6 +107,7 @@ func GetStringPoolSize() uint32 {
 	return globals.StringPoolNext
 }
 
+// EmptyStringPool is used exclusively for testing. If used in production, remove this comment.
 func EmptyStringPool() {
 	globals.InitStringPool()
 }
