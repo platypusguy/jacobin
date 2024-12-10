@@ -202,6 +202,15 @@ func JavaByteSliceToGoString(vector types.JavaByteSlice) string {
 	return string(uint8Slice)
 }
 
+func GoStringToJavaByteSlice(arg string) types.JavaByteSlice {
+	byteSlice := []byte(arg)
+	javaByteSlice := make(types.JavaByteSlice, len(byteSlice))
+	for ix, bb := range byteSlice {
+		javaByteSlice[ix] = types.JavaByte(bb)
+	}
+	return javaByteSlice
+}
+
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return "null".
