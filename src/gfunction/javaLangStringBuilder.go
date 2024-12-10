@@ -470,8 +470,10 @@ func stringBuilderAppend(params []any) any {
 	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder
 		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
 		switch fvalue.(type) {
-		case []types.JavaByte: // byte array, String, StringBuffer, or StringBuilder
+		case []types.JavaByte: // JavaByte array, String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]types.JavaByte)
+		case []byte: // byte array
+			parmArray = object.JavaByteArrayFromGoByteArray(fvalue.([]byte))
 		case []int64: // char array, int array
 			if len(params) == 4 {
 				int64Array := fvalue.([]int64)
@@ -663,6 +665,8 @@ func stringBuilderInsert(params []any) any {
 		switch fvalue.(type) {
 		case []types.JavaByte: // String, StringBuffer, or StringBuilder
 			parmArray = fvalue.([]types.JavaByte)
+		case []byte: // byte array
+			parmArray = object.JavaByteArrayFromGoByteArray(fvalue.([]byte))
 		case []int64: // char array
 			if len(params) == 5 { // subset of char array
 				int64Array := fvalue.([]int64)
