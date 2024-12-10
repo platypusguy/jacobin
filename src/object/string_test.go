@@ -388,3 +388,16 @@ func TestJavaByteArrayFromGoString(t *testing.T) {
 		t.Errorf("Expected [0x4d, 0x61, 0x72, 0x79], got %v", jba)
 	}
 }
+
+func TestJavaByteSliceCases(t *testing.T) {
+	str1 := "Off with her head, said the Red Queen"
+	jbs := GoStringToJavaByteSlice(str1)
+	t.Log(jbs)
+	if jbs[0] != 79 || jbs[len(jbs)-1] != 110 {
+		t.Errorf("expected jbs[0]=79 and jbs[last]=110")
+	}
+	str2 := JavaByteSliceToGoString(jbs)
+	if str1 != str2 {
+		t.Errorf("Expected %s, observed %s", str1, str2)
+	}
+}
