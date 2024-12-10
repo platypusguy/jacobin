@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/types"
 	"math"
 	"os"
 )
@@ -262,7 +263,13 @@ func PrintlnString(params []interface{}) interface{} {
 	if fld.Fvalue == nil {
 		fmt.Fprintln(params[0].(*os.File), "")
 	} else {
-		str := string(fld.Fvalue.([]byte))
+		var str string
+		switch fld.Fvalue.(type) {
+		case []byte:
+			str = string(fld.Fvalue.([]byte))
+		case []types.JavaByte:
+			str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		}
 		fmt.Fprintln(params[0].(*os.File), str)
 	}
 
@@ -440,8 +447,8 @@ func PrintObject(params []interface{}) interface{} {
 // "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
 func Printf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
-	*intfSprintf = append(*intfSprintf, params[1])
-	*intfSprintf = append(*intfSprintf, params[2])
+	*intfSprintf = append(*intfSprintf, params[1]) // The format string
+	*intfSprintf = append(*intfSprintf, params[2]) // The object array
 	retval := StringFormatter(*intfSprintf)
 	switch retval.(type) {
 	case *object.Object:
