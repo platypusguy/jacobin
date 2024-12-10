@@ -25,6 +25,7 @@ import (
 	"jacobin/types"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 // NewStringObject creates an empty string object (aka Java String)
@@ -196,6 +197,11 @@ func IsStringObject(unknown any) bool {
 	return o.KlassName == types.StringPoolStringIndex
 }
 
+func JavaByteSliceToGoString(vector types.JavaByteSlice) string {
+	uint8Slice := *(*[]uint8)(unsafe.Pointer(&vector))
+	return string(uint8Slice)
+}
+
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return "null".
@@ -240,8 +246,12 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
 	case types.ByteArray:
-		str := string(fld.Fvalue.([]byte))
-		return str
+		switch fld.Fvalue.(type) {
+		case []byte:
+			return string(fld.Fvalue.([]byte))
+		default:
+			return JavaByteSliceToGoString(fld.Fvalue.(types.JavaByteSlice))
+		}
 	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {

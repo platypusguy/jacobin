@@ -89,6 +89,7 @@ func IsError(t string) bool {
 
 // bytes in Go are uint8, whereas in Java they are int8. Hence this type alias.
 type JavaByte = int8
+type JavaByteSlice = []int8
 
 // booleans in Java are defined as integer values of 0 and 1
 // in arrays, they're stored as bytes, everywhere else as 32-bit ints.
