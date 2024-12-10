@@ -1262,7 +1262,7 @@ func stringIsLatin1(params []interface{}) interface{} {
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
 	obj := params[0].(*object.Object)
-	bytes := object.ByteArrayFromStringObject(obj)
+	bytes := object.JavaByteArrayFromStringObject(obj)
 	return int64(len(bytes))
 }
 
