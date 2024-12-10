@@ -28,7 +28,7 @@ func TestNewStringObject(t *testing.T) {
 		t.Errorf("Klass should be java/lang/String, observed: %s", klassStr)
 	}
 
-	value := str.FieldTable["value"].Fvalue.([]byte)
+	value := str.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(value) != 0 {
 		t.Errorf("value field should be an empty byte, observed length of %d", len(value))
 	}

@@ -36,11 +36,11 @@ func NewStringObject() *Object {
 
 	// ==== now the fields ====
 
-	// value: the content of the string as array of runes or bytes
+	// value: the content of the string as array of runes or JavaBytes (int8)
 	// Note: Post JDK9, this field is an array of bytes, so as to
 	// enable compact strings.
 
-	value := make([]byte, 0)
+	value := make([]types.JavaByte, 0)
 	valueField := Field{Ftype: types.ByteArray, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
