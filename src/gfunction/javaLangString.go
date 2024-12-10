@@ -1069,9 +1069,12 @@ func StringFormatter(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
-		switch formatStringObj.FieldTable["value"].Ftype {
-		case types.ByteArray:
+		switch formatStringObj.FieldTable["value"].Fvalue.(type) {
+		case []byte:
 			formatString = object.GoStringFromStringObject(formatStringObj)
+		case []types.JavaByte:
+			formatString =
+				object.GoStringFromJavaByteArray(formatStringObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 		default:
 			errMsg := fmt.Sprintf("StringFormatter: In the format string object, expected Ftype=%s but observed: %s",
 				types.ByteArray, formatStringObj.FieldTable["value"].Ftype)
@@ -1102,13 +1105,25 @@ func StringFormatter(params []interface{}) interface{} {
 
 		// If type is string object, process it.
 		if fld.Ftype == types.ByteArray {
-			str := string(fld.Fvalue.([]byte))
+			var str string
+			switch fld.Fvalue.(type) {
+			case []byte:
+				str = string(fld.Fvalue.([]byte))
+			case []types.JavaByte:
+				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			}
 			valuesOut = append(valuesOut, str)
 		} else {
 			// Not a string object.
 			switch fld.Ftype {
 			case types.ByteArray:
-				str := string(fld.Fvalue.([]byte))
+				var str string
+				switch fld.Fvalue.(type) {
+				case []byte:
+					str = string(fld.Fvalue.([]byte))
+				case []types.JavaByte:
+					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				}
 				valuesOut = append(valuesOut, str)
 			case types.Byte:
 				valuesOut = append(valuesOut, uint8(fld.Fvalue.(int64)))
@@ -1150,7 +1165,7 @@ func StringFormatter(params []interface{}) interface{} {
 // java/lang/String.getBytes()[B
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
-	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
+	bytes := object.JavaByteArrayFromStringObject(params[0].(*object.Object))
 	return populator("[B", types.ByteArray, bytes)
 }
 
