@@ -115,6 +115,19 @@ func ByteArrayFromStringObject(obj *Object) []byte {
 	}
 }
 
+// JavaByteArrayFromStringObject: convenience method to extract a JavaByte array from a String object (Java string)
+func JavaByteArrayFromStringObject(obj *Object) []types.JavaByte {
+	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+		switch obj.FieldTable["value"].Fvalue.(type) {
+		case []types.JavaByte:
+			return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
+		case []byte:
+			return JavaByteArrayFromGoByteArray(obj.FieldTable["value"].Fvalue.([]byte))
+		}
+	}
+	return nil
+}
+
 // StringObjectFromByteArray: convenience method to create a string object from a byte array
 func StringObjectFromByteArray(bytes []byte) *Object {
 	newStr := NewStringObject()
@@ -271,6 +284,14 @@ func GoStringFromJavaByteArray(jbarr []types.JavaByte) string {
 func JavaByteArrayFromGoString(str string) []types.JavaByte {
 	jbarr := make([]types.JavaByte, len(str))
 	for i, b := range str {
+		jbarr[i] = types.JavaByte(b)
+	}
+	return jbarr
+}
+
+func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
+	jbarr := make([]types.JavaByte, len(gbarr))
+	for i, b := range gbarr {
 		jbarr[i] = types.JavaByte(b)
 	}
 	return jbarr

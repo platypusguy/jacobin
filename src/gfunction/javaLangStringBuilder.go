@@ -392,7 +392,7 @@ func stringBuilderInit(params []any) any {
 	obj.FieldTable["count"] = fld
 
 	// Set the value = nil byte array.
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]byte, 0)}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]types.JavaByte, 0)}
 	obj.FieldTable["value"] = fld
 
 	// Set the capacity field value.
@@ -414,14 +414,17 @@ func stringBuilderInitString(params []any) any {
 	obj := params[0].(*object.Object)
 	obj.FieldTable = make(map[string]object.Field)
 
-	var byteArray []byte
-	var ok bool
+	var byteArray []types.JavaByte
 	switch params[1].(type) {
 	case *object.Object: // String
-		byteArray, ok = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-		if !ok {
-			errMsg := "Value field missing in <init> object argument or the field is not a byte array"
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		rawArray := params[1].(*object.Object).FieldTable["value"].Fvalue
+		switch rawArray.(type) {
+		case []types.JavaByte:
+			byteArray = rawArray.([]types.JavaByte)
+		case []byte:
+			byteArray = object.JavaByteArrayFromGoByteArray(rawArray.([]byte))
+		case string:
+			byteArray = object.JavaByteArrayFromGoString(rawArray.(string))
 		}
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
@@ -457,18 +460,18 @@ func stringBuilderInitString(params []any) any {
 func stringBuilderAppend(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
 	// Resolved parameter byte array, regardless of parameters:
-	var parmArray []byte
+	var parmArray []types.JavaByte
 
 	// Process based primarily on the params[1] type.
 	switch params[1].(type) {
 	case *object.Object: // char array, Object, String, StringBuffer, or StringBuilder
 		fvalue := params[1].(*object.Object).FieldTable["value"].Fvalue
 		switch fvalue.(type) {
-		case []byte: // byte array, String, StringBuffer, or StringBuilder
-			parmArray = fvalue.([]byte)
+		case []types.JavaByte: // byte array, String, StringBuffer, or StringBuilder
+			parmArray = fvalue.([]types.JavaByte)
 		case []int64: // char array, int array
 			if len(params) == 4 {
 				int64Array := fvalue.([]int64)
@@ -481,11 +484,11 @@ func stringBuilderAppend(params []any) any {
 					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 				}
 				for ix := start; ix < start+length; ix++ {
-					parmArray = append(parmArray, byte(int64Array[ix]))
+					parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
 				}
 			} else { // Append the entire char array.
 				for _, elem := range fvalue.([]int64) {
-					parmArray = append(parmArray, byte(elem))
+					parmArray = append(parmArray, types.JavaByte(elem))
 				}
 			}
 		default:
@@ -494,11 +497,11 @@ func stringBuilderAppend(params []any) any {
 		}
 	case int64: // int, long, short
 		str := fmt.Sprintf("%d", params[1].(int64))
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	case float64: // float, double
 		ff := params[1].(float64)
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -520,9 +523,9 @@ func stringBuilderAppend(params []any) any {
 func stringBuilderAppendBoolean(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
-	var parmArray []byte
+	var parmArray []types.JavaByte
 	switch params[1].(type) {
 	case int64: // boolean
 		var str string
@@ -531,7 +534,7 @@ func stringBuilderAppendBoolean(params []any) any {
 		} else {
 			str = "false"
 		}
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -553,12 +556,12 @@ func stringBuilderAppendBoolean(params []any) any {
 func stringBuilderAppendChar(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
-	var parmArray = make([]byte, 1)
+	var parmArray = make([]types.JavaByte, 1)
 	switch params[1].(type) {
 	case int64: // char
-		bb := byte(params[1].(int64))
+		bb := types.JavaByte(params[1].(int64))
 		parmArray[0] = bb
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
@@ -580,7 +583,7 @@ func stringBuilderAppendChar(params []any) any {
 func stringBuilderCharAt(params []any) any {
 	obj := params[0].(*object.Object)
 	ix := params[1].(int64)
-	bytes := obj.FieldTable["value"].Fvalue.([]byte)
+	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if ix >= int64(len(bytes)) {
 		errMsg := fmt.Sprintf("Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -593,7 +596,7 @@ func stringBuilderCharAt(params []any) any {
 // If start is equal to end, no changes are made.
 func stringBuilderDelete(params []any) any {
 	objBase := params[0].(*object.Object)
-	initBytes := objBase.FieldTable["value"].Fvalue.([]byte)
+	initBytes := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 	initLen := int64(len(initBytes))
 	start := params[1].(int64)
 	var end int64
@@ -622,7 +625,7 @@ func stringBuilderDelete(params []any) any {
 	}
 
 	// Copy retained bytes to a new byte array.
-	newArray := make([]byte, start)
+	newArray := make([]types.JavaByte, start)
 	if start > 0 {
 		copy(newArray, initBytes[0:start])
 	}
@@ -644,7 +647,7 @@ func stringBuilderDelete(params []any) any {
 func stringBuilderInsert(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
 	// Get the index value.
 	ix := params[1].(int64)
@@ -653,13 +656,13 @@ func stringBuilderInsert(params []any) any {
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
-	var parmArray []byte
+	var parmArray []types.JavaByte
 	switch params[2].(type) {
 	case *object.Object: // char array, String, StringBuffer, or StringBuilder
 		fvalue := params[2].(*object.Object).FieldTable["value"].Fvalue
 		switch fvalue.(type) {
-		case []byte: // String, StringBuffer, or StringBuilder
-			parmArray = fvalue.([]byte)
+		case []types.JavaByte: // String, StringBuffer, or StringBuilder
+			parmArray = fvalue.([]types.JavaByte)
 		case []int64: // char array
 			if len(params) == 5 { // subset of char array
 				int64Array := fvalue.([]int64)
@@ -672,11 +675,11 @@ func stringBuilderInsert(params []any) any {
 					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 				}
 				for ix := start; ix < start+length; ix++ {
-					parmArray = append(parmArray, byte(int64Array[ix]))
+					parmArray = append(parmArray, types.JavaByte(int64Array[ix]))
 				}
 			} else { // Append the entire char array.
 				for _, elem := range fvalue.([]int64) {
-					parmArray = append(parmArray, byte(elem))
+					parmArray = append(parmArray, types.JavaByte(elem))
 				}
 			}
 		default:
@@ -685,11 +688,11 @@ func stringBuilderInsert(params []any) any {
 		}
 	case int64: // integer, long
 		str := fmt.Sprintf("%d", params[2].(int64))
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	case float64: // float, double
 		ff := params[2].(float64)
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -697,7 +700,7 @@ func stringBuilderInsert(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := make([]byte, ix)
+	newArray := make([]types.JavaByte, ix)
 	if ix > 0 {
 		copy(newArray, byteArray[0:ix])
 	}
@@ -717,7 +720,7 @@ func stringBuilderInsert(params []any) any {
 func stringBuilderInsertBoolean(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
 	// Get the index value.
 	ix := params[1].(int64)
@@ -726,7 +729,7 @@ func stringBuilderInsertBoolean(params []any) any {
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
-	var parmArray []byte
+	var parmArray []types.JavaByte
 	switch params[2].(type) {
 	case int64: // boolean
 		var str string
@@ -735,7 +738,7 @@ func stringBuilderInsertBoolean(params []any) any {
 		} else {
 			str = "false"
 		}
-		parmArray = []byte(str)
+		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -743,7 +746,7 @@ func stringBuilderInsertBoolean(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := make([]byte, ix)
+	newArray := make([]types.JavaByte, ix)
 	if ix > 0 {
 		copy(newArray, byteArray[0:ix])
 	}
@@ -763,7 +766,7 @@ func stringBuilderInsertBoolean(params []any) any {
 func stringBuilderInsertChar(params []any) any {
 	// Get base object and its value field, byteArray.
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
 
 	// Get the index value.
 	ix := params[1].(int64)
@@ -772,10 +775,10 @@ func stringBuilderInsertChar(params []any) any {
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
-	var bb byte
+	var bb types.JavaByte
 	switch params[2].(type) {
 	case int64: // char
-		bb = byte(params[2].(int64))
+		bb = types.JavaByte(params[2].(int64))
 	default:
 		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -783,7 +786,7 @@ func stringBuilderInsertChar(params []any) any {
 
 	// Append parmArray to the byteArray.
 	// Set the byte count.
-	newArray := make([]byte, ix)
+	newArray := make([]types.JavaByte, ix)
 	if ix > 0 {
 		copy(newArray, byteArray[0:ix])
 	}
@@ -803,13 +806,13 @@ func stringBuilderReplace(params []any) any {
 	// Get byteArray.
 	objBase := params[0].(*object.Object)
 	fld := objBase.FieldTable["value"]
-	initBytes := fld.Fvalue.([]byte)
+	initBytes := fld.Fvalue.([]types.JavaByte)
 	initLen := int64(len(initBytes))
 
 	// Get start index, end index, and byte array to use as a replacment.
 	start := params[1].(int64)
 	end := params[2].(int64)
-	repls := params[3].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	repls := params[3].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 
 	// Validate start and end.
 	if start < 0 || start > initLen {
@@ -830,7 +833,7 @@ func stringBuilderReplace(params []any) any {
 	}
 
 	// Copy the left-most retained bytes to a new byte array.
-	newArray := make([]byte, start)
+	newArray := make([]types.JavaByte, start)
 	if start > 0 {
 		copy(newArray, initBytes[0:start])
 	}
@@ -856,7 +859,7 @@ func stringBuilderReverse(params []any) any {
 	// Get byteArray.
 	objBase := params[0].(*object.Object)
 	fld := objBase.FieldTable["value"]
-	byteArray := fld.Fvalue.([]byte)
+	byteArray := fld.Fvalue.([]types.JavaByte)
 
 	// Reverse the bytes in byteArray.
 	for ii, jj := 0, len(byteArray)-1; ii < jj; ii, jj = ii+1, jj-1 {
@@ -873,14 +876,14 @@ func stringBuilderReverse(params []any) any {
 func stringBuilderSetCharAt(params []any) any {
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
-	byteArray := fld.Fvalue.([]byte)
+	byteArray := fld.Fvalue.([]types.JavaByte)
 	ix := params[1].(int64)
 	ch := params[2].(int64)
 	if ix < 0 || ix > int64(len(byteArray)) {
 		errMsg := fmt.Sprintf("Index value (%d) is illegal", ix)
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
-	byteArray[ix] = byte(ch)
+	byteArray[ix] = types.JavaByte(ch)
 	obj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
 
 	return nil
@@ -890,10 +893,10 @@ func stringBuilderSetCharAt(params []any) any {
 func stringBuilderSetLength(params []any) any {
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
-	oldArray := fld.Fvalue.([]byte)
+	oldArray := fld.Fvalue.([]types.JavaByte)
 	oldlen := int64(len(oldArray))
 	newlen := params[1].(int64)
-	newArray := make([]byte, newlen)
+	newArray := make([]types.JavaByte, newlen)
 	if newlen < 0 {
 		errMsg := fmt.Sprintf("Length value (%d) is negative", newlen)
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
@@ -919,8 +922,9 @@ func stringBuilderSetLength(params []any) any {
 // Convert the byte array of a StringBuilder object to a String object. Then, return it.
 func stringBuilderToString(params []any) any {
 	objBase := params[0].(*object.Object)
-	byteArray := objBase.FieldTable["value"].Fvalue.([]byte)
-	objOut := object.StringObjectFromGoString(string(byteArray))
+	byteArray := objBase.FieldTable["value"].Fvalue.([]types.JavaByte)
+	goStr := object.GoStringFromJavaByteArray(byteArray)
+	objOut := object.StringObjectFromGoString(goStr)
 	return objOut
 }
 
