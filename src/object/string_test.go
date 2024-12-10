@@ -173,12 +173,12 @@ func TestByteArrayFromStringPoolIndexInvalid(t *testing.T) {
 
 func TestUpdateStringObjectFromBytes(t *testing.T) {
 	constStr := "Mary had a little lamb whose fleece was white as snow."
-	constBytes := []byte(constStr)
+	constBytes := JavaByteArrayFromGoString(constStr)
 	strObj := StringObjectFromGoString("To be updated")
 	if !IsStringObject(strObj) {
 		t.Errorf("expected IsStringObject(valid string object) to be true, observed false")
 	}
-	UpdateValueFieldFromBytes(strObj, constBytes)
+	UpdateValueFieldFromJavaBytes(strObj, constBytes)
 	strValue := GoStringFromStringObject(strObj)
 	if strValue != constStr {
 		t.Errorf("strValue from updated string object has wrong value: %s", strValue)
