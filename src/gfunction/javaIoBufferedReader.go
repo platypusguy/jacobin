@@ -166,5 +166,4 @@ func bufferedReaderReadLine(params []interface{}) interface{} {
 
 	// Return the string.
 	return object.StringObjectFromByteArray(buffer)
-
 }

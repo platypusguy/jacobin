@@ -502,7 +502,8 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	// params[1]: byte array object
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	jba := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	bytes := object.GoByteArrayFromJavaByteArray(jba)
 	zz, signum := BytesToBigInt(bytes)
 
 	// Set value to big integer.
@@ -1366,7 +1367,8 @@ func bigIntegerToByteArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	xx := obj.FieldTable["value"].Fvalue.(*big.Int)
 	bytes := xx.Bytes()
-	objOut := object.StringObjectFromByteArray(bytes)
+	objOut :=
+		object.StringObjectFromJavaByteArray(object.JavaByteArrayFromGoByteArray(bytes))
 
 	return objOut
 }

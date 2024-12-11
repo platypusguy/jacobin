@@ -126,8 +126,16 @@ func fileGetPath(params []interface{}) interface{} {
 		errMsg := "File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	bytes := fld.Fvalue.([]byte)
-	return object.StringObjectFromByteArray(bytes)
+
+	var bytes []types.JavaByte
+	switch fld.Fvalue.(type) {
+	case []byte:
+		bytes = object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		bytes = fld.Fvalue.([]types.JavaByte)
+	}
+
+	return object.StringObjectFromJavaByteArray(bytes)
 }
 
 // "java/io/File.isInvalid()Z"
