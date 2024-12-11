@@ -284,29 +284,63 @@ func mkHexFormatObject(delimiter, prefix, suffix, digits []byte) *object.Object 
 }
 
 func hfToString(params []interface{}) interface{} {
+	var delimiter, prefix, suffix, digits []types.JavaByte
+
 	obj := params[0].(*object.Object)
-	delimiter := obj.FieldTable["delimiter"].Fvalue.([]byte)
-	prefix := obj.FieldTable["prefix"].Fvalue.([]byte)
-	suffix := obj.FieldTable["suffix"].Fvalue.([]byte)
-	digits := obj.FieldTable["digits"].Fvalue.([]byte)
+	switch obj.FieldTable["delimiter"].Fvalue.(type) {
+	case []types.JavaByte:
+		delimiter = obj.FieldTable["delimiter"].Fvalue.([]types.JavaByte)
+	case []byte:
+		delimiter =
+			object.JavaByteArrayFromGoByteArray(obj.FieldTable["delimiter"].Fvalue.([]byte))
+	}
+
+	switch obj.FieldTable["prefix"].Fvalue.(type) {
+	case []types.JavaByte:
+
+		prefix = obj.FieldTable["prefix"].Fvalue.([]types.JavaByte)
+	case []byte:
+		prefix = object.JavaByteArrayFromGoByteArray(obj.FieldTable["prefix"].Fvalue.([]byte))
+	}
+
+	switch obj.FieldTable["suffix"].Fvalue.(type) {
+	case []types.JavaByte:
+		suffix = obj.FieldTable["suffix"].Fvalue.([]types.JavaByte)
+	case []byte:
+		suffix =
+			object.JavaByteArrayFromGoByteArray(obj.FieldTable["suffix"].Fvalue.([]byte))
+	}
+
+	switch obj.FieldTable["digits"].Fvalue.(type) {
+	case []types.JavaByte:
+		digits =
+			obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
+	case []byte:
+		digits =
+			object.JavaByteArrayFromGoByteArray(obj.FieldTable["digits"].Fvalue.([]byte))
+	}
+
 	uppercase := (digits[15] == 'F')
-	str := fmt.Sprintf("uppercase: %v, delimiter: \"%s\", prefix: \"%s\", suffix: \"%s\"", uppercase, delimiter, prefix, suffix)
+	str := fmt.Sprintf("uppercase: %v, delimiter: \"%s\", prefix: \"%s\", suffix: \"%s\"",
+		uppercase, object.GoStringFromJavaByteArray(delimiter),
+		object.GoStringFromJavaByteArray(prefix),
+		object.GoStringFromJavaByteArray(suffix))
 	return object.StringObjectFromGoString(str)
 }
 
 func hfDelimiter(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	return object.StringObjectFromByteArray(obj.FieldTable["delimiter"].Fvalue.([]byte))
+	return object.StringObjectFromJavaByteArray(obj.FieldTable["delimiter"].Fvalue.([]types.JavaByte))
 }
 
 func hfPrefix(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	return object.StringObjectFromByteArray(obj.FieldTable["prefix"].Fvalue.([]byte))
+	return object.StringObjectFromJavaByteArray(obj.FieldTable["prefix"].Fvalue.([]types.JavaByte))
 }
 
 func hfSuffix(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	return object.StringObjectFromByteArray(obj.FieldTable["suffix"].Fvalue.([]byte))
+	return object.StringObjectFromJavaByteArray(obj.FieldTable["suffix"].Fvalue.([]types.JavaByte))
 }
 
 func hfByteToHexDigits(params []interface{}) interface{} {
@@ -413,12 +447,15 @@ func hfShortToHexDigits(params []interface{}) interface{} {
 func hfFormatHexFromBytes(params []interface{}) interface{} {
 	str := ""
 	this := params[0].(*object.Object)
-	digits := this.FieldTable["digits"].Fvalue.([]byte)
-	delimiter := string(this.FieldTable["delimiter"].Fvalue.([]byte))
-	prefix := string(this.FieldTable["prefix"].Fvalue.([]byte))
-	suffix := string(this.FieldTable["suffix"].Fvalue.([]byte))
+	digits := this.FieldTable["digits"].Fvalue.([]types.JavaByte)
+	delimiter :=
+		object.GoStringFromJavaByteArray(this.FieldTable["delimiter"].Fvalue.([]types.JavaByte))
+	prefix :=
+		object.GoStringFromJavaByteArray(this.FieldTable["prefix"].Fvalue.([]types.JavaByte))
+	suffix :=
+		object.GoStringFromJavaByteArray(this.FieldTable["suffix"].Fvalue.([]types.JavaByte))
 	objBytes := params[1].(*object.Object)
-	bytes := objBytes.FieldTable["value"].Fvalue.([]byte)
+	bytes := objBytes.FieldTable["value"].Fvalue.([][]types.JavaByte)
 	var fromIndex int
 	var toIndex int
 	if len(params) > 2 {
@@ -474,7 +511,7 @@ func hfOf(params []interface{}) interface{} {
 }
 
 func hfOfDelimiter(params []interface{}) interface{} {
-	delimiter := params[0].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	delimiter := params[0].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	template := statics.GetStaticValue("java/util/HexFormat", "HEX_FORMAT").(*object.Object)
 	obj := object.CloneObject(template)
 	fld := obj.FieldTable["delimiter"]
@@ -486,7 +523,7 @@ func hfOfDelimiter(params []interface{}) interface{} {
 
 func hfWithPrefix(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
-	prefix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	prefix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	obj2 := object.CloneObject(obj1)
 	fld := obj2.FieldTable["prefix"]
 	fld.Fvalue = prefix
@@ -496,7 +533,7 @@ func hfWithPrefix(params []interface{}) interface{} {
 
 func hfWithSuffix(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
-	suffix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	suffix := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	obj2 := object.CloneObject(obj1)
 	fld := obj2.FieldTable["suffix"]
 	fld.Fvalue = suffix
@@ -506,7 +543,7 @@ func hfWithSuffix(params []interface{}) interface{} {
 
 func hfWithDelimiter(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
-	delimiter := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	delimiter := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	obj2 := object.CloneObject(obj1)
 	fld := obj2.FieldTable["delimiter"]
 	fld.Fvalue = delimiter
@@ -518,7 +555,7 @@ func hfWithUpperCase(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
 	obj2 := object.CloneObject(obj1)
 	fld := obj2.FieldTable["digits"]
-	digits := statics.GetStaticValue("java/util/HexFormat", "UPPERCASE_DIGITS").([]byte)
+	digits := statics.GetStaticValue("java/util/HexFormat", "UPPERCASE_DIGITS").([]types.JavaByte)
 	fld.Fvalue = digits
 	obj2.FieldTable["digits"] = fld
 	return obj2
@@ -528,7 +565,7 @@ func hfWithLowerCase(params []interface{}) interface{} {
 	obj1 := params[0].(*object.Object)
 	obj2 := object.CloneObject(obj1)
 	fld := obj2.FieldTable["digits"]
-	digits := statics.GetStaticValue("java/util/HexFormat", "LOWERCASE_DIGITS").([]byte)
+	digits := statics.GetStaticValue("java/util/HexFormat", "LOWERCASE_DIGITS").([]types.JavaByte)
 	fld.Fvalue = digits
 	obj2.FieldTable["digits"] = fld
 	return obj2
@@ -536,34 +573,36 @@ func hfWithLowerCase(params []interface{}) interface{} {
 
 func hfToHighHexDigit(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	digits := obj.FieldTable["digits"].Fvalue.([]byte)
+	digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 	arg := params[1].(int64) % 256
 	return int64(digits[arg>>4])
 }
 
 func hfToLowHexDigit(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
-	digits := obj.FieldTable["digits"].Fvalue.([]byte)
+	digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 	arg := params[1].(int64) % 256
 	return int64(digits[arg&0x0f])
 }
 
 // Helper function for hfEquals.
 func hfEqualsHelper(this, that *object.Object, fieldName string) bool {
-	f1, ok := this.FieldTable[fieldName].Fvalue.([]byte)
+	f1, ok := this.FieldTable[fieldName].Fvalue.([]types.JavaByte)
 	if !ok {
 		return false
 	}
-	f2, ok := that.FieldTable[fieldName].Fvalue.([]byte)
+	f2, ok := that.FieldTable[fieldName].Fvalue.([]types.JavaByte)
 	if !ok {
 		return false
 	}
 	if len(f1) != len(f2) {
 		return false
 	}
-	if string(f1) != string(f2) {
+
+	if object.GoStringFromJavaByteArray(f1) != object.GoStringFromJavaByteArray(f2) {
 		return false
 	}
+
 	return true
 }
 
