@@ -72,7 +72,8 @@ func NewStringObject() *Object {
 // StringObjectFromGoString: convenience method to create a string object from a Golang string
 func StringObjectFromGoString(str string) *Object {
 	newStr := NewStringObject()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: []byte(str)}
+	jba := JavaByteArrayFromGoString(str)
+	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: jba}
 	return newStr
 }
 
@@ -145,7 +146,13 @@ func StringObjectFromJavaByteArray(bytes []types.JavaByte) *Object {
 // StringPoolIndexFromStringObject: convenience method to extract a string pool index from a String object
 func StringPoolIndexFromStringObject(obj *Object) uint32 {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		str := string(obj.FieldTable["value"].Fvalue.([]byte))
+		var str string
+		switch obj.FieldTable["value"].Fvalue.(type) {
+		case []byte:
+			str = string(obj.FieldTable["value"].Fvalue.([]byte))
+		case []types.JavaByte:
+			str = GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+		}
 		index := stringPool.GetStringIndex(&str)
 		return index
 	} else {
@@ -172,9 +179,10 @@ func StringObjectFromPoolIndex(index uint32) *Object {
 }
 
 // ByteArrayFromStringPoolIndex: convenience method to get a byte array using a string pool index
-func ByteArrayFromStringPoolIndex(index uint32) []byte {
+func ByteArrayFromStringPoolIndex(index uint32) []types.JavaByte {
 	if index < stringPool.GetStringPoolSize() {
-		return []byte(*stringPool.GetStringPointer(index))
+		str := *stringPool.GetStringPointer(index)
+		return JavaByteArrayFromGoString(str)
 	} else {
 		return nil
 	}
@@ -240,8 +248,12 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
 	case types.ByteArray:
-		str := string(fld.Fvalue.([]byte))
-		return str
+		switch fld.Fvalue.(type) {
+		case []byte:
+			return string(fld.Fvalue.([]byte))
+		case []types.JavaByte:
+			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		}
 	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {
@@ -295,4 +307,23 @@ func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
 		jbarr[i] = types.JavaByte(b)
 	}
 	return jbarr
+}
+
+func JavaByteArrayEquals(jbarr1, jbarr2 []types.JavaByte) bool {
+	if jbarr1 == nil || jbarr2 == nil {
+		if jbarr1 == nil && jbarr2 == nil {
+			return true
+		}
+		return false
+	}
+
+	if len(jbarr1) != len(jbarr2) {
+		return false
+	}
+	for i, b := range jbarr1 {
+		if b != jbarr2[i] {
+			return false
+		}
+	}
+	return true
 }

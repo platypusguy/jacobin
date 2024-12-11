@@ -7,7 +7,6 @@
 package object
 
 import (
-	"bytes"
 	"io"
 	"jacobin/globals"
 	"jacobin/statics"
@@ -78,12 +77,12 @@ func TestByteArrayFromStringObject(t *testing.T) {
 	statics.LoadStaticsString()
 
 	constStr := "Mary had a little lamb whose fleece was white as snow."
-	constBytes := []byte(constStr)
+	constBytes := JavaByteArrayFromGoString(constStr)
 
 	strObj := StringObjectFromGoString(constStr)
-	bb := ByteArrayFromStringObject(strObj)
-	if !bytes.Equal(bb, constBytes) {
-		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, string(bb))
+	bb := JavaByteArrayFromStringObject(strObj)
+	if !JavaByteArrayEquals(bb, constBytes) {
+		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, GoStringFromJavaByteArray(bb))
 	}
 }
 
