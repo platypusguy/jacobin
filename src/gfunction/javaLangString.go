@@ -894,11 +894,11 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 
 	// Compute subarray and update params[0].
 	iarray = iarray[ssStart : ssStart+ssEnd]
-	var bytes []byte
+	var bytes []types.JavaByte
 	for _, ii := range iarray {
-		bytes = append(bytes, byte(ii&0xFF))
+		bytes = append(bytes, types.JavaByte(ii&0xFF))
 	}
-	obj := object.StringObjectFromByteArray(bytes)
+	obj := object.StringObjectFromJavaByteArray(bytes)
 	return obj
 
 }
@@ -1001,6 +1001,9 @@ func stringContains(params []interface{}) interface{} {
 	searchFor := params[1].(*object.Object)
 	var searchString string
 	switch searchFor.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		searchString =
+			object.GoStringFromJavaByteArray(searchFor.FieldTable["value"].Fvalue.([]types.JavaByte))
 	case []uint8:
 		searchString = string(searchFor.FieldTable["value"].Fvalue.([]byte))
 	case string:
@@ -1011,6 +1014,9 @@ func stringContains(params []interface{}) interface{} {
 	// now get the target string (the string being searched)
 	var targetString string
 	switch searchIn.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		targetString =
+			object.GoStringFromJavaByteArray(searchIn.FieldTable["value"].Fvalue.([]types.JavaByte))
 	case []uint8:
 		targetString = string(searchIn.FieldTable["value"].Fvalue.([]byte))
 	case string:
@@ -1466,7 +1472,7 @@ func substringStartEnd(params []interface{}) interface{} {
 func toCharArray(params []interface{}) interface{} {
 	// params[0]: input string
 	obj := params[0].(*object.Object)
-	bytes := obj.FieldTable["value"].Fvalue.([]byte)
+	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	var iArray []int64
 	for _, bb := range bytes {
 		iArray = append(iArray, int64(bb))
@@ -1626,23 +1632,23 @@ func valueOfObject(params []interface{}) interface{} {
 // "java/lang/String.intern()Ljava/lang/String;"
 /**
 * Returns a canonical representation for the string object.
-* <p>
+*
 * A pool of strings, initially empty, is maintained privately by the
 * class {@code String}.
-* <p>
+*
 * When the intern method is invoked, if the pool already contains a
 * string equal to this {@code String} object as determined by
 * the {@link #equals(Object)} method, then the string from the pool is
 * returned. Otherwise, this {@code String} object is added to the
 * pool and a reference to this {@code String} object is returned.
-* <p>
+*
 * It follows that for any two strings {@code s} and {@code t},
 * {@code s.intern() == t.intern()} is {@code true}
 * if and only if {@code s.equals(t)} is {@code true}.
-* <p>
+*
 * All literal strings and string-valued constant expressions are
 * interned. String literals are defined in section {@jls 3.10.5} of the
-* <cite>The Java Language Specification</cite>.
+* The Java Language Specification.
 *
 * @return  a string that has the same contents as this string, but is
 *          guaranteed to be from a pool of unique strings.
@@ -1756,8 +1762,14 @@ func stringGetChars(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("Missing value field in base object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	srcBytes, ok := srcFld.Fvalue.([]byte)
-	if !ok {
+
+	var srcBytes []types.JavaByte
+	switch srcFld.Fvalue.(type) {
+	case []byte:
+		srcBytes = object.JavaByteArrayFromGoByteArray(srcFld.Fvalue.([]byte))
+	case []types.JavaByte:
+		srcBytes = srcFld.Fvalue.([]types.JavaByte)
+	default:
 		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
@@ -1822,14 +1834,19 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	}
 
 	// Get base object byte array.
-	srcBytes, ok := srcFld.Fvalue.([]byte)
-	if !ok {
+	var srcBytes []types.JavaByte
+	switch srcFld.Fvalue.(type) {
+	case []byte:
+		srcBytes = object.JavaByteArrayFromGoByteArray(srcFld.Fvalue.([]byte))
+	case []types.JavaByte:
+		srcBytes = srcFld.Fvalue.([]types.JavaByte)
+	default:
 		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Get search argument and set up switch.
-	arg := byte(params[1].(int64))
+	arg := types.JavaByte(params[1].(int64))
 	var beginIndex int64
 	var endIndex int64
 	lenSrcBytes := int64(len(srcBytes))
