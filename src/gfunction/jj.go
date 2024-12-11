@@ -162,7 +162,7 @@ func jjGetFieldString(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(errMsg)
 	}
 	if fld.Ftype == "Ljava/lang/String;" {
-		return object.StringObjectFromByteArray(fld.Fvalue.([]byte))
+		return object.StringObjectFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 	}
 
 	// Handle vectors.
