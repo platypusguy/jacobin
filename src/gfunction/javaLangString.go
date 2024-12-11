@@ -973,9 +973,21 @@ func stringConcat(params []interface{}) interface{} {
 	var str1, str2 string
 
 	fld := params[0].(*object.Object).FieldTable["value"]
-	str1 = string(fld.Fvalue.([]byte))
+	switch fld.Fvalue.(type) {
+	case []byte:
+		str1 = string(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	}
+
 	fld = params[1].(*object.Object).FieldTable["value"]
-	str2 = string(fld.Fvalue.([]byte))
+	switch fld.Fvalue.(type) {
+	case []byte:
+		str2 = string(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	}
+
 	str := str1 + str2
 	obj := object.StringObjectFromGoString(str)
 	return obj
