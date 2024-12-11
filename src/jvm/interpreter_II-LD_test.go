@@ -927,7 +927,7 @@ func TestNewLdcTest2(t *testing.T) {
 	}
 
 	strObj := pop(&f).(*object.Object)
-	str := string(strObj.FieldTable["value"].Fvalue.([]byte))
+	str := object.GoStringFromJavaByteArray(strObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	index := stringPool.GetStringIndex(&str)
 	checkStrPtr := stringPool.GetStringPointer(index)
 	if *checkStrPtr != "hello" {
