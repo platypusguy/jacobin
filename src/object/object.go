@@ -78,8 +78,15 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	return objPtr
 }
 
-// UpdateValueFieldFromBytes: Set the value field of the given object to the given byte array
-func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
+// As of JACOBIN-613 this function is not used. It can be removed, once all string conversions to JavaBytes are done.
+// // UpdateValueFieldFromBytes: Set the value field of the given object to the given byte array
+// func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
+// 	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
+// 	objPtr.FieldTable["value"] = fld
+// }
+
+// UpdateValueFieldFromJavaBytes: Set the value field of the given object to the given JavaByte array
+func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
 	objPtr.FieldTable["value"] = fld
 }

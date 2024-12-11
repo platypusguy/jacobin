@@ -791,8 +791,8 @@ func stringClinit([]interface{}) interface{} {
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
-	bytes := make([]byte, 0)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	bytes := make([]types.JavaByte, 0)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -801,19 +801,32 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes := object.JavaByteArrayFromGoByteArray(
+			params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	case []types.JavaByte:
+		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	}
 	return nil
 }
 
-// Construct a string object from a subset of a Go byte array.
+// Construct a string object from a subset of a JavaByte array.
 // "java/lang/String.<init>([BII)V"
 func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	var bytes []types.JavaByte
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes = object.JavaByteArrayFromGoByteArray(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	}
 
 	// Get substring start and end offset
 	ssStart := params[2].(int64)
@@ -823,15 +836,15 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	totalLength := int64(len(bytes))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
 		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssStart, ssEnd)
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n",
+			object.GoStringFromJavaByteArray(bytes), totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
 	bytes = bytes[ssStart : ssStart+ssEnd]
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
-
 }
 
 // Instantiate a new string object from a Go int64 array (Java char array).
@@ -841,11 +854,11 @@ func newStringFromChars(params []interface{}) interface{} {
 	// params[1] = byte array object
 	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 
-	var bytes []byte
+	var bytes []types.JavaByte
 	for _, ii := range ints {
-		bytes = append(bytes, byte(ii&0xFF))
+		bytes = append(bytes, types.JavaByte(ii&0xFF))
 	}
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -890,12 +903,20 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 
 }
 
-// New String from String, StringBuilder, or StringBuffer.
+// New String (consisting of JavaBytes) from String, StringBuilder, or StringBuffer.
 func newStringFromString(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = String, StringBuilder, or StringBuffer object
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	var javaBytes []types.JavaByte
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+		javaBytes = object.JavaByteArrayFromGoByteArray(bytes)
+	case []types.JavaByte:
+		javaBytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	}
+
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), javaBytes)
 	return nil
 }
 
@@ -1241,7 +1262,7 @@ func stringIsLatin1(params []interface{}) interface{} {
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
 	obj := params[0].(*object.Object)
-	bytes := object.ByteArrayFromStringObject(obj)
+	bytes := object.JavaByteArrayFromStringObject(obj)
 	return int64(len(bytes))
 }
 
