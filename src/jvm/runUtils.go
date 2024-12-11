@@ -160,6 +160,11 @@ func LogTraceStack(f *frames.Frame) {
 			bytes := value.([]byte)
 			str := string(bytes)
 			output = fmt.Sprintf("[]byte: %-10s", str)
+		case []types.JavaByte:
+			value := f.OpStack[ii]
+			bytes := value.([]types.JavaByte)
+			str := object.GoStringFromJavaByteArray(bytes)
+			output = fmt.Sprintf("[]javaByte: %-10s", str)
 		default:
 			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
 		}
@@ -204,6 +209,11 @@ func emitTraceData(f *frames.Frame) string {
 			bytes := value.([]byte)
 			str := string(bytes)
 			stackTop = fmt.Sprintf("[]byte: %-10s", str)
+		case []types.JavaByte:
+			value := f.OpStack[f.TOS]
+			bytes := value.([]types.JavaByte)
+			str := object.GoStringFromJavaByteArray(bytes)
+			stackTop = fmt.Sprintf("[]javaByte: %-10s", str)
 		default:
 			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
 		}
@@ -243,7 +253,7 @@ func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
 		for fieldName := range obj.FieldTable {
 			fld := obj.FieldTable[fieldName]
 			if klass == types.StringClassName && fieldName == "value" {
-				str := string(fld.Fvalue.([]byte))
+				str := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
 			} else {
 				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
@@ -299,6 +309,12 @@ func pop(f *frames.Frame) interface{} {
 					str := string(bytes)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+					trace.Trace(traceInfo)
+				case []types.JavaByte:
+					bytes := value.([]types.JavaByte)
+					str := object.GoStringFromJavaByteArray(bytes)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
 					trace.Trace(traceInfo)
 				default:
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
@@ -390,6 +406,12 @@ func push(f *frames.Frame, x interface{}) {
 						str := string(bytes)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+						trace.Trace(traceInfo)
+					case []types.JavaByte:
+						bytes := x.([]types.JavaByte)
+						str := object.GoStringFromJavaByteArray(bytes)
+						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+							fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
 						trace.Trace(traceInfo)
 					default:
 						traceInfo = fmt.Sprintf("%56s", " ") +
