@@ -1934,9 +1934,11 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
 	} else if fieldType == types.StringClassRef {
 		// if the field type is String pointer and value is a byte array, convert it to a string
-		valueType, ok := objField.Fvalue.([]byte)
-		if ok {
-			fieldValue = object.StringObjectFromByteArray(valueType)
+		switch objField.Fvalue.(type) {
+		case []byte:
+			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
+		case []types.JavaByte:
+			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
 		}
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
