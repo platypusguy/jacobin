@@ -309,6 +309,14 @@ func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
 	return jbarr
 }
 
+func GoByteArrayFromJavaByteArray(jbarr []types.JavaByte) []byte {
+	gbarr := make([]byte, len(jbarr))
+	for i, b := range jbarr {
+		gbarr[i] = byte(b)
+	}
+	return gbarr
+}
+
 func JavaByteArrayEquals(jbarr1, jbarr2 []types.JavaByte) bool {
 	if jbarr1 == nil || jbarr2 == nil {
 		if jbarr1 == nil && jbarr2 == nil {
