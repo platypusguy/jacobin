@@ -1024,10 +1024,22 @@ func stringContains(params []interface{}) interface{} {
 }
 
 func javaLangStringContentEquals(params []interface{}) interface{} {
+	var str1, str2 string
 	obj := params[0].(*object.Object)
-	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
+
 	obj = params[1].(*object.Object)
-	str2 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -1056,12 +1068,24 @@ func stringEquals(params []interface{}) interface{} {
 // Are 2 strings equal, ignoring case?
 // "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
 func stringEqualsIgnoreCase(params []interface{}) interface{} {
+	var str1, str2 string
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
 	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
+
 	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
 
 	// Are they equal in value?
 	upstr1 := strings.ToUpper(str1)

@@ -739,7 +739,8 @@ func TestStringStripLeading(t *testing.T) {
 
 	expected := "Hello, World!"
 	outputObj := stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output := string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output :=
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -756,7 +757,8 @@ func TestStringStripLeading(t *testing.T) {
 
 	expected = "Hello, World!   "
 	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output =
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -772,7 +774,8 @@ func TestStringStripLeading(t *testing.T) {
 
 	expected = "Hello, World!"
 	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output =
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -792,7 +795,9 @@ func TestStringStripTrailing(t *testing.T) {
 	outputRaw := stringStripTrailing([]interface{}{input})
 
 	output := *outputRaw.(*object.Object)
-	strippedString := string(output.FieldTable["value"].Fvalue.([]byte))
+	strippedString :=
+		object.GoStringFromJavaByteArray(output.FieldTable["value"].Fvalue.([]types.JavaByte))
+	// strippedString := string(output.FieldTable["value"].Fvalue.([]byte))
 	if strippedString != expected {
 		t.Errorf("Expected '%s' but got '%s'",
 			expected, strippedString)
