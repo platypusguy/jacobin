@@ -600,7 +600,13 @@ func doBaload(fr *frames.Frame, _ int64) int {
 		if object.IsNull(bAref) {
 			array = make([]types.JavaByte, 0)
 		} else {
-			array = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
+			switch bAref.FieldTable["value"].Fvalue.(type) {
+			case []types.JavaByte:
+				array = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
+			case []byte: // if a Go byte array, convert it for the nonce to a JavaByte array
+				array =
+					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
+			}
 		}
 	// case *[]uint8:
 	// 	array = *(ref.(*[]uint8))
