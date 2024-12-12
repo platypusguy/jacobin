@@ -281,10 +281,11 @@ func randomNextBytes(params []interface{}) interface{} {
 	robj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(robj)
 	bobj := params[1].(*object.Object)
-	bytes :=
+	bytes := // convert to go bytes b/c that's what rand.Read expects
 		object.GoByteArrayFromJavaByteArray(bobj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	r.rand.Read(bytes)
-	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+	randBytes := object.JavaByteArrayFromGoByteArray(bytes) // convert back to Java bytes
+	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: randBytes}
 	return nil
 }
 
