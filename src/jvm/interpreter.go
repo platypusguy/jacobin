@@ -2466,8 +2466,11 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	// array of bytes will be extracted as a field and passed
 	// to this function, so we need to accommodate all types--
 	// hence, the switch on type.
-	case []uint8:
+	case []byte:
 		array := ref.([]uint8)
+		size = int64(len(array))
+	case types.JavaByte:
+		array := ref.([]types.JavaByte)
 		size = int64(len(array))
 	case []float64:
 		array := ref.([]float64)
@@ -2475,8 +2478,11 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	case []int64:
 		array := ref.([]int64)
 		size = int64(len(array))
-	case *[]uint8: // = go byte
+	case *[]byte:
 		array := *ref.(*[]uint8)
+		size = int64(len(array))
+	case *[]types.JavaByte:
+		array := *ref.(*[]types.JavaByte)
 		size = int64(len(array))
 	case []*object.Object:
 		array := ref.([]*object.Object)
