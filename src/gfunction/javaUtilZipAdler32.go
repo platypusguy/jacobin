@@ -89,7 +89,7 @@ func adlerUpdateFromArray(params []interface{}) interface{} {
 	// Collect parameters.
 	obj := params[0].(*object.Object)
 	objBB := params[1].(*object.Object)
-	bbWhole := objBB.FieldTable["value"].Fvalue.([]byte)
+	bbWhole := objBB.FieldTable["value"].Fvalue.([]types.JavaByte)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 	bbSubset := bbWhole[offset:length]
@@ -100,7 +100,8 @@ func adlerUpdateFromArray(params []interface{}) interface{} {
 	initialChecksum := uint32(value)
 
 	// Compute new checksum and store it back.
-	fld.Fvalue = int64(updateAdler32(initialChecksum, bbSubset))
+	fld.Fvalue = int64(updateAdler32(initialChecksum,
+		object.GoByteArrayFromJavaByteArray(bbSubset)))
 	obj.FieldTable["value"] = fld
 
 	return nil
