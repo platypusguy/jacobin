@@ -142,7 +142,7 @@ func TestStringPoolStringOperations(t *testing.T) {
 		return
 	}
 
-	bb := ByteArrayFromStringPoolIndex(index)
+	bb := JavaByteArrayFromStringPoolIndex(index)
 	if bb == nil {
 		t.Errorf("byte array from string pool index %d is nil", index)
 	}
@@ -164,7 +164,7 @@ func TestStringPoolStringIndexFromStringObjectInvalid(t *testing.T) {
 
 func TestByteArrayFromStringPoolIndexInvalid(t *testing.T) {
 	index := math.MaxInt32 // use a string pool index that will always be too big
-	byteArray := ByteArrayFromStringPoolIndex(uint32(index))
+	byteArray := JavaByteArrayFromStringPoolIndex(uint32(index))
 	if byteArray != nil {
 		t.Errorf("expected nil due to error, got %v", byteArray)
 	}

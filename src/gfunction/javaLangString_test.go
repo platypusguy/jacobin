@@ -260,12 +260,12 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 			name: "Test equal strings",
 			obj1: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			obj2: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			want: types.JavaBoolTrue,
@@ -275,12 +275,12 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 			name: "Test not equal strings",
 			obj1: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			obj2: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("World")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("World")},
 				},
 			},
 			want: types.JavaBoolFalse,
@@ -324,7 +324,7 @@ func TestLastIndexOfCharacter(t *testing.T) {
 			baseObject := &object.Object{
 				KlassName: types.StringPoolStringIndex,
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte(tt.base)},
+					"value": {Fvalue: object.JavaByteArrayFromGoString(tt.base)},
 				},
 			}
 
@@ -344,14 +344,14 @@ func TestLastIndexOfString(t *testing.T) {
 	strObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(str)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(str)},
 		},
 	}
 
 	searchObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(searchString)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(searchString)},
 		},
 	}
 
@@ -372,14 +372,14 @@ func TestStringRegionMatchesWithoutIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -402,14 +402,14 @@ func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -429,7 +429,7 @@ func TestStringEquals(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
@@ -437,7 +437,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -450,7 +450,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -463,7 +463,7 @@ func TestStringEquals(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -471,7 +471,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -487,7 +487,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -495,7 +495,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -510,7 +510,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -518,7 +518,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -533,7 +533,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -541,7 +541,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -558,7 +558,7 @@ func TestStringIndexOfString(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
@@ -566,7 +566,7 @@ func TestStringIndexOfString(t *testing.T) {
 	argStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(argStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(argStr)},
 		},
 	}
 
@@ -609,7 +609,7 @@ func TestStringStartsWith(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -617,7 +617,7 @@ func TestStringStartsWith(t *testing.T) {
 	prefix := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 
@@ -631,7 +631,7 @@ func TestStringStartsWith(t *testing.T) {
 	prefix = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 	// single param startswith Negative test
@@ -646,7 +646,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -655,7 +655,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	prefix := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 
@@ -671,7 +671,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	prefix = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 	// with offset startswith negative test
@@ -731,7 +731,7 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -749,7 +749,7 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -766,7 +766,7 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -784,7 +784,7 @@ func TestStringStripTrailing(t *testing.T) {
 	input := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(inputLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(inputLiteral)},
 		},
 	}
 
