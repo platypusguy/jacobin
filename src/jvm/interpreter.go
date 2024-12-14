@@ -2469,7 +2469,7 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	case []byte:
 		array := ref.([]uint8)
 		size = int64(len(array))
-	case types.JavaByte:
+	case []types.JavaByte:
 		array := ref.([]types.JavaByte)
 		size = int64(len(array))
 	case []float64:
