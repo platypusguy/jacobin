@@ -2053,10 +2053,8 @@ func stringSplitLimit(params []interface{}) interface{} {
 		outObjArray = append(outObjArray, object.StringObjectFromGoString(result[ix]))
 	}
 	return populator("[Ljava/lang/String;", types.RefArray, outObjArray)
-
 }
 
-// >>>
 func stringStrip(params []interface{}) interface{} {
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimSpace(input)

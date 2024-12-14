@@ -802,11 +802,8 @@ func TestStringStripTrailing(t *testing.T) {
 	}
 }
 
+// stringRegionMatches() tests
 func TestStringRegionMatches(t *testing.T) {
-	// Helper function to create a string object
-	createStringObject := func(s string) *object.Object {
-		return object.StringObjectFromGoString(s)
-	}
 
 	// Test case: baseOffset < 0
 	params := []any{createStringObject("hello"), int64(-1), createStringObject("hello"), int64(0), int64(5)}
@@ -865,11 +862,8 @@ func TestStringRegionMatches(t *testing.T) {
 	}
 }
 
+// stringRepeat() tests
 func TestStringRepeat(t *testing.T) {
-	// Helper function to create a string object
-	createStringObject := func(s string) *object.Object {
-		return object.StringObjectFromGoString(s)
-	}
 
 	// Test case: repeat string 0 times
 	params := []interface{}{createStringObject("hello"), int64(0)}
@@ -902,4 +896,57 @@ func TestStringRepeat(t *testing.T) {
 	if object.GoStringFromStringObject(result) != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
 	}
+}
+
+// stringSplit() tests
+func TestStringSplitLimit(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	// Test case: valid input with no limit
+	params := []interface{}{createStringObject("a,b,c"), createStringObject(","), int64(0)}
+	result := stringSplitLimit(params).(*object.Object)
+	expected := []string{"a", "b", "c"}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+
+	// Test case: valid input with limit
+	params = []interface{}{createStringObject("a,b,c"), createStringObject(","), int64(2)}
+	result = stringSplitLimit(params).(*object.Object)
+	expected = []string{"a", "b,c"}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+
+	// Test case: invalid regex pattern
+	params = []interface{}{createStringObject("a,b,c"), createStringObject("[a-"), int64(0)}
+	errBlk := stringSplitLimit(params).(*GErrBlk)
+	if errBlk == nil {
+		t.Errorf("Expected PatternSyntaxException, got %v", result)
+	}
+
+	if errBlk.ExceptionType != excNames.PatternSyntaxException {
+		t.Errorf("Expected PatternSyntaxException, got %v",
+			excNames.JVMexceptionNames[errBlk.ExceptionType])
+	}
+
+	// Test case: empty input string
+	params = []interface{}{createStringObject(""), createStringObject(","), int64(0)}
+	result = stringSplitLimit(params).(*object.Object)
+	expected = []string{""}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+}
+
+// --- utility functions for tests above ---
+func createStringObject(s string) *object.Object {
+	return object.StringObjectFromGoString(s)
 }
