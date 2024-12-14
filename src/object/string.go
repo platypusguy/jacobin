@@ -10,13 +10,13 @@ package object
 // convenience methods to create and manipulate them.
 // There exist only the following kinds of strings:
 // 1) golang string -- this is commonly used inside the JVM
-// 2) byte array -- less frequently used. Can represent either a string of bytes or a string of chars
+// 2) JavaByte array -- less frequently used. Can represent either a string of bytes or a string of chars
 // 3) String object -- used only when passing args to/from Java methods and gfunctions. Important note:
 //    string objects are the *only* form of strings passed to/from Java methods and gfunctions.
 //
 // Implementation details:
 // * the string pool stores only golang strings. This is done for performance reasons.
-// * string objects' "value" field contains a byte array, which is required by Java methods and gfunctions.
+// * string objects' "value" field contains a JavaByte array, which is required by Java methods and gfunctions.
 
 import (
 	"fmt"
@@ -25,7 +25,6 @@ import (
 	"jacobin/types"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 // NewStringObject creates an empty string object (aka Java String)
@@ -99,16 +98,7 @@ func GoStringFromStringObject(obj *Object) string {
 	return ""
 }
 
-// JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
-func JavaByteFromStringObject(obj *Object) []types.JavaByte {
-	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
-	} else {
-		return nil
-	}
-}
-
-// ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
+// ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []byte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		return obj.FieldTable["value"].Fvalue.([]byte)
@@ -117,28 +107,8 @@ func ByteArrayFromStringObject(obj *Object) []byte {
 	}
 }
 
-// JavaByteArrayFromStringObject: convenience method to extract a JavaByte array from a String object (Java string)
-func JavaByteArrayFromStringObject(obj *Object) []types.JavaByte {
-	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		switch obj.FieldTable["value"].Fvalue.(type) {
-		case []types.JavaByte:
-			return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
-		case []byte:
-			return JavaByteArrayFromGoByteArray(obj.FieldTable["value"].Fvalue.([]byte))
-		}
-	}
-	return nil
-}
-
 // StringObjectFromByteArray: convenience method to create a string object from a byte array
 func StringObjectFromByteArray(bytes []byte) *Object {
-	newStr := NewStringObject()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
-	return newStr
-}
-
-// StringObjectFromJavaByteArray: convenience method to create a string object from a JavaByte array
-func StringObjectFromJavaByteArray(bytes []types.JavaByte) *Object {
 	newStr := NewStringObject()
 	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
 	return newStr
@@ -174,16 +144,6 @@ func GoStringFromStringPoolIndex(index uint32) string {
 func StringObjectFromPoolIndex(index uint32) *Object {
 	if index < stringPool.GetStringPoolSize() {
 		return StringObjectFromGoString(*stringPool.GetStringPointer(index))
-	} else {
-		return nil
-	}
-}
-
-// ByteArrayFromStringPoolIndex: convenience method to get a byte array using a string pool index
-func ByteArrayFromStringPoolIndex(index uint32) []types.JavaByte {
-	if index < stringPool.GetStringPoolSize() {
-		str := *stringPool.GetStringPointer(index)
-		return JavaByteArrayFromGoString(str)
 	} else {
 		return nil
 	}
@@ -284,74 +244,4 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		fieldName, fld.Ftype)
 	trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
-}
-
-func GoStringFromJavaByteArray(jbarr []types.JavaByte) string {
-	var sb strings.Builder
-	for _, b := range jbarr {
-		sb.WriteByte(byte(b))
-	}
-	return sb.String()
-}
-
-func JavaByteArrayFromGoString(str string) []types.JavaByte {
-	jbarr := make([]types.JavaByte, len(str))
-	for i, b := range str {
-		jbarr[i] = types.JavaByte(b)
-	}
-	return jbarr
-}
-
-func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
-	jbarr := make([]types.JavaByte, len(gbarr))
-	for i, b := range gbarr {
-		jbarr[i] = types.JavaByte(b)
-	}
-	return jbarr
-}
-
-func GoByteArrayFromJavaByteArray(jbarr []types.JavaByte) []byte {
-	gbarr := make([]byte, len(jbarr))
-	for i, b := range jbarr {
-		gbarr[i] = byte(b)
-	}
-	return gbarr
-}
-
-func JavaByteArrayEquals(jbarr1, jbarr2 []types.JavaByte) bool {
-	if jbarr1 == nil || jbarr2 == nil {
-		if jbarr1 == nil && jbarr2 == nil {
-			return true
-		}
-		return false
-	}
-
-	if len(jbarr1) != len(jbarr2) {
-		return false
-	}
-	for i, b := range jbarr1 {
-		if b != jbarr2[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func JavaByteArrayEqualsIgnoreCase(jbarr1, jbarr2 []types.JavaByte) bool {
-	if jbarr1 == nil || jbarr2 == nil {
-		if jbarr1 == nil && jbarr2 == nil {
-			return true
-		}
-		return false
-	}
-
-	if len(jbarr1) != len(jbarr2) {
-		return false
-	}
-	for i, b := range jbarr1 {
-		if unicode.ToLower(rune(b)) != unicode.ToLower(rune(jbarr2[i])) {
-			return false
-		}
-	}
-	return true
 }
