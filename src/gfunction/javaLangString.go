@@ -7,7 +7,6 @@
 package gfunction
 
 import (
-	"bytes"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -1341,7 +1340,7 @@ func stringRegionMatches(params []any) any {
 	// param[3] offset in second string
 	// param[4] length of region to compare
 	baseStringObject := params[0].(*object.Object)
-	baseByteArray := object.ByteArrayFromStringObject(baseStringObject)
+	baseByteArray := object.JavaByteArrayFromStringObject(baseStringObject)
 
 	// If this call includes boolean ignoreCase, then the parameters are shifted in the params array.
 	ignoreCase := false
@@ -1354,7 +1353,7 @@ func stringRegionMatches(params []any) any {
 	baseOffset := params[pix].(int64)
 
 	compareStringObject := params[pix+1].(*object.Object)
-	compareByteArray := object.ByteArrayFromStringObject(compareStringObject)
+	compareByteArray := object.JavaByteArrayFromStringObject(compareStringObject)
 	compareOffset := params[pix+2].(int64)
 
 	if baseOffset < 0 || compareOffset < 0 { // in the JDK, this is the indicated response, rather than an exception(!)
@@ -1370,11 +1369,11 @@ func stringRegionMatches(params []any) any {
 	section1 := baseByteArray[baseOffset : baseOffset+regionLength]
 	section2 := compareByteArray[compareOffset : compareOffset+regionLength]
 	if ignoreCase {
-		if bytes.EqualFold(section1, section2) { // equal, ignoring case?
+		if object.JavaByteArrayEqualsIgnoreCase(section1, section2) {
 			return types.JavaBoolTrue
 		}
 	} else {
-		if bytes.Equal(section1, section2) { // equal, case-sensitive?
+		if object.JavaByteArrayEquals(section1, section2) { // case-sensitive equal
 			return types.JavaBoolTrue
 		}
 	}

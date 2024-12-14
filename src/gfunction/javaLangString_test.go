@@ -682,8 +682,6 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	}
 }
 
-// >>>>>>>> resume here
-
 func TestStringStrip(t *testing.T) {
 	// First, we would create inputs that we would want to test
 	testInputString := "    Hello, world!    "
@@ -801,5 +799,107 @@ func TestStringStripTrailing(t *testing.T) {
 	if strippedString != expected {
 		t.Errorf("Expected '%s' but got '%s'",
 			expected, strippedString)
+	}
+}
+
+func TestStringRegionMatches(t *testing.T) {
+	// Helper function to create a string object
+	createStringObject := func(s string) *object.Object {
+		return object.StringObjectFromGoString(s)
+	}
+
+	// Test case: baseOffset < 0
+	params := []any{createStringObject("hello"), int64(-1), createStringObject("hello"), int64(0), int64(5)}
+	result := stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for baseOffset < 0, got %v", result)
+	}
+
+	// Test case: compareOffset < 0
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(-1), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for compareOffset < 0, got %v", result)
+	}
+
+	// Test case: baseOffset + regionLength > len(baseByteArray)
+	params = []any{createStringObject("hello"), int64(1), createStringObject("hello"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for baseOffset + regionLength > len(baseByteArray), got %v", result)
+	}
+
+	// Test case: compareOffset + regionLength > len(compareByteArray)
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(1), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for compareOffset + regionLength > len(compareByteArray), got %v", result)
+	}
+
+	// Test case: sections are equal, case-sensitive
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal sections, case-sensitive, got %v", result)
+	}
+
+	// Test case: sections are not equal, case-sensitive
+	params = []any{createStringObject("hello"), int64(0), createStringObject("world"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal sections, case-sensitive, got %v", result)
+	}
+
+	// Test case: sections are equal, ignoring case
+	params = []any{createStringObject("hello"), types.JavaBoolTrue, int64(0), createStringObject("HELLO"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal sections, ignoring case, got %v", result)
+	}
+
+	// Test case: sections are not equal, ignoring case
+	params = []any{createStringObject("hello"), types.JavaBoolTrue, int64(0), createStringObject("WORLD"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal sections, ignoring case, got %v", result)
+	}
+}
+
+func TestStringRepeat(t *testing.T) {
+	// Helper function to create a string object
+	createStringObject := func(s string) *object.Object {
+		return object.StringObjectFromGoString(s)
+	}
+
+	// Test case: repeat string 0 times
+	params := []interface{}{createStringObject("hello"), int64(0)}
+	result := stringRepeat(params).(*object.Object)
+	expected := ""
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat string 1 time
+	params = []interface{}{createStringObject("hello"), int64(1)}
+	result = stringRepeat(params).(*object.Object)
+	expected = "hello"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat string multiple times
+	params = []interface{}{createStringObject("hello"), int64(3)}
+	result = stringRepeat(params).(*object.Object)
+	expected = "hellohellohello"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat empty string multiple times
+	params = []interface{}{createStringObject(""), int64(3)}
+	result = stringRepeat(params).(*object.Object)
+	expected = ""
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
 	}
 }

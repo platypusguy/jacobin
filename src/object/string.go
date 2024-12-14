@@ -25,6 +25,7 @@ import (
 	"jacobin/types"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // NewStringObject creates an empty string object (aka Java String)
@@ -330,6 +331,25 @@ func JavaByteArrayEquals(jbarr1, jbarr2 []types.JavaByte) bool {
 	}
 	for i, b := range jbarr1 {
 		if b != jbarr2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func JavaByteArrayEqualsIgnoreCase(jbarr1, jbarr2 []types.JavaByte) bool {
+	if jbarr1 == nil || jbarr2 == nil {
+		if jbarr1 == nil && jbarr2 == nil {
+			return true
+		}
+		return false
+	}
+
+	if len(jbarr1) != len(jbarr2) {
+		return false
+	}
+	for i, b := range jbarr1 {
+		if unicode.ToLower(rune(b)) != unicode.ToLower(rune(jbarr2[i])) {
 			return false
 		}
 	}
