@@ -451,7 +451,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for boolean " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.intConsts[entryInCp.slot]
+					f.constValue = int64(klass.intConsts[entryInCp.slot])
 					if f.isStatic {
 						staticField := statics.Static{Type: types.Bool, Value: f.constValue}
 						staticName := klass.className + "." + klass.utf8Refs[f.name].content
