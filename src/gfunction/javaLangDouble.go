@@ -237,7 +237,7 @@ func doubleValueOf(params []interface{}) interface{} {
 		obj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: params[0].(float64)}
 	case *object.Object:
 		that := params[0].(*object.Object)
-		str := string(that.FieldTable["value"].Fvalue.([]byte))
+		str := object.GoStringFromJavaByteArray(that.FieldTable["value"].Fvalue.([]types.JavaByte))
 		if len(str) < 1 {
 			return getGErrBlk(excNames.NullPointerException, "doubleValueOf: nil string argument")
 		}
