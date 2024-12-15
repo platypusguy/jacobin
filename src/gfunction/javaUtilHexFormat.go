@@ -214,46 +214,46 @@ func Load_Util_HexFormat() {
 
 // <clinit> for class HexFormat
 func hexFormatClinit(params []interface{}) interface{} {
-	DIGITS := []uint8{
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 255, 255, 255, 255, 255, 255,
-		255, 10, 11, 12, 13, 14, 15, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 10, 11, 12, 13, 14, 15, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	DIGITS := []types.JavaByte{
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1,
+		-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	}
 	sDigits := statics.Static{Type: types.ByteArray, Value: DIGITS}
 	statics.AddStatic("java/util/HexFormat.DIGITS", sDigits)
 
-	UPPERCASE_DIGITS := []uint8{
+	UPPERCASE_DIGITS := []types.JavaByte{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
 	}
 	sUppercaseDigits := statics.Static{Type: types.ByteArray, Value: UPPERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.UPPERCASE_DIGITS", sUppercaseDigits)
 
-	LOWERCASE_DIGITS := []uint8{
+	LOWERCASE_DIGITS := []types.JavaByte{
 		'0', '1', '2', '3', '4', '5', '6', '7',
 		'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 	}
 	sLowercaseDigits := statics.Static{Type: types.ByteArray, Value: LOWERCASE_DIGITS}
 	statics.AddStatic("java/util/HexFormat.LOWERCASE_DIGITS", sLowercaseDigits)
 
-	obj := mkHexFormatObject([]byte{}, []byte{}, []byte{}, LOWERCASE_DIGITS)
+	obj := mkHexFormatObject([]types.JavaByte{}, []types.JavaByte{}, []types.JavaByte{}, LOWERCASE_DIGITS)
 	sHexFormat := statics.Static{Type: "Ljava/util/HexFormat;", Value: obj}
 	statics.AddStatic("java/util/HexFormat.HEX_FORMAT", sHexFormat)
 
-	sEmptyBytes := statics.Static{Type: types.ByteArray, Value: []byte{}}
+	sEmptyBytes := statics.Static{Type: types.ByteArray, Value: []types.JavaByte{}}
 	statics.AddStatic("java/util/HexFormat.EMPTY_BYTES", sEmptyBytes)
 
 	sJavaLangAccess := statics.Static{Type: types.Int, Value: 42}
@@ -263,7 +263,7 @@ func hexFormatClinit(params []interface{}) interface{} {
 }
 
 // Make a new HexFormat object and return the object struct to caller.
-func mkHexFormatObject(delimiter, prefix, suffix, digits []byte) *object.Object {
+func mkHexFormatObject(delimiter, prefix, suffix, digits []types.JavaByte) *object.Object {
 	var fld object.Field
 	className := "java/util/HexFormat"
 	obj := object.MakeEmptyObjectWithClassName(&className)
@@ -350,7 +350,7 @@ func hfByteToHexDigits(params []interface{}) interface{} {
 	input := primitive.(int64) % 256
 	switch primitive.(type) {
 	case int64:
-		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
 			str = fmt.Sprintf("%02X", input)
 		} else { // lowercase
@@ -369,7 +369,7 @@ func hfCharToHexDigits(params []interface{}) interface{} {
 	input := primitive.(int64) % 256
 	switch primitive.(type) {
 	case int64:
-		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
 			str = fmt.Sprintf("%04X", input)
 		} else { // lowercase
@@ -388,7 +388,7 @@ func hfIntToHexDigits(params []interface{}) interface{} {
 	input := primitive.(int64)
 	switch primitive.(type) {
 	case int64:
-		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
 			str = fmt.Sprintf("%08X", input)
 		} else { // lowercase
@@ -407,7 +407,7 @@ func hfLongToHexDigits(params []interface{}) interface{} {
 	input := primitive.(int64)
 	switch primitive.(type) {
 	case int64:
-		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
 			str = fmt.Sprintf("%016X", input)
 		} else { // lowercase
@@ -430,7 +430,7 @@ func hfShortToHexDigits(params []interface{}) interface{} {
 	input := primitive.(int64)
 	switch primitive.(type) {
 	case int64:
-		digits := obj.FieldTable["digits"].Fvalue.([]byte)
+		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
 			str = fmt.Sprintf("%04X", input)
 		} else { // lowercase
@@ -455,7 +455,7 @@ func hfFormatHexFromBytes(params []interface{}) interface{} {
 	suffix :=
 		object.GoStringFromJavaByteArray(this.FieldTable["suffix"].Fvalue.([]types.JavaByte))
 	objBytes := params[1].(*object.Object)
-	bytes := objBytes.FieldTable["value"].Fvalue.([][]types.JavaByte)
+	bytes := objBytes.FieldTable["value"].Fvalue.([]types.JavaByte)
 	var fromIndex int
 	var toIndex int
 	if len(params) > 2 {
