@@ -871,7 +871,6 @@ func stringBuilderReverse(params []any) any {
 	}
 
 	objBase.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: byteArray}
-
 	return objBase
 }
 
