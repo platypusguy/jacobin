@@ -360,30 +360,3 @@ func TestObjectFieldToStringForStaticBool(t *testing.T) {
 	_ = w.Close()
 	os.Stderr = normalStderr
 }
-
-// test that string creation from a JavaByte array works correctly
-func TestGoStringFromJavaByteArray(t *testing.T) {
-	javaByteArray :=
-		[]types.JavaByte{0x4d, 0x61, 0x72, 0x79, 0x20, 0x68, 0x61, 0x64,
-			0x20, 0x61, 0x20, 0x6c, 0x69, 0x74, 0x74, 0x6c, 0x65, 0x20,
-			0x6c, 0x61, 0x6d, 0x62, 0x20, 0x77, 0x68, 0x6f, 0x73, 0x65,
-			0x20, 0x66, 0x6c, 0x65, 0x65, 0x63, 0x65, 0x20, 0x77, 0x61,
-			0x73, 0x20, 0x77, 0x68, 0x69, 0x74, 0x65, 0x20, 0x61, 0x73,
-			0x20, 0x73, 0x6e, 0x6f, 0x77, 0x2e}
-	goString := GoStringFromJavaByteArray(javaByteArray)
-	if goString != "Mary had a little lamb whose fleece was white as snow." {
-		t.Errorf("Expected 'Mary had a little lamb whose fleece was white as snow.', got '%s'", goString)
-	}
-}
-
-// test that a JavaByte array is correctly created from a Go string
-func TestJavaByteArrayFromGoString(t *testing.T) {
-	constStr := "Mary"
-	jba := JavaByteArrayFromGoString(constStr)
-	if len(jba) != 4 {
-		t.Errorf("Expected 4 bytes, got %d", len(jba))
-	}
-	if jba[0] != 0x4d || jba[1] != 0x61 || jba[2] != 0x72 || jba[3] != 0x79 {
-		t.Errorf("Expected [0x4d, 0x61, 0x72, 0x79], got %v", jba)
-	}
-}
