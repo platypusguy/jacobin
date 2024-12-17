@@ -258,11 +258,12 @@ func fosWriteByteArray(params []interface{}) interface{} {
 	}
 
 	// Set buffer to the byte array parameter.
-	buffer, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	buffer := object.GoByteArrayFromJavaByteArray(javaBytes)
 
 	// Write the buffer.
 	_, err := osFile.Write(buffer)
@@ -285,11 +286,12 @@ func fosWriteByteArrayOffset(params []interface{}) interface{} {
 	}
 
 	// Set buffer (buf1) to the byte array parameter.
-	buf1, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	buf1 := object.GoByteArrayFromJavaByteArray(javaBytes)
 
 	// Collect the offset and length parameter values.
 	offset := params[2].(int64)
