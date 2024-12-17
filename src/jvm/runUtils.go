@@ -253,7 +253,14 @@ func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
 		for fieldName := range obj.FieldTable {
 			fld := obj.FieldTable[fieldName]
 			if klass == types.StringClassName && fieldName == "value" {
-				str := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				var str string
+				switch fld.Fvalue.(type) {
+				case []types.JavaByte:
+					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				default:
+					str = string(fld.Fvalue.([]byte))
+				}
+
 				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
 			} else {
 				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
