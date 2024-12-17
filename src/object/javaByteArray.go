@@ -9,7 +9,6 @@ package object
 import (
 	"jacobin/stringPool"
 	"jacobin/types"
-	"reflect"
 	"strings"
 	"unicode"
 	"unsafe"
@@ -32,40 +31,11 @@ func JavaByteArrayFromGoString(str string) []types.JavaByte {
 }
 
 func JavaByteArrayFromGoByteArray(gbarr []byte) []types.JavaByte {
-	// jbarr := make([]types.JavaByte, len(gbarr))
-	// for i, b := range gbarr {
-	// 	jbarr[i] = types.JavaByte(b)
-	// }
-	// return jbarr
-	// Create a slice header for the byte slice
-
-	// byteHeader := *(*reflect.SliceHeader)(unsafe.Pointer(&gbarr))
-	//
-	// Create a new slice header for the int8 slice
-	// int8Header := reflect.SliceHeader{
-	// 	Data: byteHeader.Data,
-	// 	Len:  byteHeader.Len,
-	// 	Cap:  byteHeader.Cap,
-	// }
-	//
-	// // Convert the slice header to a slice of int8
-	// return *(*[]int8)(unsafe.Pointer(&int8Header))
-
-	// return unsafe.Slice((*int8)(unsafe.Pointer(&gbarr[0])), len(gbarr))
-	header := (*reflect.SliceHeader)(unsafe.Pointer(&gbarr))
-	byteSlice := *(*[]types.JavaByte)(unsafe.Pointer(header))
-	return byteSlice
+	return *(*[]int8)(unsafe.Pointer(&gbarr))
 }
 
 func GoByteArrayFromJavaByteArray(jbarr []types.JavaByte) []byte {
-	// gbarr := make([]byte, len(jbarr))
-	// for i, b := range jbarr {
-	// 	gbarr[i] = byte(b)
-	// }
-	header := (*reflect.SliceHeader)(unsafe.Pointer(&jbarr))
-	byteSlice := *(*[]byte)(unsafe.Pointer(header))
-	return byteSlice
-	// return gbarr
+	return *(*[]uint8)(unsafe.Pointer(&jbarr))
 }
 
 // JavaByteFromStringObject: convenience method to extract a Java byte array from a String object (Java string)
