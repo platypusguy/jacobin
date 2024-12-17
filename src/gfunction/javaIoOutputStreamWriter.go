@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/types"
 	"os"
 )
 
@@ -248,11 +249,12 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 	}
 
 	// Get the parameter string byte array, offset, and length.
-	paramBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "Trouble with value field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	paramBytes := object.GoByteArrayFromJavaByteArray(javaBytes)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 

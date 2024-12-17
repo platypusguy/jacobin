@@ -238,11 +238,12 @@ func fisReadByteArray(params []interface{}) interface{} {
 	}
 
 	// Set buffer to the byte array parameter.
-	buffer, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	buffer := object.GoByteArrayFromJavaByteArray(javaBytes)
 
 	// Fill the buffer.
 	nbytes, err := osFile.Read(buffer)
@@ -255,7 +256,8 @@ func fisReadByteArray(params []interface{}) interface{} {
 	}
 
 	// All is well - update the supplied buffer.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: buffer}
+	javaBytes = object.JavaByteArrayFromGoByteArray(buffer[:nbytes])
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: javaBytes}
 	params[1].(*object.Object).FieldTable["value"] = fld
 
 	// Return the number of bytes.
@@ -273,11 +275,12 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 	}
 
 	// Set buffer (buf1) to the byte array parameter.
-	buf1, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "Byte array parameter lacks a \"value\" field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	buf1 := object.GoByteArrayFromJavaByteArray(javaBytes)
 
 	// Collect the offset and length parameter values.
 	offset := params[2].(int64)
@@ -308,7 +311,8 @@ func fisReadByteArrayOffset(params []interface{}) interface{} {
 	copy(buf1[offset:], buf2)
 
 	// Update the parameter buffer.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: buf1}
+	javaBytes = object.JavaByteArrayFromGoByteArray(buf1)
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: javaBytes}
 	params[1].(*object.Object).FieldTable["value"] = fld
 
 	// Return the number of bytes.

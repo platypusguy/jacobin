@@ -543,7 +543,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  stringReplaceCC,
+			GFunction:  stringReplaceAllRegex,
 		}
 
 	// Replaces each substring of this string that matches the given regular expression with the given replacement.
