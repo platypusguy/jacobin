@@ -12,6 +12,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
+	"unsafe"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -53,7 +54,7 @@ func Load_Lang_Object() {
 	MethodSignatures["java/lang/Object.hashCode()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  objectHashCode,
 		}
 
 	MethodSignatures["java/lang/Object.notify()V"] =
@@ -117,7 +118,7 @@ type javaLangClass struct {
 func objectGetClass(params []interface{}) interface{} {
 	objPtr := params[0].(*object.Object)
 	if objPtr == nil || objPtr.KlassName == types.InvalidStringIndex {
-		errMsg := fmt.Sprintf("Invalid object in objectGetClass(): %T", params[0])
+		errMsg := fmt.Sprintf("objectGetClass: Invalid object in objectGetClass(): %T", params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -127,7 +128,7 @@ func objectGetClass(params []interface{}) interface{} {
 	// get a pointer to the class contents from the method area
 	o := classloader.MethAreaFetch(jlc.name)
 	if o == nil {
-		errMsg := fmt.Sprintf("Class %s not loaded", jlc.name)
+		errMsg := fmt.Sprintf("objectGetClass: Class %s not loaded", jlc.name)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 
@@ -160,6 +161,20 @@ func objectToString(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(str)
 	}
 
-	errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
+	errMsg := fmt.Sprintf("objectToString: Unsupported parameter type: %T", params[0])
+	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+}
+
+// "java/lang/Object.hashCode()I"
+func objectHashCode(params []interface{}) interface{} {
+	// params[0]: input Object
+	switch params[0].(type) {
+	case *object.Object:
+		ptr := uintptr(unsafe.Pointer(params[0].(*object.Object)))
+		hashCode := int64(ptr ^ (ptr >> 32))
+		return hashCode
+	}
+
+	errMsg := fmt.Sprintf("objectHashCode: Unsupported parameter type: %T", params[0])
 	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 }
