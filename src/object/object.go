@@ -103,6 +103,8 @@ func IsNull(value any) bool {
 	case *Object:
 		obj := value.(*Object)
 		return obj == nil || obj == Null
+	case []*Object:
+		return false
 	}
 	return value == nil
 }

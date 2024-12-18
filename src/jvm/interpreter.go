@@ -2898,7 +2898,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 func doIfnull(fr *frames.Frame, _ int64) int {
 	// null = nil or object.Null (a pointer to nil)
 	value := pop(fr)
-	if object.IsNull(value.(*object.Object)) {
+	if object.IsNull(value) {
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	} else {
@@ -2909,7 +2909,7 @@ func doIfnull(fr *frames.Frame, _ int64) int {
 // 0xC7 IFNONNULL jump if TOS does not hold a null address
 func doIfnonnull(fr *frames.Frame, _ int64) int {
 	value := pop(fr)
-	if object.IsNull(value.(*object.Object)) { // if == null, move along
+	if object.IsNull(value) { // if == null, move along
 		return 3
 	} else { // it's not nil nor a null pointer--so do the jump
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
