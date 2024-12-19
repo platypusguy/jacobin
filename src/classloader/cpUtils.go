@@ -11,7 +11,9 @@ package classloader
 // here to avoid circular dependencies.
 
 import (
+	"fmt"
 	"jacobin/stringPool"
+	"jacobin/trace"
 )
 
 type CpType struct {
@@ -179,10 +181,16 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 // and returns the class name, method name and method signature
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) {
+		errMsg := fmt.Sprintf("GetMethInfoFromCPmethref: cpIndex[%d] is out of range, len(CP.CpIndex)=%d",
+			cpIndex, len(CP.CpIndex))
+		trace.Error(errMsg)
 		return "", "", ""
 	}
 
 	if CP.CpIndex[cpIndex].Type != MethodRef {
+		errMsg := fmt.Sprintf("GetMethInfoFromCPmethref: CP.CpIndex[cpIndex].Type=%d, expected MethodRef=%d",
+			CP.CpIndex[cpIndex].Type, MethodRef)
+		trace.Error(errMsg)
 		return "", "", ""
 	}
 	methodRef := CP.CpIndex[cpIndex].Slot
