@@ -12,10 +12,8 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/opcodes"
 	"jacobin/types"
 	"math"
-	"os"
 )
 
 // Here we check the bytecodes of a method. The method is passed as a byte slice.
@@ -460,8 +458,8 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 	Code = code
 	PC = 0
 	for PC < len(code) {
-		s := fmt.Sprintf("PC: %d - opcode: %d %s\n", PC, code[PC], opcodes.BytecodeNames[code[PC]])
-		fmt.Fprintf(os.Stderr, s)
+		// s := fmt.Sprintf("PC: %d - opcode: %d %s\n", PC, code[PC], opcodes.BytecodeNames[code[PC]])
+		// fmt.Fprintf(os.Stderr, s)
 
 		opcode := code[PC]
 		ret := CheckTable[opcode]()
