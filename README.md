@@ -66,8 +66,9 @@ A more-than-minimal JVM written in Go.
 * Annotations
 
 ### Instrumentation
-* Instruction-level tracing (use `-trace:inst` to enable this feature)
-* Extensive logging data (use `-verbose:finest` to enable. Caveat: this produces *a lot* of data)
+* Class-loading instrumentation (use `-trace=cloadi`)
+* Instruction-level tracing (use `-trace=inst` for a listing of class/method/instructions/size-of-op-stack for all instructions as they execute)
+* Detailed instruction tracing (use `trace=verbose` to show everything in `-trace=inst`, plus the contents of the op stack for each instruction)
 
 **To do:**
 * Emit instrumented data to a port, for reading/display by a separate program.
