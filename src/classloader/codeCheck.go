@@ -529,7 +529,12 @@ func checkTableswitch() int {
 		paddingBytes = 0
 	}
 	basePC += paddingBytes
-	basePC += 12 // 4 bytes for default, 4 bytes for low, 4 bytes for high
+	basePC += 4 // jump size for default
+	low := types.FourBytesToInt64(Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4])
+	high := types.FourBytesToInt64(Code[basePC+5], Code[basePC+6], Code[basePC+7], Code[basePC+8])
+	basePC += 8 // 4 bytes for low, 4 bytes for high
+	offsetsCount := high - low + 1
+	basePC += int(offsetsCount) * 4
 	return (basePC - PC) + 1
 }
 
