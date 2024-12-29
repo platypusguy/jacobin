@@ -580,6 +580,8 @@ func TestNewFsub(t *testing.T) {
 
 // GETFIELD: Get a field from an object
 func TestNewGetField(t *testing.T) {
+	globals.InitGlobals("test")
+
 	f := newFrame(opcodes.GETFIELD)
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
@@ -627,7 +629,8 @@ func TestNewGetField(t *testing.T) {
 
 	// preceding should mean that the field value is on the stack
 	ret := pop(&f)
-	if ret != "hello" {
+	s := object.GoStringFromStringObject(ret.(*object.Object))
+	if s != "hello" {
 		t.Errorf("GETFIELD: did not get expected pointer to a string 'hello'")
 	}
 

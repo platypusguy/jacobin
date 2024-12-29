@@ -93,6 +93,8 @@ func GoStringFromStringObject(obj *Object) string {
 		return string(bytes.([]byte))
 	case []types.JavaByte:
 		return GoStringFromJavaByteArray(bytes.([]types.JavaByte))
+	case string:
+		return bytes.(string)
 	}
 
 	return ""
