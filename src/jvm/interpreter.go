@@ -1590,8 +1590,6 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 	fr.PC += 4
 
 	index := pop(fr).(int64) // the value we're looking to match
-	// "The value low must be less than or equal to high"
-	// We do not check to see if lowValue > highValue? Exception?
 
 	// Compute PC for jump.
 	jumpOffset := 0 //
@@ -1945,8 +1943,11 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
 		case []types.JavaByte:
 			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
+			// case string: // in theory, not needed, but just in case
+			// 	fieldValue = object.StringObjectFromGoString(objField.Fvalue.(string))
 		}
 	} else if types.IsArray(fieldType) {
+		// if the field type is an array, other than a string, convert it to an object
 		o := object.MakeEmptyObject()
 		of := object.Field{Ftype: fieldType, Fvalue: objField.Fvalue}
 		o.FieldTable["value"] = of
@@ -1955,7 +1956,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
 	}
-	
+
 	push(fr, fieldValue)
 	return 3 // 2 for CPslot + 1 for next bytecode
 }

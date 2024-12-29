@@ -533,6 +533,11 @@ func checkTableswitch() int {
 	low := types.FourBytesToInt64(Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4])
 	high := types.FourBytesToInt64(Code[basePC+5], Code[basePC+6], Code[basePC+7], Code[basePC+8])
 	basePC += 8 // 4 bytes for low, 4 bytes for high
+
+	if !(low <= high) {
+		return ERROR_OCCURRED
+	}
+	
 	offsetsCount := high - low + 1
 	basePC += int(offsetsCount) * 4
 	return (basePC - PC) + 1
