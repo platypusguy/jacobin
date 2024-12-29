@@ -66,6 +66,10 @@ func IsFloatingPoint(t string) bool {
 	return false
 }
 
+func IsArray(t string) bool {
+	return strings.HasPrefix(t, Array)
+}
+
 func IsAddress(t string) bool {
 	if strings.HasPrefix(t, Ref) || strings.HasPrefix(t, Array) {
 		return true

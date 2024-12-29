@@ -1946,9 +1946,16 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		case []types.JavaByte:
 			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
 		}
+	} else if types.IsArray(fieldType) {
+		o := object.MakeEmptyObject()
+		of := object.Field{Ftype: fieldType, Fvalue: objField.Fvalue}
+		o.FieldTable["value"] = of
+		o.KlassName = stringPool.GetStringIndex(&of.Ftype)
+		fieldValue = o
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
 	}
+	
 	push(fr, fieldValue)
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
