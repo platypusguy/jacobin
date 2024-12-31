@@ -287,6 +287,16 @@ func interpret(fs *list.List) {
 		fr.FrameStack = fs
 	}
 
+	// Don't allow a nil code segment (E.g. mishandled abstract).
+	if len(fr.Meth) < 1 {
+		errMsg := fmt.Sprintf("Empty code segment for %s.%s%s", fr.ClName, fr.MethName, fr.MethType)
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+		if status != exceptions.Caught { // will only happen in test
+			globals.InitGlobals("test")
+			return
+		}
+	}
+
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
 			traceInfo := emitTraceData(fr)
