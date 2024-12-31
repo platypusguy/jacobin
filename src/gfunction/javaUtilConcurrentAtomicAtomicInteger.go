@@ -13,7 +13,7 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  atomicIntegerClinit,
 		}
 
 	MethodSignatures["java/util/concurrent/atomic/AtomicInteger.<init>()V"] =
@@ -102,12 +102,21 @@ func Load_Util_Concurrent_Atomic_AtomicInteger() {
 
 }
 
+// "java/util/concurrent/atomic/AtomicInteger.<clinit>()V"
+func atomicIntegerClinit(params []interface{}) interface{} {
+	className := "java/util/concurrent/atomic/AtomicInteger"
+	obj := object.MakeEmptyObjectWithClassName(&className)
+	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	obj.FieldTable["value"] = initialField
+	return obj
+}
+
 // "java/util/concurrent/atomic/AtomicInteger.<init>()V"
 func atomicIntegerInitVoid(params []interface{}) interface{} {
 	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	obj := params[0].(*object.Object)
 	obj.FieldTable["value"] = initialField
-	return nil
+	return obj
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.<init>(I)V"
@@ -116,7 +125,7 @@ func atomicIntegerInitInt(params []interface{}) interface{} {
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
 	obj := params[0].(*object.Object)
 	obj.FieldTable["value"] = initialField
-	return nil
+	return obj
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.get()I"
@@ -132,30 +141,29 @@ func atomicIntegerGet(params []interface{}) interface{} {
 
 func atomicIntegerGetAndSet(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := params[1].(int64)
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
 	return oldValue
 }
 
 func atomicIntegerCompareAndSet(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	expectedValue := params[1].(int64)
 	if oldValue != expectedValue {
-		global.AtomicIntegerLock.Unlock() // <-------------------
 		return int64(0)
 	}
 	newValue := params[2].(int64)
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
 	return int64(1)
 }
 
@@ -163,74 +171,74 @@ func atomicIntegerCompareAndSet(params []interface{}) interface{} {
 
 func atomicIntegerGetAndIncrement(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue + 1
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return oldValue                   // previous value
+	return oldValue // previous value
 }
 
 func atomicIntegerGetAndDecrement(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue - 1
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return oldValue                   // previous value
+	return oldValue // previous value
 }
 
 func atomicIntegerGetAndAdd(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	delta := params[1].(int64)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue + delta
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return oldValue                   // previous value
+	return oldValue // previous value
 }
 
 func atomicIntegerIncrementAndGet(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue + 1
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return newValue                   // previous value
+	return newValue // previous value
 }
 
 func atomicIntegerDecrementAndGet(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue - 1
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return newValue                   // previous value
+	return newValue // previous value
 }
 
 func atomicIntegerAddAndGet(params []interface{}) interface{} {
 	global := globals.GetGlobalRef()
-	global.AtomicIntegerLock.Lock() // <-------------------
+	global.AtomicIntegerLock.Lock()
+	defer global.AtomicIntegerLock.Unlock()
 	obj := params[0].(*object.Object)
 	delta := params[1].(int64)
 	oldValue := obj.FieldTable["value"].Fvalue.(int64)
 	newValue := oldValue + delta
 	newField := object.Field{Ftype: types.Int, Fvalue: newValue}
 	obj.FieldTable["value"] = newField
-	global.AtomicIntegerLock.Unlock() // <-------------------
-	return newValue                   // previous value
+	return newValue // previous value
 }

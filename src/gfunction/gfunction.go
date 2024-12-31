@@ -127,7 +127,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Math_Big_Integer()
 
 	// java/security/*
-	// Load_Security_SecureRandom() <--------------- TODO
+	Load_Security_SecureRandom()
 	Load_Security_AccessController()
 
 	// java/util/*
