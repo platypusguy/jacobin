@@ -1254,8 +1254,18 @@ func doIinc(fr *frames.Frame, _ int64) int {
 		increment = byteToInt64(fr.Meth[fr.PC+2])
 		PCtoSkip = 2
 	}
+
+	// shoehorn the result into Java's 32-bit int
 	orig := fr.Locals[index].(int64)
-	fr.Locals[index] = orig + increment
+	chkInt32 := orig + increment
+	if chkInt32 > math.MaxInt32 {
+		chkInt32 = math.MinInt32 + (increment - 1)
+	} else {
+		if chkInt32 < math.MinInt32 {
+			chkInt32 = math.MaxInt32 + (increment + 1)
+		}
+	}
+	fr.Locals[index] = chkInt32
 	return PCtoSkip + 1
 }
 
