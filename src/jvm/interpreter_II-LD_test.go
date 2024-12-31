@@ -66,6 +66,24 @@ func TestNewIincNeg(t *testing.T) {
 	}
 }
 
+func TestIincOverflow(t *testing.T) {
+	f := newFrame(opcodes.IINC)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x7FFFFFFF)) // initialize local variable[1] to max int
+	f.Meth = append(f.Meth, 1)                     // increment local variable[1]
+	f.Meth = append(f.Meth, 1)                     // increment it by 1
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
+	}
+	value := int32(f.Locals[1].(int64))
+	if value != -2147483648 {
+		t.Errorf("IINC: Expected popped value to be -2147483648, got: %d", value)
+	}
+}
+
 // ILOAD: test load of int in locals[index] on to stack
 func TestNewIload(t *testing.T) {
 	f := newFrame(opcodes.ILOAD)
