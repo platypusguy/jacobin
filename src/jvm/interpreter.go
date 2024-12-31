@@ -141,7 +141,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doDup2x2,        // DUP2_X2         0x5E
 	doSwap,          // SWAP            0x5F
 	doIadd,          // IADD            0x60
-	doIadd,          // LADD            0x61
+	doLadd,          // LADD            0x61
 	doFadd,          // FADD            0x62
 	doFadd,          // DADD            0x63
 	doIsub,          // ISUB            0x64
@@ -1040,12 +1040,29 @@ func doSwap(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x60 IADD, LADD integer addition, push result
+// 0x60 IADD integer addition, push result
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	sum := i1 + i2
+
+	if sum > math.MaxInt32 {
+		sum = math.MinInt32 + (i2 - 1)
+	} else {
+		if sum < math.MinInt32 {
+			sum = math.MaxInt32 + (i2 + 1)
+		}
+	}
+
 	push(fr, sum)
+	return 1
+}
+
+// 0x61 LADD integer addition, push result
+func doLadd(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	push(fr, i1+i2)
 	return 1
 }
 
