@@ -145,7 +145,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doFadd,          // FADD            0x62
 	doFadd,          // DADD            0x63
 	doIsub,          // ISUB            0x64
-	doIsub,          // LSUB            0x65
+	doLsub,          // LSUB            0x65
 	doFsub,          // FSUB            0x66
 	doFsub,          // DSUB            0x67
 	doImul,          // IMUL            0x68
@@ -1046,7 +1046,7 @@ func doIadd(fr *frames.Frame, _ int64) int {
 	i1 := pop(fr).(int64)
 	sum := i1 + i2
 
-	if sum > math.MaxInt32 {
+	if sum > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
 		sum = math.MinInt32 + (i2 - 1)
 	} else {
 		if sum < math.MinInt32 {
@@ -1074,8 +1074,26 @@ func doFadd(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// Ox64, 0x65 ISUB, LSUB subtract subtract TOS-1 from TOS
+// Ox64 ISUB subtract subtract TOS-1 from TOS
 func doIsub(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	diff := i1 - i2
+
+	if diff > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
+		diff = math.MinInt32 - (i2 + 1)
+	} else {
+		if diff < math.MinInt32 {
+			diff = math.MaxInt32 - (i2 - 1)
+		}
+	}
+
+	push(fr, diff)
+	return 1
+}
+
+// 0x65 LSUB subtract subtract TOS-1 from TOS
+func doLsub(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	diff := i1 - i2
