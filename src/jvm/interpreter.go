@@ -149,7 +149,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doFsub,          // FSUB            0x66
 	doFsub,          // DSUB            0x67
 	doImul,          // IMUL            0x68
-	doImul,          // LMUL            0x69
+	doLmul,          // LMUL            0x69
 	doFmul,          // FMUL            0x6A
 	doFmul,          // DMUL            0x6B
 	doIdiv,          // IDIV            0x6C
@@ -1120,8 +1120,17 @@ func doFsub(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x68 IMUL multiply two int64s
+// 0x68 IMUL multiply two int32s
 func doImul(fr *frames.Frame, _ int64) int {
+	i2 := int32(pop(fr).(int64))
+	i1 := int32(pop(fr).(int64))
+	product := multiply(i1, i2)
+	push(fr, int64(product))
+	return 1
+}
+
+// 0x68 LMUL multiply two int64s, i.e. longs
+func doLmul(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	product := multiply(i1, i2)
