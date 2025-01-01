@@ -20,7 +20,7 @@ type StackValue interface {
 var debugging bool = false
 
 type Number interface {
-	int64 | float64
+	int32 | int64 | float64
 }
 
 // get the last four digits of the frame address. Used for logging/diagnostics
