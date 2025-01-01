@@ -197,6 +197,23 @@ func TestNewImul(t *testing.T) {
 	}
 }
 
+// Test IMUL (pop 2 values, multiply them, push result)
+func TestImulOverflow(t *testing.T) {
+	f := newFrame(opcodes.IMUL)
+	push(&f, int64(11))
+	push(&f, int64(math.MaxInt32))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != 0 {
+		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(int64)
+	if value != 2147483637 {
+		t.Errorf("IMUL: Expected popped value to be 2147483637, got: %d", value)
+	}
+}
+
 // INEG: negate an int
 func TestNewIneg(t *testing.T) {
 	f := newFrame(opcodes.INEG)
