@@ -16,6 +16,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -28,7 +29,7 @@ import (
 // for array bytecodes, which are located in arrayBytecodes_test.go
 
 // IINC: increment local variable
-func TestNewIinc(t *testing.T) {
+func TestIinc(t *testing.T) {
 	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
@@ -47,7 +48,7 @@ func TestNewIinc(t *testing.T) {
 }
 
 // IINC: increment local variable by negative value
-func TestNewIincNeg(t *testing.T) {
+func TestIincNeg(t *testing.T) {
 	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
@@ -607,6 +608,23 @@ func TestNewIsub(t *testing.T) {
 	value := pop(&f).(int64)
 	if value != 3 {
 		t.Errorf("ISUB: Expected popped value to be 3, got: %d", value)
+	}
+}
+
+func TestIsubUnderflow(t *testing.T) {
+	f := newFrame(opcodes.ISUB)
+	push(&f, int64(math.MinInt))
+	push(&f, int64(1))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	value := int32(f.OpStack[0].(int64))
+	if value != 2147483646 {
+		t.Errorf("ISUB: Expected popped value to be 2147483646, got: %d", value)
 	}
 }
 
