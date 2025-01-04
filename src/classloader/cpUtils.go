@@ -12,8 +12,9 @@ package classloader
 
 import (
 	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/stringPool"
-	"jacobin/trace"
 )
 
 type CpType struct {
@@ -180,18 +181,24 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 // GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
 // and returns the class name, method name and method signature
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
-	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) {
+	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) { // temporary check. This will eventually be caught in code checking
 		errMsg := fmt.Sprintf("GetMethInfoFromCPmethref: cpIndex[%d] is out of range, len(CP.CpIndex)=%d",
 			cpIndex, len(CP.CpIndex))
-		trace.Error(errMsg)
-		return "", "", ""
+		excCaught := globals.GetGlobalRef().FuncThrowException(excNames.IllegalClassFormatException, errMsg)
+		if !excCaught {
+			return "", "", "" // applies only if in test
+		}
+		// trace.Error(errMsg)
 	}
 
-	if CP.CpIndex[cpIndex].Type != MethodRef {
+	if CP.CpIndex[cpIndex].Type != MethodRef { // temporary check. This will eventually be caught in code checking
 		errMsg := fmt.Sprintf("GetMethInfoFromCPmethref: CP.CpIndex[cpIndex].Type=%d, expected MethodRef=%d",
 			CP.CpIndex[cpIndex].Type, MethodRef)
-		trace.Error(errMsg)
-		return "", "", ""
+		excCaught := globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+		if !excCaught {
+			return "", "", "" // applies only if in test
+		}
+		// trace.Error(errMsg)
 	}
 	methodRef := CP.CpIndex[cpIndex].Slot
 	classIndex := CP.MethodRefs[methodRef].ClassIndex
