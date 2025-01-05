@@ -44,209 +44,209 @@ import (
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
-	doNothing,       // NOP             0x00
-	doAconstNull,    // ACONST_NULL     0x01
-	doIconstM1,      // ICONST_M1       0x02
-	doIconst0,       // ICONST_0        0x03
-	doIconst1,       // ICONST_1        0x04
-	doIconst2,       // ICONST_2        0x05
-	doIconst3,       // ICONST_3        0x06
-	doIconst4,       // ICONST_4        0x07
-	doIconst5,       // ICONST_5        0x08
-	doLconst0,       // LCONST_0        0x09
-	doLconst1,       // LCONST_1        0x0A
-	doFconst0,       // FCONST_0        0x0B
-	doFconst1,       // FCONST_1        0x0C
-	doFconst2,       // FCONST_2        0x0D
-	doDconst0,       // DCONST_0        0x0E
-	doDconst1,       // DCONST_1        0x0F
-	doBipush,        // BIPUSH          0x10
-	doSipush,        // SIPUSH          0x11
-	doLdc,           // LDC             0x12
-	doLdcw,          // LDC_W           0x13
-	doLdc2w,         // LDC2_W          0x14
-	doLoad,          // ILOAD           0x15
-	doLoad,          // LLOAD           0x16
-	doLoad,          // FLOAD           0x17
-	doLoad,          // DLOAD           0x18
-	doLoad,          // ALOAD           0x19
-	doIload0,        // ILOAD_0         0x1A
-	doIload1,        // ILOAD_1         0x1B
-	doIload2,        // ILOAD_2         0x1C
-	doIload3,        // ILOAD_3         0x1D
-	doIload0,        // LLOAD_0         0x1E
-	doIload1,        // LLOAD_1         0x1F
-	doIload2,        // LLOAD_2         0x20
-	doIload3,        // LLOAD_3         0x21
-	doFload0,        // FLOAD_0         0x22
-	doFload1,        // FLOAD_1         0x23
-	doFload2,        // FLOAD_2         0x24
-	doFload3,        // FLOAD_3         0x25
-	doFload0,        // DLOAD_0         0x26
-	doFload1,        // DLOAD_1         0x27
-	doFload2,        // DLOAD_2         0x28
-	doFload3,        // DLOAD_3         0x29
-	doAload0,        // ALOAD_0         0x2A
-	doAload1,        // ALOAD_1         0x2B
-	doAload2,        // ALOAD_2         0x2C
-	doAload3,        // ALOAD_3         0x2D
-	doIaload,        // IALOAD          0x2E
-	doIaload,        // LALOAD          0x2F
-	doFaload,        // FALOAD          0x30
-	doFaload,        // DALOAD          0x31
-	doAaload,        // AALOAD          0x32
-	doBaload,        // BALOAD          0x33
-	doIaload,        // CALOAD          0x34
-	doIaload,        // SALOAD          0x35
-	doIstore,        // ISTORE          0x36
-	doIstore,        // LSTORE          0x37
-	doFstore,        // FSTORE          0x38
-	doFstore,        // DSTORE          0x39
-	doAstore,        // ASTORE          0x3A
-	doIstore0,       // ISTORE_0        0x3B
-	doIstore1,       // ISTORE_1        0x3C
-	doIstore2,       // ISTORE_2        0x3D
-	doIstore3,       // ISTORE_3        0x3E
-	doIstore0,       // LSTORE_0        0x3F
-	doIstore1,       // LSTORE_1        0x40
-	doIstore2,       // LSTORE_2        0x41
-	doIstore3,       // LSTORE_3        0x42
-	doFstore0,       // FSTORE_0        0x43
-	doFstore1,       // FSTORE_1        0x44
-	doFstore2,       // FSTORE_2        0x45
-	doFstore3,       // FSTORE_3        0x46
-	doFstore0,       // DSTORE_0        0x47
-	doFstore1,       // DSTORE_1        0x48
-	doFstore2,       // DSTORE_2        0x49
-	doFstore3,       // DSTORE_3        0x4A
-	doAstore0,       // ASTORE_0        0x4B
-	doAstore1,       // ASTORE_1        0x4C
-	doAstore2,       // ASTORE_2        0x4D
-	doAstore3,       // ASTORE_3        0x4E
-	doIastore,       // IASTORE         0x4F
-	doIastore,       // LASTORE         0x50
-	doFastore,       // FASTORE         0x51
-	doFastore,       // DASTORE         0x52
-	doAastore,       // AASTORE         0x53
-	doBastore,       // BASTORE         0x54
-	doIastore,       // CASTORE         0x55
-	doIastore,       // SASTORE         0x56
-	doPop,           // POP             0x57
-	doPop2,          // POP2            0x58
-	doDup,           // DUP             0x59
-	doDupx1,         // DUP_X1          0x5A
-	doDupx2,         // DUP_X2          0x5B
-	doDup2,          // DUP2            0x5C
-	doDup2x1,        // DUP2_X1         0x5D
-	doDup2x2,        // DUP2_X2         0x5E
-	doSwap,          // SWAP            0x5F
-	doIadd,          // IADD            0x60
-	doLadd,          // LADD            0x61
-	doFadd,          // FADD            0x62
-	doFadd,          // DADD            0x63
-	doIsub,          // ISUB            0x64
-	doLsub,          // LSUB            0x65
-	doFsub,          // FSUB            0x66
-	doFsub,          // DSUB            0x67
-	doImul,          // IMUL            0x68
-	doLmul,          // LMUL            0x69
-	doFmul,          // FMUL            0x6A
-	doFmul,          // DMUL            0x6B
-	doIdiv,          // IDIV            0x6C
-	doIdiv,          // LDIV            0x6D
-	doFdiv,          // FDIV            0x6E
-	doFdiv,          // DDIV            0x6F
-	doIrem,          // IREM            0x70
-	doIrem,          // LREM            0x71
-	doFrem,          // FREM            0x72
-	doFrem,          // DREM            0x73
-	doIneg,          // INEG            0x74
-	doIneg,          // LNEG            0x75
-	doFneg,          // FNEG            0x76
-	doFneg,          // DNEG            0x77
-	doIshl,          // ISHL            0x78
-	doIshl,          // LSHL            0x79
-	doIshr,          // ISHR            0x7A
-	doIshr,          // LSHR            0x7B
-	doIushr,         // IUSHR           0x7C
-	doIushr,         // LUSHR           0x7D
-	doIand,          // IAND            0x7E
-	doIand,          // LAND            0x7F
-	doIor,           // IOR             0x80
-	doIor,           // LOR             0x81
-	doIxor,          // IXOR            0x82
-	doIxor,          // LXOR            0x83
-	doIinc,          // IINC            0x84
-	doNothing,       // I2L             0x85
-	doI2f,           // I2F             0x86
-	doI2f,           // I2D             0x87
-	doNothing,       // L2I             0x88
-	doL2f,           // L2F             0x89
-	doL2f,           // L2D             0x8A
-	doF2i,           // F2I             0x8B
-	doF2i,           // F2L             0x8C
-	doNothing,       // F2D             0x8D
-	doD2i,           // D2I             0x8E
-	doD2i,           // D2L             0x8F
-	doNothing,       // D2F             0x90
-	doI2b,           // I2B             0x91
-	doI2c,           // I2C             0x92
-	doI2s,           // I2S             0x93
-	doLcmp,          // LCMP            0x94
-	doFcmpl,         // FCMPL           0x95
-	doFcmpl,         // FCMPG           0x96
-	doFcmpl,         // DCMPL           0x97
-	doFcmpl,         // DCMPG           0x98
-	doIfeq,          // IFEQ            0x99
-	doIfne,          // IFNE            0x9A
-	doIflt,          // IFLT            0x9B
-	doIfge,          // IFGE            0x9C
-	doIfgt,          // IFGT            0x9D
-	doIfle,          // IFLE            0x9E
-	doIficmpeq,      // IF_ICMPEQ       0x9F
-	doIficmpne,      // IF_ICMPNE       0xA0
-	doIficmplt,      // IF_ICMPLT       0xA1
-	doIficmpge,      // IF_ICMPGE       0xA2
-	doIficmpgt,      // IF_ICMPGT       0xA3
-	doIficmple,      // IF_ICMPLE       0xA4
-	doIfacmpeq,      // IF_ACMPEQ       0xA5
-	doIfacmpne,      // IF_ACMPNE       0xA6
-	doGoto,          // GOTO            0xA7
-	doJsr,           // JSR             0xA8
-	doRet,           // RET             0xA9
-	doTableswitch,   // TABLESWITCH     0xAA
-	doLookupswitch,  // LOOKUPSWITCH    0xAB
-	doIreturn,       // IRETURN         0xAC
-	doIreturn,       // LRETURN         0xAD
-	doIreturn,       // FRETURN         0xAE
-	doIreturn,       // DRETURN         0xAF
-	doIreturn,       // ARETURN         0xB0
-	doReturn,        // RETURN          0xB1
-	nil,             // GETSTATIC       0xB2 initialized in initializeDispatchTable()
-	nil,             // PUTSTATIC       0xB3 initialized in initializeDispatchTable()
-	doGetfield,      // GETFIELD        0xB4
-	doPutfield,      // PUTFIELD        0xB5
-	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
-	doInvokespecial, // INVOKESPECIAL   0xB7
-	nil,             // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
-	notImplemented,  // INVOKEINTERFACE 0xB9
-	notImplemented,  // INVOKEDYNAMIC   0xBA
-	nil,             // NEW             0xBB initialized in initializeDispatchTable()
-	doNewarray,      // NEWARRAY        0xBC
-	doAnewarray,     // ANEWARRAY       0xBD
-	doArraylength,   // ARRAYLENGTH     0xBE
-	doAthrow,        // ATHROW          0xBF
-	doCheckcast,     // CHECKCAST       0xC0
-	doInstanceof,    // INSTANCEOF      0xC1
-	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
-	doPop,           // MONITOREXIT     0xC3  "       "       "    "     "      '
-	doWide,          // WIDE            0xC4
-	doMultinewarray, // MULTIANEWARRAY  0xC5
-	doIfnull,        // IFNULL          0xC6
-	doIfnonnull,     // IFNONNULL       0xC7
-	doGotow,         // GOTO_W          0xC8
-	doJsrw,          // JSR_W           0xC9
-	doWarninvalid,   // BREAKPOINT      0xCA not implemented, generates warning, not exception
+	doNothing,         // NOP             0x00
+	doAconstNull,      // ACONST_NULL     0x01
+	doIconstM1,        // ICONST_M1       0x02
+	doIconst0,         // ICONST_0        0x03
+	doIconst1,         // ICONST_1        0x04
+	doIconst2,         // ICONST_2        0x05
+	doIconst3,         // ICONST_3        0x06
+	doIconst4,         // ICONST_4        0x07
+	doIconst5,         // ICONST_5        0x08
+	doLconst0,         // LCONST_0        0x09
+	doLconst1,         // LCONST_1        0x0A
+	doFconst0,         // FCONST_0        0x0B
+	doFconst1,         // FCONST_1        0x0C
+	doFconst2,         // FCONST_2        0x0D
+	doDconst0,         // DCONST_0        0x0E
+	doDconst1,         // DCONST_1        0x0F
+	doBipush,          // BIPUSH          0x10
+	doSipush,          // SIPUSH          0x11
+	doLdc,             // LDC             0x12
+	doLdcw,            // LDC_W           0x13
+	doLdc2w,           // LDC2_W          0x14
+	doLoad,            // ILOAD           0x15
+	doLoad,            // LLOAD           0x16
+	doLoad,            // FLOAD           0x17
+	doLoad,            // DLOAD           0x18
+	doLoad,            // ALOAD           0x19
+	doIload0,          // ILOAD_0         0x1A
+	doIload1,          // ILOAD_1         0x1B
+	doIload2,          // ILOAD_2         0x1C
+	doIload3,          // ILOAD_3         0x1D
+	doIload0,          // LLOAD_0         0x1E
+	doIload1,          // LLOAD_1         0x1F
+	doIload2,          // LLOAD_2         0x20
+	doIload3,          // LLOAD_3         0x21
+	doFload0,          // FLOAD_0         0x22
+	doFload1,          // FLOAD_1         0x23
+	doFload2,          // FLOAD_2         0x24
+	doFload3,          // FLOAD_3         0x25
+	doFload0,          // DLOAD_0         0x26
+	doFload1,          // DLOAD_1         0x27
+	doFload2,          // DLOAD_2         0x28
+	doFload3,          // DLOAD_3         0x29
+	doAload0,          // ALOAD_0         0x2A
+	doAload1,          // ALOAD_1         0x2B
+	doAload2,          // ALOAD_2         0x2C
+	doAload3,          // ALOAD_3         0x2D
+	doIaload,          // IALOAD          0x2E
+	doIaload,          // LALOAD          0x2F
+	doFaload,          // FALOAD          0x30
+	doFaload,          // DALOAD          0x31
+	doAaload,          // AALOAD          0x32
+	doBaload,          // BALOAD          0x33
+	doIaload,          // CALOAD          0x34
+	doIaload,          // SALOAD          0x35
+	doIstore,          // ISTORE          0x36
+	doIstore,          // LSTORE          0x37
+	doFstore,          // FSTORE          0x38
+	doFstore,          // DSTORE          0x39
+	doAstore,          // ASTORE          0x3A
+	doIstore0,         // ISTORE_0        0x3B
+	doIstore1,         // ISTORE_1        0x3C
+	doIstore2,         // ISTORE_2        0x3D
+	doIstore3,         // ISTORE_3        0x3E
+	doIstore0,         // LSTORE_0        0x3F
+	doIstore1,         // LSTORE_1        0x40
+	doIstore2,         // LSTORE_2        0x41
+	doIstore3,         // LSTORE_3        0x42
+	doFstore0,         // FSTORE_0        0x43
+	doFstore1,         // FSTORE_1        0x44
+	doFstore2,         // FSTORE_2        0x45
+	doFstore3,         // FSTORE_3        0x46
+	doFstore0,         // DSTORE_0        0x47
+	doFstore1,         // DSTORE_1        0x48
+	doFstore2,         // DSTORE_2        0x49
+	doFstore3,         // DSTORE_3        0x4A
+	doAstore0,         // ASTORE_0        0x4B
+	doAstore1,         // ASTORE_1        0x4C
+	doAstore2,         // ASTORE_2        0x4D
+	doAstore3,         // ASTORE_3        0x4E
+	doIastore,         // IASTORE         0x4F
+	doIastore,         // LASTORE         0x50
+	doFastore,         // FASTORE         0x51
+	doFastore,         // DASTORE         0x52
+	doAastore,         // AASTORE         0x53
+	doBastore,         // BASTORE         0x54
+	doIastore,         // CASTORE         0x55
+	doIastore,         // SASTORE         0x56
+	doPop,             // POP             0x57
+	doPop2,            // POP2            0x58
+	doDup,             // DUP             0x59
+	doDupx1,           // DUP_X1          0x5A
+	doDupx2,           // DUP_X2          0x5B
+	doDup2,            // DUP2            0x5C
+	doDup2x1,          // DUP2_X1         0x5D
+	doDup2x2,          // DUP2_X2         0x5E
+	doSwap,            // SWAP            0x5F
+	doIadd,            // IADD            0x60
+	doLadd,            // LADD            0x61
+	doFadd,            // FADD            0x62
+	doFadd,            // DADD            0x63
+	doIsub,            // ISUB            0x64
+	doLsub,            // LSUB            0x65
+	doFsub,            // FSUB            0x66
+	doFsub,            // DSUB            0x67
+	doImul,            // IMUL            0x68
+	doLmul,            // LMUL            0x69
+	doFmul,            // FMUL            0x6A
+	doFmul,            // DMUL            0x6B
+	doIdiv,            // IDIV            0x6C
+	doIdiv,            // LDIV            0x6D
+	doFdiv,            // FDIV            0x6E
+	doFdiv,            // DDIV            0x6F
+	doIrem,            // IREM            0x70
+	doIrem,            // LREM            0x71
+	doFrem,            // FREM            0x72
+	doFrem,            // DREM            0x73
+	doIneg,            // INEG            0x74
+	doIneg,            // LNEG            0x75
+	doFneg,            // FNEG            0x76
+	doFneg,            // DNEG            0x77
+	doIshl,            // ISHL            0x78
+	doIshl,            // LSHL            0x79
+	doIshr,            // ISHR            0x7A
+	doIshr,            // LSHR            0x7B
+	doIushr,           // IUSHR           0x7C
+	doIushr,           // LUSHR           0x7D
+	doIand,            // IAND            0x7E
+	doIand,            // LAND            0x7F
+	doIor,             // IOR             0x80
+	doIor,             // LOR             0x81
+	doIxor,            // IXOR            0x82
+	doIxor,            // LXOR            0x83
+	doIinc,            // IINC            0x84
+	doNothing,         // I2L             0x85
+	doI2f,             // I2F             0x86
+	doI2f,             // I2D             0x87
+	doNothing,         // L2I             0x88
+	doL2f,             // L2F             0x89
+	doL2f,             // L2D             0x8A
+	doF2i,             // F2I             0x8B
+	doF2i,             // F2L             0x8C
+	doNothing,         // F2D             0x8D
+	doD2i,             // D2I             0x8E
+	doD2i,             // D2L             0x8F
+	doNothing,         // D2F             0x90
+	doI2b,             // I2B             0x91
+	doI2c,             // I2C             0x92
+	doI2s,             // I2S             0x93
+	doLcmp,            // LCMP            0x94
+	doFcmpl,           // FCMPL           0x95
+	doFcmpl,           // FCMPG           0x96
+	doFcmpl,           // DCMPL           0x97
+	doFcmpl,           // DCMPG           0x98
+	doIfeq,            // IFEQ            0x99
+	doIfne,            // IFNE            0x9A
+	doIflt,            // IFLT            0x9B
+	doIfge,            // IFGE            0x9C
+	doIfgt,            // IFGT            0x9D
+	doIfle,            // IFLE            0x9E
+	doIficmpeq,        // IF_ICMPEQ       0x9F
+	doIficmpne,        // IF_ICMPNE       0xA0
+	doIficmplt,        // IF_ICMPLT       0xA1
+	doIficmpge,        // IF_ICMPGE       0xA2
+	doIficmpgt,        // IF_ICMPGT       0xA3
+	doIficmple,        // IF_ICMPLE       0xA4
+	doIfacmpeq,        // IF_ACMPEQ       0xA5
+	doIfacmpne,        // IF_ACMPNE       0xA6
+	doGoto,            // GOTO            0xA7
+	doJsr,             // JSR             0xA8
+	doRet,             // RET             0xA9
+	doTableswitch,     // TABLESWITCH     0xAA
+	doLookupswitch,    // LOOKUPSWITCH    0xAB
+	doIreturn,         // IRETURN         0xAC
+	doIreturn,         // LRETURN         0xAD
+	doIreturn,         // FRETURN         0xAE
+	doIreturn,         // DRETURN         0xAF
+	doIreturn,         // ARETURN         0xB0
+	doReturn,          // RETURN          0xB1
+	nil,               // GETSTATIC       0xB2 initialized in initializeDispatchTable()
+	nil,               // PUTSTATIC       0xB3 initialized in initializeDispatchTable()
+	doGetfield,        // GETFIELD        0xB4
+	doPutfield,        // PUTFIELD        0xB5
+	doInvokeVirtual,   // INVOKEVIRTUAL   0xB6
+	doInvokespecial,   // INVOKESPECIAL   0xB7
+	nil,               // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
+	doInvokeinterface, // INVOKEINTERFACE 0xB9
+	notImplemented,    // INVOKEDYNAMIC   0xBA
+	nil,               // NEW             0xBB initialized in initializeDispatchTable()
+	doNewarray,        // NEWARRAY        0xBC
+	doAnewarray,       // ANEWARRAY       0xBD
+	doArraylength,     // ARRAYLENGTH     0xBE
+	doAthrow,          // ATHROW          0xBF
+	doCheckcast,       // CHECKCAST       0xC0
+	doInstanceof,      // INSTANCEOF      0xC1
+	doPop,             // MONITORENTER    0xC2 not implemented but won't throw exception
+	doPop,             // MONITOREXIT     0xC3  "       "       "    "     "      '
+	doWide,            // WIDE            0xC4
+	doMultinewarray,   // MULTIANEWARRAY  0xC5
+	doIfnull,          // IFNULL          0xC6
+	doIfnonnull,       // IFNONNULL       0xC7
+	doGotow,           // GOTO_W          0xC8
+	doJsrw,            // JSR_W           0xC9
+	doWarninvalid,     // BREAKPOINT      0xCA not implemented, generates warning, not exception
 }
 
 // initializeDispatchTable initializes a few bytecodes that call interpret(). If they were
@@ -2414,6 +2414,151 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+}
+
+// 0xB9 INVOKEINTERFACE
+func doInvokeinterface(fr *frames.Frame, _ int64) int {
+	return notImplemented(fr, 0)
+	/*
+		CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+		count := f.Meth[f.PC+3]
+		zeroByte := f.Meth[f.PC+4]
+		f.PC += 4
+
+		CP := f.CP.(*classloader.CPool)
+		if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
+			errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
+			status := exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		CPentry := CP.CpIndex[CPslot]
+		if CPentry.Type != classloader.Interface {
+			glob.ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
+				CPentry.Type, classloader.Interface)
+			status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		method := CP.InterfaceRefs[CPentry.Slot]
+
+		// get the class entry from this method
+		interfaceRef := method.ClassIndex
+		interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
+		interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
+		interfaceName := *interfaceNamePtr
+
+		// get the method name for this method
+		nAndTindex := method.NameAndType
+		nAndTentry := CP.CpIndex[nAndTindex]
+		nAndTslot := nAndTentry.Slot
+		nAndT := CP.NameAndTypes[nAndTslot]
+		interfaceMethodNameIndex := nAndT.NameIndex
+		interfaceMethodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, interfaceMethodNameIndex)
+
+		// get the signature for this method
+		interfaceMethodSigIndex := nAndT.DescIndex
+		interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
+			CP, interfaceMethodSigIndex)
+
+		// now get the objRef pointing to the class containing the call to the method
+		// described just previously. It is located on the f.OpStack below the args to
+		// be passed to the method.
+		// The objRef object has previously been instantiated and its constructor called.
+		objRef := f.OpStack[f.TOS-int(count)+1]
+		if objRef == nil {
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
+				interfaceName+interfaceMethodName+interfaceMethodType)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		// get the name of the objectRef's class, and make sure it's loaded
+		objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
+		if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
+			// in this case, LoadClassFromNameOnly() will have already thrown the exception
+			if globals.JacobinHome() == "test" {
+				return err // applies only if in test
+			}
+		}
+
+		class := classloader.MethAreaFetch(objRefClassName)
+		if class == nil {
+			// in theory, this can't happen due to immediately previous loading, but making sure
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		var mtEntry classloader.MTentry
+		var err error
+		mtEntry, err = locateInterfaceMeth(class, f, objRefClassName, interfaceName,
+			interfaceMethodName, interfaceMethodType)
+		if err != nil { // any error will already have been handled
+			continue
+		}
+
+		clData := *class.Data
+		if mtEntry.MType == 'J' {
+			entry := mtEntry.Meth.(classloader.JmEntry)
+			fram, err := createAndInitNewFrame(
+				clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, f)
+			if err != nil {
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+					interfaceMethodName + interfaceMethodType
+				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			f.PC += 1                            // to point to the next bytecode before exiting
+			fs.PushFront(fram)                   // push the new frame
+			f = fs.Front().Value.(*frames.Frame) // point f to the new head
+			goto frameInterpreter
+		} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+			gmethData := mtEntry.Meth.(gfunction.GMeth)
+			paramCount := gmethData.ParamSlots
+			var params []interface{}
+			for i := 0; i < paramCount; i++ {
+				params = append(params, pop(f))
+			}
+
+			if globals.TraceInst {
+				infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
+				trace.Trace(infoMsg)
+			}
+			ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, globals.TraceVerbose)
+			if ret != nil {
+				switch ret.(type) {
+				case error:
+					if glob.JacobinName == "test" {
+						errRet := ret.(error)
+						return errRet
+					} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+						f.PC += 1
+						goto frameInterpreter
+					}
+				default: // if it's not an error, then it's a legitimate return value, which we simply push
+					push(f, ret)
+					if strings.HasSuffix(interfaceMethodType, "D") || strings.HasSuffix(interfaceMethodType, "J") {
+						push(f, ret) // push twice if long or double
+					}
+				}
+				// any exception will already have been handled.
+			}
+		}
+	*/
 }
 
 // 0xBB NEW create a new object

@@ -197,7 +197,7 @@ func TestNewImul(t *testing.T) {
 	}
 }
 
-// Test IMUL (pop 2 values, multiply them, push result)
+// Test IMUL (pop 2 values, multiply them, push result) -- here test for overflow of int32 (aka Java int)
 func TestImulOverflow(t *testing.T) {
 	f := newFrame(opcodes.IMUL)
 	push(&f, int64(11))
