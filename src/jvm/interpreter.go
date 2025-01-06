@@ -2127,17 +2127,18 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
-			"location %d in method %s of class %s\n",
-			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
-		}
-	}
+	// The following check is now performed in codeCheck.go. It is left here for reference, but can be deleted.
+	// CPentry := CP.CpIndex[CPslot]
+	// if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
+	// 	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+	// 	errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
+	// 		"location %d in method %s of class %s\n",
+	// 		CPentry.Type, fr.PC, fr.MethName, fr.ClName)
+	// 	status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, fr)
+	// 	if status != exceptions.Caught {
+	// 		return exceptions.ERROR_OCCURRED // applies only if in test
+	// 	}
+	// }
 
 	className, methodName, methodType :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)

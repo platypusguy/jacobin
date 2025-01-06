@@ -590,6 +590,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 	}
 }
 
+/* now part of codecheck.go. TODO: migrate it to codecheck_test.go
 // INVOKEVIRTUAL : invoke method -- here testing for error
 func TestNewInvokevirtualInvalid(t *testing.T) {
 	globals.InitGlobals("test")
@@ -614,7 +615,7 @@ func TestNewInvokevirtualInvalid(t *testing.T) {
 		FldName: "testField",
 		FldType: "I",
 	}
-	
+
 	f.CP = &CP
 
 	fs := frames.CreateFrameStack()
@@ -635,3 +636,4 @@ func TestNewInvokevirtualInvalid(t *testing.T) {
 		}
 	}
 }
+*/
