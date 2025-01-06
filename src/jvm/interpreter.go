@@ -270,6 +270,8 @@ func initializeDispatchTable() {
 	DispatchTable[opcodes.NEW] = doNew
 }
 
+var Interpret = interpret // for testing
+
 // the main interpreter loop. This loop takes responsibility for
 // pushing a new frame for a called method onto the stack, and for
 // popping the current frame when a bytecode of the RETURN family
