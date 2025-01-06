@@ -14,6 +14,7 @@ import (
 	"testing"
 )
 
+/* // this check is now performed in codeCheck.go
 func TestMeInfoFromMethRefInvalid(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -42,6 +43,7 @@ func TestMeInfoFromMethRefInvalid(t *testing.T) {
 		t.Errorf("Did not get expected result for pointing to CPentry that's not a MethodRef")
 	}
 }
+*/
 
 func TestMeInfoFromMethRefValid(t *testing.T) {
 	globals.InitGlobals("test")

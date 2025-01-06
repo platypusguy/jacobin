@@ -416,8 +416,8 @@ var CheckTable = [203]BytecodeFunc{
 	return3,            // GETFIELD        0xB4
 	return3,            // PUTFIELD        0xB5
 	checkInvokevirtual, // INVOKEVIRTUAL   0xB6
-	return3,            // INVOKESPECIAL   0xB7
-	return3,            // INVOKESTATIC    0xB8
+	checkInvokespecial, // INVOKESPECIAL   0xB7
+	checkInvokestatic,  // INVOKESTATIC    0xB8
 	return5,            // INVOKEINTERFACE 0xB9
 	return5,            // INVOKEDYNAMIC   0xBA
 	return3,            // NEW             0xBB
@@ -563,6 +563,48 @@ func checkInvokevirtual() int {
 	if CPentry.Type != MethodRef {
 		// because this is not a ClassFormatError, we throw the error/exception here
 		errMsg := fmt.Sprintf("INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference", PC, CPentry.Type)
+		status := globals.GetGlobalRef().FuncThrowException(excNames.VerifyError, errMsg)
+		if status != true { // will only happen in test
+			return ERROR_OCCURRED
+		}
+	}
+	return 3
+}
+
+// INVOKESPECIAL 0xB7
+func checkInvokespecial() int {
+	// check that the index points to a method reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != MethodRef && CPentry.Type != Interface {
+		// because this is not a ClassFormatError, we throw the error/exception here
+		errMsg := fmt.Sprintf("INVOKESPECIAL at %d: CP entry (%d) is not a method or interface reference",
+			PC, CPentry.Type)
+		status := globals.GetGlobalRef().FuncThrowException(excNames.VerifyError, errMsg)
+		if status != true { // will only happen in test
+			return ERROR_OCCURRED
+		}
+	}
+	return 3
+}
+
+// INVOKESTATIC 0xB8
+func checkInvokestatic() int {
+	// check that the index points to a method reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != MethodRef && CPentry.Type != Interface {
+		// because this is not a ClassFormatError, we throw the error/exception here
+		errMsg := fmt.Sprintf("INVOKESTATIC at %d: CP entry (%d) is not a method or interface reference",
+			PC, CPentry.Type)
 		status := globals.GetGlobalRef().FuncThrowException(excNames.VerifyError, errMsg)
 		if status != true { // will only happen in test
 			return ERROR_OCCURRED
