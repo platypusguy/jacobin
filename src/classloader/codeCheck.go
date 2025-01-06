@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -21,6 +21,9 @@ import (
 // The bytecodes are checked against a function lookup table which calls the function
 // to performs the check. It then uses the skip table to determine the number of bytes
 // to skip to the next bytecode. If an error occurs, a ClassFormatException is thrown.
+
+// NOTE: The unit tests for these functions are in codeCheck_test.go in the jvm directory.
+// Placed there to avoid circular dependencies.
 
 var bytecodeSkipTable = map[byte]int{
 	0x00: 1, // NOP
@@ -484,6 +487,8 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 }
 
 // === check functions in alpha order by name of bytecode ===
+
+// GOTO 0xA7
 func checkGoto() int {
 	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
@@ -492,6 +497,7 @@ func checkGoto() int {
 	return 3
 }
 
+// GOTO_W 0xC8
 func checkGotow() int {
 	jumpTo := int(types.FourBytesToInt64(Code[PC+1], Code[PC+2], Code[PC+3], Code[PC+4]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
@@ -500,69 +506,10 @@ func checkGotow() int {
 	return 5
 }
 
-func checkLookupswitch() int { // need to check this
-	basePC := PC
-
-	paddingBytes := 4 - ((PC + 1) % 4)
-	if paddingBytes == 4 {
-		paddingBytes = 0
-	}
-	basePC += paddingBytes
-	basePC += 4 // jump size for default
-
-	npairs := binary.BigEndian.Uint32(
-		[]byte{Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4]})
-
-	basePC += 4
-	basePC += int(npairs) * 8
-
-	return (basePC - PC) + 1
-}
-
-func checkTableswitch() int {
-	basePC := PC
-
-	paddingBytes := 4 - ((PC + 1) % 4)
-	if paddingBytes == 4 {
-		paddingBytes = 0
-	}
-	basePC += paddingBytes
-	basePC += 4 // jump size for default
-	low := types.FourBytesToInt64(Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4])
-	high := types.FourBytesToInt64(Code[basePC+5], Code[basePC+6], Code[basePC+7], Code[basePC+8])
-	basePC += 8 // 4 bytes for low, 4 bytes for high
-
-	if !(low <= high) {
-		return ERROR_OCCURRED
-	}
-
-	offsetsCount := high - low + 1
-	basePC += int(offsetsCount) * 4
-	return (basePC - PC) + 1
-}
-
+// IF_ACMPEQ 0xA5 (and the many other IF* bytecodes)
 func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
-		return ERROR_OCCURRED
-	}
-	return 3
-}
-
-// INVOKEVIRTUAL 0xB6
-func checkInvokevirtual() int {
-	// check that the index points to a method reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
-		return ERROR_OCCURRED
-	}
-
-	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != MethodRef {
-		// because this is not a ClassFormatError, we emit a trace message here
-		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
-		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 	return 3
@@ -604,6 +551,68 @@ func checkInvokestatic() int {
 		return ERROR_OCCURRED
 	}
 	return 3
+}
+
+// INVOKEVIRTUAL 0xB6
+func checkInvokevirtual() int {
+	// check that the index points to a method reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != MethodRef {
+		// because this is not a ClassFormatError, we emit a trace message here
+		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	return 3
+}
+
+// LOOKUPSWITCH 0xAB
+func checkLookupswitch() int { // need to check this
+	basePC := PC
+
+	paddingBytes := 4 - ((PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	basePC += paddingBytes
+	basePC += 4 // jump size for default
+
+	npairs := binary.BigEndian.Uint32(
+		[]byte{Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4]})
+
+	basePC += 4
+	basePC += int(npairs) * 8
+
+	return (basePC - PC) + 1
+}
+
+// TABLESWITCH 0xAA
+func checkTableswitch() int {
+	basePC := PC
+
+	paddingBytes := 4 - ((PC + 1) % 4)
+	if paddingBytes == 4 {
+		paddingBytes = 0
+	}
+	basePC += paddingBytes
+	basePC += 4 // jump size for default
+	low := types.FourBytesToInt64(Code[basePC+1], Code[basePC+2], Code[basePC+3], Code[basePC+4])
+	high := types.FourBytesToInt64(Code[basePC+5], Code[basePC+6], Code[basePC+7], Code[basePC+8])
+	basePC += 8 // 4 bytes for low, 4 bytes for high
+
+	if !(low <= high) {
+		return ERROR_OCCURRED
+	}
+
+	offsetsCount := high - low + 1
+	basePC += int(offsetsCount) * 4
+	return (basePC - PC) + 1
 }
 
 // === utility functions ===
