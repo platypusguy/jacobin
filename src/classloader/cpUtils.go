@@ -184,7 +184,7 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) { // temporary check. This will eventually be caught in code checking
 		errMsg := fmt.Sprintf("GetMethInfoFromCPmethref: cpIndex[%d] is out of range, len(CP.CpIndex)=%d",
 			cpIndex, len(CP.CpIndex))
-		excCaught := globals.GetGlobalRef().FuncThrowException(excNames.IllegalClassFormatException, errMsg)
+		excCaught := globals.GetGlobalRef().FuncThrowException(excNames.VerifyError, errMsg)
 		if !excCaught {
 			return "", "", "" // applies only if in test
 		}
