@@ -261,7 +261,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 }
 
 // LoadClassFromNameOnly loads a class from name in java/lang/Class format
-// It also loads the superclass of any class it loads.
+// It also loads the superclasses of any class it loads.
 func LoadClassFromNameOnly(name string) error {
 	var err error
 	className := name
@@ -330,6 +330,9 @@ loadAclass:
 		className = *stringPool.GetStringPointer(superclassIndex)
 		goto loadAclass
 	}
+
+	// at this point, we know the class and all its superclasses have been loaded. So,
+	// we can add all the superclass methods to the present class.
 	return err
 }
 
