@@ -531,6 +531,15 @@ func checkInvokeinterface() int {
 	if zeroByte != 0 {
 		return ERROR_OCCURRED
 	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != Interface {
+		// because this is not a ClassFormatError, we output a trace error message here
+		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: CP entry (%d) is not an interface reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
 	return 4
 }
 

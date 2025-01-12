@@ -270,8 +270,6 @@ func initializeDispatchTable() {
 	DispatchTable[opcodes.NEW] = doNew
 }
 
-var Interpret = interpret // for testing
-
 // the main interpreter loop. This loop takes responsibility for
 // pushing a new frame for a called method onto the stack, and for
 // popping the current frame when a bytecode of the RETURN family
@@ -2428,14 +2426,6 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		zeroByte := f.Meth[f.PC+4]
 		f.PC += 4
 
-		CP := f.CP.(*classloader.CPool)
-		if count < 1 || CPslot >= len(CP.CpIndex) || zeroByte != 0x00 {
-			errMsg := fmt.Sprintf("Invalid values for INVOKEINTERFACE bytecode")
-			status := exceptions.ThrowEx(excNames.IllegalClassFormatException, errMsg, f)
-			if status != exceptions.Caught {
-				return errors.New(errMsg) // applies only if in test
-			}
-		}
 
 		CPentry := CP.CpIndex[CPslot]
 		if CPentry.Type != classloader.Interface {
