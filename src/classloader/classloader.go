@@ -29,7 +29,7 @@ import (
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
 // and moved to an execution role. Most of the comments and code presuppose some
 // familiarity with the role of classloaders. More information can be found at:
-// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.3
+// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.3
 type Classloader struct {
 	Name       string
 	Parent     string
