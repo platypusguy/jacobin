@@ -28,8 +28,8 @@ import (
 
 var GMT = make(gmt)
 
-type gmt map[string]gmtEntry
-type gmtEntry struct {
+type gmt map[string]GmtEntry
+type GmtEntry struct {
 	MethData interface{} // pointer to the method data
 	MType    byte        // method type, G = Go method, J = Java method
 }
@@ -58,7 +58,7 @@ type gmtEntry struct {
 var GMTmutex sync.Mutex
 
 // adds an entry to the MTable, using a mutex
-func GmtAddEntry(key string, mte gmtEntry) {
+func GmtAddEntry(key string, mte GmtEntry) {
 	// fmt.Printf("DEBUG gmt.go AddEntry key=%s, gmtEntry=%s\n", key, string(mte.MType))
 	GMTmutex.Lock()
 	GMT[key] = mte
