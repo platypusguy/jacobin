@@ -136,7 +136,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 					case 'L', '[':
 						fldValue = object.Null
 					}
-					statics.AddStatic(staticName, statics.Static{Type: string(fldType[0]), Value: fldValue}) // CURR
+					statics.AddStatic(staticName, statics.Static{Type: string(fldType[0]), Value: fldValue})
 				}
 			}
 		} // loop through the fields if any
@@ -147,7 +147,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	// and work our way down to the present class, adding fields to FieldTable.
 	// so we add the present class into position[0] and then loop through
 	// the slice of class names
-	superclasses = append([]string{classname}, superclasses...)
+	superclasses = append([]string{classname}, superclasses...) // CURR: JACOBIN-575 we need to add methods to GMT
 	for j := len(superclasses) - 1; j >= 0; j-- {
 		superclassName := superclasses[j]
 		c := classloader.MethAreaFetch(superclassName)
