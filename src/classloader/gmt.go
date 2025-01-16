@@ -57,7 +57,7 @@ type GmtEntry struct {
 // updating it simultaneously.
 var GMTmutex sync.Mutex
 
-// adds an entry to the MTable, using a mutex
+// adds an entry to the GMT, using a mutex
 func GmtAddEntry(key string, mte GmtEntry) {
 	// fmt.Printf("DEBUG gmt.go AddEntry key=%s, gmtEntry=%s\n", key, string(mte.MType))
 	GMTmutex.Lock()
@@ -65,7 +65,7 @@ func GmtAddEntry(key string, mte GmtEntry) {
 	GMTmutex.Unlock()
 }
 
-// DumpMTable dumps the contents of MTable in sorted order to stderr
+// DumpMTable dumps the contents of GMT in sorted order to stderr
 func DumpGmt() {
 	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpGMT BEGIN")
 	// Create an array of keys.
