@@ -57,9 +57,16 @@ type GmtEntry struct {
 // updating it simultaneously.
 var GMTmutex sync.Mutex
 
-// adds an entry to the GMT, using a mutex
+// GmtAddEntry adds an entry to the GMT, iff the entry is not already loaded. We don't override
+// existing entries because gFunctions were loaded at start-up.
 func GmtAddEntry(key string, mte GmtEntry) {
-	// fmt.Printf("DEBUG gmt.go AddEntry key=%s, gmtEntry=%s\n", key, string(mte.MType))
+	if _, exists := GMT[key]; !exists {
+		gmtInsert(key, mte)
+	}
+}
+
+// does the actual addition of an entry to the GMT, using a mutex
+func gmtInsert(key string, mte GmtEntry) {
 	GMTmutex.Lock()
 	GMT[key] = mte
 	GMTmutex.Unlock()
