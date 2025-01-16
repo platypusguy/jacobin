@@ -147,7 +147,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	// and work our way down to the present class, adding fields to FieldTable.
 	// so we add the present class into position[0] and then loop through
 	// the slice of class names
-	superclasses = append([]string{classname}, superclasses...) // CURR: JACOBIN-575 we need to add methods to GMT
+	superclasses = append([]string{classname}, superclasses...)
 	for j := len(superclasses) - 1; j >= 0; j-- {
 		superclassName := superclasses[j]
 		c := classloader.MethAreaFetch(superclassName)
@@ -169,6 +169,30 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			obj.FieldTable[name] = *fieldToAdd
 		} // end of handling fields for one  class or superclass
 	} // end of handling fields for classes with superclasses other than Object
+
+	// set up the methods in the MethodList and the GMT
+	for _, meth := range k.Data.MethodTable {
+		methName := k.Data.CP.Utf8Refs[meth.Name]
+		methType := k.Data.CP.Utf8Refs[meth.Desc]
+		FQN := classname + "." + methName + methType
+		k.Data.MethodList = append(k.Data.MethodList, FQN)
+		classloader.GmtAddEntry(FQN, classloader.GmtEntry{MethData: &meth, MType: 'J'})
+	}
+	// go through the superclasses and add their methods to the class's MethodList
+	for _, superclassName := range superclasses {
+		superclass := classloader.MethAreaFetch(superclassName)
+		if superclass == nil {
+			errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
+			trace.Error(errMsg)
+		}
+
+		// for _, m := range superclass.Data.MethodTable { // CURR JACOBIN-575
+		// 	_, ok := k.Data.MethodTable[m.Name]
+		// 	if !ok {
+		// 		k.Data.MethodTable[m.Name] = m
+		// 	}
+		// }
+	}
 
 runInitializer:
 	// check the code for validity before running initialization blocks
