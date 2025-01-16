@@ -32,7 +32,8 @@ type ClData struct {
 	Pkg             string   // package name, if any. (so named, b/c 'package' is a golang keyword)
 	Interfaces      []uint16 // indices into UTF8Refs
 	Fields          []Field
-	MethodTable     map[string]*Method
+	MethodList      []string           // sorted list of method names including superclass methods. Is the key to GMT
+	MethodTable     map[string]*Method // the methods defined in this class
 	Attributes      []Attr
 	SourceFile      string
 	Bootstraps      []BootstrapMethod
