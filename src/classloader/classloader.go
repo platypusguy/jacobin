@@ -498,6 +498,19 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	kd.MethodList = make(map[string]string)
+	// insert the methods from java/lang/Object into the MethodList
+	kd.MethodList["clone()Ljava/lang/Object;"] = "java/lang/Object.clone()Ljava/lang/Object;"
+	kd.MethodList["equals(Ljava/lang/Object;)Z"] = "java/lang/Object.equals(Ljava/lang/Object;)Z"
+	kd.MethodList["getClass()Ljava/lang/Object;"] = "java/lang/Object.getClass()Ljava/lang/Object;"
+	kd.MethodList["hashCode()I"] = "java/lang/Object.hashCode()I"
+	kd.MethodList["notify()V"] = "java/lang/Object.notify()V"
+	kd.MethodList["notifyAll()V"] = "java/lang/Object.notifyAll()V"
+	kd.MethodList["toString()Ljava/lang/Object;"] = "java/lang/Object.toString()Ljava/lang/Object;"
+	kd.MethodList["wait()V"] = "java/lang/Object.wait()V"
+	kd.MethodList["wait(J)V"] = "java/lang/Object.wait(J)V"
+	kd.MethodList["wait(JI)V"] = "java/lang/Object.wait(JI)V"
+
 	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
