@@ -141,7 +141,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			}
 		} // loop through the fields if any
 		goto runInitializer
-	} // end of handling fields for objects w/ no superclasses
+	} // end of handling fields for objects w/ no superclasses other than java/lang/Object
 
 	// in the case of superclasses, we start at the topmost superclass
 	// and work our way down to the present class, adding fields to FieldTable.
@@ -177,8 +177,8 @@ runInitializer:
 		methName := k.Data.CP.Utf8Refs[meth.Name]
 		methType := k.Data.CP.Utf8Refs[meth.Desc]
 		FQN := classname + "." + methName + methType
-		k.Data.MethodList = append(k.Data.MethodList, FQN)
 		classloader.GmtAddEntry(FQN, classloader.GmtEntry{MethData: &meth, MType: 'J'})
+		k.Data.MethodList[methName+methType] = FQN
 	}
 
 	// // go through the superclasses and add their methods to the class's MethodList
