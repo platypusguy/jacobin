@@ -76,6 +76,11 @@ func justReturn([]interface{}) interface{} {
 	return object.StringObjectFromGoString("justReturn")
 }
 
+// return a Java null object.
+func returnNull([]interface{}) interface{} {
+	return object.Null
+}
+
 func returnCharsetName([]interface{}) interface{} {
 	return object.StringObjectFromGoString(globals.GetCharsetName())
 }
