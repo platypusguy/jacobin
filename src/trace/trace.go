@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -49,7 +49,7 @@ func Trace(argMsg string) {
 	mutex.Unlock()
 	if err != nil {
 		errMsg := fmt.Sprintf("Trace: *** stderr failed, err: %v", err)
-		abruptEnd(excNames.IOError, errMsg)
+		rawAbort(excNames.IOError, errMsg)
 	}
 }
 
@@ -61,8 +61,8 @@ func Error(argMsg string) {
 	_, err = fmt.Fprintf(os.Stderr, "%s\n", errMsg)
 	mutex.Unlock()
 	if err != nil {
-		errMsg := fmt.Sprintf("Error: *** stderr failed, err: %v", err)
-		abruptEnd(excNames.IOError, errMsg)
+		errMsg = fmt.Sprintf("Error: *** stderr failed, err: %v", err)
+		rawAbort(excNames.IOError, errMsg)
 	}
 }
 
@@ -73,28 +73,14 @@ func Warning(argMsg string) {
 	_, err := fmt.Fprintf(os.Stderr, "%s\n", errMsg)
 	mutex.Unlock()
 	if err != nil {
-		errMsg := fmt.Sprintf("Error: *** stderr failed, err: %v", err)
-		abruptEnd(excNames.IOError, errMsg)
+		errMsg = fmt.Sprintf("Error: *** stderr failed, err: %v", err)
+		rawAbort(excNames.IOError, errMsg)
 	}
 }
 
-// Duplicated from minimalAbort in the exceptions package exceptions.go due to a Go-diagnosed cycle.
-func abruptEnd(whichException int, msg string) {
+// Perform a minimal abort, which is a direct call to the global minimal abort function.
+// Clearly, if trace is not working, then something is grievously wrong and the abort
+// must be immediate.
+func rawAbort(whichException int, msg string) {
 	globals.GetGlobalRef().FuncMinimalAbort(whichException, msg)
-	/*
-		var stack string
-		bytes := debug.Stack()
-		if len(bytes) > 0 {
-			stack = string(bytes)
-		} else {
-			stack = ""
-		}
-		glob := globals.GetGlobalRef()
-		glob.ErrorGoStack = stack
-		errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
-		_, _ = fmt.Fprintln(os.Stderr, errMsg)
-		// exceptions.ShowGoStackTrace(nil) // <------------ causes Go-diagnosed cycle: classloader > exceptions > classloader
-		// _ = shutdown.Exit(shutdown.APP_EXCEPTION) <--- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
-		os.Exit(UNKNOWN_ERROR)
-	*/
 }
