@@ -47,24 +47,6 @@ func byteToInt64(bite byte) int64 {
 	return int64(bite)
 }
 
-// converts four bytes into a signed 64-bit integer
-func fourBytesToInt64(b1, b2, b3, b4 byte) int64 {
-	wbytes := make([]byte, 8)
-	wbytes[4] = b1
-	wbytes[5] = b2
-	wbytes[6] = b3
-	wbytes[7] = b4
-
-	if (b1 & 0x80) == 0x80 { // Negative bite value (left-most bit on)?
-		// Negative byte - need to extend the sign (left-most) bit
-		wbytes[0] = 0xff
-		wbytes[1] = 0xff
-		wbytes[2] = 0xff
-		wbytes[3] = 0xff
-	}
-	return int64(binary.BigEndian.Uint64(wbytes))
-}
-
 // converts an interface{} value to int8. Used for BASTORE
 func convertInterfaceToByte(val interface{}) types.JavaByte {
 	switch t := val.(type) {
