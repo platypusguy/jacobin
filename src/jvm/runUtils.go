@@ -62,7 +62,7 @@ func convertInterfaceToByte(val interface{}) types.JavaByte {
 	return 0
 }
 
-// converts an interface{} value into uint64
+// converts an interface{} value on the op stack into a uint64
 func convertInterfaceToUint64(val interface{}) uint64 {
 	// in theory, the only types passed to this function are those
 	// found on the operand stack: ints, floats, pointers
@@ -80,14 +80,18 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 
 // converts an interface{} value into int64
 // notes:
+//
 //   - an exception is thrown if function is passed a uint64
-//   - there exists a similarl uint function: convertInterfaceToUint64()
+//
+//   - there exists a similar uint function: convertInterfaceToUint64()
+//
 //   - for converting a byte as a numeric value and so to propagate negative values,
 //     use byteToInt64(). This would be done only in numeric conversions of binary data.
+//
+//     It might appear that you could put most of the case statements into a single case statement,
+//     but golang does not allow this. For interface conversion, it needs to be done type-by-type.
 func convertInterfaceToInt64(arg interface{}) int64 {
 	switch t := arg.(type) {
-	case int64:
-		return t
 	case int8:
 		return int64(t)
 	case uint8:
@@ -102,6 +106,8 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 		return int64(t)
 	case uint32:
 		return int64(t)
+	case int64:
+		return t
 	case bool:
 		return types.ConvertGoBoolToJavaBool(t)
 	default:
