@@ -81,3 +81,24 @@ func TestConvertFilenameWithPlatformPathSeparator(t *testing.T) {
 		}
 	}
 }
+
+func TestIsFilePartOfJDK_JdkPrefix(t *testing.T) {
+	filename := "jdk/internal/reflect/Reflection.class"
+	if !IsFilePartOfJDK(&filename) {
+		t.Errorf("Expected true for filename with 'jdk' prefix, got false")
+	}
+}
+
+func TestIsFilePartOfJDK_SunPrefix(t *testing.T) {
+	filename := "sun/misc/Unsafe.class"
+	if !IsFilePartOfJDK(&filename) {
+		t.Errorf("Expected true for filename with 'sun' prefix, got false")
+	}
+}
+
+func TestIsFilePartOfJDK_NoPrefix(t *testing.T) {
+	filename := "com/example/MyClass.class"
+	if IsFilePartOfJDK(&filename) {
+		t.Errorf("Expected false for filename with no JDK prefix, got true")
+	}
+}
