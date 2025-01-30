@@ -585,7 +585,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
 					kdm.Exceptions =
 						append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
-				} // CURR
+				}
 			}
 
 			if len(fullyParsedClass.methods[i].parameters) > 0 {

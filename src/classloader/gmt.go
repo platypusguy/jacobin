@@ -72,7 +72,7 @@ func gmtInsert(key string, mte GmtEntry) {
 	GMTmutex.Unlock()
 }
 
-// DumpMTable dumps the contents of GMT in sorted order to stderr
+// DumpGmt dumps the contents of GMT in sorted order to stderr
 func DumpGmt() {
 	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpGMT BEGIN")
 	// Create an array of keys.

@@ -79,3 +79,18 @@ func TestJavaBoolean(t *testing.T) {
 		t.Errorf("JavaBool: expected a result of 0, but got: %d", val)
 	}
 }
+
+// Test typeUtils.go's FourBytesToInt64() function
+func TestFourBytesToInt64(t *testing.T) {
+	// Test a positive number
+	val := FourBytesToInt64(0x00, 0x00, 0x00, 0x01)
+	if val != 1 {
+		t.Errorf("FourBytesToInt64: expected a result of 1, but got: %d", val)
+	}
+
+	// Test a negative number
+	val = FourBytesToInt64(0xff, 0xff, 0xff, 0xff)
+	if val != -1 {
+		t.Errorf("FourBytesToInt64: expected a result of -1, but got: %d", val)
+	}
+}
