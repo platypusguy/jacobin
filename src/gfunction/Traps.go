@@ -30,6 +30,18 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/io/ByteArrayOutputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
 	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
