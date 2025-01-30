@@ -61,6 +61,7 @@ func JVMrun() int {
 
 	// Enable functions call InstantiateClass through a global function variable. (This avoids circularity issues.)
 	globPtr.FuncInstantiateClass = InstantiateClass
+	globPtr.FuncMinimalAbort = exceptions.MinimalAbort
 	globPtr.FuncThrowException = exceptions.ThrowExNil
 	globPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 

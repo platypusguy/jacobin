@@ -63,7 +63,7 @@ func TestMinimalThrow(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	minimalAbort(excNames.UnknownError, "just a test")
+	MinimalAbort(excNames.UnknownError, "just a test")
 	// restore stderr to what it was before
 	_ = w.Close()
 	out, _ := io.ReadAll(r)

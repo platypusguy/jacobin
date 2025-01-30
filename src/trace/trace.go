@@ -13,7 +13,6 @@ import (
 	"jacobin/excNames"
 	"jacobin/globals"
 	"os"
-	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -81,18 +80,21 @@ func Warning(argMsg string) {
 
 // Duplicated from minimalAbort in the exceptions package exceptions.go due to a Go-diagnosed cycle.
 func abruptEnd(whichException int, msg string) {
-	var stack string
-	bytes := debug.Stack()
-	if len(bytes) > 0 {
-		stack = string(bytes)
-	} else {
-		stack = ""
-	}
-	glob := globals.GetGlobalRef()
-	glob.ErrorGoStack = stack
-	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
-	_, _ = fmt.Fprintln(os.Stderr, errMsg)
-	// exceptions.ShowGoStackTrace(nil) <------------ causes Go-diagnosed cycle: classloader > exceptions > classloader
-	// _ = shutdown.Exit(shutdown.APP_EXCEPTION) <--- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
-	os.Exit(UNKNOWN_ERROR)
+	globals.GetGlobalRef().FuncMinimalAbort(whichException, msg)
+	/*
+		var stack string
+		bytes := debug.Stack()
+		if len(bytes) > 0 {
+			stack = string(bytes)
+		} else {
+			stack = ""
+		}
+		glob := globals.GetGlobalRef()
+		glob.ErrorGoStack = stack
+		errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
+		_, _ = fmt.Fprintln(os.Stderr, errMsg)
+		// exceptions.ShowGoStackTrace(nil) // <------------ causes Go-diagnosed cycle: classloader > exceptions > classloader
+		// _ = shutdown.Exit(shutdown.APP_EXCEPTION) <--- causes Go-diagnosed cycle: shutdown > statics > trace > shutdown
+		os.Exit(UNKNOWN_ERROR)
+	*/
 }

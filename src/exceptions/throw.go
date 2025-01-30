@@ -65,7 +65,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	// Frame pointer provided?
 	if f == nil {
-		minimalAbort(which, msg) // this calls exit()
+		MinimalAbort(which, msg) // this calls exit()
 		return NotCaught         // only occurs in tests
 	}
 
@@ -84,7 +84,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
 	if !ok {
 		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d", f.Thread)
-		minimalAbort(excNames.InternalException, errMsg)
+		MinimalAbort(excNames.InternalException, errMsg)
 	}
 	fs := th.Stack
 
@@ -279,9 +279,9 @@ func generateThrowBytecodes(f *frames.Frame, exceptionCPname string, msg string)
 }
 */
 
-// minimalAbort is the exception thrown when the frame info is not available,
+// MinimalAbort is the exception thrown when the frame info is not available,
 // such as during start-up, if the main class can't be found, etc.
-func minimalAbort(whichException int, msg string) {
+func MinimalAbort(whichException int, msg string) {
 	var stack string
 	bytes := debug.Stack()
 	if len(bytes) > 0 {
@@ -293,7 +293,7 @@ func minimalAbort(whichException int, msg string) {
 	glob.ErrorGoStack = stack
 	errMsg := fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[whichException], msg)
 	_, _ = fmt.Fprintln(os.Stderr, errMsg)
-	// errMsg := fmt.Sprintf("[ThrowEx][minimalAbort] %s", msg)
+	// errMsg := fmt.Sprintf("[ThrowEx][MinimalAbort] %s", msg)
 	// ShowPanicCause(errMsg)
 	// ShowFrameStack(&thread.ExecThread{})
 	ShowGoStackTrace(nil)

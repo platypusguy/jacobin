@@ -99,6 +99,7 @@ type Globals struct {
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
+	FuncMinimalAbort     func(int, string)
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
@@ -155,6 +156,7 @@ func InitGlobals(progName string) Globals {
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
 		FuncThrowException:   fakeThrowEx,
+		FuncMinimalAbort:     fakeMinimalAbort,
 	}
 
 	TraceInit = false
@@ -316,6 +318,12 @@ func fakeThrowEx(whichEx int, msg string) bool {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func")
 	fmt.Fprintf(os.Stderr, errMsg)
 	return false
+}
+
+// Fake MinimalAbort() in exceptions.go
+func fakeMinimalAbort(whichEx int, msg string) {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
 }
 
 func InitStringPool() {
