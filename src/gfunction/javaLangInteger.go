@@ -164,12 +164,14 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Replace a leading "#" with "0x" in strArg.
+	wbase := 10
 	if strings.HasPrefix(strArg, "#") {
-		strArg = strings.Replace(strArg, "#", "0x", 1)
+		wbase = 16
+		strArg = strArg[1:]
 	}
 
 	// Parse the input integer.
-	int64Value, err := strconv.ParseInt(strArg, 10, 64)
+	int64Value, err := strconv.ParseInt(strArg, wbase, 64)
 	if err != nil {
 		errMsg := fmt.Sprintf("strconv.ParseInt(%s,10,64) failed, failed, reason: %s", strArg, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
