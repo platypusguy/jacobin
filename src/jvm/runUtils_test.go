@@ -31,10 +31,18 @@ func TestConvertBoolByteToInt64(t *testing.T) {
 	}
 }
 
-// test conversion to int64 0f the types not tested above
+// test conversion of valid interfaces representing numeric values to int64
 func TestConvertRemainingUntestedTypesToInt64(t *testing.T) {
+	globals.InitGlobals("test")
+
 	i8 := int8(42)
 	val := convertInterfaceToInt64(i8)
+	if val != 42 {
+		t.Errorf("convertInterfaceToInt64(int8), expected = 42, got %d", val)
+	}
+
+	u8 := int8(42)
+	val = convertInterfaceToInt64(u8)
 	if val != 42 {
 		t.Errorf("convertInterfaceToInt64(int8), expected = 42, got %d", val)
 	}
@@ -51,16 +59,22 @@ func TestConvertRemainingUntestedTypesToInt64(t *testing.T) {
 		t.Errorf("convertInterfaceToInt64(uint16), expected = 142, got %d", val)
 	}
 
-	i := int(1042)
+	i := int(-1042)
 	val = convertInterfaceToInt64(i)
-	if val != 1042 {
-		t.Errorf("convertInterfaceToInt6(int), expected = 1042, got %d", val)
+	if val != -1042 {
+		t.Errorf("convertInterfaceToInt6(int), expected = -1042, got %d", val)
 	}
 
-	i32 := int(104232)
+	i32 := int32(-104232)
 	val = convertInterfaceToInt64(i32)
+	if val != -104232 {
+		t.Errorf("convertInterfaceToInt64(int32), expected = -104232, got %d", val)
+	}
+
+	u32 := uint32(104232)
+	val = convertInterfaceToInt64(u32)
 	if val != 104232 {
-		t.Errorf("convertInterfaceToInt64(int32), expected = 104232, got %d", val)
+		t.Errorf("convertInterfaceToInt64(uint32), expected = 104232, got %d", val)
 	}
 }
 
