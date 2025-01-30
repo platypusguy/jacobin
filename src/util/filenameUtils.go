@@ -66,6 +66,11 @@ func IsFilePartOfJDK(filename *string) bool {
 func SearchDirByFileExtension(dir, extension string) *[]string {
 	var filenames []string
 
+	_, direrr := os.Stat(dir)
+	if os.IsNotExist(direrr) {
+		return nil
+	}
+
 	// Walk through the directory tree
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

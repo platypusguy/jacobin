@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"log"
+	"strings"
 	"testing"
 )
 
@@ -21,7 +22,7 @@ func TestExports(t *testing.T) {
 
 	// expects to be running in the top Jacobin directory
 	err := CreateNativeFunctionTable("testdata")
-	if err != nil {
-		t.Error(err)
+	if !strings.Contains(err.Error(), "not found") {
+		t.Error("did not get expected error for missing file")
 	}
 }

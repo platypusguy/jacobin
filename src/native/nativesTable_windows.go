@@ -79,6 +79,11 @@ func CreateNativeFunctionTable(path string) error {
 
 	// directory walk looking for DLL files
 	dllList := util.SearchDirByFileExtension(topDir, "dll")
+	if dllList == nil {
+		errMsg := fmt.Sprintf("directory %s not found in search for .dll files", topDir)
+		exceptions.ThrowEx(excNames.FileNotFoundException, errMsg, nil)
+		return errors.New(errMsg)
+	}
 	dllListSize := len(*dllList)
 	var functionListSize = 0
 

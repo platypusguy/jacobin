@@ -82,6 +82,8 @@ func TestConvertFilenameWithPlatformPathSeparator(t *testing.T) {
 	}
 }
 
+// test whether a file is part of the JDK, based on its prefix
+
 func TestIsFilePartOfJDK_JdkPrefix(t *testing.T) {
 	filename := "jdk/internal/reflect/Reflection.class"
 	if !IsFilePartOfJDK(&filename) {
@@ -100,5 +102,59 @@ func TestIsFilePartOfJDK_NoPrefix(t *testing.T) {
 	filename := "com/example/MyClass.class"
 	if IsFilePartOfJDK(&filename) {
 		t.Errorf("Expected false for filename with no JDK prefix, got true")
+	}
+}
+
+// test searching for a file by extension
+
+func TestSearchDirByFileExtension_FindsFiles(t *testing.T) {
+	tempDir := t.TempDir()
+
+	tempFile1, err := os.CreateTemp(tempDir, "*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = tempFile1.Close()
+
+	tempFile2, err := os.CreateTemp(tempDir, "*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = tempFile2.Close()
+
+	tempFile3, err := os.CreateTemp(tempDir, "*.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = tempFile3.Close()
+
+	result := SearchDirByFileExtension(tempDir, "txt")
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if len(*result) != 2 {
+		t.Errorf("Expected 2 files, got %d", len(*result))
+	}
+}
+
+func TestSearchDirByFileExtension_NoFilesFound(t *testing.T) {
+	tempDir := t.TempDir()
+
+	result := SearchDirByFileExtension(tempDir, "txt")
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if len(*result) != 0 {
+		t.Errorf("Expected 0 files, got %d", len(*result))
+	}
+}
+
+func TestSearchDirByFileExtension_HandlesErrors(t *testing.T) {
+	tempDir := " no such directory -- 778899 "
+	result := SearchDirByFileExtension(tempDir, "txt")
+	if result != nil {
+		t.Fatal("Expected nil result due to absent directory")
 	}
 }
