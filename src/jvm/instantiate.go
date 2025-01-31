@@ -173,6 +173,26 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 runInitializer:
 
 	// set up the methods in the MethodList and the GMT
+
+	/* JACOBIN-575 uncomment when resuming work on the MethodList
+	// go through the superclasses and add their methods to the class's MethodList
+	for _, superclassName := range superclasses {
+		superclass := classloader.MethAreaFetch(superclassName)
+		if superclass == nil {
+			errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
+			trace.Error(errMsg)
+		}
+
+		for _, meth := range superclass.Data.MethodTable { // in theory, all methods should already be in the GMT
+			methName := superclass.Data.CP.Utf8Refs[meth.Name]
+			methType := superclass.Data.CP.Utf8Refs[meth.Desc]
+			FQN := superclassName + "." + methName + methType
+			k.Data.MethodList[methName+methType] = FQN
+		}
+	}
+	*/
+
+	// now add the methods of the present class to the MethodList
 	for _, meth := range k.Data.MethodTable {
 		methName := k.Data.CP.Utf8Refs[meth.Name]
 		methType := k.Data.CP.Utf8Refs[meth.Desc]
@@ -180,23 +200,6 @@ runInitializer:
 		classloader.GmtAddEntry(FQN, classloader.GmtEntry{MethData: &meth, MType: 'J'})
 		k.Data.MethodList[methName+methType] = FQN
 	}
-
-	// // go through the superclasses and add their methods to the class's MethodList
-	// superclasses = append(superclasses, "java/lang/Object") // add Object to the end of the list
-	// for _, superclassName := range superclasses {
-	// 	superclass := classloader.MethAreaFetch(superclassName)
-	// 	if superclass == nil {
-	// 		errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
-	// 		trace.Error(errMsg)
-	// 	}
-	//
-	// 	for _, meth := range superclass.Data.MethodTable { // in theory, all methods should already be in the GMT
-	// 		methName := superclass.Data.CP.Utf8Refs[meth.Name]
-	// 		methType := superclass.Data.CP.Utf8Refs[meth.Desc]
-	// 		FQN := superclassName + "." + methName + methType
-	// 		k.Data.MethodList = append(k.Data.MethodList, FQN)
-	// 	}
-	// }
 
 	// check the code for validity before running initialization blocks
 	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
