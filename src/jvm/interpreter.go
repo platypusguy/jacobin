@@ -2127,24 +2127,47 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	// The following check is now performed in codeCheck.go. It is left here for reference, but can be deleted.
-	// CPentry := CP.CpIndex[CPslot]
-	// if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
-	// 	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-	// 	errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
-	// 		"location %d in method %s of class %s\n",
-	// 		CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-	// 	status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, fr)
-	// 	if status != exceptions.Caught {
-	// 		return exceptions.ERROR_OCCURRED // applies only if in test
-	// 	}
-	// }
 
 	className, methodName, methodType :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	/* // JACOBIN-575 reactive this code when ready to complete this task
+	k := classloader.MethAreaFetch(className) // we know the class is already loaded
+	methListEntry, ok := k.Data.MethodList[methodName+methodType]
+	if !ok { // if it's not in the GMT, then it's likely being called explicitly, so test for this.
+		methFQN := className + "." + methodName + methodType
+		_, ok = classloader.GMT[methFQN]
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: Method not found in methodList: " + methodName + methodType +
+				" for class: " + className
+			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		} else {
+			methListEntry = methFQN
+		}
+	}
+
+	gmtEntry, ok := classloader.GMT[methListEntry]
+	if !ok {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := "INVOKEVIRTUAL: Method not found in GMT: " + methodName + methodType + "for class: " + className
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	mtEntry := classloader.MTentry{
+		Meth: gmtEntry.MethData.(classloader.MData), MType: gmtEntry.MType,
+	}
+	*/
 
 	mtEntry := classloader.MTable[className+"."+methodName+methodType]
 	if mtEntry.Meth == nil { // if the method is not in the method table, find it
+		// mtEntry := classloader.MTable[className+"."+methodName+methodType]
+		// if !ok { // if the method is not in the method table, find it
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
 			// TODO: search the superclasses, then the classpath and retry
@@ -2163,6 +2186,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
 	if mtEntry.MType == 'G' { // so we have a native golang function
 		// get the parameters/args off the stack
+		// mtEntry.Meth = *mtEntry.Meth.(*gfunction.GMeth) // JACOBIN-575
 		gmethData := mtEntry.Meth.(gfunction.GMeth)
 		paramCount := gmethData.ParamSlots
 		var params []interface{}
@@ -2241,7 +2265,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
 	fullConstructorName := className + "." + methodName + methodType
-	if fullConstructorName == "java/lang/Object.<init>()V" {
+	if fullConstructorName == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
 		return 3 // 2 for the CPslot + 1 for next bytecode
 	}
 
