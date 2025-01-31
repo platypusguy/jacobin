@@ -53,9 +53,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	if glob.JacobinName == "test" {
 		var errMsg string
 		if f != nil {
-			errMsg = fmt.Sprintf("%s in %s.%s, %s",
-				excNames.JVMexceptionNames[which],
-				util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, msg)
+			errMsg = fmt.Sprintf("%s in %s, %s", excNames.JVMexceptionNames[which], frames.FormatFQN(f), msg)
 		} else { // if we got here by a call to ThrowExNil()
 			errMsg = fmt.Sprintf("%s: %s", excNames.JVMexceptionNames[which], msg)
 		}
@@ -83,7 +81,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
 	if !ok {
-		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d", f.Thread)
+		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
+			f.Thread, frames.FormatFQN(f))
 		MinimalAbort(excNames.InternalException, errMsg)
 	}
 	fs := th.Stack
@@ -101,7 +100,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		// 2. pushing the objRef on the op stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
 		if globals.TraceVerbose {
-			infoMsg := fmt.Sprintf("[ThrowEx] caught %s, msg: %s", exceptionCPname, msg)
+			infoMsg := fmt.Sprintf("[ThrowEx] caught %s, FQN: %s, msg: %s", exceptionCPname, frames.FormatFQN(f), msg)
 			trace.Trace(infoMsg)
 		}
 
@@ -133,7 +132,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 	throwObject, err := glob.FuncInstantiateClass(exceptionCPname, fs)
 	if err != nil {
-		println(err.Error())
+		fmt.Printf("InstantiateClass failed, FQN: %s, %s", frames.FormatFQN(f), err.Error())
 		if throwObject != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "%v\n", throwObject)
 			_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
@@ -144,7 +143,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	params := []any{fs, throwObj}
 	glob.FuncFillInStackTrace(params)
 
-	excInfo := fmt.Sprintf("%s: %s", exceptionNameForUser, msg)
+	excInfo := fmt.Sprintf("%s: FQN: %s, %s", exceptionNameForUser, frames.FormatFQN(f), msg)
 	_, _ = fmt.Fprintln(os.Stderr, excInfo)
 
 	stackTrace := throwObj.FieldTable["stackTrace"].Fvalue.(*object.Object)

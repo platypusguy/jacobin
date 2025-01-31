@@ -289,7 +289,7 @@ func interpret(fs *list.List) {
 
 	// Don't allow a nil code segment (E.g. mishandled abstract).
 	if len(fr.Meth) < 1 {
-		errMsg := fmt.Sprintf("Empty code segment for %s.%s%s", fr.ClName, fr.MethName, fr.MethType)
+		errMsg := "Empty code segment"
 		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
 		if status != exceptions.Caught { // will only happen in test
 			globals.InitGlobals("test")
@@ -1989,8 +1989,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	objField, ok := obj.FieldTable[fieldName]
 	if !ok {
-		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable for %s.%s%s",
-			fr.PC, fieldName, fr.ClName, fr.MethName, fr.MethType)
+		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2097,8 +2096,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 
 		objField, ok := obj.FieldTable[fieldName]
 		if !ok {
-			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
-				fieldName, fr.ClName, fr.MethName)
+			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present", fieldName)
 			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2108,8 +2106,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
 		if strings.HasPrefix(objField.Ftype, types.Static) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
-				fr.ClName, fr.MethName)
+			errMsg := "PUTFIELD: invalid attempt to update a static variable"
 			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
