@@ -136,8 +136,7 @@ func RunNativeFunction(fs *list.List, className, nativeFunctionName, methodType 
 		}
 
 		// Build the exception message and return it.
-		errMsg := fmt.Sprintf("%s in thread: %s, method: %s",
-			errBlk.ErrMsg, threadName, fullMethName)
+		errMsg := fmt.Sprintf("%s in thread: %s", errBlk.ErrMsg, threadName)
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, frame)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
