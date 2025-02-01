@@ -1681,7 +1681,7 @@ frameInterpreter:
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
 			if globals.TraceVerbose {
-				emitTraceFieldID("GETSTATIC", fieldName)
+				EmitTraceFieldID("GETSTATIC", fieldName)
 			}
 
 			// was this static field previously loaded? Is so, get its location and move on.
@@ -1768,7 +1768,7 @@ frameInterpreter:
 			fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
 			fieldName = className + "." + fieldName
 			if globals.TraceVerbose {
-				emitTraceFieldID("PUTSTATIC", fieldName)
+				EmitTraceFieldID("PUTSTATIC", fieldName)
 			}
 
 			// was this static field previously loaded? Is so, get its location and move on.
@@ -1901,7 +1901,7 @@ frameInterpreter:
 			nameCPentry := CP.CpIndex[nameCPIndex]
 			fieldName := CP.Utf8Refs[nameCPentry.Slot]
 			if globals.TraceVerbose {
-				emitTraceFieldID("GETFIELD", fieldName)
+				EmitTraceFieldID("GETFIELD", fieldName)
 			}
 
 			// Get object reference from stack.
@@ -2014,7 +2014,7 @@ frameInterpreter:
 				nameCPentry := CP.CpIndex[nameCPIndex]
 				fieldName := CP.Utf8Refs[nameCPentry.Slot]
 				if globals.TraceVerbose {
-					emitTraceFieldID("PUTFIELD", fieldName)
+					EmitTraceFieldID("PUTFIELD", fieldName)
 				}
 
 				objField, ok := obj.FieldTable[fieldName]

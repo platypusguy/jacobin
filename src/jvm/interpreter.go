@@ -299,7 +299,7 @@ func interpret(fs *list.List) {
 
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
-			traceInfo := emitTraceData(fr)
+			traceInfo := trace.EmitTraceData(fr)
 			trace.Trace(traceInfo)
 		}
 
@@ -1756,7 +1756,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
-		emitTraceFieldID("GETSTATIC", fieldName)
+		trace.EmitTraceFieldID("GETSTATIC", fieldName)
 	}
 
 	// was this static field previously loaded? Is so, get its location and move on.
@@ -1830,7 +1830,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
-		emitTraceFieldID("PUTSTATIC", fieldName)
+		trace.EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
 	// was this static field previously loaded? Is so, get its location and move on.
@@ -1956,7 +1956,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 	fieldName := fullFieldEntry.FldName
 	if globals.TraceVerbose {
-		emitTraceFieldID("GETFIELD", fieldName)
+		trace.EmitTraceFieldID("GETFIELD", fieldName)
 	}
 
 	// Get object reference from stack.
@@ -2092,7 +2092,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 		fieldName := fullFieldEntry.FldName
 		if globals.TraceVerbose {
-			emitTraceFieldID("PUTFIELD", fieldName)
+			trace.EmitTraceFieldID("PUTFIELD", fieldName)
 		}
 
 		objField, ok := obj.FieldTable[fieldName]
