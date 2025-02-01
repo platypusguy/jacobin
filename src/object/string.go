@@ -20,8 +20,9 @@ package object
 
 import (
 	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/stringPool"
-	"jacobin/trace"
 	"jacobin/types"
 	"strconv"
 	"strings"
@@ -244,6 +245,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// None of the above.
 	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	trace.Error(errMsg)
+	globals.GetGlobalRef().FuncThrowException(excNames.UnsupportedOperationException, errMsg)
+	// trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }

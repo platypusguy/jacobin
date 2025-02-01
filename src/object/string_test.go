@@ -7,6 +7,7 @@
 package object
 
 import (
+	"fmt"
 	"io"
 	"jacobin/globals"
 	"jacobin/statics"
@@ -285,6 +286,10 @@ func TestObjectFieldToStringForIntArray(t *testing.T) {
 
 func TestObjectFieldToStringForUnknownType(t *testing.T) {
 	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = func(i int, s string) bool {
+		fmt.Fprintf(os.Stderr, "Exception thrown in TestObjectFieldToStringForUnknownType: %s\n", s)
+		return false
+	}
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr

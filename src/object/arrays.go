@@ -8,8 +8,9 @@ package object
 
 import (
 	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/stringPool"
-	"jacobin/trace"
 	"jacobin/types"
 	"reflect"
 )
@@ -164,7 +165,8 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	if rawArray == nil {
 		errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed a nil parameter")
-		trace.Warning(errMsg)
+		globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
+		// trace.Warning(errMsg)
 		return nil
 	}
 
@@ -215,7 +217,8 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	}
 
 	errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed an unsupported type: %T", rawArray)
-	trace.Warning(errMsg)
+	globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
+	// trace.Warning(errMsg)
 	return nil
 }
 
