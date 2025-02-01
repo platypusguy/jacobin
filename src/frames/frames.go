@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -9,7 +9,7 @@ package frames
 import (
 	"container/list"
 	"fmt"
-	"jacobin/util"
+	"strings"
 	"unsafe"
 )
 
@@ -124,5 +124,6 @@ func PeekFrame(fs *list.List, which int) *Frame {
 
 // From the given frame, return the FQN as a formatted string.
 func FormatFQN(fr *Frame) string {
-	return fmt.Sprintf("%s.%s%s", util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
+	clName := strings.ReplaceAll(fr.ClName, "/", ".")
+	return fmt.Sprintf("%s.%s%s", clName, fr.MethName, fr.MethType)
 }
