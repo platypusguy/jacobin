@@ -9,8 +9,8 @@ package statics
 import (
 	"errors"
 	"fmt"
+	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"runtime/debug"
@@ -53,7 +53,7 @@ var staticsMutex = sync.RWMutex{}
 func AddStatic(name string, s Static) error {
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
-		trace.Error(errMsg)
+		globals.GetGlobalRef().FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
 	staticsMutex.RLock()
@@ -127,7 +127,7 @@ func GetStaticValue(className string, fieldName string) any {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)
-		trace.Error(errMsg)
+		glob.FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
 
