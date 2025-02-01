@@ -59,11 +59,8 @@ func JVMrun() int {
 	}
 	globPtr = globals.GetGlobalRef()
 
-	// Enable functions call InstantiateClass through a global function variable. (This avoids circularity issues.)
-	globPtr.FuncInstantiateClass = InstantiateClass
-	globPtr.FuncMinimalAbort = exceptions.MinimalAbort
-	globPtr.FuncThrowException = exceptions.ThrowExNil
-	globPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
+	// Enable select functions via a global function variable. (This avoids circularity issues.)
+	InitializeGlobalFunctionPointers(globPtr)
 
 	if globals.TraceInit {
 		trace.Trace("running program: " + globPtr.JacobinName)
@@ -157,4 +154,11 @@ func JVMrun() int {
 	StartExec(*mainClass, &MainThread, globPtr)
 
 	return shutdown.Exit(shutdown.OK)
+}
+
+func InitializeGlobalFunctionPointers(globalPtr *globals.Globals) {
+	globalPtr.FuncInstantiateClass = InstantiateClass
+	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort
+	globalPtr.FuncThrowException = exceptions.ThrowExNil
+	globalPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 }
