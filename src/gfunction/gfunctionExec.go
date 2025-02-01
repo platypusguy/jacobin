@@ -127,8 +127,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		} else {
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
-		errMsg := fmt.Sprintf("%s in thread: %s, method: %s",
-			errBlk.ErrMsg, threadName, fullMethName)
+		errMsg := fmt.Sprintf("%s in thread: %s", errBlk.ErrMsg, threadName)
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test

@@ -9,6 +9,7 @@ package frames
 import (
 	"container/list"
 	"fmt"
+	"jacobin/util"
 	"unsafe"
 )
 
@@ -119,4 +120,9 @@ func PeekFrame(fs *list.List, which int) *Frame {
 		}
 	}
 	return e.Value.(*Frame)
+}
+
+// From the given frame, return the FQN as a formatted string.
+func FormatFQN(fr *Frame) string {
+	return fmt.Sprintf("%s.%s%s", util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
 }
