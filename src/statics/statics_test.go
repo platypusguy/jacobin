@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"jacobin/globals"
-	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -54,7 +53,6 @@ func tCheckStatic(t *testing.T, className string, fieldName string, expValue any
 
 func TestStatics1(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 	/***
 	PreloadStatics()
@@ -107,7 +105,6 @@ func TestStatics1(t *testing.T) {
 
 func TestInvalidStaticAdd(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err := AddStatic("", Static{})
@@ -118,7 +115,6 @@ func TestInvalidStaticAdd(t *testing.T) {
 
 func TestInvalidLookup(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Int, Value: int(42)})
@@ -148,7 +144,6 @@ func TestInvalidLookup(t *testing.T) {
 
 func TestIntConversions(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
@@ -191,7 +186,6 @@ func TestIntConversions(t *testing.T) {
 
 func TestStaticsPreload(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	PreloadStatics()
@@ -240,7 +234,6 @@ func fnTestDumpStatics(t *testing.T, selection int64, className string, threesom
 
 func TestDumpStatics(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.f1", Static{Type: types.Byte, Value: 'B'})
