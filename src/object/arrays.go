@@ -147,12 +147,12 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 }
 
 // Make1DimRefArray makes a 1-dimensional reference array. Its logic is nearly identical to
-// Make1DimArray, except that it is passed a pointer to the object whose references are in
+// Make1DimArray, except that it is passed a string identifying the type of object in
 // the array and it inserts that value into the field and object type fields.
-func Make1DimRefArray(objType *string, size int64) *Object {
+func Make1DimRefArray(objType string, size int64) *Object {
 	o := MakeEmptyObject()
 	rarArr := make([]*Object, size)
-	arrayType := types.RefArray + *objType
+	arrayType := types.RefArray + objType
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
 	o.FieldTable["value"] = of
 	o.KlassName = stringPool.GetStringIndex(&of.Ftype)

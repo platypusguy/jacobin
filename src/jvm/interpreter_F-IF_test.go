@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -25,7 +25,7 @@ import (
 // here in alphabetical order of the instruction name.
 // THIS FILE CONTAINS TESTS FOR ALL BYTECODES FROM F2D THROUGH IFNULL.
 // All other bytecodes are in run_*_test.go files except
-// for array bytecodes, which are located in arrayBytecodes_test.go
+// for array bytecodes, which are located in interpreter_arrayBytecodes_test.go
 
 // F2D: test convert float to double
 func TestNewF2d(t *testing.T) {

@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -25,8 +25,8 @@ import (
 	"unsafe"
 )
 
-// Bytecodes tested in alphabetical order. Non-bytecode tests at ene of file.
-// Note: array bytecodes are in array_test.go
+// Bytecodes tested in alphabetical order. Non-bytecode tests at end of file.
+// Note: array bytecodes are in interpreter_arrayBytecodes_test.go
 
 // LLOAD: test load of long in locals[index] on to stack
 func TestNewLload(t *testing.T) {

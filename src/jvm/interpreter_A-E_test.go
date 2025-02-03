@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -26,7 +26,7 @@ import (
 // here in alphabetical order of the instruction name.
 // THIS FILE CONTAINS TESTS FOR ALL BYTECODES THROUGH DUP2_X2.
 // All other bytecodes are in interpreter_*_test.go files except
-// for array bytecodes, which are located in arrayBytecodes_test.go
+// for array bytecodes, which are located in interpreter_arrayBytecodes_test.go
 
 // set up function to create a frame with a method with the single instruction
 // that's being tested

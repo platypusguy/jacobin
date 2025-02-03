@@ -287,7 +287,7 @@ func TestNewAastoreInvalid2(t *testing.T) {
 // AASTORE: Test error conditions: index out of range
 func TestNewAastoreInvalid3(t *testing.T) {
 	objType := types.ObjectClassName
-	o := object.Make1DimRefArray(&objType, 10)
+	o := object.Make1DimRefArray(objType, 10)
 	f := newFrame(opcodes.AASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
