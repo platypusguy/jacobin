@@ -26,14 +26,15 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 	if len(params) < 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "copyOf: too few arguments")
 	}
+
+	// Check for a null array.
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "copyOf: null array argument")
+	}
+
 	// Extract the array and the new length.
 	parmObj := params[0].(*object.Object)
 	newLen := int(params[1].(int64))
-
-	// Check for a null array.
-	if parmObj == nil {
-		return getGErrBlk(excNames.NullPointerException, "copyOf: null array argument")
-	}
 
 	// Check for a negative length.
 	if newLen < 0 {
@@ -47,8 +48,7 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 	oldLen := len(rawArrayOld)
 
 	// Create a new array of the desired length.
-	arrayType := "Ljava/lang/Object;"
-	newArray := object.Make1DimRefArray(&arrayType, int64(newLen))
+	newArray := object.Make1DimRefArray("Ljava/lang/Object;", int64(newLen))
 	rawArrayNew := newArray.FieldTable["value"].Fvalue.([]*object.Object)
 
 	// Copy the elements from the old array to the new array.
