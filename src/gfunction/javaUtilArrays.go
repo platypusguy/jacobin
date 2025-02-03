@@ -1,0 +1,59 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2025 by the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
+ */
+
+package gfunction
+
+import (
+	"jacobin/excNames"
+	"jacobin/object"
+)
+
+// A partial implementation of the java/util/Arrays class.
+
+func Load_Util_Arrays() {
+	MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;)[Ljava/lang/Object"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  copyOf,
+		}
+}
+
+func copyOf(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "copyOf: too few arguments")
+	}
+	// Extract the array and the new length.
+	parmObj := params[0].(*object.Object)
+	newLen := params[1].(int64)
+
+	// Check for a null array.
+	if parmObj == nil {
+		return getGErrBlk(excNames.NullPointerException, "copyOf: null array argument")
+	}
+
+	// Check for a negative length.
+	if newLen < 0 {
+		return getGErrBlk(excNames.NegativeArraySizeException, "copyOf: negative array length")
+	}
+
+	// Get the array length.
+	parmObject := *parmObj
+	arr := parmObject.FieldTable["value"]
+	rawArrayOld := arr.Fvalue.([]*object.Object)
+	oldLen := len(rawArrayOld)
+
+	// Create a new array of the desired length.
+	arrayType := "Ljava/lang/Object;"
+	newArray := object.Make1DimRefArray(&arrayType, newLen)
+	rawArrayNew := newArray.FieldTable["value"].Fvalue.([]*object.Object)
+
+	// Copy the elements from the old array to the new array.
+	for i := 0; i < oldLen && i < int(newLen); i++ {
+		rawArrayNew[i] = rawArrayOld[i]
+	} // CURR: need to handle the case where newLen > oldLen
+
+	return newArray
+}

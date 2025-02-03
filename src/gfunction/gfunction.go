@@ -136,13 +136,14 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Security_AccessController()
 
 	// java/util/*
-	Load_Util_Zip_Adler32()
-	Load_Util_Zip_Crc32_Crc32c()
+	Load_Util_Arrays()
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_HexFormat()
 	Load_Util_Locale()
 	Load_Util_Random()
+	Load_Util_Zip_Adler32()
+	Load_Util_Zip_Crc32_Crc32c()
 
 	// jdk/internal/misc/*
 	Load_Jdk_Internal_Misc_Unsafe()
