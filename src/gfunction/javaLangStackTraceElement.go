@@ -81,8 +81,7 @@ func of(params []interface{}) interface{} {
 	}
 
 	// create the 1-dimensional array of stackTraceElements
-	stackTraceElementClassName := "java/lang/StackTraceElement"
-	stackTrace := object.Make1DimRefArray(&stackTraceElementClassName, depth)
+	stackTrace := object.Make1DimRefArray("java/lang/StackTraceElement", depth)
 
 	// insert empty stackTraceElements into the array.
 	rawArray := stackTrace.FieldTable["value"].Fvalue.([]*object.Object)
