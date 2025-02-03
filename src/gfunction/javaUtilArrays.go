@@ -17,11 +17,11 @@ func Load_Util_Arrays() {
 	MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;)[Ljava/lang/Object"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  copyOf,
+			GFunction:  copyOfObjectPointers,
 		}
 }
 
-func copyOf(params []interface{}) interface{} {
+func copyOfObjectPointers(params []interface{}) interface{} {
 	if len(params) < 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "copyOf: too few arguments")
 	}
