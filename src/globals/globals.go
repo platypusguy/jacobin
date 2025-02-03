@@ -198,12 +198,6 @@ func InitGlobals(progName string) Globals {
 	return global
 }
 
-// ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
-// type ThreadList struct {
-// 	ThreadsList  *list.List
-// 	ThreadsMutex sync.Mutex
-// }
-
 // GetGlobalRef returns a pointer to the singleton instance of Globals
 func GetGlobalRef() *Globals {
 	return &global
