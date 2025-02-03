@@ -141,6 +141,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_HexFormat()
 	Load_Util_Locale()
+	Load_Util_Objects()
 	Load_Util_Random()
 	Load_Util_Zip_Adler32()
 	Load_Util_Zip_Crc32_Crc32c()
