@@ -116,8 +116,7 @@ func TestMakde1DimIntArray(t *testing.T) {
 
 func TestMake1DimRefArray(t *testing.T) {
 	globals.InitGlobals("test")
-	objType := "genericObj"
-	rArr := Make1DimRefArray(&objType, 11)
+	rArr := Make1DimRefArray("genericObj", 11)
 	size := ArrayLength(rArr)
 	if size != 11 {
 		t.Errorf("Expecting 11 elements in array, got %d", size)

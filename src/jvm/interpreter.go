@@ -2670,7 +2670,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
 	}
 
-	arrayPtr := object.Make1DimRefArray(&refTypeName, size)
+	arrayPtr := object.Make1DimRefArray(refTypeName, size)
 	g := globals.GetGlobalRef()
 	g.ArrayAddressList.PushFront(arrayPtr)
 	push(fr, arrayPtr)
