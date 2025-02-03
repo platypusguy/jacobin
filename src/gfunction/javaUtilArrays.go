@@ -14,20 +14,21 @@ import (
 // A partial implementation of the java/util/Arrays class.
 
 func Load_Util_Arrays() {
-	MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;)[Ljava/lang/Object"] =
+	MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  copyOfObjectPointers,
 		}
 }
 
+// Copy the specified array of pointers, truncating or padding with nulls so the copy has the specified length.
 func copyOfObjectPointers(params []interface{}) interface{} {
 	if len(params) < 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "copyOf: too few arguments")
 	}
 	// Extract the array and the new length.
 	parmObj := params[0].(*object.Object)
-	newLen := params[1].(int64)
+	newLen := int(params[1].(int64))
 
 	// Check for a null array.
 	if parmObj == nil {
@@ -47,13 +48,19 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 
 	// Create a new array of the desired length.
 	arrayType := "Ljava/lang/Object;"
-	newArray := object.Make1DimRefArray(&arrayType, newLen)
+	newArray := object.Make1DimRefArray(&arrayType, int64(newLen))
 	rawArrayNew := newArray.FieldTable["value"].Fvalue.([]*object.Object)
 
 	// Copy the elements from the old array to the new array.
-	for i := 0; i < oldLen && i < int(newLen); i++ {
+	for i := 0; i < oldLen && i < newLen; i++ {
 		rawArrayNew[i] = rawArrayOld[i]
-	} // CURR: need to handle the case where newLen > oldLen
+	}
+
+	if newLen > oldLen {
+		for i := oldLen; i < newLen; i++ {
+			rawArrayNew[i] = nil
+		}
+	}
 
 	return newArray
 }
