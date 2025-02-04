@@ -15,6 +15,7 @@ import (
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/trace"
+	"jacobin/types"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -128,7 +129,12 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// can be called, and CLI processing has also occurred. So, we
 	// know we have the latest assertion-enabled status.
 	x := statics.Statics["main.$assertionsDisabled"].Value.(int64)
-	return 1 - x // return the 0 if disabled, 1 if not.
+	if x == 1 {
+		return types.JavaBoolFalse
+	} else {
+		return types.JavaBoolTrue
+	}
+	// return 1 - x // return the 0 if disabled, 1 if not.
 }
 
 // "java/lang/Class.getName()Ljava/lang/String;"
