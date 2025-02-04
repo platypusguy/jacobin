@@ -7,11 +7,16 @@
 package gfunction
 
 import (
+	"io"
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/statics"
+	"jacobin/types"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -135,5 +140,72 @@ func TestGetPrimitiveClass_Void(t *testing.T) {
 	result := getPrimitiveClass(params)
 	if _, ok := result.(*classloader.Klass); !ok {
 		t.Errorf("Expected *classloader.Klass, got %T", result)
+	}
+}
+
+func TestSimpleClassLoadByName(t *testing.T) {
+	setup()
+	k, err := simpleClassLoadByName("java/lang/String")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if k == nil {
+		t.Errorf("Expected *classloader.Klass for java/lang/String, got nil")
+	}
+}
+
+func TestSimpleClassLoadByName_Error(t *testing.T) {
+	setup()
+
+	// trap the error message written out due to not being able to find the class
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	k, err := simpleClassLoadByName("java/lang/No-Such-Class")
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "java.lang.ClassNotFoundException") {
+		t.Errorf("Unexpected error message, got %s", errMsg)
+	}
+
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+	if k != nil {
+		t.Errorf("Expected nil data for non-existent class, got %v", k)
+	}
+}
+
+func TestAssertionsEnabledStatus_Disabled(t *testing.T) {
+	setup()
+	statics.LoadProgramStatics()
+	result := getAssertionsEnabledStatus(nil)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false, got %v", result)
+	}
+}
+
+func TestAssertionsEnabledStatus_Enabled(t *testing.T) {
+	setup()
+	_ = statics.AddStatic("main.$assertionsDisabled",
+		statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
+	result := getAssertionsEnabledStatus(nil)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true, got %v", result)
+	}
+}
+
+func TestGetNameWithAStringObject(t *testing.T) {
+	setup()
+	obj := object.StringObjectFromGoString("java/lang/String")
+	params := []interface{}{obj}
+	result := getName(params)
+	if result != "java/lang/String" {
+		t.Errorf("Expected java/lang/String, got %s", result)
 	}
 }
