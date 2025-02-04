@@ -90,7 +90,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	if err == nil {
 		return k
 	} else {
-		errMsg := fmt.Sprintf("Does not handle: %s", str)
+		errMsg := fmt.Sprintf("%s: %s", err.Error(), str)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 }
