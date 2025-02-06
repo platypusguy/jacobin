@@ -93,14 +93,14 @@ func rafInitString(params []interface{}) interface{} {
 	case "rw", "rws", "rwd":
 		modeInt = os.O_RDWR | os.O_CREATE | os.O_APPEND
 	default:
-		errMsg := fmt.Sprintf("mode string (%s) invalid", modeStr)
+		errMsg := fmt.Sprintf("rafInitString: mode string (%s) invalid", modeStr)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Open the file in the specified mode.
 	osFile, err := os.OpenFile(pathStr, modeInt, CreateFilePermissions)
 	if err != nil {
-		errMsg := fmt.Sprintf("os.OpenFile(%s) failed, reason: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("rafInitString: os.OpenFile(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -124,7 +124,7 @@ func rafInitFile(params []interface{}) interface{} {
 	obj := params[1].(*object.Object)
 	fld, ok := obj.FieldTable[FilePath]
 	if !ok {
-		errMsg := "java/io/File object is missing the FilePath field"
+		errMsg := "rafInitFile: java/io/File object is missing the FilePath field"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	pathStr := string(fld.Fvalue.([]byte))
@@ -138,14 +138,14 @@ func rafInitFile(params []interface{}) interface{} {
 	case "rw", "rws", "rwd":
 		modeInt = os.O_RDWR | os.O_CREATE | os.O_APPEND
 	default:
-		errMsg := fmt.Sprintf("mode string (%s) invalid", modeStr)
+		errMsg := fmt.Sprintf("rafInitFile: mode string (%s) invalid", modeStr)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Open the file in the specified mode.
 	osFile, err := os.OpenFile(pathStr, modeInt, CreateFilePermissions)
 	if err != nil {
-		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("rafInitFile: os.Open(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -169,7 +169,7 @@ func rafGetFilePointer(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	fld, ok := obj.FieldTable[FileHandle]
 	if !ok {
-		errMsg := "java/io/RandomAccessFile object is missing the FileHandle field"
+		errMsg := "rafGetFilePointer: java/io/RandomAccessFile object is missing the FileHandle field"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	var osFile *os.File = fld.Fvalue.(*os.File)
@@ -177,7 +177,7 @@ func rafGetFilePointer(params []interface{}) interface{} {
 	// Get the current position relative to the beginning of file.
 	posn, err := osFile.Seek(0, 1)
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Seek(0, 1) failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("rafGetFilePointer: osFile.Seek(0, 1) failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
