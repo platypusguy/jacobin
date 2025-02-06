@@ -780,7 +780,7 @@ func Load_Lang_String() {
 func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(types.StringClassName)
 	if klass == nil {
-		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
+		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", types.StringClassName)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
@@ -834,7 +834,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "newStringFromBytesSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n",
 			object.GoStringFromJavaByteArray(bytes), totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
@@ -870,12 +870,12 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	// Return the string.
 	fld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in character array object")
+		errMsg := fmt.Sprintf("newStringFromCharsSubset: Missing value field in character array object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	iarray, ok := fld.Fvalue.([]int64)
 	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in character array object", fld.Ftype, fld.Fvalue)
+		errMsg := fmt.Sprintf("newStringFromCharsSubset: Invalid value field type (%s : %T) in character array object", fld.Ftype, fld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -886,7 +886,7 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(iarray))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "newStringFromCharsSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1322,7 +1322,7 @@ func stringMatches(params []any) any {
 
 	regex, err := regexp.Compile(regexString)
 	if err != nil {
-		errMsg := fmt.Sprintf("Invalid regular expression: %s", regexString)
+		errMsg := fmt.Sprintf("stringMatches: Invalid regular expression: %s", regexString)
 		return getGErrBlk(excNames.PatternSyntaxException, errMsg)
 	}
 	if regex.MatchString(baseString) {
@@ -1426,7 +1426,7 @@ func substringToTheEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "substringToTheEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1454,7 +1454,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "substringStartEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1557,7 +1557,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
-		errMsg := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg := "valueOfCharSubarray: Either nil input byte array, invalid substring offset, or invalid substring length"
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1620,7 +1620,7 @@ func valueOfObject(params []interface{}) interface{} {
 		inObj := params[0].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "value")
 	default:
-		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
+		errMsg := fmt.Sprintf("valueOfObject: Unsupported parameter type: %T", params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1668,7 +1668,7 @@ func stringCheckBoundsBeginEnd(params []interface{}) interface{} {
 	length := params[2].(int64)
 
 	if begin < 0 || begin > end || end > length {
-		errMsg := fmt.Sprintf("checkBoundsBeginEnd: begin: %d, end: %d, length: %d", begin, end, length)
+		errMsg := fmt.Sprintf("stringCheckBoundsBeginEnd: begin: %d, end: %d, length: %d", begin, end, length)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1682,7 +1682,7 @@ func stringCheckBoundsOffCount(params []interface{}) interface{} {
 	length := params[2].(int64)
 
 	if offset < 0 || count < 0 || offset > count || offset > (length-count) {
-		errMsg := fmt.Sprintf("checkBoundsOffCount: offset: %d, count: %d, length: %d", offset, count, length)
+		errMsg := fmt.Sprintf("stringCheckBoundsOffCount: offset: %d, count: %d, length: %d", offset, count, length)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1710,7 +1710,7 @@ func stringStartsWith(params []interface{}) interface{} {
 	if len(params) == 3 {
 		offset := int(params[2].(int64))
 		if offset < 0 || offset > len(baseStr) {
-			errMsg := fmt.Sprintf("checkBoundsOffCount: base: %s, prefix: %s, offset: %d", baseStr, prefix, offset)
+			errMsg := fmt.Sprintf("stringStartsWith: base: %s, prefix: %s, offset: %d", baseStr, prefix, offset)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		if strings.HasPrefix(baseStr[offset:], prefix) {
@@ -1758,7 +1758,7 @@ func stringGetChars(params []interface{}) interface{} {
 	// Return nil
 	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in base object")
+		errMsg := fmt.Sprintf("stringGetChars: Missing value field in base object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1769,7 +1769,7 @@ func stringGetChars(params []interface{}) interface{} {
 	case []types.JavaByte:
 		srcBytes = srcFld.Fvalue.([]types.JavaByte)
 	default:
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+		errMsg := fmt.Sprintf("stringGetChars: Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1784,12 +1784,13 @@ func stringGetChars(params []interface{}) interface{} {
 	dstObj := params[3].(*object.Object)
 	dstFld, ok := dstObj.FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in char array object")
+		errMsg := fmt.Sprintf("stringGetChars: Missing value field in char array object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	dstChars, ok := dstFld.Fvalue.([]int64)
 	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in char array object", dstFld.Ftype, dstFld.Fvalue)
+		errMsg := fmt.Sprintf("stringGetChars: Invalid value field type (%s : %T) in char array object",
+			dstFld.Ftype, dstFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1801,7 +1802,7 @@ func stringGetChars(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength || dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "stringGetChars: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", srcLength, srcBegin, srcEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1828,7 +1829,7 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	// Get field of base object.
 	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in base object")
+		errMsg := fmt.Sprintf("stringIndexOfCh: Missing value field in base object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1840,7 +1841,7 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	case []types.JavaByte:
 		srcBytes = srcFld.Fvalue.([]types.JavaByte)
 	default:
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+		errMsg := fmt.Sprintf("stringIndexOfCh: Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1867,12 +1868,12 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	case 3: // int indexOf(int ch, int beginIndex, int endIndex)
 		beginIndex = params[2].(int64)
 		if beginIndex < 0 || beginIndex >= lenSrcBytes {
-			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenSrcBytes, beginIndex)
+			errMsg := fmt.Sprintf("stringIndexOfCh: Base string len: %d, begin index: %d", lenSrcBytes, beginIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		endIndex = params[3].(int64)
 		if endIndex > lenSrcBytes || beginIndex > endIndex {
-			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenSrcBytes, endIndex)
+			errMsg := fmt.Sprintf("stringIndexOfCh: Base string len: %d, end index: %d", lenSrcBytes, endIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 	}
@@ -1915,12 +1916,12 @@ func stringIndexOfString(params []interface{}) interface{} {
 	case 3: // int indexOf(String str, int beginIndex, int endIndex)
 		beginIndex = params[2].(int64)
 		if beginIndex < 0 || beginIndex >= lenOrigBaseString {
-			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenOrigBaseString, beginIndex)
+			errMsg := fmt.Sprintf("stringIndexOfString: Base string len: %d, begin index: %d", lenOrigBaseString, beginIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		endIndex = params[3].(int64)
 		if endIndex > lenOrigBaseString || beginIndex > endIndex {
-			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenOrigBaseString, endIndex)
+			errMsg := fmt.Sprintf("stringIndexOfString: Base string len: %d, end index: %d", lenOrigBaseString, endIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 	}
