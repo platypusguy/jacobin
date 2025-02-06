@@ -427,7 +427,7 @@ func stringBuilderInitString(params []any) any {
 			byteArray = object.JavaByteArrayFromGoString(rawArray.(string))
 		}
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderInitString: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -482,7 +482,7 @@ func stringBuilderAppend(params []any) any {
 				length := params[3].(int64)
 				end := start + length
 				if start < 0 || start > len64Array || end <= start || end > len64Array {
-					errMsg := fmt.Sprintf("Invalid offset (%d) or length (%d)", start, length)
+					errMsg := fmt.Sprintf("stringBuilderAppend: Invalid offset (%d) or length (%d)", start, length)
 					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 				}
 				for ix := start; ix < start+length; ix++ {
@@ -494,7 +494,8 @@ func stringBuilderAppend(params []any) any {
 				}
 			}
 		default:
-			errMsg := fmt.Sprintf("Object value field value type (%T) is not a byte array nor a char array", params[1])
+			errMsg := fmt.Sprintf("stringBuilderAppend: Object value field value type (%T) is not a byte array nor a char array",
+				params[1])
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	case int64: // int, long, short
@@ -505,7 +506,7 @@ func stringBuilderAppend(params []any) any {
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderAppend: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -538,7 +539,7 @@ func stringBuilderAppendBoolean(params []any) any {
 		}
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderAppendBoolean: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -566,7 +567,7 @@ func stringBuilderAppendChar(params []any) any {
 		bb := types.JavaByte(params[1].(int64))
 		parmArray[0] = bb
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderAppendChar: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -587,7 +588,7 @@ func stringBuilderCharAt(params []any) any {
 	ix := params[1].(int64)
 	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if ix >= int64(len(bytes)) {
-		errMsg := fmt.Sprintf("Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
+		errMsg := fmt.Sprintf("stringBuilderCharAt: Index value (%d) exceeds the byte array size (%d)", ix, len(bytes))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	return int64(bytes[ix])
@@ -610,11 +611,11 @@ func stringBuilderDelete(params []any) any {
 
 	// Validate start and end.
 	if start < 0 || start > initLen {
-		errMsg := fmt.Sprintf("Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
+		errMsg := fmt.Sprintf("stringBuilderDelete: Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end < start {
-		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end)
+		errMsg := fmt.Sprintf("stringBuilderDelete: End value (%d) < Start value (%d)", start, end)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end > initLen {
@@ -654,7 +655,8 @@ func stringBuilderInsert(params []any) any {
 	// Get the index value.
 	ix := params[1].(int64)
 	if ix < 0 || ix > int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		errMsg := fmt.Sprintf("stringBuilderInsert: Index value (%d) is negative or exceeds the byte array size (%d)",
+			ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -675,7 +677,7 @@ func stringBuilderInsert(params []any) any {
 				length := params[4].(int64)
 				end := start + length
 				if start < 0 || start > len64Array || end <= start || end > len64Array {
-					errMsg := fmt.Sprintf("Invalid offset (%d) or length (%d)", start, length)
+					errMsg := fmt.Sprintf("stringBuilderInsert: Invalid offset (%d) or length (%d)", start, length)
 					return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 				}
 				for ix := start; ix < start+length; ix++ {
@@ -687,7 +689,8 @@ func stringBuilderInsert(params []any) any {
 				}
 			}
 		default:
-			errMsg := fmt.Sprintf("Object value field value type (%T) is not a byte array nor a char array", params[1])
+			errMsg := fmt.Sprintf("stringBuilderInsert: Object value field value type (%T) is not a byte array nor a char array",
+				params[1])
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	case int64: // integer, long
@@ -698,7 +701,7 @@ func stringBuilderInsert(params []any) any {
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderInsert: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -729,7 +732,8 @@ func stringBuilderInsertBoolean(params []any) any {
 	// Get the index value.
 	ix := params[1].(int64)
 	if ix < 0 || ix > int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		errMsg := fmt.Sprintf("stringBuilderInsertBoolean: Index value (%d) is negative or exceeds the byte array size (%d)",
+			ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -744,7 +748,7 @@ func stringBuilderInsertBoolean(params []any) any {
 		}
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderInsertBoolean: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -775,7 +779,8 @@ func stringBuilderInsertChar(params []any) any {
 	// Get the index value.
 	ix := params[1].(int64)
 	if ix < 0 || ix > int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) is negative or exceeds the byte array size (%d)", ix, len(byteArray))
+		errMsg := fmt.Sprintf("stringBuilderInsertChar: Index value (%d) is negative or exceeds the byte array size (%d)",
+			ix, len(byteArray))
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -784,7 +789,7 @@ func stringBuilderInsertChar(params []any) any {
 	case int64: // char
 		bb = types.JavaByte(params[2].(int64))
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("stringBuilderInsertChar: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -820,11 +825,11 @@ func stringBuilderReplace(params []any) any {
 
 	// Validate start and end.
 	if start < 0 || start > initLen {
-		errMsg := fmt.Sprintf("Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
+		errMsg := fmt.Sprintf("stringBuilderReplace: Start value (%d) < 0 or exceeds the byte array size (%d)", start, initLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end < start {
-		errMsg := fmt.Sprintf("End value (%d) < Start value (%d)", start, end)
+		errMsg := fmt.Sprintf("stringBuilderReplace: End value (%d) < Start value (%d)", start, end)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 	if end > initLen {
@@ -883,7 +888,7 @@ func stringBuilderSetCharAt(params []any) any {
 	ix := params[1].(int64)
 	ch := params[2].(int64)
 	if ix < 0 || ix > int64(len(byteArray)) {
-		errMsg := fmt.Sprintf("Index value (%d) is illegal", ix)
+		errMsg := fmt.Sprintf("stringBuilderSetCharAt: Index value (%d) is illegal", ix)
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 	byteArray[ix] = types.JavaByte(ch)
@@ -901,7 +906,7 @@ func stringBuilderSetLength(params []any) any {
 	newlen := params[1].(int64)
 	newArray := make([]types.JavaByte, newlen)
 	if newlen < 0 {
-		errMsg := fmt.Sprintf("Length value (%d) is negative", newlen)
+		errMsg := fmt.Sprintf("stringBuilderSetLength: Length value (%d) is negative", newlen)
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 	if newlen == oldlen {
