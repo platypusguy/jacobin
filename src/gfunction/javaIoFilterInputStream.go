@@ -96,7 +96,7 @@ func initFilterInputStreamFile(params []interface{}) interface{} {
 	// Get file path field from the File argument.
 	fld, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "File object argument lacks a FilePath field"
+		errMsg := "initFilterInputStreamFile: File object argument lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -127,7 +127,7 @@ func initFilterInputStreamString(params []interface{}) interface{} {
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	osFile, err := os.Open(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFilterInputStreamString: os.Open(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
