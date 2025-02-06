@@ -480,7 +480,7 @@ func stringBufferInitString(params []any) any {
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("StringBufferInitString: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
