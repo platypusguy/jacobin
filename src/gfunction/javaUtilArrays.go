@@ -24,12 +24,12 @@ func Load_Util_Arrays() {
 // Copy the specified array of pointers, truncating or padding with nulls so the copy has the specified length.
 func copyOfObjectPointers(params []interface{}) interface{} {
 	if len(params) < 2 {
-		return getGErrBlk(excNames.IllegalArgumentException, "copyOf: too few arguments")
+		return getGErrBlk(excNames.IllegalArgumentException, "copyOfObjectPointers: too few arguments")
 	}
 
 	// Check for a null array.
 	if params[0] == nil {
-		return getGErrBlk(excNames.NullPointerException, "copyOf: null array argument")
+		return getGErrBlk(excNames.NullPointerException, "copyOfObjectPointers: null array argument")
 	}
 
 	// Extract the array and the new length.
@@ -38,7 +38,7 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 
 	// Check for a negative length.
 	if newLen < 0 {
-		return getGErrBlk(excNames.NegativeArraySizeException, "copyOf: negative array length")
+		return getGErrBlk(excNames.NegativeArraySizeException, "copyOfObjectPointers: negative array length")
 	}
 
 	// Get the array length.
