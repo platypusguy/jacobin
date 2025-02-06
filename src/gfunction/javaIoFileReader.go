@@ -62,13 +62,13 @@ func Load_Io_FileReader() {
 func initFileReader(params []interface{}) interface{} {
 	fld1, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "File object lacks a FilePath field"
+		errMsg := "initFileReader: File object lacks a FilePath field"
 		return getGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
 	inPathStr := string(fld1.Fvalue.([]byte))
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", inPathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileReader: os.Open(%s) failed, reason: %s", inPathStr, err.Error())
 		return getGErrBlk(excNames.FileNotFoundException, errMsg)
 	}
 
@@ -88,7 +88,7 @@ func initFileReaderString(params []interface{}) interface{} {
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	osFile, err := os.Open(pathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initFileReaderString: os.Open(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.FileNotFoundException, errMsg)
 	}
 

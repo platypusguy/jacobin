@@ -127,7 +127,7 @@ func Load_Lang_System() {
 func systemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
-		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
+		errMsg := "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not"
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -145,7 +145,7 @@ func systemClinit([]interface{}) interface{} {
 // docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
 func arrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
-		errMsg := fmt.Sprintf("Expected 5 parameters, got %d", len(params))
+		errMsg := fmt.Sprintf("arrayCopy: Expected 5 parameters, got %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -156,13 +156,13 @@ func arrayCopy(params []interface{}) interface{} {
 	length := params[4].(int64)
 
 	if object.IsNull(src) || object.IsNull(dest) {
-		errMsg := fmt.Sprintf("null src or dest")
+		errMsg := fmt.Sprintf("arrayCopy: null src or dest")
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
-			"Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+			"arrayCopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -170,7 +170,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
 	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
-		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
+		errMsg := fmt.Sprintf("arrayCopy: invalid src or dest array")
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 
@@ -178,7 +178,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destLen := object.ArrayLength(dest)
 
 	if srcPos+length > srcLen || destPos+length > destLen {
-		errMsg := fmt.Sprintf("Array position + length exceeds array size")
+		errMsg := fmt.Sprintf("arrayCopy: Array position + length exceeds array size")
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 

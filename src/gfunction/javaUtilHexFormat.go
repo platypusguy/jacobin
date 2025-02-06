@@ -461,16 +461,16 @@ func hfFormatHexFromBytes(params []interface{}) interface{} {
 	if len(params) > 2 {
 		fromIndex = int(params[2].(int64))
 		if fromIndex < 0 || fromIndex > len(bytes) {
-			errMsg := fmt.Sprintf("from index out of range: %d", fromIndex)
+			errMsg := fmt.Sprintf("hfFormatHexFromBytes: from index out of range: %d", fromIndex)
 			return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 		}
 		toIndex = int(params[3].(int64))
 		if toIndex < 0 || toIndex > len(bytes) {
-			errMsg := fmt.Sprintf("to index out of range: %d", fromIndex)
+			errMsg := fmt.Sprintf("hfFormatHexFromBytes: to index out of range: %d", fromIndex)
 			return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 		}
 		if toIndex <= fromIndex {
-			errMsg := fmt.Sprintf("to index <= from index: %d", fromIndex)
+			errMsg := fmt.Sprintf("hfFormatHexFromBytes: to index <= from index: %d", fromIndex)
 			return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 		}
 	} else {
@@ -499,7 +499,7 @@ func hfFromHexDigit(params []interface{}) interface{} {
 	if arg < 103 && arg > 96 { // range: 'a' to 'f'
 		return arg - 87 // arg + 10 - 'a'
 	}
-	errMsg := fmt.Sprintf("Out of range: %d", arg)
+	errMsg := fmt.Sprintf("hfFromHexDigit: Out of range: %d", arg)
 	return getGErrBlk(excNames.NumberFormatException, errMsg)
 
 }

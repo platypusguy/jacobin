@@ -399,7 +399,7 @@ func getPrime(bitLength int) (*big.Int, string) {
 		// Generate a random number given the bit length.
 		zz, err := rand.Prime(rand.Reader, bitLength)
 		if err != nil {
-			errMsg := fmt.Sprintf("rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
+			errMsg := fmt.Sprintf("getPrime: rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
 			return nil, errMsg
 		}
 
@@ -440,7 +440,7 @@ func addStaticBigInteger(argName string, argValue int64) {
 func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(bigIntegerClassName)
 	if klass == nil {
-		errMsg := fmt.Sprintf("BigInteger<clinit>: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
+		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -562,7 +562,7 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	// Get a big.Int in the randge of [0, upperBound].
 	zz, err := rand.Int(rand.Reader, upperBound)
 	if err != nil {
-		errMsg := fmt.Sprintf("rand.Int(numBits=%d) failed, reason: %s", numBits, err.Error())
+		errMsg := fmt.Sprintf("bigIntegerInitRandom: rand.Int(numBits=%d) failed, reason: %s", numBits, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
@@ -588,7 +588,7 @@ func bigIntegerInitString(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	_, ok := zz.SetString(str, 10)
 	if !ok {
-		errMsg := fmt.Sprintf("<init> string (%s) not all numerics", str)
+		errMsg := fmt.Sprintf("bigIntegerInitString: string (%s) not all numerics", str)
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
@@ -616,7 +616,7 @@ func bigIntegerInitStringRadix(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	_, ok := zz.SetString(str, int(rdx))
 	if !ok {
-		errMsg := fmt.Sprintf("<init> string (%s) not all numerics or the radix (%d) is invalid", str, rdx)
+		errMsg := fmt.Sprintf("bigIntegerInitStringRadix: string (%s) not all numerics or the radix (%d) is invalid", str, rdx)
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
@@ -769,7 +769,7 @@ func bigIntegerByteValueExact(params []interface{}) interface{} {
 	xx := fld.Fvalue.(*big.Int)
 	ii := xx.Int64()
 	if ii < 0 || ii > 255 {
-		errMsg := fmt.Sprintf("Value (%d) will not fit in a byte", ii)
+		errMsg := fmt.Sprintf("bigIntegerByteValueExact: Value (%d) will not fit in a byte", ii)
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 	return ii & 0xFF
@@ -799,7 +799,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerDivide: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -830,7 +830,7 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerDivideAndRemainder: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1013,7 +1013,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "BigInteger: modulus not positive"
+		errMsg := "bigIntegerMod: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1049,7 +1049,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	mm := objModulus.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if mm.Cmp(zero) <= 0 {
-		errMsg := "BigInteger: modulus not positive"
+		errMsg := "bigIntegerModInverse: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1057,7 +1057,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	ret := zz.ModInverse(xx, mm)
 	if ret == nil {
-		errMsg := "BigInteger not invertible"
+		errMsg := "bigIntegerModInverse: BigInteger not invertible"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1088,7 +1088,7 @@ func bigIntegerModPow(params []interface{}) interface{} {
 	mm := objMM.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if mm.Cmp(zero) <= 0 {
-		errMsg := fmt.Sprintf("Modulus (%d) is negative", mm.Int64())
+		errMsg := fmt.Sprintf("bigIntegerModPow: Modulus (%d) is negative", mm.Int64())
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1224,7 +1224,7 @@ func bigIntegerPow(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	pow := params[1].(int64)
 	if pow < 0 {
-		errMsg := fmt.Sprintf("Power (%d) is negative", pow)
+		errMsg := fmt.Sprintf("bigIntegerPow: Power (%d) is negative", pow)
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 	yy := big.NewInt(pow)
@@ -1256,7 +1256,7 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerRemainder: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1315,7 +1315,7 @@ func bigIntegerSqrt(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if xx.Cmp(zero) < 0 {
-		errMsg := fmt.Sprintf("Argument (%d) is negative", xx.Int64())
+		errMsg := fmt.Sprintf("bigIntegerSqrt: Argument (%d) is negative", xx.Int64())
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1394,7 +1394,7 @@ func bigIntegerToStringRadix(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	rdx := params[1].(int64)
 	if rdx < 2 || rdx > 62 {
-		errMsg := fmt.Sprintf("Invalid radix value (%d)", rdx)
+		errMsg := fmt.Sprintf("bigIntegerToStringRadix: Invalid radix value (%d)", rdx)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 

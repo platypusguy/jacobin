@@ -16,14 +16,14 @@ import (
 
 func TestCopyOfObjectPointers_TooFewArguments(t *testing.T) {
 	result := *(copyOfObjectPointers([]interface{}{}).(*GErrBlk))
-	if result.ExceptionType != excNames.IllegalArgumentException || result.ErrMsg != "copyOf: too few arguments" {
+	if result.ExceptionType != excNames.IllegalArgumentException || result.ErrMsg != "copyOfObjectPointers: too few arguments" {
 		t.Errorf("Expected IllegalArgumentException for too few arguments")
 	}
 }
 
 func TestCopyOfObjectPointers_NullArray(t *testing.T) {
 	result := *(copyOfObjectPointers([]interface{}{nil, int64(5)}).(*GErrBlk))
-	if result.ExceptionType != excNames.NullPointerException || result.ErrMsg != "copyOf: null array argument" {
+	if result.ExceptionType != excNames.NullPointerException || result.ErrMsg != "copyOfObjectPointers: null array argument" {
 		t.Errorf("Expected NullPointerException for null array argument")
 	}
 }
@@ -31,7 +31,7 @@ func TestCopyOfObjectPointers_NullArray(t *testing.T) {
 func TestCopyOfObjectPointers_NegativeLength(t *testing.T) {
 	obj := &object.Object{}
 	result := *(copyOfObjectPointers([]interface{}{obj, int64(-1)}).(*GErrBlk))
-	if result.ExceptionType != excNames.NegativeArraySizeException || result.ErrMsg != "copyOf: negative array length" {
+	if result.ExceptionType != excNames.NegativeArraySizeException || result.ErrMsg != "copyOfObjectPointers: negative array length" {
 		// if result != getGErrBlk(excNames.NegativeArraySizeException, "copyOf: negative array length") {
 		t.Errorf("Expected NegativeArraySizeException for negative array length")
 	}
