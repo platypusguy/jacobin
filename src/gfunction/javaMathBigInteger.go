@@ -507,11 +507,11 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	zz, signum := BytesToBigInt(bytes)
 
 	// Set value to big integer.
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum to sign.
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	// Return void.
@@ -532,7 +532,7 @@ func bigIntegerInitProbablyPrime(params []interface{}) interface{} {
 	zz, errMsg := getPrime(int(bitLength))
 	if zz != nil {
 		// Set value to big integer.
-		fld.Fvalue = zz
+		fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 		obj.FieldTable["value"] = fld
 
 		// Set signum to sign.
@@ -567,7 +567,7 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	}
 
 	// Set value to big integer.
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum to sign.
@@ -593,12 +593,12 @@ func bigIntegerInitString(params []interface{}) interface{} {
 	}
 
 	// Update base object and return nil
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return nil
@@ -621,12 +621,12 @@ func bigIntegerInitStringRadix(params []interface{}) interface{} {
 	}
 
 	// Update base object and return nil
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return nil
@@ -650,7 +650,7 @@ func bigIntegerAbs(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -676,7 +676,7 @@ func bigIntegerAdd(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -702,7 +702,7 @@ func bigIntegerAnd(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -728,7 +728,7 @@ func bigIntegerAndNot(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -812,7 +812,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -850,7 +850,7 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -904,7 +904,7 @@ func bigIntegerGCD(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -965,7 +965,7 @@ func bigIntegerMax(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -995,7 +995,7 @@ func bigIntegerMin(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1026,7 +1026,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1066,7 +1066,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1101,7 +1101,7 @@ func bigIntegerModPow(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1136,7 +1136,7 @@ func bigIntegerMultiply(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1159,7 +1159,7 @@ func bigIntegerNegate(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1182,7 +1182,7 @@ func bigIntegerNot(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1208,7 +1208,7 @@ func bigIntegerOr(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1238,7 +1238,7 @@ func bigIntegerPow(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1269,7 +1269,7 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1290,7 +1290,7 @@ func bigIntegerProbablyPrime(params []interface{}) interface{} {
 
 		// Set signum field to the sign.
 		signum := zz.Sign()
-		fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+		fld := object.Field{Ftype: types.Int, Fvalue: signum}
 		obj.FieldTable["signum"] = fld
 
 		return obj
@@ -1328,7 +1328,7 @@ func bigIntegerSqrt(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1354,7 +1354,7 @@ func bigIntegerSubtract(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1435,7 +1435,7 @@ func bigIntegerXor(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
