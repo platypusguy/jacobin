@@ -1277,10 +1277,10 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 
 // "java/math/BigInteger.probablyPrime(ILjava/util/Random;)Ljava/math/BigInteger;"
 func bigIntegerProbablyPrime(params []interface{}) interface{} {
-	// params[1]: number of bits (bitLength)
-	// params[2]: Random object (yy)
+	// params[0]: number of bits (bitLength)
+	// params[1]: Random object (yy)
 
-	bitLength := params[1].(int64)
+	bitLength := params[0].(int64)
 	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
 
 	zz, errMsg := getPrime(int(bitLength))
