@@ -100,15 +100,15 @@ func TGrunner(t *testing.T, className, methodName, methodType string,
 	// Run the G function.
 	observed := RunGfunction(mtEntry, fs, className, methodName, methodType, &params, true, false)
 
-	// Check result.
+	// Check for nil result.
 	if observed == nil {
 		if expected != nil {
 			t.Errorf("TGrunner ERROR: FQN %s returned nil but caller expected %T", fqn, expected)
 			return
 		}
 	} else {
-		// Not nil. Check for errors first.
-		switch expected.(type) {
+		// Not nil. Check for two types of errors.
+		switch observed.(type) {
 		case error:
 			t.Errorf("TGrunner ERROR: FQN %s returned an error, text: %s", fqn, observed.(error).Error())
 			return
@@ -116,13 +116,14 @@ func TGrunner(t *testing.T, className, methodName, methodType string,
 			t.Errorf("TGrunner ERROR: FQN %s returned a GErrBlk, text: %s", fqn, observed.(*GErrBlk).ErrMsg)
 			return
 		default:
-			// Not an error.
+			// Not any kind of error.
 			// Make sure that the observed value is the same type as the expected.
 			if reflect.TypeOf(observed) != reflect.TypeOf(expected) {
 				t.Errorf("TGrunner ERROR: FQN %s expected return type %T, observed type %T", fqn, expected, observed)
 				return
 			}
-			// Same type.
+			// Go data types agree.
+			// Check the Jacobin field types and values.
 			switch observed.(type) {
 			case *object.Object:
 				// Some type of object. Check the value field.
@@ -137,7 +138,7 @@ func TGrunner(t *testing.T, className, methodName, methodType string,
 								fqn, fobs.Ftype, fexp.Ftype)
 							return
 						}
-						// Special check for BigInteger values.
+						// Special checking for BigInteger values.
 						if fexp.Ftype == types.BigInteger {
 							biexp := fexp.Fvalue.(*big.Int)
 							biobs := fexp.Fvalue.(*big.Int)
@@ -147,6 +148,7 @@ func TGrunner(t *testing.T, className, methodName, methodType string,
 								return
 							}
 						} else {
+							// For every other Field Ftype .....
 							// Compare the 2 Fvalues, byte for byte, regardless of type.
 							// TODO: This does not work for an array of objects!
 							if !CompareBlobs(fobs, fexp) {
