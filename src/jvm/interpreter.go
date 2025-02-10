@@ -2866,11 +2866,12 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 	return 1 // should not be reached, in theory
 }
 
-// 0xC0 CHECKCAST same as INSTANCEOF but does nothing on null,
+// 0xC0 CHECKCAST
 func doCheckcast(fr *frames.Frame, _ int64) int {
-	// and doesn't change the stack if the cast is legal.
-	// Because this uses the same logic as INSTANCEOF, any change here should
-	// be made to INSTANCEOF
+	// same as INSTANCEOF but does nothing on null;
+	// doesn't change the stack if the cast is legal.
+	// Because this uses the same logic as INSTANCEOF,
+	// any change here should be made to INSTANCEOF
 
 	ref := peek(fr) // peek b/c the objectRef is *not* removed from the op stack
 	if ref == nil { // if ref is nil, just carry on
@@ -2896,7 +2897,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		}
 	}
 
-	// at this point, we know we have a non-nil, non-null pointer to an object;
+	// at this point, we know we have a non-nil/non-null pointer to an object;
 	// now, get the class we're casting the object to.
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
