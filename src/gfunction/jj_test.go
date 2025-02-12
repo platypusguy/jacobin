@@ -1,6 +1,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"io"
 	"jacobin/globals"
 	"jacobin/object"
@@ -55,4 +56,109 @@ func TestJjDumpStatics(t *testing.T) {
 	fnTestJjDumpStatics(t, statics.SelectAll, "", []string{"test.f1", "test.f2", "test.f3"})
 	fnTestJjDumpStatics(t, statics.SelectUser, "", []string{"test.f1", "test.f2", "test.f3"})
 	fnTestJjDumpStatics(t, statics.SelectClass, "test", []string{"test.f1", "test.f2", "test.f3"})
+}
+
+func TestJjStringifyScalar_BoolTrue(t *testing.T) {
+	result := jjStringifyScalar(types.Bool, types.JavaBoolTrue)
+	expected := object.StringObjectFromGoString("true")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_BoolFalse(t *testing.T) {
+	result := jjStringifyScalar(types.Bool, types.JavaBoolFalse)
+	expected := object.StringObjectFromGoString("false")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Byte(t *testing.T) {
+	result := jjStringifyScalar(types.Byte, uint8(0xAB))
+	expected := object.StringObjectFromGoString("ab")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Char(t *testing.T) {
+	result := jjStringifyScalar(types.Char, int64('A'))
+	expected := object.StringObjectFromGoString("A")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Double(t *testing.T) {
+	result := jjStringifyScalar(types.Double, float64(3.14))
+	expected := object.StringObjectFromGoString("3.14")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Float(t *testing.T) {
+	result := jjStringifyScalar(types.Float, float64(3.14))
+	expected := object.StringObjectFromGoString("3.14")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Int(t *testing.T) {
+	result := jjStringifyScalar(types.Int, int64(42))
+	expected := object.StringObjectFromGoString("42")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Long(t *testing.T) {
+	result := jjStringifyScalar(types.Long, int64(42))
+	expected := object.StringObjectFromGoString("42")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_String(t *testing.T) {
+	strObj := object.StringObjectFromGoString("test")
+	result := jjStringifyScalar("Ljava/lang/String;", strObj)
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(strObj) {
+		t.Errorf("Expected %v, got %v", strObj, result)
+	}
+}
+
+func TestJjStringifyScalar_Short(t *testing.T) {
+	result := jjStringifyScalar(types.Short, int64(42))
+	expected := object.StringObjectFromGoString("42")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_RefNull(t *testing.T) {
+	result := jjStringifyScalar(types.Ref, object.Null)
+	expected := object.StringObjectFromGoString("null")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_RefNonNull(t *testing.T) {
+	obj := &object.Object{KlassName: 1}
+	result := jjStringifyScalar(types.Ref, obj)
+	expected := object.StringObjectFromGoString(fmt.Sprintf("%v", obj))
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestJjStringifyScalar_Default(t *testing.T) {
+	result := jjStringifyScalar("UnknownType", 42)
+	expected := object.StringObjectFromGoString("42")
+	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
 }
