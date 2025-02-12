@@ -313,3 +313,43 @@ func TestJjDumpStatics(t *testing.T) {
 	fnTestJjDumpStatics(t, statics.SelectUser, "", []string{"test.f1", "test.f2", "test.f3"})
 	fnTestJjDumpStatics(t, statics.SelectClass, "test", []string{"test.f1", "test.f2", "test.f3"})
 }
+
+func TestJjDumpObject_InvalidObject(t *testing.T) {
+	objTitle := object.StringObjectFromGoString("Test Object")
+	params := []interface{}{nil, objTitle, int64(2)}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for invalid object")
+		}
+	}()
+
+	_ = jjDumpObject(params)
+}
+
+func TestJjDumpObject_InvalidTitle(t *testing.T) {
+	obj := &object.Object{}
+	params := []interface{}{obj, nil, int64(2)}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for invalid title")
+		}
+	}()
+
+	_ = jjDumpObject(params)
+}
+
+func TestJjDumpObject_InvalidIndent(t *testing.T) {
+	obj := &object.Object{}
+	objTitle := object.StringObjectFromGoString("Test Object")
+	params := []interface{}{obj, objTitle, nil}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for invalid indent")
+		}
+	}()
+
+	_ = jjDumpObject(params)
+}
