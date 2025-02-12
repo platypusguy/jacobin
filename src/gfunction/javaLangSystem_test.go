@@ -7,12 +7,18 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"os"
+	"os/user"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestArrayCopyNonOverlapping(t *testing.T) {
@@ -243,5 +249,301 @@ func TestArrayCopyInvalidLength(t *testing.T) {
 	errMsg := err.(*GErrBlk).ErrMsg
 	if !strings.Contains(errMsg, "Array position + length exceeds array size") {
 		t.Errorf("Expected error re invalid length, got %s", errMsg)
+	}
+}
+
+func TestGetProperty_FileEncoding(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("file.encoding")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(globals.GetGlobalRef().FileEncoding)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_FileSeparator(t *testing.T) {
+	propObj := object.StringObjectFromGoString("file.separator")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(string(os.PathSeparator))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaClassPath(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.class.path")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(".")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaCompiler(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.compiler")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("no JIT")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaHome(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.home")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(globals.GetGlobalRef().JavaHome)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaIoTmpdir(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.io.tmpdir")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(os.TempDir())
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaLibraryPath(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.library.path")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(globals.GetGlobalRef().JavaHome)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVendor(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.vendor")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("Jacobin")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVendorUrl(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.vendor.url")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("https://jacobin.org")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVendorVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.vendor.version")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(globals.GetGlobalRef().Version)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.version")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmName(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.vm.name")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(
+		fmt.Sprintf("Jacobin VM v. %s (Java %d) 64-bit VM", globals.GetGlobalRef().Version, globals.GetGlobalRef().MaxJavaVersion))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmSpecificationName(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.vm.specification.name")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("Java Virtual Machine Specification")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmSpecificationVendor(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.vm.specification.vendor")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("Oracle and Jacobin")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmSpecificationVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.vm.specification.version")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmVendor(t *testing.T) {
+	propObj := object.StringObjectFromGoString("java.vm.vendor")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("Jacobin")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_JavaVmVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.vm.version")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_LineSeparator(t *testing.T) {
+	propObj := object.StringObjectFromGoString("line.separator")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	var expected string
+	if runtime.GOOS == "windows" {
+		expected = "\\r\\n"
+	} else {
+		expected = "\\n"
+	}
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_NativeEncoding(t *testing.T) {
+	propObj := object.StringObjectFromGoString("native.encoding")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(globals.GetCharsetName())
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_OsArch(t *testing.T) {
+	propObj := object.StringObjectFromGoString("os.arch")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(runtime.GOARCH)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_OsName(t *testing.T) {
+	propObj := object.StringObjectFromGoString("os.name")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(runtime.GOOS)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_OsVersion(t *testing.T) {
+	propObj := object.StringObjectFromGoString("os.version")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString("not yet available")
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_PathSeparator(t *testing.T) {
+	propObj := object.StringObjectFromGoString("path.separator")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected := object.StringObjectFromGoString(string(os.PathSeparator))
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_UserDir(t *testing.T) {
+	propObj := object.StringObjectFromGoString("user.dir")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	expected, _ := os.Getwd()
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_UserHome(t *testing.T) {
+	propObj := object.StringObjectFromGoString("user.home")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	currentUser, _ := user.Current()
+	expected := currentUser.HomeDir
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_UserName(t *testing.T) {
+	propObj := object.StringObjectFromGoString("user.name")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	currentUser, _ := user.Current()
+	expected := currentUser.Name
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_UserTimezone(t *testing.T) {
+	propObj := object.StringObjectFromGoString("user.timezone")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	now := time.Now()
+	expected, _ := now.Zone()
+	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetProperty_Default(t *testing.T) {
+	propObj := object.StringObjectFromGoString("unknown.property")
+	params := []interface{}{propObj}
+	result := getProperty(params)
+	if result != object.Null {
+		t.Errorf("Expected null, got %v", result)
 	}
 }
