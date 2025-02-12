@@ -37,7 +37,7 @@ const ShortArray = "[S"
 const Interface = "i"
 const NonArrayObject = "n"
 
-const StringIndex = "T"
+const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
 const BigInteger = "BI" // The related Fvalue is a Golang *big.Int

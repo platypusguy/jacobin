@@ -300,6 +300,13 @@ func InitArrayAddressList() *list.List {
 	return list.New()
 }
 
+// Fake GoStringFromStringObject()
+func fakeGoStringFromStringObject(obj interface{}) string {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized GoStringFromStringObject pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
+	return ""
+}
+
 // Fake InstantiateClass
 func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized InstantiateClass pointer func: classname=%s\n", classname)
@@ -307,17 +314,17 @@ func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) 
 	return nil, errors.New(errMsg)
 }
 
+// Fake MinimalAbort() in exceptions.go
+func fakeMinimalAbort(whichEx int, msg string) {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
+}
+
 // Fake ThrowEx() in exceptions.go
 func fakeThrowEx(whichEx int, msg string) bool {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func")
 	fmt.Fprintf(os.Stderr, errMsg)
 	return false
-}
-
-// Fake MinimalAbort() in exceptions.go
-func fakeMinimalAbort(whichEx int, msg string) {
-	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func")
-	fmt.Fprintf(os.Stderr, errMsg)
 }
 
 func InitStringPool() {
