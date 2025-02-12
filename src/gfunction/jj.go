@@ -114,6 +114,11 @@ func jjStringifyVector(thing any) *object.Object {
 
 func jjGetStaticString(params []interface{}) interface{} {
 
+	if len(params) == 0 || params[0] == nil {
+		errMsg := fmt.Sprintf("jjGetStaticString: No class object")
+		return object.StringObjectFromGoString(errMsg)
+	}
+
 	// Get class name.
 	classObj := params[0].(*object.Object)
 	if classObj == nil || classObj.KlassName == types.InvalidStringIndex {
@@ -123,6 +128,11 @@ func jjGetStaticString(params []interface{}) interface{} {
 	className := object.ObjectFieldToString(classObj, "value")
 
 	// Get field name.
+	if len(params) < 0 || params[1] == nil {
+		errMsg := fmt.Sprintf("jjGetStaticString: Invalid field is missing or nil")
+		return object.StringObjectFromGoString(errMsg)
+	}
+
 	fieldObj := params[1].(*object.Object)
 	if fieldObj == nil || fieldObj.KlassName == types.InvalidStringIndex {
 		errMsg := fmt.Sprintf("jjGetStaticString: Invalid field object: %T", params[1])
@@ -148,6 +158,11 @@ func jjGetFieldString(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 
 	// Get field name.
+	if len(params) < 0 || params[1] == nil {
+		errMsg := fmt.Sprintf("jjGetFieldString: Invalid field is missing or nil")
+		return object.StringObjectFromGoString(errMsg)
+	}
+
 	fieldObj := params[1].(*object.Object)
 	if fieldObj == nil || fieldObj.KlassName == types.InvalidStringIndex {
 		errMsg := fmt.Sprintf("jjGetFieldString: Invalid field object: %T", params[1])
@@ -173,6 +188,7 @@ func jjGetFieldString(params []interface{}) interface{} {
 	// Handle a scalar.
 	return jjStringifyScalar(fld.Ftype, fld.Fvalue)
 }
+
 func jjDumpStatics(params []interface{}) interface{} {
 	fromObj := params[0].(*object.Object)
 	if fromObj == nil || fromObj.KlassName == types.InvalidStringIndex {
