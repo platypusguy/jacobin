@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -56,6 +56,18 @@ func TestConvertClassFilenameToInternalFormat(t *testing.T) {
 	s = ConvertClassFilenameToInternalFormat("sponge/bob/square.Pants.class")
 	if s != "sponge/bob/square/Pants" {
 		t.Error("Unexpected result in call ConvertInternalClassNameToFilename(): " + s)
+	}
+}
+
+func TestConvertInternalClassNameToUserFormat(t *testing.T) {
+	s := ConvertInternalClassNameToUserFormat("java/lang/Object")
+	if s != "java.lang.Object" {
+		t.Errorf("Expected 'java.lang.Object', got: %s", s)
+	}
+
+	s = ConvertInternalClassNameToUserFormat("com.example.MyClass")
+	if s != "com.example.MyClass" {
+		t.Errorf("Expected 'com.example.MyClass', got: %s", s)
 	}
 }
 

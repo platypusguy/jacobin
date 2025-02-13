@@ -54,10 +54,10 @@ func ConvertToPlatformPathSeparators(pathIn string) string {
 // is part of the JDK distribution
 func IsFilePartOfJDK(filename *string) bool {
 	str := ConvertInternalClassNameToUserFormat(*filename)
-	return strings.HasPrefix(str, "java") ||
-		strings.HasPrefix(str, "jdk") ||
+	return strings.HasPrefix(str, "java.") ||
+		strings.HasPrefix(str, "jdk.") ||
 		strings.HasPrefix(str, "com.sun") ||
-		strings.HasPrefix(str, "sun")
+		strings.HasPrefix(str, "sun.")
 }
 
 // SearchDirByFileExtension searches a directory and its subdirectories for
