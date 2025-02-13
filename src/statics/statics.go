@@ -12,11 +12,15 @@ import (
 	"jacobin/excNames"
 	"jacobin/globals"
 	"jacobin/types"
+	"jacobin/util"
 	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
+	"testing"
 )
+
+const flagTraceStatics = false
 
 // Statics is a fast-lookup map of static variables and functions. The int64 value
 // contains the index into the statics array where the entry is stored.
@@ -59,6 +63,11 @@ func AddStatic(name string, s Static) error {
 	staticsMutex.RLock()
 	Statics[name] = s
 	staticsMutex.RUnlock()
+	if flagTraceStatics && util.IsFilePartOfJDK(&name) {
+		if !testing.Testing() {
+			_, _ = fmt.Fprintf(os.Stderr, ">>>trace>>>AddStatic: Adding static entry with name=%s, value=%v\n", name, s.Value)
+		}
+	}
 	return nil
 }
 
