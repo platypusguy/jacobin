@@ -26,17 +26,27 @@ var StartTime time.Time
 // Identical to shutdown.UNKNOWN_ERROR (avoiding a cycle)
 const UNKNOWN_ERROR = 5
 
+var disabled = false
+
 // Initialize the trace frame.
 func Init() {
 	StartTime = time.Now()
+	disabled = false
+}
+
+// Disable the trace function. This is useful primarily in testing.
+func Disable() {
+	disabled = true
 }
 
 // Trace is the principal tracing function. Note that it currently
 // writes to stderr. At some future point, this might become an option.
 func Trace(argMsg string) {
-
 	var err error
 
+	if disabled {
+		return
+	}
 	// if the message is more low-level than a WARNING,
 	// prefix it with the elapsed time in millisecs.
 	// check duration accuracy: time.Sleep(100 * time.Millisecond)
@@ -55,6 +65,10 @@ func Trace(argMsg string) {
 
 // An error message is a prefix-decorated message that has no time-stamp.
 func Error(argMsg string) {
+	if disabled {
+		return
+	}
+
 	var err error
 	errMsg := "ERROR: " + argMsg
 	mutex.Lock()
@@ -68,6 +82,10 @@ func Error(argMsg string) {
 
 // Similar to Error, except it's a warning, not an error.
 func Warning(argMsg string) {
+	if disabled {
+		return
+	}
+
 	errMsg := "WARNING: " + argMsg
 	mutex.Lock()
 	_, err := fmt.Fprintf(os.Stderr, "%s\n", errMsg)
