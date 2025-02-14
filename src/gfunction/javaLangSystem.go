@@ -38,7 +38,7 @@ import (
  as a 64-bit address in this scheme--as they are in the JVM).
 
  The passed-in slice contains one entry for every parameter passed to the method (which
- could mean an empty slice). Longs and doubles use two parameter entries.
+ could mean an empty slice). Note: longs and doubles use only one parameter entry each.
 */
 
 func Load_Lang_System() {
