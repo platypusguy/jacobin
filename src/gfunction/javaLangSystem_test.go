@@ -8,8 +8,10 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/classloader"
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"os"
@@ -20,6 +22,34 @@ import (
 	"testing"
 	"time"
 )
+
+func TestSystemClassInitWithClinitRun(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitRun}})
+	ret := systemClinit(nil)
+	successMsg := object.GoStringFromStringObject(ret.(*object.Object))
+	if successMsg != "systemClinit" {
+		t.Errorf("Expected message 'systemClinit', got %s", successMsg)
+	}
+}
+
+func TestSystemClassInitWithClinitNotRun(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitNotRun}})
+	statics.PreloadStatics()
+
+	ret := systemClinit(nil)
+	successMsg := object.GoStringFromStringObject(ret.(*object.Object))
+	if successMsg != "systemClinit" {
+		t.Errorf("Expected message 'systemClinit', got %s", successMsg)
+	}
+
+	if statics.GetStaticValue("java/lang/System", "out") == nil {
+		t.Errorf("Expected to find static field 'out' in System class")
+	}
+}
 
 func TestArrayCopyNonOverlapping(t *testing.T) {
 	globals.InitGlobals("test")
