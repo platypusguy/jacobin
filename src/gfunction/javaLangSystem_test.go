@@ -293,6 +293,24 @@ func TestArrayCopyInvalidLength(t *testing.T) {
 	}
 }
 
+func TestGetMilliTime(t *testing.T) {
+	globals.InitGlobals("test")
+	ret := currentTimeMillis(nil).(int64)
+	if ret < 1739512706877 { // milli time on 13 Feb 2025 at roughtly 10PM PST
+		t.Errorf("Expected a greater value from nanoTime(), got %d", ret)
+	}
+}
+
+func TestGetNanoTime(t *testing.T) {
+	globals.InitGlobals("test")
+	ret := nanoTime(nil).(int64)
+	if ret < 1739512706877498200 { // nanotime on 13 Feb 2025 at roughtly 10PM PST
+		t.Errorf("Expected a greater value from nanoTime(), got %d", ret)
+	}
+}
+
+// the various property retrievals tested next
+
 func TestGetProperty_FileEncoding(t *testing.T) {
 	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("file.encoding")
