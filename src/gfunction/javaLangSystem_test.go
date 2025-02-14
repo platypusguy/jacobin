@@ -309,6 +309,29 @@ func TestGetNanoTime(t *testing.T) {
 	}
 }
 
+func TestExitI(t *testing.T) {
+	globals.InitGlobals("test")
+	ret := exitI([]interface{}{int64(17)})
+	if ret.(int64) != 17 {
+		t.Errorf("Expected exit code of 17, got %d", ret.(int64))
+	}
+}
+
+func TestGetConsole(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// systemClnit() will initialize stdin
+	classloader.InitMethodArea()
+	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitNotRun}})
+	statics.PreloadStatics()
+	_ = systemClinit(nil)
+
+	ret := getConsole(nil)
+	if ret.(*os.File) != os.Stdin {
+		t.Errorf("Expected getConsole() to return stdin, got %v", ret)
+	}
+}
+
 // the various property retrievals tested next
 
 func TestGetProperty_FileEncoding(t *testing.T) {

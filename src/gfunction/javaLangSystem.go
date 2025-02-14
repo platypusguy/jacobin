@@ -313,7 +313,7 @@ func exitI(params []interface{}) interface{} {
 	exitCode := params[0].(int64)
 	var exitStatus = int(exitCode)
 	shutdown.Exit(exitStatus)
-	return 0 // this code is not executed as previous line ends Jacobin
+	return exitCode // this code is not executed as previous line ends Jacobin
 }
 
 // Force a garbage collection cycle.
