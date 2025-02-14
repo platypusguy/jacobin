@@ -13,6 +13,7 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"os/user"
@@ -51,6 +52,16 @@ func TestSystemClassInitWithClinitNotRun(t *testing.T) {
 	}
 }
 
+func TestSystemClassInitInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	trace.Disable()
+	ret := systemClinit(nil)
+	successMsg := ret.(*GErrBlk).ErrMsg
+	if successMsg != "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not" {
+		t.Errorf("Expected message that java/lang/System was not in the MethodArea', got %s", successMsg)
+	}
+}
 func TestArrayCopyNonOverlapping(t *testing.T) {
 	globals.InitGlobals("test")
 
