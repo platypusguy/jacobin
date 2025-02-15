@@ -401,6 +401,14 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 		str = object.ObjectFieldToString(inObj, "FilePath")
 		if str == "null" {
 			str = object.ObjectFieldToString(inObj, "value")
+			if str == "null" {
+				str = ""
+				for name, _ := range inObj.FieldTable {
+					str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+				}
+				str = str[:len(str)-2]
+			}
+
 		}
 	case nil:
 		str = "null"
