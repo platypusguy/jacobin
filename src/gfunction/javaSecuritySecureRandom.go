@@ -200,12 +200,12 @@ var secureRandomClassName = "java/security/SecureRandom"
 func SecureRandom_Init(params []interface{}) interface{} {
 
 	// Create dummy seed.
-	dummySeed := []types.JavaByte{0}
+	dummySeed := []byte{0}
 
 	// Create SecureRandom object with dummy seed value.
 	obj := object.MakeEmptyObjectWithClassName(&secureRandomClassName)
 	obj.FieldTable["seed"] = object.Field{
-		Ftype:  "[]types.JavaByte",
+		Ftype:  types.ByteArray,
 		Fvalue: dummySeed,
 	}
 
