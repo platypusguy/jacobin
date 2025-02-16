@@ -6,7 +6,11 @@
 
 package types
 
-import "strings"
+import (
+	"bytes"
+	"encoding/binary"
+	"strings"
+)
 
 // These are the types that are used in an object's field.Ftype and elsewhere.
 
@@ -41,6 +45,7 @@ const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
 const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
+const RNG = "RG"        // RandomNumberGenerator is a Golang *rand.Rand
 
 const Static = "X"
 const StaticDouble = "XD"
@@ -114,4 +119,20 @@ func ConvertGoBoolToJavaBool(goBool bool) int64 {
 	} else {
 		return JavaBoolFalse
 	}
+}
+
+// Convert an int64 to a byte array in network byte order (BigEndian).
+func Int64ToBytesBE(arg int64) []byte {
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, arg)
+	return buf.Bytes()
+}
+
+// Convert a byte array in network byte order (BigEndian) to an int64.
+func BytesToInt64BE(arg []byte) int64 {
+	sum := int64(0)
+	for ix := 0; ix < len(arg); ix++ {
+		sum += int64(arg[ix])
+	}
+	return sum
 }

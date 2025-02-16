@@ -240,6 +240,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray:
 		return GoStringFromStringPoolIndex(obj.KlassName)
+	case types.RNG:
+		return "RandomNumberGenerator"
 	}
 
 	// None of the above.
