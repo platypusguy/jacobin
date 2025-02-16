@@ -804,7 +804,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			}
 		}
 		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.FloatArray {
+		if fld.Ftype != types.FloatArray && fld.Ftype != types.DoubleArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: field type expected=[F, observed=%s",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
