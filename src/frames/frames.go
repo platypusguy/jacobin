@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -9,6 +9,7 @@ package frames
 import (
 	"container/list"
 	"fmt"
+	"strings"
 	"unsafe"
 )
 
@@ -20,7 +21,7 @@ type StackValue interface {
 var debugging bool = false
 
 type Number interface {
-	int64 | float64
+	int32 | int64 | float64
 }
 
 // get the last four digits of the frame address. Used for logging/diagnostics
@@ -119,4 +120,10 @@ func PeekFrame(fs *list.List, which int) *Frame {
 		}
 	}
 	return e.Value.(*Frame)
+}
+
+// From the given frame, return the FQN as a formatted string.
+func FormatFQN(fr *Frame) string {
+	clName := strings.ReplaceAll(fr.ClName, "/", ".")
+	return fmt.Sprintf("%s.%s%s", clName, fr.MethName, fr.MethType)
 }

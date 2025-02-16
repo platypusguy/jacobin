@@ -7,7 +7,7 @@
 package object
 
 import (
-	"bytes"
+	"fmt"
 	"io"
 	"jacobin/globals"
 	"jacobin/statics"
@@ -28,7 +28,7 @@ func TestNewStringObject(t *testing.T) {
 		t.Errorf("Klass should be java/lang/String, observed: %s", klassStr)
 	}
 
-	value := str.FieldTable["value"].Fvalue.([]byte)
+	value := str.FieldTable["value"].Fvalue.([]types.JavaByte)
 	if len(value) != 0 {
 		t.Errorf("value field should be an empty byte, observed length of %d", len(value))
 	}
@@ -78,12 +78,12 @@ func TestByteArrayFromStringObject(t *testing.T) {
 	statics.LoadStaticsString()
 
 	constStr := "Mary had a little lamb whose fleece was white as snow."
-	constBytes := []byte(constStr)
+	constBytes := JavaByteArrayFromGoString(constStr)
 
 	strObj := StringObjectFromGoString(constStr)
-	bb := ByteArrayFromStringObject(strObj)
-	if !bytes.Equal(bb, constBytes) {
-		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, string(bb))
+	bb := JavaByteArrayFromStringObject(strObj)
+	if !JavaByteArrayEquals(bb, constBytes) {
+		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, GoStringFromJavaByteArray(bb))
 	}
 }
 
@@ -143,7 +143,7 @@ func TestStringPoolStringOperations(t *testing.T) {
 		return
 	}
 
-	bb := ByteArrayFromStringPoolIndex(index)
+	bb := JavaByteArrayFromStringPoolIndex(index)
 	if bb == nil {
 		t.Errorf("byte array from string pool index %d is nil", index)
 	}
@@ -165,7 +165,7 @@ func TestStringPoolStringIndexFromStringObjectInvalid(t *testing.T) {
 
 func TestByteArrayFromStringPoolIndexInvalid(t *testing.T) {
 	index := math.MaxInt32 // use a string pool index that will always be too big
-	byteArray := ByteArrayFromStringPoolIndex(uint32(index))
+	byteArray := JavaByteArrayFromStringPoolIndex(uint32(index))
 	if byteArray != nil {
 		t.Errorf("expected nil due to error, got %v", byteArray)
 	}
@@ -173,12 +173,12 @@ func TestByteArrayFromStringPoolIndexInvalid(t *testing.T) {
 
 func TestUpdateStringObjectFromBytes(t *testing.T) {
 	constStr := "Mary had a little lamb whose fleece was white as snow."
-	constBytes := []byte(constStr)
+	constBytes := JavaByteArrayFromGoString(constStr)
 	strObj := StringObjectFromGoString("To be updated")
 	if !IsStringObject(strObj) {
 		t.Errorf("expected IsStringObject(valid string object) to be true, observed false")
 	}
-	UpdateValueFieldFromBytes(strObj, constBytes)
+	UpdateValueFieldFromJavaBytes(strObj, constBytes)
 	strValue := GoStringFromStringObject(strObj)
 	if strValue != constStr {
 		t.Errorf("strValue from updated string object has wrong value: %s", strValue)
@@ -286,6 +286,10 @@ func TestObjectFieldToStringForIntArray(t *testing.T) {
 
 func TestObjectFieldToStringForUnknownType(t *testing.T) {
 	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = func(i int, s string) bool {
+		fmt.Fprintf(os.Stderr, "Exception thrown in TestObjectFieldToStringForUnknownType: %s\n", s)
+		return false
+	}
 
 	// to inspect usage message, redirect stderr
 	normalStderr := os.Stderr

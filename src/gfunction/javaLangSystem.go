@@ -38,10 +38,16 @@ import (
  as a 64-bit address in this scheme--as they are in the JVM).
 
  The passed-in slice contains one entry for every parameter passed to the method (which
- could mean an empty slice). Longs and doubles use two parameter entries.
+ could mean an empty slice). Note: longs and doubles use only one parameter entry each.
 */
 
 func Load_Lang_System() {
+
+	MethodSignatures["java/lang/System.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  systemClinit,
+		}
 
 	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
@@ -85,12 +91,6 @@ func Load_Lang_System() {
 			GFunction:  getConsole,
 		}
 
-	MethodSignatures["java/lang/System.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinit,
-		}
-
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -103,10 +103,16 @@ func Load_Lang_System() {
 			GFunction:  returnFalse,
 		}
 
+	MethodSignatures["java/lang/System.registerNatives()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 }
 
 /*
-		 check whether this clinit() has been previously run. If not, have it duplicate the
+		 check whether this systemClinit() has been previously run. If not, have it duplicate the
 	   following bytecodes from JDK 17 java/lang/System:
 			static {};
 			0: invokestatic  #637                // Method registerNatives:()V
@@ -118,10 +124,10 @@ func Load_Lang_System() {
 			12: putstatic     #384                // Field err:Ljava/io/PrintStream;
 			15: return
 */
-func clinit([]interface{}) interface{} {
+func systemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
-		errMsg := "System<clinit>: Expected java/lang/System to be in the MethodArea, but it was not"
+		errMsg := "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not"
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -131,7 +137,7 @@ func clinit([]interface{}) interface{} {
 		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
-	return nil
+	return object.StringObjectFromGoString("systemClinit")
 }
 
 // arrayCopy copies an array or subarray from one array to another, both of which must exist.
@@ -139,7 +145,7 @@ func clinit([]interface{}) interface{} {
 // docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
 func arrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
-		errMsg := fmt.Sprintf("Expected 5 parameters, got %d", len(params))
+		errMsg := fmt.Sprintf("arrayCopy: Expected 5 parameters, got %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -150,13 +156,13 @@ func arrayCopy(params []interface{}) interface{} {
 	length := params[4].(int64)
 
 	if object.IsNull(src) || object.IsNull(dest) {
-		errMsg := fmt.Sprintf("null src or dest")
+		errMsg := fmt.Sprintf("arrayCopy: null src or dest")
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
-			"Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+			"arrayCopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -164,7 +170,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
 	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
-		errMsg := fmt.Sprintf("java/lang/System.arraycopy: invalid src or dest array")
+		errMsg := fmt.Sprintf("arrayCopy: invalid src or dest array")
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 
@@ -172,7 +178,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destLen := object.ArrayLength(dest)
 
 	if srcPos+length > srcLen || destPos+length > destLen {
-		errMsg := fmt.Sprintf("Array position + length exceeds array size")
+		errMsg := fmt.Sprintf("arrayCopy: Array position + length exceeds array size")
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -183,13 +189,25 @@ func arrayCopy(params []interface{}) interface{} {
 		// non-overlapping copy of identical items
 		switch srcType {
 		case types.ByteArray:
-			sArr := src.FieldTable["value"].Fvalue.([]byte)
-			dArr := dest.FieldTable["value"].Fvalue.([]byte)
-			for i := int64(0); i < length; i++ {
-				dArr[d] = sArr[s]
-				d += 1
-				s += 1
+			switch src.FieldTable["value"].Fvalue.(type) {
+			case []types.JavaByte:
+				sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
+				dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
+				for i := int64(0); i < length; i++ {
+					dArr[d] = sArr[s]
+					d += 1
+					s += 1
+				}
+			case []byte:
+				sArr := src.FieldTable["value"].Fvalue.([]byte)
+				dArr := dest.FieldTable["value"].Fvalue.([]byte)
+				for i := int64(0); i < length; i++ {
+					dArr[d] = sArr[s]
+					d += 1
+					s += 1
+				}
 			}
+
 		case types.RefArray: // TODO: make sure refs are to the same object types
 			sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
 			dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
@@ -220,14 +238,14 @@ func arrayCopy(params []interface{}) interface{} {
 
 		switch srcType {
 		case types.ByteArray:
-			sArr := src.FieldTable["value"].Fvalue.([]byte)
-			dArr := dest.FieldTable["value"].Fvalue.([]byte)
+			sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
+			dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
 			for i := int64(0); i < length; i++ {
 				tempArray[i] = sArr[s]
 				s += 1
 			}
 			for i := int64(0); i < length; i++ {
-				dArr[d] = tempArray[i].(byte)
+				dArr[d] = tempArray[i].(types.JavaByte)
 				d += 1
 			}
 
@@ -295,7 +313,7 @@ func exitI(params []interface{}) interface{} {
 	exitCode := params[0].(int64)
 	var exitStatus = int(exitCode)
 	shutdown.Exit(exitStatus)
-	return 0 // this code is not executed as previous line ends Jacobin
+	return exitCode // this code is not executed as previous line ends Jacobin
 }
 
 // Force a garbage collection cycle.
@@ -357,8 +375,8 @@ func getProperty(params []interface{}) interface{} {
 		} else {
 			value = "\\n"
 		}
-	case "native.encoding": // hard to find out what this is, so hard-coding to UTF8
-		value = "UTF8"
+	case "native.encoding":
+		value = globals.GetCharsetName()
 	case "os.arch":
 		value = runtime.GOARCH
 	case "os.name":

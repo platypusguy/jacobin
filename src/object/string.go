@@ -10,18 +10,19 @@ package object
 // convenience methods to create and manipulate them.
 // There exist only the following kinds of strings:
 // 1) golang string -- this is commonly used inside the JVM
-// 2) byte array -- less frequently used. Can represent either a string of bytes or a string of chars
+// 2) JavaByte array -- less frequently used. Can represent either a string of bytes or a string of chars
 // 3) String object -- used only when passing args to/from Java methods and gfunctions. Important note:
 //    string objects are the *only* form of strings passed to/from Java methods and gfunctions.
 //
 // Implementation details:
 // * the string pool stores only golang strings. This is done for performance reasons.
-// * string objects' "value" field contains a byte array, which is required by Java methods and gfunctions.
+// * string objects' "value" field contains a JavaByte array, which is required by Java methods and gfunctions.
 
 import (
 	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/stringPool"
-	"jacobin/trace"
 	"jacobin/types"
 	"strconv"
 	"strings"
@@ -36,11 +37,11 @@ func NewStringObject() *Object {
 
 	// ==== now the fields ====
 
-	// value: the content of the string as array of runes or bytes
+	// value: the content of the string as array of runes or JavaBytes (int8)
 	// Note: Post JDK9, this field is an array of bytes, so as to
 	// enable compact strings.
 
-	value := make([]byte, 0)
+	value := make([]types.JavaByte, 0)
 	valueField := Field{Ftype: types.ByteArray, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
@@ -72,7 +73,8 @@ func NewStringObject() *Object {
 // StringObjectFromGoString: convenience method to create a string object from a Golang string
 func StringObjectFromGoString(str string) *Object {
 	newStr := NewStringObject()
-	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: []byte(str)}
+	jba := JavaByteArrayFromGoString(str)
+	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: jba}
 	return newStr
 }
 
@@ -85,17 +87,21 @@ func GoStringFromStringObject(obj *Object) string {
 	if !ok {
 		return ""
 	}
-	bytes, ok := fld.Fvalue.([]byte)
-	if !ok {
-		return ""
+
+	bytes := fld.Fvalue
+	switch bytes.(type) {
+	case []byte:
+		return string(bytes.([]byte))
+	case []types.JavaByte:
+		return GoStringFromJavaByteArray(bytes.([]types.JavaByte))
+	case string:
+		return bytes.(string)
 	}
-	if len(bytes) > 0 {
-		return string(bytes)
-	}
+
 	return ""
 }
 
-// ByteArrayFromStringObject: convenience method to extract a byte array from a String object (Java string)
+// ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []byte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		return obj.FieldTable["value"].Fvalue.([]byte)
@@ -114,7 +120,13 @@ func StringObjectFromByteArray(bytes []byte) *Object {
 // StringPoolIndexFromStringObject: convenience method to extract a string pool index from a String object
 func StringPoolIndexFromStringObject(obj *Object) uint32 {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		str := string(obj.FieldTable["value"].Fvalue.([]byte))
+		var str string
+		switch obj.FieldTable["value"].Fvalue.(type) {
+		case []byte:
+			str = string(obj.FieldTable["value"].Fvalue.([]byte))
+		case []types.JavaByte:
+			str = GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+		}
 		index := stringPool.GetStringIndex(&str)
 		return index
 	} else {
@@ -135,15 +147,6 @@ func GoStringFromStringPoolIndex(index uint32) string {
 func StringObjectFromPoolIndex(index uint32) *Object {
 	if index < stringPool.GetStringPoolSize() {
 		return StringObjectFromGoString(*stringPool.GetStringPointer(index))
-	} else {
-		return nil
-	}
-}
-
-// ByteArrayFromStringPoolIndex: convenience method to get a byte array using a string pool index
-func ByteArrayFromStringPoolIndex(index uint32) []byte {
-	if index < stringPool.GetStringPoolSize() {
-		return []byte(*stringPool.GetStringPointer(index))
 	} else {
 		return nil
 	}
@@ -209,8 +212,12 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
 	case types.ByteArray:
-		str := string(fld.Fvalue.([]byte))
-		return str
+		switch fld.Fvalue.(type) {
+		case []byte:
+			return fmt.Sprintf("%x", fld.Fvalue.([]byte))
+		case []types.JavaByte:
+			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		}
 	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {
@@ -233,11 +240,14 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray:
 		return GoStringFromStringPoolIndex(obj.KlassName)
+	case types.RNG:
+		return "RandomNumberGenerator"
 	}
 
 	// None of the above.
 	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
 		fieldName, fld.Ftype)
-	trace.Error(errMsg)
+	globals.GetGlobalRef().FuncThrowException(excNames.UnsupportedOperationException, errMsg)
+	// trace.Error(errMsg)
 	return GoStringFromStringPoolIndex(obj.KlassName)
 }

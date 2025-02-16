@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-5 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -11,6 +11,7 @@ import (
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/exceptions"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/trace"
 	"jacobin/types"
@@ -65,6 +66,25 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 	return &gErrBlk
 }
 
+// do-nothing Go function shared by several source files
+func clinitGeneric([]interface{}) interface{} {
+	return object.StringObjectFromGoString("clinitGeneric")
+}
+
+// do-nothing Go function shared by several source files
+func justReturn([]interface{}) interface{} {
+	return object.StringObjectFromGoString("justReturn")
+}
+
+// return a Java null object.
+func returnNull([]interface{}) interface{} {
+	return object.Null
+}
+
+func returnCharsetName([]interface{}) interface{} {
+	return object.StringObjectFromGoString(globals.GetCharsetName())
+}
+
 // MTableLoadGFunctions loads the Go methods from files that contain them. It does this
 // by calling the Load_* function in each of those files to load whatever Go functions
 // they make available.
@@ -81,6 +101,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Io_FileOutputStream()
 	Load_Io_FileReader()
 	Load_Io_FileWriter()
+	Load_Io_FilterInputStream()
 	Load_Io_InputStreamReader()
 	Load_Io_OutputStreamWriter()
 	Load_Io_PrintStream()
@@ -110,34 +131,37 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// java/math/*
 	Load_Math_Big_Integer()
 
-	// java/nio/*
-	Load_Nio_Charset_Charset()
-
 	// java/security/*
-	// Load_Security_SecureRandom() <--------------- TODO
+	Load_Security_SecureRandom()
 	Load_Security_AccessController()
 
 	// java/util/*
-	Load_Util_Zip_Adler32()
-	Load_Util_Zip_Crc32_Crc32c()
+	Load_Util_Arrays()
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
-	Load_Util_HashMap()
+	Load_Util_HexFormat()
 	Load_Util_Locale()
+	Load_Util_Objects()
 	Load_Util_Random()
+	Load_Util_Zip_Adler32()
+	Load_Util_Zip_Crc32_Crc32c()
 
 	// jdk/internal/misc/*
 	Load_Jdk_Internal_Misc_Unsafe()
 	Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
-	// Load functions that invoke justReturn() and do nothing else.
-	Load_Just_Return()
+	// Load functions that invoke clinitGeneric() and do nothing else.
+	Load_Other_methods()
 
 	// Load traps that lead to unconditional error returns.
 	Load_Traps()
 
+	// jacobin JVM diagnostic routines
+	Load_jj()
+
 	//	now, with the accumulated MethodSignatures maps, load MTable.
 	loadlib(MTable, MethodSignatures)
+
 }
 
 // load the test gfunctions in testGfunctions.go
@@ -177,6 +201,10 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		}
 
 		classloader.AddEntry(tbl, key, tableEntry)
+		classloader.GmtAddEntry(key, classloader.GmtEntry{ // JACOBIN-575 adding to GMT in parallel
+			MethData: &gme,
+			MType:    'G',
+		})
 	}
 	if !ok {
 		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")

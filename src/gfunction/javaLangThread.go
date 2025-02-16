@@ -47,7 +47,7 @@ func Load_Lang_Thread() {
 func threadSleep(params []interface{}) interface{} {
 	sleepTime, ok := params[0].(int64)
 	if !ok {
-		errMsg := "Parameter must be an int64 (long)"
+		errMsg := "threadSleep: Parameter must be an int64 (long)"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	time.Sleep(time.Duration(sleepTime) * time.Millisecond)

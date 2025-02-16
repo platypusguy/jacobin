@@ -8,7 +8,6 @@ used extensively in unit tests
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-
     // run test here
 
 

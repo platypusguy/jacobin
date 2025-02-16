@@ -3,9 +3,7 @@ package statics
 import (
 	"fmt"
 	"io"
-	// "jacobin/classloader"
 	"jacobin/globals"
-	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"strings"
@@ -55,7 +53,6 @@ func tCheckStatic(t *testing.T, className string, fieldName string, expValue any
 
 func TestStatics1(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 	/***
 	PreloadStatics()
@@ -102,13 +99,12 @@ func TestStatics1(t *testing.T) {
 	tCheckStatic(t, "AlphaBetaGamma", "WILLIE", ref)
 	tCheckStatic(t, "AlphaBetaGamma", "THIRTEEN", int64(13))
 	tCheckStatic(t, "AlphaBetaGamma", "TRUE", true)
-	DumpStatics()
+	DumpStatics("TestStatics1", SelectUser, "")
 
 }
 
 func TestInvalidStaticAdd(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err := AddStatic("", Static{})
@@ -119,7 +115,6 @@ func TestInvalidStaticAdd(t *testing.T) {
 
 func TestInvalidLookup(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Int, Value: int(42)})
@@ -149,7 +144,6 @@ func TestInvalidLookup(t *testing.T) {
 
 func TestIntConversions(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
@@ -192,7 +186,6 @@ func TestIntConversions(t *testing.T) {
 
 func TestStaticsPreload(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
 	PreloadStatics()
@@ -217,33 +210,40 @@ func TestStaticsPreload(t *testing.T) {
 	}
 }
 
+func fnTestDumpStatics(t *testing.T, selection int64, className string, threesome []string) {
+	// Re-direct stderr.
+	originalStderr := os.Stderr
+	rerr, werr, _ := os.Pipe()
+	os.Stderr = werr
+
+	// Dump statics.
+	DumpStatics("TestDumpStatics", selection, className)
+
+	// Close the working stderr, capture its contents, and restore the original stderr.
+	_ = werr.Close()
+	bytes, _ := io.ReadAll(rerr)
+	contents := string(bytes[:])
+	os.Stderr = originalStderr
+
+	if !strings.Contains(contents, threesome[0]) || !strings.Contains(contents, threesome[1]) || !strings.Contains(contents, threesome[2]) {
+		t.Errorf("fnTestDumpStatics(%d, \"%s\"): looking for these: %v", selection, className, threesome)
+		t.Errorf("fnTestDumpStatics(%d, \"%s\"): didn't see them in DumpStatics output: %s", selection, className, contents)
+	}
+
+}
+
 func TestDumpStatics(t *testing.T) {
 	globals.InitGlobals("test")
-	trace.Init()
 	Statics = make(map[string]Static)
 
-	err1 := AddStatic("test.1", Static{Type: types.Byte, Value: 'B'})
-	err2 := AddStatic("test.2", Static{Type: types.Int, Value: int(42)})
-	err3 := AddStatic("test.3", Static{Type: types.Double, Value: 24.0})
+	err1 := AddStatic("test.f1", Static{Type: types.Byte, Value: 'B'})
+	err2 := AddStatic("test.f2", Static{Type: types.Int, Value: int(42)})
+	err3 := AddStatic("test.f3", Static{Type: types.Double, Value: 24.0})
 	if err1 != nil || err2 != nil || err3 != nil {
 		t.Errorf("TestIntConversions: got unexpected error adding statics for testing")
 	}
 
-	// redirect stderr, to avoid all the error msgs for a non-existent class
-	normalStderr := os.Stderr
-	rerr, werr, _ := os.Pipe()
-	os.Stderr = werr
-
-	DumpStatics()
-
-	_ = werr.Close()
-	out, _ := io.ReadAll(rerr)
-	os.Stderr = normalStderr
-	contents := string(out[:])
-
-	os.Stderr = normalStderr
-
-	if !strings.Contains(contents, "test.1") || !strings.Contains(contents, "test.2") || !strings.Contains(contents, "test.3") {
-		t.Errorf("TestIntConversions: got unexpected error in DumpStatics: %s", contents)
-	}
+	fnTestDumpStatics(t, SelectAll, "", []string{"test.f1", "test.f2", "test.f3"})
+	fnTestDumpStatics(t, SelectUser, "", []string{"test.f1", "test.f2", "test.f3"})
+	fnTestDumpStatics(t, SelectClass, "test", []string{"test.f1", "test.f2", "test.f3"})
 }

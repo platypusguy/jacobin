@@ -22,7 +22,7 @@ func Load_Lang_StringBuffer() {
 	MethodSignatures["java/lang/StringBuffer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/StringBuffer.<init>()V"] =
@@ -448,7 +448,7 @@ func stringBufferInit(params []any) any {
 	obj.FieldTable["count"] = fld
 
 	// Set the value = nil byte array.
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]byte, 0)}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: make([]types.JavaByte, 0)}
 	obj.FieldTable["value"] = fld
 
 	// Set the capacity field value.
@@ -464,23 +464,23 @@ func stringBufferInit(params []any) any {
 	return nil
 }
 
-// Initialise StringBuffer with a String object.
+// Initialize StringBuffer with a String object.
 func stringBufferInitString(params []any) any {
 	// Get File object and initialise the field map.
 	obj := params[0].(*object.Object)
 	obj.FieldTable = make(map[string]object.Field)
 
-	var byteArray []byte
+	var byteArray []types.JavaByte
 	var ok bool
 	switch params[1].(type) {
 	case *object.Object: // String
-		byteArray, ok = params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+		byteArray, ok = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 		if !ok {
-			errMsg := "Value field missing in <init> object argument or the field is not a byte array"
+			errMsg := "StringBufferInitString: value field missing in <init> object or the field is not a byte array"
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	default:
-		errMsg := fmt.Sprintf("Parameter type (%T) is illegal", params[1])
+		errMsg := fmt.Sprintf("StringBufferInitString: Parameter type (%T) is illegal", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 

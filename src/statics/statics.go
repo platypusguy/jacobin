@@ -9,15 +9,18 @@ package statics
 import (
 	"errors"
 	"fmt"
+	"jacobin/excNames"
 	"jacobin/globals"
-	"jacobin/trace"
 	"jacobin/types"
+	"jacobin/util"
 	"os"
 	"runtime/debug"
-	"sort"
 	"strings"
 	"sync"
+	"testing"
 )
+
+const flagTraceStatics = false
 
 // Statics is a fast-lookup map of static variables and functions. The int64 value
 // contains the index into the statics array where the entry is stored.
@@ -28,37 +31,43 @@ var Statics = make(map[string]Static)
 type Static struct {
 	Type string // see the possible returns in types/javatypes.go
 	// the kind of entity we're dealing with. Can be:
-	/*
-		B	byte signed byte (includes booleans)
-		C	char	Unicode character code point (UTF-16)
-		D	double
-		F	float
-		I	int	integer
-		J	long integer
-		L ClassName ;	reference	an instance of class ClassName
-		S	signed short int
-		Z	boolean
-		[x   array of x, where x is any primitive or a reference
-		plus (Jacobin implementation-specific):
-		G   native method (that is, one written in Go)
-		T	string (ptr to an object, but facilitates processing knowing it's a string)
-		GS  Go I/O stream (os.Stdin, os.Stdout, os.Stderr)
-	*/
+	// B	byte signed byte (includes booleans)
+	// C	char	Unicode character code point (UTF-16)
+	// D	double
+	// F	float
+	// I	int	integer
+	// J	long integer
+	// LClassName;	reference to an instance of an object of class ClassName
+	// S	signed short int
+	// Z	boolean
+	// [x   array of x, where x is any primitive or a reference
+	//
+	// plus (Jacobin implementation-specific):
+	// G   native method (that is, one written in Go)
+	// T   string (ptr to an object, but facilitates processing knowing it's a string)
+	// GS  Go I/O stream (os.Stdin, os.Stdout, os.Stderr)
+
 	Value any
 }
 
 var staticsMutex = sync.RWMutex{}
 
 // AddStatic adds a static field to the Statics table using a mutex
+// name: className.fieldName
 func AddStatic(name string, s Static) error {
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
-		trace.Error(errMsg)
+		globals.GetGlobalRef().FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
 	staticsMutex.RLock()
 	Statics[name] = s
 	staticsMutex.RUnlock()
+	if flagTraceStatics && util.IsFilePartOfJDK(&name) {
+		if !testing.Testing() {
+			_, _ = fmt.Fprintf(os.Stderr, ">>>trace>>>AddStatic: Adding static entry with name=%s, value=%v\n", name, s.Value)
+		}
+	}
 	return nil
 }
 
@@ -127,7 +136,7 @@ func GetStaticValue(className string, fieldName string) any {
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)
-		trace.Error(errMsg)
+		glob.FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -139,6 +148,8 @@ func GetStaticValue(className string, fieldName string) any {
 		retValue = types.ConvertGoBoolToJavaBool(value)
 	case byte:
 		retValue = int64(prevLoaded.Value.(byte))
+	case types.JavaByte:
+		retValue = int64(prevLoaded.Value.(types.JavaByte))
 	case int32:
 		retValue = int64(prevLoaded.Value.(int32))
 	case int:
@@ -150,23 +161,92 @@ func GetStaticValue(className string, fieldName string) any {
 	return retValue
 }
 
+const SelectAll = int64(1)
+const SelectClass = int64(2)
+const SelectUser = int64(3)
+
 // DumpStatics dumps the contents of the statics table in sorted order to stderr
-func DumpStatics() {
-	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpStatics BEGIN")
-	// Create an array of keys.
+func DumpStatics(from string, selection int64, className string) {
+	_, _ = fmt.Fprintf(os.Stderr, "\n===== DumpStatics BEGIN, from=\"%s\", selection=%d, className=\"%s\"\n",
+		from, selection, className)
+
+	if selection == SelectClass && len(className) < 1 {
+		_, _ = fmt.Fprintln(os.Stderr, "ERROR, no class name specified!\n===== DumpStatics END")
+		return
+	}
+
+	// Create a slice of keys.
 	keys := make([]string, 0, len(Statics))
 	for key := range Statics {
 		keys = append(keys, key)
 	}
-	// Sort the keys.
-	// All the upper case entries precede all the lower case entries.
-	sort.Strings(keys)
-	// In key sequence order, display the key and its value.
+
+	// Sort the keys, case-insensitive.
+	globals.SortCaseInsensitive(&keys)
+
+	// Process the key slice, depending on selection value.
+	var value string
 	for _, key := range keys {
-		if !strings.HasPrefix(key, "java/") && !strings.HasPrefix(key, "jdk/") &&
-			!strings.HasPrefix(key, "javax/") && !strings.HasPrefix(key, "sun") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s     %v\n", key, Statics[key])
+		st := Statics[key]
+
+		// Filter switch.
+		switch selection {
+		case SelectClass:
+			left := strings.Split(key, ".")
+			if left[0] != className {
+				continue
+			}
+		case SelectUser:
+			if strings.HasPrefix(key, "java/") || strings.HasPrefix(key, "jdk/") ||
+				strings.HasPrefix(key, "javax/") || strings.HasPrefix(key, "sun") {
+				continue
+			}
+		case SelectAll: // passthrough: nothing here to filter
+		default:
+			_, _ = fmt.Fprintf(os.Stderr, "ERROR, illegal selection specified: %d!\n===== DumpStatics END", selection)
+			return
 		}
+
+		// due to circular dependence on object, we can't test directly for object.Null, so we do this.
+		if (strings.HasPrefix(st.Type, "L") || strings.HasPrefix(st.Type, "[")) && st.Value == nil {
+			value = "<null>"
+		} else {
+			switch st.Type {
+			case types.Bool:
+				switch st.Value.(type) {
+				case bool:
+					if st.Value.(bool) {
+						value = "true"
+					} else {
+						value = "false"
+					}
+				default:
+					if st.Value.(int64) == 1 {
+						value = "true"
+					} else {
+						value = "false"
+					}
+				}
+			case types.Byte:
+				value = fmt.Sprintf("0x%02x", st.Value)
+			case types.Char, types.Rune:
+				value = fmt.Sprintf("'%c'", st.Value)
+			case "Ljava/lang/String;":
+				// TODO: Avoiding a circularity issue between packages statics and object. What a pity!
+				value = fmt.Sprintf("%v", st.Value)
+			default:
+				value = fmt.Sprintf("%v", st.Value)
+			}
+
+		}
+
+		// Prefix name with statics designation (X).
+		if strings.HasPrefix(st.Type, "X") {
+			st.Type = st.Type[1:] // remove X type prefix, which says field is static
+		}
+
+		// Print it.
+		_, _ = fmt.Fprintf(os.Stderr, "%-40s   %s %s\n", key, st.Type, value)
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpStatics END")
 }

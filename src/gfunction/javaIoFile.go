@@ -21,13 +21,13 @@ func Load_Io_File() {
 	MethodSignatures["java/io/File.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/File.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/File.<init>(Ljava/lang/String;)V"] =
@@ -72,26 +72,26 @@ func fileInit(params []interface{}) interface{} {
 		objFile.FieldTable = make(map[string]object.Field)
 	}
 
-	// Initialise the file status as "invalid".
+	// Initialise the file status as "invalid" (=0).
 	fld := object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	objFile.FieldTable[FileStatus] = fld
 
 	// Get the argument path string object.
 	objPath := params[1]
 	if object.IsNull(objPath) {
-		errMsg := "Path object is null"
+		errMsg := "fileInit: Path object is null"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 	argPathStr := object.GoStringFromStringObject(objPath.(*object.Object))
 	if argPathStr == "" {
-		errMsg := "String argument for path is empty"
+		errMsg := "fileInit: String argument for path is empty"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	// Create an absolute path string.
 	absPathStr, err := filepath.Abs(argPathStr)
 	if err != nil {
-		errMsg := fmt.Sprintf("filepath.Abs(%s) failed, reason: %s", argPathStr, err.Error())
+		errMsg := fmt.Sprintf("fileInit: filepath.Abs(%s) failed, reason: %s", argPathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -123,18 +123,26 @@ func fileInit(params []interface{}) interface{} {
 func fileGetPath(params []interface{}) interface{} {
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "File object lacks a FilePath field"
+		errMsg := "fileGetPath: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	bytes := fld.Fvalue.([]byte)
-	return object.StringObjectFromByteArray(bytes)
+
+	var bytes []types.JavaByte
+	switch fld.Fvalue.(type) {
+	case []byte:
+		bytes = object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		bytes = fld.Fvalue.([]types.JavaByte)
+	}
+
+	return object.StringObjectFromJavaByteArray(bytes)
 }
 
 // "java/io/File.isInvalid()Z"
 func fileIsInvalid(params []interface{}) interface{} {
 	status, ok := params[0].(*object.Object).FieldTable[FileStatus].Fvalue.(int64)
 	if !ok {
-		errMsg := "File object lacks a FileStatus field"
+		errMsg := "fileIsInvalid: File object lacks a FileStatus field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	if status == 0 {
@@ -155,7 +163,7 @@ func fileDelete(params []interface{}) interface{} {
 	// Get file path string.
 	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
 	if !ok {
-		errMsg := "File object lacks a FilePath field"
+		errMsg := "fileDelete: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	pathStr := string(bytes)
@@ -174,7 +182,7 @@ func fileCreate(params []interface{}) interface{} {
 	// Get path string.
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "File object lacks a FilePath field"
+		errMsg := "fileCreate: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	pathStr := string(fld.Fvalue.([]byte))

@@ -100,6 +100,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	globals.InitGlobals("test")
 	trace.Init()
 	t.Logf("globals.InitGlobals and trace.Init ok\n")
+	// globals.TraceCloadi = true
 
 	// Initialise classloader
 	err = classloader.Init()

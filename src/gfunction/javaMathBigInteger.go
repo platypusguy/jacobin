@@ -399,7 +399,7 @@ func getPrime(bitLength int) (*big.Int, string) {
 		// Generate a random number given the bit length.
 		zz, err := rand.Prime(rand.Reader, bitLength)
 		if err != nil {
-			errMsg := fmt.Sprintf("rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
+			errMsg := fmt.Sprintf("getPrime: rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
 			return nil, errMsg
 		}
 
@@ -440,7 +440,7 @@ func addStaticBigInteger(argName string, argValue int64) {
 func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(bigIntegerClassName)
 	if klass == nil {
-		errMsg := fmt.Sprintf("BigInteger<clinit>: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
+		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -451,7 +451,7 @@ func bigIntegerClinit([]interface{}) interface{} {
 		addStaticBigInteger("ZERO", int64(0))
 		klass.Data.ClInit = types.ClInitRun
 	}
-	return nil
+	return object.StringObjectFromGoString("bigIntegerClinit")
 }
 
 // Convert a byte slice into a signed big integer.
@@ -502,15 +502,16 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	// params[1]: byte array object
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	jba := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	bytes := object.GoByteArrayFromJavaByteArray(jba)
 	zz, signum := BytesToBigInt(bytes)
 
 	// Set value to big integer.
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum to sign.
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	// Return void.
@@ -531,7 +532,7 @@ func bigIntegerInitProbablyPrime(params []interface{}) interface{} {
 	zz, errMsg := getPrime(int(bitLength))
 	if zz != nil {
 		// Set value to big integer.
-		fld.Fvalue = zz
+		fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 		obj.FieldTable["value"] = fld
 
 		// Set signum to sign.
@@ -561,12 +562,12 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	// Get a big.Int in the randge of [0, upperBound].
 	zz, err := rand.Int(rand.Reader, upperBound)
 	if err != nil {
-		errMsg := fmt.Sprintf("rand.Int(numBits=%d) failed, reason: %s", numBits, err.Error())
+		errMsg := fmt.Sprintf("bigIntegerInitRandom: rand.Int(numBits=%d) failed, reason: %s", numBits, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
 	// Set value to big integer.
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum to sign.
@@ -587,17 +588,17 @@ func bigIntegerInitString(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	_, ok := zz.SetString(str, 10)
 	if !ok {
-		errMsg := fmt.Sprintf("<init> string (%s) not all numerics", str)
+		errMsg := fmt.Sprintf("bigIntegerInitString: string (%s) not all numerics", str)
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
 	// Update base object and return nil
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return nil
@@ -615,17 +616,17 @@ func bigIntegerInitStringRadix(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	_, ok := zz.SetString(str, int(rdx))
 	if !ok {
-		errMsg := fmt.Sprintf("<init> string (%s) not all numerics or the radix (%d) is invalid", str, rdx)
+		errMsg := fmt.Sprintf("bigIntegerInitStringRadix: string (%s) not all numerics or the radix (%d) is invalid", str, rdx)
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 
 	// Update base object and return nil
-	fld.Fvalue = zz
+	fld = object.Field{Ftype: types.BigInteger, Fvalue: zz}
 	obj.FieldTable["value"] = fld
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return nil
@@ -649,7 +650,7 @@ func bigIntegerAbs(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld = object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld = object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -675,7 +676,7 @@ func bigIntegerAdd(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -701,7 +702,7 @@ func bigIntegerAnd(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -727,7 +728,7 @@ func bigIntegerAndNot(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -768,7 +769,7 @@ func bigIntegerByteValueExact(params []interface{}) interface{} {
 	xx := fld.Fvalue.(*big.Int)
 	ii := xx.Int64()
 	if ii < 0 || ii > 255 {
-		errMsg := fmt.Sprintf("Value (%d) will not fit in a byte", ii)
+		errMsg := fmt.Sprintf("bigIntegerByteValueExact: Value (%d) will not fit in a byte", ii)
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 	return ii & 0xFF
@@ -798,7 +799,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerDivide: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -811,7 +812,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -829,7 +830,7 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerDivideAndRemainder: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -849,7 +850,7 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -903,7 +904,7 @@ func bigIntegerGCD(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -964,7 +965,7 @@ func bigIntegerMax(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -994,7 +995,7 @@ func bigIntegerMin(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1012,7 +1013,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "BigInteger: modulus not positive"
+		errMsg := "bigIntegerMod: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1025,7 +1026,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1048,7 +1049,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	mm := objModulus.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if mm.Cmp(zero) <= 0 {
-		errMsg := "BigInteger: modulus not positive"
+		errMsg := "bigIntegerModInverse: modulus not positive"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1056,7 +1057,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	var zz = new(big.Int)
 	ret := zz.ModInverse(xx, mm)
 	if ret == nil {
-		errMsg := "BigInteger not invertible"
+		errMsg := "bigIntegerModInverse: BigInteger not invertible"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1065,7 +1066,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1087,7 +1088,7 @@ func bigIntegerModPow(params []interface{}) interface{} {
 	mm := objMM.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if mm.Cmp(zero) <= 0 {
-		errMsg := fmt.Sprintf("Modulus (%d) is negative", mm.Int64())
+		errMsg := fmt.Sprintf("bigIntegerModPow: Modulus (%d) is negative", mm.Int64())
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1100,7 +1101,7 @@ func bigIntegerModPow(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1135,7 +1136,7 @@ func bigIntegerMultiply(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1158,7 +1159,7 @@ func bigIntegerNegate(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1181,7 +1182,7 @@ func bigIntegerNot(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1207,7 +1208,7 @@ func bigIntegerOr(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1223,7 +1224,7 @@ func bigIntegerPow(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	pow := params[1].(int64)
 	if pow < 0 {
-		errMsg := fmt.Sprintf("Power (%d) is negative", pow)
+		errMsg := fmt.Sprintf("bigIntegerPow: Power (%d) is negative", pow)
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 	yy := big.NewInt(pow)
@@ -1237,7 +1238,7 @@ func bigIntegerPow(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1255,7 +1256,7 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if yy.Cmp(zero) <= 0 {
-		errMsg := "Divide by zero"
+		errMsg := "bigIntegerRemainder: Divide by zero"
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1268,7 +1269,7 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1276,10 +1277,10 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 
 // "java/math/BigInteger.probablyPrime(ILjava/util/Random;)Ljava/math/BigInteger;"
 func bigIntegerProbablyPrime(params []interface{}) interface{} {
-	// params[1]: number of bits (bitLength)
-	// params[2]: Random object (yy)
+	// params[0]: number of bits (bitLength)
+	// params[1]: Random object (yy)
 
-	bitLength := params[1].(int64)
+	bitLength := params[0].(int64)
 	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
 
 	zz, errMsg := getPrime(int(bitLength))
@@ -1289,7 +1290,7 @@ func bigIntegerProbablyPrime(params []interface{}) interface{} {
 
 		// Set signum field to the sign.
 		signum := zz.Sign()
-		fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+		fld := object.Field{Ftype: types.Int, Fvalue: signum}
 		obj.FieldTable["signum"] = fld
 
 		return obj
@@ -1314,7 +1315,7 @@ func bigIntegerSqrt(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	zero := big.NewInt(int64(0))
 	if xx.Cmp(zero) < 0 {
-		errMsg := fmt.Sprintf("Argument (%d) is negative", xx.Int64())
+		errMsg := fmt.Sprintf("bigIntegerSqrt: Argument (%d) is negative", xx.Int64())
 		return getGErrBlk(excNames.ArithmeticException, errMsg)
 	}
 
@@ -1327,7 +1328,7 @@ func bigIntegerSqrt(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1353,7 +1354,7 @@ func bigIntegerSubtract(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj
@@ -1366,7 +1367,8 @@ func bigIntegerToByteArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	xx := obj.FieldTable["value"].Fvalue.(*big.Int)
 	bytes := xx.Bytes()
-	objOut := object.StringObjectFromByteArray(bytes)
+	objOut :=
+		object.StringObjectFromJavaByteArray(object.JavaByteArrayFromGoByteArray(bytes))
 
 	return objOut
 }
@@ -1392,7 +1394,7 @@ func bigIntegerToStringRadix(params []interface{}) interface{} {
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	rdx := params[1].(int64)
 	if rdx < 2 || rdx > 62 {
-		errMsg := fmt.Sprintf("Invalid radix value (%d)", rdx)
+		errMsg := fmt.Sprintf("bigIntegerToStringRadix: Invalid radix value (%d)", rdx)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1433,7 +1435,7 @@ func bigIntegerXor(params []interface{}) interface{} {
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
-	fld := object.Field{Ftype: types.BigInteger, Fvalue: signum}
+	fld := object.Field{Ftype: types.Int, Fvalue: signum}
 	obj.FieldTable["signum"] = fld
 
 	return obj

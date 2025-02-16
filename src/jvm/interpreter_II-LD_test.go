@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023-4 by Jacobin authors. All rights reserved.
+ * Copyright (c) 2023-5 by Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -16,6 +16,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -25,10 +26,10 @@ import (
 // here in alphabetical order of the instruction name.
 // THIS FILE CONTAINS TESTS FOR ALL BYTECODES FROM IINC to LDIV.
 // All other bytecodes are in run_*_test.go files except
-// for array bytecodes, which are located in arrayBytecodes_test.go
+// for array bytecodes, which are located in interpreter_arrayBytecodes_test.go
 
 // IINC: increment local variable
-func TestNewIinc(t *testing.T) {
+func TestIinc(t *testing.T) {
 	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
@@ -47,7 +48,7 @@ func TestNewIinc(t *testing.T) {
 }
 
 // IINC: increment local variable by negative value
-func TestNewIincNeg(t *testing.T) {
+func TestIincNeg(t *testing.T) {
 	f := newFrame(opcodes.IINC)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, int64(10)) // initialize local variable[1] to 10
@@ -63,6 +64,24 @@ func TestNewIincNeg(t *testing.T) {
 	value := f.Locals[1]
 	if value != int64(-17) {
 		t.Errorf("IINC: Expected popped value to be -17, got: %d", value)
+	}
+}
+
+func TestIincOverflow(t *testing.T) {
+	f := newFrame(opcodes.IINC)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, int64(0x7FFFFFFF)) // initialize local variable[1] to max int
+	f.Meth = append(f.Meth, 1)                     // increment local variable[1]
+	f.Meth = append(f.Meth, 1)                     // increment it by 1
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != -1 {
+		t.Errorf("Top of stack, expected -1, got: %d", f.TOS)
+	}
+	value := int32(f.Locals[1].(int64))
+	if value != -2147483648 {
+		t.Errorf("IINC: Expected popped value to be -2147483648, got: %d", value)
 	}
 }
 
@@ -175,6 +194,23 @@ func TestNewImul(t *testing.T) {
 	value := pop(&f).(int64)
 	if value != 70 {
 		t.Errorf("IMUL: Expected popped value to be 70, got: %d", value)
+	}
+}
+
+// Test IMUL (pop 2 values, multiply them, push result) -- here test for overflow of int32 (aka Java int)
+func TestImulOverflow(t *testing.T) {
+	f := newFrame(opcodes.IMUL)
+	push(&f, int64(11))
+	push(&f, int64(math.MaxInt32))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != 0 {
+		t.Errorf("IMUL, Top of stack, expected 0, got: %d", f.TOS)
+	}
+	value := pop(&f).(int64)
+	if value != 2147483637 {
+		t.Errorf("IMUL: Expected popped value to be 2147483637, got: %d", value)
 	}
 }
 
@@ -592,6 +628,23 @@ func TestNewIsub(t *testing.T) {
 	}
 }
 
+func TestIsubUnderflow(t *testing.T) {
+	f := newFrame(opcodes.ISUB)
+	push(&f, int64(math.MinInt))
+	push(&f, int64(1))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	if f.TOS != 0 {
+		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
+	}
+
+	value := int32(f.OpStack[0].(int64))
+	if value != 2147483646 {
+		t.Errorf("ISUB: Expected popped value to be 2147483646, got: %d", value)
+	}
+}
+
 // IUSHR: unsigned right shift of int
 func TestNewIushr(t *testing.T) {
 	f := newFrame(opcodes.IUSHR)
@@ -927,7 +980,7 @@ func TestNewLdcTest2(t *testing.T) {
 	}
 
 	strObj := pop(&f).(*object.Object)
-	str := string(strObj.FieldTable["value"].Fvalue.([]byte))
+	str := object.GoStringFromJavaByteArray(strObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	index := stringPool.GetStringIndex(&str)
 	checkStrPtr := stringPool.GetStringPointer(index)
 	if *checkStrPtr != "hello" {

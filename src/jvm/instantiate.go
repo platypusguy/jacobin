@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-3 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
  */
 
@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
+	"jacobin/excNames"
+	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -18,6 +20,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"jacobin/util"
 	"strings"
 	"unsafe"
 )
@@ -108,21 +111,37 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if len(superclasses) == 0 {
 		for i := 0; i < len(k.Data.Fields); i++ {
-			f := k.Data.Fields[i]
-			name := k.Data.CP.Utf8Refs[f.Name]
+			fld := k.Data.Fields[i]
+			fldName := k.Data.CP.Utf8Refs[fld.Name]
 
-			fieldToAdd, err := createField(f, k, classname)
+			fieldToAdd, err := createField(fld, k, classname)
 			if err != nil {
 				return nil, err
 			}
-			obj.FieldTable[name] = *fieldToAdd
-		} // loop through the fields if any
-		// add the field to the field table for this object
+			obj.FieldTable[fldName] = *fieldToAdd
 
-		// obj.FieldTable = nil  // removed via JACOBIN-378
+			// prepare the static fields, by inserting them w/ default values in Statics table
+			// See (https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2)
+			if fld.IsStatic {
+				staticName := classname + "." + fldName
+				_, ok := statics.Statics[staticName]
+				if !ok {
+					var fldValue any
+					fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
+					switch fldType[0] {
+					case 'B', 'C', 'S', 'I', 'J', 'Z':
+						fldValue = int64(0)
+					case 'F', 'D':
+						fldValue = float64(0.00)
+					case 'L', '[':
+						fldValue = object.Null
+					}
+					statics.AddStatic(staticName, statics.Static{Type: string(fldType[0]), Value: fldValue})
+				}
+			}
+		} // loop through the fields if any
 		goto runInitializer
-		// return &obj, nil
-	} // end of handling fields for objects w/ no superclasses
+	} // end of handling fields for objects w/ no superclasses other than java/lang/Object
 
 	// in the case of superclasses, we start at the topmost superclass
 	// and work our way down to the present class, adding fields to FieldTable.
@@ -152,12 +171,65 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	} // end of handling fields for classes with superclasses other than Object
 
 runInitializer:
+
+	// set up the methods in the MethodList and the GMT
+
+	/* JACOBIN-575 uncomment when resuming work on the MethodList
+	// go through the superclasses and add their methods to the class's MethodList
+	for _, superclassName := range superclasses {
+		superclass := classloader.MethAreaFetch(superclassName)
+		if superclass == nil {
+			errMsg := fmt.Sprintf("InstantiateClass: MethAreaFetch(superclass: %s) failed", superclassName)
+			trace.Error(errMsg)
+		}
+
+		for _, meth := range superclass.Data.MethodTable { // in theory, all methods should already be in the GMT
+			methName := superclass.Data.CP.Utf8Refs[meth.Name]
+			methType := superclass.Data.CP.Utf8Refs[meth.Desc]
+			FQN := superclassName + "." + methName + methType
+			k.Data.MethodList[methName+methType] = FQN
+		}
+	}
+	*/
+
+	// now add the methods of the present class to the MethodList
+	for _, meth := range k.Data.MethodTable {
+		methName := k.Data.CP.Utf8Refs[meth.Name]
+		methType := k.Data.CP.Utf8Refs[meth.Desc]
+		FQN := classname + "." + methName + methType
+		classloader.GmtAddEntry(FQN, classloader.GmtEntry{MethData: &meth, MType: 'J'})
+		k.Data.MethodList[methName+methType] = FQN
+	}
+
+	// check the code for validity before running initialization blocks
+	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
+		for _, m := range k.Data.MethodTable {
+			code := m.CodeAttr.Code
+			err := classloader.CheckCodeValidity(code, &k.Data.CP)
+			if err != nil {
+				clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
+				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s",
+					classname, clName)
+				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
+				if status != exceptions.Caught {
+					return nil, errors.New(errMsg) // applies only if in test
+				}
+			}
+		}
+		// update the Method Area to indicate that the code has been checked
+		k.CodeChecked = true
+		classloader.MethAreaInsert(classname, k)
+		if globals.TraceCloadi {
+			trace.Trace("InstantiateClass: Code checked for class: " + classname)
+		}
+	}
+
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
 	if ok && k.Data.ClInit == types.ClInitNotRun {
 		err := runInitializationBlock(k, superclasses, frameStack)
 		if err != nil {
-			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()", classname)
+			errMsg := fmt.Sprintf("InstantiateClass: runInitializationBlock failed with %s.<clinit>()V", classname)
 			trace.Error(errMsg)
 			return nil, err
 		}

@@ -29,7 +29,7 @@ import (
 // Classloader holds the parsed bytecode in classes, where they can be retrieved
 // and moved to an execution role. Most of the comments and code presuppose some
 // familiarity with the role of classloaders. More information can be found at:
-// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.3
+// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.3
 type Classloader struct {
 	Name       string
 	Parent     string
@@ -112,6 +112,15 @@ type field struct {
 	description int         // index of the UTF-8 entry in the CP
 	constValue  interface{} // the constant value if any was defined
 	attributes  []attr
+}
+
+type ResolvedFieldEntry struct {
+	AccessFlags int
+	IsStatic    bool
+	IsFinal     bool
+	ClName      string
+	FldName     string
+	FldType     string
 }
 
 // the methods of the class, including the constructors
@@ -252,7 +261,7 @@ func LoadFromLoaderChannel(LoaderChannel <-chan string) {
 }
 
 // LoadClassFromNameOnly loads a class from name in java/lang/Class format
-// It also loads the superclass of any class it loads.
+// It also loads the superclasses of any class it loads.
 func LoadClassFromNameOnly(name string) error {
 	var err error
 	className := name
@@ -321,6 +330,9 @@ loadAclass:
 		className = *stringPool.GetStringPointer(superclassIndex)
 		goto loadAclass
 	}
+
+	// at this point, we know the class and all its superclasses have been loaded. So,
+	// we can add all the superclass methods to the present class.
 	return err
 }
 
@@ -412,6 +424,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 	if globals.TraceClass {
 		trace.Trace("ParseAndPostClass: File " + filename + " to be processed")
 	}
+
 	fullyParsedClass, err := parse(rawBytes)
 	if err != nil {
 		trace.Error("ParseAndPostClass: file " + filename + ", err: " + err.Error())
@@ -423,6 +436,7 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 		trace.Error("ParseAndPostClass: format-checking " + filename)
 		return types.InvalidStringIndex, types.InvalidStringIndex, fmt.Errorf("format-checking error")
 	}
+
 	if globals.TraceClass {
 		trace.Trace("Class " + fullyParsedClass.className + " has been format-checked.")
 	}
@@ -450,9 +464,6 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 // load the parsed class into a form suitable for posting to the method area (which is
 // classloader.MethArea). This mostly involves copying the data, converting most indexes
 // to uint16 and removing some fields we needed in parsing, but which are no longer required.
-//
-// As of JACOBIN-575, methods are no longer included in the MethArea, but are all loaded into
-// the JVM-wide MTable (classloader.mTable).
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	kd := ClData{}
@@ -471,6 +482,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		for i := 0; i < len(fullyParsedClass.fields); i++ {
 			kdf := Field{}
 			kdf.Name = uint16(fullyParsedClass.fields[i].name)
+			kdf.NameStr = fullyParsedClass.utf8Refs[kdf.Name].content // temporarily include field name. JACOBIN-611
 			kdf.Desc = uint16(fullyParsedClass.fields[i].description)
 			kdf.IsStatic = fullyParsedClass.fields[i].isStatic
 			if len(fullyParsedClass.fields[i].attributes) > 0 {
@@ -485,6 +497,19 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			kd.Fields = append(kd.Fields, kdf)
 		}
 	}
+
+	kd.MethodList = make(map[string]string)
+	// insert the methods from java/lang/Object into the MethodList
+	kd.MethodList["clone()Ljava/lang/Object;"] = "java/lang/Object.clone()Ljava/lang/Object;"
+	kd.MethodList["equals(Ljava/lang/Object;)Z"] = "java/lang/Object.equals(Ljava/lang/Object;)Z"
+	kd.MethodList["getClass()Ljava/lang/Object;"] = "java/lang/Object.getClass()Ljava/lang/Object;"
+	kd.MethodList["hashCode()I"] = "java/lang/Object.hashCode()I"
+	kd.MethodList["notify()V"] = "java/lang/Object.notify()V"
+	kd.MethodList["notifyAll()V"] = "java/lang/Object.notifyAll()V"
+	kd.MethodList["toString()Ljava/lang/Object;"] = "java/lang/Object.toString()Ljava/lang/Object;"
+	kd.MethodList["wait()V"] = "java/lang/Object.wait()V"
+	kd.MethodList["wait(J)V"] = "java/lang/Object.wait(J)V"
+	kd.MethodList["wait(JI)V"] = "java/lang/Object.wait(JI)V"
 
 	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
@@ -560,7 +585,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 				for p := 0; p < len(fullyParsedClass.methods[i].exceptions); p++ {
 					kdm.Exceptions =
 						append(kdm.Exceptions, uint16(fullyParsedClass.methods[i].exceptions[p]))
-				} // CURR
+				}
 			}
 
 			if len(fullyParsedClass.methods[i].parameters) > 0 {
@@ -585,7 +610,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if clInitPresent {
 		kd.ClInit = types.ClInitNotRun // there is a clinit, but it's not been run
 	} else {
-		kd.ClInit = types.NoClinit // there is no clinit
+		kd.ClInit = types.NoClInit // there is no clinit
 	}
 
 	if len(fullyParsedClass.attributes) > 0 {
@@ -645,9 +670,25 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	if len(fullyParsedClass.utf8Refs) > 0 {
+		for i := 0; i < len(fullyParsedClass.utf8Refs); i++ {
+			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
+		}
+	}
+
 	if len(fullyParsedClass.classRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.classRefs); i++ {
 			kd.CP.ClassRefs = append(kd.CP.ClassRefs, fullyParsedClass.classRefs[i])
+		}
+	}
+
+	if len(fullyParsedClass.nameAndTypes) > 0 {
+		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
+			nat := NameAndTypeEntry{
+				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
+				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
+			}
+			kd.CP.NameAndTypes = append(kd.CP.NameAndTypes, nat)
 		}
 	}
 
@@ -669,11 +710,26 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	if len(fullyParsedClass.fieldRefs) > 0 {
 		for i := 0; i < len(fullyParsedClass.fieldRefs); i++ {
-			fr := FieldRefEntry{
-				ClassIndex:  uint16(fullyParsedClass.fieldRefs[i].classIndex),
-				NameAndType: uint16(fullyParsedClass.fieldRefs[i].nameAndTypeIndex),
-			}
-			kd.CP.FieldRefs = append(kd.CP.FieldRefs, fr)
+			rfe := ResolvedFieldEntry{}
+			clIndex := fullyParsedClass.fieldRefs[i].classIndex
+			clRefIndex := fullyParsedClass.cpIndex[clIndex]
+			clRef := fullyParsedClass.classRefs[clRefIndex.slot]
+			clName := *(stringPool.GetStringPointer(clRef))
+
+			nAndTindex := fullyParsedClass.fieldRefs[i].nameAndTypeIndex
+			nAndTRefIndex := fullyParsedClass.cpIndex[nAndTindex]
+			nAndTRef := fullyParsedClass.nameAndTypes[nAndTRefIndex.slot]
+
+			fieldNameIndex := nAndTRef.nameIndex
+			fieldName := FetchUTF8stringFromCPEntryNumber(&kd.CP, uint16(fieldNameIndex))
+
+			fieldTypeIndex := nAndTRef.descriptorIndex
+			fieldType := FetchUTF8stringFromCPEntryNumber(&kd.CP, uint16(fieldTypeIndex))
+
+			rfe.ClName = clName
+			rfe.FldName = fieldName
+			rfe.FldType = fieldType
+			kd.CP.FieldRefs = append(kd.CP.FieldRefs, rfe)
 		}
 	}
 
@@ -738,22 +794,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	if len(fullyParsedClass.methodTypes) > 0 {
 		for i := 0; i < len(fullyParsedClass.methodTypes); i++ {
 			kd.CP.MethodTypes = append(kd.CP.MethodTypes, uint16(fullyParsedClass.methodTypes[i]))
-		}
-	}
-
-	if len(fullyParsedClass.nameAndTypes) > 0 {
-		for i := 0; i < len(fullyParsedClass.nameAndTypes); i++ {
-			nat := NameAndTypeEntry{
-				NameIndex: uint16(fullyParsedClass.nameAndTypes[i].nameIndex),
-				DescIndex: uint16(fullyParsedClass.nameAndTypes[i].descriptorIndex),
-			}
-			kd.CP.NameAndTypes = append(kd.CP.NameAndTypes, nat)
-		}
-	}
-
-	if len(fullyParsedClass.utf8Refs) > 0 {
-		for i := 0; i < len(fullyParsedClass.utf8Refs); i++ {
-			kd.CP.Utf8Refs = append(kd.CP.Utf8Refs, fullyParsedClass.utf8Refs[i].content)
 		}
 	}
 

@@ -7,8 +7,12 @@
 package object
 
 import (
+	"fmt"
+	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"reflect"
 )
 
 /*  This file contains some data structures and some primitive
@@ -121,7 +125,7 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 	// contain the actual value rather than a pointer to the value. 2024-02
 	switch arrType {
 	case BYTE:
-		barArr := make([]byte, size)
+		barArr := make([]types.JavaByte, size)
 		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
 		o.FieldTable["value"] = of
 	case FLOAT: // case 'F', 'D': // float arrays
@@ -143,12 +147,12 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 }
 
 // Make1DimRefArray makes a 1-dimensional reference array. Its logic is nearly identical to
-// Make1DimArray, except that it is passed a pointer to the object whose references are in
+// Make1DimArray, except that it is passed a string identifying the type of object in
 // the array and it inserts that value into the field and object type fields.
-func Make1DimRefArray(objType *string, size int64) *Object {
+func Make1DimRefArray(objType string, size int64) *Object {
 	o := MakeEmptyObject()
 	rarArr := make([]*Object, size)
-	arrayType := types.RefArray + *objType
+	arrayType := types.RefArray + objType
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
 	o.FieldTable["value"] = of
 	o.KlassName = stringPool.GetStringIndex(&of.Ftype)
@@ -159,19 +163,63 @@ func Make1DimRefArray(objType *string, size int64) *Object {
 // MakeArrayFromRawArray accepts a raw array (such as []byte) and
 // converts it into an array *object*.
 func MakeArrayFromRawArray(rawArray interface{}) *Object {
+	if rawArray == nil {
+		errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed a nil parameter")
+		globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
+		// trace.Warning(errMsg)
+		return nil
+	}
+
 	switch rawArray.(type) {
 	case *Object: // if it's a ref to an array object, just return it
 		arr := rawArray.(*Object)
 		return arr
-	case *[]uint8: // an array of bytes
-		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]uint8))
+	case []*Object: // if it's a ref to an array of objects, just return it
+		obj := MakePrimitiveObject("java/lang/Object", "[Ljava/lang/Object", rawArray.([]*Object))
+		return obj
+	case *[]types.JavaByte: // an array of bytes
+		objPtr :=
+			MakePrimitiveObject(types.ByteArray, types.ByteArray, *rawArray.(*[]types.JavaByte))
 		return objPtr
-	case []uint8: // an array of bytes
-		objPtr := MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray)
-		return objPtr
-	default:
-		return nil
 	}
+
+	arrType := reflect.TypeOf(rawArray)
+	if arrType.Kind() == reflect.Slice {
+		switch arrType.Elem().Kind() {
+		case reflect.Int8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, rawArray.([]int8))
+		case reflect.Uint8:
+			// convert array of bytes into JavaBytes
+			jba := JavaByteArrayFromGoByteArray(rawArray.([]uint8))
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, jba)
+		case reflect.Int64:
+			return MakePrimitiveObject(types.IntArray, types.IntArray, rawArray.([]int64))
+		}
+	}
+
+	// This code basically turns an array into a slice.
+	if arrType.Kind() == reflect.Array {
+		slice := make([]interface{}, arrType.Len())
+		arrValue := reflect.ValueOf(rawArray)
+		for i := 0; i < arrValue.Len(); i++ {
+			item := arrValue.Index(i).Interface()
+			slice[i] = item
+		}
+
+		switch arrType.Elem().Kind() {
+		case reflect.Int8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
+		case reflect.Uint8:
+			return MakePrimitiveObject(types.ByteArray, types.ByteArray, slice)
+		case reflect.Int64:
+			return MakePrimitiveObject(types.IntArray, types.IntArray, slice)
+		}
+	}
+
+	errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed an unsupported type: %T", rawArray)
+	globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
+	// trace.Warning(errMsg)
+	return nil
 }
 
 // ArrayLength returns the length of an array object, when passed a pointer to it
@@ -181,7 +229,7 @@ func ArrayLength(arrayRef *Object) int64 {
 	arrayType := o.Ftype
 	switch arrayType {
 	case types.ByteArray:
-		array := o.Fvalue.([]byte)
+		array := o.Fvalue.([]types.JavaByte)
 		size = int64(len(array))
 	case types.RefArray:
 		array := o.Fvalue.([]*Object)

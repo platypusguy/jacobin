@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -98,6 +99,7 @@ type Globals struct {
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
+	FuncMinimalAbort     func(int, string)
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
@@ -154,6 +156,7 @@ func InitGlobals(progName string) Globals {
 		GoStackShown:         false,
 		FuncInstantiateClass: fakeInstantiateClass,
 		FuncThrowException:   fakeThrowEx,
+		FuncMinimalAbort:     fakeMinimalAbort,
 	}
 
 	TraceInit = false
@@ -194,12 +197,6 @@ func InitGlobals(progName string) Globals {
 
 	return global
 }
-
-// ThreadList contains a list of all app execution threads and a mutex for adding new threads to the list.
-// type ThreadList struct {
-// 	ThreadsList  *list.List
-// 	ThreadsMutex sync.Mutex
-// }
 
 // GetGlobalRef returns a pointer to the singleton instance of Globals
 func GetGlobalRef() *Globals {
@@ -303,11 +300,24 @@ func InitArrayAddressList() *list.List {
 	return list.New()
 }
 
+// Fake GoStringFromStringObject()
+func fakeGoStringFromStringObject(obj interface{}) string {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized GoStringFromStringObject pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
+	return ""
+}
+
 // Fake InstantiateClass
 func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized InstantiateClass pointer func: classname=%s\n", classname)
 	fmt.Fprintf(os.Stderr, errMsg)
 	return nil, errors.New(errMsg)
+}
+
+// Fake MinimalAbort() in exceptions.go
+func fakeMinimalAbort(whichEx int, msg string) {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func")
+	fmt.Fprintf(os.Stderr, errMsg)
 }
 
 // Fake ThrowEx() in exceptions.go
@@ -345,4 +355,17 @@ func InitStringPool() {
 	StringPoolNext = uint32(3)
 
 	StringPoolLock.Unlock()
+}
+
+// Get the character set name.
+func GetCharsetName() string {
+	return global.FileEncoding
+}
+
+// Case-insensitive sort.
+// Golang should have provided this!
+func SortCaseInsensitive(ptrSlice *[]string) {
+	slices.SortFunc(*ptrSlice, func(a, b string) int {
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))
+	})
 }

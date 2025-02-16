@@ -44,209 +44,209 @@ import (
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
-	doNothing,       // NOP             0x00
-	doAconstNull,    // ACONST_NULL     0x01
-	doIconstM1,      // ICONST_M1       0x02
-	doIconst0,       // ICONST_0        0x03
-	doIconst1,       // ICONST_1        0x04
-	doIconst2,       // ICONST_2        0x05
-	doIconst3,       // ICONST_3        0x06
-	doIconst4,       // ICONST_4        0x07
-	doIconst5,       // ICONST_5        0x08
-	doLconst0,       // LCONST_0        0x09
-	doLconst1,       // LCONST_1        0x0A
-	doFconst0,       // FCONST_0        0x0B
-	doFconst1,       // FCONST_1        0x0C
-	doFconst2,       // FCONST_2        0x0D
-	doDconst0,       // DCONST_0        0x0E
-	doDconst1,       // DCONST_1        0x0F
-	doBipush,        // BIPUSH          0x10
-	doSipush,        // SIPUSH          0x11
-	doLdc,           // LDC             0x12
-	doLdcw,          // LDC_W           0x13
-	doLdc2w,         // LDC2_W          0x14
-	doLoad,          // ILOAD           0x15
-	doLoad,          // LLOAD           0x16
-	doLoad,          // FLOAD           0x17
-	doLoad,          // DLOAD           0x18
-	doLoad,          // ALOAD           0x19
-	doIload0,        // ILOAD_0         0x1A
-	doIload1,        // ILOAD_1         0x1B
-	doIload2,        // ILOAD_2         0x1C
-	doIload3,        // ILOAD_3         0x1D
-	doIload0,        // LLOAD_0         0x1E
-	doIload1,        // LLOAD_1         0x1F
-	doIload2,        // LLOAD_2         0x20
-	doIload3,        // LLOAD_3         0x21
-	doFload0,        // FLOAD_0         0x22
-	doFload1,        // FLOAD_1         0x23
-	doFload2,        // FLOAD_2         0x24
-	doFload3,        // FLOAD_3         0x25
-	doFload0,        // DLOAD_0         0x26
-	doFload1,        // DLOAD_1         0x27
-	doFload2,        // DLOAD_2         0x28
-	doFload3,        // DLOAD_3         0x29
-	doAload0,        // ALOAD_0         0x2A
-	doAload1,        // ALOAD_1         0x2B
-	doAload2,        // ALOAD_2         0x2C
-	doAload3,        // ALOAD_3         0x2D
-	doIaload,        // IALOAD          0x2E
-	doIaload,        // LALOAD          0x2F
-	doFaload,        // FALOAD          0x30
-	doFaload,        // DALOAD          0x31
-	doAaload,        // AALOAD          0x32
-	doBaload,        // BALOAD          0x33
-	doIaload,        // CALOAD          0x34
-	doIaload,        // SALOAD          0x35
-	doIstore,        // ISTORE          0x36
-	doIstore,        // LSTORE          0x37
-	doFstore,        // FSTORE          0x38
-	doFstore,        // DSTORE          0x39
-	doAstore,        // ASTORE          0x3A
-	doIstore0,       // ISTORE_0        0x3B
-	doIstore1,       // ISTORE_1        0x3C
-	doIstore2,       // ISTORE_2        0x3D
-	doIstore3,       // ISTORE_3        0x3E
-	doIstore0,       // LSTORE_0        0x3F
-	doIstore1,       // LSTORE_1        0x40
-	doIstore2,       // LSTORE_2        0x41
-	doIstore3,       // LSTORE_3        0x42
-	doFstore0,       // FSTORE_0        0x43
-	doFstore1,       // FSTORE_1        0x44
-	doFstore2,       // FSTORE_2        0x45
-	doFstore3,       // FSTORE_3        0x46
-	doFstore0,       // DSTORE_0        0x47
-	doFstore1,       // DSTORE_1        0x48
-	doFstore2,       // DSTORE_2        0x49
-	doFstore3,       // DSTORE_3        0x4A
-	doAstore0,       // ASTORE_0        0x4B
-	doAstore1,       // ASTORE_1        0x4C
-	doAstore2,       // ASTORE_2        0x4D
-	doAstore3,       // ASTORE_3        0x4E
-	doIastore,       // IASTORE         0x4F
-	doIastore,       // LASTORE         0x50
-	doFastore,       // FASTORE         0x51
-	doFastore,       // DASTORE         0x52
-	doAastore,       // AASTORE         0x53
-	doBastore,       // BASTORE         0x54
-	doIastore,       // CASTORE         0x55
-	doIastore,       // SASTORE         0x56
-	doPop,           // POP             0x57
-	doPop2,          // POP2            0x58
-	doDup,           // DUP             0x59
-	doDupx1,         // DUP_X1          0x5A
-	doDupx2,         // DUP_X2          0x5B
-	doDup2,          // DUP2            0x5C
-	doDup2x1,        // DUP2_X1         0x5D
-	doDup2x2,        // DUP2_X2         0x5E
-	doSwap,          // SWAP            0x5F
-	doIadd,          // IADD            0x60
-	doIadd,          // LADD            0x61
-	doFadd,          // FADD            0x62
-	doFadd,          // DADD            0x63
-	doIsub,          // ISUB            0x64
-	doIsub,          // LSUB            0x65
-	doFsub,          // FSUB            0x66
-	doFsub,          // DSUB            0x67
-	doImul,          // IMUL            0x68
-	doImul,          // LMUL            0x69
-	doFmul,          // FMUL            0x6A
-	doFmul,          // DMUL            0x6B
-	doIdiv,          // IDIV            0x6C
-	doIdiv,          // LDIV            0x6D
-	doFdiv,          // FDIV            0x6E
-	doFdiv,          // DDIV            0x6F
-	doIrem,          // IREM            0x70
-	doIrem,          // LREM            0x71
-	doFrem,          // FREM            0x72
-	doFrem,          // DREM            0x73
-	doIneg,          // INEG            0x74
-	doIneg,          // LNEG            0x75
-	doFneg,          // FNEG            0x76
-	doFneg,          // DNEG            0x77
-	doIshl,          // ISHL            0x78
-	doIshl,          // LSHL            0x79
-	doIshr,          // ISHR            0x7A
-	doIshr,          // LSHR            0x7B
-	doIushr,         // IUSHR           0x7C
-	doIushr,         // LUSHR           0x7D
-	doIand,          // IAND            0x7E
-	doIand,          // LAND            0x7F
-	doIor,           // IOR             0x80
-	doIor,           // LOR             0x81
-	doIxor,          // IXOR            0x82
-	doIxor,          // LXOR            0x83
-	doIinc,          // IINC            0x84
-	doNothing,       // I2L             0x85
-	doI2f,           // I2F             0x86
-	doI2f,           // I2D             0x87
-	doNothing,       // L2I             0x88
-	doL2f,           // L2F             0x89
-	doL2f,           // L2D             0x8A
-	doF2i,           // F2I             0x8B
-	doF2i,           // F2L             0x8C
-	doNothing,       // F2D             0x8D
-	doD2i,           // D2I             0x8E
-	doD2i,           // D2L             0x8F
-	doNothing,       // D2F             0x90
-	doI2b,           // I2B             0x91
-	doI2c,           // I2C             0x92
-	doI2s,           // I2S             0x93
-	doLcmp,          // LCMP            0x94
-	doFcmpl,         // FCMPL           0x95
-	doFcmpl,         // FCMPG           0x96
-	doFcmpl,         // DCMPL           0x97
-	doFcmpl,         // DCMPG           0x98
-	doIfeq,          // IFEQ            0x99
-	doIfne,          // IFNE            0x9A
-	doIflt,          // IFLT            0x9B
-	doIfge,          // IFGE            0x9C
-	doIfgt,          // IFGT            0x9D
-	doIfle,          // IFLE            0x9E
-	doIficmpeq,      // IF_ICMPEQ       0x9F
-	doIficmpne,      // IF_ICMPNE       0xA0
-	doIficmplt,      // IF_ICMPLT       0xA1
-	doIficmpge,      // IF_ICMPGE       0xA2
-	doIficmpgt,      // IF_ICMPGT       0xA3
-	doIficmple,      // IF_ICMPLE       0xA4
-	doIfacmpeq,      // IF_ACMPEQ       0xA5
-	doIfacmpne,      // IF_ACMPNE       0xA6
-	doGoto,          // GOTO            0xA7
-	doJsr,           // JSR             0xA8
-	doRet,           // RET             0xA9
-	doTableswitch,   // TABLESWITCH     0xAA
-	doLookupswitch,  // LOOKUPSWITCH    0xAB
-	doIreturn,       // IRETURN         0xAC
-	doIreturn,       // LRETURN         0xAD
-	doIreturn,       // FRETURN         0xAE
-	doIreturn,       // DRETURN         0xAF
-	doIreturn,       // ARETURN         0xB0
-	doReturn,        // RETURN          0xB1
-	nil,             // GETSTATIC       0xB2 initialized in initializeDispatchTable()
-	nil,             // PUTSTATIC       0xB3 initialized in initializeDispatchTable()
-	doGetfield,      // GETFIELD        0xB4
-	doPutfield,      // PUTFIELD        0xB5
-	doInvokeVirtual, // INVOKEVIRTUAL   0xB6
-	doInvokeSpecial, // INVOKESPECIAL   0xB7
-	nil,             // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
-	notImplemented,  // INVOKEINTERFACE 0xB9
-	notImplemented,  // INVOKEDYNAMIC   0xBA
-	nil,             // NEW             0xBB initialized in initializeDispatchTable()
-	doNewarray,      // NEWARRAY        0xBC
-	doAnewarray,     // ANEWARRAY       0xBD
-	doArraylength,   // ARRAYLENGTH     0xBE
-	doAthrow,        // ATHROW          0xBF
-	doCheckcast,     // CHECKCAST       0xC0
-	doInstanceof,    // INSTANCEOF      0xC1
-	doPop,           // MONITORENTER    0xC2 not implemented but won't throw exception
-	doPop,           // MONITOREXIT     0xC3  "       "       "    "     "      '
-	doWide,          // WIDE            0xC4
-	doMultinewarray, // MULTIANEWARRAY  0xC5
-	doIfnull,        // IFNULL          0xC6
-	doIfnonnull,     // IFNONNULL       0xC7
-	doGotow,         // GOTO_W          0xC8
-	doJsrw,          // JSR_W           0xC9
-	doWarninvalid,   // BREAKPOINT      0xCA not implemented, generates warning, not exception
+	doNothing,         // NOP             0x00
+	doAconstNull,      // ACONST_NULL     0x01
+	doIconstM1,        // ICONST_M1       0x02
+	doIconst0,         // ICONST_0        0x03
+	doIconst1,         // ICONST_1        0x04
+	doIconst2,         // ICONST_2        0x05
+	doIconst3,         // ICONST_3        0x06
+	doIconst4,         // ICONST_4        0x07
+	doIconst5,         // ICONST_5        0x08
+	doLconst0,         // LCONST_0        0x09
+	doLconst1,         // LCONST_1        0x0A
+	doFconst0,         // FCONST_0        0x0B
+	doFconst1,         // FCONST_1        0x0C
+	doFconst2,         // FCONST_2        0x0D
+	doDconst0,         // DCONST_0        0x0E
+	doDconst1,         // DCONST_1        0x0F
+	doBipush,          // BIPUSH          0x10
+	doSipush,          // SIPUSH          0x11
+	doLdc,             // LDC             0x12
+	doLdcw,            // LDC_W           0x13
+	doLdc2w,           // LDC2_W          0x14
+	doLoad,            // ILOAD           0x15
+	doLoad,            // LLOAD           0x16
+	doLoad,            // FLOAD           0x17
+	doLoad,            // DLOAD           0x18
+	doLoad,            // ALOAD           0x19
+	doIload0,          // ILOAD_0         0x1A
+	doIload1,          // ILOAD_1         0x1B
+	doIload2,          // ILOAD_2         0x1C
+	doIload3,          // ILOAD_3         0x1D
+	doIload0,          // LLOAD_0         0x1E
+	doIload1,          // LLOAD_1         0x1F
+	doIload2,          // LLOAD_2         0x20
+	doIload3,          // LLOAD_3         0x21
+	doFload0,          // FLOAD_0         0x22
+	doFload1,          // FLOAD_1         0x23
+	doFload2,          // FLOAD_2         0x24
+	doFload3,          // FLOAD_3         0x25
+	doFload0,          // DLOAD_0         0x26
+	doFload1,          // DLOAD_1         0x27
+	doFload2,          // DLOAD_2         0x28
+	doFload3,          // DLOAD_3         0x29
+	doAload0,          // ALOAD_0         0x2A
+	doAload1,          // ALOAD_1         0x2B
+	doAload2,          // ALOAD_2         0x2C
+	doAload3,          // ALOAD_3         0x2D
+	doIaload,          // IALOAD          0x2E
+	doIaload,          // LALOAD          0x2F
+	doFaload,          // FALOAD          0x30
+	doFaload,          // DALOAD          0x31
+	doAaload,          // AALOAD          0x32
+	doBaload,          // BALOAD          0x33
+	doIaload,          // CALOAD          0x34
+	doIaload,          // SALOAD          0x35
+	doIstore,          // ISTORE          0x36
+	doIstore,          // LSTORE          0x37
+	doFstore,          // FSTORE          0x38
+	doFstore,          // DSTORE          0x39
+	doAstore,          // ASTORE          0x3A
+	doIstore0,         // ISTORE_0        0x3B
+	doIstore1,         // ISTORE_1        0x3C
+	doIstore2,         // ISTORE_2        0x3D
+	doIstore3,         // ISTORE_3        0x3E
+	doIstore0,         // LSTORE_0        0x3F
+	doIstore1,         // LSTORE_1        0x40
+	doIstore2,         // LSTORE_2        0x41
+	doIstore3,         // LSTORE_3        0x42
+	doFstore0,         // FSTORE_0        0x43
+	doFstore1,         // FSTORE_1        0x44
+	doFstore2,         // FSTORE_2        0x45
+	doFstore3,         // FSTORE_3        0x46
+	doFstore0,         // DSTORE_0        0x47
+	doFstore1,         // DSTORE_1        0x48
+	doFstore2,         // DSTORE_2        0x49
+	doFstore3,         // DSTORE_3        0x4A
+	doAstore0,         // ASTORE_0        0x4B
+	doAstore1,         // ASTORE_1        0x4C
+	doAstore2,         // ASTORE_2        0x4D
+	doAstore3,         // ASTORE_3        0x4E
+	doIastore,         // IASTORE         0x4F
+	doIastore,         // LASTORE         0x50
+	doFastore,         // FASTORE         0x51
+	doFastore,         // DASTORE         0x52
+	doAastore,         // AASTORE         0x53
+	doBastore,         // BASTORE         0x54
+	doIastore,         // CASTORE         0x55
+	doIastore,         // SASTORE         0x56
+	doPop,             // POP             0x57
+	doPop2,            // POP2            0x58
+	doDup,             // DUP             0x59
+	doDupx1,           // DUP_X1          0x5A
+	doDupx2,           // DUP_X2          0x5B
+	doDup2,            // DUP2            0x5C
+	doDup2x1,          // DUP2_X1         0x5D
+	doDup2x2,          // DUP2_X2         0x5E
+	doSwap,            // SWAP            0x5F
+	doIadd,            // IADD            0x60
+	doLadd,            // LADD            0x61
+	doFadd,            // FADD            0x62
+	doFadd,            // DADD            0x63
+	doIsub,            // ISUB            0x64
+	doLsub,            // LSUB            0x65
+	doFsub,            // FSUB            0x66
+	doFsub,            // DSUB            0x67
+	doImul,            // IMUL            0x68
+	doLmul,            // LMUL            0x69
+	doFmul,            // FMUL            0x6A
+	doFmul,            // DMUL            0x6B
+	doIdiv,            // IDIV            0x6C
+	doIdiv,            // LDIV            0x6D
+	doFdiv,            // FDIV            0x6E
+	doFdiv,            // DDIV            0x6F
+	doIrem,            // IREM            0x70
+	doIrem,            // LREM            0x71
+	doFrem,            // FREM            0x72
+	doFrem,            // DREM            0x73
+	doIneg,            // INEG            0x74
+	doIneg,            // LNEG            0x75
+	doFneg,            // FNEG            0x76
+	doFneg,            // DNEG            0x77
+	doIshl,            // ISHL            0x78
+	doIshl,            // LSHL            0x79
+	doIshr,            // ISHR            0x7A
+	doIshr,            // LSHR            0x7B
+	doIushr,           // IUSHR           0x7C
+	doIushr,           // LUSHR           0x7D
+	doIand,            // IAND            0x7E
+	doIand,            // LAND            0x7F
+	doIor,             // IOR             0x80
+	doIor,             // LOR             0x81
+	doIxor,            // IXOR            0x82
+	doIxor,            // LXOR            0x83
+	doIinc,            // IINC            0x84
+	doNothing,         // I2L             0x85
+	doI2f,             // I2F             0x86
+	doI2f,             // I2D             0x87
+	doNothing,         // L2I             0x88
+	doL2f,             // L2F             0x89
+	doL2f,             // L2D             0x8A
+	doF2i,             // F2I             0x8B
+	doF2i,             // F2L             0x8C
+	doNothing,         // F2D             0x8D
+	doD2i,             // D2I             0x8E
+	doD2i,             // D2L             0x8F
+	doNothing,         // D2F             0x90
+	doI2b,             // I2B             0x91
+	doI2c,             // I2C             0x92
+	doI2s,             // I2S             0x93
+	doLcmp,            // LCMP            0x94
+	doFcmpl,           // FCMPL           0x95
+	doFcmpl,           // FCMPG           0x96
+	doFcmpl,           // DCMPL           0x97
+	doFcmpl,           // DCMPG           0x98
+	doIfeq,            // IFEQ            0x99
+	doIfne,            // IFNE            0x9A
+	doIflt,            // IFLT            0x9B
+	doIfge,            // IFGE            0x9C
+	doIfgt,            // IFGT            0x9D
+	doIfle,            // IFLE            0x9E
+	doIficmpeq,        // IF_ICMPEQ       0x9F
+	doIficmpne,        // IF_ICMPNE       0xA0
+	doIficmplt,        // IF_ICMPLT       0xA1
+	doIficmpge,        // IF_ICMPGE       0xA2
+	doIficmpgt,        // IF_ICMPGT       0xA3
+	doIficmple,        // IF_ICMPLE       0xA4
+	doIfacmpeq,        // IF_ACMPEQ       0xA5
+	doIfacmpne,        // IF_ACMPNE       0xA6
+	doGoto,            // GOTO            0xA7
+	doJsr,             // JSR             0xA8
+	doRet,             // RET             0xA9
+	doTableswitch,     // TABLESWITCH     0xAA
+	doLookupswitch,    // LOOKUPSWITCH    0xAB
+	doIreturn,         // IRETURN         0xAC
+	doIreturn,         // LRETURN         0xAD
+	doIreturn,         // FRETURN         0xAE
+	doIreturn,         // DRETURN         0xAF
+	doIreturn,         // ARETURN         0xB0
+	doReturn,          // RETURN          0xB1
+	nil,               // GETSTATIC       0xB2 initialized in initializeDispatchTable()
+	nil,               // PUTSTATIC       0xB3 initialized in initializeDispatchTable()
+	doGetfield,        // GETFIELD        0xB4
+	doPutfield,        // PUTFIELD        0xB5
+	doInvokeVirtual,   // INVOKEVIRTUAL   0xB6
+	doInvokespecial,   // INVOKESPECIAL   0xB7
+	nil,               // INVOKESTATIC    0xB8 initialized in initializeDispatchTable()
+	doInvokeinterface, // INVOKEINTERFACE 0xB9
+	notImplemented,    // INVOKEDYNAMIC   0xBA
+	nil,               // NEW             0xBB initialized in initializeDispatchTable()
+	doNewarray,        // NEWARRAY        0xBC
+	doAnewarray,       // ANEWARRAY       0xBD
+	doArraylength,     // ARRAYLENGTH     0xBE
+	doAthrow,          // ATHROW          0xBF
+	doCheckcast,       // CHECKCAST       0xC0
+	doInstanceof,      // INSTANCEOF      0xC1
+	doPop,             // MONITORENTER    0xC2 not implemented but won't throw exception
+	doPop,             // MONITOREXIT     0xC3  "       "       "    "     "      '
+	doWide,            // WIDE            0xC4
+	doMultinewarray,   // MULTIANEWARRAY  0xC5
+	doIfnull,          // IFNULL          0xC6
+	doIfnonnull,       // IFNONNULL       0xC7
+	doGotow,           // GOTO_W          0xC8
+	doJsrw,            // JSR_W           0xC9
+	doWarninvalid,     // BREAKPOINT      0xCA not implemented, generates warning, not exception
 }
 
 // initializeDispatchTable initializes a few bytecodes that call interpret(). If they were
@@ -287,9 +287,19 @@ func interpret(fs *list.List) {
 		fr.FrameStack = fs
 	}
 
+	// Don't allow a nil code segment (E.g. mishandled abstract).
+	if len(fr.Meth) < 1 {
+		errMsg := "Empty code segment"
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+		if status != exceptions.Caught { // will only happen in test
+			globals.InitGlobals("test")
+			return
+		}
+	}
+
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
-			traceInfo := emitTraceData(fr)
+			traceInfo := EmitTraceData(fr)
 			trace.Trace(traceInfo)
 		}
 
@@ -307,7 +317,9 @@ func interpret(fs *list.List) {
 			case exceptions.RESUME_HERE: // continue processing from the present fr.PC
 				// This primarily occurs when an exception is caught. The catch resets
 				// the PC to the catch code to execute. So, we don't need any update to
-				// the PC.
+				// the PC. However, we have to refresh the current frame b/c the
+				// exception will refresh the topmost frame with any exception handling
+				fr = fs.Front().Value.(*frames.Frame)
 			default:
 				fr.PC += ret
 			}
@@ -398,7 +410,7 @@ func doLdc2w(fr *frames.Frame, _ int64) int {
 	idx := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 
 	CPe := classloader.FetchCPentry(fr.CP.(*classloader.CPool), idx)
-	if CPe.RetType == classloader.IS_INT64 { // push value twice (due to 64-bit width)
+	if CPe.RetType == classloader.IS_INT64 {
 		push(fr, CPe.IntVal)
 	} else if CPe.RetType == classloader.IS_FLOAT64 {
 		push(fr, CPe.FloatVal)
@@ -589,19 +601,32 @@ func doBaload(fr *frames.Frame, _ int64) int {
 	}
 
 	var bAref *object.Object
-	var array []byte
+	var array []types.JavaByte
+	var pushValue int64
+	var pushValueReady = false
 	switch ref.(type) {
 	case *object.Object:
 		bAref = ref.(*object.Object)
 		if object.IsNull(bAref) {
-			array = make([]byte, 0)
+			array = make([]types.JavaByte, 0)
 		} else {
-			array = bAref.FieldTable["value"].Fvalue.([]byte)
+			switch bAref.FieldTable["value"].Fvalue.(type) {
+			case []types.JavaByte:
+				array = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
+			case []byte: // if a Go byte array, convert it for the nonce to a JavaByte array
+				array =
+					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
+			}
 		}
-	case *[]uint8:
-		array = *(ref.(*[]uint8))
-	case []uint8:
-		array = ref.([]uint8)
+	// case *[]uint8:
+	// 	array = *(ref.(*[]uint8))
+	// case []uint8:
+	// 	array = ref.([]uint8)
+	case []int8:
+		arr := ref.([]int8)
+		val := arr[index]
+		pushValue = int64(val)
+		pushValueReady = true
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid  type of object ref: %T",
@@ -611,19 +636,23 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
-	size := int64(len(array))
 
-	if index >= size {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
-		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+	if !pushValueReady { // if pushValue was already set up due to []int8 being handled, skip this
+		size := int64(len(array))
+		if index >= size {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
+			status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
 		}
+		var value = array[index]
+		pushValue = int64(value)
 	}
-	var value = array[index]
-	push(fr, int64(value))
+
+	push(fr, pushValue)
 	return 1
 }
 
@@ -775,7 +804,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			}
 		}
 		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.FloatArray {
+		if fld.Ftype != types.FloatArray && fld.Ftype != types.DoubleArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: field type expected=[F, observed=%s",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
@@ -862,7 +891,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 func doBastore(fr *frames.Frame, _ int64) int {
 	value := convertInterfaceToByte(pop(fr))
 	index := pop(fr).(int64)
-	var rawArray []byte
+	var rawArray []types.JavaByte
 	arrayRef := pop(fr)
 	switch arrayRef.(type) {
 	case *object.Object:
@@ -886,9 +915,13 @@ func doBastore(fr *frames.Frame, _ int64) int {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
-		rawArray = fld.Fvalue.([]byte)
-	case []byte:
-		rawArray = arrayRef.([]byte)
+		rawArray = fld.Fvalue.([]types.JavaByte)
+	// case []byte:
+	// 	rawArray = arrayRef.([]byte)
+	case []types.JavaByte: // JavaByte is an alias for int8
+		int8Array := arrayRef.([]types.JavaByte)
+		int8Array[index] = types.JavaByte(value)
+		return 1
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BASTORE: unexpected reference type: %T",
@@ -1017,12 +1050,29 @@ func doSwap(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x60 IADD, LADD integer addition, push result
+// 0x60 IADD integer addition, push result
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	sum := i1 + i2
+
+	if sum > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
+		sum = math.MinInt32 + (i2 - 1)
+	} else {
+		if sum < math.MinInt32 {
+			sum = math.MaxInt32 + (i2 + 1)
+		}
+	}
+
 	push(fr, sum)
+	return 1
+}
+
+// 0x61 LADD integer addition, push result
+func doLadd(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	push(fr, i1+i2)
 	return 1
 }
 
@@ -1034,8 +1084,26 @@ func doFadd(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// Ox64, 0x65 ISUB, LSUB subtract subtract TOS-1 from TOS
+// Ox64 ISUB subtract subtract TOS-1 from TOS
 func doIsub(fr *frames.Frame, _ int64) int {
+	i2 := pop(fr).(int64)
+	i1 := pop(fr).(int64)
+	diff := i1 - i2
+
+	if diff > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
+		diff = math.MinInt32 - (i2 + 1)
+	} else {
+		if diff < math.MinInt32 {
+			diff = math.MaxInt32 - (i2 - 1)
+		}
+	}
+
+	push(fr, diff)
+	return 1
+}
+
+// 0x65 LSUB subtract subtract TOS-1 from TOS
+func doLsub(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	diff := i1 - i2
@@ -1052,8 +1120,17 @@ func doFsub(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x68 IMUL multiply two int64s
+// 0x68 IMUL multiply two int32s
 func doImul(fr *frames.Frame, _ int64) int {
+	i2 := int32(pop(fr).(int64))
+	i1 := int32(pop(fr).(int64))
+	product := multiply(i1, i2)
+	push(fr, int64(product))
+	return 1
+}
+
+// 0x68 LMUL multiply two int64s, i.e. longs
+func doLmul(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
 	product := multiply(i1, i2)
@@ -1231,8 +1308,18 @@ func doIinc(fr *frames.Frame, _ int64) int {
 		increment = byteToInt64(fr.Meth[fr.PC+2])
 		PCtoSkip = 2
 	}
+
+	// shoehorn the result into Java's 32-bit int
 	orig := fr.Locals[index].(int64)
-	fr.Locals[index] = orig + increment
+	chkInt32 := orig + increment
+	if chkInt32 > math.MaxInt32 {
+		chkInt32 = math.MinInt32 + (increment - 1)
+	} else {
+		if chkInt32 < math.MinInt32 {
+			chkInt32 = math.MaxInt32 + (increment + 1)
+		}
+	}
+	fr.Locals[index] = chkInt32
 	return PCtoSkip + 1
 }
 
@@ -1556,26 +1643,24 @@ func doTableswitch(fr *frames.Frame, _ int64) int {
 	}
 	fr.PC += paddingBytes
 
-	defaultJump := fourBytesToInt64( // the jump if the value is not in the table
+	defaultJump := types.FourBytesToInt64( // the jump if the value is not in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
-	lowValue := fourBytesToInt64( // the lowest value in the table
+	lowValue := types.FourBytesToInt64( // the lowest value in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
-	highValue := fourBytesToInt64( // the highest value in the table
+	highValue := types.FourBytesToInt64( // the highest value in the table
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	fr.PC += 4
 
 	index := pop(fr).(int64) // the value we're looking to match
-	// "The value low must be less than or equal to high"
-	// We do not check to see if lowValue > highValue? Exception?
 
 	// Compute PC for jump.
 	jumpOffset := 0 //
 	for value := lowValue; value <= highValue; value++ {
 		if value == index {
 			fr.PC += jumpOffset
-			jumpPC := fourBytesToInt64(
+			jumpPC := types.FourBytesToInt64(
 				fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 			fr.PC = basePC
 			return int(jumpPC)
@@ -1612,10 +1697,10 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 	jumpTable := make(map[int64]int)
 	for i := 0; i < int(npairs); i++ {
 		// get the jump size for each case branch
-		caseValue := fourBytesToInt64(
+		caseValue := types.FourBytesToInt64(
 			fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 		fr.PC += 4
-		jumpOffset := fourBytesToInt64(fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
+		jumpOffset := types.FourBytesToInt64(fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 		fr.PC += 4
 		jumpTable[caseValue] = int(jumpOffset)
 	}
@@ -1652,7 +1737,6 @@ func doReturn(fr *frames.Frame, _ int64) int {
 // 0xB2 GETSTATIC
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
@@ -1668,31 +1752,17 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
-
-	// get the class entry from the field entry for this field. It's the class name.
-	classRef := field.ClassIndex
-	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-	classNamePtr := stringPool.GetStringPointer(classNameIndex)
-	className := *classNamePtr
-
-	// process the name and type entry for this field
-	nAndTindex := field.NameAndType
-	nAndTentry := CP.CpIndex[nAndTindex]
-	nAndTslot := nAndTentry.Slot
-	nAndT := CP.NameAndTypes[nAndTslot]
-	fieldNameIndex := nAndT.NameIndex
-	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	className := field.ClName
+	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
-		emitTraceFieldID("GETSTATIC", fieldName)
+		EmitTraceFieldID("GETSTATIC", fieldName)
 	}
 
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.Statics[fieldName]
 	if !ok { // if field is not already loaded, then
-		// the class has not been instantiated, so
-		// instantiate the class
-		// _, err := instantiateClass(className, fr.FrameStack)
+		// the class has not been instantiated, so instantiate the class
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
 			prevLoaded, ok = statics.Statics[fieldName]
@@ -1756,23 +1826,11 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
-
-	// get the class entry from the field entry for this field. It's the class name.
-	classRef := field.ClassIndex
-	classNameIndex := CP.ClassRefs[CP.CpIndex[classRef].Slot]
-	classNamePtr := stringPool.GetStringPointer(classNameIndex)
-	className := *classNamePtr
-
-	// process the name and type entry for this field
-	nAndTindex := field.NameAndType
-	nAndTentry := CP.CpIndex[nAndTindex]
-	nAndTslot := nAndTentry.Slot
-	nAndT := CP.NameAndTypes[nAndTslot]
-	fieldNameIndex := nAndT.NameIndex
-	fieldName := classloader.FetchUTF8stringFromCPEntryNumber(CP, fieldNameIndex)
+	className := field.ClName
+	fieldName := field.FldName
 	fieldName = className + "." + fieldName
 	if MainThread.Trace {
-		emitTraceFieldID("PUTSTATIC", fieldName)
+		EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
 	// was this static field previously loaded? Is so, get its location and move on.
@@ -1795,7 +1853,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	// containing class, something is wrong so get out of here.
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s", fieldName)
+		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s.%s", className, fieldName)
 		trace.Error(errMsg)
 		return exceptions.ERROR_OCCURRED
 	}
@@ -1870,7 +1928,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			}
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTSTATIC: field %s, type unrecognized: %v", fieldName, value)
+			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
 			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
 		}
@@ -1896,14 +1954,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	// Get field name.
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-	nameAndTypeCPIndex := fullFieldEntry.NameAndType
-	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-	nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-	nameCPIndex := nameAndType.NameIndex
-	nameCPentry := CP.CpIndex[nameCPIndex]
-	fieldName := CP.Utf8Refs[nameCPentry.Slot]
+	fieldName := fullFieldEntry.FldName
 	if globals.TraceVerbose {
-		emitTraceFieldID("GETFIELD", fieldName)
+		EmitTraceFieldID("GETFIELD", fieldName)
 	}
 
 	// Get object reference from stack.
@@ -1913,8 +1966,17 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		break
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s", ref, fieldName)
+		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s.%s", ref, fr.ClName, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	// Check reference for a nil pointer.
+	if ref.(*object.Object) == nil {
+		errMsg := fmt.Sprintf("GETFIELD: Invalid (null) reference to a field: %s.%s", fr.ClName, fieldName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
@@ -1927,25 +1989,37 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 
 	objField, ok := obj.FieldTable[fieldName]
 	if !ok {
-		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable for %s.%s%s",
-			fr.PC, fieldName, fr.ClName, fr.MethName, fr.MethType)
+		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
+
 	fieldType = objField.Ftype
 	if fieldType == types.StringIndex {
 		fieldValue = stringPool.GetStringPointer(objField.Fvalue.(uint32))
 	} else if fieldType == types.StringClassRef {
 		// if the field type is String pointer and value is a byte array, convert it to a string
-		valueType, ok := objField.Fvalue.([]byte)
-		if ok {
-			fieldValue = object.StringObjectFromByteArray(valueType)
+		switch objField.Fvalue.(type) {
+		case []byte:
+			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
+		case []types.JavaByte:
+			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
+			// case string: // in theory, not needed, but just in case
+			// 	fieldValue = object.StringObjectFromGoString(objField.Fvalue.(string))
 		}
+	} else if types.IsArray(fieldType) {
+		// if the field type is an array, other than a string, convert it to an object
+		o := object.MakeEmptyObject()
+		of := object.Field{Ftype: fieldType, Fvalue: objField.Fvalue}
+		o.FieldTable["value"] = of
+		o.KlassName = stringPool.GetStringIndex(&of.Ftype)
+		fieldValue = o
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
 	}
+
 	push(fr, fieldValue)
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
@@ -2015,20 +2089,14 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	// otherwise look up the field name in the CP and find it in the FieldTable, then do the update
 	if len(obj.FieldTable) != 0 {
 		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
-		nameAndTypeCPIndex := fullFieldEntry.NameAndType
-		nameAndTypeIndex := CP.CpIndex[nameAndTypeCPIndex]
-		nameAndType := CP.NameAndTypes[nameAndTypeIndex.Slot]
-		nameCPIndex := nameAndType.NameIndex
-		nameCPentry := CP.CpIndex[nameCPIndex]
-		fieldName := CP.Utf8Refs[nameCPentry.Slot]
+		fieldName := fullFieldEntry.FldName
 		if globals.TraceVerbose {
-			emitTraceFieldID("PUTFIELD", fieldName)
+			EmitTraceFieldID("PUTFIELD", fieldName)
 		}
 
 		objField, ok := obj.FieldTable[fieldName]
 		if !ok {
-			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s referenced by %s.%s is not present",
-				fieldName, fr.ClName, fr.MethName)
+			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present", fieldName)
 			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2038,8 +2106,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
 		if strings.HasPrefix(objField.Ftype, types.Static) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("PUTFIELD: invalid attempt to update a static variable in %s.%s",
-				fr.ClName, fr.MethName)
+			errMsg := "PUTFIELD: invalid attempt to update a static variable"
 			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2056,25 +2123,48 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// fr.PC += 2
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != classloader.MethodRef { // the pointed-to CP entry must be a method reference
+
+	className, methodName, methodType :=
+		classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	/* // JACOBIN-575 reactive this code when ready to complete this task
+	k := classloader.MethAreaFetch(className) // we know the class is already loaded
+	methListEntry, ok := k.Data.MethodList[methodName+methodType]
+	if !ok { // if it's not in the GMT, then it's likely being called explicitly, so test for this.
+		methFQN := className + "." + methodName + methodType
+		_, ok = classloader.GMT[methFQN]
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: Method not found in methodList: " + methodName + methodType +
+				" for class: " + className
+			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+			if status != exceptions.Caught {
+				return exceptions.ERROR_OCCURRED // applies only if in test
+			}
+		} else {
+			methListEntry = methFQN
+		}
+	}
+
+	gmtEntry, ok := classloader.GMT[methListEntry]
+	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("INVOKEVIRTUAL: Expected a method ref, but got %d in"+
-			"location %d in method %s of class %s\n",
-			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		status := exceptions.ThrowEx(excNames.WrongMethodTypeException, errMsg, fr)
+		errMsg := "INVOKEVIRTUAL: Method not found in GMT: " + methodName + methodType + "for class: " + className
+		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
 
-	className, methodName, methodType :=
-		classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	mtEntry := classloader.MTentry{
+		Meth: gmtEntry.MethData.(classloader.MData), MType: gmtEntry.MType,
+	}
+	*/
 
 	mtEntry := classloader.MTable[className+"."+methodName+methodType]
 	if mtEntry.Meth == nil { // if the method is not in the method table, find it
+		// mtEntry := classloader.MTable[className+"."+methodName+methodType]
+		// if !ok { // if the method is not in the method table, find it
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
 			// TODO: search the superclasses, then the classpath and retry
@@ -2093,6 +2183,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
 	if mtEntry.MType == 'G' { // so we have a native golang function
 		// get the parameters/args off the stack
+		// mtEntry.Meth = *mtEntry.Meth.(*gfunction.GMeth) // JACOBIN-575
 		gmethData := mtEntry.Meth.(gfunction.GMeth)
 		paramCount := gmethData.ParamSlots
 		var params []interface{}
@@ -2163,16 +2254,15 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 }
 
 // OxB7 INVOKESPECIAL
-func doInvokeSpecial(fr *frames.Frame, _ int64) int {
+func doInvokespecial(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	// f.PC += 2
 	CP := fr.CP.(*classloader.CPool)
 	className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
 
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
 	fullConstructorName := className + "." + methodName + methodType
-	if fullConstructorName == "java/lang/Object.<init>()V" {
+	if fullConstructorName == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
 		return 3 // 2 for the CPslot + 1 for next bytecode
 	}
 
@@ -2304,7 +2394,6 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 
-		// fr.PC += 2 // advance PC for the first two bytes of this bytecode
 		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, MainThread.Trace)
 		if ret != nil {
 			switch ret.(type) {
@@ -2316,9 +2405,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
-				return 3
 			}
 		}
+		return 3
 		// any exception will already have been handled.
 	} else if mtEntry.MType == 'J' {
 		m := mtEntry.Meth.(classloader.JmEntry)
@@ -2342,12 +2431,148 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			}
 		}
 
-		fr.PC += 2                    // 2 == initial PC advance in this bytecode (see above)
-		fr.PC += 1                    // to point to the next bytecode before exiting
+		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
 	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+}
+
+// 0xB9 INVOKEINTERFACE
+func doInvokeinterface(fr *frames.Frame, _ int64) int {
+	return notImplemented(fr, 0)
+	/*
+		CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
+		count := f.Meth[f.PC+3]
+		zeroByte := f.Meth[f.PC+4]
+		f.PC += 4
+
+
+		CPentry := CP.CpIndex[CPslot]
+		if CPentry.Type != classloader.Interface {
+			glob.ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
+				CPentry.Type, classloader.Interface)
+			status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		method := CP.InterfaceRefs[CPentry.Slot]
+
+		// get the class entry from this method
+		interfaceRef := method.ClassIndex
+		interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
+		interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
+		interfaceName := *interfaceNamePtr
+
+		// get the method name for this method
+		nAndTindex := method.NameAndType
+		nAndTentry := CP.CpIndex[nAndTindex]
+		nAndTslot := nAndTentry.Slot
+		nAndT := CP.NameAndTypes[nAndTslot]
+		interfaceMethodNameIndex := nAndT.NameIndex
+		interfaceMethodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, interfaceMethodNameIndex)
+
+		// get the signature for this method
+		interfaceMethodSigIndex := nAndT.DescIndex
+		interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
+			CP, interfaceMethodSigIndex)
+
+		// now get the objRef pointing to the class containing the call to the method
+		// described just previously. It is located on the f.OpStack below the args to
+		// be passed to the method.
+		// The objRef object has previously been instantiated and its constructor called.
+		objRef := f.OpStack[f.TOS-int(count)+1]
+		if objRef == nil {
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
+				interfaceName+interfaceMethodName+interfaceMethodType)
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		// get the name of the objectRef's class, and make sure it's loaded
+		objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
+		if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
+			// in this case, LoadClassFromNameOnly() will have already thrown the exception
+			if globals.JacobinHome() == "test" {
+				return err // applies only if in test
+			}
+		}
+
+		class := classloader.MethAreaFetch(objRefClassName)
+		if class == nil {
+			// in theory, this can't happen due to immediately previous loading, but making sure
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+			if status != exceptions.Caught {
+				return errors.New(errMsg) // applies only if in test
+			}
+		}
+
+		var mtEntry classloader.MTentry
+		var err error
+		mtEntry, err = locateInterfaceMeth(class, f, objRefClassName, interfaceName,
+			interfaceMethodName, interfaceMethodType)
+		if err != nil { // any error will already have been handled
+			continue
+		}
+
+		clData := *class.Data
+		if mtEntry.MType == 'J' {
+			entry := mtEntry.Meth.(classloader.JmEntry)
+			fram, err := createAndInitNewFrame(
+				clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, f)
+			if err != nil {
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+					interfaceMethodName + interfaceMethodType
+				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
+				if status != exceptions.Caught {
+					return errors.New(errMsg) // applies only if in test
+				}
+			}
+
+			f.PC += 1                            // to point to the next bytecode before exiting
+			fs.PushFront(fram)                   // push the new frame
+			f = fs.Front().Value.(*frames.Frame) // point f to the new head
+			goto frameInterpreter
+		} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+			gmethData := mtEntry.Meth.(gfunction.GMeth)
+			paramCount := gmethData.ParamSlots
+			var params []interface{}
+			for i := 0; i < paramCount; i++ {
+				params = append(params, pop(f))
+			}
+
+			if globals.TraceInst {
+				infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
+				trace.Trace(infoMsg)
+			}
+			ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, globals.TraceVerbose)
+			if ret != nil {
+				switch ret.(type) {
+				case error:
+					if glob.JacobinName == "test" {
+						errRet := ret.(error)
+						return errRet
+					} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+						f.PC += 1
+						goto frameInterpreter
+					}
+				default: // if it's not an error, then it's a legitimate return value, which we simply push
+					push(f, ret)
+					if strings.HasSuffix(interfaceMethodType, "D") || strings.HasSuffix(interfaceMethodType, "J") {
+						push(f, ret) // push twice if long or double
+					}
+				}
+				// any exception will already have been handled.
+			}
+		}
+	*/
 }
 
 // 0xBB NEW create a new object
@@ -2445,7 +2670,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		refTypeName = *stringPool.GetStringPointer(refNameStringPoolIndex)
 	}
 
-	arrayPtr := object.Make1DimRefArray(&refTypeName, size)
+	arrayPtr := object.Make1DimRefArray(refTypeName, size)
 	g := globals.GetGlobalRef()
 	g.ArrayAddressList.PushFront(arrayPtr)
 	push(fr, arrayPtr)
@@ -2472,8 +2697,11 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	// array of bytes will be extracted as a field and passed
 	// to this function, so we need to accommodate all types--
 	// hence, the switch on type.
-	case []uint8:
+	case []byte:
 		array := ref.([]uint8)
+		size = int64(len(array))
+	case []types.JavaByte:
+		array := ref.([]types.JavaByte)
 		size = int64(len(array))
 	case []float64:
 		array := ref.([]float64)
@@ -2481,8 +2709,11 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 	case []int64:
 		array := ref.([]int64)
 		size = int64(len(array))
-	case *[]uint8: // = go byte
+	case *[]byte:
 		array := *ref.(*[]uint8)
+		size = int64(len(array))
+	case *[]types.JavaByte:
+		array := *ref.(*[]types.JavaByte)
 		size = int64(len(array))
 	case []*object.Object:
 		array := ref.([]*object.Object)
@@ -2635,11 +2866,12 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 	return 1 // should not be reached, in theory
 }
 
-// 0xC0 CHECKCAST same as INSTANCEOF but does nothing on null,
+// 0xC0 CHECKCAST
 func doCheckcast(fr *frames.Frame, _ int64) int {
-	// and doesn't change the stack if the cast is legal.
-	// Because this uses the same logic as INSTANCEOF, any change here should
-	// be made to INSTANCEOF
+	// same as INSTANCEOF but does nothing on null;
+	// doesn't change the stack if the cast is legal.
+	// Because this uses the same logic as INSTANCEOF,
+	// any change here should be made to INSTANCEOF
 
 	ref := peek(fr) // peek b/c the objectRef is *not* removed from the op stack
 	if ref == nil { // if ref is nil, just carry on
@@ -2665,7 +2897,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		}
 	}
 
-	// at this point, we know we have a non-nil, non-null pointer to an object;
+	// at this point, we know we have a non-nil/non-null pointer to an object;
 	// now, get the class we're casting the object to.
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
@@ -2898,7 +3130,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 func doIfnull(fr *frames.Frame, _ int64) int {
 	// null = nil or object.Null (a pointer to nil)
 	value := pop(fr)
-	if object.IsNull(value.(*object.Object)) {
+	if object.IsNull(value) {
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
 		return int(jumpTo)
 	} else {
@@ -2909,7 +3141,7 @@ func doIfnull(fr *frames.Frame, _ int64) int {
 // 0xC7 IFNONNULL jump if TOS does not hold a null address
 func doIfnonnull(fr *frames.Frame, _ int64) int {
 	value := pop(fr)
-	if object.IsNull(value.(*object.Object)) { // if == null, move along
+	if object.IsNull(value) { // if == null, move along
 		return 3
 	} else { // it's not nil nor a null pointer--so do the jump
 		jumpTo := (int16(fr.Meth[fr.PC+1]) * 256) + int16(fr.Meth[fr.PC+2])
@@ -2919,14 +3151,14 @@ func doIfnonnull(fr *frames.Frame, _ int64) int {
 
 // 0xC8 GOTO_W jump to a four-byte offset
 func doGotow(fr *frames.Frame, _ int64) int {
-	jumpTo := fourBytesToInt64(
+	jumpTo := types.FourBytesToInt64(
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	return int(jumpTo)
 }
 
 // 0xC9 JSR_W jump to a four-byte offset
 func doJsrw(fr *frames.Frame, _ int64) int {
-	jumpTo := fourBytesToInt64(
+	jumpTo := types.FourBytesToInt64(
 		fr.Meth[fr.PC+1], fr.Meth[fr.PC+2], fr.Meth[fr.PC+3], fr.Meth[fr.PC+4])
 	push(fr, jumpTo) // JSR and JSR_W both push the jump offset and jump to it
 	return int(jumpTo)

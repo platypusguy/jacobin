@@ -7,7 +7,6 @@
 package gfunction
 
 import (
-	"bytes"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -544,7 +543,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  stringReplaceCC,
+			GFunction:  stringReplaceAllRegex,
 		}
 
 	// Replaces each substring of this string that matches the given regular expression with the given replacement.
@@ -777,11 +776,22 @@ func Load_Lang_String() {
 
 // ==== INSTANTIATION AND INITIALIZATION FUNCTIONS ====
 
+// "java/lang/String.<clinit>()V" -- String class initialisation
+func stringClinit([]interface{}) interface{} {
+	klass := classloader.MethAreaFetch(types.StringClassName)
+	if klass == nil {
+		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", types.StringClassName)
+		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
+	}
+	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+	return object.StringObjectFromGoString("stringClinit")
+}
+
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
-	bytes := make([]byte, 0)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	bytes := make([]types.JavaByte, 0)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -790,19 +800,32 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes := object.JavaByteArrayFromGoByteArray(
+			params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	case []types.JavaByte:
+		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	}
 	return nil
 }
 
-// Construct a string object from a subset of a Go byte array.
+// Construct a string object from a subset of a JavaByte array.
 // "java/lang/String.<init>([BII)V"
 func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	var bytes []types.JavaByte
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes = object.JavaByteArrayFromGoByteArray(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+	}
 
 	// Get substring start and end offset
 	ssStart := params[2].(int64)
@@ -811,16 +834,16 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", string(bytes), totalLength, ssStart, ssEnd)
+		errMsg1 := "newStringFromBytesSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n",
+			object.GoStringFromJavaByteArray(bytes), totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
 	bytes = bytes[ssStart : ssStart+ssEnd]
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
-
 }
 
 // Instantiate a new string object from a Go int64 array (Java char array).
@@ -830,11 +853,11 @@ func newStringFromChars(params []interface{}) interface{} {
 	// params[1] = byte array object
 	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 
-	var bytes []byte
+	var bytes []types.JavaByte
 	for _, ii := range ints {
-		bytes = append(bytes, byte(ii&0xFF))
+		bytes = append(bytes, types.JavaByte(ii&0xFF))
 	}
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
 	return nil
 }
 
@@ -847,12 +870,12 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	// Return the string.
 	fld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in character array object")
+		errMsg := fmt.Sprintf("newStringFromCharsSubset: Missing value field in character array object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	iarray, ok := fld.Fvalue.([]int64)
 	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in character array object", fld.Ftype, fld.Fvalue)
+		errMsg := fmt.Sprintf("newStringFromCharsSubset: Invalid value field type (%s : %T) in character array object", fld.Ftype, fld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -863,39 +886,36 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(iarray))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "newStringFromCharsSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
 	iarray = iarray[ssStart : ssStart+ssEnd]
-	var bytes []byte
+	var bytes []types.JavaByte
 	for _, ii := range iarray {
-		bytes = append(bytes, byte(ii&0xFF))
+		bytes = append(bytes, types.JavaByte(ii&0xFF))
 	}
-	obj := object.StringObjectFromByteArray(bytes)
+	obj := object.StringObjectFromJavaByteArray(bytes)
 	return obj
 
 }
 
-// New String from String, StringBuilder, or StringBuffer.
+// New String (consisting of JavaBytes) from String, StringBuilder, or StringBuffer.
 func newStringFromString(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = String, StringBuilder, or StringBuffer object
-	bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
-	object.UpdateValueFieldFromBytes(params[0].(*object.Object), bytes)
-	return nil
-}
-
-// "java/lang/String.<clinit>()V" -- String class initialisation
-func stringClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(types.StringClassName)
-	if klass == nil {
-		errMsg := fmt.Sprintf("Could not find class %s in the MethodArea", types.StringClassName)
-		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
+	var javaBytes []types.JavaByte
+	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+		javaBytes = object.JavaByteArrayFromGoByteArray(bytes)
+	case []types.JavaByte:
+		javaBytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	}
-	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
+
+	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), javaBytes)
 	return nil
 }
 
@@ -952,9 +972,21 @@ func stringConcat(params []interface{}) interface{} {
 	var str1, str2 string
 
 	fld := params[0].(*object.Object).FieldTable["value"]
-	str1 = string(fld.Fvalue.([]byte))
+	switch fld.Fvalue.(type) {
+	case []byte:
+		str1 = string(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	}
+
 	fld = params[1].(*object.Object).FieldTable["value"]
-	str2 = string(fld.Fvalue.([]byte))
+	switch fld.Fvalue.(type) {
+	case []byte:
+		str2 = string(fld.Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	}
+
 	str := str1 + str2
 	obj := object.StringObjectFromGoString(str)
 	return obj
@@ -968,6 +1000,9 @@ func stringContains(params []interface{}) interface{} {
 	searchFor := params[1].(*object.Object)
 	var searchString string
 	switch searchFor.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		searchString =
+			object.GoStringFromJavaByteArray(searchFor.FieldTable["value"].Fvalue.([]types.JavaByte))
 	case []uint8:
 		searchString = string(searchFor.FieldTable["value"].Fvalue.([]byte))
 	case string:
@@ -978,6 +1013,9 @@ func stringContains(params []interface{}) interface{} {
 	// now get the target string (the string being searched)
 	var targetString string
 	switch searchIn.FieldTable["value"].Fvalue.(type) {
+	case []types.JavaByte:
+		targetString =
+			object.GoStringFromJavaByteArray(searchIn.FieldTable["value"].Fvalue.([]types.JavaByte))
 	case []uint8:
 		targetString = string(searchIn.FieldTable["value"].Fvalue.([]byte))
 	case string:
@@ -991,10 +1029,22 @@ func stringContains(params []interface{}) interface{} {
 }
 
 func javaLangStringContentEquals(params []interface{}) interface{} {
+	var str1, str2 string
 	obj := params[0].(*object.Object)
-	str1 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
+
 	obj = params[1].(*object.Object)
-	str2 := string(obj.FieldTable["value"].Fvalue.([]byte))
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -1023,12 +1073,24 @@ func stringEquals(params []interface{}) interface{} {
 // Are 2 strings equal, ignoring case?
 // "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
 func stringEqualsIgnoreCase(params []interface{}) interface{} {
+	var str1, str2 string
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
 	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
+
 	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
+	switch obj.FieldTable["value"].Fvalue.(type) {
+	case []byte:
+		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
+	case []types.JavaByte:
+		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	}
 
 	// Are they equal in value?
 	upstr1 := strings.ToUpper(str1)
@@ -1069,9 +1131,12 @@ func StringFormatter(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		formatStringObj := params[0].(*object.Object) // the format string is passed as a pointer to a string object
-		switch formatStringObj.FieldTable["value"].Ftype {
-		case types.ByteArray:
+		switch formatStringObj.FieldTable["value"].Fvalue.(type) {
+		case []byte:
 			formatString = object.GoStringFromStringObject(formatStringObj)
+		case []types.JavaByte:
+			formatString =
+				object.GoStringFromJavaByteArray(formatStringObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 		default:
 			errMsg := fmt.Sprintf("StringFormatter: In the format string object, expected Ftype=%s but observed: %s",
 				types.ByteArray, formatStringObj.FieldTable["value"].Ftype)
@@ -1102,13 +1167,25 @@ func StringFormatter(params []interface{}) interface{} {
 
 		// If type is string object, process it.
 		if fld.Ftype == types.ByteArray {
-			str := string(fld.Fvalue.([]byte))
+			var str string
+			switch fld.Fvalue.(type) {
+			case []byte:
+				str = string(fld.Fvalue.([]byte))
+			case []types.JavaByte:
+				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			}
 			valuesOut = append(valuesOut, str)
 		} else {
 			// Not a string object.
 			switch fld.Ftype {
 			case types.ByteArray:
-				str := string(fld.Fvalue.([]byte))
+				var str string
+				switch fld.Fvalue.(type) {
+				case []byte:
+					str = string(fld.Fvalue.([]byte))
+				case []types.JavaByte:
+					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				}
 				valuesOut = append(valuesOut, str)
 			case types.Byte:
 				valuesOut = append(valuesOut, uint8(fld.Fvalue.(int64)))
@@ -1121,8 +1198,8 @@ func StringFormatter(params []interface{}) interface{} {
 				}
 				valuesOut = append(valuesOut, zz)
 			case types.Char:
-				cc := fmt.Sprint(fld.Fvalue.(int64))
-				valuesOut = append(valuesOut, cc)
+				rooney := rune(fld.Fvalue.(int64))
+				valuesOut = append(valuesOut, rooney)
 			case types.Double:
 				valuesOut = append(valuesOut, fld.Fvalue.(float64))
 			case types.Float:
@@ -1150,7 +1227,7 @@ func StringFormatter(params []interface{}) interface{} {
 // java/lang/String.getBytes()[B
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
-	bytes := object.ByteArrayFromStringObject(params[0].(*object.Object))
+	bytes := object.JavaByteArrayFromStringObject(params[0].(*object.Object))
 	return populator("[B", types.ByteArray, bytes)
 }
 
@@ -1226,7 +1303,7 @@ func stringIsLatin1(params []interface{}) interface{} {
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
 	obj := params[0].(*object.Object)
-	bytes := object.ByteArrayFromStringObject(obj)
+	bytes := object.JavaByteArrayFromStringObject(obj)
 	return int64(len(bytes))
 }
 
@@ -1245,7 +1322,7 @@ func stringMatches(params []any) any {
 
 	regex, err := regexp.Compile(regexString)
 	if err != nil {
-		errMsg := fmt.Sprintf("Invalid regular expression: %s", regexString)
+		errMsg := fmt.Sprintf("stringMatches: Invalid regular expression: %s", regexString)
 		return getGErrBlk(excNames.PatternSyntaxException, errMsg)
 	}
 	if regex.MatchString(baseString) {
@@ -1263,7 +1340,7 @@ func stringRegionMatches(params []any) any {
 	// param[3] offset in second string
 	// param[4] length of region to compare
 	baseStringObject := params[0].(*object.Object)
-	baseByteArray := object.ByteArrayFromStringObject(baseStringObject)
+	baseByteArray := object.JavaByteArrayFromStringObject(baseStringObject)
 
 	// If this call includes boolean ignoreCase, then the parameters are shifted in the params array.
 	ignoreCase := false
@@ -1276,7 +1353,7 @@ func stringRegionMatches(params []any) any {
 	baseOffset := params[pix].(int64)
 
 	compareStringObject := params[pix+1].(*object.Object)
-	compareByteArray := object.ByteArrayFromStringObject(compareStringObject)
+	compareByteArray := object.JavaByteArrayFromStringObject(compareStringObject)
 	compareOffset := params[pix+2].(int64)
 
 	if baseOffset < 0 || compareOffset < 0 { // in the JDK, this is the indicated response, rather than an exception(!)
@@ -1292,11 +1369,11 @@ func stringRegionMatches(params []any) any {
 	section1 := baseByteArray[baseOffset : baseOffset+regionLength]
 	section2 := compareByteArray[compareOffset : compareOffset+regionLength]
 	if ignoreCase {
-		if bytes.EqualFold(section1, section2) { // equal, ignoring case?
+		if object.JavaByteArrayEqualsIgnoreCase(section1, section2) {
 			return types.JavaBoolTrue
 		}
 	} else {
-		if bytes.Equal(section1, section2) { // equal, case-sensitive?
+		if object.JavaByteArrayEquals(section1, section2) { // case-sensitive equal
 			return types.JavaBoolTrue
 		}
 	}
@@ -1349,7 +1426,7 @@ func substringToTheEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "substringToTheEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1377,7 +1454,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	// Validate boundaries.
 	totalLength := int64(len(str))
 	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "substringStartEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1394,7 +1471,7 @@ func substringStartEnd(params []interface{}) interface{} {
 func toCharArray(params []interface{}) interface{} {
 	// params[0]: input string
 	obj := params[0].(*object.Object)
-	bytes := obj.FieldTable["value"].Fvalue.([]byte)
+	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	var iArray []int64
 	for _, bb := range bytes {
 		iArray = append(iArray, int64(bb))
@@ -1480,7 +1557,7 @@ func valueOfCharSubarray(params []interface{}) interface{} {
 	// Validate boundaries.
 	wholeLength := int64(len(wholeString))
 	if wholeLength < 1 || ssOffset < 0 || ssCount < 1 || ssOffset > (wholeLength-1) || (ssOffset+ssCount) > wholeLength {
-		errMsg := "Either: nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg := "valueOfCharSubarray: Either nil input byte array, invalid substring offset, or invalid substring length"
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1543,7 +1620,7 @@ func valueOfObject(params []interface{}) interface{} {
 		inObj := params[0].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "value")
 	default:
-		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[0])
+		errMsg := fmt.Sprintf("valueOfObject: Unsupported parameter type: %T", params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1554,23 +1631,23 @@ func valueOfObject(params []interface{}) interface{} {
 // "java/lang/String.intern()Ljava/lang/String;"
 /**
 * Returns a canonical representation for the string object.
-* <p>
+*
 * A pool of strings, initially empty, is maintained privately by the
 * class {@code String}.
-* <p>
+*
 * When the intern method is invoked, if the pool already contains a
 * string equal to this {@code String} object as determined by
 * the {@link #equals(Object)} method, then the string from the pool is
 * returned. Otherwise, this {@code String} object is added to the
 * pool and a reference to this {@code String} object is returned.
-* <p>
+*
 * It follows that for any two strings {@code s} and {@code t},
 * {@code s.intern() == t.intern()} is {@code true}
 * if and only if {@code s.equals(t)} is {@code true}.
-* <p>
+*
 * All literal strings and string-valued constant expressions are
 * interned. String literals are defined in section {@jls 3.10.5} of the
-* <cite>The Java Language Specification</cite>.
+* The Java Language Specification.
 *
 * @return  a string that has the same contents as this string, but is
 *          guaranteed to be from a pool of unique strings.
@@ -1591,7 +1668,7 @@ func stringCheckBoundsBeginEnd(params []interface{}) interface{} {
 	length := params[2].(int64)
 
 	if begin < 0 || begin > end || end > length {
-		errMsg := fmt.Sprintf("checkBoundsBeginEnd: begin: %d, end: %d, length: %d", begin, end, length)
+		errMsg := fmt.Sprintf("stringCheckBoundsBeginEnd: begin: %d, end: %d, length: %d", begin, end, length)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1605,7 +1682,7 @@ func stringCheckBoundsOffCount(params []interface{}) interface{} {
 	length := params[2].(int64)
 
 	if offset < 0 || count < 0 || offset > count || offset > (length-count) {
-		errMsg := fmt.Sprintf("checkBoundsOffCount: offset: %d, count: %d, length: %d", offset, count, length)
+		errMsg := fmt.Sprintf("stringCheckBoundsOffCount: offset: %d, count: %d, length: %d", offset, count, length)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 	}
 
@@ -1633,7 +1710,7 @@ func stringStartsWith(params []interface{}) interface{} {
 	if len(params) == 3 {
 		offset := int(params[2].(int64))
 		if offset < 0 || offset > len(baseStr) {
-			errMsg := fmt.Sprintf("checkBoundsOffCount: base: %s, prefix: %s, offset: %d", baseStr, prefix, offset)
+			errMsg := fmt.Sprintf("stringStartsWith: base: %s, prefix: %s, offset: %d", baseStr, prefix, offset)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		if strings.HasPrefix(baseStr[offset:], prefix) {
@@ -1681,12 +1758,18 @@ func stringGetChars(params []interface{}) interface{} {
 	// Return nil
 	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in base object")
+		errMsg := fmt.Sprintf("stringGetChars: Missing value field in base object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	srcBytes, ok := srcFld.Fvalue.([]byte)
-	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+
+	var srcBytes []types.JavaByte
+	switch srcFld.Fvalue.(type) {
+	case []byte:
+		srcBytes = object.JavaByteArrayFromGoByteArray(srcFld.Fvalue.([]byte))
+	case []types.JavaByte:
+		srcBytes = srcFld.Fvalue.([]types.JavaByte)
+	default:
+		errMsg := fmt.Sprintf("stringGetChars: Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1701,12 +1784,13 @@ func stringGetChars(params []interface{}) interface{} {
 	dstObj := params[3].(*object.Object)
 	dstFld, ok := dstObj.FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in char array object")
+		errMsg := fmt.Sprintf("stringGetChars: Missing value field in char array object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	dstChars, ok := dstFld.Fvalue.([]int64)
 	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in char array object", dstFld.Ftype, dstFld.Fvalue)
+		errMsg := fmt.Sprintf("stringGetChars: Invalid value field type (%s : %T) in char array object",
+			dstFld.Ftype, dstFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -1718,7 +1802,7 @@ func stringGetChars(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength || dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
-		errMsg1 := "Either nil input byte array, invalid substring offset, or invalid substring length"
+		errMsg1 := "stringGetChars: Either nil input byte array, invalid substring offset, or invalid substring length"
 		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", srcLength, srcBegin, srcEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
@@ -1745,19 +1829,24 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	// Get field of base object.
 	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
-		errMsg := fmt.Sprintf("Missing value field in base object")
+		errMsg := fmt.Sprintf("stringIndexOfCh: Missing value field in base object")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Get base object byte array.
-	srcBytes, ok := srcFld.Fvalue.([]byte)
-	if !ok {
-		errMsg := fmt.Sprintf("Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
+	var srcBytes []types.JavaByte
+	switch srcFld.Fvalue.(type) {
+	case []byte:
+		srcBytes = object.JavaByteArrayFromGoByteArray(srcFld.Fvalue.([]byte))
+	case []types.JavaByte:
+		srcBytes = srcFld.Fvalue.([]types.JavaByte)
+	default:
+		errMsg := fmt.Sprintf("stringIndexOfCh: Invalid value field type (%s : %T) in base object", srcFld.Ftype, srcFld.Fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Get search argument and set up switch.
-	arg := byte(params[1].(int64))
+	arg := types.JavaByte(params[1].(int64))
 	var beginIndex int64
 	var endIndex int64
 	lenSrcBytes := int64(len(srcBytes))
@@ -1779,12 +1868,12 @@ func stringIndexOfCh(params []interface{}) interface{} {
 	case 3: // int indexOf(int ch, int beginIndex, int endIndex)
 		beginIndex = params[2].(int64)
 		if beginIndex < 0 || beginIndex >= lenSrcBytes {
-			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenSrcBytes, beginIndex)
+			errMsg := fmt.Sprintf("stringIndexOfCh: Base string len: %d, begin index: %d", lenSrcBytes, beginIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		endIndex = params[3].(int64)
 		if endIndex > lenSrcBytes || beginIndex > endIndex {
-			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenSrcBytes, endIndex)
+			errMsg := fmt.Sprintf("stringIndexOfCh: Base string len: %d, end index: %d", lenSrcBytes, endIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 	}
@@ -1827,12 +1916,12 @@ func stringIndexOfString(params []interface{}) interface{} {
 	case 3: // int indexOf(String str, int beginIndex, int endIndex)
 		beginIndex = params[2].(int64)
 		if beginIndex < 0 || beginIndex >= lenOrigBaseString {
-			errMsg := fmt.Sprintf("Base string len: %d, begin index: %d", lenOrigBaseString, beginIndex)
+			errMsg := fmt.Sprintf("stringIndexOfString: Base string len: %d, begin index: %d", lenOrigBaseString, beginIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 		endIndex = params[3].(int64)
 		if endIndex > lenOrigBaseString || beginIndex > endIndex {
-			errMsg := fmt.Sprintf("Base string len: %d, end index: %d", lenOrigBaseString, endIndex)
+			errMsg := fmt.Sprintf("stringIndexOfString: Base string len: %d, end index: %d", lenOrigBaseString, endIndex)
 			return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
 		}
 	}
@@ -1965,10 +2054,8 @@ func stringSplitLimit(params []interface{}) interface{} {
 		outObjArray = append(outObjArray, object.StringObjectFromGoString(result[ix]))
 	}
 	return populator("[Ljava/lang/String;", types.RefArray, outObjArray)
-
 }
 
-// >>>
 func stringStrip(params []interface{}) interface{} {
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimSpace(input)

@@ -17,7 +17,7 @@ func Load_Lang_Character() {
 	MethodSignatures["java/lang/Character.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Character.isDigit(C)Z"] =

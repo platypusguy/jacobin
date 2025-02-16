@@ -176,15 +176,10 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 }
 
 // GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
-// and returns the class name, method name and method signature
+// and returns the class name, method name and method signature. Note that checks on the
+// validity of the cpIndex are performed in codeCheck.go in the various invoke* methods tested there.
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
-	if cpIndex < 1 || cpIndex >= len(CP.CpIndex) {
-		return "", "", ""
-	}
 
-	if CP.CpIndex[cpIndex].Type != MethodRef {
-		return "", "", ""
-	}
 	methodRef := CP.CpIndex[cpIndex].Slot
 	classIndex := CP.MethodRefs[methodRef].ClassIndex
 

@@ -20,7 +20,7 @@ func Load_Lang_Long() {
 	MethodSignatures["java/lang/Long.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Long.doubleValue()D"] =
@@ -81,7 +81,7 @@ func longParseLong(params []interface{}) interface{} {
 	str := object.GoStringFromStringObject(obj)
 	jj, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("strconv.ParseInt(%s,10,64), failed, reason: %s", str, err.Error())
+		errMsg := fmt.Sprintf("longParseLong: strconv.ParseInt(%s,10,64), failed, reason: %s", str, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	return jj

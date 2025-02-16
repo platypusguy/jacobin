@@ -23,13 +23,13 @@ func Load_Util_Zip_Crc32_Crc32c() {
 	MethodSignatures["java/util/zip/CRC32.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/zip/CRC32C.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/zip/CRC32.<init>()V"] =
@@ -151,7 +151,7 @@ func crc32UpdateFromArray(params []interface{}) interface{} {
 	// Collect parameters.
 	obj := params[0].(*object.Object)
 	objBB := params[1].(*object.Object)
-	bbWhole := objBB.FieldTable["value"].Fvalue.([]byte)
+	bbWhole := objBB.FieldTable["value"].Fvalue.([]types.JavaByte)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 	bbSubset := bbWhole[offset:length]
@@ -166,7 +166,8 @@ func crc32UpdateFromArray(params []interface{}) interface{} {
 	valuePoly := uint32(fldPoly.Fvalue.(int64))
 
 	// Compute new checksum and store it back.
-	fldValue.Fvalue = int64(updateCRC32(initialChecksum, bbSubset, valuePoly))
+	fldValue.Fvalue = int64(updateCRC32(initialChecksum,
+		object.GoByteArrayFromJavaByteArray(bbSubset), valuePoly))
 	obj.FieldTable["value"] = fldValue
 
 	return nil

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/types"
 	"math"
 	"os"
 )
@@ -249,26 +250,6 @@ func Load_Io_PrintStream() {
 
 }
 
-// "java/io/PrintStream.println(Ljava/lang/String;)V"
-func PrintlnString(params []interface{}) interface{} {
-	param1, ok := params[1].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-
-	// Handle null strings as well as []byte.
-	fld := param1.FieldTable["value"]
-	if fld.Fvalue == nil {
-		fmt.Fprintln(params[0].(*os.File), "")
-	} else {
-		str := string(fld.Fvalue.([]byte))
-		fmt.Fprintln(params[0].(*os.File), str)
-	}
-
-	return nil
-}
-
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
 // "java/io/PrintStream.println()V"
 func PrintlnV(params []interface{}) interface{} {
@@ -318,27 +299,6 @@ func PrintlnLong(params []interface{}) interface{} {
 func PrintlnDoubleFloat(params []interface{}) interface{} {
 	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
 	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint)+"\n", doubleToPrint)
-	return nil
-}
-
-// Println an Object's contents
-// "java/io/PrintStream.println(Ljava/lang/Object;)V"
-func PrintlnObject(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		inObj := params[1].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "FilePath")
-		if str == "null" {
-			str = object.ObjectFieldToString(inObj, "value")
-		}
-	case nil:
-		str = "null"
-	default:
-		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	fmt.Fprintln(params[0].(*os.File), str)
 	return nil
 }
 
@@ -399,49 +359,12 @@ func PrintDouble(params []interface{}) interface{} {
 	return nil
 }
 
-// Print string
-// "java/io/PrintStream.print(Ljava/lang/String;)V"
-func PrintString(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		str = object.GoStringFromStringObject(params[1].(*object.Object))
-	default:
-		errMsg := fmt.Sprintf("Expected params[1] of type *object.Object but observed type %T\n", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-
-	fmt.Fprint(params[0].(*os.File), str)
-	return nil
-}
-
-// Print an Object's contents
-// "java/io/PrintStream.print(Ljava/lang/Object;)V"
-func PrintObject(params []interface{}) interface{} {
-	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		inObj := params[1].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "FilePath")
-		if str == "null" {
-			str = object.ObjectFieldToString(inObj, "value")
-		}
-	case nil:
-		str = "null"
-	default:
-		errMsg := fmt.Sprintf("Unsupported parameter type: %T", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	fmt.Fprint(params[0].(*os.File), str)
-	return nil
-}
-
 // Printf -- handle the variable args and then call golang's own printf function
 // "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
 func Printf(params []interface{}) interface{} {
 	var intfSprintf = new([]interface{})
-	*intfSprintf = append(*intfSprintf, params[1])
-	*intfSprintf = append(*intfSprintf, params[2])
+	*intfSprintf = append(*intfSprintf, params[1]) // The format string
+	*intfSprintf = append(*intfSprintf, params[2]) // The object array
 	retval := StringFormatter(*intfSprintf)
 	switch retval.(type) {
 	case *object.Object:
@@ -467,4 +390,95 @@ func getDoubleFormat(d float64) string {
 			return "%f"
 		}
 	}
+}
+
+// Called by PrintObject and PrintlnObject
+func _printObject(params []interface{}, newLine bool) interface{} {
+	var str string
+	switch params[1].(type) {
+	case *object.Object:
+		inObj := params[1].(*object.Object)
+		str = object.ObjectFieldToString(inObj, "FilePath")
+		if str == "null" {
+			str = object.ObjectFieldToString(inObj, "value")
+			if str == "null" {
+				str = ""
+				for name, _ := range inObj.FieldTable {
+					str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+				}
+				str = str[:len(str)-2]
+			}
+
+		}
+	case nil:
+		str = "null"
+	default:
+		errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	if newLine {
+		fmt.Fprintln(params[0].(*os.File), str)
+	} else {
+		fmt.Fprint(params[0].(*os.File), str)
+	}
+
+	return nil
+}
+
+// Print an Object's contents
+// "java/io/PrintStream.print(Ljava/lang/Object;)V"
+func PrintObject(params []interface{}) interface{} {
+	return _printObject(params, false)
+}
+
+// Println an Object's contents
+// "java/io/PrintStream.println(Ljava/lang/Object;)V"
+func PrintlnObject(params []interface{}) interface{} {
+	return _printObject(params, true)
+}
+
+// "java/io/PrintStream.println(Ljava/lang/String;)V"
+func _printString(params []interface{}, newLine bool) interface{} {
+	var str string
+	param1, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("_printString: Expected params[1] of type *object.Object but observed type %T\n", params[1])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Handle null strings as well as []byte.
+	fld := param1.FieldTable["value"]
+	if fld.Fvalue == nil {
+		str = ""
+	} else {
+		switch fld.Fvalue.(type) {
+		case []byte:
+			str = string(fld.Fvalue.([]byte))
+		case []types.JavaByte:
+			str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		default:
+			errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	if newLine {
+		fmt.Fprintln(params[0].(*os.File), str)
+	} else {
+		fmt.Fprint(params[0].(*os.File), str)
+	}
+
+	return nil
+}
+
+// Print string
+// "java/io/PrintStream.print(Ljava/lang/String;)V"
+func PrintString(params []interface{}) interface{} {
+	return _printString(params, false)
+}
+
+// "java/io/PrintStream.println(Ljava/lang/String;)V"
+func PrintlnString(params []interface{}) interface{} {
+	return _printString(params, true)
 }

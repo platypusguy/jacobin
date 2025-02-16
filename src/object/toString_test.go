@@ -135,9 +135,18 @@ func TestObjectFieldToStringPos(t *testing.T) {
 	var byteAry = []byte{65, 66, 67}
 	setField(obj, fieldName, types.ByteArray, byteAry)
 	observed = ObjectFieldToString(obj, fieldName)
+	expected = "414243"
+	if observed != expected {
+		t.Errorf("Raw byte array, expected: %s, observed: %s\n", expected, observed)
+	}
+
+	// Java byte array
+	var jbAry = []types.JavaByte{65, 66, 67}
+	setField(obj, fieldName, types.ByteArray, jbAry)
+	observed = ObjectFieldToString(obj, fieldName)
 	expected = "ABC"
 	if observed != expected {
-		t.Errorf("Byte array, expected: %s, observed: %s\n", expected, observed)
+		t.Errorf("Java byte array, expected: %s, observed: %s\n", expected, observed)
 	}
 
 	// Double array

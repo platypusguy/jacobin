@@ -17,11 +17,13 @@ import (
 
 // the definition of the class as it's stored in the method area
 type Klass struct {
-	Status byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
-	Loader string
-	Data   *ClData
+	Status      byte // I=Initializing,F=formatChecked,V=verified,L=linked,N=instantiated
+	Loader      string
+	Data        *ClData
+	CodeChecked bool // has the code been checked for this class?
 }
 
+// the class data, as it's posted to the method area
 type ClData struct {
 	Name            string
 	NameIndex       uint32 // index into StringPool
@@ -30,7 +32,8 @@ type ClData struct {
 	Pkg             string   // package name, if any. (so named, b/c 'package' is a golang keyword)
 	Interfaces      []uint16 // indices into UTF8Refs
 	Fields          []Field
-	MethodTable     map[string]*Method
+	MethodList      map[string]string  // maps method names including superclass methods to FQN, which is the key to GMT
+	MethodTable     map[string]*Method // the methods defined in this class
 	Attributes      []Attr
 	SourceFile      string
 	Bootstraps      []BootstrapMethod
@@ -39,12 +42,13 @@ type ClData struct {
 	ClInit          byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
 }
 
+// the CP of the loaded class (see above)
 type CPool struct {
 	CpIndex        []CpEntry // the constant pool index to entries
 	ClassRefs      []uint32  // points to a string pool entry = class name
 	Doubles        []float64
 	Dynamics       []DynamicEntry
-	FieldRefs      []FieldRefEntry
+	FieldRefs      []ResolvedFieldEntry
 	Floats         []float32
 	IntConsts      []int32 // 32-bit int containing the actual int value
 	InterfaceRefs  []InterfaceRefEntry
@@ -77,6 +81,7 @@ type AccessFlags struct {
 
 type Field struct {
 	AccessFlags int
+	NameStr     string
 	Name        uint16 // index of the UTF-8 entry in the CP
 	Desc        uint16 // index of the UTF-8 entry in the CP
 	IsStatic    bool   // is the field static?

@@ -15,6 +15,7 @@ import (
 	"jacobin/shutdown"
 	"jacobin/statics"
 	"jacobin/trace"
+	"jacobin/types"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -42,7 +43,7 @@ func Load_Lang_Class() {
 	MethodSignatures["java/lang/Class.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
@@ -90,7 +91,7 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	if err == nil {
 		return k
 	} else {
-		errMsg := fmt.Sprintf("Does not handle: %s", str)
+		errMsg := fmt.Sprintf("getPrimitiveClass: %s: %s", err.Error(), str)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 }
@@ -111,7 +112,7 @@ func simpleClassLoadByName(className string) (*classloader.Klass, error) {
 		if className == "" {
 			errClassName = "<empty string>"
 		}
-		errMsg := fmt.Sprintf("Failed to load class %s by name, reason: %s", errClassName, err.Error())
+		errMsg := fmt.Sprintf("simpleClassLoadByName: Failed to load class %s by name, reason: %s", errClassName, err.Error())
 		trace.Error(errMsg)
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
@@ -128,7 +129,12 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// can be called, and CLI processing has also occurred. So, we
 	// know we have the latest assertion-enabled status.
 	x := statics.Statics["main.$assertionsDisabled"].Value.(int64)
-	return 1 - x // return the 0 if disabled, 1 if not.
+	if x == 1 {
+		return types.JavaBoolFalse
+	} else {
+		return types.JavaBoolTrue
+	}
+	// return 1 - x // return the 0 if disabled, 1 if not.
 }
 
 // "java/lang/Class.getName()Ljava/lang/String;"

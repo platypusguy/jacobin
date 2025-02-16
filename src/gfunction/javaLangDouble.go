@@ -22,7 +22,7 @@ func Load_Lang_Double() {
 	MethodSignatures["java/lang/Double.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/Double.byteValue()B"] =
@@ -85,6 +85,18 @@ func Load_Lang_Double() {
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  longBitsToDouble,
+		}
+
+	MethodSignatures["java/lang/Double.valueOf(Ljava/lang/String;)Ljava/lang/Double;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  doubleValueOf,
+		}
+
+	MethodSignatures["java/lang/Double.valueOf(D)Ljava/lang/Double;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  doubleValueOf,
 		}
 
 }
@@ -170,13 +182,13 @@ func doubleParseDouble(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	strArg := object.GoStringFromStringObject(parmObj)
 	if len(strArg) < 1 {
-		return getGErrBlk(excNames.NumberFormatException, "String length is zero")
+		return getGErrBlk(excNames.NumberFormatException, "doubleParseDouble: String length is zero")
 	}
 
 	// Compute output.
 	output, err := strconv.ParseFloat(strArg, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("strconv.ParseFloat(%s) failed, reason: %s", strArg, err.Error())
+		errMsg := fmt.Sprintf("doubleParseDouble: strconv.ParseFloat(%s) failed, reason: %s", strArg, err.Error())
 		return getGErrBlk(excNames.NumberFormatException, errMsg)
 	}
 	return output
@@ -215,4 +227,28 @@ func doubleToLongBits(params []interface{}) interface{} {
 func longBitsToDouble(params []interface{}) interface{} {
 	bits := params[0].(int64)
 	return math.Float64frombits(uint64(bits))
+}
+
+func doubleValueOf(params []interface{}) interface{} {
+	className := "java/lang/Double"
+	obj := object.MakeEmptyObjectWithClassName(&className)
+	switch params[0].(type) {
+	case float64:
+		obj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: params[0].(float64)}
+	case *object.Object:
+		that := params[0].(*object.Object)
+		str := object.GoStringFromJavaByteArray(that.FieldTable["value"].Fvalue.([]types.JavaByte))
+		if len(str) < 1 {
+			return getGErrBlk(excNames.NullPointerException, "doubleValueOf: nil string argument")
+		}
+		dbl, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return getGErrBlk(excNames.NumberFormatException, "doubleValueOf: "+err.Error())
+		}
+		obj.FieldTable["value"] = object.Field{Ftype: types.Double, Fvalue: dbl}
+	default:
+		errMsg := fmt.Sprintf("doubleValueOf: unrecognizable parameter type: %T", params[0])
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
+	return obj
 }

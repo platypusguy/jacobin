@@ -29,7 +29,7 @@ func Load_Io_Console() {
 			GFunction:  consoleClinit,
 		}
 
-	// Flushes the console and forces any buffered output to be written immediately.
+	// Returns the Charset object used for the Console.
 	MethodSignatures["java/io/Console.charset()Ljava/nio/charset/Charset;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -105,7 +105,7 @@ func Load_Io_Console() {
 func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
 	if klass == nil {
-		errMsg := "Console <clinit>: Could not find java/io/Console in the MethodArea"
+		errMsg := "consoleClinit: Could not find java/io/Console in the MethodArea"
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
@@ -157,7 +157,7 @@ func consoleReadLine([]interface{}) interface{} {
 			break
 		}
 		if err != nil {
-			errMsg := fmt.Sprintf("stdin.Read error: %s", err.Error())
+			errMsg := fmt.Sprintf("consoleReadLine: stdin.Read error: %s", err.Error())
 			return getGErrBlk(excNames.IOException, errMsg)
 		}
 		if bb[0] == '\n' {
@@ -182,7 +182,7 @@ func consolePrintfReadLine(params []interface{}) interface{} {
 func consoleReadPassword([]interface{}) interface{} {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		errMsg := fmt.Sprintf("stdin.ReadPassword failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("consoleReadPassword: stdin.ReadPassword failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	stdout := statics.GetStaticValue("java/lang/System", "out").(*os.File)

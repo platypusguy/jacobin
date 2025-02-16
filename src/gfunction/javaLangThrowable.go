@@ -19,17 +19,17 @@ import (
 
 func Load_Lang_Throwable() {
 
+	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  throwableClinit,
+		}
+
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
 			ParamSlots:   0,
 			GFunction:    FillInStackTrace,
 			NeedsContext: true,
-		}
-
-	MethodSignatures["java/lang/Throwable.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  throwableClinit,
 		}
 
 	MethodSignatures["java/lang/Throwable.getOurStackTrace:()[Ljava/lang/StackTraceElement;"] =
@@ -46,7 +46,7 @@ func Load_Lang_Throwable() {
 //  2. for the nonce, Throwable.SUPPRESSED_SENTINEL is set to nil. It's unlikely we'll
 //     ever need it, but if we do, we'll implement it then.
 //
-// So, essentially, we're just initializing several static fields (as expected in clinit())
+// So, essentially, we're just initializing several static fields (as expected in systemClinit())
 //
 // 0:  ldc           #8                  // class java/lang/Throwable
 // 2:  invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
@@ -66,8 +66,7 @@ func Load_Lang_Throwable() {
 // java of previous: private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
 // 36: return
 func throwableClinit([]interface{}) interface{} {
-	stackTraceElementClassName := "java/lang/StackTraceElement"
-	emptyStackTraceElementArray := object.Make1DimRefArray(&stackTraceElementClassName, 0)
+	emptyStackTraceElementArray := object.Make1DimRefArray("java/lang/StackTraceElement", 0)
 	_ = statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
 		Type:  "[Ljava/lang/StackTraceElement",
 		Value: emptyStackTraceElementArray,
@@ -78,13 +77,12 @@ func throwableClinit([]interface{}) interface{} {
 	_ = statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
 		Type: "Ljava/util/List", Value: nil})
 
-	emptyThrowableClassName := "java/lang/Throwable"
-	emptyThrowableArray := object.Make1DimRefArray(&emptyThrowableClassName, 0)
+	emptyThrowableArray := object.Make1DimRefArray("java/lang/Throwable", 0)
 	_ = statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
 		Type:  "[Ljava/lang/Throwable",
 		Value: emptyThrowableArray,
 	})
-	return nil
+	return object.StringObjectFromGoString("throwableClinit")
 }
 
 // This function is called by Throwable.<init>().

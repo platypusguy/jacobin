@@ -30,6 +30,18 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/io/ByteArrayOutputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
 	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -70,18 +82,6 @@ func Load_Traps() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterInputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterInputStream.<init>(Ljava/io/InputStream;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
@@ -132,16 +132,16 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
+	MethodSignatures["java/nio/ByteBuffer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapDeprecated,
+			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/rmi/RMISecurityManager.<init>()V"] =
+	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapDeprecated,
+			GFunction:  trapClass,
 		}
 
 	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
@@ -156,28 +156,52 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/rmi/RMISecurityManager.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  returnNull,
+		}
+
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  returnNull,
+		}
+
 }
 
 // Generic trap for classes
 func trapClass([]interface{}) interface{} {
-	errMsg := "The requested class is not yet supported"
+	errMsg := "TRAP: The requested class is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for deprecated classes and functions
 func trapDeprecated([]interface{}) interface{} {
-	errMsg := "The requested class or function is deprecated and, therefore, not supported"
+	errMsg := "TRAP: The requested class or function is deprecated and, therefore, not supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for deprecated classes and functions
 func trapUndocumented([]interface{}) interface{} {
-	errMsg := "The requested class or function is undocumented and, therefore, not supported"
+	errMsg := "TRAP: The requested class or function is undocumented and, therefore, not supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
 
 // Generic trap for functions
 func trapFunction([]interface{}) interface{} {
-	errMsg := "The requested function is not yet supported"
+	errMsg := "TRAP: The requested function is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }

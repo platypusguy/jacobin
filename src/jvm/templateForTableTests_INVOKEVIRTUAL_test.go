@@ -147,7 +147,7 @@ func RunTestFuncWith0or1Strings(params TestVars) error {
 	fs.PushFront(&f) // push the new frame
 
 	// run the method (by running the frame)
-	_ = runFrame(fs)
+	interpret(fs)
 
 	// get contents written by stderr and stdout, then restore
 	// stderr and stdout to what they were before the test
@@ -307,7 +307,7 @@ func TestGfunWith0or1StringsTable(t *testing.T) {
 			fs.PushFront(&f) // push the new frame
 
 			// run the method (by running the frame)
-			_ = runFrame(fs)
+			interpret(fs)
 
 			// get contents written by stderr and stdout, then restore
 			// stderr and stdout to what they were before the test

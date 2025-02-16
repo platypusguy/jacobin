@@ -8,6 +8,7 @@ package object
 
 import (
 	"fmt"
+	"jacobin/globals"
 	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
@@ -188,6 +189,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	obj := *objPtr
 	output := ""
 	var klassString string
+	var className string
 
 	// Emit BEGIN
 	if indent > 0 {
@@ -200,7 +202,8 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 		output += strings.Repeat(" ", indent)
 	}
 	if obj.KlassName != types.InvalidStringIndex {
-		klassString = "\tClass: " + *(stringPool.GetStringPointer(obj.KlassName))
+		className = *(stringPool.GetStringPointer(obj.KlassName))
+		klassString = "\tClass: " + className
 	} else {
 		klassString = "\t<class MISSING>"
 	}
@@ -213,7 +216,14 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 	nflds := len(obj.FieldTable)
 	if nflds > 0 {
 		output += fmt.Sprintf("\tField Table (%d):\n", nflds)
-		for fieldName := range obj.FieldTable {
+		// Create a sorted slice of keys.
+		keys := make([]string, 0, len(obj.FieldTable))
+		for key := range obj.FieldTable {
+			keys = append(keys, key)
+		}
+		globals.SortCaseInsensitive(&keys)
+
+		for _, fieldName := range keys {
 			if indent > 0 {
 				output += strings.Repeat(" ", indent)
 			}
@@ -221,7 +231,7 @@ func (objPtr *Object) DumpObject(title string, indent int) {
 			if !ok {
 				output += fmt.Sprintf("\t\t<ERROR nil FieldTable[%s] ptr>\n", fieldName)
 			} else {
-				str := fmtHelper(obj.FieldTable[fieldName], klassString, fieldName)
+				str := fmtHelper(obj.FieldTable[fieldName], className, fieldName)
 				output += fmt.Sprintf("\t\tFld %s: (%s) %s\n", fieldName, obj.FieldTable[fieldName].Ftype, str)
 			}
 		}

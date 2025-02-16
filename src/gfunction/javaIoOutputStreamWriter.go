@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/types"
 	"os"
 )
 
@@ -18,7 +19,7 @@ func Load_Io_OutputStreamWriter() {
 	MethodSignatures["java/io/OutputStreamWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;)V"] =
@@ -93,14 +94,14 @@ func initOutputStreamWriter(params []interface{}) interface{} {
 	// Get file path field.
 	fldPath, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		errMsg := "OutputStream object lacks a FilePath field"
+		errMsg := "initOutputStreamWriter: OutputStream object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get file handle field.
 	fldHandle, ok := params[1].(*object.Object).FieldTable[FileHandle]
 	if !ok {
-		errMsg := "OutputStream object lacks a FileHandle field"
+		errMsg := "initOutputStreamWriter: OutputStream object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	osFile := fldHandle.Fvalue.(*os.File)
@@ -109,7 +110,7 @@ func initOutputStreamWriter(params []interface{}) interface{} {
 	_, err := osFile.Stat()
 	if err != nil {
 		pathStr := string(fldPath.Fvalue.([]byte))
-		errMsg := fmt.Sprintf("os.Stat(%s) failed, reason: %s", pathStr, err.Error())
+		errMsg := fmt.Sprintf("initOutputStreamWriter: os.Stat(%s) failed, reason: %s", pathStr, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -127,14 +128,14 @@ func oswClose(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswClose: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Close the file.
 	err := osFile.Close()
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Close() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswClose: osFile.Close() failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
@@ -145,14 +146,14 @@ func oswFlush(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswFlush: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Flush the file's buffers.
 	err := osFile.Sync()
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Sync() failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswFlush: osFile.Sync() failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	return nil
@@ -167,14 +168,14 @@ func oswWriteOneChar(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := obj.FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswWriteOneChar: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the integer argument.
 	wint, ok := params[1].(int64)
 	if !ok {
-		errMsg := "Error in integer argument"
+		errMsg := "oswWriteOneChar: Error in integer argument"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -185,7 +186,7 @@ func oswWriteOneChar(params []interface{}) interface{} {
 	// Write one byte.
 	_, err := osFile.Write(buffer)
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteOneChar: osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -198,14 +199,14 @@ func oswWriteCharBuffer(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswWriteCharBuffer: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the parameter buffer, offset, and length.
 	intArray, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 	if !ok {
-		errMsg := "Trouble with value field ([]int64)"
+		errMsg := "oswWriteCharBuffer: Trouble with value field ([]int64)"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 	offset := params[2].(int64)
@@ -216,7 +217,7 @@ func oswWriteCharBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(intArray))-offset) {
-		errMsg := fmt.Sprintf("Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("oswWriteCharBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(intArray))
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
@@ -230,7 +231,7 @@ func oswWriteCharBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteCharBuffer: osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
@@ -243,16 +244,17 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 	// Get file handle.
 	osFile, ok := params[0].(*object.Object).FieldTable[FileHandle].Fvalue.(*os.File)
 	if !ok {
-		errMsg := "OutputStreamWriter object lacks a FileHandle field"
+		errMsg := "oswWriteStringBuffer: OutputStreamWriter object lacks a FileHandle field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 
 	// Get the parameter string byte array, offset, and length.
-	paramBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte)
+	javaBytes, ok := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	if !ok {
-		errMsg := "Trouble with value field"
+		errMsg := "oswWriteStringBuffer: Trouble with value field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
+	paramBytes := object.GoByteArrayFromJavaByteArray(javaBytes)
 	offset := params[2].(int64)
 	length := params[3].(int64)
 
@@ -261,7 +263,7 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if length < 0 || offset < 0 || length > (int64(len(paramBytes))-offset) {
-		errMsg := fmt.Sprintf("Error in parameters: offset=%d, length=%d, char.array.length=%d",
+		errMsg := fmt.Sprintf("oswWriteStringBuffer: Error in parameters: offset=%d, length=%d, char.array.length=%d",
 			offset, length, len(paramBytes))
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
@@ -275,7 +277,7 @@ func oswWriteStringBuffer(params []interface{}) interface{} {
 	// Write the byte buffer.
 	_, err := osFile.Write(outBytes)
 	if err != nil {
-		errMsg := fmt.Sprintf("osFile.Write failed, reason: %s", err.Error())
+		errMsg := fmt.Sprintf("oswWriteStringBuffer: osFile.Write failed, reason: %s", err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
 

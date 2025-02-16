@@ -96,6 +96,7 @@ func TestJmodMapHomeDefault(t *testing.T) {
 	t.Logf("Map size is %d\n", mapSize)
 
 	checkMap(t, types.StringClassName, "java.base.jmod")
+	checkMap(t, "java/util/zip/ZipUtils", "java.base.jmod")
 	checkMap(t, "com/sun/accessibility/internal/resources/accessibility", "java.desktop.jmod")
 
 }

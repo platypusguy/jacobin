@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -47,40 +47,22 @@ func byteToInt64(bite byte) int64 {
 	return int64(bite)
 }
 
-// converts four bytes into a signed 64-bit integer
-func fourBytesToInt64(b1, b2, b3, b4 byte) int64 {
-	wbytes := make([]byte, 8)
-	wbytes[4] = b1
-	wbytes[5] = b2
-	wbytes[6] = b3
-	wbytes[7] = b4
-
-	if (b1 & 0x80) == 0x80 { // Negative bite value (left-most bit on)?
-		// Negative byte - need to extend the sign (left-most) bit
-		wbytes[0] = 0xff
-		wbytes[1] = 0xff
-		wbytes[2] = 0xff
-		wbytes[3] = 0xff
-	}
-	return int64(binary.BigEndian.Uint64(wbytes))
-}
-
 // converts an interface{} value to int8. Used for BASTORE
-func convertInterfaceToByte(val interface{}) byte {
+func convertInterfaceToByte(val interface{}) types.JavaByte {
 	switch t := val.(type) {
-	case int64:
-		return byte(t)
-	case int:
-		return byte(t)
-	case int8:
-		return byte(t)
 	case byte:
+		return types.JavaByte(t)
+	case int:
+		return types.JavaByte(t)
+	case int8:
 		return t
+	case int64:
+		return types.JavaByte(t)
 	}
 	return 0
 }
 
-// converts an interface{} value into uint64
+// converts an interface{} value on the op stack into a uint64
 func convertInterfaceToUint64(val interface{}) uint64 {
 	// in theory, the only types passed to this function are those
 	// found on the operand stack: ints, floats, pointers
@@ -98,14 +80,18 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 
 // converts an interface{} value into int64
 // notes:
+//
 //   - an exception is thrown if function is passed a uint64
-//   - there exists a similarl uint function: convertInterfaceToUint64()
+//
+//   - there exists a similar uint function: convertInterfaceToUint64()
+//
 //   - for converting a byte as a numeric value and so to propagate negative values,
 //     use byteToInt64(). This would be done only in numeric conversions of binary data.
+//
+//     It might appear that you could put most of the case statements into a single case statement,
+//     but golang does not allow this. For interface conversion, it needs to be done type-by-type.
 func convertInterfaceToInt64(arg interface{}) int64 {
 	switch t := arg.(type) {
-	case int64:
-		return t
 	case int8:
 		return int64(t)
 	case uint8:
@@ -120,6 +106,8 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 		return int64(t)
 	case uint32:
 		return int64(t)
+	case int64:
+		return t
 	case bool:
 		return types.ConvertGoBoolToJavaBool(t)
 	default:
@@ -130,130 +118,6 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 		}
 	}
 	return 0
-}
-
-// Log the existing stack
-// Could be called for tracing -or- supply info for an error section
-func LogTraceStack(f *frames.Frame) {
-	var traceInfo, output string
-	if f.TOS == -1 {
-		traceInfo = fmt.Sprintf("%55s %s.%s stack <empty>", "", f.ClName, f.MethName)
-		trace.Trace(traceInfo)
-		return
-	}
-	for ii := 0; ii <= f.TOS; ii++ {
-		switch f.OpStack[ii].(type) {
-		case *object.Object:
-			if object.IsNull(f.OpStack[ii].(*object.Object)) {
-				output = fmt.Sprintf("<null>")
-			} else {
-				objPtr := f.OpStack[ii].(*object.Object)
-				output = objPtr.FormatField("")
-			}
-		case *[]uint8:
-			value := f.OpStack[ii]
-			strPtr := value.(*[]byte)
-			str := string(*strPtr)
-			output = fmt.Sprintf("*[]byte: %-10s", str)
-		case []uint8:
-			value := f.OpStack[ii]
-			bytes := value.([]byte)
-			str := string(bytes)
-			output = fmt.Sprintf("[]byte: %-10s", str)
-		default:
-			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
-		}
-		if f.TOS == ii {
-			traceInfo = fmt.Sprintf("%55s %s.%s TOS   [%d] %s", "", f.ClName, f.MethName, ii, output)
-		} else {
-			traceInfo = fmt.Sprintf("%55s %s.%s stack [%d] %s", "", f.ClName, f.MethName, ii, output)
-		}
-		trace.Trace(traceInfo)
-	}
-}
-
-// Generate a trace of a field ID (static or non-static).
-func emitTraceFieldID(opcode, fld string) {
-	traceInfo := fmt.Sprintf("%65s fieldName: %s", opcode, fld)
-	trace.Trace(traceInfo)
-}
-
-// the generation and formatting of trace data for each executed bytecode.
-// Returns the formatted data for output to logging, console, or other uses.
-func emitTraceData(f *frames.Frame) string {
-	var tos = " -"
-	var stackTop = ""
-	if f.TOS != -1 {
-		tos = fmt.Sprintf("%2d", f.TOS)
-		switch f.OpStack[f.TOS].(type) {
-		// if the value at TOS is a string, say so and print the first 10 chars of the string
-		case *object.Object:
-			if object.IsNull(f.OpStack[f.TOS].(*object.Object)) {
-				stackTop = fmt.Sprintf("<null>")
-			} else {
-				objPtr := f.OpStack[f.TOS].(*object.Object)
-				stackTop = objPtr.FormatField("")
-			}
-		case *[]uint8:
-			value := f.OpStack[f.TOS]
-			strPtr := value.(*[]byte)
-			str := string(*strPtr)
-			stackTop = fmt.Sprintf("*[]byte: %-10s", str)
-		case []uint8:
-			value := f.OpStack[f.TOS]
-			bytes := value.([]byte)
-			str := string(bytes)
-			stackTop = fmt.Sprintf("[]byte: %-10s", str)
-		default:
-			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
-		}
-	}
-
-	traceInfo :=
-		"class: " + fmt.Sprintf("%-22s", f.ClName) +
-			" meth: " + fmt.Sprintf("%-10s", f.MethName) +
-			" PC: " + fmt.Sprintf("% 3d", f.PC) +
-			", " + fmt.Sprintf("%-13s", opcodes.BytecodeNames[int(f.Meth[f.PC])]) +
-			" TOS: " + tos +
-			" " + stackTop +
-			" "
-	return traceInfo
-}
-
-// traceObject : Used by push, pop, and peek in tracing an object.
-func traceObject(f *frames.Frame, opStr string, obj *object.Object) {
-	var traceInfo string
-	prefix := fmt.Sprintf(" %4s          TOS:", opStr)
-
-	// Nil pointer to object?
-	if obj == nil {
-		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
-		trace.Trace(traceInfo)
-		return
-	}
-
-	// The object pointer is not nil.
-	klass := object.GoStringFromStringPoolIndex(obj.KlassName)
-	traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d, class: %s", f.TOS, klass)
-	trace.Trace(traceInfo)
-
-	// Trace field table.
-	prefix = " "
-	if len(obj.FieldTable) > 0 {
-		for fieldName := range obj.FieldTable {
-			fld := obj.FieldTable[fieldName]
-			if klass == types.StringClassName && fieldName == "value" {
-				str := string(fld.Fvalue.([]byte))
-				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
-			} else {
-				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
-			}
-			trace.Trace(traceInfo)
-		}
-	} else { // nil FieldTable
-		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("no fields")
-		trace.Trace(traceInfo)
-	}
 }
 
 // pop from the operand stack.
@@ -287,7 +151,7 @@ func pop(f *frames.Frame) interface{} {
 				switch value.(type) {
 				case *object.Object:
 					obj := value.(*object.Object)
-					traceObject(f, "POP", obj)
+					TraceObject(f, "POP", obj)
 				case *[]uint8:
 					strPtr := value.(*[]byte)
 					str := string(*strPtr)
@@ -299,6 +163,12 @@ func pop(f *frames.Frame) interface{} {
 					str := string(bytes)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
 						fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+					trace.Trace(traceInfo)
+				case []types.JavaByte:
+					bytes := value.([]types.JavaByte)
+					str := object.GoStringFromJavaByteArray(bytes)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
 					trace.Trace(traceInfo)
 				default:
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
@@ -333,7 +203,7 @@ func peek(f *frames.Frame) interface{} {
 		switch value.(type) {
 		case *object.Object:
 			obj := value.(*object.Object)
-			traceObject(f, "PEEK", obj)
+			TraceObject(f, "PEEK", obj)
 		default:
 			traceInfo = fmt.Sprintf("                                                  "+
 				"PEEK          TOS:%3d %T %v", f.TOS, value, value)
@@ -378,7 +248,7 @@ func push(f *frames.Frame, x interface{}) {
 					switch x.(type) {
 					case *object.Object:
 						obj := x.(*object.Object)
-						traceObject(f, "PUSH", obj)
+						TraceObject(f, "PUSH", obj)
 					case *[]uint8:
 						strPtr := x.(*[]byte)
 						str := string(*strPtr)
@@ -390,6 +260,12 @@ func push(f *frames.Frame, x interface{}) {
 						str := string(bytes)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
 							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+						trace.Trace(traceInfo)
+					case []types.JavaByte:
+						bytes := x.([]types.JavaByte)
+						str := object.GoStringFromJavaByteArray(bytes)
+						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+							fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
 						trace.Trace(traceInfo)
 					default:
 						traceInfo = fmt.Sprintf("%56s", " ") +
@@ -668,4 +544,145 @@ verifyInterfaceMethod:
 	}
 
 	return mtEntry, nil
+}
+
+// the generation and formatting of trace data for each executed bytecode.
+// Returns the formatted data for output to logging, console, or other uses.
+func EmitTraceData(f *frames.Frame) string {
+	var tos = " -"
+	var stackTop = ""
+	if f.TOS != -1 {
+		tos = fmt.Sprintf("%2d", f.TOS)
+		switch f.OpStack[f.TOS].(type) {
+		// if the value at TOS is a string, say so and print the first 10 chars of the string
+		case *object.Object:
+			if object.IsNull(f.OpStack[f.TOS].(*object.Object)) {
+				stackTop = fmt.Sprintf("<null>")
+			} else {
+				objPtr := f.OpStack[f.TOS].(*object.Object)
+				stackTop = objPtr.FormatField("")
+			}
+		case *[]uint8:
+			value := f.OpStack[f.TOS]
+			strPtr := value.(*[]byte)
+			str := string(*strPtr)
+			stackTop = fmt.Sprintf("*[]byte: %-10s", str)
+		case []uint8:
+			value := f.OpStack[f.TOS]
+			bytes := value.([]byte)
+			str := string(bytes)
+			stackTop = fmt.Sprintf("[]byte: %-10s", str)
+		case []types.JavaByte:
+			value := f.OpStack[f.TOS]
+			bytes := value.([]types.JavaByte)
+			str := object.GoStringFromJavaByteArray(bytes)
+			stackTop = fmt.Sprintf("[]javaByte: %-10s", str)
+		default:
+			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
+		}
+	}
+
+	traceInfo :=
+		"class: " + fmt.Sprintf("%-22s", f.ClName) +
+			" meth: " + fmt.Sprintf("%-10s", f.MethName) +
+			" PC: " + fmt.Sprintf("% 3d", f.PC) +
+			", " + fmt.Sprintf("%-13s", opcodes.BytecodeNames[int(f.Meth[f.PC])]) +
+			" TOS: " + tos +
+			" " + stackTop +
+			" "
+	return traceInfo
+}
+
+// Generate a trace of a field ID (static or non-static).
+func EmitTraceFieldID(opcode, fld string) {
+	traceInfo := fmt.Sprintf("%65s fieldName: %s", opcode, fld)
+	trace.Trace(traceInfo)
+}
+
+// Log the existing stack
+// Could be called for tracing -or- supply info for an error section
+func LogTraceStack(f *frames.Frame) {
+	var traceInfo, output string
+	if f.TOS == -1 {
+		traceInfo = fmt.Sprintf("%55s %s.%s stack <empty>", "", f.ClName, f.MethName)
+		trace.Trace(traceInfo)
+		return
+	}
+	for ii := 0; ii <= f.TOS; ii++ {
+		switch f.OpStack[ii].(type) {
+		case *object.Object:
+			if object.IsNull(f.OpStack[ii].(*object.Object)) {
+				output = fmt.Sprintf("<null>")
+			} else {
+				objPtr := f.OpStack[ii].(*object.Object)
+				output = objPtr.FormatField("")
+			}
+		case *[]uint8:
+			value := f.OpStack[ii]
+			strPtr := value.(*[]byte)
+			str := string(*strPtr)
+			output = fmt.Sprintf("*[]byte: %-10s", str)
+		case []uint8:
+			value := f.OpStack[ii]
+			bytes := value.([]byte)
+			str := string(bytes)
+			output = fmt.Sprintf("[]byte: %-10s", str)
+		case []types.JavaByte:
+			value := f.OpStack[ii]
+			bytes := value.([]types.JavaByte)
+			str := object.GoStringFromJavaByteArray(bytes)
+			output = fmt.Sprintf("[]javaByte: %-10s", str)
+		default:
+			output = fmt.Sprintf("%T %v ", f.OpStack[ii], f.OpStack[ii])
+		}
+		if f.TOS == ii {
+			traceInfo = fmt.Sprintf("%55s %s.%s TOS   [%d] %s", "", f.ClName, f.MethName, ii, output)
+		} else {
+			traceInfo = fmt.Sprintf("%55s %s.%s stack [%d] %s", "", f.ClName, f.MethName, ii, output)
+		}
+		trace.Trace(traceInfo)
+	}
+}
+
+// TraceObject : Used by push, pop, and peek in tracing an object.
+func TraceObject(f *frames.Frame, opStr string, obj *object.Object) {
+	var traceInfo string
+	prefix := fmt.Sprintf(" %4s          TOS:", opStr)
+
+	// Nil pointer to object?
+	if obj == nil {
+		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
+		trace.Trace(traceInfo)
+		return
+	}
+
+	// The object pointer is not nil.
+	klass := object.GoStringFromStringPoolIndex(obj.KlassName)
+	traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d, class: %s", f.TOS, klass)
+	trace.Trace(traceInfo)
+
+	// Trace field table.
+	prefix = " "
+	if len(obj.FieldTable) > 0 {
+		for fieldName := range obj.FieldTable {
+			fld := obj.FieldTable[fieldName]
+			if klass == types.StringClassName && fieldName == "value" {
+				var str string
+				switch fld.Fvalue.(type) {
+				case []types.JavaByte:
+					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+				default:
+					str = string(fld.Fvalue.([]byte))
+				}
+
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
+			} else {
+				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
+			}
+			trace.Trace(traceInfo)
+		}
+	} else { // nil FieldTable
+		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("no fields")
+		trace.Trace(traceInfo)
+	}
 }

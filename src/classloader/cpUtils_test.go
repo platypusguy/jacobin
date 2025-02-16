@@ -14,35 +14,6 @@ import (
 	"testing"
 )
 
-func TestMeInfoFromMethRefInvalid(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// set up a class with a constant pool containing entries
-	// that will fail the following tests
-	klass := CPool{}
-	klass.CpIndex = append(klass.CpIndex, CpEntry{})
-	klass.CpIndex = append(klass.CpIndex, CpEntry{IntConst, 0})
-	klass.CpIndex = append(klass.CpIndex, CpEntry{UTF8, 0})
-
-	klass.IntConsts = append(klass.IntConsts, int32(26))
-	klass.Utf8Refs = append(klass.Utf8Refs, "Hello string")
-
-	s1, s2, s3 := GetMethInfoFromCPmethref(&klass, 0)
-	if s1 != "" && s2 != "" && s3 != "" {
-		t.Errorf("Did not get expected result for pointing to CPentry[0]")
-	}
-
-	s1, s2, s3 = GetMethInfoFromCPmethref(&klass, 999)
-	if s1 != "" && s2 != "" && s3 != "" {
-		t.Errorf("Did not get expected result for pointing to CPentry outside of CP")
-	}
-
-	s1, s2, s3 = GetMethInfoFromCPmethref(&klass, 1)
-	if s1 != "" && s2 != "" && s3 != "" {
-		t.Errorf("Did not get expected result for pointing to CPentry that's not a MethodRef")
-	}
-}
-
 func TestMeInfoFromMethRefValid(t *testing.T) {
 	globals.InitGlobals("test")
 

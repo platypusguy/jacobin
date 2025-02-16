@@ -9,7 +9,7 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/excNames"
-	"jacobin/trace"
+	"jacobin/object"
 	"math"
 	"math/big"
 	"math/rand"
@@ -219,11 +219,10 @@ func Load_Lang_Math() {
 func mathClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/Math")
 	if klass == nil {
-		errMsg := "Math<clinit>: Expected java/lang/Math to be in the MethodArea, but it was not"
-		trace.Error(errMsg)
+		errMsg := "mathClinit: Expected java/lang/Math to be in the MethodArea, but it was not"
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	return nil
+	return object.StringObjectFromGoString("mathClinit")
 }
 
 // Absolute value function for Java float and double
@@ -323,7 +322,7 @@ func floorFloat64(params []interface{}) interface{} {
 // to the algebraic quotient.
 func floorDivInt64(dividend int64, divisor int64) interface{} {
 	if divisor == 0 {
-		return getGErrBlk(excNames.ArithmeticException, "Divide by zero")
+		return getGErrBlk(excNames.ArithmeticException, "floorDivInt64: Divide by zero")
 	}
 	if dividend <= math.MinInt64 && divisor == -1 {
 		return math.MinInt64

@@ -16,7 +16,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/Random.<init>()V"] =
@@ -257,7 +257,7 @@ func randomNextIntBound(params []interface{}) interface{} {
 	r := GetStructFromRandomObject(obj)
 	bound := params[1].(int64)
 	if bound < 1 {
-		errMsg := fmt.Sprintf("Bound must be positive, observed: %d", bound)
+		errMsg := fmt.Sprintf("randomNextIntBound: Bound must be positive, observed: %d", bound)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	output := r.rand.Int63n(bound)
@@ -281,9 +281,11 @@ func randomNextBytes(params []interface{}) interface{} {
 	robj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(robj)
 	bobj := params[1].(*object.Object)
-	bytes := bobj.FieldTable["value"].Fvalue.([]byte)
+	bytes := // convert to go bytes b/c that's what rand.Read expects
+		object.GoByteArrayFromJavaByteArray(bobj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	r.rand.Read(bytes)
-	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: bytes}
+	randBytes := object.JavaByteArrayFromGoByteArray(bytes) // convert back to Java bytes
+	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: randBytes}
 	return nil
 }
 

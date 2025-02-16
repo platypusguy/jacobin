@@ -33,13 +33,22 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 	var excFrame *frames.Frame // the catch frame
 	var excPC int              // the program counter for the catch logic in the catch frame
 
+	firstTimeThrough := true
 	for fr := fs.Front(); fr != nil; {
 		var f = fr.Value.(*frames.Frame)
 		var searchPC int
+
 		if f.ExceptionPC == -1 {
 			searchPC = f.PC
 		} else {
 			searchPC = f.ExceptionPC
+		}
+
+		// if we're not on the first iteration, we need to back up the PC because the PC in all
+		// lower frames are already pointing to the next bytecode. This is not true on the first
+		// frame, because the PC is then pointing directly at the exception-throwing bytecode.
+		if !firstTimeThrough {
+			searchPC -= 1
 		}
 
 		excFrame, excPC = locateExceptionFrame(f, excName, searchPC)
@@ -50,7 +59,7 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 			if fr.Next() == nil {
 				return nil, -1
 			}
-
+			firstTimeThrough = false
 			fr = fr.Next()
 		}
 	}
@@ -65,12 +74,11 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	methEntry, found := classloader.MTable[fullMethName]
 	if !found {
 		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s not found in MTable", fullMethName)
-		minimalAbort(excNames.InternalException, errMsg)
+		MinimalAbort(excNames.InternalException, errMsg)
 	}
 
 	if methEntry.MType != 'J' {
-		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s is a native method", fullMethName)
-		minimalAbort(excNames.InternalException, errMsg)
+		return nil, -1 // G-functions have no exception handlers
 	}
 
 	method := methEntry.Meth.(classloader.JmEntry)
@@ -85,7 +93,7 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	// if we got this far, the method has an exception table
 	for i := 0; i < len(method.Exceptions); i++ {
 		entry := method.Exceptions[i]
-		// per https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.7.3
+		// per https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.7.3
 		// the StartPC value is inclusive, the EndPC value is exclusive
 		if pc >= entry.StartPc && pc < entry.EndPc {
 			// found a handler, now check that it's for the right exception

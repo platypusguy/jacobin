@@ -33,10 +33,17 @@ func TestStringClinit(t *testing.T) {
 			if gErr.ExceptionType != excNames.ClassNotLoadedException {
 				t.Errorf("TestStringClinit: Unexpected exception type. got %d", gErr.ExceptionType)
 			}
+		case *object.Object:
+			str := object.GoStringFromStringObject(retval.(*object.Object))
+			if str != "stringClinit" {
+				t.Errorf("TestStringClinit: Expected \"stringClinit\", observed %v", str)
+			}
+			return
 		default:
 			t.Errorf("TestStringClinit: Did not get expected error message, got %v", retval)
 		}
 	}
+	t.Error("TestStringClinit: stringClinit() returned nil")
 }
 
 func TestStringToUpperCase(t *testing.T) {
@@ -253,12 +260,12 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 			name: "Test equal strings",
 			obj1: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			obj2: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			want: types.JavaBoolTrue,
@@ -268,12 +275,12 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 			name: "Test not equal strings",
 			obj1: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("Hello")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("Hello")},
 				},
 			},
 			obj2: object.Object{
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte("World")},
+					"value": {Fvalue: object.JavaByteArrayFromGoString("World")},
 				},
 			},
 			want: types.JavaBoolFalse,
@@ -317,7 +324,7 @@ func TestLastIndexOfCharacter(t *testing.T) {
 			baseObject := &object.Object{
 				KlassName: types.StringPoolStringIndex,
 				FieldTable: map[string]object.Field{
-					"value": {Fvalue: []byte(tt.base)},
+					"value": {Fvalue: object.JavaByteArrayFromGoString(tt.base)},
 				},
 			}
 
@@ -337,14 +344,14 @@ func TestLastIndexOfString(t *testing.T) {
 	strObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(str)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(str)},
 		},
 	}
 
 	searchObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(searchString)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(searchString)},
 		},
 	}
 
@@ -365,14 +372,14 @@ func TestStringRegionMatchesWithoutIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -395,14 +402,14 @@ func TestStringRegionMatchesWithIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -422,7 +429,7 @@ func TestStringEquals(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
@@ -430,7 +437,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -443,7 +450,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareStr)},
 		},
 	}
 
@@ -456,7 +463,7 @@ func TestStringEquals(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -464,7 +471,7 @@ func TestStringEquals(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -480,7 +487,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -488,7 +495,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -503,7 +510,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -511,7 +518,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -526,7 +533,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	baseStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(referenceStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(referenceStr)},
 		},
 	}
 
@@ -534,7 +541,7 @@ func TestStringEqualsIgnoreCase(t *testing.T) {
 	compareStringObject = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(compareToStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(compareToStr)},
 		},
 	}
 
@@ -551,7 +558,7 @@ func TestStringIndexOfString(t *testing.T) {
 	baseStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseStr)},
 		},
 	}
 
@@ -559,7 +566,7 @@ func TestStringIndexOfString(t *testing.T) {
 	argStringObject := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(argStr)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(argStr)},
 		},
 	}
 
@@ -602,7 +609,7 @@ func TestStringStartsWith(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -610,7 +617,7 @@ func TestStringStartsWith(t *testing.T) {
 	prefix := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 
@@ -624,7 +631,7 @@ func TestStringStartsWith(t *testing.T) {
 	prefix = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 	// single param startswith Negative test
@@ -639,7 +646,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
@@ -648,7 +655,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	prefix := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 
@@ -664,7 +671,7 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 	prefix = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(prefixLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(prefixLiteral)},
 		},
 	}
 	// with offset startswith negative test
@@ -674,8 +681,6 @@ func TestStringStartsWithUsingOffset(t *testing.T) {
 			"In TestStringStartsWithUsingOffset() expected false but got true")
 	}
 }
-
-// >>>>>>>> resume here
 
 func TestStringStrip(t *testing.T) {
 	// First, we would create inputs that we would want to test
@@ -726,13 +731,14 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
 	expected := "Hello, World!"
 	outputObj := stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output := string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output :=
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -743,13 +749,14 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
 	expected = "Hello, World!   "
 	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output =
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -759,13 +766,14 @@ func TestStringStripLeading(t *testing.T) {
 	baseStr = &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(baseLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(baseLiteral)},
 		},
 	}
 
 	expected = "Hello, World!"
 	outputObj = stringStripLeading([]interface{}{baseStr}).(*object.Object)
-	output = string(outputObj.FieldTable["value"].Fvalue.([]byte))
+	output =
+		object.GoStringFromJavaByteArray(outputObj.FieldTable["value"].Fvalue.([]types.JavaByte))
 	if output != expected {
 		t.Errorf("Expected '%s' but got '%s'", expected, output)
 	}
@@ -776,7 +784,7 @@ func TestStringStripTrailing(t *testing.T) {
 	input := &object.Object{
 		KlassName: types.StringPoolStringIndex,
 		FieldTable: map[string]object.Field{
-			"value": {Fvalue: []byte(inputLiteral)},
+			"value": {Fvalue: object.JavaByteArrayFromGoString(inputLiteral)},
 		},
 	}
 
@@ -785,9 +793,160 @@ func TestStringStripTrailing(t *testing.T) {
 	outputRaw := stringStripTrailing([]interface{}{input})
 
 	output := *outputRaw.(*object.Object)
-	strippedString := string(output.FieldTable["value"].Fvalue.([]byte))
+	strippedString :=
+		object.GoStringFromJavaByteArray(output.FieldTable["value"].Fvalue.([]types.JavaByte))
+	// strippedString := string(output.FieldTable["value"].Fvalue.([]byte))
 	if strippedString != expected {
 		t.Errorf("Expected '%s' but got '%s'",
 			expected, strippedString)
 	}
+}
+
+// stringRegionMatches() tests
+func TestStringRegionMatches(t *testing.T) {
+
+	// Test case: baseOffset < 0
+	params := []any{createStringObject("hello"), int64(-1), createStringObject("hello"), int64(0), int64(5)}
+	result := stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for baseOffset < 0, got %v", result)
+	}
+
+	// Test case: compareOffset < 0
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(-1), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for compareOffset < 0, got %v", result)
+	}
+
+	// Test case: baseOffset + regionLength > len(baseByteArray)
+	params = []any{createStringObject("hello"), int64(1), createStringObject("hello"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for baseOffset + regionLength > len(baseByteArray), got %v", result)
+	}
+
+	// Test case: compareOffset + regionLength > len(compareByteArray)
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(1), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for compareOffset + regionLength > len(compareByteArray), got %v", result)
+	}
+
+	// Test case: sections are equal, case-sensitive
+	params = []any{createStringObject("hello"), int64(0), createStringObject("hello"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal sections, case-sensitive, got %v", result)
+	}
+
+	// Test case: sections are not equal, case-sensitive
+	params = []any{createStringObject("hello"), int64(0), createStringObject("world"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal sections, case-sensitive, got %v", result)
+	}
+
+	// Test case: sections are equal, ignoring case
+	params = []any{createStringObject("hello"), types.JavaBoolTrue, int64(0), createStringObject("HELLO"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal sections, ignoring case, got %v", result)
+	}
+
+	// Test case: sections are not equal, ignoring case
+	params = []any{createStringObject("hello"), types.JavaBoolTrue, int64(0), createStringObject("WORLD"), int64(0), int64(5)}
+	result = stringRegionMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal sections, ignoring case, got %v", result)
+	}
+}
+
+// stringRepeat() tests
+func TestStringRepeat(t *testing.T) {
+
+	// Test case: repeat string 0 times
+	params := []interface{}{createStringObject("hello"), int64(0)}
+	result := stringRepeat(params).(*object.Object)
+	expected := ""
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat string 1 time
+	params = []interface{}{createStringObject("hello"), int64(1)}
+	result = stringRepeat(params).(*object.Object)
+	expected = "hello"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat string multiple times
+	params = []interface{}{createStringObject("hello"), int64(3)}
+	result = stringRepeat(params).(*object.Object)
+	expected = "hellohellohello"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: repeat empty string multiple times
+	params = []interface{}{createStringObject(""), int64(3)}
+	result = stringRepeat(params).(*object.Object)
+	expected = ""
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+}
+
+// stringSplit() tests
+func TestStringSplitLimit(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+
+	// Test case: valid input with no limit
+	params := []interface{}{createStringObject("a,b,c"), createStringObject(","), int64(0)}
+	result := stringSplitLimit(params).(*object.Object)
+	expected := []string{"a", "b", "c"}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+
+	// Test case: valid input with limit
+	params = []interface{}{createStringObject("a,b,c"), createStringObject(","), int64(2)}
+	result = stringSplitLimit(params).(*object.Object)
+	expected = []string{"a", "b,c"}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+
+	// Test case: invalid regex pattern
+	params = []interface{}{createStringObject("a,b,c"), createStringObject("[a-"), int64(0)}
+	errBlk := stringSplitLimit(params).(*GErrBlk)
+	if errBlk == nil {
+		t.Errorf("Expected PatternSyntaxException, got %v", result)
+	}
+
+	if errBlk.ExceptionType != excNames.PatternSyntaxException {
+		t.Errorf("Expected PatternSyntaxException, got %v",
+			excNames.JVMexceptionNames[errBlk.ExceptionType])
+	}
+
+	// Test case: empty input string
+	params = []interface{}{createStringObject(""), createStringObject(","), int64(0)}
+	result = stringSplitLimit(params).(*object.Object)
+	expected = []string{""}
+	for i, obj := range result.FieldTable["value"].Fvalue.([]*object.Object) {
+		if object.GoStringFromStringObject(obj) != expected[i] {
+			t.Errorf("Expected '%s', got '%s'", expected[i], object.GoStringFromStringObject(obj))
+		}
+	}
+}
+
+// --- utility functions for tests above ---
+func createStringObject(s string) *object.Object {
+	return object.StringObjectFromGoString(s)
 }
