@@ -454,18 +454,27 @@ func hfFormatHexFromBytes(params []interface{}) interface{} {
 		object.GoStringFromJavaByteArray(this.FieldTable["prefix"].Fvalue.([]types.JavaByte))
 	suffix :=
 		object.GoStringFromJavaByteArray(this.FieldTable["suffix"].Fvalue.([]types.JavaByte))
-	objBytes := params[1].(*object.Object)
-	bytes := objBytes.FieldTable["value"].Fvalue.([]types.JavaByte)
+	fld := params[1].(*object.Object).FieldTable["value"]
+	var byteArray []byte
+	switch fld.Fvalue.(type) {
+	case []byte:
+		byteArray = fld.Fvalue.([]byte)
+	case []types.JavaByte:
+		byteArray = object.GoByteArrayFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	default:
+		errMsg := fmt.Sprintf("hfFormatHexFromBytes: Expected []byte or []types.JavaByte, observed %s", fld.Ftype)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	var fromIndex int
 	var toIndex int
 	if len(params) > 2 {
 		fromIndex = int(params[2].(int64))
-		if fromIndex < 0 || fromIndex > len(bytes) {
+		if fromIndex < 0 || fromIndex > len(byteArray) {
 			errMsg := fmt.Sprintf("hfFormatHexFromBytes: from index out of range: %d", fromIndex)
 			return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 		}
 		toIndex = int(params[3].(int64))
-		if toIndex < 0 || toIndex > len(bytes) {
+		if toIndex < 0 || toIndex > len(byteArray) {
 			errMsg := fmt.Sprintf("hfFormatHexFromBytes: to index out of range: %d", fromIndex)
 			return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 		}
@@ -475,13 +484,13 @@ func hfFormatHexFromBytes(params []interface{}) interface{} {
 		}
 	} else {
 		fromIndex = 0
-		toIndex = len(bytes)
+		toIndex = len(byteArray)
 	}
 	for ix := fromIndex; ix < toIndex; ix++ {
 		if digits[15] == 'F' { // uppercase
-			str += fmt.Sprintf("%s%02X%s%s", prefix, bytes[ix], suffix, delimiter)
+			str += fmt.Sprintf("%s%02X%s%s", prefix, byteArray[ix], suffix, delimiter)
 		} else { // lowercase
-			str += fmt.Sprintf("%s%02x%s%s", prefix, bytes[ix], suffix, delimiter)
+			str += fmt.Sprintf("%s%02x%s%s", prefix, byteArray[ix], suffix, delimiter)
 		}
 	}
 	str = str[:len(str)-len(delimiter)]

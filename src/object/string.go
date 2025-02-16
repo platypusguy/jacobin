@@ -214,7 +214,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	case types.ByteArray:
 		switch fld.Fvalue.(type) {
 		case []byte:
-			return string(fld.Fvalue.([]byte))
+			return fmt.Sprintf("%x", fld.Fvalue.([]byte))
 		case []types.JavaByte:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		}
@@ -240,6 +240,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray:
 		return GoStringFromStringPoolIndex(obj.KlassName)
+	case types.RNG:
+		return "RandomNumberGenerator"
 	}
 
 	// None of the above.
