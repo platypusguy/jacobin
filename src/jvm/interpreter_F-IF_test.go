@@ -1038,22 +1038,6 @@ func TestNewIand(t *testing.T) {
 	}
 }
 
-// IDIV: integer divide of.TOS-1 by tos, push result
-func TestNewIdiv(t *testing.T) {
-	f := newFrame(opcodes.IDIV)
-	push(&f, int64(220))
-	push(&f, int64(22))
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	interpret(fs)
-	value := pop(&f).(int64)
-	if value != 10 {
-		t.Errorf("IDIV: expected a result of 10, but got: %d", value)
-	}
-}
-
-// IDIV: Testing the exception is done in TestHexIDIVexception.go
-
 // ICONST_M1:
 func TestNewIconstN1(t *testing.T) {
 	f := newFrame(opcodes.ICONST_M1)
@@ -1158,6 +1142,22 @@ func TestNewIconst5(t *testing.T) {
 		t.Errorf("ICONST_5: Expected popped value to be 5, got: %d", value)
 	}
 }
+
+// IDIV: integer divide of.TOS-1 by tos, push result
+func TestNewIdiv(t *testing.T) {
+	f := newFrame(opcodes.IDIV)
+	push(&f, int64(220))
+	push(&f, int64(22))
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+	value := pop(&f).(int64)
+	if value != 10 {
+		t.Errorf("IDIV: expected a result of 10, but got: %d", value)
+	}
+}
+
+// IDIV: Testing the exception is done in TestHexIDIVexception.go
 
 // IF_ACMPEQ: jump if two addresses are equal
 func TestNewIfAcmpEq(t *testing.T) {
