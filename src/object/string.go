@@ -209,7 +209,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return str
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
-	case types.ByteArray:
+	case types.ByteArray, "Ljava/lang/String;":
 		switch fld.Fvalue.(type) {
 		case []byte:
 			return fmt.Sprintf("%x", fld.Fvalue.([]byte))
