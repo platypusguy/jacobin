@@ -291,30 +291,22 @@ func TestObjectFieldToStringForUnknownType(t *testing.T) {
 		return false
 	}
 
-	// to inspect usage message, redirect stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
 	obj := StringObjectFromGoString("allo!")
-	obj.FieldTable["testField"] = Field{
-		Ftype:  "..",
+	obj.FieldTable["testFieldName"] = Field{
+		Ftype:  "testFieldType",
 		Fvalue: nil,
 	}
-	ret := ObjectFieldToString(obj, "testField")
+	ret := ObjectFieldToString(obj, "testFieldName")
 
 	if !strings.Contains(ret, "java/lang/String") {
 		t.Errorf("Expected different return string, got %s", ret)
 	}
 
-	// restore stderr to what it was before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-	msg := string(out[:])
-
-	if !strings.Contains(msg, "not yet supported") {
-		t.Errorf("Expected different error message, got %s", msg)
+	if !strings.Contains(ret, "testFieldName") { // just the field name
+		t.Errorf("Looking for field name, got %s", ret)
+	}
+	if !strings.Contains(ret, "testFieldType") { // just the field name
+		t.Errorf("Looking for field type, got %s", ret)
 	}
 }
 

@@ -20,8 +20,6 @@ package object
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/globals"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"strconv"
@@ -244,10 +242,9 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "RandomNumberGenerator"
 	}
 
-	// None of the above.
-	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
-		fieldName, fld.Ftype)
-	globals.GetGlobalRef().FuncThrowException(excNames.UnsupportedOperationException, errMsg)
-	// trace.Error(errMsg)
-	return GoStringFromStringPoolIndex(obj.KlassName)
+	// None of the above!
+	// Just return the class name, field name, and the field type.
+	result := fmt.Sprintf("UNRECOGNISED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
+	return result
+
 }
