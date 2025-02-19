@@ -106,6 +106,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 
 	k.Data.ClInit = types.ClInitInProgress
 
+	currJvmStackSize := fs.Len()
 	if frames.PushFrame(fs, f) != nil {
 		errMsg := "memory exception allocating frame in runJavaInitializer()"
 		trace.Error(errMsg)
@@ -118,7 +119,11 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 		trace.Trace(infoMsg)
 	}
 
-	interpret(fs)                   // if an error occurs, ThrowEx() will break us out of here
+	// the <clinit> method might call other methods, so we can't just determine that
+	// it's completed by the return from interpret(). See JACOBIN-665
+	for fs.Len() > currJvmStackSize { // loop until the frame stack is back to its pre-<clinit>() size
+		interpret(fs) // if an error occurs, ThrowEx() will break us out of here
+	}
 	k.Data.ClInit = types.ClInitRun // flag showing we've run this class's <clinit>
 
 	// frames.PopFrame(fs)
