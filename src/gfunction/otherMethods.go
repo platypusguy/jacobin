@@ -122,4 +122,16 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 }
