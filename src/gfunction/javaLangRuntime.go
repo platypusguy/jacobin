@@ -7,10 +7,13 @@
 package gfunction
 
 import (
+	"fmt"
+	"golang.org/x/sys/windows"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
 	"runtime"
+	"unsafe"
 )
 
 func Load_Lang_Runtime() {
@@ -121,4 +124,18 @@ func runtimeGetRuntime([]interface{}) interface{} {
 // runtimeAvailableProcessors: Get the number of CPU cores.
 func runtimeAvailableProcessors([]interface{}) interface{} {
 	return int64(runtime.NumCPU())
+}
+
+// maxMemory: Get the maximum amount of memory that the max JVM will attempt to use. (For the moment, the max system RAM)
+func maxMemory([]interface{}) interface{} {
+	if runtime.GOOS == "windows" {
+		var memStatus windows.MemStatusEx
+		memStatus.Length = uint32(unsafe.Sizeof(memStatus))
+		err := windows.GlobalMemoryStatusEx(&memStatus)
+		if err != nil {
+			fmt.Printf("Error getting memory status: %v\n", err)
+			return
+		}
+	}
+
 }
