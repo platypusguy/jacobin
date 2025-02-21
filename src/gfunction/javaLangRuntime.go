@@ -7,13 +7,11 @@
 package gfunction
 
 import (
-	"fmt"
-	"golang.org/x/sys/windows"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"math"
 	"runtime"
-	"unsafe"
 )
 
 func Load_Lang_Runtime() {
@@ -126,16 +124,15 @@ func runtimeAvailableProcessors([]interface{}) interface{} {
 	return int64(runtime.NumCPU())
 }
 
-// maxMemory: Get the maximum amount of memory that the max JVM will attempt to use. (For the moment, the max system RAM)
+// maxMemory: Get the maximum amount of memory that the max Jacobin will attempt to use. If there is no limit,
+// Java return Long.MAX_VALUE, which is what we do here
 func maxMemory([]interface{}) interface{} {
-	if runtime.GOOS == "windows" {
-		var memStatus windows.MemStatusEx
-		memStatus.Length = uint32(unsafe.Sizeof(memStatus))
-		err := windows.GlobalMemoryStatusEx(&memStatus)
-		if err != nil {
-			fmt.Printf("Error getting memory status: %v\n", err)
-			return
-		}
-	}
+	return int64(math.MaxInt64)
+}
 
+// totalMemory: Get the maximum amount of memory that the max Jacobin will attempt to use.
+func totalMemory([]interface{}) interface{} {
+	memStats := new(runtime.MemStats)
+	runtime.ReadMemStats(memStats)
+	return int64(memStats.Sys)
 }
