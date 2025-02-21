@@ -82,6 +82,12 @@ func Load_Lang_Runtime() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/lang/Runtime.maxMemory()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  maxMemory,
+		}
+
 	MethodSignatures["java/lang/Runtime.removeShutdownHook(Ljava/lang/Thread;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -92,6 +98,12 @@ func Load_Lang_Runtime() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Runtime.totalMemory()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  totalMemory,
 		}
 
 	MethodSignatures["java/lang/Runtime.version()Ljava/lang/Runtime/Version;"] =
