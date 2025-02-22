@@ -1865,16 +1865,16 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		// be stored as a boolean, a byte (in an array), or int64
 		// We want all forms normalized to int64
 		value = pop(fr).(int64) & 0x01
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 	case types.Char, types.Short, types.Int, types.Long:
 		value = pop(fr).(int64)
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 	case types.Byte:
 		var val byte
 		v := pop(fr)
@@ -1885,16 +1885,16 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		case byte:
 			val = v.(byte)
 		}
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: val,
-		}
+		})
 	case types.Float, types.Double:
 		value = pop(fr).(float64)
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 
 	default:
 		// if it's not a primitive or a pointer to a class,
@@ -1906,10 +1906,11 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		}
 		switch value.(type) {
 		case *object.Object:
-			statics.Statics[fieldName] = statics.Static{
+			statics.AddStatic(fieldName, statics.Static{
 				Type:  prevLoaded.Type,
 				Value: value,
-			}
+			})
+
 		case *classloader.Klass:
 			// convert to an *object.Object
 			kPtr := value.(*classloader.Klass)
@@ -1922,10 +1923,10 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 
 			obj.FieldTable[fieldName] = objField
 
-			statics.Statics[fieldName] = statics.Static{
-				Type:  objField.Ftype,
+			statics.AddStatic(fieldName, statics.Static{
+				Type:  prevLoaded.Type,
 				Value: value,
-			}
+			})
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
