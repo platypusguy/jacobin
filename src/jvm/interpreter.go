@@ -2041,21 +2041,10 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		}
 	}
 
-	var ref interface{} // pointer to object we're updating
-	value := pop(fr)    // the value we're placing in the field
-	ref = pop(fr)       // on non-long, non-double values, this will be a
-	// reference to the object. On longs and doubles
-	// it will be the second pop of the value field,
-	// so we check for this.
+	value := pop(fr) // the value we're placing in the field
+	ref := pop(fr)   // reference to the object we're updating
 
 	switch ref.(type) {
-	case int64, float64: // if it is a float or double, then pop
-		// once more to get the pointer to object. If it's an int64,
-		// we know it's a long (likewise a float64 shows a double)
-		// because that's the only reason a second pop would find
-		// identical value types pushed twice. So pop once more to
-		// get the object reference.
-		ref = pop(fr).(*object.Object)
 	case *object.Object:
 		// Handle the Object after this switch
 	default:
@@ -2072,10 +2061,8 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	// Get Object struct.
 	obj := *(ref.(*object.Object))
 
-	// if the value we're inserting is a reference to an
-	// array object, we have to modify it to point directly
-	// to the array of primitives, rather than to the array
-	// object
+	// if the value we're inserting is a reference to an array object, we need to modify it
+	// to point directly to the array of primitives, rather than to the array object
 	switch value.(type) {
 	case *object.Object:
 		if !object.IsNull(value.(*object.Object)) {
@@ -2128,7 +2115,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	className, methodName, methodType :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	/* // JACOBIN-575 reactive this code when ready to complete this task
+	/* // JACOBIN-575 reactivate this code when ready to complete this task
 	k := classloader.MethAreaFetch(className) // we know the class is already loaded
 	methListEntry, ok := k.Data.MethodList[methodName+methodType]
 	if !ok { // if it's not in the GMT, then it's likely being called explicitly, so test for this.

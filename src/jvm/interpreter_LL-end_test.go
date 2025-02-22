@@ -1018,7 +1018,6 @@ func TestNewPutFieldDouble(t *testing.T) {
 	push(&f, obj)
 
 	push(&f, float64(26.8)) // update the field to 26.8
-	push(&f, float64(26.8)) // push a second time b/c it's a double
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
