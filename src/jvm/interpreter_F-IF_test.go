@@ -1368,6 +1368,25 @@ func TestNewIfIcmpgt(t *testing.T) {
 	}
 }
 
+// IF_ICMPGT: jump if val1 > val2 (both ints, both popped off stack)
+func TestIfIcmpgtWithLessThan(t *testing.T) {
+	f := newFrame(opcodes.IF_ICMPGT)
+	push(&f, int64(8)) // val1 > val2, so jump should be made.
+	push(&f, int64(9))
+	ret := doIficmpgt(&f, 0)
+
+	// f.Meth = append(f.Meth, 0) // where we are jumping to, byte 4 = ICONST2
+	// f.Meth = append(f.Meth, 4)
+	// f.Meth = append(f.Meth, opcodes.NOP)
+	// f.Meth = append(f.Meth, opcodes.ICONST_2)
+	// fs := frames.CreateFrameStack()
+	// fs.PushFront(&f) // push the new frame
+	// interpret(fs)
+	if ret != 3 { // -1 b/c the run loop adds 1 before exiting
+		t.Errorf("IF_ICMPGT: expecting to jump over opcode (so, PC +3), got: %d", ret)
+	}
+}
+
 // IF_ICMPLE: if integer compare val 1 ! <= val 2 //test when condition fails
 func TestNewIfIcmpletFail(t *testing.T) {
 	f := newFrame(opcodes.IF_ICMPLE)
