@@ -1876,14 +1876,15 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			Value: value,
 		})
 	case types.Byte:
-		var val byte
+		var val types.JavaByte
 		v := pop(fr)
 		switch v.(type) { // could be passed a byte or an integral type for a value
 		case int64:
-			newVal := v.(int64)
-			val = byte(newVal)
-		case byte:
-			val = v.(byte)
+			val = types.JavaByte(v.(int64))
+		case uint8:
+			val = types.JavaByte(v.(uint8))
+		case types.JavaByte:
+			val = v.(types.JavaByte)
 		}
 		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,

@@ -30,9 +30,9 @@ func TestJjStringifyScalar_BoolFalse(t *testing.T) {
 }
 
 func TestJjStringifyScalar_Byte(t *testing.T) {
-	result := jjStringifyScalar(types.Byte, uint8(0xAB))
-	expected := object.StringObjectFromGoString("ab")
-	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
+	result := object.GoStringFromStringObject(jjStringifyScalar(types.Byte, byte(0xAB)))
+	expected := "0xab"
+	if result != expected {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }
