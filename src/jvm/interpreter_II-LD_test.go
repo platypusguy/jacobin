@@ -686,12 +686,7 @@ func TestNewIxor(t *testing.T) {
 }
 
 // JSR: compute the offset of a jump, push it, and do the jump
-// In this test we use JSR to jump over the RETURN bytecode to a second JSR bytecode.
-// That second bytecode, jumps backwards to the RETURN bytecode. In this way, we test
-// forward and backward jumps. We then test that the jump offsets were appropriately
-// placed on the op stack.
-/*
-func TestNewJSR(t *testing.T) {
+func TestJSR(t *testing.T) {
 	f := newFrame(opcodes.JSR) // jump to next JSR
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0x04)
@@ -700,19 +695,28 @@ func TestNewJSR(t *testing.T) {
 	f.Meth = append(f.Meth, 0x00)
 	f.Meth = append(f.Meth, 0xFF)
 
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	interpret(fs)
+	ret := int64(doJsr(&f, 0))
 
-	if f.OpStack[0] != int64(4) {
-		t.Errorf("JSR: expected opstack[0] to be 4, got: %d", f.OpStack[0])
-	}
-
-	if f.OpStack[1] != int64(-1) {
-		t.Errorf("JSR: expected opstack[1] to be -1, got: %d", f.OpStack[1])
+	if ret != int64(4) {
+		t.Errorf("JSR: expected jump of 4, got: %d", ret)
 	}
 }
-*/
+
+// JSR_W: compute the offset of a wide jump, push it, and return the jump distance
+func TestWideJsr(t *testing.T) {
+	f := newFrame(opcodes.JSR_W)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x04)
+
+	ret := int64(doJsrw(&f, 0))
+
+	if ret != int64(4) {
+		t.Errorf("JSR_W: expected jump of 4, got: %d", ret)
+	}
+}
+
 // L2D: Convert long to double
 func TestNewL2d(t *testing.T) {
 	f := newFrame(opcodes.L2D)
