@@ -135,16 +135,16 @@ func Load_Security_SecureRandom() {
 			GFunction:  trapProtected,
 		}
 
-	MethodSignatures["java/security/SecureRandom.nextBytes([B)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  secureRandomNextBytes,
-		}
-
 	MethodSignatures["java/security/SecureRandom.nextBoolean()Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  secureRandomNextBoolean,
+		}
+
+	MethodSignatures["java/security/SecureRandom.nextBytes([B)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  secureRandomNextBytes,
 		}
 
 	MethodSignatures["java/security/SecureRandom.nextBytes([BLjava/security/SecureRandomParameters;)V"] =
@@ -315,8 +315,10 @@ func secureRandomSetSeed(params []interface{}) interface{} {
 
 // secureRandomNextBytes generates a specified number of random bytes
 func secureRandomNextBytes(params []interface{}) interface{} {
-	if len(params) != 2 {
-		errMsg := fmt.Sprintf("secureRandomNextBytes: Expected 2 parameters (SecureRandom object, int64 size), got %d", len(params))
+	switch len(params) {
+	case 2, 3:
+	default:
+		errMsg := fmt.Sprintf("secureRandomNextBytes: Wrong number of parameters, observed %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -343,8 +345,8 @@ func secureRandomNextBytes(params []interface{}) interface{} {
 		return getGErrBlk(excNames.RuntimeException, fmt.Sprintf("secureRandomNextBytes: rng.Read(byteArray), err: %v", err))
 	}
 
-	// Return byte array.
-	result := object.JavaByteArrayFromGoByteArray(byteArray)
+	// Return objectified Java byte array.
+	result := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(byteArray))
 	return result
 }
 
