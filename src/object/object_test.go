@@ -24,6 +24,16 @@ func TestIsNull(t *testing.T) {
 	}
 }
 
+// An array reference is never null
+func TestIsNullForArrays(t *testing.T) {
+	stringPool.EmptyStringPool()
+	stringPool.PreloadArrayClassesToStringPool()
+	arrayObj := Make1DimArray(BYTE, 10)
+	if IsNull(arrayObj) {
+		t.Errorf("arrayObj should not be null")
+	}
+}
+
 func TestMakeEmptyObjectWithClassName(t *testing.T) {
 	globals.InitGlobals("test")
 	clName := "genericClass"
