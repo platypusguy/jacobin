@@ -3014,23 +3014,12 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// similar, in which one [ is present for every array dimension, followed by a
 	// single letter describing the type of primitive in the leaf dimension of the array.
 	// The letters are the usual ones used in the JVM for primitives, etc.
-	// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
+	// as in: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.2-200
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != classloader.ClassRef {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "MULTIANEWARRAY: multi-dimensional array presently supports classes only"
-		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
-		}
-	} else {
-		// utf8Index := CP.ClassRefs[CPentry.Slot]
-		// arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
-		arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
-		arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
-	}
+	arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+	arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
 
 	var rawArrayType uint8
 	for i := 0; i < len(arrayDesc); i++ {
