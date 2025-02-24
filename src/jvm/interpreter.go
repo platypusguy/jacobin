@@ -3004,7 +3004,7 @@ func doWide(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0xC5 MULTINEWARRAY create a multi-dimensional array
+// 0xC5 MULTIANEWARRAY create a multi-dimensional array
 func doMultinewarray(fr *frames.Frame, _ int64) int {
 	var arrayDesc string
 	var arrayType uint8
