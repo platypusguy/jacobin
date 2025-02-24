@@ -193,3 +193,9 @@ func trapFunction([]interface{}) interface{} {
 	errMsg := "TRAP: The requested function is not yet supported"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
+
+// Generic trap for functions
+func trapProtected([]interface{}) interface{} {
+	errMsg := "TRAP: The requested function is protected"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
