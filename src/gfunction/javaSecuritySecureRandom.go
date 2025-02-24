@@ -346,8 +346,9 @@ func secureRandomNextBytes(params []interface{}) interface{} {
 	}
 
 	// Return objectified Java byte array.
-	result := object.MakePrimitiveObject(types.ByteArray, types.ByteArray, object.JavaByteArrayFromGoByteArray(byteArray))
-	return result
+	fld.Fvalue = object.JavaByteArrayFromGoByteArray(byteArray)
+	baObject.FieldTable["value"] = fld
+	return nil
 }
 
 // secureRandomNextInt generates a random int64
