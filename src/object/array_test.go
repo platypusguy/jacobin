@@ -7,9 +7,12 @@
 package object
 
 import (
+	"fmt"
+	"io"
 	"jacobin/globals"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"os"
 	"testing"
 )
 
@@ -183,6 +186,35 @@ func TestMakeArrayFromRawArrayNil(t *testing.T) {
 	if newArr != nil {
 		t.Errorf("Expecting nil, got %v", newArr)
 	}
+}
+
+func TestMakeArrayFromRawArrayInvalidInput(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = announceError
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	newArr := MakeArrayFromRawArray(10)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg != "Error in tested function\n" {
+		t.Errorf("Expecting error message 'Error in tested function\n', got %s", errMsg)
+	}
+	if newArr != nil {
+		t.Errorf("Expecting nil, got %v", newArr)
+	}
+}
+
+// used instead of throwing an exception, which creates a circularity problem
+func announceError(_ int, _ string) bool {
+	fmt.Fprintln(os.Stderr, "Error in tested function")
+	return true
 }
 
 func TestArrayLength(t *testing.T) {
