@@ -108,7 +108,7 @@ func Load_Security_SecureRandom() {
 	MethodSignatures["java/security/SecureRandom.getInstanceStrong()Ljava/security/SecureRandom;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  secureRandomGetInstance,
+			GFunction:  secureRandomGetInstanceStrong,
 		}
 
 	MethodSignatures["java/security/SecureRandom.getParameters()Ljava/security/SecureRandomParameters;"] =
@@ -215,7 +215,7 @@ func Load_Security_SecureRandom() {
 
 }
 
-var secureRandomClassName = "java.security.SecureRandom"
+var secureRandomClassName = "java/security/SecureRandom"
 
 // Return a byte array holding a generated dummy seed of the specified byte size (count).
 func _genSeed(count int64) []byte {
@@ -246,13 +246,25 @@ func secureRandomInit(params []interface{}) interface{} {
 	seed := time.Now().UnixNano()
 	_reSeedObject(obj, seed)
 
-	return nil
+	return obj
 
 }
 
 // SecureRandomGetInstance - several variations of SecureRandom getInstance.
 func secureRandomGetInstance(params []interface{}) interface{} {
 	return secureRandomInit(params)
+}
+
+// secureRandomGetInstanceStrong.
+func secureRandomGetInstanceStrong(params []interface{}) interface{} {
+
+	// Create SecureRandom object with default seed value.
+	obj := object.MakeEmptyObjectWithClassName(&secureRandomClassName)
+	seed := time.Now().UnixNano()
+	_reSeedObject(obj, seed)
+
+	return obj
+
 }
 
 // Re-seed this SecureRandom object.
