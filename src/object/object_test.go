@@ -24,12 +24,12 @@ func TestIsNull(t *testing.T) {
 	}
 }
 
-// An array reference is never null
+// An array of Object pointers is never null
 func TestIsNullForArrays(t *testing.T) {
 	stringPool.EmptyStringPool()
 	stringPool.PreloadArrayClassesToStringPool()
-	arrayObj := Make1DimArray(BYTE, 10)
-	if IsNull(arrayObj) {
+	arrayObj := Make1DimArray(REF, 10)
+	if IsNull(arrayObj.FieldTable["value"].Fvalue.([]*Object)) {
 		t.Errorf("arrayObj should not be null")
 	}
 }
