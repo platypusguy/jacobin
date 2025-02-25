@@ -113,12 +113,21 @@ func TestJavaByteArrayFromStringObjectValie(t *testing.T) {
 }
 
 func TestJavaByteArrayFromStringObjectInvalid(t *testing.T) {
-	globals.InitGlobals("test")
-	statics.LoadStaticsString()
 	str := StringObjectFromGoString("ABC")
 	ba := ByteArrayFromStringObject(str)
 	if ba[0] != types.JavaByte('A') && ba[1] != types.JavaByte('B') && ba[2] != types.JavaByte('C') {
 		t.Errorf("expected 'ABC', observed: %s", string(GoStringFromJavaByteArray(ba)))
+	}
+}
+
+func TestStringPoolIndexFromStringObjectWithByteArray(t *testing.T) {
+	stringPool.EmptyStringPool()
+	stringPool.PreloadArrayClassesToStringPool()
+	ba := []byte("Hello")
+	obj := StringObjectFromByteArray(ba)
+	index := StringPoolIndexFromStringObject(obj)
+	if *(stringPool.GetStringPointer(index)) != "Hello" {
+		t.Errorf("expected 'Hello', observed: %s", *(stringPool.GetStringPointer(index)))
 	}
 }
 
