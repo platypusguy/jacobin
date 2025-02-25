@@ -73,7 +73,32 @@ func TestGoStringFromInvalidStringObject(t *testing.T) {
 	}
 }
 
-func TestByteArrayFromStringObject(t *testing.T) {
+func TestGoStringFromStringNullObject(t *testing.T) {
+	str := GoStringFromStringObject(nil)
+	if str != "" {
+		t.Errorf("expected empty string, observed: '%s'", str)
+	}
+}
+
+func TestGoStringFromInvalidObject(t *testing.T) {
+	obj := MakeEmptyObject()
+	obj.FieldTable["value"] = Field{Ftype: types.Int, Fvalue: 42}
+	str := GoStringFromStringObject(obj)
+	if str != "" {
+		t.Errorf("expected empty string, observed: '%s'", str)
+	}
+}
+
+func TestGoStringFromGoString(t *testing.T) {
+	obj := MakeEmptyObject()
+	obj.FieldTable["value"] = Field{Ftype: types.GolangString, Fvalue: "Hello"}
+	str := GoStringFromStringObject(obj)
+	if str != "Hello" {
+		t.Errorf("expected string 'Hello', observed: '%s'", str)
+	}
+}
+
+func TestJavaByteArrayFromStringObjectValie(t *testing.T) {
 	globals.InitGlobals("test")
 	statics.LoadStaticsString()
 
@@ -84,6 +109,16 @@ func TestByteArrayFromStringObject(t *testing.T) {
 	bb := JavaByteArrayFromStringObject(strObj)
 	if !JavaByteArrayEquals(bb, constBytes) {
 		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, GoStringFromJavaByteArray(bb))
+	}
+}
+
+func TestJavaByteArrayFromStringObjectInvalid(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.LoadStaticsString()
+	str := StringObjectFromGoString("ABC")
+	ba := ByteArrayFromStringObject(str)
+	if ba[0] != types.JavaByte('A') && ba[1] != types.JavaByte('B') && ba[2] != types.JavaByte('C') {
+		t.Errorf("expected 'ABC', observed: %s", string(GoStringFromJavaByteArray(ba)))
 	}
 }
 

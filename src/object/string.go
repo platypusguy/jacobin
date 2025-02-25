@@ -100,9 +100,9 @@ func GoStringFromStringObject(obj *Object) string {
 }
 
 // ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
-func ByteArrayFromStringObject(obj *Object) []byte {
+func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		return obj.FieldTable["value"].Fvalue.([]byte)
+		return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	} else {
 		return nil
 	}
@@ -242,7 +242,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 
 	// None of the above!
 	// Just return the class name, field name, and the field type.
-	result := fmt.Sprintf("UNRECOGNISED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
+	result := fmt.Sprintf("UNRECOGNIZED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
 	return result
 
 }
