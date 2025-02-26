@@ -531,7 +531,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid reference type of an array: %T",
+		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Reference invalid type of array: %T",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {

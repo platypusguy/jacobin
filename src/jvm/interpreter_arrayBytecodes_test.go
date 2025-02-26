@@ -1420,6 +1420,28 @@ func TestNewFaload(t *testing.T) {
 	}
 }
 
+// FALOAD: Test with raw float array
+func TestFaLoadWithRawFloatArray(t *testing.T) {
+	f := newFrame(opcodes.FALOAD)
+	fArray := []float64{1.0, 2.0, 3.0, 4.0, 50.}
+	push(&f, fArray)   // push the reference to the array, here a raw byte array
+	push(&f, int64(2)) // get contents in array[2]
+
+	globals.InitGlobals("test")
+
+	// execute the bytecode
+	ret := doFaload(&f, 0)
+
+	if ret != 1 {
+		t.Errorf("FALOAD: Expected error return of 1, got %d", ret)
+	}
+
+	fl := pop(&f).(float64)
+	if fl != 3.0 {
+		t.Errorf("FALOAD: Expected 3.0, got %f", fl)
+	}
+}
+
 // FALOAD: Test exception on nil array address
 func TestNewFaloadNilArray(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1488,6 +1510,35 @@ func TestNewFaloadInvalidSubscript(t *testing.T) {
 	if !strings.Contains(errMsg, "Invalid array subscript") {
 		t.Errorf("DALOAD: Did not get expected err msg for invalid subscript, got: %s",
 			errMsg)
+	}
+}
+
+func TestFaLoadWhenNotAValidArray(t *testing.T) {
+	f := newFrame(opcodes.FALOAD)
+	badArray := []byte{1, 2, 3, 4, 5}
+	push(&f, badArray)  // push the reference to the array, here a raw byte array
+	push(&f, int64(20)) // get contents in array[20]
+
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// execute the bytecode
+	ret := doFaload(&f, 0)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if ret != math.MaxInt32 { // = exceptions.ERROR_OCCURRED but can't use here due to circular import
+		t.Errorf("FALOAD: Expected error return of , got %d", ret)
+	}
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "Reference invalid type of array") {
+		t.Errorf("FALOAD: Got unexpected error message: %s", errMsg)
 	}
 }
 
@@ -1781,7 +1832,7 @@ func TestNewIaloadInvalidSubscript(t *testing.T) {
 	}
 }
 
-func TestIaLoadWhenNotAnArray(t *testing.T) {
+func TestIaLoadWhenNotAValidArray(t *testing.T) {
 	f := newFrame(opcodes.IALOAD)
 	badArray := []byte{1, 2, 3, 4, 5}
 	push(&f, badArray)  // push the reference to the array, here a raw byte array
