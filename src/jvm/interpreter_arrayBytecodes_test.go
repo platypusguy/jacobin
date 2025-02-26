@@ -149,6 +149,38 @@ func TestNewAaloadWithNil(t *testing.T) {
 	}
 }
 
+// AALOAD: using an invalid subscript into the array
+func TestAaloadInvalidSubscript(t *testing.T) {
+	globals.InitGlobals("test")
+
+	refArr := object.Make1DimRefArray(types.ObjectClassName, 10)
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.AALOAD) // now fetch the value
+	push(&f, refArr)              // push the reference to the array
+	push(&f, int64(200))          // get contents in array[200] which is invalid
+	ret := doAaload(&f, 0)
+
+	// restore stderr to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if ret != math.MaxInt32 { // = exceptions.ERROR_OCCURRED. Literal not used due to circularity.
+		t.Errorf("AALOAD: Expecting error code, got: %d", ret)
+	}
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "Invalid array subscript") {
+		t.Errorf("DALOAD: Did not get expected err msg for invalid subscript, got: %s",
+			errMsg)
+	}
+}
+
 // ANEWARRAY: create an array of T_REF.
 // AASTORE: store a value in the array.
 //
