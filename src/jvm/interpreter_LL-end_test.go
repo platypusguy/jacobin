@@ -1529,7 +1529,6 @@ func TestPutStaticFloat(t *testing.T) {
 	}
 }
 
-/*
 // PUTSTATIC: this should bonk because the class of the static cannot be found/loaded
 // An extremely frustrating test. In numerous places, we throw exceptions have trace statements
 // and we test them by redirectirng stderr to a pipe and reading the output. This works fine in
@@ -1543,10 +1542,13 @@ func TestPutStaticFloat(t *testing.T) {
 func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	globals.InitGlobals("test")
 	MainThread.Trace = true
+	statics.LoadProgramStatics()
+	classloader.InitMethodArea()
+	statics.Statics = make(map[string]statics.Static)
 
-	// normalStderr := os.Stderr
-	// r, w, _ := os.Pipe()
-	// os.Stderr = w
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
 
 	f := newFrame(opcodes.PUTSTATIC)
 	f.Meth = append(f.Meth, 0x00)
@@ -1570,9 +1572,6 @@ func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	}
 	f.CP = &CP
 
-	statics.LoadProgramStatics()
-	classloader.InitMethodArea()
-
 	// this code was suggested as a way to capture all the output to the redirected stderr
 	// On the Goland test runner, this works fine. All the error messages are captured.
 	// However, on go test, the error messages are not captured. I don't know why and have
@@ -1592,7 +1591,13 @@ func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	// fs := frames.CreateFrameStack()
 	// fs.PushFront(&f) // push the new frame
 	// interpret(fs)
+
 	ret := doPutStatic(&f, 0)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	_, _ = io.ReadAll(r)
+	os.Stderr = normalStderr
 
 	// _ = w.Close()
 	// wg.Wait()
@@ -1608,11 +1613,12 @@ func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	// 	!strings.Contains(string(msg), "could not find class") {
 	// 	t.Errorf("PUTSTATIC: Got unexpected error text: \n%s\nmsg: %s", string(text), string(msg))
 	// }
+
 	if ret != exceptions.ERROR_OCCURRED {
-		t.Errorf("PUTSTATIC: Expected an error return code, but got none")
+		t.Errorf("TestPutStaticInvalidNoSuchClass: Expected ret=exceptions.ERROR_OCCURRED, observed: %d", ret)
+		t.Log(string(msg))
 	}
 }
-*/
 
 // PUTSTATIC: Update a static field -- invalid b/c does not point to a field ref in the CP
 func TestPutStaticInvalid(t *testing.T) {
@@ -1647,10 +1653,11 @@ func TestPutStaticInvalid(t *testing.T) {
 	errMsg := string(msg)
 
 	if errMsg == "" {
-		t.Errorf("PUTSTATIC: Expected error but did not get one.")
+		t.Errorf("TestPutStaticInvalidNoSuchClass: Expected error message but errMsg is \"\".")
 	} else {
-		if !strings.Contains(errMsg, "Expected a field ref, but got") {
-			t.Errorf("PUTSTATIC: Did not get expected error message, got: %s", errMsg)
+		expected := "Expected a field ref, but got"
+		if !strings.Contains(errMsg, expected) {
+			t.Errorf("TestPutStaticInvalidNoSuchClass: expected: %s, observed: %s", expected, errMsg)
 		}
 	}
 }

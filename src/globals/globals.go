@@ -302,7 +302,7 @@ func InitArrayAddressList() *list.List {
 
 // Fake GoStringFromStringObject()
 func fakeGoStringFromStringObject(obj interface{}) string {
-	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized GoStringFromStringObject pointer func")
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized GoStringFromStringObject pointer func\n")
 	fmt.Fprintf(os.Stderr, errMsg)
 	return ""
 }
@@ -316,13 +316,13 @@ func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) 
 
 // Fake MinimalAbort() in exceptions.go
 func fakeMinimalAbort(whichEx int, msg string) {
-	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func")
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func\n")
 	fmt.Fprintf(os.Stderr, errMsg)
 }
 
 // Fake ThrowEx() in exceptions.go
 func fakeThrowEx(whichEx int, msg string) bool {
-	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func")
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func\n")
 	fmt.Fprintf(os.Stderr, errMsg)
 	return false
 }
