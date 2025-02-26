@@ -474,7 +474,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		obj := ref.(*object.Object)
 		if object.IsNull(obj) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid null reference to an array",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
@@ -486,7 +486,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		array = ref.([]int64)
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid reference to an array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
@@ -531,7 +531,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid reference type of an array: %T",
+		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Reference invalid type of array: %T",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
