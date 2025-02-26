@@ -1190,6 +1190,230 @@ func TestPutStaticInt(t *testing.T) {
 	}
 }
 
+// PUTSTATIC: Update a static field, an int, successfully (same as previous test, with tracing on)
+func TestPutStaticIntWithTrace(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = true
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, int64(420))
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     "I",
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	statics.AddStatic("test.field1", statics.Static{
+		Type:  "I",
+		Value: 42,
+	})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "PUTSTATIC") || !strings.Contains(errMsg, "field1") {
+		t.Errorf("PUTSTATIC: Got unexpected error msg: \n%s", errMsg)
+	}
+
+	val := statics.GetStaticValue("test", "field1").(int64)
+	if val != 420 {
+		t.Errorf("PUTSTATIC: Expected static value to be 420, got: %d", val)
+	}
+}
+
+// PUTSTATIC: Update a static field, a boolean, successfully
+func TestPutStaticBool(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = false
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, types.JavaBoolTrue)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     types.Bool,
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	statics.AddStatic("test.field1", statics.Static{
+		Type:  "Z",
+		Value: types.JavaBoolFalse,
+	})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg != "" {
+		t.Errorf("PUTSTATIC: Got unexpected error msg: \n%s", errMsg)
+	}
+
+	val := statics.GetStaticValue("test", "field1").(int64)
+	if val != types.JavaBoolTrue {
+		t.Errorf("PUTSTATIC: Expected static value to be true (1), got: %d", val)
+	}
+}
+
+// PUTSTATIC: Update a static field, a byte, successfully
+func TestPutStaticJavaByte(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = false
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, byte('A'))
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     types.Byte,
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	statics.AddStatic("test.field1", statics.Static{
+		Type:  types.Byte,
+		Value: byte('B'),
+	})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg != "" {
+		t.Errorf("PUTSTATIC: Got unexpected error msg: \n%s", errMsg)
+	}
+
+	val := statics.GetStaticValue("test", "field1").(int64) // GeStaticValue converts bytes to int64s
+	if rune(val) != 'A' {
+		t.Errorf("PUTSTATIC: Expected static value to be 'A', got: %c", rune(val))
+	}
+}
+
+// PUTSTATIC: Update a static field, a byte, successfully. This byte value is passed in as int64
+func TestPutStaticJavaByteAsInt64(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = false
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, int64('A'))
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     types.Byte,
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	statics.AddStatic("test.field1", statics.Static{
+		Type:  types.Byte,
+		Value: int64('B'),
+	})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg != "" {
+		t.Errorf("PUTSTATIC: Got unexpected error msg: \n%s", errMsg)
+	}
+
+	val := statics.GetStaticValue("test", "field1").(int64) // GeStaticValue converts bytes to int64s
+	if rune(val) != 'A' {
+		t.Errorf("PUTSTATIC: Expected static value to be 'A', got: %c", rune(val))
+	}
+}
+
 // PUTSTATIC: Update a static field, an float/double, successfully
 func TestPutStaticFloat(t *testing.T) {
 	globals.InitGlobals("test")
