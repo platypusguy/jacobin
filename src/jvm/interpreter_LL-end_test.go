@@ -7,6 +7,8 @@
 package jvm
 
 import (
+	// "bytes"
+	// "fmt"
 	"io"
 	"jacobin/classloader"
 	"jacobin/exceptions"
@@ -22,6 +24,7 @@ import (
 	"jacobin/types"
 	"os"
 	"strings"
+	// "sync"
 	"testing"
 	"unsafe"
 )
@@ -1303,7 +1306,7 @@ func TestPutStaticBool(t *testing.T) {
 }
 
 // PUTSTATIC: Update a static field, a byte, successfully
-func TestPutStaticJavaByte(t *testing.T) {
+func TestPutStaticByte(t *testing.T) {
 	globals.InitGlobals("test")
 	MainThread.Trace = false
 
@@ -1358,8 +1361,64 @@ func TestPutStaticJavaByte(t *testing.T) {
 	}
 }
 
+// PUTSTATIC: Update a static field, a byte, successfully
+func TestPutStaticJavaByte(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = false
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, types.JavaByte('A'))
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     types.Byte,
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	statics.AddStatic("test.field1", statics.Static{
+		Type:  types.Byte,
+		Value: types.JavaByte('B'),
+	})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if errMsg != "" {
+		t.Errorf("PUTSTATIC: Got unexpected error msg: \n%s", errMsg)
+	}
+
+	val := statics.GetStaticValue("test", "field1").(int64) // GeStaticValue converts bytes to int64s
+	if rune(val) != 'A' {
+		t.Errorf("PUTSTATIC: Expected static value to be 'A', got: %c", rune(val))
+	}
+}
+
 // PUTSTATIC: Update a static field, a byte, successfully. This byte value is passed in as int64
-func TestPutStaticJavaByteAsInt64(t *testing.T) {
+func TestPutStaticByteAsInt64(t *testing.T) {
 	globals.InitGlobals("test")
 	MainThread.Trace = false
 
@@ -1469,6 +1528,91 @@ func TestPutStaticFloat(t *testing.T) {
 		t.Errorf("PUTSTATIC: Expected static value to be 420.9, got: %f", val)
 	}
 }
+
+/*
+// PUTSTATIC: this should bonk because the class of the static cannot be found/loaded
+// An extremely frustrating test. In numerous places, we throw exceptions have trace statements
+// and we test them by redirectirng stderr to a pipe and reading the output. This works fine in
+// almost all cases. But not in this test. We've added additional code to flush the redirected
+// stderr, but it still doesn't work.
+//
+// Note that the test works fine in the Goland test runner. It's only when running 'go test' that
+// the error messages are not captured. I've left the code in, in the event one day a work around
+// allows us to test the error message. For the moment, we just test for an error return code.
+// But once again, that works in Goland, but fails in go test. Why on earth?
+func TestPutStaticInvalidNoSuchClass(t *testing.T) {
+	globals.InitGlobals("test")
+	MainThread.Trace = true
+
+	// normalStderr := os.Stderr
+	// r, w, _ := os.Pipe()
+	// os.Stderr = w
+
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00)
+	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
+	push(&f, float64(420.1))
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0} // should be a field ref
+
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      "test",
+		FldName:     "field1",
+		FldType:     "F",
+	}
+	f.CP = &CP
+
+	statics.LoadProgramStatics()
+	classloader.InitMethodArea()
+
+	// this code was suggested as a way to capture all the output to the redirected stderr
+	// On the Goland test runner, this works fine. All the error messages are captured.
+	// However, on go test, the error messages are not captured. I don't know why and have
+	// spent hours trying to figure it out. I'm leaving this code here in case someone else
+	// can figure it out.
+	// var buf bytes.Buffer
+	// var wg sync.WaitGroup
+	// wg.Add(1)
+	// go func() {
+	// 	_, err := io.Copy(&buf, r)
+	// 	if err != nil {
+	// 		fmt.Println("Error copying from pipe:", err)
+	// 	}
+	// 	wg.Done()
+	// }()
+
+	// fs := frames.CreateFrameStack()
+	// fs.PushFront(&f) // push the new frame
+	// interpret(fs)
+	ret := doPutStatic(&f, 0)
+
+	// _ = w.Close()
+	// wg.Wait()
+	// // text := buf.String()
+	// // msg, _ := io.ReadAll(r)
+	// os.Stderr = normalStderr
+
+	// see previous note in this test about why this code is commented out
+	// fmt.Println("text: " + string(text))
+	// fmt.Println("msg: " + string(msg))
+	//
+	// if !strings.Contains(string(text), "could not load class") &&
+	// 	!strings.Contains(string(msg), "could not find class") {
+	// 	t.Errorf("PUTSTATIC: Got unexpected error text: \n%s\nmsg: %s", string(text), string(msg))
+	// }
+	if ret != exceptions.ERROR_OCCURRED {
+		t.Errorf("PUTSTATIC: Expected an error return code, but got none")
+	}
+}
+*/
 
 // PUTSTATIC: Update a static field -- invalid b/c does not point to a field ref in the CP
 func TestPutStaticInvalid(t *testing.T) {
