@@ -1836,16 +1836,29 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.Statics[fieldName]
 	if !ok { // if field is not already loaded, then
+		if MainThread.Trace {
+			msg := fmt.Sprintf("doPutStatic: Field was NOT previously loaded: %s", fieldName)
+			trace.Trace(msg)
+		}
 		// the class has not been instantiated, so
 		// instantiate the class
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
+			if MainThread.Trace {
+				msg := fmt.Sprintf("doPutStatic: Loaded class %s", className)
+				trace.Trace(msg)
+			}
 			prevLoaded, ok = statics.Statics[fieldName]
 		} else {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
 			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
+		}
+	} else {
+		if MainThread.Trace {
+			msg := fmt.Sprintf("doPutStatic: Field was INDEED previously loaded: %s", fieldName)
+			trace.Trace(msg)
 		}
 	}
 
