@@ -17,6 +17,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -1717,7 +1718,7 @@ func TestNewIaloadNilArray(t *testing.T) {
 
 	errMsg := string(out[:])
 
-	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+	if !strings.Contains(errMsg, "Invalid null reference to an array") {
 		t.Errorf("IALOAD: Did not get expected err msg for nil array, got: %s",
 			errMsg)
 	}
@@ -1777,6 +1778,35 @@ func TestNewIaloadInvalidSubscript(t *testing.T) {
 	if !strings.Contains(errMsg, "Invalid array subscript") {
 		t.Errorf("IALOAD: Did not get expected err msg for invalid subscript, got: %s",
 			errMsg)
+	}
+}
+
+func TestIaLoadWhenNotAnArray(t *testing.T) {
+	f := newFrame(opcodes.IALOAD)
+	badArray := []byte{1, 2, 3, 4, 5}
+	push(&f, badArray)  // push the reference to the array, here a raw byte array
+	push(&f, int64(20)) // get contents in array[20]
+
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// execute the bytecode
+	ret := doIaload(&f, 0)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	if ret != math.MaxInt32 { // = exceptions.ERROR_OCCURRED but can't use here due to circular import
+		t.Errorf("IALOAD: Expected error return of , got %d", ret)
+	}
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "Invalid reference to an array") {
+		t.Errorf("IALOAD: Got unexpected error message: %s", errMsg)
 	}
 }
 
@@ -2009,7 +2039,7 @@ func TestNewLaloadNilArray(t *testing.T) {
 
 	errMsg := string(out[:])
 
-	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+	if !strings.Contains(errMsg, "Invalid null reference to an array") {
 		t.Errorf("LALOAD: Did not get expected err msg for nil array, got: %s",
 			errMsg)
 	}
