@@ -13,6 +13,9 @@ const loopCount = 20
 const absTolerance = 1e-9
 const relTolerance = 1e-6
 
+// Close enough?
+// If very small, use an absolute tolerance.
+// Otherwise, use a relative tolerance.
 func float64CloseEnough(tweedleDee, tweedleDum float64) bool {
 	diff := math.Abs(tweedleDee - tweedleDum)
 

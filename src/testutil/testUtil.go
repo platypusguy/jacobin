@@ -12,6 +12,11 @@ import (
 	"testing"
 )
 
+// ***** NOT THREAD-SAFE *****
+var originalStderr *os.File
+var originalStdout *os.File
+var testStderr *os.File
+var testStdout *os.File
 var flagInit = false
 
 // Standard unit test initialisation without processing stderr and stdout.
@@ -32,14 +37,8 @@ func UTinit(t *testing.T) {
 	flagInit = true
 }
 
-// NOT THREAD-SAFE.
-var originalStderr *os.File
-var originalStdout *os.File
-var testStderr *os.File
-var testStdout *os.File
-
 // Save current stdout and stderr.
-// Substitute 2
+// Substitute 2 ones while executing Jacobin functions.
 func UTnewConsole(t *testing.T) {
 	var err error
 
