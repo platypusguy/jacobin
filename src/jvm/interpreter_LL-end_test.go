@@ -7,8 +7,6 @@
 package jvm
 
 import (
-	// "bytes"
-	// "fmt"
 	"io"
 	"jacobin/classloader"
 	"jacobin/exceptions"
@@ -24,7 +22,6 @@ import (
 	"jacobin/types"
 	"os"
 	"strings"
-	// "sync"
 	"testing"
 	"unsafe"
 )
@@ -1530,19 +1527,10 @@ func TestPutStaticFloat(t *testing.T) {
 }
 
 // PUTSTATIC: this should bonk because the class of the static cannot be found/loaded
-// An extremely frustrating test. In numerous places, we throw exceptions have trace statements
-// and we test them by redirectirng stderr to a pipe and reading the output. This works fine in
-// almost all cases. But not in this test. We've added additional code to flush the redirected
-// stderr, but it still doesn't work.
-//
-// Note that the test works fine in the Goland test runner. It's only when running 'go test' that
-// the error messages are not captured. I've left the code in, in the event one day a work around
-// allows us to test the error message. For the moment, we just test for an error return code.
-// But once again, that works in Goland, but fails in go test. Why on earth?
 func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	globals.InitGlobals("test")
 	MainThread.Trace = true
-	statics.LoadProgramStatics()
+
 	classloader.InitMethodArea()
 	statics.Statics = make(map[string]statics.Static)
 
@@ -1572,47 +1560,12 @@ func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	}
 	f.CP = &CP
 
-	// this code was suggested as a way to capture all the output to the redirected stderr
-	// On the Goland test runner, this works fine. All the error messages are captured.
-	// However, on go test, the error messages are not captured. I don't know why and have
-	// spent hours trying to figure it out. I'm leaving this code here in case someone else
-	// can figure it out.
-	// var buf bytes.Buffer
-	// var wg sync.WaitGroup
-	// wg.Add(1)
-	// go func() {
-	// 	_, err := io.Copy(&buf, r)
-	// 	if err != nil {
-	// 		fmt.Println("Error copying from pipe:", err)
-	// 	}
-	// 	wg.Done()
-	// }()
-
-	// fs := frames.CreateFrameStack()
-	// fs.PushFront(&f) // push the new frame
-	// interpret(fs)
-
 	ret := doPutStatic(&f, 0)
 
 	_ = w.Close()
 	msg, _ := io.ReadAll(r)
 	_, _ = io.ReadAll(r)
 	os.Stderr = normalStderr
-
-	// _ = w.Close()
-	// wg.Wait()
-	// // text := buf.String()
-	// // msg, _ := io.ReadAll(r)
-	// os.Stderr = normalStderr
-
-	// see previous note in this test about why this code is commented out
-	// fmt.Println("text: " + string(text))
-	// fmt.Println("msg: " + string(msg))
-	//
-	// if !strings.Contains(string(text), "could not load class") &&
-	// 	!strings.Contains(string(msg), "could not find class") {
-	// 	t.Errorf("PUTSTATIC: Got unexpected error text: \n%s\nmsg: %s", string(text), string(msg))
-	// }
 
 	if ret != exceptions.ERROR_OCCURRED {
 		t.Errorf("TestPutStaticInvalidNoSuchClass: Expected ret=exceptions.ERROR_OCCURRED, observed: %d", ret)
