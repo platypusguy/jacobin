@@ -178,7 +178,7 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Create Integer object.
-	return populator("java/lang/Integer", types.Int, int64Value)
+	return Populator("java/lang/Integer", types.Int, int64Value)
 }
 
 // "java/lang/Integer.doubleValue()D"
@@ -285,7 +285,7 @@ func integerSignum(params []interface{}) interface{} {
 // "java/lang/Integer.valueOf(I)Ljava/lang/Integer;"
 func integerValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return populator("java/lang/Integer", types.Int, int64Value)
+	return Populator("java/lang/Integer", types.Int, int64Value)
 }
 
 // "java/lang/Integer.toString()Ljava/lang/String;"
