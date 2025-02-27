@@ -93,19 +93,6 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	fr.MethName = methodName
 	fr.MethType = methodType
 
-	// Add CP to the frame.
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
-	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
-		ClName:  "testClass",
-		FldName: "testField",
-		FldType: "I",
-	}
-	fr.CP = &CP
-
 	// Push fr to front of fs.
 	_ = frames.PushFrame(fs, fr)
 
