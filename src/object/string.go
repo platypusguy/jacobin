@@ -216,7 +216,9 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		case []types.JavaByte:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		}
-	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
+	case types.CharArray:
+		return GoStringFromJavaCharArray(fld.Fvalue.([]int64))
+	case types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {
 			str += fmt.Sprint(elem)
@@ -245,4 +247,13 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	result := fmt.Sprintf("UNRECOGNIZED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
 	return result
 
+}
+
+// Go string from a Java character array.
+func GoStringFromJavaCharArray(inArray []int64) string {
+	var sb strings.Builder
+	for _, ch := range inArray {
+		sb.WriteRune(rune(ch))
+	}
+	return sb.String()
 }

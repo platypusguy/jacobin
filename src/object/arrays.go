@@ -237,7 +237,7 @@ func ArrayLength(arrayRef *Object) int64 {
 	case types.FloatArray:
 		array := o.Fvalue.([]float64)
 		size = int64(len(array))
-	case types.IntArray:
+	case types.IntArray, types.CharArray:
 		array := o.Fvalue.([]int64)
 		size = int64(len(array))
 	default:

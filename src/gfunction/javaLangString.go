@@ -1228,7 +1228,7 @@ func StringFormatter(params []interface{}) interface{} {
 func getBytesFromString(params []interface{}) interface{} {
 	// params[0] = reference string with byte array to be returned
 	bytes := object.JavaByteArrayFromStringObject(params[0].(*object.Object))
-	return populator("[B", types.ByteArray, bytes)
+	return Populator("[B", types.ByteArray, bytes)
 }
 
 // java/lang/String.getBytes([BIIBI)V
@@ -1476,7 +1476,7 @@ func toCharArray(params []interface{}) interface{} {
 	for _, bb := range bytes {
 		iArray = append(iArray, int64(bb))
 	}
-	return populator("[C", types.IntArray, iArray)
+	return Populator("[C", types.CharArray, iArray)
 }
 
 // "java/lang/String.toLowerCase()Ljava/lang/String;"
@@ -2025,7 +2025,7 @@ func stringSplit(params []interface{}) interface{} {
 	for ix := 0; ix < len(result); ix++ {
 		outObjArray = append(outObjArray, object.StringObjectFromGoString(result[ix]))
 	}
-	return populator("[Ljava/lang/String;", types.RefArray, outObjArray)
+	return Populator("[Ljava/lang/String;", types.RefArray, outObjArray)
 
 }
 
@@ -2056,7 +2056,7 @@ func stringSplitLimit(params []interface{}) interface{} {
 	for ix := 0; ix < len(result); ix++ {
 		outObjArray = append(outObjArray, object.StringObjectFromGoString(result[ix]))
 	}
-	return populator("[Ljava/lang/String;", types.RefArray, outObjArray)
+	return Populator("[Ljava/lang/String;", types.RefArray, outObjArray)
 }
 
 func stringStrip(params []interface{}) interface{} {

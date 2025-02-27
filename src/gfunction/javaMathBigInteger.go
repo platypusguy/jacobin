@@ -410,29 +410,11 @@ func getPrime(bitLength int) (*big.Int, string) {
 	}
 }
 
-// initBigIntegerField: Initialise the object field.
-// Fvalue holds *big.Int (pointer).
-func initBigIntegerField(obj *object.Object, argValue int64) {
-	ptrBigInt := big.NewInt(argValue)
-	fldValue := object.Field{Ftype: types.BigInteger, Fvalue: ptrBigInt}
-	obj.FieldTable["value"] = fldValue
-	var fldSign object.Field
-	switch {
-	case argValue == 0:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(0)}
-	case argValue < 0:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(-1)}
-	default:
-		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
-	}
-	obj.FieldTable["signum"] = fldSign
-}
-
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
 func addStaticBigInteger(argName string, argValue int64) {
 	name := fmt.Sprintf("%s.%s", bigIntegerClassName, argName)
 	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
-	initBigIntegerField(obj, argValue)
+	InitBigIntegerField(obj, argValue)
 	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/math/BigInteger;", Value: obj})
 }
 
@@ -1410,7 +1392,7 @@ func bigIntegerValueOf(params []interface{}) interface{} {
 
 	argValue := params[0].(int64)
 	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
-	initBigIntegerField(obj, argValue)
+	InitBigIntegerField(obj, argValue)
 
 	return obj
 }

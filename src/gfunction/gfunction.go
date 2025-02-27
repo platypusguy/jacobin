@@ -15,6 +15,7 @@ import (
 	"jacobin/object"
 	"jacobin/trace"
 	"jacobin/types"
+	"math/big"
 	"os"
 	"strings"
 )
@@ -213,7 +214,7 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 }
 
 // Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
-func populator(classname string, fldtype string, fldvalue interface{}) *object.Object {
+func Populator(classname string, fldtype string, fldvalue interface{}) *object.Object {
 	var objPtr *object.Object
 	if fldtype == types.StringIndex {
 		objPtr = object.StringObjectFromGoString(fldvalue.(string))
@@ -251,4 +252,22 @@ func returnFalse(params []interface{}) interface{} {
 // Return true.
 func returnTrue(params []interface{}) interface{} {
 	return types.JavaBoolTrue
+}
+
+// InitBigIntegerField: Initialise the object field.
+// Fvalue holds *big.Int (pointer).
+func InitBigIntegerField(obj *object.Object, argValue int64) {
+	ptrBigInt := big.NewInt(argValue)
+	fldValue := object.Field{Ftype: types.BigInteger, Fvalue: ptrBigInt}
+	obj.FieldTable["value"] = fldValue
+	var fldSign object.Field
+	switch {
+	case argValue == 0:
+		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(0)}
+	case argValue < 0:
+		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(-1)}
+	default:
+		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
+	}
+	obj.FieldTable["signum"] = fldSign
 }

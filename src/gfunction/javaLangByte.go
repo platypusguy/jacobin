@@ -79,7 +79,7 @@ func byteDecode(params []interface{}) interface{} {
 	}
 
 	// Create Byte object.
-	return populator("java/lang/Byte", types.Byte, int64Value)
+	return Populator("java/lang/Byte", types.Byte, int64Value)
 }
 
 // "java/lang/Byte.doubleValue()D"
@@ -103,5 +103,5 @@ func byteToString(params []interface{}) interface{} {
 // "java/lang/Byte.valueOf(B)Ljava/lang/Byte;"
 func byteValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return populator("java/lang/Byte", types.Byte, int64Value)
+	return Populator("java/lang/Byte", types.Byte, int64Value)
 }
