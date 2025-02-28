@@ -4,8 +4,8 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) Consult jacobin.org.
  * ------------------------------------------------------------------------
  *
- *  This directory contains various docs and notes the developers want to share
- *  but keep with the source code.
+ *  This directory contains various docs and notes the developers want to refer to
+ *  and keep with the source code.
  *
  *  The contents might change unexpectedly, so do not depend on these files
  *  in any way. They're just scribbles, brainstorming, and miscellany.
