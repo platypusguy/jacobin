@@ -260,7 +260,7 @@ func InitJavaHome() {
 	handle, err := os.Open(releasePath)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: os.Open(%s) failed. Exiting.\n", releasePath)
-		_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		return
 	}
 	defer handle.Close()
@@ -303,27 +303,27 @@ func InitArrayAddressList() *list.List {
 // Fake GoStringFromStringObject()
 func fakeGoStringFromStringObject(obj interface{}) string {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized GoStringFromStringObject pointer func\n")
-	fmt.Fprintf(os.Stderr, errMsg)
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
 	return ""
 }
 
 // Fake InstantiateClass
 func fakeInstantiateClass(classname string, frameStack *list.List) (any, error) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized InstantiateClass pointer func: classname=%s\n", classname)
-	fmt.Fprintf(os.Stderr, errMsg)
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
 	return nil, errors.New(errMsg)
 }
 
 // Fake MinimalAbort() in exceptions.go
 func fakeMinimalAbort(whichEx int, msg string) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized MinimalAbort pointer func\n")
-	fmt.Fprintf(os.Stderr, errMsg)
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
 }
 
 // Fake ThrowEx() in exceptions.go
 func fakeThrowEx(whichEx int, msg string) bool {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func\n")
-	fmt.Fprintf(os.Stderr, errMsg)
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
 	return false
 }
 
