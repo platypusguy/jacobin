@@ -9,8 +9,6 @@ module jacobin
 go 1.24.0
 
 require (
-	github.com/ebitengine/purego v0.7.1
-	github.com/omarghader/pefile-go v0.0.0-20170717144148-b1abcb010d7d
 	golang.org/x/sys v0.17.0
 	golang.org/x/term v0.17.0
 )
