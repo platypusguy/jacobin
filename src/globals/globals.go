@@ -223,7 +223,7 @@ func InitJacobinHome() {
 		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.UserHomeDir() failed. Exiting.\n")
-			_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			return
 		}
 		jacobinHome = userHomeDir + string(os.PathSeparator) + "jacobin_data"
@@ -233,7 +233,7 @@ func InitJacobinHome() {
 	err := os.MkdirAll(jacobinHome, 0755)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "InitJacobinHome: os.MkDirAll(%s) failed. Exiting.\n", jacobinHome)
-		_, _ = fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		return
 	}
 

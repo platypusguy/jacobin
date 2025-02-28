@@ -52,8 +52,10 @@ func TestDumpConfig(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	err = DumpConfig(file)
+
 	if err != nil {
-		t.Errorf(err.Error())
+		errStr := err.Error()
+		t.Errorf("%s", errStr)
 	}
 
 	_ = file.Close()

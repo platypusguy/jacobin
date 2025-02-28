@@ -67,7 +67,7 @@ func Test_II_I(t *testing.T) {
 			t.Logf("Success, observed = expected = 0x%08x\n", expected)
 		}
 	case NativeErrBlk:
-		t.Errorf(ret.(NativeErrBlk).ErrMsg)
+		t.Errorf("%s", ret.(NativeErrBlk).ErrMsg)
 	default:
 		t.Errorf("Unexpected observed type: %T\n", ret)
 	}
