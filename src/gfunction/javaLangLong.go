@@ -106,7 +106,7 @@ func longRotateRight(params []interface{}) interface{} {
 // "java/lang/Long.valueOf(J)Ljava/lang/Long;"
 func longValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return populator("java/lang/Long", types.Long, int64Value)
+	return Populator("java/lang/Long", types.Long, int64Value)
 }
 
 // "java/lang/Long.toHexString(J)Ljava/lang/String;"
