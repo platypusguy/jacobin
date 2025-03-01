@@ -18,7 +18,7 @@ func TestRcFromRunner(t *testing.T) {
 	if rc != RcRunnerFailure || !strings.Contains(outstr, "Usage:") {
 		t.Errorf("TestRcFromRunner: expected rc=%d, observed rc=%d, outstr=%s", RcRunnerFailure, rc, outstr)
 	}
-	
+
 	rc, outstr = Runner("go", "version", 0, false)
 	if rc != RcRunnerTimeout {
 		t.Errorf("TestRcFromRunner: expected rc=%d, observed rc=%d, outstr=%s", RcRunnerTimeout, rc, outstr)

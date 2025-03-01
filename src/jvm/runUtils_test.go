@@ -8,11 +8,17 @@ package jvm
 
 import (
 	"jacobin/classloader"
+	"jacobin/frames"
 	"jacobin/globals"
 	"jacobin/object"
+	"jacobin/opcodes"
 	"jacobin/stringPool"
+	"jacobin/testutil"
 	"jacobin/trace"
+	"jacobin/types"
+	"strings"
 	"testing"
+	"unsafe"
 )
 
 // tests for runUtils.go. Note that most functions are tested inside the tests for run.go,
@@ -109,12 +115,92 @@ func TestConvertFloatToInt64RoundUp(t *testing.T) {
 // larger number (i.e., a 32-bit field) the most significant bit can indeed
 // represent a sign. This test makes sure we convert such a data byte to a
 // negative number.
-func TestDataByteToInt64(t *testing.T) {
+func TestByteToInt64(t *testing.T) {
 	b := byte(0xA0)
 	val := byteToInt64(b)
-	if !(val < 0) {
-		t.Errorf("dataByteToInt64(byte), expected value < 0, got %d", val)
+	if val != -96 {
+		t.Errorf("TestByteToInt64: byteToInt64(0xA0) expected -96, got %d", val)
 	}
+	b = 0x7F
+	val = byteToInt64(b)
+	if val != 127 {
+		t.Errorf("TestByteToInt64: byteToInt64(0x7F) expected 127, got %d", val)
+	}
+}
+
+func TestConvertInterfaceToJavaByte(t *testing.T) {
+	argUint8 := byte(0xA0)
+	jb := convertInterfaceToByte(argUint8)
+	if jb != -96 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0xA0) expected -96, got %d", jb)
+	}
+	argUint8 = 0x7F
+	jb = convertInterfaceToByte(argUint8)
+	if jb != 127 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0x7F) expected 127, got %d", jb)
+	}
+	argInt := int(0xA0)
+	jb = convertInterfaceToByte(argInt)
+	if jb != -96 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0xA0) expected -96, got %d", jb)
+	}
+	argInt = 0x7F
+	jb = convertInterfaceToByte(argInt)
+	if jb != 127 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0x7F) expected 127, got %d", jb)
+	}
+	argJavaByte := types.JavaByte(-1)
+	jb = convertInterfaceToByte(argJavaByte)
+	if jb != -1 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(-1) expected -1, got %d", jb)
+	}
+	argJavaByte = 0x7F
+	jb = convertInterfaceToByte(argJavaByte)
+	if jb != 127 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0x7F) expected 127, got %d", jb)
+	}
+	argInt64 := int64(32767)
+	jb = convertInterfaceToByte(argInt64)
+	if jb != -1 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(32767) expected -1, got %d", jb)
+	}
+	argInt64 = 0x7F
+	jb = convertInterfaceToByte(argInt64)
+	if jb != 127 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(0x7F) expected 127, got %d", jb)
+	}
+	argRubbish := "ABC"
+	jb = convertInterfaceToByte(argRubbish)
+	if jb != 0 {
+		t.Errorf("TestConvertInterfaceToJavaByte: convertInterfaceToByte(\"ABC\") expected 0, got %d", jb)
+	}
+}
+
+func TestConvertInterfaceToUint64(t *testing.T) {
+	var i64 int64 = 200
+	var f64 float64 = 345.0
+	var i64ptr = unsafe.Pointer(&i64)
+
+	ret := convertInterfaceToUint64(i64)
+	if ret != 200 {
+		t.Errorf("TestConvertInterfaceToUint64: Expected convertInterfaceToUint64(200) to return 200, got %d\n", ret)
+	}
+
+	ret = convertInterfaceToUint64(f64)
+	if ret != 345 {
+		t.Errorf("TestConvertInterfaceToUint64: Expected convertInterfaceToUint64(345.0) to return 345, got %d\n", ret)
+	}
+
+	ret = convertInterfaceToUint64(i64ptr)
+	if ret == 200 {
+		t.Errorf("TestConvertInterfaceToUint64: Expected convertInterfaceToUint64(ptr to 200) to return 200, got %d\n", ret)
+	}
+
+	ret = convertInterfaceToUint64("ABC")
+	if ret != 0 {
+		t.Errorf("TestConvertInterfaceToUint64: convertInterfaceToUint64(\"ABC\") expected 0, got %d", ret)
+	}
+
 }
 
 func TestIfClassAisAsubclassOfBool(t *testing.T) {
@@ -141,7 +227,7 @@ func TestIfClassAisAsubclassOfBool(t *testing.T) {
 }
 
 // check that a class is not a subclass of itself
-func TestIfClassAisAsubclassOfItaelf(t *testing.T) {
+func TestIfClassAisAsubclassOfItself(t *testing.T) {
 
 }
 func TestIfClassAisAsubclassOfBoolInvalid(t *testing.T) {
@@ -219,4 +305,310 @@ func TestCheckCastArray3(t *testing.T) {
 	if !ret {
 		t.Errorf("checkcastArray of a subclass array should return true, got false")
 	}
+}
+
+func TestPushPeekPop(t *testing.T) {
+	testutil.UTinit(t)
+	globals.TraceVerbose = false
+	var ret, thing interface{}
+	flagDeepTracing := false
+
+	// Create frame (fr).
+	fr := frames.CreateFrame(13)
+	fr.Thread = 0 // Mainthread
+	// left nil: fr.FrameStack
+	fr.ClName = "TestClass"
+	fr.MethName = "TestMethod"
+	fr.MethType = "()V"
+	fr.Meth = []byte{byte(opcodes.NOP)}
+
+	// Try a nil stack.
+	t.Log("Trying a pop() with a nil stack. Ignore the following ThrowEx stack underflow warning.")
+	ret = pop(fr)
+	if ret != nil {
+		t.Errorf("TestPushPeekPop(nil): fr.TOS = -1. Expected nil returned from pop(), got %v", ret)
+	}
+
+	// Setup loop.
+	globals.TraceVerbose = true
+	objstr42 := object.StringObjectFromGoString("42")
+	barray := []byte{'A', 'B', 'C'}
+	jba := []types.JavaByte{'A', 'B', 'C'}
+	rubbish := "rubbish"
+
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
+
+	// Push 8 / pop 8 in a loop.
+	for ix := 0; ix < 3; ix++ {
+		push(fr, nil)
+		push(fr, int64(42))
+		push(fr, float64(42.0))
+		push(fr, objstr42)
+		push(fr, &barray)
+		push(fr, barray)
+		push(fr, jba)
+		push(fr, rubbish)
+
+		// rubbish
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(rubbish): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if ret != rubbish {
+			t.Errorf("TestPushPeekPop(rubbish): Loop %d. Expected \"rubbish\" returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#7 rubbish ok")
+		}
+
+		// jba
+		thing = peek(fr)
+		thingString := object.GoStringFromJavaByteArray(thing.([]types.JavaByte))
+		ret = pop(fr)
+		retString := object.GoStringFromJavaByteArray(ret.([]types.JavaByte))
+		if retString != thingString {
+			t.Errorf("TestPushPeekPop(jba): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if retString != "ABC" {
+			t.Errorf("TestPushPeekPop(jba): Loop %d. Expected \"ABC\" in a []types.JavaByte returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#6 jba ok")
+		}
+
+		// barray
+		thing = peek(fr)
+		thingString = string(thing.([]uint8))
+		ret = pop(fr)
+		retString = string(ret.([]uint8))
+		if retString != thingString {
+			t.Errorf("TestPushPeekPop(barray): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if retString != "ABC" {
+			t.Errorf("TestPushPeekPop(barray): Loop %d. Expected \"ABC\" in a []uint8 returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#5 barray ok")
+		}
+
+		// &barray
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(&barray): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		retString = string(*ret.(*[]byte))
+		if retString != "ABC" {
+			t.Errorf("TestPushPeekPop(&barray): Loop %d. Expected \"ABC\" in a *[]uint8 returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#4 &barray ok")
+		}
+
+		// objstr42
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(objstr42): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		retString = object.GoStringFromStringObject(ret.(*object.Object))
+		if retString != "42" {
+			t.Errorf("TestPushPeekPop(objstr42): Loop %d. Expected \"42\" in a String object returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#3 objstr42 ok")
+		}
+
+		// float64
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(float64): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if ret.(float64) != 42.0 {
+			t.Errorf("TestPushPeekPop(float64): Loop %d. Expected 42.0 in a float64 from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#2 float64 ok")
+		}
+
+		// int64
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(int64): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if ret.(int64) != 42 {
+			t.Errorf("TestPushPeekPop(int64): Loop %d. Expected 42 in an int64 from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#1 int64 ok")
+		}
+
+		// nil
+		thing = peek(fr)
+		ret = pop(fr)
+		if ret != thing {
+			t.Errorf("TestPushPeekPop(nil): Loop %d. ret != thing. thing=%v, ret=%v", ix, thing, ret)
+		}
+		if ret != nil {
+			t.Errorf("TestPushPeekPop(nil): Loop %d. Expected nil returned from pop(), got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#0 nil ok")
+		}
+
+	}
+
+	// Restore console for go test.
+	testutil.UTrestoreConsole(t)
+
+}
+
+func TestEmitTraceData(t *testing.T) {
+	testutil.UTinit(t)
+	globals.TraceVerbose = true
+	var ret interface{}
+	flagDeepTracing := false
+
+	// Create frame (fr).
+	fr := frames.CreateFrame(13)
+	fr.Thread = 0 // Mainthread
+	// left nil: fr.FrameStack
+	fr.ClName = "TestClass"
+	fr.MethName = "TestMethod"
+	fr.MethType = "()V"
+	fr.Meth = []byte{byte(opcodes.NOP)}
+
+	// Try a nil stack.
+	ret = EmitTraceData(fr)
+	if !strings.Contains(ret.(string), "TOS:  -") {
+		t.Errorf("TestEmitTraceData(nil): Expected \"TOS: -\", got: %v", ret)
+	}
+
+	// Setup loop.
+	objstr42 := object.StringObjectFromGoString("42")
+	barray := []byte{'A', 'B', 'C'}
+	jba := []types.JavaByte{'A', 'B', 'C'}
+	rubbish := "rubbish"
+
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
+
+	// EmitTraceData in a loop for 8 different top of stack variables.
+	for ix := 0; ix < 3; ix++ {
+
+		// rubbish
+		push(fr, rubbish)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "string rubbish") {
+			t.Errorf("TestEmitTraceData(rubbish): Loop %d. Expected \"string rubbish\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#7 rubbish ok")
+		}
+
+		// jba
+		push(fr, jba)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "[]JavaByte: ABC") {
+			t.Errorf("TestEmitTraceData(jba): Loop %d. Expected \"[]JavaByte: ABC\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#6 jba ok")
+		}
+
+		// barray
+		push(fr, barray)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "[]byte: ABC") {
+			t.Errorf("TestEmitTraceData(barray): Loop %d. Expected \"[]byte: ABC\", got %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#5 barray ok")
+		}
+
+		// &barray
+		push(fr, &barray)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "[]byte: ABC") {
+			t.Errorf("TestEmitTraceData(&barray): Loop %d. Expected \"[]byte: ABC\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#4 &barray ok")
+		}
+
+		// objstr42
+		push(fr, objstr42)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "String: 42") {
+			t.Errorf("TestEmitTraceData(objstr42): Loop %d. Expected \"String: 42\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#3 objstr42 ok")
+		}
+
+		// float64
+		push(fr, 42.0)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "42") {
+			t.Errorf("TestEmitTraceData(float64): Loop %d. Expected \"42\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#2 float64 ok")
+		}
+
+		// int64
+		push(fr, int64(42))
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "42") {
+			t.Errorf("TestEmitTraceData(int64): Loop %d. Expected \"42\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#1 int64 ok")
+		}
+
+		// nil
+		push(fr, nil)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "nil") {
+			t.Errorf("TestEmitTraceData(nil): Loop %d. Expected \"nil\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#0 nil ok")
+		}
+
+	}
+
+	// Restore console for go test.
+	testutil.UTrestoreConsole(t)
+
 }

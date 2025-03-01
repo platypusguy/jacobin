@@ -23,7 +23,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"unsafe"
 )
 
 // Bytecodes tested in alphabetical order. Non-bytecode tests at end of file.
@@ -1918,28 +1917,5 @@ func TestInvalidInstruction(t *testing.T) {
 
 	if !strings.Contains(msg, "Invalid bytecode") {
 		t.Errorf("Error message for invalid bytecode not as expected, got: %s", msg)
-	}
-}
-
-func TestConvertInterfaceToUint64(t *testing.T) {
-	var i64 int64 = 200
-	var f64 float64 = 345.0
-	var ptr = unsafe.Pointer(&f64)
-
-	ret := convertInterfaceToUint64(i64)
-	if ret != 200 {
-		t.Errorf("Expected TestConvertInterfaceToUint64() to retun 200, got %d\n",
-			ret)
-	}
-
-	ret = convertInterfaceToUint64(f64)
-	if ret != 345 {
-		t.Errorf("Expected TestConvertInterfaceToUint64() to retun 345, got %d\n",
-			ret)
-	}
-
-	ret = convertInterfaceToUint64(ptr)
-	if ret == 0 { // a minimal test
-		t.Error("Expected TestConvertInterfaceToUint64() to !=0, got 0\n")
 	}
 }
