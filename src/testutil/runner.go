@@ -79,7 +79,8 @@ func Runner(argCmdExec string, argOpts string, argDeadlineSecs int, argVerbose b
 
 		default:
 			outString = CleanText(outString)
-			errMsg := fmt.Sprintf("%s: cmd.CombinedOutput() indicated an error: %s", msgPrefix, outString)
+			errMsg := fmt.Sprintf("%s: cmd.CombinedOutput() indicated an error: %v, outString: [%s]", 
+				msgPrefix, err, outString)
 			return RcRunnerFailure, errMsg
 		}
 
