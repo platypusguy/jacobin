@@ -63,7 +63,7 @@ func AddStatic(name string, s Static) error {
 	staticsMutex.RLock()
 	Statics[name] = s
 	staticsMutex.RUnlock()
-	if flagTraceStatics && util.IsFilePartOfJDK(&name) {
+	if flagTraceStatics && !util.IsFilePartOfJDK(&name) {
 		if !testing.Testing() {
 			_, _ = fmt.Fprintf(os.Stderr, ">>>trace>>>AddStatic: Adding static entry with name=%s, value=%v\n", name, s.Value)
 		}
@@ -121,7 +121,7 @@ func LoadStaticsString() {
 
 }
 
-// GetStaticValue: Given the frame, frame stack, and field name,
+// GetStaticValue: Given the class name and field name,
 // return the field contents.
 // If successful, return the field value and a nil error;
 // Else (error), return a nil field value and the non-nil error.

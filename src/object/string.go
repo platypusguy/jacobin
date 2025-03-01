@@ -20,8 +20,6 @@ package object
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/globals"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"strconv"
@@ -102,9 +100,9 @@ func GoStringFromStringObject(obj *Object) string {
 }
 
 // ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
-func ByteArrayFromStringObject(obj *Object) []byte {
+func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
-		return obj.FieldTable["value"].Fvalue.([]byte)
+		return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	} else {
 		return nil
 	}
@@ -211,14 +209,16 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return str
 	case types.Byte, types.Char, types.Int, types.Long, types.Rune, types.Short:
 		return fmt.Sprintf("%d", fld.Fvalue.(int64))
-	case types.ByteArray:
+	case types.ByteArray, "Ljava/lang/String;":
 		switch fld.Fvalue.(type) {
 		case []byte:
 			return fmt.Sprintf("%x", fld.Fvalue.([]byte))
 		case []types.JavaByte:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		}
-	case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
+	case types.CharArray:
+		return GoStringFromJavaCharArray(fld.Fvalue.([]int64))
+	case types.IntArray, types.LongArray, types.ShortArray:
 		var str string
 		for _, elem := range fld.Fvalue.([]int64) {
 			str += fmt.Sprint(elem)
@@ -240,14 +240,20 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray:
 		return GoStringFromStringPoolIndex(obj.KlassName)
-	case types.RNG:
-		return "RandomNumberGenerator"
 	}
 
-	// None of the above.
-	errMsg := fmt.Sprintf("ObjectFieldToString: field \"%s\" Ftype \"%s\" not yet supported. Returning the class name",
-		fieldName, fld.Ftype)
-	globals.GetGlobalRef().FuncThrowException(excNames.UnsupportedOperationException, errMsg)
-	// trace.Error(errMsg)
-	return GoStringFromStringPoolIndex(obj.KlassName)
+	// None of the above!
+	// Just return the class name, field name, and the field type.
+	result := fmt.Sprintf("UNRECOGNIZED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
+	return result
+
+}
+
+// Go string from a Java character array.
+func GoStringFromJavaCharArray(inArray []int64) string {
+	var sb strings.Builder
+	for _, ch := range inArray {
+		sb.WriteRune(rune(ch))
+	}
+	return sb.String()
 }

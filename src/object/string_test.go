@@ -73,7 +73,32 @@ func TestGoStringFromInvalidStringObject(t *testing.T) {
 	}
 }
 
-func TestByteArrayFromStringObject(t *testing.T) {
+func TestGoStringFromStringNullObject(t *testing.T) {
+	str := GoStringFromStringObject(nil)
+	if str != "" {
+		t.Errorf("expected empty string, observed: '%s'", str)
+	}
+}
+
+func TestGoStringFromInvalidObject(t *testing.T) {
+	obj := MakeEmptyObject()
+	obj.FieldTable["value"] = Field{Ftype: types.Int, Fvalue: 42}
+	str := GoStringFromStringObject(obj)
+	if str != "" {
+		t.Errorf("expected empty string, observed: '%s'", str)
+	}
+}
+
+func TestGoStringFromGoString(t *testing.T) {
+	obj := MakeEmptyObject()
+	obj.FieldTable["value"] = Field{Ftype: types.GolangString, Fvalue: "Hello"}
+	str := GoStringFromStringObject(obj)
+	if str != "Hello" {
+		t.Errorf("expected string 'Hello', observed: '%s'", str)
+	}
+}
+
+func TestJavaByteArrayFromStringObjectValie(t *testing.T) {
 	globals.InitGlobals("test")
 	statics.LoadStaticsString()
 
@@ -84,6 +109,25 @@ func TestByteArrayFromStringObject(t *testing.T) {
 	bb := JavaByteArrayFromStringObject(strObj)
 	if !JavaByteArrayEquals(bb, constBytes) {
 		t.Errorf("expected string value to be '%s', observed: '%s'", constStr, GoStringFromJavaByteArray(bb))
+	}
+}
+
+func TestJavaByteArrayFromStringObjectInvalid(t *testing.T) {
+	str := StringObjectFromGoString("ABC")
+	ba := ByteArrayFromStringObject(str)
+	if ba[0] != types.JavaByte('A') && ba[1] != types.JavaByte('B') && ba[2] != types.JavaByte('C') {
+		t.Errorf("expected 'ABC', observed: %s", string(GoStringFromJavaByteArray(ba)))
+	}
+}
+
+func TestStringPoolIndexFromStringObjectWithByteArray(t *testing.T) {
+	stringPool.EmptyStringPool()
+	stringPool.PreloadArrayClassesToStringPool()
+	ba := []byte("Hello")
+	obj := StringObjectFromByteArray(ba)
+	index := StringPoolIndexFromStringObject(obj)
+	if *(stringPool.GetStringPointer(index)) != "Hello" {
+		t.Errorf("expected 'Hello', observed: %s", *(stringPool.GetStringPointer(index)))
 	}
 }
 
@@ -291,30 +335,22 @@ func TestObjectFieldToStringForUnknownType(t *testing.T) {
 		return false
 	}
 
-	// to inspect usage message, redirect stderr
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
 	obj := StringObjectFromGoString("allo!")
-	obj.FieldTable["testField"] = Field{
-		Ftype:  "..",
+	obj.FieldTable["testFieldName"] = Field{
+		Ftype:  "testFieldType",
 		Fvalue: nil,
 	}
-	ret := ObjectFieldToString(obj, "testField")
+	ret := ObjectFieldToString(obj, "testFieldName")
 
 	if !strings.Contains(ret, "java/lang/String") {
 		t.Errorf("Expected different return string, got %s", ret)
 	}
 
-	// restore stderr to what it was before
-	_ = w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-	msg := string(out[:])
-
-	if !strings.Contains(msg, "not yet supported") {
-		t.Errorf("Expected different error message, got %s", msg)
+	if !strings.Contains(ret, "testFieldName") { // just the field name
+		t.Errorf("Looking for field name, got %s", ret)
+	}
+	if !strings.Contains(ret, "testFieldType") { // just the field name
+		t.Errorf("Looking for field type, got %s", ret)
 	}
 }
 

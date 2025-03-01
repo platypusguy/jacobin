@@ -59,8 +59,15 @@ func jjStringifyScalar(ftype string, fvalue any) *object.Object {
 		} else {
 			str = "false"
 		}
-	case types.Byte: // uint8
-		str = fmt.Sprintf("%02x", fvalue.(uint8))
+	case types.Byte: // uint8, int8
+		switch fvalue.(type) {
+		case byte:
+			str = fmt.Sprintf("0x%02x", fvalue.(byte))
+		case types.JavaByte:
+			str = fmt.Sprintf("0x%02x", fvalue.(types.JavaByte))
+		default:
+			str = fmt.Sprintf("%v", fvalue)
+		}
 	case types.Char, types.Rune:
 		str = fmt.Sprintf("%c", fvalue.(int64))
 	case types.Double:

@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-2 by Andrew Binstock. All rights reserved.
+ * Copyright (c) 2021-5 by Andrew Binstock. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -10,7 +10,6 @@ import (
 	"errors"
 	"jacobin/globals"
 	"jacobin/object"
-	"jacobin/statics"
 	"jacobin/stringPool"
 	"jacobin/types"
 	"strconv"
@@ -454,11 +453,8 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						indexOfcpEntryForString := klass.stringRefs[entryInCp.slot].index
 						cpEntryForString := klass.cpIndex[indexOfcpEntryForString]
 						stringValue := klass.utf8Refs[cpEntryForString.slot]
-						f.constValue = object.StringObjectFromGoString(stringValue.content)
 						if f.isStatic { // if it's a static field, add it to the statics table
-							staticField := statics.Static{Type: "Ljava/lang/String;", Value: f.constValue}
-							staticName := klass.className + "." + klass.utf8Refs[f.name].content
-							statics.AddStatic(staticName, staticField)
+							f.constValue = object.StringObjectFromGoString(stringValue.content)
 						} else {
 							f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 						}
@@ -471,12 +467,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for boolean " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = int64(klass.intConsts[entryInCp.slot])
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Bool, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = int64(klass.intConsts[entryInCp.slot])
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Byte: // byte--same logic as for types.Int, only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -485,12 +481,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for byte " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.intConsts[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Byte, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.intConsts[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Char: // char--same logic as for types.Int, only error message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -499,12 +495,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for char " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.intConsts[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Char, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.intConsts[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Double: // double
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -513,12 +509,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for double " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.doubles[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Double, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.doubles[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Float: // float
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -527,12 +523,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for float " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.floats[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Float, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.floats[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Int: // integer
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -541,12 +537,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for integer " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.intConsts[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Int, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.intConsts[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Long: // long
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -555,12 +551,12 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for long " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.longConsts[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Long, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.longConsts[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
+
 				case types.Short: // short--same logic as int, only message is different
 					indexIntoCP := int(attribute.attrContent[0])*256 +
 						int(attribute.attrContent[1])
@@ -569,11 +565,10 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 						return pos, cfe("error: wrong type of constant value for short " +
 							klass.utf8Refs[f.name].content)
 					}
-					f.constValue = klass.intConsts[entryInCp.slot]
 					if f.isStatic {
-						staticField := statics.Static{Type: types.Short, Value: f.constValue}
-						staticName := klass.className + "." + klass.utf8Refs[f.name].content
-						statics.AddStatic(staticName, staticField)
+						f.constValue = klass.intConsts[entryInCp.slot]
+					} else {
+						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
 				}
 			} else { // append the attribute only if it's not ConstantValue
@@ -581,9 +576,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 			}
 			pos = k
 		}
-
 		klass.fields = append(klass.fields, f)
-
 	}
 	return pos, nil
 }

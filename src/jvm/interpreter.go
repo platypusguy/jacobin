@@ -474,7 +474,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		obj := ref.(*object.Object)
 		if object.IsNull(obj) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid null reference to an array",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
@@ -486,7 +486,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		array = ref.([]int64)
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid (null) reference to an array",
+		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid reference to an array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
@@ -531,7 +531,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid reference type of an array: %T",
+		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Reference invalid type of array: %T",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
@@ -1836,16 +1836,29 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.Statics[fieldName]
 	if !ok { // if field is not already loaded, then
+		if MainThread.Trace {
+			msg := fmt.Sprintf("doPutStatic: Field was NOT previously loaded: %s", fieldName)
+			trace.Trace(msg)
+		}
 		// the class has not been instantiated, so
 		// instantiate the class
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
+			if MainThread.Trace {
+				msg := fmt.Sprintf("doPutStatic: Loaded class %s", className)
+				trace.Trace(msg)
+			}
 			prevLoaded, ok = statics.Statics[fieldName]
 		} else {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
 			trace.Error(errMsg)
 			return exceptions.ERROR_OCCURRED
+		}
+	} else {
+		if MainThread.Trace {
+			msg := fmt.Sprintf("doPutStatic: Field was INDEED previously loaded: %s", fieldName)
+			trace.Trace(msg)
 		}
 	}
 
@@ -1865,36 +1878,37 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		// be stored as a boolean, a byte (in an array), or int64
 		// We want all forms normalized to int64
 		value = pop(fr).(int64) & 0x01
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 	case types.Char, types.Short, types.Int, types.Long:
 		value = pop(fr).(int64)
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 	case types.Byte:
-		var val byte
+		var val types.JavaByte
 		v := pop(fr)
 		switch v.(type) { // could be passed a byte or an integral type for a value
 		case int64:
-			newVal := v.(int64)
-			val = byte(newVal)
-		case byte:
-			val = v.(byte)
+			val = types.JavaByte(v.(int64))
+		case uint8:
+			val = types.JavaByte(v.(uint8))
+		case types.JavaByte:
+			val = v.(types.JavaByte)
 		}
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: val,
-		}
+		})
 	case types.Float, types.Double:
 		value = pop(fr).(float64)
-		statics.Statics[fieldName] = statics.Static{
+		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
 			Value: value,
-		}
+		})
 
 	default:
 		// if it's not a primitive or a pointer to a class,
@@ -1906,10 +1920,11 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		}
 		switch value.(type) {
 		case *object.Object:
-			statics.Statics[fieldName] = statics.Static{
+			statics.AddStatic(fieldName, statics.Static{
 				Type:  prevLoaded.Type,
 				Value: value,
-			}
+			})
+
 		case *classloader.Klass:
 			// convert to an *object.Object
 			kPtr := value.(*classloader.Klass)
@@ -1922,10 +1937,10 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 
 			obj.FieldTable[fieldName] = objField
 
-			statics.Statics[fieldName] = statics.Static{
-				Type:  objField.Ftype,
+			statics.AddStatic(fieldName, statics.Static{
+				Type:  prevLoaded.Type,
 				Value: value,
-			}
+			})
 		default:
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
@@ -2040,21 +2055,10 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		}
 	}
 
-	var ref interface{} // pointer to object we're updating
-	value := pop(fr)    // the value we're placing in the field
-	ref = pop(fr)       // on non-long, non-double values, this will be a
-	// reference to the object. On longs and doubles
-	// it will be the second pop of the value field,
-	// so we check for this.
+	value := pop(fr) // the value we're placing in the field
+	ref := pop(fr)   // reference to the object we're updating
 
 	switch ref.(type) {
-	case int64, float64: // if it is a float or double, then pop
-		// once more to get the pointer to object. If it's an int64,
-		// we know it's a long (likewise a float64 shows a double)
-		// because that's the only reason a second pop would find
-		// identical value types pushed twice. So pop once more to
-		// get the object reference.
-		ref = pop(fr).(*object.Object)
 	case *object.Object:
 		// Handle the Object after this switch
 	default:
@@ -2071,10 +2075,8 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	// Get Object struct.
 	obj := *(ref.(*object.Object))
 
-	// if the value we're inserting is a reference to an
-	// array object, we have to modify it to point directly
-	// to the array of primitives, rather than to the array
-	// object
+	// if the value we're inserting is a reference to an array object, we need to modify it
+	// to point directly to the array of primitives, rather than to the array object
 	switch value.(type) {
 	case *object.Object:
 		if !object.IsNull(value.(*object.Object)) {
@@ -2127,7 +2129,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	className, methodName, methodType :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	/* // JACOBIN-575 reactive this code when ready to complete this task
+	/* // JACOBIN-575 reactivate this code when ready to complete this task
 	k := classloader.MethAreaFetch(className) // we know the class is already loaded
 	methListEntry, ok := k.Data.MethodList[methodName+methodType]
 	if !ok { // if it's not in the GMT, then it's likely being called explicitly, so test for this.
@@ -3015,7 +3017,7 @@ func doWide(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0xC5 MULTINEWARRAY create a multi-dimensional array
+// 0xC5 MULTIANEWARRAY create a multi-dimensional array
 func doMultinewarray(fr *frames.Frame, _ int64) int {
 	var arrayDesc string
 	var arrayType uint8
@@ -3025,23 +3027,12 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// similar, in which one [ is present for every array dimension, followed by a
 	// single letter describing the type of primitive in the leaf dimension of the array.
 	// The letters are the usual ones used in the JVM for primitives, etc.
-	// as in: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.3.2-200
+	// as in: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.3.2-200
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != classloader.ClassRef {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "MULTIANEWARRAY: multi-dimensional array presently supports classes only"
-		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
-		}
-	} else {
-		// utf8Index := CP.ClassRefs[CPentry.Slot]
-		// arrayDesc = classloader.FetchUTF8stringFromCPEntryNumber(CP, utf8Index)
-		arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
-		arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
-	}
+	arrayDescStringPoolIndex := CP.ClassRefs[CPentry.Slot]
+	arrayDesc = *stringPool.GetStringPointer(arrayDescStringPoolIndex)
 
 	var rawArrayType uint8
 	for i := 0; i < len(arrayDesc); i++ {

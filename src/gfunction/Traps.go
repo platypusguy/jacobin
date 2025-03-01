@@ -12,12 +12,6 @@ import (
 
 func Load_Traps() {
 
-	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 	MethodSignatures["java/io/BufferedOutputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -25,12 +19,6 @@ func Load_Traps() {
 		}
 
 	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapClass,
@@ -203,5 +191,11 @@ func trapUndocumented([]interface{}) interface{} {
 // Generic trap for functions
 func trapFunction([]interface{}) interface{} {
 	errMsg := "TRAP: The requested function is not yet supported"
+	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
+}
+
+// Generic trap for functions
+func trapProtected([]interface{}) interface{} {
+	errMsg := "TRAP: The requested function is protected"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }

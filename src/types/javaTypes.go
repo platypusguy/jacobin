@@ -45,7 +45,6 @@ const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
 const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
-const RNG = "RG"        // RandomNumberGenerator is a Golang *rand.Rand
 
 const Static = "X"
 const StaticDouble = "XD"

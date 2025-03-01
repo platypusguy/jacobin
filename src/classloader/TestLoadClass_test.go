@@ -27,7 +27,8 @@ func checkClass(t *testing.T, className string, expectedJmod string) bool {
 
 	classBytes, err := GetClassBytes(expectedJmod, className)
 	if err != nil {
-		t.Errorf("checkClass: GetClassBytes expectedJmod=" + expectedJmod + ", className=" + className + " failed\n")
+		t.Errorf("checkClass: GetClassBytes expectedJmod=%s, className=%s failed\n",
+			expectedJmod, className)
 		return false
 	}
 	t.Logf("checkClass: classloader.GetClassBytes returned a byte array for class %s in jmod %s ok\n", className, expectedJmod)

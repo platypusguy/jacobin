@@ -434,7 +434,7 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // MONITORENTER    0xC2
 	return1,              // MONITOREXIT     0xC3
 	return1,              // WIDE            0xC4
-	return4,              // MULTIANEWARRAY  0xC5
+	checkMultianewarray,  // MULTIANEWARRAY  0xC5
 	return3,              // IFNULL          0xC6
 	return3,              // IFNONNULL       0xC7
 	checkGotow,           // GOTO_W          0xC8
@@ -641,6 +641,30 @@ func checkTableswitch() int {
 	offsetsCount := high - low + 1
 	basePC += int(offsetsCount) * 4
 	return (basePC - PC) + 1
+}
+
+// MULTIANEWARRAY 0xC5 (create a multidimensional array)
+func checkMultianewarray() int {
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != ClassRef {
+		// because this is not a ClassFormatError, we emit a trace message here
+		errMsg := fmt.Sprintf("%s:\n MULTIANEWARRAY at %d: CP entry (%d) is not a class reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+
+	dimensions := Code[PC+3]
+	if dimensions == 0 {
+		return ERROR_OCCURRED
+	}
+
+	return 4
 }
 
 // === utility functions ===
