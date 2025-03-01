@@ -511,11 +511,11 @@ func TestEmitTraceData(t *testing.T) {
 	for ix := 0; ix < 3; ix++ {
 
 		// rubbish
-		push(fr, rubbish)
+		push(fr, object.StringObjectFromGoString(rubbish))
 		ret = EmitTraceData(fr)
 		_ = pop(fr)
-		if !strings.Contains(ret.(string), "string rubbish") {
-			t.Errorf("TestEmitTraceData(rubbish): Loop %d. Expected \"string rubbish\", got: %v", ix, ret)
+		if !strings.Contains(ret.(string), "String: rubbish") {
+			t.Errorf("TestEmitTraceData(rubbish): Loop %d. Expected \"String: rubbish\", got: %v", ix, ret)
 			break
 		}
 		if flagDeepTracing {
