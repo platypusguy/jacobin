@@ -16,7 +16,6 @@ import (
 	"jacobin/testutil"
 	"jacobin/trace"
 	"jacobin/types"
-	"runtime"
 	"strings"
 	"testing"
 	"unsafe"
@@ -596,17 +595,15 @@ func TestEmitTraceData(t *testing.T) {
 		}
 
 		// nil
-		if runtime.GOOS != "windows" {
-			push(fr, object.Null)
-			ret = EmitTraceData(fr)
-			_ = pop(fr)
-			if !strings.Contains(ret.(string), "<null>") {
-				t.Errorf("TestEmitTraceData(nil): Loop %d. Expected \"<null>\", got: %v", ix, ret)
-				break
-			}
-			if flagDeepTracing {
-				t.Log("#0 nil ok")
-			}
+		push(fr, object.Null)
+		ret = EmitTraceData(fr)
+		_ = pop(fr)
+		if !strings.Contains(ret.(string), "<null>") {
+			t.Errorf("TestEmitTraceData(nil): Loop %d. Expected \"<null>\", got: %v", ix, ret)
+			break
+		}
+		if flagDeepTracing {
+			t.Log("#0 nil ok")
 		}
 
 	}
