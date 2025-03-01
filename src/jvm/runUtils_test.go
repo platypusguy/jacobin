@@ -595,11 +595,11 @@ func TestEmitTraceData(t *testing.T) {
 		}
 
 		// nil
-		push(fr, nil)
+		push(fr, object.Null)
 		ret = EmitTraceData(fr)
 		_ = pop(fr)
-		if !strings.Contains(ret.(string), "nil") {
-			t.Errorf("TestEmitTraceData(nil): Loop %d. Expected \"nil\", got: %v", ix, ret)
+		if !strings.Contains(ret.(string), "<null>") {
+			t.Errorf("TestEmitTraceData(nil): Loop %d. Expected \"<null>\", got: %v", ix, ret)
 			break
 		}
 		if flagDeepTracing {
