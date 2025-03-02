@@ -18,6 +18,7 @@ import (
 	"jacobin/types"
 	"strings"
 	"testing"
+	"time"
 	"unsafe"
 )
 
@@ -510,6 +511,8 @@ func TestEmitTraceData(t *testing.T) {
 	// EmitTraceData in a loop for 8 different top of stack variables.
 	for ix := 0; ix < 3; ix++ {
 
+		start := time.Now()
+
 		// rubbish
 		push(fr, object.StringObjectFromGoString(rubbish))
 		ret = EmitTraceData(fr)
@@ -605,6 +608,9 @@ func TestEmitTraceData(t *testing.T) {
 		if flagDeepTracing {
 			t.Log("#0 nil ok")
 		}
+
+		elapsed := time.Since(start)
+		t.Logf("Loop %d consumed %s", ix, elapsed)
 
 	}
 
