@@ -19,7 +19,6 @@ import (
 	"jacobin/types"
 	"strings"
 	"testing"
-	"time"
 	"unsafe"
 )
 
@@ -312,8 +311,6 @@ func TestCheckCastArray3(t *testing.T) {
 func TestPushPeekPop(t *testing.T) {
 	// Let verbose trace messages go into a pipe that we will never see.
 	// We only care about evaluating the return from pop() in the loop.
-	// On Windows, this call must appear before anything else.
-	// testutil.UTnewConsole(t)
 
 	testutil.UTinit(t)
 	globals.TraceVerbose = false
@@ -323,7 +320,6 @@ func TestPushPeekPop(t *testing.T) {
 	// Create frame (fr).
 	fr := frames.CreateFrame(13)
 	fr.Thread = 0 // Mainthread
-	// left nil: fr.FrameStack
 	fr.ClName = "TestClass"
 	fr.MethName = "TestMethod"
 	fr.MethType = "()V"
@@ -342,6 +338,10 @@ func TestPushPeekPop(t *testing.T) {
 	barray := []byte{'A', 'B', 'C'}
 	jba := []types.JavaByte{'A', 'B', 'C'}
 	rubbish := "rubbish"
+
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
 
 	// Push 8 / pop 8 in a loop.
 	for ix := 0; ix < 3; ix++ {
@@ -475,15 +475,11 @@ func TestPushPeekPop(t *testing.T) {
 	}
 
 	// Restore console for go test.
-	// testutil.UTrestoreConsole(t)
+	testutil.UTrestoreConsole(t)
 
 }
 
 func TestEmitTraceData(t *testing.T) {
-	// Let verbose trace messages go into a pipe that we will never see.
-	// We only care about evaluating the return from pop() in the loop.
-	// On Windows, this must be called before anything else.
-	// testutil.UTnewConsole(t)
 
 	testutil.UTinit(t)
 	globals.TraceVerbose = true
@@ -505,6 +501,10 @@ func TestEmitTraceData(t *testing.T) {
 		t.Errorf("TestEmitTraceData(nil): Expected \"TOS: -\", got: %v", ret)
 	}
 
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
+
 	// Setup loop.
 	objstr42 := object.StringObjectFromGoString("42")
 	barray := []byte{'A', 'B', 'C'}
@@ -514,7 +514,7 @@ func TestEmitTraceData(t *testing.T) {
 	// EmitTraceData in a loop for 8 different top of stack variables.
 	for ix := 0; ix < 3; ix++ {
 
-		start := time.Now()
+		//start := time.Now()
 
 		// rubbish
 		push(fr, object.StringObjectFromGoString(rubbish))
@@ -614,11 +614,11 @@ func TestEmitTraceData(t *testing.T) {
 			t.Log("#0 nil ok")
 		}
 
-		elapsed := time.Since(start)
-		t.Logf("Loop %d consumed %s", ix, elapsed)
+		//elapsed := time.Since(start)
+		//t.Logf("Loop %d consumed %s", ix, elapsed)
 
 	}
 
 	// Restore console for go test.
-	// testutil.UTrestoreConsole(t)
+	testutil.UTrestoreConsole(t)
 }
