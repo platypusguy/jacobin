@@ -310,15 +310,15 @@ func TestCheckCastArray3(t *testing.T) {
 }
 
 func TestPushPeekPop(t *testing.T) {
-	// Let verbose trace messages go into a pipe that we will never see.
-	// We only care about evaluating the return from pop() in the loop.
-	// On Windows, this call must appear before anything else.
-	// testutil.UTnewConsole(t)
 
 	testutil.UTinit(t)
 	globals.TraceVerbose = false
 	var ret, thing interface{}
 	flagDeepTracing := false
+
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
 
 	// Create frame (fr).
 	fr := frames.CreateFrame(13)
@@ -330,7 +330,7 @@ func TestPushPeekPop(t *testing.T) {
 	fr.Meth = []byte{byte(opcodes.NOP)}
 
 	// Try a nil stack.
-	t.Log("Trying a pop() with a nil stack. Ignore the following ThrowEx stack underflow warning.")
+	t.Log("Trying a pop() with a nil stack. Ignore any ThrowEx stack underflow warning.")
 	ret = pop(fr)
 	if ret != nil {
 		t.Errorf("TestPushPeekPop(nil): fr.TOS = -1. Expected nil returned from pop(), got %v", ret)
@@ -475,21 +475,21 @@ func TestPushPeekPop(t *testing.T) {
 	}
 
 	// Restore console for go test.
-	// testutil.UTrestoreConsole(t)
+	testutil.UTrestoreConsole(t)
 
 }
 
 func TestEmitTraceData(t *testing.T) {
-	// Let verbose trace messages go into a pipe that we will never see.
-	// We only care about evaluating the return from pop() in the loop.
-	// On Windows, this must be called before anything else.
-	// testutil.UTnewConsole(t)
 
 	testutil.UTinit(t)
 	globals.TraceVerbose = true
 	var ret interface{}
 	flagDeepTracing := false
-
+	
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	testutil.UTnewConsole(t)
+	
 	// Create frame (fr).
 	fr := frames.CreateFrame(13)
 	fr.Thread = 0 // Mainthread
@@ -620,5 +620,5 @@ func TestEmitTraceData(t *testing.T) {
 	}
 
 	// Restore console for go test.
-	// testutil.UTrestoreConsole(t)
+	testutil.UTrestoreConsole(t)
 }
