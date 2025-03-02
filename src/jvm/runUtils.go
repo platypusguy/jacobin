@@ -587,14 +587,8 @@ func EmitTraceData(f *frames.Frame) string {
 		}
 	}
 
-	traceInfo :=
-		"class: " + fmt.Sprintf("%-22s", f.ClName) +
-			" meth: " + fmt.Sprintf("%-10s", f.MethName) +
-			" PC: " + fmt.Sprintf("% 3d", f.PC) +
-			", " + fmt.Sprintf("%-13s", opcodes.BytecodeNames[int(f.Meth[f.PC])]) +
-			" TOS: " + tos +
-			" " + stackTop +
-			" "
+	traceInfo := fmt.Sprintf("class: %-22s meth:%-10sPC: % 3d, %-13s TOS: %s %s ",
+		f.ClName, f.MethName, f.PC, opcodes.BytecodeNames[int(f.Meth[f.PC])], tos, stackTop)
 	return traceInfo
 }
 
@@ -656,14 +650,14 @@ func TraceObject(f *frames.Frame, opStr string, obj *object.Object) {
 
 	// Nil pointer to object?
 	if obj == nil {
-		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d null", f.TOS)
+		traceInfo = fmt.Sprintf("%74s%3d null", prefix, f.TOS)
 		trace.Trace(traceInfo)
 		return
 	}
 
 	// The object pointer is not nil.
 	klass := object.GoStringFromStringPoolIndex(obj.KlassName)
-	traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("%3d, class: %s", f.TOS, klass)
+	traceInfo = fmt.Sprintf("%74s%3d, class: %s", prefix, f.TOS, klass)
 	trace.Trace(traceInfo)
 
 	// Trace field table.
@@ -680,14 +674,14 @@ func TraceObject(f *frames.Frame, opStr string, obj *object.Object) {
 					str = string(fld.Fvalue.([]byte))
 				}
 
-				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v \"%s\"", fieldName, fld.Ftype, fld.Fvalue, str)
+				traceInfo = fmt.Sprintf("%74sfield: %s %s %v \"%s\"", prefix, fieldName, fld.Ftype, fld.Fvalue, str)
 			} else {
-				traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("field: %s %s %v", fieldName, fld.Ftype, fld.Fvalue)
+				traceInfo = fmt.Sprintf("%74sfield: %s %s %v", prefix, fieldName, fld.Ftype, fld.Fvalue)
 			}
 			trace.Trace(traceInfo)
 		}
 	} else { // nil FieldTable
-		traceInfo = fmt.Sprintf("%74s", prefix) + fmt.Sprintf("no fields")
+		traceInfo = fmt.Sprintf("%74sno fields", prefix)
 		trace.Trace(traceInfo)
 	}
 }
