@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: '1.23.x'
+        go-version: '1.24.x'
         cache: true
         cache-dependency-path: "**/go.sum"
       
@@ -58,7 +58,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: '1.23.x'
+        go-version: '1.24.x'
         cache: true
         cache-dependency-path: "**/go.sum"
       
