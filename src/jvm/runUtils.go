@@ -560,7 +560,12 @@ func EmitTraceData(f *frames.Frame) string {
 				stackTop = fmt.Sprintf("<null>")
 			} else {
 				objPtr := f.OpStack[f.TOS].(*object.Object)
-				stackTop = objPtr.FormatField("")
+				if objPtr.KlassName == types.StringPoolStringIndex {
+					str := object.GoStringFromStringObject(objPtr)
+					stackTop = fmt.Sprintf("String: %-10s", str)
+				} else {
+					stackTop = objPtr.FormatField("")
+				}
 			}
 		case *[]uint8:
 			value := f.OpStack[f.TOS]
@@ -576,7 +581,7 @@ func EmitTraceData(f *frames.Frame) string {
 			value := f.OpStack[f.TOS]
 			bytes := value.([]types.JavaByte)
 			str := object.GoStringFromJavaByteArray(bytes)
-			stackTop = fmt.Sprintf("[]javaByte: %-10s", str)
+			stackTop = fmt.Sprintf("[]JavaByte: %-10s", str)
 		default:
 			stackTop = fmt.Sprintf("%T %v ", f.OpStack[f.TOS], f.OpStack[f.TOS])
 		}
