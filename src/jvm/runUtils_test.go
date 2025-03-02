@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	// "io"
 	"jacobin/classloader"
 	"jacobin/frames"
 	"jacobin/globals"
@@ -309,6 +310,11 @@ func TestCheckCastArray3(t *testing.T) {
 }
 
 func TestPushPeekPop(t *testing.T) {
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	// On Windows, this call must appear before anything else.
+	// testutil.UTnewConsole(t)
+
 	testutil.UTinit(t)
 	globals.TraceVerbose = false
 	var ret, thing interface{}
@@ -336,10 +342,6 @@ func TestPushPeekPop(t *testing.T) {
 	barray := []byte{'A', 'B', 'C'}
 	jba := []types.JavaByte{'A', 'B', 'C'}
 	rubbish := "rubbish"
-
-	// Let verbose trace messages go into a pipe that we will never see.
-	// We only care about evaluating the return from pop() in the loop.
-	testutil.UTnewConsole(t)
 
 	// Push 8 / pop 8 in a loop.
 	for ix := 0; ix < 3; ix++ {
@@ -473,11 +475,16 @@ func TestPushPeekPop(t *testing.T) {
 	}
 
 	// Restore console for go test.
-	testutil.UTrestoreConsole(t)
+	// testutil.UTrestoreConsole(t)
 
 }
 
 func TestEmitTraceData(t *testing.T) {
+	// Let verbose trace messages go into a pipe that we will never see.
+	// We only care about evaluating the return from pop() in the loop.
+	// On Windows, this must be called before anything else.
+	// testutil.UTnewConsole(t)
+
 	testutil.UTinit(t)
 	globals.TraceVerbose = true
 	var ret interface{}
@@ -504,10 +511,6 @@ func TestEmitTraceData(t *testing.T) {
 	jba := []types.JavaByte{'A', 'B', 'C'}
 	rubbish := "rubbish"
 
-	// Let verbose trace messages go into a pipe that we will never see.
-	// We only care about evaluating the return from pop() in the loop.
-	testutil.UTnewConsole(t)
-
 	// EmitTraceData in a loop for 8 different top of stack variables.
 	for ix := 0; ix < 3; ix++ {
 
@@ -521,6 +524,7 @@ func TestEmitTraceData(t *testing.T) {
 			t.Errorf("TestEmitTraceData(rubbish): Loop %d. Expected \"String: rubbish\", got: %v", ix, ret)
 			break
 		}
+
 		if flagDeepTracing {
 			t.Log("#7 rubbish ok")
 		}
@@ -569,6 +573,7 @@ func TestEmitTraceData(t *testing.T) {
 			t.Errorf("TestEmitTraceData(objstr42): Loop %d. Expected \"String: 42\", got: %v", ix, ret)
 			break
 		}
+
 		if flagDeepTracing {
 			t.Log("#3 objstr42 ok")
 		}
@@ -615,6 +620,5 @@ func TestEmitTraceData(t *testing.T) {
 	}
 
 	// Restore console for go test.
-	testutil.UTrestoreConsole(t)
-
+	// testutil.UTrestoreConsole(t)
 }
