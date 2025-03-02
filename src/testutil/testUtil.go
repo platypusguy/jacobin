@@ -41,10 +41,12 @@ func UTinit(t *testing.T) {
 // Substitute 2 ones while executing Jacobin functions.
 func UTnewConsole(t *testing.T) {
 	var err error
+	var dummy *os.File
 
 	// Swap in a new stdout.
 	originalStdout = os.Stdout
-	_, testStdout, err = os.Pipe()
+	dummy, testStdout, err = os.Pipe()
+	_ = dummy.Close()
 	if err != nil {
 		os.Stdout = originalStdout // Restore original stdout.
 		t.Fatalf("stdTestBegin: os.Pipe()-->stdout failed, err: %s", err.Error())
@@ -53,7 +55,8 @@ func UTnewConsole(t *testing.T) {
 
 	// Swap in a new stderr.
 	originalStderr = os.Stderr
-	_, testStderr, err = os.Pipe()
+	dummy, testStderr, err = os.Pipe()
+	_ = dummy.Close()
 	if err != nil {
 		_ = testStdout.Close()
 		os.Stdout = originalStdout // Restore original stdout.
