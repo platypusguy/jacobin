@@ -346,6 +346,7 @@ func InitStringPool() {
 	// Add "java/lang/String"
 	StringPoolTable[types.StringClassName] = types.StringPoolStringIndex
 	StringPoolList = append(StringPoolList, types.StringClassName)
+	StringIndexString = 1
 
 	// Add "java/lang/Object"
 	StringPoolTable[types.ObjectClassName] = types.ObjectPoolStringIndex

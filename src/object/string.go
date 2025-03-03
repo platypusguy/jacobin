@@ -141,6 +141,12 @@ func GoStringFromStringPoolIndex(index uint32) string {
 	}
 }
 
+// StringPoolIndexFromGoString: derive a string pool index based on the Go String of a class name.
+func StringPoolIndexFromGoString(arg string) uint32 {
+	obj := StringObjectFromGoString(arg)
+	return StringPoolIndexFromStringObject(obj)
+}
+
 // StringObjectFromStringPoolIndex: convenience method to create a string object using a string pool index
 func StringObjectFromPoolIndex(index uint32) *Object {
 	if index < stringPool.GetStringPoolSize() {

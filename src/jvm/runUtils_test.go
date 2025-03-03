@@ -330,7 +330,6 @@ func TestPushPeekPop(t *testing.T) {
 	fr.Meth = []byte{byte(opcodes.NOP)}
 
 	// Try a nil stack.
-	t.Log("Trying a pop() with a nil stack. Ignore any ThrowEx stack underflow warning.")
 	ret = pop(fr)
 	if ret != nil {
 		t.Errorf("TestPushPeekPop(nil): fr.TOS = -1. Expected nil returned from pop(), got %v", ret)
@@ -485,11 +484,11 @@ func TestEmitTraceData(t *testing.T) {
 	globals.TraceVerbose = true
 	var ret interface{}
 	flagDeepTracing := false
-	
+
 	// Let verbose trace messages go into a pipe that we will never see.
 	// We only care about evaluating the return from pop() in the loop.
 	testutil.UTnewConsole(t)
-	
+
 	// Create frame (fr).
 	fr := frames.CreateFrame(13)
 	fr.Thread = 0 // Mainthread
@@ -621,4 +620,133 @@ func TestEmitTraceData(t *testing.T) {
 
 	// Restore console for go test.
 	testutil.UTrestoreConsole(t)
+}
+
+func TestGetSuperclasses(t *testing.T) {
+	testutil.UTinit(t)
+
+	// Try an invalid index.
+	aryUint32 := getSuperclasses(types.InvalidStringIndex)
+	if len(aryUint32) != 0 {
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.InvalidStringIndex). Expected return length 0, got: %d", len(aryUint32))
+	}
+
+	// Try the java.lang.Object index.
+	aryUint32 = getSuperclasses(types.ObjectPoolStringIndex)
+	if len(aryUint32) != 0 {
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected return length 0, got: %d", len(aryUint32))
+	}
+
+	// Try the java.lang.String index.
+	aryUint32 = getSuperclasses(types.StringPoolStringIndex)
+	if len(aryUint32) != 1 {
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected return length 1, got: %d", len(aryUint32))
+	}
+	str := object.GoStringFromStringPoolIndex(aryUint32[0])
+	if str != "java/lang/Object" {
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected java/lang/Object, got: %s", str)
+	}
+
+	// Try the java.lang.String index.
+	poolIndex := object.StringPoolIndexFromGoString("java/math/BigInteger")
+	if poolIndex == types.InvalidStringIndex {
+		t.Errorf("TestGetSuperclasses: StringPoolIndexFromGoString(\"java/math/BigInteger\") --> types.InvalidStringIndex")
+	} else {
+		aryUint32 = getSuperclasses(poolIndex)
+		if len(aryUint32) != 2 {
+			t.Errorf("TestGetSuperclasses: getSuperclasses(\"java/math/BigInteger\"). Expected return length 2, got: %d", len(aryUint32))
+		}
+		for ix := 0; ix < len(aryUint32); ix++ {
+			className := object.GoStringFromStringPoolIndex(aryUint32[ix])
+			switch className {
+			case "java/lang/Number", "java/lang/Object":
+			default:
+				t.Errorf("TestGetSuperclasses: Unrecognised superclass of java/math/BigInteger: %s", className)
+			}
+		}
+	}
+
+}
+
+func TestCheckcastNonArrayObject(t *testing.T) {
+	testutil.UTinit(t)
+
+	// Try java/lang/String.
+	className := "java/lang/String"
+	obj := object.StringObjectFromGoString(className)
+	if !checkcastNonArrayObject(obj, className) {
+		t.Errorf("TestCheckcastNonArrayObject: checkcastNonArrayObject(%s) returned false", className)
+	}
+
+	// Try javax/sql/rowset/BaseRowSet.
+	className = "javax/sql/rowset/BaseRowSet"
+	obj = object.StringObjectFromGoString(className)
+	if checkcastNonArrayObject(obj, className) {
+		t.Errorf("TestCheckcastNonArrayObject: checkcastNonArrayObject(%s) returned true", className)
+	}
+
+	// Try aaa/bbb/ccc.
+	className = "aaa/bbb/ccc"
+	obj = object.StringObjectFromGoString(className)
+	testutil.UTnewConsole(t) // Avoid: Attempt to access uninitialized ThrowEx pointer func
+	if checkcastNonArrayObject(obj, className) {
+		t.Errorf("TestCheckcastNonArrayObject: checkcastNonArrayObject(%s) returned true", className)
+	}
+	testutil.UTrestoreConsole(t)
+}
+
+func TestCheckcastArray(t *testing.T) {
+	testutil.UTinit(t)
+
+	// java/lang/String.
+	className := "java/lang/String"
+	obj := object.StringObjectFromGoString(className)
+	if !checkcastArray(obj, className) {
+		t.Errorf("TestCheckcastArray: TestCheckcastArray(%s) returned false", className)
+	}
+
+	// javax/sql/rowset/BaseRowSet.
+	className = "javax/sql/rowset/BaseRowSet"
+	obj = object.StringObjectFromGoString(className)
+	if checkcastArray(obj, className) {
+		t.Errorf("TestCheckcastArray: TestCheckcastArray(%s) returned true", className)
+	}
+
+	// aaa/bbb/ccc.
+	className = "aaa/bbb/ccc"
+	obj = object.StringObjectFromGoString(className)
+	testutil.UTnewConsole(t)
+	if checkcastArray(obj, className) {
+		t.Errorf("TestCheckcastArray: TestCheckcastArray(%s) returned true", className)
+	}
+	testutil.UTrestoreConsole(t)
+
+	// types.InvalidStringIndex
+	obj = object.MakePrimitiveObject("will be replaced", "nonsense", 42)
+	obj.KlassName = types.InvalidStringIndex
+	testutil.UTnewConsole(t) // Avoid: Attempt to access uninitialized ThrowEx pointer func
+	if checkcastArray(obj, className) {
+		t.Errorf("TestCheckcastArray: TestCheckcastArray(%s) returned true", className)
+	}
+	testutil.UTrestoreConsole(t)
+
+	// Setup for primitive array types comparisons.
+	className1 := "[Lmy/long/array;"
+	className2 := "[Lmy/long/array;"
+	_ = stringPool.GetStringIndex(&className1)
+	_ = stringPool.GetStringIndex(&className2)
+	longArray := []int64{int64(1), int64(2), int64(3)}
+
+	// Same primitive array types.
+	obj2 := object.MakePrimitiveObject(className2, types.LongArray, longArray)
+	if !checkcastArray(obj2, className1) {
+		t.Errorf("TestCheckcastArray: checkcastArray(obj2, %s) returned false, expected true", className1)
+	}
+
+	// Differing primitive array types.
+	obj2 = object.MakePrimitiveObject(className, types.IntArray, longArray)
+	if checkcastArray(obj2, className1) {
+		t.Errorf("TestCheckcastArray: checkcastArray(obj2, %s) returned true, expected false", className1)
+	}
+
 }

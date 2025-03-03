@@ -1,7 +1,6 @@
 package gfunction
 
 import (
-	"fmt"
 	"io"
 	"jacobin/globals"
 	"jacobin/object"
@@ -102,11 +101,13 @@ func TestJjStringifyScalar_RefNull(t *testing.T) {
 }
 
 func TestJjStringifyScalar_RefNonNull(t *testing.T) {
-	obj := &object.Object{KlassName: 1}
+	globals.InitGlobals("test")
+	expected := "ABC"
+	obj := object.StringObjectFromGoString(expected)
 	result := jjStringifyScalar(types.Ref, obj)
-	expected := object.StringObjectFromGoString(fmt.Sprintf("%v", obj))
-	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+	observed := object.GoStringFromStringObject(result)
+	if observed != expected {
+		t.Errorf("Expected %s, got %s", expected, observed)
 	}
 }
 
