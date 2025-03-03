@@ -6,8 +6,7 @@ module jacobin
 // go 1.21   // as of 2023-08-11 (v. 0.4.0) per JACOBIN-330
 // go 1.21.4 // as of 2023-11-08
 // go 1.24   // as of 2025-02-27 (v. 0.7.0) per JACOBIN-636
-// go 1.23.6 // as of 2025-03-02 (v. 0.7.0) - fallback version
-go 1.23.6
+go 1.24.0
 
 require golang.org/x/term v0.17.0
 
