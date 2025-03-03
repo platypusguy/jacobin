@@ -45,6 +45,26 @@ func fmtHelper(field Field, className string, fieldName string) string {
 		} else {
 			if fvalue != nil {
 				switch fvalue.(type) {
+				case []types.JavaByte:
+					str := GoStringFromJavaByteArray(fvalue.([]types.JavaByte))
+					last := len(str) - 1
+					if last < 0 {
+						return "\"\""
+					}
+					if str[last] == '\n' {
+						str = str[0:last]
+					}
+					return fmt.Sprintf("\"%s\"", str)
+				case []byte:
+					bytes := fvalue.([]byte)
+					last := len(bytes) - 1
+					if last < 0 {
+						return "\"\""
+					}
+					if bytes[last] == '\n' {
+						bytes = bytes[0:last]
+					}
+					return fmt.Sprintf("\"%s\"", string(bytes))
 				case *[]byte:
 					bytes := *fvalue.(*[]byte)
 					last := len(bytes) - 1
@@ -67,7 +87,8 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	// Process the other types.
 	switch ftype {
 	case types.StringIndex:
-		return *stringPool.GetStringPointer(fvalue.(uint32))
+		stringItem := *stringPool.GetStringPointer(fvalue.(uint32))
+		return stringItem
 	case types.Bool:
 		// Special handling for boolean.
 		if flagStatic {
@@ -116,7 +137,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 			if len(bytes) < 1 {
 				return "<byte array of zero length>"
 			}
-			return fmt.Sprintf("% x", bytes)
+			return fmt.Sprintf("% 02x", bytes)
 		}
 	}
 
