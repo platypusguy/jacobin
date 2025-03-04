@@ -21,15 +21,10 @@ As we progress, we post short explanations of project decisions and explanations
 
 #### Project Posts
 
-[Jacobin at the 3-year mark](https://binstock.blogspot.com/2024/09/at-3-year-mark-brief-look-at-history.html)
+[Jacobin at 3.5 years](https://binstock.blogspot.com/2025/03/jacobin-jvm-after-3-of-development-on.html) | [3 years](https://binstock.blogspot.com/2024/09/at-3-year-mark-brief-look-at-history.html) | 
+[2.5 years ]( http://binstock.blogspot.com/2024/02/jacobin-jvm-at-30-months.html) | [2years](http://binstock.blogspot.com/2023/08/jacobin-at-2-year-mark.html) | [18 months](http://binstock.blogspot.com/2023/02/jacobin-jvm-at-18-months.html) | [after 1 year](http://binstock.blogspot.com/2022/08/jacobin-jvm-at-1-year-mark.html)
 
-[Jacobin at 30 months]( http://binstock.blogspot.com/2024/02/jacobin-jvm-at-30-months.html)
-
-[Jacobin at the 2-year mark](http://binstock.blogspot.com/2023/08/jacobin-at-2-year-mark.html)
-
-[Jacobin at 18 months](http://binstock.blogspot.com/2023/02/jacobin-jvm-at-18-months.html)
-
-[Jacobin status at the 1-year mark](http://binstock.blogspot.com/2022/08/jacobin-jvm-at-1-year-mark.html)
+[Jacobin update log](https://github.com/platypusguy/jacobin/wiki/Update-Log)
 
 [Why was Go chosen for this project?](http://binstock.blogspot.com/2021/08/a-whole-new-project-jvm.html)
 
