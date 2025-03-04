@@ -209,7 +209,7 @@ func TestFmtHelper(t *testing.T) {
 
 	// String, unexpectedly using string.
 	// debug: stringPool.DumpStringPool("format_test.go-TestFmtHelper")
-	fld = Field{types.StringIndex, globals.StringIndexString}
+	fld = Field{types.StringIndex, types.StringPoolStringIndex}
 	str = fmtHelper(fld, className, fieldName)
 	if str != types.StringClassName {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"%s\", got \"%v\"", types.StringClassName, str)
