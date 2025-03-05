@@ -124,7 +124,7 @@ func LoadStaticsString() {
 // GetStaticValue: Given the class name and field name,
 // return the field contents.
 // If successful, return the field value and a nil error;
-// Else (error), return a nil field value and the non-nil error.
+// Else (error), return errors.New(errMsg).
 func GetStaticValue(className string, fieldName string) any {
 	var retValue any
 
@@ -133,6 +133,10 @@ func GetStaticValue(className string, fieldName string) any {
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := Statics[staticName]
 	if !ok {
+		/*
+			An error is returned only in test mode.
+			In non-test mode, the exception is thrown and the JVM shuts down.
+		*/
 		glob := globals.GetGlobalRef()
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GetStaticValue: could not find static: %s", staticName)

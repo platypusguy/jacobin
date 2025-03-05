@@ -316,6 +316,9 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 
 	thisClassName := stringPool.GetStringPointer(classNameIndex)
 	thisClass := classloader.MethAreaFetch(*thisClassName)
+	if thisClass == nil {
+		return retval
+	}
 	thisClassSuper := thisClass.Data.SuperclassIndex
 
 	retval = append(retval, thisClassSuper)

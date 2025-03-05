@@ -11,6 +11,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/types"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -155,5 +156,123 @@ func TestFormatField(t *testing.T) {
 	t.Log("Will try FormatField again.")
 	str = obj.FormatField("Fred")
 	t.Log(str)
+
+}
+
+// used instead of throwing an exception, which creates a circularity problem
+func _formatCycleKiller(_ int, _ string) bool {
+	return true
+}
+
+func TestFmtHelper(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+	className := filepath.FromSlash("java/lang/madeUpClass")
+	fieldName := "Fred"
+
+	// String.
+	javaBytes := []types.JavaByte{'A', 'B', 'C'}
+	fld := Field{types.StringClassRef, javaBytes}
+	str := fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "ABC") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"ABC\", got \"%v\"", str)
+	}
+
+	// Static String.
+	fld = Field{types.Static + types.StringClassRef, javaBytes}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "ABC") && !strings.Contains(str, "static") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"ABC\", got \"%v\"", str)
+	}
+
+	// String, unexpectedly using []byte.
+	bites := []byte{'A', 'B', 'C'}
+	fld = Field{types.StringClassRef, bites}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "ABC") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"ABC\", got \"%v\"", str)
+	}
+
+	// String, unexpectedly using *[]byte.
+	fld = Field{types.StringClassRef, &bites}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "ABC") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"ABC\", got \"%v\"", str)
+	}
+
+	// String, unexpectedly using string.
+	fld = Field{types.StringClassRef, "ABC"}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "ABC") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"ABC\", got \"%v\"", str)
+	}
+
+	// String, unexpectedly using string.
+	// debug: stringPool.DumpStringPool("format_test.go-TestFmtHelper")
+	fld = Field{types.StringIndex, types.StringPoolStringIndex}
+	str = fmtHelper(fld, className, fieldName)
+	if str != types.StringClassName {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"%s\", got \"%v\"", types.StringClassName, str)
+	}
+
+	// Primitive integer.
+	fld = Field{types.Int, int64(42)}
+	str = fmtHelper(fld, className, fieldName)
+	if str != "42" {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"42\", got \"%v\"", str)
+	}
+
+	// Primitive static long.
+	fld = Field{types.StaticLong, int64(42)}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "42") && !strings.Contains(str, "static") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return STATIC \"42\", got \"%v\"", str)
+	}
+
+	// Primitive boolean.
+	fld = Field{types.Bool, types.JavaBoolTrue}
+	str = fmtHelper(fld, className, fieldName)
+	if str != "true" {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"true\", got \"%v\"", str)
+	}
+
+	// Primitive boolean, unexpected Go bool.
+	fld = Field{types.Bool, true}
+	str = fmtHelper(fld, className, fieldName)
+	if str != "true" {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"true\", got \"%v\"", str)
+	}
+
+	// Primitive byte array.
+	bites = []byte{'A', 'B', 'C'}
+	fld = Field{types.ByteArray, bites}
+	str = fmtHelper(fld, className, fieldName)
+	if str != "41 42 43" {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"41 42 43\", got \"%v\"", str)
+	}
+
+	// Primitive byte array pointer.
+	bites = []byte{'A', 'B', 'C'}
+	fld = Field{types.ByteArray, &bites}
+	str = fmtHelper(fld, className, fieldName)
+	if str != "41 42 43" {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"41 42 43\", got \"%v\"", str)
+	}
+
+	// Primitive byte array, wrong format.
+	jb := []types.JavaByte{1, 2, 3}
+	fld = Field{types.ByteArray, jb}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "but value is of type") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"but value is of type\", got \"%v\"", str)
+	}
+
+	// Primitive byte array, length=0.
+	bites = []byte{}
+	fld = Field{types.ByteArray, bites}
+	str = fmtHelper(fld, className, fieldName)
+	if !strings.Contains(str, "array of zero") {
+		t.Errorf("TestFmtHelper: expected fmtHelper to return \"array of zero\", got \"%v\"", str)
+	}
 
 }

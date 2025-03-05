@@ -8,7 +8,6 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
@@ -87,7 +86,7 @@ func jjStringifyScalar(ftype string, fvalue any) *object.Object {
 			str = "null"
 		} else {
 			obj := fvalue.(*object.Object)
-			if obj.KlassName == globals.StringIndexString {
+			if obj.KlassName == types.StringPoolStringIndex {
 				// It is a Java String object. Return it as-is.
 				return obj
 			}
