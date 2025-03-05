@@ -83,7 +83,7 @@ func jjStringifyScalar(ftype string, fvalue any) *object.Object {
 		str = fmt.Sprintf("%d", fvalue.(int64))
 	case types.Ref, types.ByteArray:
 		if object.IsNull(fvalue.(*object.Object)) {
-			str = "null"
+			str = types.NullString
 		} else {
 			obj := fvalue.(*object.Object)
 			if obj.KlassName == types.StringPoolStringIndex {

@@ -1619,7 +1619,7 @@ func valueOfObject(params []interface{}) interface{} {
 	case *object.Object:
 		inObj := params[0].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "value")
-		if str == "null" {
+		if str == types.NullString {
 			str = object.ObjectFieldToString(inObj, "name")
 		}
 	default:

@@ -296,8 +296,8 @@ func TestObjectFieldToStringInvalidFieldName(t *testing.T) {
 	obj := StringObjectFromGoString("a little lamb")
 	ret := ObjectFieldToString(obj, "non-existentField")
 
-	if ret != "null" {
-		t.Errorf("Expected null, got %s", ret)
+	if ret != types.NullString {
+		t.Errorf("Expected types.NullString, got %s", ret)
 	}
 
 }

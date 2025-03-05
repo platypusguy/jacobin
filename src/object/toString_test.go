@@ -179,13 +179,13 @@ func TestObjectFieldToStringPos(t *testing.T) {
 
 	// nil
 	observed = ObjectFieldToString(nil, fieldName)
-	if observed != "null" {
-		t.Errorf("nil, expected: %s, observed: %s\n", "null", observed)
+	if observed != types.NullString {
+		t.Errorf("nil, expected: %s, observed: %s\n", types.NullString, observed)
 	}
 
 	// Null
 	observed = ObjectFieldToString(Null, fieldName)
-	if observed != "null" {
-		t.Errorf("object.Null, expected: %s, observed: %s\n", "null", observed)
+	if observed != types.NullString {
+		t.Errorf("object.Null, expected: %s, observed: %s\n", types.NullString, observed)
 	}
 }
