@@ -399,19 +399,36 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 	case *object.Object:
 		inObj := params[1].(*object.Object)
 		str = object.ObjectFieldToString(inObj, "FilePath")
-		if str == "null" {
+		if str == types.NullString {
 			str = object.ObjectFieldToString(inObj, "value")
-			if str == "null" {
+			if str == types.NullString {
+				className := object.GoStringFromStringPoolIndex(inObj.KlassName)
+				if newLine {
+					fmt.Fprintf(params[0].(*os.File), "class: %s, fields:\n", className)
+				} else {
+					fmt.Fprintf(params[0].(*os.File), "class: %s, fields: ", className)
+				}
 				str = ""
 				for name, _ := range inObj.FieldTable {
-					str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+					if newLine {
+						str += fmt.Sprintf("%s=%s\n", name, object.ObjectFieldToString(inObj, name))
+					} else {
+						str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+					}
 				}
-				str = str[:len(str)-2]
+				if newLine {
+					fmt.Fprint(params[0].(*os.File), str)
+					return nil
+				} else {
+					str = str[:len(str)-2]
+					fmt.Fprint(params[0].(*os.File), str)
+					return nil
+				}
 			}
 
 		}
 	case nil:
-		str = "null"
+		str = types.NullString
 	default:
 		errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
