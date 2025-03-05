@@ -174,15 +174,15 @@ func IsStringObject(unknown any) bool {
 
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
-	// If null, return "null".
+	// If null, return types.NullString.
 	if IsNull(obj) {
-		return "null"
+		return types.NullString
 	}
 
-	// If the field is missing, return "null".
+	// If the field is missing, return types.NullString.
 	fld, ok := obj.FieldTable[fieldName]
 	if !ok {
-		return "null"
+		return types.NullString
 	}
 
 	// If a static, remove the leading types.Static.
@@ -250,7 +250,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 
 	// None of the above!
 	// Just return the class name, field name, and the field type.
-	result := fmt.Sprintf("UNRECOGNIZED: %s.%s(Ftype: %s)", GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype)
+	result := fmt.Sprintf("ObjectFieldToString UNRECOGNIZED FTYPE: %s.%s(Ftype: %s, Fvalue: %v)",
+		GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype, fld.Fvalue)
 	return result
 
 }
