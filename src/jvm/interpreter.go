@@ -2442,60 +2442,59 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 
 // 0xB9 INVOKEINTERFACE
 func doInvokeinterface(fr *frames.Frame, _ int64) int {
+
+	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
+	count := fr.Meth[fr.PC+3]
+	zeroByte := fr.Meth[fr.PC+4]
+
+	CP := fr.CP.(*classloader.CPool)
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != classloader.Interface || zeroByte != 0 { // remove the zeroByte test later
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
+			CPentry.Type, classloader.Interface)
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, fr) // this is the error thrown by JDK
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	method := CP.InterfaceRefs[CPentry.Slot]
+
+	// get the class entry from this method
+	interfaceRef := method.ClassIndex
+	interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
+	interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
+	interfaceName := *interfaceNamePtr
+
+	// get the method name for this method
+	nAndTindex := method.NameAndType
+	nAndTentry := CP.CpIndex[nAndTindex]
+	nAndTslot := nAndTentry.Slot
+	nAndT := CP.NameAndTypes[nAndTslot]
+	interfaceMethodNameIndex := nAndT.NameIndex
+	interfaceMethodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, interfaceMethodNameIndex)
+
+	// get the signature for this method
+	interfaceMethodSigIndex := nAndT.DescIndex
+	interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
+		CP, interfaceMethodSigIndex)
+
+	// now get the objRef pointing to the class containing the call to the method
+	// described just previously. It is located on the f.OpStack below the args to
+	// be passed to the method.
+	// The objRef object has previously been instantiated and its constructor called.
+	objRef := fr.OpStack[fr.TOS-int(count)+1]
+	if objRef == nil {
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
+			interfaceName+interfaceMethodName+interfaceMethodType)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
 	return notImplemented(fr, 0)
 	/*
-		CPslot := (int(f.Meth[f.PC+1]) * 256) + int(f.Meth[f.PC+2]) // next 2 bytes point to CP entry
-		count := f.Meth[f.PC+3]
-		zeroByte := f.Meth[f.PC+4]
-		f.PC += 4
-
-
-		CPentry := CP.CpIndex[CPslot]
-		if CPentry.Type != classloader.Interface {
-			glob.ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("INVOKEINTERFACE: CP entry type (%d) did not point to an interface method type (%d)",
-				CPentry.Type, classloader.Interface)
-			status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f) // this is the error thrown by JDK
-			if status != exceptions.Caught {
-				return errors.New(errMsg) // applies only if in test
-			}
-		}
-
-		method := CP.InterfaceRefs[CPentry.Slot]
-
-		// get the class entry from this method
-		interfaceRef := method.ClassIndex
-		interfaceNameIndex := CP.ClassRefs[CP.CpIndex[interfaceRef].Slot]
-		interfaceNamePtr := stringPool.GetStringPointer(interfaceNameIndex)
-		interfaceName := *interfaceNamePtr
-
-		// get the method name for this method
-		nAndTindex := method.NameAndType
-		nAndTentry := CP.CpIndex[nAndTindex]
-		nAndTslot := nAndTentry.Slot
-		nAndT := CP.NameAndTypes[nAndTslot]
-		interfaceMethodNameIndex := nAndT.NameIndex
-		interfaceMethodName := classloader.FetchUTF8stringFromCPEntryNumber(CP, interfaceMethodNameIndex)
-
-		// get the signature for this method
-		interfaceMethodSigIndex := nAndT.DescIndex
-		interfaceMethodType := classloader.FetchUTF8stringFromCPEntryNumber(
-			CP, interfaceMethodSigIndex)
-
-		// now get the objRef pointing to the class containing the call to the method
-		// described just previously. It is located on the f.OpStack below the args to
-		// be passed to the method.
-		// The objRef object has previously been instantiated and its constructor called.
-		objRef := f.OpStack[f.TOS-int(count)+1]
-		if objRef == nil {
-			errMsg := fmt.Sprintf("INVOKEINTERFACE: object whose method, %s, is invoked is null",
-				interfaceName+interfaceMethodName+interfaceMethodType)
-			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, f)
-			if status != exceptions.Caught {
-				return errors.New(errMsg) // applies only if in test
-			}
-		}
-
 		// get the name of the objectRef's class, and make sure it's loaded
 		objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
 		if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
