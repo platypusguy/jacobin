@@ -94,7 +94,7 @@ func TestJjStringifyScalar_Short(t *testing.T) {
 
 func TestJjStringifyScalar_RefNull(t *testing.T) {
 	result := jjStringifyScalar(types.Ref, object.Null)
-	expected := object.StringObjectFromGoString("null")
+	expected := object.StringObjectFromGoString(types.NullString)
 	if object.GoStringFromStringObject(result) != object.GoStringFromStringObject(expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
