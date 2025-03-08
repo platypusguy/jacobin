@@ -495,10 +495,6 @@ frameInterpreter:
 }
 */
 
-func add[N frames.Number](num1, num2 N) N {
-	return num1 + num2
-}
-
 // multiply two numbers
 func multiply[N frames.Number](num1, num2 N) N {
 	return num1 * num2
@@ -506,15 +502,6 @@ func multiply[N frames.Number](num1, num2 N) N {
 
 func subtract[N frames.Number](num1, num2 N) N {
 	return num1 - num2
-}
-
-// UsesTwoSlots identifies longs and doubles -- the two data items
-// that occupy two slots on the op stack and elsewhere
-func UsesTwoSlots(t string) bool {
-	if t == types.Double || t == types.Long || t == types.StaticDouble || t == types.StaticLong {
-		return true
-	}
-	return false
 }
 
 // create a new frame and load up the local variables with the passed
