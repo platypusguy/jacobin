@@ -2493,87 +2493,81 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
 	}
-	return notImplemented(fr, 0)
-	/*
-		// get the name of the objectRef's class, and make sure it's loaded
-		objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
-		if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
-			// in this case, LoadClassFromNameOnly() will have already thrown the exception
-			if globals.JacobinHome() == "test" {
-				return err // applies only if in test
-			}
-		}
 
-		class := classloader.MethAreaFetch(objRefClassName)
-		if class == nil {
-			// in theory, this can't happen due to immediately previous loading, but making sure
-			errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
-			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+	// get the name of the objectRef's class, and make sure it's loaded
+	objRefClassName := *(stringPool.GetStringPointer(objRef.(*object.Object).KlassName))
+	if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
+		// in this case, LoadClassFromNameOnly() will have already thrown the exception
+		if globals.JacobinHome() == "test" {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	class := classloader.MethAreaFetch(objRefClassName)
+	if class == nil {
+		// in theory, this can't happen due to immediately previous loading, but making sure
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
+		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		}
+	}
+
+	var mtEntry classloader.MTentry
+	var err error
+	mtEntry, err = locateInterfaceMeth(class, fr, objRefClassName, interfaceName,
+		interfaceMethodName, interfaceMethodType)
+	if err != nil { // any error will already have been handled
+		return exceptions.ERROR_OCCURRED
+	}
+
+	clData := *class.Data
+	if mtEntry.MType == 'J' {
+		entry := mtEntry.Meth.(classloader.JmEntry)
+		fram, err := createAndInitNewFrame(
+			clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, fr)
+		if err != nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+				interfaceMethodName + interfaceMethodType
+			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
-				return errors.New(errMsg) // applies only if in test
+				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
 
-		var mtEntry classloader.MTentry
-		var err error
-		mtEntry, err = locateInterfaceMeth(class, f, objRefClassName, interfaceName,
-			interfaceMethodName, interfaceMethodType)
-		if err != nil { // any error will already have been handled
-			continue
+		fr.FrameStack.PushFront(fram) // push the new frame
+		return 0
+	} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
+		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		paramCount := gmethData.ParamSlots
+		var params []interface{}
+		for i := 0; i < paramCount; i++ {
+			params = append(params, pop(fr))
 		}
 
-		clData := *class.Data
-		if mtEntry.MType == 'J' {
-			entry := mtEntry.Meth.(classloader.JmEntry)
-			fram, err := createAndInitNewFrame(
-				clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, f)
-			if err != nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
-					interfaceMethodName + interfaceMethodType
-				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, f)
-				if status != exceptions.Caught {
-					return errors.New(errMsg) // applies only if in test
+		if globals.TraceInst {
+			infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
+			trace.Trace(infoMsg)
+		}
+		ret := gfunction.RunGfunction(
+			mtEntry, fr.FrameStack, interfaceName, interfaceMethodName, interfaceMethodType, &params, true,
+			globals.TraceVerbose)
+		if ret != nil {
+			switch ret.(type) {
+			case error:
+				if globals.GetGlobalRef().JacobinName == "test" {
+					return exceptions.ERROR_OCCURRED
+				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+					return exceptions.ERROR_OCCURRED
 				}
-			}
-
-			f.PC += 1                            // to point to the next bytecode before exiting
-			fs.PushFront(fram)                   // push the new frame
-			f = fs.Front().Value.(*frames.Frame) // point f to the new head
-			goto frameInterpreter
-		} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
-			gmethData := mtEntry.Meth.(gfunction.GMeth)
-			paramCount := gmethData.ParamSlots
-			var params []interface{}
-			for i := 0; i < paramCount; i++ {
-				params = append(params, pop(f))
-			}
-
-			if globals.TraceInst {
-				infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
-				trace.Trace(infoMsg)
-			}
-			ret := gfunction.RunGfunction(mtEntry, fs, interfaceName, interfaceMethodName, interfaceMethodType, &params, true, globals.TraceVerbose)
-			if ret != nil {
-				switch ret.(type) {
-				case error:
-					if glob.JacobinName == "test" {
-						errRet := ret.(error)
-						return errRet
-					} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-						f.PC += 1
-						goto frameInterpreter
-					}
-				default: // if it's not an error, then it's a legitimate return value, which we simply push
-					push(f, ret)
-					if strings.HasSuffix(interfaceMethodType, "D") || strings.HasSuffix(interfaceMethodType, "J") {
-						push(f, ret) // push twice if long or double
-					}
-				}
-				// any exception will already have been handled.
+			default: // if it's not an error, then it's a legitimate return value, which we simply push
+				push(fr, ret)
 			}
 		}
-	*/
+		// any exception will already have been handled.
+	}
+	return notImplemented(fr, 0)
 }
 
 // 0xBB NEW create a new object
