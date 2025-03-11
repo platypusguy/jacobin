@@ -2563,11 +2563,12 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
+				return 5 // 2 for CP slot + 1 for count, 1 for zero byte, and 1 for next bytecode
 			}
 		}
 		// any exception will already have been handled.
 	}
-	return notImplemented(fr, 0)
+	return notImplemented(fr, 0) // in theory, unreachable code
 }
 
 // 0xBB NEW create a new object
