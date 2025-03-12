@@ -2169,10 +2169,10 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// if !ok { // if the method is not in the method table, find it
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
-			// TODO: search the superclasses, then the classpath and retry
+			// TODO: search the interfaces, then the classpath and retry
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+			status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
@@ -2273,7 +2273,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
@@ -2360,7 +2360,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
