@@ -549,6 +549,43 @@ verifyInterfaceMethod:
 	return mtEntry, nil
 }
 
+func findAllInterfaces(class *classloader.Klass) []string {
+	retval := []string{}
+	clData := *class.Data
+	for i := 0; i < len(clData.Interfaces); i++ {
+		index := uint32(clData.Interfaces[i])
+		retval = append(retval, *stringPool.GetStringPointer(index))
+	}
+
+	// this gets one level of superinterfaces to all the interfaces in retval
+	for i := 0; i < len(retval); i++ {
+		superinterfaces := []string{}
+		interfaceName := retval[i]
+		interfaceClass := classloader.MethAreaFetch(interfaceName)
+		if interfaceClass == nil {
+			if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+				if globals.JacobinHome() == "test" {
+					return retval // applies only if in test
+				}
+			}
+		}
+
+		for j := 0; j < len(interfaceClass.Data.Interfaces); j++ {
+			index := uint32(interfaceClass.Data.Interfaces[j])
+			superinterfaces = append(superinterfaces, *stringPool.GetStringPointer(index))
+		}
+
+		if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+			// in this case, LoadClassFromNameOnly() will have already thrown the exception
+			if globals.JacobinHome() == "test" {
+				return retval // applies only if in test
+			}
+		}
+		retval = append(retval, superinterfaces...)
+	}
+	return retval
+}
+
 // the generation and formatting of trace data for each executed bytecode.
 // Returns the formatted data for output to logging, console, or other uses.
 func EmitTraceData(f *frames.Frame) string {
