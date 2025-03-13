@@ -2165,8 +2165,6 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	mtEntry := classloader.MTable[className+"."+methodName+methodType]
 	if mtEntry.Meth == nil { // if the method is not in the method table, find it
-		// mtEntry := classloader.MTable[className+"."+methodName+methodType]
-		// if !ok { // if the method is not in the method table, find it
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
 			// TODO: search the interfaces, then the classpath and retry

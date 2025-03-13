@@ -209,6 +209,9 @@ type InvokeDynamicEntry struct { // type 18 (invokedynamic data)
 // Note that if the given method is not found, the hierarchy of superclasses is ascended,
 // in search for the method. The one exception is for main() which, if not found in the
 // first class, will never be in one of the superclasses.
+//
+// Note: if the method is not in the class or its superclasses, an error is returned. This
+// method does not check interfaces for the method.
 func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 	origClassName := className
 
@@ -244,14 +247,12 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			return MTentry{Meth: methEntry.Meth, MType: 'J'}, nil
 		}
 		if methEntry.MType == 'G' {
-
 			return MTentry{Meth: methEntry.Meth, MType: 'G'}, nil
 		}
 		errMsg := fmt.Sprintf("FetchMethodAndCP: methEntry.Meth != nil BUT methEntry.MType is neither J nor G for %s", methFQN)
 		trace.Error(errMsg)
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return MTentry{}, errors.New(errMsg) // dummy return needed for tests
-
 	}
 
 	// --- at this point, the method is not in the MTable ---
@@ -306,7 +307,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		return methodEntry, nil
 	}
 
-	// if we're here, the className did not contain the searched-for method. So, go up the superclasses, (TODO)
+	// if we're here, the className did not contain the searched-for method. So, go up the superclasses,
 	// except if we're searching for main(), in which case, we don't go up the list of superclasses
 	if methName == "main" {
 		noMainError(origClassName)
@@ -362,9 +363,10 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 // error message when main() can't be found. Syntax mirrors OpenJDK HotSpot
 func noMainError(className string) {
-	errMsg := fmt.Sprintf("Error: main() method not found in class %s\n"+
-		"Please define the main method as:\n"+
-		"   public static void main(String[] args)", className)
+	errMsg := fmt.Sprintf(
+		"Error: main() method not found in class %s\n"+
+			"Please define the main method as:\n"+
+			"   public static void main(String[] args)", className)
 	trace.Error(errMsg)
 	shutdown.Exit(shutdown.APP_EXCEPTION)
 }
