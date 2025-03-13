@@ -2166,16 +2166,24 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	mtEntry := classloader.MTable[className+"."+methodName+methodType]
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
-		if err != nil || mtEntry.Meth == nil {
-			// TODO: search the interfaces, then the classpath and retry
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
-			status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+		if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces
+			klass := classloader.MethAreaFetch(className)
+			if len(klass.Data.Interfaces) > 0 {
+				mtEntry.Meth, err = locateInterfaceMeth(klass, fr, className, className, methodName, methodType)
+				if err != nil || mtEntry.Meth == nil { // method not found in interfaces, so throw an exception
+					// TODO: search the classpath and retry
+					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
+					status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+					if status != exceptions.Caught {
+						return exceptions.ERROR_OCCURRED // applies only if in test
+					}
+				}
 			}
 		}
 	}
+
+	// if we got here, we have a method to call in mtEntry.Meth
 
 	// if we have a native function (here, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
