@@ -512,28 +512,38 @@ func locateInterfaceMeth(
 			mtEntry, _ = classloader.FetchMethodAndCP(
 				interfaceName, interfaceMethodName, interfaceMethodType)
 			if mtEntry.Meth == nil {
-				glob.ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
-					interfaceName, interfaceMethodName, interfaceMethodType)
-				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-				if status != exceptions.Caught {
-					return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+				// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
+				superInterfaces := getSuperInterfaces(class)
+				superInterfaces = append([]string{"java/lang/Object"}, superInterfaces...) // prepend java/lang/Object
+				for _, superInterface := range superInterfaces {
+					objClass := classloader.MethAreaFetch(superInterface) // we know this succeeds
+					objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
+					if objClassMethod != nil { // if the method is found in java/lang/Object
+						mtEntry.Meth = objClassMethod
+						goto verifyInterfaceMethod // method found, move on to execution
+					}
 				}
 			}
-			goto verifyInterfaceMethod // method found, move on to execution
-		} else { // CURR: check for superclasses, after checking Object
-			foundIntfaceName = ""
-		}
-	}
 
-	if foundIntfaceName == "" { // no interface was found, check java.lang.Object()
-		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-			objRefClassName, interfaceName)
-		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
-		if status != exceptions.Caught {
-			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+			// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
+			glob.ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+				interfaceName, interfaceMethodName, interfaceMethodType)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+			if status != exceptions.Caught {
+				return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+			}
 		}
 	}
+	//
+	// if foundIntfaceName == "" { // no interface method was found, check java.lang.Object()
+	// 	errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+	// 		objRefClassName, interfaceName)
+	// 	status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+	// 	if status != exceptions.Caught {
+	// 		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+	// 	}
+	// }
 
 verifyInterfaceMethod:
 	if mtEntry.MType == 'J' && meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
@@ -545,27 +555,28 @@ verifyInterfaceMethod:
 			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
 		}
 	}
-
 	return mtEntry, nil
 }
 
-func findAllInterfaces(class *classloader.Klass) []string {
-	retval := []string{}
+func getSuperInterfaces(class *classloader.Klass) []string {
+	interfaces := []string{}
+	superinterfaces := []string{}
+
 	clData := *class.Data
 	for i := 0; i < len(clData.Interfaces); i++ {
 		index := uint32(clData.Interfaces[i])
-		retval = append(retval, *stringPool.GetStringPointer(index))
+		interfaces = append(interfaces, *stringPool.GetStringPointer(index))
 	}
 
 	// this gets one level of superinterfaces to all the interfaces in retval
-	for i := 0; i < len(retval); i++ {
-		superinterfaces := []string{}
-		interfaceName := retval[i]
+	for i := 0; i < len(interfaces); i++ {
+		interfaceName := interfaces[i]
 		interfaceClass := classloader.MethAreaFetch(interfaceName)
 		if interfaceClass == nil {
 			if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+				// in this case, LoadClassFromNameOnly() will have already thrown the exception
 				if globals.JacobinHome() == "test" {
-					return retval // applies only if in test
+					return superinterfaces // applies only if in test. At this point, superinterfaces is empty
 				}
 			}
 		}
@@ -575,15 +586,25 @@ func findAllInterfaces(class *classloader.Klass) []string {
 			superinterfaces = append(superinterfaces, *stringPool.GetStringPointer(index))
 		}
 
-		if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
-			// in this case, LoadClassFromNameOnly() will have already thrown the exception
-			if globals.JacobinHome() == "test" {
-				return retval // applies only if in test
+		// get any superinterfaces of the superinterfaces
+		superSuperInterfaces := []string{}
+		for k := 0; k < len(superinterfaces); k++ {
+			superInterfaceName := superinterfaces[k]
+			if err := classloader.LoadClassFromNameOnly(superInterfaceName); err != nil {
+				// in this case, LoadClassFromNameOnly() will have already thrown the exception
+				if globals.JacobinHome() == "test" {
+					return []string{} // applies only if in test
+				}
+			}
+			superInterfaceClass := classloader.MethAreaFetch(superInterfaceName)
+			for m := 0; m < len(superInterfaceClass.Data.Interfaces); m++ {
+				index := uint32(superInterfaceClass.Data.Interfaces[m])
+				superSuperInterfaces = append(superSuperInterfaces, *stringPool.GetStringPointer(index))
 			}
 		}
-		retval = append(retval, superinterfaces...)
+		superinterfaces = append(superinterfaces, superSuperInterfaces...)
 	}
-	return retval
+	return superinterfaces
 }
 
 // the generation and formatting of trace data for each executed bytecode.
