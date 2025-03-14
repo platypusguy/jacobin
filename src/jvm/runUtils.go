@@ -500,7 +500,7 @@ func locateInterfaceMeth(
 			if ok {
 				mtEntry, _ = classloader.FetchMethodAndCP(
 					clData.Name, interfaceMethodName, interfaceMethodType)
-				goto verifyInterfaceMethod
+				return mtEntry, nil
 			}
 
 			if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
@@ -513,7 +513,7 @@ func locateInterfaceMeth(
 				interfaceName, interfaceMethodName, interfaceMethodType)
 
 			if mtEntry.Meth != nil {
-				goto verifyInterfaceMethod // method found, move on to execution
+				return mtEntry, nil // method found\
 			}
 
 			// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
@@ -524,7 +524,7 @@ func locateInterfaceMeth(
 				objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
 				if objClassMethod != nil { // if the method is found in java/lang/Object
 					mtEntry.Meth = objClassMethod
-					goto verifyInterfaceMethod // method found, move on to execution
+					return mtEntry, nil // method found, move on to execution
 				}
 			}
 			// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
@@ -539,18 +539,8 @@ func locateInterfaceMeth(
 		}
 	}
 
-verifyInterfaceMethod:
-	// if a J method calls native code, JVM spec throws exception
-	if mtEntry.MType == 'J' && mtEntry.Meth.(classloader.JmEntry).AccessFlags&0x0100 > 0 {
-		glob.ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKEINTERFACE: Native method requested: " +
-			clData.Name + "." + interfaceMethodName + interfaceMethodType
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, f)
-		if status != exceptions.Caught {
-			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
-		}
-	}
-	return mtEntry, nil
+	// verifyInterfaceMethod:
+	return mtEntry, nil // CURR: method is somewhere returning a nested mtEntry, which fails in interpreter
 }
 
 func getSuperInterfaces(class *classloader.Klass) []string {

@@ -2179,7 +2179,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					break
 				}
 			} // end of search of interfaces if method has any
-			if err != nil || mtEntry.Meth == nil { // method not found in interfaces, so throw an exception
+			
+			if err != nil || mtEntry.Meth == nil { // method was not found in interfaces, so throw an exception
 				// TODO: search the classpath and retry
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
