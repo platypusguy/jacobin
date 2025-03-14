@@ -445,8 +445,8 @@ func checkcastInterface(obj *object.Object, className string) bool {
 func locateInterfaceMeth(
 	class *classloader.Klass, // the objRef class
 	f *frames.Frame,
-	objRefClassName string,
 	interfaceName string,
+	objRefClassName string,
 	interfaceMethodName string,
 	interfaceMethodType string) (classloader.MTentry, error) {
 
@@ -488,7 +488,7 @@ func locateInterfaceMeth(
 
 	var foundIntfaceName = ""
 	var mtEntry classloader.MTentry
-	var meth *classloader.Method
+	// var meth *classloader.Method
 	var ok bool
 	for i := 0; i < len(clData.Interfaces); i++ {
 		index := uint32(clData.Interfaces[i])
@@ -496,7 +496,7 @@ func locateInterfaceMeth(
 		if foundIntfaceName == interfaceName {
 			// at this point we know that clData's class implements the required interface.
 			// Now, check whether clData contains the desired method.
-			meth, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
+			_, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
 			if ok {
 				mtEntry, _ = classloader.FetchMethodAndCP(
 					clData.Name, interfaceMethodName, interfaceMethodType)
@@ -511,20 +511,22 @@ func locateInterfaceMeth(
 			}
 			mtEntry, _ = classloader.FetchMethodAndCP(
 				interfaceName, interfaceMethodName, interfaceMethodType)
-			if mtEntry.Meth == nil {
-				// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
-				superInterfaces := getSuperInterfaces(class)
-				superInterfaces = append([]string{"java/lang/Object"}, superInterfaces...) // prepend java/lang/Object
-				for _, superInterface := range superInterfaces {
-					objClass := classloader.MethAreaFetch(superInterface) // we know this succeeds
-					objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
-					if objClassMethod != nil { // if the method is found in java/lang/Object
-						mtEntry.Meth = objClassMethod
-						goto verifyInterfaceMethod // method found, move on to execution
-					}
-				}
+
+			if mtEntry.Meth != nil {
+				goto verifyInterfaceMethod // method found, move on to execution
 			}
 
+			// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
+			superInterfaces := getSuperInterfaces(class)
+			superInterfaces = append([]string{"java/lang/Object"}, superInterfaces...) // prepend java/lang/Object
+			for _, superInterface := range superInterfaces {
+				objClass := classloader.MethAreaFetch(superInterface) // we know this succeeds
+				objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
+				if objClassMethod != nil { // if the method is found in java/lang/Object
+					mtEntry.Meth = objClassMethod
+					goto verifyInterfaceMethod // method found, move on to execution
+				}
+			}
 			// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
 			glob.ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
@@ -532,21 +534,14 @@ func locateInterfaceMeth(
 			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
 			if status != exceptions.Caught {
 				return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+
 			}
 		}
 	}
-	//
-	// if foundIntfaceName == "" { // no interface method was found, check java.lang.Object()
-	// 	errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-	// 		objRefClassName, interfaceName)
-	// 	status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
-	// 	if status != exceptions.Caught {
-	// 		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
-	// 	}
-	// }
 
 verifyInterfaceMethod:
-	if mtEntry.MType == 'J' && meth.AccessFlags&0x0100 > 0 { // if a J method calls native code, JVM spec throws exception
+	// if a J method calls native code, JVM spec throws exception
+	if mtEntry.MType == 'J' && mtEntry.Meth.(classloader.JmEntry).AccessFlags&0x0100 > 0 {
 		glob.ErrorGoStack = string(debug.Stack())
 		errMsg := "INVOKEINTERFACE: Native method requested: " +
 			clData.Name + "." + interfaceMethodName + interfaceMethodType
