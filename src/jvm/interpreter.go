@@ -2457,7 +2457,6 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 
 // 0xB9 INVOKEINTERFACE
 func doInvokeinterface(fr *frames.Frame, _ int64) int {
-
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	count := fr.Meth[fr.PC+3]
 	zeroByte := fr.Meth[fr.PC+4]

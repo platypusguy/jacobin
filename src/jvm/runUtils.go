@@ -450,7 +450,7 @@ func locateInterfaceMeth(
 	interfaceMethodName string,
 	interfaceMethodType string) (classloader.MTentry, error) {
 
-	glob := globals.GetGlobalRef()
+	/* glob := globals.GetGlobalRef() */
 
 	// Find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
 	// the steps are taken, where C is the interface:
@@ -486,60 +486,97 @@ func locateInterfaceMeth(
 		}
 	}
 
-	var foundIntfaceName = ""
 	var mtEntry classloader.MTentry
-	// var meth *classloader.Method
-	var ok bool
-	for i := 0; i < len(clData.Interfaces); i++ {
-		index := uint32(clData.Interfaces[i])
-		foundIntfaceName = *stringPool.GetStringPointer(index)
-		if foundIntfaceName == interfaceName {
-			// at this point we know that clData's class implements the required interface.
-			// Now, check whether clData contains the desired method.
-			_, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
-			if ok {
-				mtEntry, _ = classloader.FetchMethodAndCP(
-					clData.Name, interfaceMethodName, interfaceMethodType)
-				return mtEntry, nil
-			}
+	/*
+		var foundIntfaceName = ""
+		var ok bool
+	*/
 
-			if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
-				// in this case, LoadClassFromNameOnly() will have already thrown the exception
-				if globals.JacobinHome() == "test" {
-					return classloader.MTentry{}, err // applies only if in test
-				}
-			}
-			mtEntry, _ = classloader.FetchMethodAndCP(
-				interfaceName, interfaceMethodName, interfaceMethodType)
-
-			if mtEntry.Meth != nil {
-				return mtEntry, nil // method found\
-			}
-
-			// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
-			superInterfaces := getSuperInterfaces(class)
-			superInterfaces = append([]string{"java/lang/Object"}, superInterfaces...) // prepend java/lang/Object
-			for _, superInterface := range superInterfaces {
-				objClass := classloader.MethAreaFetch(superInterface) // we know this succeeds
-				objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
-				if objClassMethod != nil { // if the method is found in java/lang/Object
-					mtEntry.Meth = objClassMethod
-					return mtEntry, nil // method found, move on to execution
-				}
-			}
-			// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
-			glob.ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
-				interfaceName, interfaceMethodName, interfaceMethodType)
-			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
-			if status != exceptions.Caught {
-				return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
-
-			}
-		}
+	// check whether the class or the interface directly implement the method.
+	// The interface directly implements the method if it's a default method.
+	// Note: this simultaneously checks java/lang/Object because all classes inherit its methods
+	mtEntry, err := classloader.FetchMethodAndCP(
+		interfaceName, interfaceMethodName, interfaceMethodType)
+	if err != nil {
+		mtEntry, _ = classloader.FetchMethodAndCP(
+			objRefClassName, interfaceMethodName, interfaceMethodType)
+	}
+	if mtEntry.Meth != nil {
+		return mtEntry, nil // method found
 	}
 
-	return mtEntry, nil // CURR: method is somewhere returning a nested mtEntry, which fails in interpreter
+	/*
+		methToFind := interfaceMethodName + interfaceMethodType
+		classInterfaces := getClassInterfaces(class)
+		for _, ci := range classInterfaces  {
+			if foundIntfaceName == interfaceName {
+				// at this point we know that clData's class directly implements the required interface.
+				// This will be true for interfaces with default methods.
+				// Now, check whether clData contains the desired method.
+				_, ok = clData.MethodTable[interfaceMethodName+interfaceMethodType]
+				if ok {
+					mtEntry, _ = classloader.FetchMethodAndCP(
+						clData.Name, interfaceMethodName, interfaceMethodType)
+					return mtEntry, nil
+				}
+
+				if err := classloader.LoadClassFromNameOnly(interfaceName); err != nil {
+					// in this case, LoadClassFromNameOnly() will have already thrown the exception
+					if globals.JacobinHome() == "test" {
+						return classloader.MTentry{}, err // applies only if in test
+					}
+				}
+				mtEntry, _ = classloader.FetchMethodAndCP(
+					interfaceName, interfaceMethodName, interfaceMethodType)
+
+				if mtEntry.Meth != nil {
+					return mtEntry, nil // method found
+				}
+
+				// the method was not found in the interface, so look at java/lang/Object, then superinterfaces
+				superInterfaces := getSuperInterfaces(class)
+				superInterfaces = append([]string{"java/lang/Object"}, superInterfaces...) // prepend java/lang/Object
+				for _, superInterface := range superInterfaces {
+					objClass := classloader.MethAreaFetch(superInterface) // we know this succeeds
+					objClassMethod := objClass.Data.MethodTable[interfaceMethodName+interfaceMethodType]
+					if objClassMethod != nil { // if the method is found in java/lang/Object
+						mtEntry.Meth = objClassMethod
+						return mtEntry, nil // method found, move on to execution
+					}
+				}
+				// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
+				glob.ErrorGoStack = string(debug.Stack())
+				errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+					interfaceName, interfaceMethodName, interfaceMethodType)
+				status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+				if status != exceptions.Caught {
+					return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+
+				}
+			}
+		}
+	*/
+
+	// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
+	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+	errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+		interfaceName, interfaceMethodName, interfaceMethodType)
+	status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
+	if status != exceptions.Caught {
+		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+	}
+	return classloader.MTentry{}, errors.New(errMsg) // unreachable due to exception thrown immediately above
+}
+
+// goes through the set of interfaces that a class implements and returns them as an array of strings
+func getClassInterfaces(class *classloader.Klass) []string {
+	interfaces := []string{}
+	clData := *class.Data
+	for i := 0; i < len(clData.Interfaces); i++ {
+		index := uint32(clData.Interfaces[i])
+		interfaces = append(interfaces, *stringPool.GetStringPointer(index))
+	}
+	return interfaces
 }
 
 func getSuperInterfaces(class *classloader.Klass) []string {
