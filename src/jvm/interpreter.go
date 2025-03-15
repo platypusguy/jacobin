@@ -2174,12 +2174,12 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			for i := 0; i < len(klass.Data.Interfaces); i++ {
 				index := uint32(klass.Data.Interfaces[i])
 				interfaceName := *stringPool.GetStringPointer(index)
-				mtEntry.Meth, err = locateInterfaceMeth(klass, fr, interfaceName, className, methodName, methodType)
+				mtEntry, err = locateInterfaceMeth(klass, fr, interfaceName, className, methodName, methodType)
 				if mtEntry.Meth != nil {
 					break
 				}
 			} // end of search of interfaces if method has any
-			
+
 			if err != nil || mtEntry.Meth == nil { // method was not found in interfaces, so throw an exception
 				// TODO: search the classpath and retry
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())

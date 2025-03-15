@@ -539,7 +539,6 @@ func locateInterfaceMeth(
 		}
 	}
 
-	// verifyInterfaceMethod:
 	return mtEntry, nil // CURR: method is somewhere returning a nested mtEntry, which fails in interpreter
 }
 
