@@ -2549,9 +2549,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
-
+		fr.PC += 5                    // 2 for CP slot, 1 for count, 1 for zero byte, 1 for next bytecode
 		fr.FrameStack.PushFront(fram) // push the new frame
-		return 0
+		return 0                      // forcing execution of the new frame
 	} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
 		gmethData := mtEntry.Meth.(gfunction.GMeth)
 		paramCount := gmethData.ParamSlots
