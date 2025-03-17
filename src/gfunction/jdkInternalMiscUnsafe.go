@@ -72,13 +72,13 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  unsafeObjectFieldOffset1,
 		}
 
-	MethodSignatures["jdk.internal.misc.Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  arrayIndexScale,
 		}
 
-	MethodSignatures["jdk.internal.misc.Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  arrayIndexScale0,
