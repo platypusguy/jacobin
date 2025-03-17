@@ -9,6 +9,7 @@ package gfunction
 import (
 	"jacobin/excNames"
 	"jacobin/object"
+	"strings"
 )
 
 /*
@@ -71,6 +72,17 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  unsafeObjectFieldOffset1,
 		}
 
+	MethodSignatures["jdk.internal.misc.Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  arrayIndexScale,
+		}
+
+	MethodSignatures["jdk.internal.misc.Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  arrayIndexScale0,
+		}
 }
 
 var classUnsafeName = "jdk/internal/misc/Unsafe"
@@ -85,6 +97,34 @@ func arrayBaseOffset(params []interface{}) interface{} {
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 	return int64(0) // this should work...
+}
+
+// Return the size of the elements of an array
+func arrayIndexScale(params []interface{}) interface{} {
+	arrObj := params[0] // array class whose scale factor is to be returned
+	if arrObj == object.Null {
+		errMsg := "arrayIndexScale: Object is a null pointer"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	return arrayIndexScale0(params)
+}
+
+// Utility fundtion that does the work of arrayIndexScale()
+func arrayIndexScale0(params []interface{}) interface{} {
+	// The array class is passed in as a string, so we need to convert it to an object
+	// to get the class name.
+	arrClass := params[0].(*object.Object).FieldTable["value"].Ftype
+	if strings.HasPrefix(arrClass, "[[") { // multi-dimensional array, the first dimension is always pointers
+		return int64(8)
+	}
+
+	switch arrClass {
+	case "[Z", "[B":
+		return int64(1)
+	default:
+		return int64(8)
+	}
 }
 
 // SWAG
