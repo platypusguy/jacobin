@@ -524,7 +524,7 @@ func locateInterfaceMeth(
 
 	// if we got here, the method was not found in the interface, java/lang/Object, or in superinterfaces
 	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-	errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s"+
+	errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface method not found: %s.%s%s",
 		interfaceName, interfaceMethodName, interfaceMethodType)
 	status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, f)
 	if status != exceptions.Caught {
