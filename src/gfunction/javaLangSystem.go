@@ -91,6 +91,12 @@ func Load_Lang_System() {
 			GFunction:  getConsole,
 		}
 
+	MethodSignatures["java/lang/System.getenv(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  systemGetenv,
+		}
+
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -320,6 +326,12 @@ func exitI(params []interface{}) interface{} {
 func forceGC([]interface{}) interface{} {
 	runtime.GC()
 	return nil
+}
+
+// Get an environment variable string.
+func systemGetenv(params []interface{}) interface{} {
+	key := object.GoStringFromStringObject(params[0].(*object.Object))
+	return object.StringObjectFromGoString(os.Getenv(key))
 }
 
 // Get a property
