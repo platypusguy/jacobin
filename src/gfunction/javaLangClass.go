@@ -16,6 +16,7 @@ import (
 	"jacobin/statics"
 	"jacobin/trace"
 	"jacobin/types"
+	"strings"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -44,6 +45,12 @@ func Load_Lang_Class() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/lang/Class.isArray()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  classIsArray,
 		}
 
 	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
@@ -142,4 +149,14 @@ func getName(params []interface{}) interface{} {
 	primitive := params[0].(*object.Object)
 	str := object.GoStringFromStringObject(primitive)
 	return str
+}
+
+// "java/lang/Class.getName()Ljava/lang/String;"
+func classIsArray(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	fldType := obj.FieldTable["value"].Ftype
+	if strings.HasPrefix(fldType, types.Array) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
