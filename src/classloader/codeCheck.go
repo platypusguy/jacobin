@@ -518,7 +518,7 @@ func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 // GETFIELD 0xB4
 func checkGetfield() int {
 	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[1]) * 256) + int(Code[2]) // next 2 bytes point to CP entry
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
