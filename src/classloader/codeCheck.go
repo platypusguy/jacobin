@@ -417,7 +417,7 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // RETURN          0xB1
 	return3,              // GETSTATIC       0xB2
 	return3,              // PUTSTATIC       0xB3
-	return3,              // GETFIELD        0xB4
+	checkGetfield,        // GETFIELD        0xB4
 	return3,              // PUTFIELD        0xB5
 	checkInvokevirtual,   // INVOKEVIRTUAL   0xB6
 	checkInvokespecial,   // INVOKESPECIAL   0xB7
@@ -515,32 +515,41 @@ func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 	return 3
 }
 
-// INVOKEINTERFACE 0xB9
-func checkInvokeinterface() int {
+// GETFIELD 0xB4
+func checkGetfield() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[1]) * 256) + int(Code[2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf("%s:\n GETFIELD at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	return 3
+}
+
+// INVOKEVIRTUAL 0xB6
+func checkInvokevirtual() int {
+	// check that the index points to a method reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
-	countByte := Code[PC+3]
-	if countByte == 0 {
-		return ERROR_OCCURRED
-	}
-
-	zeroByte := Code[PC+4]
-	if zeroByte != 0 {
-		return ERROR_OCCURRED
-	}
-
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != Interface {
-		// because this is not a ClassFormatError, we output a trace error message here
-		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: CP entry (%d) is not an interface reference",
+	if CPentry.Type != MethodRef {
+		// because this is not a ClassFormatError, we emit a trace message here
+		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	return 4
+	return 3
 }
 
 // INVOKESPECIAL 0xB7
@@ -581,23 +590,32 @@ func checkInvokestatic() int {
 	return 3
 }
 
-// INVOKEVIRTUAL 0xB6
-func checkInvokevirtual() int {
-	// check that the index points to a method reference in the CP
+// INVOKEINTERFACE 0xB9
+func checkInvokeinterface() int {
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
 		return ERROR_OCCURRED
 	}
 
+	countByte := Code[PC+3]
+	if countByte == 0 {
+		return ERROR_OCCURRED
+	}
+
+	zeroByte := Code[PC+4]
+	if zeroByte != 0 {
+		return ERROR_OCCURRED
+	}
+
 	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != MethodRef {
-		// because this is not a ClassFormatError, we emit a trace message here
-		errMsg := fmt.Sprintf("%s:\n INVOKEVIRTUAL at %d: CP entry (%d) is not a method reference",
+	if CPentry.Type != Interface {
+		// because this is not a ClassFormatError, we output a trace error message here
+		errMsg := fmt.Sprintf("%s:\n INVOKEINTERFACE at %d: CP entry (%d) is not an interface reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
-	return 3
+	return 4
 }
 
 // LOOKUPSWITCH 0xAB

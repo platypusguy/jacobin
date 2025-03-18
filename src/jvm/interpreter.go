@@ -1956,16 +1956,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 	fieldEntry := CP.CpIndex[CPslot]
-	if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GETFIELD: Expected a field ref, but got %d in"+
-			"location %d in method %s of class %s\n",
-			fieldEntry.Type, fr.PC, fr.MethName, fr.ClName)
-		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
-		}
-	}
+	// we check that the pointed-to CP entry is a field reference in codeCheck.go
 
 	// Get field name.
 	fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
