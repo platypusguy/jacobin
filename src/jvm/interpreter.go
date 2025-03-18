@@ -2021,8 +2021,6 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			fieldValue = object.StringObjectFromByteArray(objField.Fvalue.([]byte))
 		case []types.JavaByte:
 			fieldValue = object.StringObjectFromJavaByteArray(objField.Fvalue.([]types.JavaByte))
-			// case string: // in theory, not needed, but just in case
-			// 	fieldValue = object.StringObjectFromGoString(objField.Fvalue.(string))
 		}
 	} else if types.IsArray(fieldType) {
 		// if the field type is an array, other than a string, convert it to an object
