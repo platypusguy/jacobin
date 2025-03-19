@@ -117,7 +117,7 @@ func bufferedReaderInit(params []interface{}) interface{} {
 }
 
 // "java/io/BufferedReader.markSupported()Z"
-func bufferedReaderMarkSupported(params []interface{}) interface{} {
+func bufferedReaderMarkSupported([]interface{}) interface{} {
 	return int64(0) // false
 }
 

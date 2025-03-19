@@ -139,6 +139,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/util/*
 	Load_Util_Arrays()
+	Load_Util_Base64()
 	Load_Util_Concurrent_Atomic_AtomicInteger()
 	Load_Util_Concurrent_Atomic_Atomic_Long()
 	Load_Util_Hash_Map()
