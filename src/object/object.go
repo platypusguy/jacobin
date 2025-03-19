@@ -135,3 +135,8 @@ func CloneObject(oldObject *Object) *Object {
 	}
 	return newObject
 }
+
+// Clear the field table of the given object.
+func ClearFieldTable(object *Object) {
+	object.FieldTable = make(map[string]Field)
+}
