@@ -155,6 +155,7 @@ func hashmapInit(params []interface{}) interface{} {
 	defer hashmapMutex.Unlock()
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
+	obj.KlassName = object.StringPoolIndexFromGoString(classNameHashMap)
 	fld := obj.FieldTable[fieldNameMap]
 	fld.Ftype = types.HashMap
 	fld.Fvalue = nilMap
