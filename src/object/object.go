@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-24 by Jacobin Authors. All rights reserved.
+ * Copyright (c) 2021-25 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -87,13 +87,6 @@ func MakeOneFieldObject(classString string, fname string, ftype string, arg any)
 	return objPtr
 }
 
-// As of JACOBIN-613 this function is not used. It can be removed, once all string conversions to JavaBytes are done.
-// // UpdateValueFieldFromBytes: Set the value field of the given object to the given byte array
-// func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
-// 	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
-// 	objPtr.FieldTable["value"] = fld
-// }
-
 // UpdateValueFieldFromJavaBytes: Set the value field of the given object to the given JavaByte array
 func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
@@ -101,12 +94,10 @@ func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 }
 
 // Null is the Jacobin implementation of Java's null
-// var zero64 = uint64(0)
-// var Null *Object = (*Object)(unsafe.Pointer(&zero64))
 // JACOBIN-618 changed definition of null to this.
 var Null = (*Object)(nil)
 
-// determines whether a value is null or not
+// IsNull determines whether a value is null
 func IsNull(value any) bool {
 	switch value.(type) {
 	case *Object:
@@ -118,7 +109,7 @@ func IsNull(value any) bool {
 	return value == nil
 }
 
-// Make a replica of an existing object.
+// CloneObject makes a replica of an existing object.
 func CloneObject(oldObject *Object) *Object {
 	// Create new empty object.
 	newObject := MakeEmptyObject()
