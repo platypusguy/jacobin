@@ -33,6 +33,7 @@ import (
 	"jacobin/types"
 	"jacobin/util"
 	"math"
+	"reflect"
 	"runtime/debug"
 	"strings"
 )
@@ -2020,6 +2021,30 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		o.FieldTable["value"] = of
 		o.KlassName = stringPool.GetStringIndex(&of.Ftype)
 		fieldValue = o
+	} else if fieldType == "Ljava/lang/Object;" {
+		// if it's a pointer to an Object and the value field is an array or slice, wrap the array in an Object
+		v := reflect.ValueOf(objField.Fvalue)
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+			var newFieldType string
+			w := reflect.TypeOf(objField.Fvalue)
+			elemType := w.Elem()
+			switch elemType.Kind() {
+			case reflect.Int8:
+				newFieldType = "[B"
+			case reflect.Int64:
+				newFieldType = "[I"
+			case reflect.Float64:
+				newFieldType = "[F"
+			default:
+				newFieldType = "[Ljava/lang/Object;"
+			}
+			o := object.MakeEmptyObject()
+			of := object.Field{Ftype: newFieldType, Fvalue: objField.Fvalue}
+			o.FieldTable["value"] = of
+			klassName := "[Ljava/lang/Object;"
+			o.KlassName = stringPool.GetStringIndex(&klassName) // "[Ljava/lang/Object;"
+			fieldValue = o
+		}
 	} else { // not an index to the string pool, nor a String pointer with a byte array
 		fieldValue = objField.Fvalue
 	}
