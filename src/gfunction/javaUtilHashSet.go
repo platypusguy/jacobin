@@ -297,7 +297,7 @@ func hashsetIsEmpty(params []interface{}) interface{} {
 		return result
 	}
 
-	if result == 0 {
+	if result.(int64) == 0 {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -327,9 +327,9 @@ func hashsetToArray(params []interface{}) interface{} {
 	}
 
 	// Create an array of objects.
-	objArray := make([]any, 0, len(hm))
+	objArray := make([]*object.Object, 0, len(hm))
 	for _, value := range hm {
-		objArray = append(objArray, value)
+		objArray = append(objArray, value.(*object.Object))
 	}
 
 	return object.MakePrimitiveObject(classNameObject, types.RefArray, objArray)
