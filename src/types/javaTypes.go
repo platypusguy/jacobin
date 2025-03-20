@@ -46,7 +46,9 @@ const GolangString = "G"
 const FileHandle = "FH" // The related Fvalue is a Golang *os.File
 const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
 const HashMap = "HM"    // The related Fvalue is a Golang map[interface{}]interface{}
+const Properties = "PT" // The related Fvalue is a Golang map[interface{}]interface{}
 type DefHashMap map[any]any
+type DefProperties map[string]string
 
 const Static = "X"
 const StaticDouble = "XD"
