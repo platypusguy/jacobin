@@ -12,6 +12,7 @@ import (
 	"jacobin/object"
 	"jacobin/stringPool"
 	"jacobin/types"
+	"sync"
 )
 
 func Load_Util_Hash_Map() {
@@ -145,9 +146,12 @@ func Load_Util_Hash_Map() {
 }
 
 var classNameHashMap = "java/util/HashMap"
+var hashmapMutex = sync.RWMutex{}
 
 // Initialise a hash map empty.
 func hashmapInit(params []interface{}) interface{} {
+	hashmapMutex.Lock()
+	defer hashmapMutex.Unlock()
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
 	fld := obj.FieldTable["value"]
@@ -178,6 +182,9 @@ func _getKey(param interface{}) (interface{}, bool) {
 
 // Put inserts a key-value pair into the HashMap and returns the previous value or null.
 func hashmapPut(params []interface{}) interface{} {
+	hashmapMutex.Lock()
+	defer hashmapMutex.Unlock()
+
 	if len(params) < 3 {
 		errMsg := "hashmapPut: requires 3 parameters: HashMap, key, and value"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -269,6 +276,9 @@ func hashmapGet(params []interface{}) interface{} {
 
 // Remove a hash map entry. Return the removed value or nil if there is not one that matches the key.
 func hashmapRemove(params []interface{}) interface{} {
+	hashmapMutex.Lock()
+	defer hashmapMutex.Unlock()
+
 	if len(params) < 2 {
 		errMsg := "hashmapRemove: Requires 2 parameters: HashMap and key"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -339,6 +349,9 @@ func hashmapSize(params []interface{}) interface{} {
 }
 
 func hashmapPutAll(params []interface{}) interface{} {
+	hashmapMutex.Lock()
+	defer hashmapMutex.Unlock()
+
 	if len(params) < 2 {
 		errMsg := "hashmapPutAll: requires 2 parameters: this HashMap and that HashMap"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)

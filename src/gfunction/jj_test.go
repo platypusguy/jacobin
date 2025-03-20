@@ -184,7 +184,8 @@ func TestJjGetStaticString_InvalidFieldObject(t *testing.T) {
 func TestJjGetStaticString_VectorType(t *testing.T) {
 	classObj := object.StringObjectFromGoString("testClass")
 	fieldObj := object.StringObjectFromGoString("testField")
-	statics.Statics["testClass.testField"] = statics.Static{Type: types.Array, Value: &object.Object{FieldTable: map[string]object.Field{"value": {Fvalue: []int64{1, 2, 3}}}}}
+	statics.AddStatic("testClass.testField",
+		statics.Static{Type: types.Array, Value: &object.Object{FieldTable: map[string]object.Field{"value": {Fvalue: []int64{1, 2, 3}}}}})
 	params := []interface{}{classObj, fieldObj}
 	result := jjGetStaticString(params)
 	expected := object.StringObjectFromGoString("1,2,3")
@@ -196,7 +197,7 @@ func TestJjGetStaticString_VectorType(t *testing.T) {
 func TestJjGetStaticString_ScalarType(t *testing.T) {
 	classObj := object.StringObjectFromGoString("testClass")
 	fieldObj := object.StringObjectFromGoString("testField")
-	statics.Statics["testClass.testField"] = statics.Static{Type: types.Int, Value: int64(42)}
+	statics.AddStatic("testClass.testField", statics.Static{Type: types.Int, Value: int64(42)})
 	params := []interface{}{classObj, fieldObj}
 	result := jjGetStaticString(params)
 	expected := object.StringObjectFromGoString("42")

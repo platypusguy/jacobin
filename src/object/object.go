@@ -78,6 +78,15 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	return objPtr
 }
 
+// Make an object for a Java primitive field (byte, int, etc.), given the class, field name, and field type.
+func MakeOneFieldObject(classString string, fname string, ftype string, arg any) *Object {
+	objPtr := MakeEmptyObject()
+	(*objPtr).KlassName = stringPool.GetStringIndex(&classString)
+	field := Field{ftype, arg}
+	(*objPtr).FieldTable[fname] = field
+	return objPtr
+}
+
 // As of JACOBIN-613 this function is not used. It can be removed, once all string conversions to JavaBytes are done.
 // // UpdateValueFieldFromBytes: Set the value field of the given object to the given byte array
 // func UpdateValueFieldFromBytes(objPtr *Object, argBytes []byte) {
@@ -125,4 +134,9 @@ func CloneObject(oldObject *Object) *Object {
 		newObject.FieldTable[key] = oldObject.FieldTable[key]
 	}
 	return newObject
+}
+
+// Clear the field table of the given object.
+func ClearFieldTable(object *Object) {
+	object.FieldTable = make(map[string]Field)
 }
