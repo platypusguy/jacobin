@@ -15,6 +15,10 @@ import (
 	"sync"
 )
 
+var classNameHashMap = "java/util/HashMap"
+var hashmapMutex = sync.RWMutex{}
+var fieldNameMap = "map"
+
 func Load_Util_Hash_Map() {
 
 	MethodSignatures["java/util/HashMap.<clinit>()V"] =
@@ -145,36 +149,34 @@ func Load_Util_Hash_Map() {
 
 }
 
-var classNameHashMap = "java/util/HashMap"
-var hashmapMutex = sync.RWMutex{}
-
-// Initialise a hash map empty.
+// Initialise a hash map object to an empty state.
 func hashmapInit(params []interface{}) interface{} {
 	hashmapMutex.Lock()
 	defer hashmapMutex.Unlock()
 	nilMap := make(types.DefHashMap)
 	obj := params[0].(*object.Object)
-	fld := obj.FieldTable["value"]
+	fld := obj.FieldTable[fieldNameMap]
 	fld.Ftype = types.HashMap
 	fld.Fvalue = nilMap
-	obj.FieldTable["value"] = fld
+	obj.FieldTable[fieldNameMap] = fld
 	return nil
 }
 
+// An internal function to extract the HashMap key field value.
 func _getKey(param interface{}) (interface{}, bool) {
 	keyObj, ok := param.(*object.Object)
-	if !ok {
+	if !ok || keyObj == nil {
 		errMsg := "HashMap:_getKey: Key parameter is not an object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg), false
 	}
 	if object.IsStringObject(keyObj) {
 		return object.GoStringFromStringObject(keyObj), true
 	}
-	fvalue := keyObj.FieldTable["value"].Fvalue
+	fvalue := keyObj.FieldTable[fieldNameMap].Fvalue
 	switch fvalue.(type) {
 	case int64, float64:
 	default:
-		ftype := keyObj.FieldTable["value"].Ftype
+		ftype := keyObj.FieldTable[fieldNameMap].Ftype
 		errMsg := fmt.Sprintf("HashMap:_getKey: Unsupported key type: {Ftype: %s, Fvalue: %T}", ftype, fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg), false
 	}
@@ -192,7 +194,7 @@ func hashmapPut(params []interface{}) interface{} {
 	}
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapPut: HashMap parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -212,7 +214,7 @@ func hashmapPut(params []interface{}) interface{} {
 	value := params[2]
 
 	// Get the current hash map.
-	fld := this.FieldTable["value"]
+	fld := this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapPut: HashMap parameter is missing its \"value\" field"
@@ -228,7 +230,7 @@ func hashmapPut(params []interface{}) interface{} {
 	// Store the new key-value pair in the hash map.
 	hm[key] = value
 	fld.Fvalue = hm
-	this.FieldTable["value"] = fld
+	this.FieldTable[fieldNameMap] = fld
 
 	// Return the previous value for that key.
 	return prevValue
@@ -242,7 +244,7 @@ func hashmapGet(params []interface{}) interface{} {
 	}
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapGet: The first parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -259,7 +261,7 @@ func hashmapGet(params []interface{}) interface{} {
 	}
 
 	// Get the current hash map.
-	fld := this.FieldTable["value"]
+	fld := this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapGet: The HashMap is not present"
@@ -286,7 +288,7 @@ func hashmapRemove(params []interface{}) interface{} {
 	}
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapRemove: The first parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -303,7 +305,7 @@ func hashmapRemove(params []interface{}) interface{} {
 	}
 
 	// Get the current hash map.
-	fld := this.FieldTable["value"]
+	fld := this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapRemove: The HashMap is not present"
@@ -327,7 +329,7 @@ func hashmapRemove(params []interface{}) interface{} {
 func hashmapSize(params []interface{}) interface{} {
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapSize: The first parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -338,7 +340,7 @@ func hashmapSize(params []interface{}) interface{} {
 	}
 
 	// Get the current hash map.
-	fld := this.FieldTable["value"]
+	fld := this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapSize: The HashMap is not present"
@@ -359,7 +361,7 @@ func hashmapPutAll(params []interface{}) interface{} {
 	}
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapPutAll: The first parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -370,7 +372,7 @@ func hashmapPutAll(params []interface{}) interface{} {
 	}
 
 	// Get the hash map from this.
-	thisFld := this.FieldTable["value"]
+	thisFld := this.FieldTable[fieldNameMap]
 	thisHmap, ok := thisFld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapPutAll: The HashMap is not present in the 1st parameter"
@@ -389,7 +391,7 @@ func hashmapPutAll(params []interface{}) interface{} {
 	}
 
 	// Get the hash map from that.
-	thatFld := that.FieldTable["value"]
+	thatFld := that.FieldTable[fieldNameMap]
 	thatHmap, ok := thatFld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapPutAll: The HashMap is not present in the 2nd parameter"
@@ -411,7 +413,7 @@ func hashmapContainsKey(params []interface{}) interface{} {
 	}
 
 	this, ok := params[0].(*object.Object)
-	if !ok {
+	if !ok || this == nil {
 		errMsg := "hashmapContainsKey: The first parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
@@ -428,7 +430,7 @@ func hashmapContainsKey(params []interface{}) interface{} {
 	}
 
 	// Get the current hash map.
-	fld := this.FieldTable["value"]
+	fld := this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashmapContainsKey: The HashMap is not present"
