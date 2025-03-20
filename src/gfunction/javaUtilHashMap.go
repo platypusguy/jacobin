@@ -164,7 +164,7 @@ func hashmapInit(params []interface{}) interface{} {
 func _getKey(param interface{}) (interface{}, bool) {
 	keyObj, ok := param.(*object.Object)
 	if !ok {
-		errMsg := "HashMap:_getKey: The key is not an object"
+		errMsg := "HashMap:_getKey: Key parameter is not an object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg), false
 	}
 	if object.IsStringObject(keyObj) {
@@ -174,7 +174,8 @@ func _getKey(param interface{}) (interface{}, bool) {
 	switch fvalue.(type) {
 	case int64, float64:
 	default:
-		errMsg := fmt.Sprintf("HashMap:_getKey: Unsupported key type: %T", fvalue)
+		ftype := keyObj.FieldTable["value"].Ftype
+		errMsg := fmt.Sprintf("HashMap:_getKey: Unsupported key type: {Ftype: %s, Fvalue: %T}", ftype, fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg), false
 	}
 	return fvalue, true
@@ -192,12 +193,12 @@ func hashmapPut(params []interface{}) interface{} {
 
 	this, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "hashmapPut: The first parameter is not an object"
+		errMsg := "hashmapPut: HashMap parameter is not an object"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
 
 	if *stringPool.GetStringPointer(this.KlassName) != classNameHashMap {
-		errMsg := "hashmapPut: The object is not a HashMap"
+		errMsg := "hashmapPut: HashMap parameter is not a HashMap"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -214,7 +215,7 @@ func hashmapPut(params []interface{}) interface{} {
 	fld := this.FieldTable["value"]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
-		errMsg := "hashmapPut: The HashMap is not present"
+		errMsg := "hashmapPut: HashMap parameter is missing its \"value\" field"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
