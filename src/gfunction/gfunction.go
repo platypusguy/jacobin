@@ -145,6 +145,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Util_Hash_Map()
 	Load_Util_HexFormat()
 	Load_Util_Locale()
+	Load_Util_Properties()
 	Load_Util_Objects()
 	Load_Util_Random()
 	Load_Util_Zip_Adler32()
