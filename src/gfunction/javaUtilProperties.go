@@ -192,8 +192,8 @@ func propertiesInit(params []interface{}) interface{} {
 func propertiesGetProperty(params []interface{}) interface{} {
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("propertiesGetProperty: Properties object is invalid: %T", params[0])
+	if !ok || this == nil {
+		errMsg := fmt.Sprintf("propertiesGetProperty: Properties object is invalid: {type %T, value %v}", params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	properties, ok := this.FieldTable[fieldNameProperties].Fvalue.(types.DefProperties)
@@ -205,7 +205,7 @@ func propertiesGetProperty(params []interface{}) interface{} {
 	// Get key.
 	keyObj, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesGetProperty: Key object is invalid: %T", params[1])
+		errMsg := fmt.Sprintf("propertiesGetProperty: Key object is invalid: {type %T, value %v}", params[1], params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	key := object.GoStringFromStringObject(keyObj)
@@ -253,7 +253,7 @@ func propertiesRemove(params []interface{}) interface{} {
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesRemove: Properties object is invalid: %T", params[0])
+		errMsg := fmt.Sprintf("propertiesRemove: Properties object is invalid: {type %T, value %v}", params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	fld, ok := this.FieldTable[fieldNameProperties]
@@ -266,7 +266,7 @@ func propertiesRemove(params []interface{}) interface{} {
 	// Get key.
 	keyObj, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesRemove: Key object is invalid: %T", params[1])
+		errMsg := fmt.Sprintf("propertiesRemove: Key object is invalid: {type %T, value %v}", params[1], params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	key := object.GoStringFromStringObject(keyObj)
@@ -303,7 +303,7 @@ func propertiesSetProperty(params []interface{}) interface{} {
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesSetProperty: Properties object is invalid: %T", params[0])
+		errMsg := fmt.Sprintf("propertiesSetProperty: Properties object is invalid: {type %T, value %v}", params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	fld, ok := this.FieldTable[fieldNameProperties]
@@ -316,7 +316,7 @@ func propertiesSetProperty(params []interface{}) interface{} {
 	// Get key.
 	keyObj, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesSetProperty: Key object is invalid: %T", params[1])
+		errMsg := fmt.Sprintf("propertiesSetProperty: Key object is invalid: {type %T, value %v}", params[1], params[1])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	key := object.GoStringFromStringObject(keyObj)
@@ -357,7 +357,7 @@ func propertiesSize(params []interface{}) interface{} {
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesSize: Properties object is invalid: %T", params[0])
+		errMsg := fmt.Sprintf("propertiesSize: Properties object is invalid: {type %T, value %v}", params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	properties, ok := this.FieldTable[fieldNameProperties].Fvalue.(types.DefProperties)
@@ -377,7 +377,7 @@ func propertiesToString(params []interface{}) interface{} {
 	// Get properties table.
 	this, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("propertiesToString: Properties object is invalid: %T", params[0])
+		errMsg := fmt.Sprintf("propertiesToString: Properties object is invalid: {type %T, value %v}", params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	properties, ok := this.FieldTable[fieldNameProperties].Fvalue.(types.DefProperties)
