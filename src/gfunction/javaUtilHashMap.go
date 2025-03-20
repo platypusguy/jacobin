@@ -173,11 +173,11 @@ func _getKey(param interface{}) (interface{}, bool) {
 	if object.IsStringObject(keyObj) {
 		return object.GoStringFromStringObject(keyObj), true
 	}
-	fvalue := keyObj.FieldTable[fieldNameMap].Fvalue
+	fvalue := keyObj.FieldTable[fieldNameValue].Fvalue
 	switch fvalue.(type) {
 	case int64, float64:
 	default:
-		ftype := keyObj.FieldTable[fieldNameMap].Ftype
+		ftype := keyObj.FieldTable[fieldNameValue].Ftype
 		errMsg := fmt.Sprintf("HashMap:_getKey: Unsupported key type: {Ftype: %s, Fvalue: %T}", ftype, fvalue)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg), false
 	}
