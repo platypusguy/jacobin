@@ -244,8 +244,10 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return str
 	case types.FileHandle:
 		return "FileHandle"
-	case types.Ref, types.RefArray, "[Ljava/lang/Object":
+	case types.Ref, types.RefArray, "[Ljava/lang/Object;":
 		return GoStringFromStringPoolIndex(obj.KlassName)
+	case "[Ljava/lang/Object":
+		return "[Ljava/lang/Object;"
 	}
 
 	// None of the above!
