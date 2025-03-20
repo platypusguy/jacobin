@@ -175,7 +175,7 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 		arr := rawArray.(*Object)
 		return arr
 	case []*Object: // if it's a ref to an array of objects, just return it
-		obj := MakePrimitiveObject("java/lang/Object", "[Ljava/lang/Object", rawArray.([]*Object))
+		obj := MakePrimitiveObject("java/lang/Object", "[Ljava/lang/Object;", rawArray.([]*Object))
 		return obj
 	case *[]types.JavaByte: // an array of bytes
 		objPtr :=
