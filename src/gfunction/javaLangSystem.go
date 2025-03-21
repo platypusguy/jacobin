@@ -100,7 +100,7 @@ func Load_Lang_System() {
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  returnNullObject,
+			GFunction:  systemGetSecurityManager,
 		}
 
 	MethodSignatures["java/lang/System.allowSecurityManager()Z"] =
@@ -332,6 +332,11 @@ func forceGC([]interface{}) interface{} {
 func systemGetenv(params []interface{}) interface{} {
 	key := object.GoStringFromStringObject(params[0].(*object.Object))
 	return object.StringObjectFromGoString(os.Getenv(key))
+}
+
+// Get the fake SecurityManager.
+func systemGetSecurityManager(params []interface{}) interface{} {
+	return object.MakePrimitiveObject("java/lang/SecurityManager", types.Int, 42)
 }
 
 // Get a property

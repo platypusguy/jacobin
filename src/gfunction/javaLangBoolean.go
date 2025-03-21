@@ -103,8 +103,9 @@ func Load_Lang_Boolean() {
 func booleanBooleanValue(params []interface{}) interface{} {
 	// Try for a Boolean object.
 	obj, ok := params[0].(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("booleanBooleanValue: The parameter is neither String nor boolean: %T", params[0])
+	if !ok || obj == nil {
+		errMsg := fmt.Sprintf("booleanBooleanValue: Boolean parameter is neither nil or an invalid object: {%T, %v}",
+			params[0], params[0])
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -142,7 +143,12 @@ func booleanBooleanValue(params []interface{}) interface{} {
 func booleanGetBoolean(params []interface{}) interface{} {
 
 	// Get the property name and validate it.
-	obj := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		errMsg := fmt.Sprintf("booleanGetBoolean: Boolean parameter is neither nil or an invalid object: {%T, %v}",
+			params[0], params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	fld, ok := obj.FieldTable["value"]
 	if !ok {
 		errMsg := "booleanGetBoolean: Missing the \"value\" field"
