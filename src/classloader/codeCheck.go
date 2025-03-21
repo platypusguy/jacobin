@@ -118,11 +118,11 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // BASTORE         0x54
 	return1,              // CASTORE         0x55
 	return1,              // SASTORE         0x56
-	return1,              // POP             0x57
-	return1,              // POP2            0x58
-	return1,              // DUP             0x59
-	return1,              // DUP_X1          0x5A
-	return1,              // DUP_X2          0x5B
+	checkPop,             // POP             0x57
+	checkPop2,            // POP2            0x58
+	checkDup,             // DUP             0x59
+	checkDupx1,           // DUP_X1          0x5A
+	checkDupx2,           // DUP_X2          0x5B
 	return1,              // DUP2            0x5C
 	return1,              // DUP2_X1         0x5D
 	return1,              // DUP2_X2         0x5E
@@ -184,20 +184,20 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // FCMPG           0x96
 	return1,              // DCMPL           0x97
 	return1,              // DCMPG           0x98
-	checkIf,              // IFEQ            0x99
-	checkIf,              // IFNE            0x9A
-	checkIf,              // IFLT            0x9B
-	checkIf,              // IFGE            0x9C
-	checkIf,              // IFGT            0x9D
-	checkIf,              // IFLE            0x9E
-	checkIf,              // IF_ICMPEQ       0x9F
-	checkIf,              // IF_ICMPNE       0xA0
-	checkIf,              // IF_ICMPLT       0xA1
-	checkIf,              // IF_ICMPGE       0xA2
-	checkIf,              // IF_ICMPGT       0xA3
-	checkIf,              // IF_ICMPLE       0xA4
-	checkIf,              // IF_ACMPEQ       0xA5
-	checkIf,              // IF_ACMPNE       0xA6
+	checkIfwithint,       // IFEQ            0x99
+	checkIfwithint,       // IFNE            0x9A
+	checkIfwithint,       // IFLT            0x9B
+	checkIfwithint,       // IFGE            0x9C
+	checkIfwithint,       // IFGT            0x9D
+	checkIfwithint,       // IFLE            0x9E
+	checkIfwith2ints,     // IF_ICMPEQ       0x9F
+	checkIfwith2ints,     // IF_ICMPNE       0xA0
+	checkIfwith2ints,     // IF_ICMPLT       0xA1
+	checkIfwith2ints,     // IF_ICMPGE       0xA2
+	checkIfwith2ints,     // IF_ICMPGT       0xA3
+	checkIfwith2ints,     // IF_ICMPLE       0xA4
+	checkIfwith2refs,     // IF_ACMPEQ       0xA5
+	checkIfwith2refs,     // IF_ACMPNE       0xA6
 	checkGoto,            // GOTO            0xA7
 	checkGoto,            // JSR             0xA8
 	return2,              // RET             0xA9
@@ -239,7 +239,7 @@ var CheckTable = [203]BytecodeFunc{
 var PC int
 var CP *CPool
 var Code []byte
-var OpStack []byte // values are: N = nil, I = int, L = long, F = float, R = reference
+var OpStack []byte // values are: N = nil, I = int, L = long, F = float, R = reference, U = unknown
 var TOS int        // index to top of stack, 0 = empty (note: stack is 0-based, not -1 based as in the interpreter)
 var LocalsCount int
 var Locals []byte // uses samve values as OpStack
@@ -313,7 +313,7 @@ func checkAload() int {
 		return ERROR_OCCURRED
 	}
 
-	if Locals[index] != 'R' {
+	if Locals[index] != 'R' && Locals[index] != 'U' {
 		return ERROR_OCCURRED
 	}
 
@@ -324,6 +324,85 @@ func checkAload() int {
 
 	OpStack[TOS] = 'R'
 	return 2
+}
+
+// DUP 0x59 Duplicate the top value on the stack
+func checkDup() int {
+	if TOS < 1 {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = OpStack[TOS-1]
+	return 1
+}
+
+// DUP_X1 0x5A Duplicate the top value on the stack and insert two down
+func checkDupx1() int {
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	initialTOSvalue := OpStack[TOS]
+
+	OpStack[TOS] = OpStack[TOS-1]
+	OpStack[TOS-1] = OpStack[TOS-2]
+	OpStack[TOS-2] = initialTOSvalue
+	return 1
+}
+
+// DUP_X2 0x5B Duplicate the top value on the stack and insert three down
+func checkDupx2() int {
+	if TOS < 3 {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	initialTOSvalue := OpStack[TOS]
+
+	OpStack[TOS] = OpStack[TOS-1]
+	OpStack[TOS-1] = OpStack[TOS-2]
+	OpStack[TOS-2] = OpStack[TOS-3]
+	OpStack[TOS-3] = initialTOSvalue
+	return 1
+}
+
+// GETFIELD 0xB4 Get field from object and push it onto the stack
+func checkGetfield() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf("%s:\n GETFIELD at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+
+	if TOS+1 > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	OpStack[TOS] = 'U' // unknown type, as we don't know the type of the field.
+	return 3
 }
 
 // GOTO 0xA7
@@ -344,30 +423,72 @@ func checkGotow() int {
 	return 5
 }
 
-// IF_ACMPEQ 0xA5 (and the many other IF* bytecodes)
-func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
+// IF_ACMPEQ 0xA5 Pop two references off the stack and jump if they are equal
+// IF_ACMPNE 0xA6 Pop two references off the stack and jump if they are not equal
+func checkIfwith2refs() int {
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
 		return ERROR_OCCURRED
 	}
+
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	} else {
+		if (OpStack[TOS] != 'R' && OpStack[TOS] != 'U') ||
+			(OpStack[TOS-1] != 'R' && OpStack[TOS-1] != 'U') {
+			return ERROR_OCCURRED
+		}
+	}
+
+	TOS -= 2
 	return 3
 }
 
-// GETFIELD 0xB4
-func checkGetfield() int {
-	// check that the index points to a field reference in the CP
-	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
-	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+// IF_ICMPEQ       0x9F pop two ints off the stack and jump if comparison succeeds
+// IF_ICMPNE       0xA0
+// IF_ICMPLT       0xA1
+// IF_ICMPGE       0xA2
+// IF_ICMPGT       0xA3
+// IF_ICMPLE       0xA4
+func checkIfwith2ints() int {
+	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
+	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
 		return ERROR_OCCURRED
 	}
 
-	CPentry := CP.CpIndex[CPslot]
-	if CPentry.Type != FieldRef {
-		errMsg := fmt.Sprintf("%s:\n GETFIELD at %d: CP entry (%d) is not a field reference",
-			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
-		trace.Error(errMsg)
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	} else {
+		if (OpStack[TOS] != 'I' && OpStack[TOS] != 'U') ||
+			(OpStack[TOS-1] != 'I' && OpStack[TOS-1] != 'U') {
+			return ERROR_OCCURRED
+		}
+	}
+
+	TOS -= 2
+	return 3
+}
+
+// IFEQ 0x99 pop int off the stack and jump if comparison with zero succeeds
+// IFNE 0x9A
+// IFLT 0x9B
+// IFGE 0x9C
+// IFGT 0x9D
+// IFLE 0x9E
+func checkIfwithint() int { //
+	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
+	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
 		return ERROR_OCCURRED
 	}
+
+	if TOS < 1 {
+		return ERROR_OCCURRED
+	} else {
+		if OpStack[TOS] != 'I' && OpStack[TOS] != 'U' {
+			return ERROR_OCCURRED
+		}
+	}
+	TOS -= 1
 	return 3
 }
 
@@ -474,6 +595,24 @@ func checkLookupswitch() int { // need to check this
 	basePC += int(npairs) * 8
 
 	return (basePC - PC) + 1
+}
+
+// POP 0x57 Pop the top value off the stack
+func checkPop() int {
+	if TOS < 1 {
+		return ERROR_OCCURRED
+	}
+	TOS -= 1
+	return 1
+}
+
+// POP2 0x58 Pop the top two values off the stack
+func checkPop2() int {
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	}
+	TOS -= 2
+	return 1
 }
 
 // TABLESWITCH 0xAA

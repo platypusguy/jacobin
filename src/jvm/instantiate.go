@@ -11,8 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/exceptions"
 	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/shutdown"
@@ -20,7 +18,6 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
-	"jacobin/util"
 	"strings"
 	"unsafe"
 )
@@ -201,30 +198,31 @@ runInitializer:
 		k.Data.MethodList[methName+methType] = FQN
 	}
 
-	// check the code for validity before running initialization blocks
-	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
-		for _, m := range k.Data.MethodTable {
-			code := m.CodeAttr.Code
-			err := classloader.CheckCodeValidity(
-				code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals)
-			if err != nil {
-				clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
-				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s:\n\t%s",
-					classname, clName, err.Error())
-				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
-				if status != exceptions.Caught {
-					return nil, errors.New(errMsg) // applies only if in test
+	/*
+		// check the code for validity before running initialization blocks
+		if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
+			for _, m := range k.Data.MethodTable {
+				code := m.CodeAttr.Code
+				err := classloader.CheckCodeValidity(
+					code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals)
+				if err != nil {
+					clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
+					errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s:\n\t%s",
+						classname, clName, err.Error())
+					status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
+					if status != exceptions.Caught {
+						return nil, errors.New(errMsg) // applies only if in test
+					}
 				}
 			}
+			// update the Method Area to indicate that the code has been checked
+			k.CodeChecked = true
+			classloader.MethAreaInsert(classname, k)
+			if globals.TraceCloadi {
+				trace.Trace("InstantiateClass: Code checked for class: " + classname)
+			}
 		}
-		// update the Method Area to indicate that the code has been checked
-		k.CodeChecked = true
-		classloader.MethAreaInsert(classname, k)
-		if globals.TraceCloadi {
-			trace.Trace("InstantiateClass: Code checked for class: " + classname)
-		}
-	}
-
+	*/
 	// run intialization blocks
 	_, ok := k.Data.MethodTable["<clinit>()V"]
 	if ok && k.Data.ClInit == types.ClInitNotRun {
