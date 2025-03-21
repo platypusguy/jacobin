@@ -278,11 +278,7 @@ func CheckCodeValidity(code []byte, cp *CPool, stackSize int, locals int) error 
 		ret := CheckTable[opcode]()
 		if ret == ERROR_OCCURRED {
 			errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
-			status := globals.GetGlobalRef().FuncThrowException(excNames.ClassFormatError, errMsg)
-			if status != true { // will only happen in test
-				globals.InitGlobals("test")
-				return errors.New(errMsg)
-			}
+			return errors.New(errMsg)
 		} else {
 			if ret+PC > len(code) {
 				errMsg := fmt.Sprintf("Invalid bytecode or argument at location %d", PC)
@@ -325,7 +321,7 @@ func checkAload() int {
 	if TOS > len(OpStack) {
 		return ERROR_OCCURRED
 	}
-	
+
 	OpStack[TOS] = 'R'
 	return 2
 }

@@ -205,11 +205,12 @@ runInitializer:
 	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
 		for _, m := range k.Data.MethodTable {
 			code := m.CodeAttr.Code
-			err := classloader.CheckCodeValidity(code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals)
+			err := classloader.CheckCodeValidity(
+				code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals)
 			if err != nil {
 				clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
-				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s",
-					classname, clName)
+				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s:\n\t%s",
+					classname, clName, err.Error())
 				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
 				if status != exceptions.Caught {
 					return nil, errors.New(errMsg) // applies only if in test
