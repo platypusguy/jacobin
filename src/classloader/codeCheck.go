@@ -123,9 +123,9 @@ var CheckTable = [203]BytecodeFunc{
 	checkDup,             // DUP             0x59
 	checkDupx1,           // DUP_X1          0x5A
 	checkDupx2,           // DUP_X2          0x5B
-	return1,              // DUP2            0x5C
-	return1,              // DUP2_X1         0x5D
-	return1,              // DUP2_X2         0x5E
+	checkDup2,            // DUP2            0x5C
+	checkDup2x1,          // DUP2_X1         0x5D
+	checkDup2x2,          // DUP2_X2         0x5E
 	return1,              // SWAP            0x5F
 	return1,              // IADD            0x60
 	return1,              // LADD            0x61
@@ -377,6 +377,77 @@ func checkDupx2() int {
 	OpStack[TOS-1] = OpStack[TOS-2]
 	OpStack[TOS-2] = OpStack[TOS-3]
 	OpStack[TOS-3] = initialTOSvalue
+	return 1
+}
+
+// DUP2 0x5C Duplicate the top two values on the stack
+func checkDup2() int {
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 2
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = OpStack[TOS-2]
+	OpStack[TOS-1] = OpStack[TOS-3]
+	return 1
+}
+
+// DUP2_X1 0x5D Duplicate the top two values on the stack and insert them two down. So,
+// ..., value3, value2, value1 <-TOS
+//
+//	becomes:
+//
+// ..., value2, value1, value3, value2, value1
+func checkDup2x1() int {
+	if TOS < 3 {
+		return ERROR_OCCURRED
+	}
+
+	initialTOSvalue := OpStack[TOS]
+	initialTOSplus1value := OpStack[TOS-1]
+
+	TOS += 2
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = OpStack[TOS-2]
+	OpStack[TOS-1] = OpStack[TOS-3]
+	OpStack[TOS-2] = OpStack[TOS-4]
+	OpStack[TOS-3] = initialTOSvalue
+	OpStack[TOS-4] = initialTOSplus1value
+	return 1
+}
+
+// DUP2_X2 0x5E Duplicate the top two values on the stack and insert them three down. So,
+// ..., value4, value3, value2, value1 <-TOS
+//
+//	becomes:
+//
+// ..., value2, value1, value4, value3, value2, value1
+func checkDup2x2() int {
+	if TOS < 4 {
+		return ERROR_OCCURRED
+	}
+
+	initialTOSvalue := OpStack[TOS]
+	initialTOSplus1value := OpStack[TOS-1]
+
+	TOS += 2
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = OpStack[TOS-2]
+	OpStack[TOS-1] = OpStack[TOS-3]
+	OpStack[TOS-2] = OpStack[TOS-4]
+	OpStack[TOS-3] = OpStack[TOS-5]
+	OpStack[TOS-4] = initialTOSvalue
+	OpStack[TOS-5] = initialTOSplus1value
 	return 1
 }
 
