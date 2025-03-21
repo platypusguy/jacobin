@@ -205,7 +205,7 @@ runInitializer:
 	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
 		for _, m := range k.Data.MethodTable {
 			code := m.CodeAttr.Code
-			err := classloader.CheckCodeValidity(code, &k.Data.CP)
+			err := classloader.CheckCodeValidity(code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals)
 			if err != nil {
 				clName, _ := classloader.FetchUTF8stringInLoadedClass(k, int(m.Name))
 				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s",
