@@ -33,21 +33,21 @@ var WideInEffect = false
 var CheckTable = [203]BytecodeFunc{
 	return1,              // NOP             0x00
 	checkAconstnull,      // ACONST_NULL     0x01
-	return1,              // ICONST_M1       0x02
-	return1,              // ICONST_0        0x03
-	return1,              // ICONST_1        0x04
-	return1,              // ICONST_2        0x05
-	return1,              // ICONST_3        0x06
-	return1,              // ICONST_4        0x07
-	return1,              // ICONST_5        0x08
-	return1,              // LCONST_0        0x09
-	return1,              // LCONST_1        0x0A
+	checkIconst,          // ICONST_M1       0x02
+	checkIconst,          // ICONST_0        0x03
+	checkIconst,          // ICONST_1        0x04
+	checkIconst,          // ICONST_2        0x05
+	checkIconst,          // ICONST_3        0x06
+	checkIconst,          // ICONST_4        0x07
+	checkIconst,          // ICONST_5        0x08
+	checkIconst,          // LCONST_0        0x09
+	checkIconst,          // LCONST_1        0x0A
 	return1,              // FCONST_0        0x0B
 	return1,              // FCONST_1        0x0C
 	return1,              // FCONST_2        0x0D
 	return1,              // DCONST_0        0x0E
 	return1,              // DCONST_1        0x0F
-	return2,              // BIPUSH          0x10
+	checkBipush,          // BIPUSH          0x10
 	return3,              // SIPUSH          0x11
 	return2,              // LDC             0x12
 	return3,              // LDC_W           0x13
@@ -57,8 +57,8 @@ var CheckTable = [203]BytecodeFunc{
 	return2,              // FLOAD           0x17
 	return2,              // DLOAD           0x18
 	checkAload,           // ALOAD           0x19
-	return1,              // ILOAD_0         0x1A
-	return1,              // ILOAD_1         0x1B
+	checkIload0,          // ILOAD_0         0x1A
+	checkIload1,          // ILOAD_1         0x1B
 	return1,              // ILOAD_2         0x1C
 	return1,              // ILOAD_3         0x1D
 	return1,              // LLOAD_0         0x1E
@@ -90,8 +90,8 @@ var CheckTable = [203]BytecodeFunc{
 	return2,              // FSTORE          0x38
 	return2,              // DSTORE          0x39
 	return2,              // ASTORE          0x3A
-	return1,              // ISTORE_0        0x3B
-	return1,              // ISTORE_1        0x3C
+	checkIstore0,         // ISTORE_0        0x3B
+	checkIstore1,         // ISTORE_1        0x3C
 	return1,              // ISTORE_2        0x3D
 	return1,              // ISTORE_3        0x3E
 	return1,              // LSTORE_0        0x3F
@@ -126,7 +126,7 @@ var CheckTable = [203]BytecodeFunc{
 	checkDup2,            // DUP2            0x5C
 	checkDup2x1,          // DUP2_X1         0x5D
 	checkDup2x2,          // DUP2_X2         0x5E
-	return1,              // SWAP            0x5F
+	checkSwap,            // SWAP            0x5F
 	return1,              // IADD            0x60
 	return1,              // LADD            0x61
 	return1,              // FADD            0x62
@@ -326,6 +326,17 @@ func checkAload() int {
 	return 2
 }
 
+// BIPUSH 0x10 Push byte onto the stack
+func checkBipush() int {
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = 'I'
+	return 2
+}
+
 // DUP 0x59 Duplicate the top value on the stack
 func checkDup() int {
 	if TOS < 1 {
@@ -494,6 +505,25 @@ func checkGotow() int {
 	return 5
 }
 
+// ICONST_M1 0x02 Push int constant -1 onto the stack
+// ICONST_0 0x03 Push int constant 0 onto the stack
+// ICONST_1 0x04 Push int constant 1 onto the stack
+// ICONST_2 0x05 Push int constant 2 onto the stack
+// ICONST_3 0x06 Push int constant 3 onto the stack
+// ICONST_4 0x07 Push int constant 4 onto the stack
+// ICONST_5 0x08 Push int constant 5 onto the stack
+// LCONST_0 0x09 Push long constant 0 onto the stack
+// LCONST_1 0x0A Push long constant 1 onto the stack
+func checkIconst() int {
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = 'I'
+	return 1
+}
+
 // IF_ACMPEQ 0xA5 Pop two references off the stack and jump if they are equal
 // IF_ACMPNE 0xA6 Pop two references off the stack and jump if they are not equal
 func checkIfwith2refs() int {
@@ -555,12 +585,50 @@ func checkIfwithint() int { //
 	if TOS < 1 {
 		return ERROR_OCCURRED
 	} else {
-		if OpStack[TOS] != 'I' && OpStack[TOS] != 'U' {
+		if OpStack[TOS] == 'F' || OpStack[TOS] == 'R' {
 			return ERROR_OCCURRED
 		}
 	}
 	TOS -= 1
 	return 3
+}
+
+// ILOAD_0 0x1A Load int from local variable 0
+func checkIload0() int {
+	if LocalsCount < 1 {
+		return ERROR_OCCURRED
+	}
+
+	if Locals[0] == 'F' || Locals[0] != 'R' {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = 'I'
+	return 1
+}
+
+// ILOAD_1 0x1B Load int from local variable 1
+func checkIload1() int {
+	if LocalsCount < 2 {
+		return ERROR_OCCURRED
+	}
+
+	if Locals[1] == 'F' || Locals[1] != 'R' {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	OpStack[TOS] = 'I'
+	return 1
 }
 
 // INVOKEVIRTUAL 0xB6
@@ -648,6 +716,36 @@ func checkInvokeinterface() int {
 	return 4
 }
 
+// ISTORE_0 0x3B Store int from stack into local variable 0
+func checkIstore0() int {
+	if LocalsCount < 1 {
+		return ERROR_OCCURRED
+	}
+
+	if TOS < 1 {
+		return ERROR_OCCURRED
+	}
+
+	Locals[0] = OpStack[TOS]
+	TOS -= 1
+	return 1
+}
+
+// ISTORE_1 0x3C Store int from stack into local variable 1
+func checkIstore1() int {
+	if LocalsCount < 2 {
+		return ERROR_OCCURRED
+	}
+
+	if TOS < 1 {
+		return ERROR_OCCURRED
+	}
+
+	Locals[1] = OpStack[TOS]
+	TOS -= 1
+	return 1
+}
+
 // LOOKUPSWITCH 0xAB
 func checkLookupswitch() int { // need to check this
 	basePC := PC
@@ -683,6 +781,18 @@ func checkPop2() int {
 		return ERROR_OCCURRED
 	}
 	TOS -= 2
+	return 1
+}
+
+// SWAP 0x5F Swap the top two values on the stack
+func checkSwap() int {
+	if TOS < 2 {
+		return ERROR_OCCURRED
+	}
+
+	temp := OpStack[TOS]
+	OpStack[TOS] = OpStack[TOS-1]
+	OpStack[TOS-1] = temp
 	return 1
 }
 
