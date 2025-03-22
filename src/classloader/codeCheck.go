@@ -15,6 +15,7 @@ import (
 	"jacobin/trace"
 	"jacobin/types"
 	"math"
+	"strings"
 )
 
 // Here we check the bytecodes of a method. The method is passed as a byte slice.
@@ -49,7 +50,7 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // DCONST_1        0x0F
 	checkBipush,          // BIPUSH          0x10
 	return3,              // SIPUSH          0x11
-	return2,              // LDC             0x12
+	checkLdc,             // LDC             0x12
 	return3,              // LDC_W           0x13
 	return3,              // LDC2_W          0x14
 	return2,              // ILOAD           0x15
@@ -209,7 +210,7 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // DRETURN         0xAF
 	return1,              // ARETURN         0xB0
 	return1,              // RETURN          0xB1
-	return3,              // GETSTATIC       0xB2
+	checkGetstatic,       // GETSTATIC       0xB2
 	return3,              // PUTSTATIC       0xB3
 	checkGetfield,        // GETFIELD        0xB4
 	return3,              // PUTFIELD        0xB5
@@ -487,6 +488,31 @@ func checkGetfield() int {
 	return 3
 }
 
+// GETSTATIC 0xB2 Get static field and push it onto the stack
+func checkGetstatic() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf("%s:\n GETSTATIC at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+
+	if TOS+1 > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	OpStack[TOS] = 'U' // unknown type, as we don't know the type of the field.
+	return 3
+}
+
 // GOTO 0xA7
 func checkGoto() int {
 	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
@@ -647,6 +673,16 @@ func checkInvokevirtual() int {
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+
+	_, _, methodType := GetMethInfoFromCPmethref(CP, CPslot)
+	if !strings.HasSuffix(methodType, "V") { // if the return is not void
+		// so, we need to push the return value onto the stack
+		TOS += 1
+		if TOS > len(OpStack) {
+			return ERROR_OCCURRED
+		}
+		OpStack[TOS] = 'U' // unknown type. TODO: use the type data to determine the type of the return value
+	}
 	return 3
 }
 
@@ -744,6 +780,35 @@ func checkIstore1() int {
 	Locals[1] = OpStack[TOS]
 	TOS -= 1
 	return 1
+}
+
+// LDC 0x12 Push item from constant pool onto the stack
+func checkLdc() int {
+	CPslot := int(Code[PC+1])
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != StringConst && CPentry.Type != IntConst && CPentry.Type != FloatConst {
+		return ERROR_OCCURRED
+	}
+
+	TOS += 1
+	if TOS > len(OpStack) {
+		return ERROR_OCCURRED
+	}
+
+	switch CPentry.Type {
+	case IntConst:
+		OpStack[TOS] = 'I'
+	case FloatConst:
+		OpStack[TOS] = 'F'
+	default:
+		OpStack[TOS] = 'R'
+	}
+
+	return 2
 }
 
 // LOOKUPSWITCH 0xAB
