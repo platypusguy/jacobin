@@ -209,7 +209,7 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // FRETURN         0xAE
 	return1,              // DRETURN         0xAF
 	return1,              // ARETURN         0xB0
-	return1,              // RETURN          0xB1
+	checkReturn,          // RETURN          0xB1
 	checkGetstatic,       // GETSTATIC       0xB2
 	return3,              // PUTSTATIC       0xB3
 	checkGetfield,        // GETFIELD        0xB4
@@ -519,6 +519,8 @@ func checkGoto() int {
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
 		return ERROR_OCCURRED
 	}
+
+	// TODO handle saving state for jump. Don't jump backwards.
 	return 3
 }
 
@@ -618,6 +620,24 @@ func checkIfwithint() int { //
 	TOS -= 1
 	return 3
 }
+
+// // IINC 0x84 Increment local variable by constant
+// func checkIinc() int {
+// 	index := int(Code[PC+1])
+// 	if index >= LocalsCount {
+// 		return ERROR_OCCURRED
+// 	}
+//
+// 	if Locals[index] != 'F' || Locals[index] != 'R' {
+// 		return ERROR_OCCURRED
+// 	}
+//
+// 	if Locals[index] != 'U' {
+// 		Locals[index] = 'I'
+// 	}
+//
+// 	return 3
+// }
 
 // ILOAD_0 0x1A Load int from local variable 0
 func checkIload0() int {
@@ -846,6 +866,11 @@ func checkPop2() int {
 		return ERROR_OCCURRED
 	}
 	TOS -= 2
+	return 1
+}
+
+// RETURN 0xB1 Return void from method
+func checkReturn() int {
 	return 1
 }
 
