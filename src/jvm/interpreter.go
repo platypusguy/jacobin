@@ -1970,7 +1970,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	ref := pop(fr)
 	switch ref.(type) {
 	case *object.Object:
-		break
+		//break
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s.%s", ref, fr.ClName, fieldName)
@@ -2030,11 +2030,11 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			elemType := w.Elem()
 			switch elemType.Kind() {
 			case reflect.Int8:
-				newFieldType = "[B"
+				newFieldType = types.ByteArray
 			case reflect.Int64:
-				newFieldType = "[I"
+				newFieldType = types.IntArray
 			case reflect.Float64:
-				newFieldType = "[F"
+				newFieldType = types.FloatArray // types.DoubleArray?
 			default:
 				newFieldType = "[Ljava/lang/Object;"
 			}
