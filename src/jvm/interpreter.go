@@ -2112,7 +2112,8 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 
 		objField, ok := obj.FieldTable[fieldName]
 		if !ok {
-			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present", fieldName)
+			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present in object of class = %s",
+				fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
 			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
