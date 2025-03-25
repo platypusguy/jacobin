@@ -1970,7 +1970,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	ref := pop(fr)
 	switch ref.(type) {
 	case *object.Object:
-		//break
+		break
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s.%s", ref, fr.ClName, fieldName)
