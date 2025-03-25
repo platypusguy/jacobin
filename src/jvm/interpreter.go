@@ -2030,11 +2030,11 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			elemType := w.Elem()
 			switch elemType.Kind() {
 			case reflect.Int8:
-				newFieldType = "[B"
+				newFieldType = types.ByteArray
 			case reflect.Int64:
-				newFieldType = "[I"
+				newFieldType = types.IntArray
 			case reflect.Float64:
-				newFieldType = "[F"
+				newFieldType = types.FloatArray // types.DoubleArray?
 			default:
 				newFieldType = "[Ljava/lang/Object;"
 			}
@@ -2112,7 +2112,8 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 
 		objField, ok := obj.FieldTable[fieldName]
 		if !ok {
-			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present", fieldName)
+			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present in object of class %s",
+				fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
 			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
