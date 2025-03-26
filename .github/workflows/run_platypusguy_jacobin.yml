@@ -48,7 +48,6 @@ jobs:
         go get
         go install -v ./...
         jacobin --version
-        cd ../..
         
     - name: Setup Jacotest
       run: |
@@ -56,13 +55,14 @@ jobs:
         cd jacotest.go/src
         go get
         go install -v .
-        cd ..
         jacotest -h
 
     - name: Run Test Cases
       run: |
+        cd jacotest.go
         jacotest -c -x || true
 
     - name: Summary of Results
       run: |
+        cd jacotest.go
         jacotest -r 3
