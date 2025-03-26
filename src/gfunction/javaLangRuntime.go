@@ -123,7 +123,7 @@ func runtimeClinit([]interface{}) interface{} {
 		Type:  types.Ref + stringClassnameRuntime,
 		Value: obj,
 	})
-	return object.StringObjectFromGoString(stringClassnameRuntime)
+	return nil
 }
 
 // runtimeGetRuntime: Get the singleton Runtime object.

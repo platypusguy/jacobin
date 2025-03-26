@@ -246,13 +246,20 @@ func secureRandomInit(params []interface{}) interface{} {
 	seed := time.Now().UnixNano()
 	_reSeedObject(obj, seed)
 
-	return obj
+	return nil
 
 }
 
 // SecureRandomGetInstance - several variations of SecureRandom getInstance.
 func secureRandomGetInstance(params []interface{}) interface{} {
-	return secureRandomInit(params)
+
+	// Create SecureRandom object with default seed value.
+	obj := params[0].(*object.Object)
+	seed := time.Now().UnixNano()
+	_reSeedObject(obj, seed)
+
+	return obj
+
 }
 
 // secureRandomGetInstanceStrong.

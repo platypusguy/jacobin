@@ -784,7 +784,7 @@ func stringClinit([]interface{}) interface{} {
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 	klass.Data.ClInit = types.ClInitRun // just mark that String.<clinit>() has been run
-	return object.StringObjectFromGoString("stringClinit")
+	return nil
 }
 
 // Instantiate a new empty string - "java/lang/String.<init>()V"

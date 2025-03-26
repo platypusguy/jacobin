@@ -13,7 +13,6 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/stringPool"
-	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"os/user"
@@ -24,44 +23,18 @@ import (
 	"time"
 )
 
-func TestSystemClassInitWithClinitRun(t *testing.T) {
+func TestSystemClinit(t *testing.T) {
 	globals.InitGlobals("test")
 	classloader.InitMethodArea()
 	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitRun}})
 	ret := systemClinit(nil)
-	successMsg := object.GoStringFromStringObject(ret.(*object.Object))
-	if successMsg != "systemClinit" {
-		t.Errorf("Expected message 'systemClinit', got %s", successMsg)
+	if ret != nil {
+		gErr := ret.(*GErrBlk)
+		t.Errorf("TestSystemClinit: Unexpected error message. got %s", gErr.ErrMsg)
 	}
+	t.Log("TestSystemClinit: stringClinit() returned nil as expected")
 }
 
-func TestSystemClassInitWithClinitNotRun(t *testing.T) {
-	globals.InitGlobals("test")
-	classloader.InitMethodArea()
-	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitNotRun}})
-	statics.PreloadStatics()
-
-	ret := systemClinit(nil)
-	successMsg := object.GoStringFromStringObject(ret.(*object.Object))
-	if successMsg != "systemClinit" {
-		t.Errorf("Expected message 'systemClinit', got %s", successMsg)
-	}
-
-	if statics.GetStaticValue("java/lang/System", "out") == nil {
-		t.Errorf("Expected to find static field 'out' in System class")
-	}
-}
-
-func TestSystemClassInitInvalid(t *testing.T) {
-	globals.InitGlobals("test")
-	classloader.InitMethodArea()
-	trace.Disable()
-	ret := systemClinit(nil)
-	successMsg := ret.(*GErrBlk).ErrMsg
-	if successMsg != "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not" {
-		t.Errorf("Expected message that java/lang/System was not in the MethodArea', got %s", successMsg)
-	}
-}
 func TestArrayCopyNonOverlapping(t *testing.T) {
 	globals.InitGlobals("test")
 

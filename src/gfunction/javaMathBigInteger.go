@@ -433,7 +433,7 @@ func bigIntegerClinit([]interface{}) interface{} {
 		addStaticBigInteger("ZERO", int64(0))
 		klass.Data.ClInit = types.ClInitRun
 	}
-	return object.StringObjectFromGoString("bigIntegerClinit")
+	return nil
 }
 
 // Convert a byte slice into a signed big integer.

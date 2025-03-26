@@ -236,7 +236,7 @@ func atomicIntegerClinit(params []interface{}) interface{} {
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	obj.FieldTable["value"] = initialField
-	return obj
+	return nil
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.<init>()V"
@@ -244,7 +244,7 @@ func atomicIntegerInitVoid(params []interface{}) interface{} {
 	initialField := object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	obj := params[0].(*object.Object)
 	obj.FieldTable["value"] = initialField
-	return obj
+	return nil
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.<init>(I)V"
@@ -253,7 +253,7 @@ func atomicIntegerInitInt(params []interface{}) interface{} {
 	initialValue := params[1].(int64)
 	initialField := object.Field{Ftype: types.Int, Fvalue: initialValue}
 	obj.FieldTable["value"] = initialField
-	return obj
+	return nil
 }
 
 // "java/util/concurrent/atomic/AtomicInteger.Set(I)V"
