@@ -23,13 +23,19 @@ jobs:
           cache: true
           cache-dependency-path: "**/go.sum"
           
-    - name: Setup for Linux or MacOS
+    - name: Setup JDK
+      uses: actions/setup-java@main
+      with:
+        distribution: 'oracle'
+        java-version: '21'
+
+    - name: Setup GITHUB_PATH for Linux or MacOS
       run: |
         echo "$HOME/go/bin" >> $GITHUB_PATH
       shell: bash
       if: runner.os != 'Windows'
 
-    - name: Setup for Windows
+    - name: Setup GITHUB_PATH for Windows
       run: |
         echo "%HOMEPATH%\go\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
       shell: powershell
@@ -53,16 +59,8 @@ jobs:
         cd ..
         jacotest -h
 
-    - name: Setup JDK
-      uses: actions/setup-java@main
-      with:
-        distribution: 'oracle'
-        java-version: '21'
-
     - name: Run Test Cases
       run: |
-        java --version
-        javac --version
         jacotest -c -x || true
 
     - name: Summary of Results
