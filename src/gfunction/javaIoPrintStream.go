@@ -11,8 +11,8 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
-	"math"
 	"os"
+	"strconv"
 )
 
 /*
@@ -77,13 +77,13 @@ func Load_Io_PrintStream() {
 	MethodSignatures["java/io/PrintStream.println(D)V"] = // println double
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnDoubleFloat,
+			GFunction:  PrintlnDouble,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(F)V"] = // println float
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  PrintlnDoubleFloat,
+			GFunction:  PrintlnFloat,
 		}
 
 	MethodSignatures["java/io/PrintStream.println(Ljava/lang/Object;)V"] = // println object
@@ -293,12 +293,17 @@ func PrintlnLong(params []interface{}) interface{} {
 	return nil
 }
 
-// Doubles in Java are 64-bit FP. Like Hotspot, we print at least one decimal place of data.
-// "java/io/PrintStream.println(D)V"
-// "java/io/PrintStream.println(F)V"
-func PrintlnDoubleFloat(params []interface{}) interface{} {
-	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint)+"\n", doubleToPrint)
+// PrintlnDouble = java/io/Prinstream.print(double)
+func PrintlnDouble(params []interface{}) interface{} {
+	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Fprintln(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 64))
+	return nil
+}
+
+// PrintlnFloat = java/io/Prinstream.print(float)
+func PrintlnFloat(params []interface{}) interface{} {
+	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Fprintln(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
@@ -341,21 +346,17 @@ func PrintLong(params []interface{}) interface{} {
 	return nil
 }
 
-// PrintFloat = java/io/Prinstream.print(float)
-// Doubles in Java are 64-bit FP
-// "java/io/PrintStream.print(F)V"
-func PrintFloat(params []interface{}) interface{} {
-	floatToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(floatToPrint), floatToPrint)
+// PrintDouble = java/io/Prinstream.print(double)
+func PrintDouble(params []interface{}) interface{} {
+	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Fprint(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 64))
 	return nil
 }
 
-// PrintDouble = java/io/Prinstream.print(double)
-// Doubles in Java are 64-bit FP
-// "java/io/PrintStream.print(D)V"
-func PrintDouble(params []interface{}) interface{} {
-	doubleToPrint := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintf(params[0].(*os.File), getDoubleFormat(doubleToPrint), doubleToPrint)
+// PrintFloat = java/io/Prinstream.print(float)
+func PrintFloat(params []interface{}) interface{} {
+	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
+	fmt.Fprint(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
@@ -376,20 +377,6 @@ func Printf(params []interface{}) interface{} {
 	fmt.Fprint(params[0].(*os.File), str)
 	return params[0] // Return the PrintStream object
 
-}
-
-// Trying to approximate the exact formatting used in HotSpot JVM
-// TODO: look at the JDK source code to map this formatting exactly.
-func getDoubleFormat(d float64) string {
-	if d < 0.0000001 || d > 10_000_000 {
-		return "%E"
-	} else {
-		if d == math.Floor(d) { // if the fractional part is 0, print a trailing .0
-			return "%.01f"
-		} else {
-			return "%f"
-		}
-	}
 }
 
 // Called by PrintObject and PrintlnObject
