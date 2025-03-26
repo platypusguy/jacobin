@@ -37,7 +37,8 @@ jobs:
         
     - name: Setup Jacotest
       run: |
-        cd src
+        git clone https://github.com/texadactyl/jacotest.go
+        cd jacotest.go/src
         go get
         go install -v .
         cd ..
