@@ -35,6 +35,15 @@ jobs:
       shell: powershell
       if: runner.os == 'Windows'
         
+    - name: Setup Jacobin
+      run: |
+        git clone https://github.com/platypusguy/jacobin
+        cd jacobin/src
+        go get
+        go install -v ./...
+        jacobin --version
+        cd ../..
+        
     - name: Setup Jacotest
       run: |
         git clone https://github.com/texadactyl/jacotest.go
@@ -44,15 +53,6 @@ jobs:
         cd ..
         jacotest -h
 
-    - name: Setup Jacobin
-      run: |
-        git clone https://github.com/platypusguy/jacobin
-        cd jacobin/src
-        go get
-        go install -v ./...
-        cd ../..
-        jacobin --version
-        
     - name: Setup JDK
       uses: actions/setup-java@main
       with:
