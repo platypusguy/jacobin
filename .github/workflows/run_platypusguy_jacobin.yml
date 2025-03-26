@@ -1,0 +1,67 @@
+# On demand, this workflow will run jacotest against https://github.com/platypusguy/jacobin.
+
+name: Jacotest with platypusguy Jacobin
+
+on:
+  workflow_dispatch:  # This ensures the workflow runs only on demand.
+
+jobs:
+
+  run_jacobin:
+    strategy:
+      matrix:
+        
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Setup Go
+      uses: actions/setup-go@main
+      with:
+          go-version: '1.24.x'
+          cache: true
+          cache-dependency-path: "**/go.sum"
+          
+    - name: Setup JDK
+      uses: actions/setup-java@main
+      with:
+        distribution: 'oracle'
+        java-version: '21'
+
+    - name: Setup GITHUB_PATH for Linux or MacOS
+      run: |
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+      shell: bash
+      if: runner.os != 'Windows'
+
+    - name: Setup GITHUB_PATH for Windows
+      run: |
+        echo "%HOMEPATH%\go\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+      shell: powershell
+      if: runner.os == 'Windows'
+        
+    - name: Setup Jacobin
+      run: |
+        git clone https://github.com/platypusguy/jacobin
+        cd jacobin/src
+        go get
+        go install -v ./...
+        jacobin --version
+        
+    - name: Setup Jacotest
+      run: |
+        git clone https://github.com/texadactyl/jacotest.go
+        cd jacotest.go/src
+        go get
+        go install -v .
+
+    - name: Run Test Cases
+      run: |
+        cd jacotest.go
+        jacotest -c -x || true
+
+    - name: Summary of Results
+      run: |
+        cd jacotest.go
+        jacotest -r 3
