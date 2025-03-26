@@ -69,12 +69,12 @@ func getGErrBlk(exceptionType int, errMsg string) *GErrBlk {
 
 // do-nothing Go function shared by several source files
 func clinitGeneric([]interface{}) interface{} {
-	return object.StringObjectFromGoString("clinitGeneric")
+	return nil
 }
 
 // do-nothing Go function shared by several source files
 func justReturn([]interface{}) interface{} {
-	return object.StringObjectFromGoString("justReturn")
+	return nil
 }
 
 // return a Java null object.

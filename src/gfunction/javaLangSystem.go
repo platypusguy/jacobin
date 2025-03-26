@@ -143,7 +143,7 @@ func systemClinit([]interface{}) interface{} {
 		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
-	return object.StringObjectFromGoString("systemClinit")
+	return nil
 }
 
 // arrayCopy copies an array or subarray from one array to another, both of which must exist.

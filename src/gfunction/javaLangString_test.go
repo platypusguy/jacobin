@@ -26,24 +26,18 @@ func TestStringClinit(t *testing.T) {
 		switch retval.(type) {
 		case *GErrBlk:
 			gErr := retval.(*GErrBlk)
-			if !strings.Contains(gErr.ErrMsg, "TestStringClinit: Could not find java/lang/String") {
-				classloader.MethAreaDump()
-				t.Errorf("TestStringClinit: Unexpected error message. got %s", gErr.ErrMsg)
-			}
-			if gErr.ExceptionType != excNames.ClassNotLoadedException {
-				t.Errorf("TestStringClinit: Unexpected exception type. got %d", gErr.ExceptionType)
-			}
+			t.Errorf("TestStringClinit: Unexpected GErrBlk error message. got %s", gErr.ErrMsg)
+			return
 		case *object.Object:
-			str := object.GoStringFromStringObject(retval.(*object.Object))
-			if str != "stringClinit" {
-				t.Errorf("TestStringClinit: Expected \"stringClinit\", observed %v", str)
-			}
+			className := object.GoStringFromStringPoolIndex(retval.(*object.Object).KlassName)
+			t.Errorf("TestStringClinit: Unexpected object, class name %s", className)
 			return
 		default:
-			t.Errorf("TestStringClinit: Did not get expected error message, got %v", retval)
+			t.Errorf("TestStringClinit: Unexpected return, got %T, %v", retval, retval)
+			return
 		}
 	}
-	t.Error("TestStringClinit: stringClinit() returned nil")
+	t.Log("TestStringClinit: stringClinit() returned nil as expected")
 }
 
 func TestStringToUpperCase(t *testing.T) {

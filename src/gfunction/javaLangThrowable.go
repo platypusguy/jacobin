@@ -82,7 +82,7 @@ func throwableClinit([]interface{}) interface{} {
 		Type:  "[Ljava/lang/Throwable",
 		Value: emptyThrowableArray,
 	})
-	return object.StringObjectFromGoString("throwableClinit")
+	return nil
 }
 
 // This function is called by Throwable.<init>().
