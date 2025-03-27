@@ -133,7 +133,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doIastore,         // CASTORE         0x55
 	doIastore,         // SASTORE         0x56
 	doPop,             // POP             0x57
-	doPop,             // POP2             0x58
+	doPop,             // POP2            0x58
 	doDup,             // DUP             0x59
 	doDupx1,           // DUP_X1          0x5A
 	doDupx2,           // DUP_X2          0x5B
@@ -948,7 +948,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 }
 
 // 0x57 POP pop 1 item off op stack
-// 0x58 POP2 pop ditto because in Jacobin, we only need to pop off a single item.
+// 0x58 POP2 per JACOBIN-710, POP2 is used by HotSpot to pop two 32-bit values
+// off the stack (for longs and doubles). However, our longs and doubles are
+// ingle 64-bit pops, so POP2 is implemented as a single pop.
 func doPop(fr *frames.Frame, _ int64) int {
 	if fr.TOS < 0 {
 		errMsg := fmt.Sprintf("stack underflow in POP/POP2 in %s.%s",
