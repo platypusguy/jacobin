@@ -204,6 +204,31 @@ func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
 	return className, methName, methSig
 }
 
+func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {
+	methodRef := CP.CpIndex[cpIndex].Slot
+	classIndex := CP.InterfaceRefs[methodRef].ClassIndex
+
+	classRefIdx := CP.CpIndex[classIndex].Slot
+	classIdx := CP.ClassRefs[classRefIdx]
+	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
+	className := *classNamePtr
+
+	// now get the method signature
+	nameAndTypeCPindex := CP.InterfaceRefs[methodRef].NameAndType
+	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
+	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
+	methNameCPindex := nameAndType.NameIndex
+	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
+	methName := CP.Utf8Refs[methNameUTF8index]
+
+	// and get the method signature/description
+	methSigCPindex := nameAndType.DescIndex
+	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
+	methSig := CP.Utf8Refs[methSigUTF8index]
+
+	return className, methName, methSig
+}
+
 // accepts the index of a CP entry, which should point to a classref
 // and resolves it to return a string containing the class name.
 // Returns an empty string if an error occurred

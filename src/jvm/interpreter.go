@@ -2379,12 +2379,19 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 
 // 0xB8 INVOKESTATIC
 func doInvokestatic(fr *frames.Frame, _ int64) int {
+	var className, methodName, methodType string
+
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
-	className, methodName, methodType :=
-		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
+	entry := CP.CpIndex[CPslot]
+	if entry.Type == classloader.Interface {
+		className, methodName, methodType =
+			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
+	} else {
+		className, methodName, methodType =
+			classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	}
 	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 	if err != nil || mtEntry.Meth == nil {
 		// TODO: search the classpath and retry
