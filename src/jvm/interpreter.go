@@ -133,7 +133,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doIastore,         // CASTORE         0x55
 	doIastore,         // SASTORE         0x56
 	doPop,             // POP             0x57
-	doPop2,            // POP2            0x58
+	doPop,             // POP2             0x58
 	doDup,             // DUP             0x59
 	doDupx1,           // DUP_X1          0x5A
 	doDupx2,           // DUP_X2          0x5B
@@ -947,10 +947,11 @@ func doBastore(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x57 POP pop item off op stack
+// 0x57 POP pop 1 item off op stack
+// 0x58 POP2 pop ditto because in Jacobin, we only need to pop off a single item.
 func doPop(fr *frames.Frame, _ int64) int {
 	if fr.TOS < 0 {
-		errMsg := fmt.Sprintf("stack underflow in POP in %s.%s",
+		errMsg := fmt.Sprintf("stack underflow in POP/POP2 in %s.%s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
 		if status != exceptions.Caught {
@@ -958,20 +959,6 @@ func doPop(fr *frames.Frame, _ int64) int {
 		}
 	}
 	fr.TOS -= 1
-	return 1
-}
-
-// 0x58 POP2 pop 2 items off op stack
-func doPop2(fr *frames.Frame, _ int64) int {
-	if fr.TOS < 1 {
-		errMsg := fmt.Sprintf("stack underflow in POP2 in %s.%s",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
-		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
-		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
-		}
-	}
-	fr.TOS -= 2
 	return 1
 }
 

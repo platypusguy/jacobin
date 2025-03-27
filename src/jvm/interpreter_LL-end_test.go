@@ -773,31 +773,33 @@ func TestPopBytecodrUnderflow(t *testing.T) {
 func TestPop2(t *testing.T) {
 
 	f := newFrame(opcodes.POP2)
-	push(&f, int64(34)) // push three different values; 34 at bottom
-	push(&f, int64(21))
-	push(&f, int64(10))
+	// push three different values; 34 at bottom
+	push(&f, int64(34)) // fload_0 : Load float from local variable
+	push(&f, int64(21)) // iload : Load int from local variable
+	push(&f, int64(10)) // lconst_1 : Push long constant
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
 
-	if f.TOS != 0 {
+	if f.TOS != 1 {
 		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
 	}
 
 	top := pop(&f).(int64)
 
-	if top != 34 {
-		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	if top != 21 {
+		t.Errorf("POP2: expected top's value to be 21, but got: %d", top)
 	}
 }
 
 // POP2: pop two items off stack -- make sure tracing doesn't affect the output
 func TestPop2WithTrace(t *testing.T) {
 	f := newFrame(opcodes.POP2)
-	push(&f, int64(34)) // push three different values; 34 at bottom
-	push(&f, int64(21))
-	push(&f, int64(10))
+	// push three different values; 34 at bottom
+	push(&f, int64(34)) // fload_0 : Load float from local variable
+	push(&f, int64(21)) // iload : Load int from local variable
+	push(&f, int64(10)) // lconst_1 : Push long constant
 
 	MainThread = thread.CreateThread()
 	MainThread.Stack = frames.CreateFrameStack()
@@ -805,14 +807,14 @@ func TestPop2WithTrace(t *testing.T) {
 	MainThread.Trace = true        // turn on tracing
 	interpret(MainThread.Stack)
 
-	if f.TOS != 0 {
+	if f.TOS != 1 {
 		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
 	}
 
 	top := pop(&f).(int64)
 
-	if top != 34 {
-		t.Errorf("POP2: expected top's value to be 34, but got: %d", top)
+	if top != 21 {
+		t.Errorf("POP2: expected top's value to be 21, but got: %d", top)
 	}
 
 	if MainThread.Trace != true {
@@ -840,7 +842,7 @@ func TestPop2Underflow(t *testing.T) {
 
 	errMsg := string(msg)
 
-	if !strings.Contains(errMsg, "stack underflow in POP2") {
+	if !strings.Contains(errMsg, "stack underflow in POP") {
 		t.Errorf("Did not get expected error from invalid POP, got: %s", errMsg)
 	}
 }
