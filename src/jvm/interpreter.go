@@ -2287,9 +2287,19 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 // OxB7 INVOKESPECIAL
 func doInvokespecial(fr *frames.Frame, _ int64) int {
+	var className, methodName, methodType string
+
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	className, methodName, methodType := classloader.GetMethInfoFromCPmethref(CP, CPslot)
+
+	entry := CP.CpIndex[CPslot]
+	if entry.Type == classloader.Interface {
+		className, methodName, methodType =
+			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
+	} else {
+		className, methodName, methodType =
+			classloader.GetMethInfoFromCPmethref(CP, CPslot)
+	}
 
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
