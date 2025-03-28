@@ -2821,19 +2821,24 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		if appMsg != nil {
 			switch appMsg.(type) {
 			case []types.JavaByte:
-				st := appMsg.([]types.JavaByte)
-				errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(st))
+				jbarray := appMsg.([]types.JavaByte)
+				errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(jbarray))
 			case *object.Object:
-				st := appMsg.(*object.Object)
-				value := st.FieldTable["value"].Fvalue
+				obj := appMsg.(*object.Object)
+				value := obj.FieldTable["value"].Fvalue
 				switch value.(type) {
 				case []byte:
-					errMsg += fmt.Sprintf(": %s", string(st.FieldTable["value"].Fvalue.([]byte)))
+					errMsg += fmt.Sprintf(": %s", string(obj.FieldTable["value"].Fvalue.([]byte)))
 				case uint32:
 					str := stringPool.GetStringPointer(value.(uint32))
 					errMsg += fmt.Sprintf(": %s", *str)
+				default:
+					str := fmt.Sprintf(": %v", value)
+					errMsg += fmt.Sprintf(": %s", str)
 				}
-
+			default:
+				str := fmt.Sprintf(": %v", appMsg)
+				errMsg += fmt.Sprintf(": %s", str)
 			}
 		}
 		trace.Error(errMsg)
