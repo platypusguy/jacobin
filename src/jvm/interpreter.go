@@ -2818,9 +2818,9 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		appMsg := objectRef.FieldTable["detailMessage"].Fvalue
 		if appMsg != nil {
 			switch appMsg.(type) {
-			case []uint8:
-				st := appMsg.([]uint8)
-				errMsg += fmt.Sprintf(": %s", string(st))
+			case []types.JavaByte:
+				st := appMsg.([]types.JavaByte)
+				errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(st))
 			case *object.Object:
 				st := appMsg.(*object.Object)
 				value := st.FieldTable["value"].Fvalue
