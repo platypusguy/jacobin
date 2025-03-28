@@ -114,8 +114,8 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	}
 
 	if globals.TraceVerbose {
-		infoMsg := fmt.Sprintf("Start init: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
-			f.ClName, f.MethName, meth.MaxStack, meth.MaxLocals, len(meth.Code))
+		infoMsg := fmt.Sprintf("Start init: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		trace.Trace(infoMsg)
 	}
 
