@@ -167,31 +167,36 @@ func hashsetAdd(params []interface{}) interface{} {
 		errMsg := "hashsetAdd: Argument parameter is nil or not an object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	fld, ok := that.FieldTable["value"]
+	if !ok || that == nil {
+		errMsg := "hashsetAdd: Argument parameter is missing the \"value\" field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 
 	// Hash the argument.
-	hashedUint64, err := util.HashAnything(*that)
+	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetAdd: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
-	hashedString := strconv.FormatUint(hashedUint64, 10)
+	keyString := strconv.FormatUint(hashedUint64, 10)
 
 	// Remember whether the key already exists.
 	flagReturn := types.JavaBoolTrue // Assume not existing yet.
-	fld := this.FieldTable[fieldNameMap]
+	fld = this.FieldTable[fieldNameMap]
 	hm, ok := fld.Fvalue.(types.DefHashMap)
 	if !ok {
 		errMsg := "hashsetAdd: HashMap is not present"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	_, exists := hm[hashedString]
+	_, exists := hm[keyString]
 	if exists {
 		flagReturn = types.JavaBoolFalse
 	}
 
 	// Add this argument.
 	var extparams = new([]interface{})
-	key := object.StringObjectFromGoString(hashedString)
+	key := object.StringObjectFromGoString(keyString)
 	*extparams = append(*extparams, this)
 	*extparams = append(*extparams, key)
 	*extparams = append(*extparams, that)
@@ -225,9 +230,14 @@ func hashsetRemove(params []interface{}) interface{} {
 		errMsg := "hashsetRemove: Argument parameter is nil or not an object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	fld, ok := that.FieldTable["value"]
+	if !ok || that == nil {
+		errMsg := "hashsetRemove: Argument parameter is missing the \"value\" field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 
 	// Hash the argument.
-	hashedUint64, err := util.HashAnything(*that)
+	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetRemove: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
@@ -272,9 +282,14 @@ func hashsetContains(params []interface{}) interface{} {
 		errMsg := "hashsetContains: Argument parameter is nil or not an object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	fld, ok := that.FieldTable["value"]
+	if !ok || that == nil {
+		errMsg := "hashsetContains: Argument parameter is missing the \"value\" field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 
 	// Hash the argument.
-	hashedUint64, err := util.HashAnything(*that)
+	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetContains: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
