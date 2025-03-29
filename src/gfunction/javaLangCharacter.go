@@ -62,18 +62,18 @@ func Load_Lang_Character() {
 func charIsDigit(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	if unicode.IsDigit(rune(ii)) {
-		return int64(1)
+		return types.JavaBoolTrue
 	}
-	return int64(0)
+	return types.JavaBoolFalse
 }
 
 // "java/lang/Character.isLetter(C)Z"
 func charIsLetter(params []interface{}) interface{} {
 	ii := params[0].(int64)
 	if unicode.IsLetter(rune(ii)) {
-		return int64(1)
+		return types.JavaBoolTrue
 	}
-	return int64(0)
+	return types.JavaBoolFalse
 }
 
 // "java/lang/Character.toLowerCase(C)C"
