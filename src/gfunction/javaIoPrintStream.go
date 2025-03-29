@@ -374,6 +374,13 @@ func Printf(params []interface{}) interface{} {
 	}
 	objPtr := retval.(*object.Object)
 	str := object.GoStringFromStringObject(objPtr)
+	switch params[0].(type) {
+	case *os.File:
+		break
+	default:
+		errMsg := fmt.Sprintf("Printf: Expected parameter type *os.File, observed: %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	fmt.Fprint(params[0].(*os.File), str)
 	return params[0] // Return the PrintStream object
 
