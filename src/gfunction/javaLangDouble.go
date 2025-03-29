@@ -219,7 +219,7 @@ func doubleToLongBits(params []interface{}) interface{} {
 	if !math.IsNaN(value) {
 		return int64(math.Float64bits(value))
 	}
-	return 0x7ff8000000000000 // equivalent to Java's 0x7ff8000000000000L
+	return int64(0x7ff8000000000000) // equivalent to Java's 0x7ff8000000000000L
 }
 
 // Simulating longBitsToDouble in Go
