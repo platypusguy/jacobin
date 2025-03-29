@@ -3221,15 +3221,15 @@ func ldc(fr *frames.Frame, width int) int {
 	}
 
 	CPe := classloader.FetchCPentry(fr.CP.(*classloader.CPool), idx)
-	if CPe.EntryType == 0 || // 0 = error
+	if CPe.EntryType == classloader.Dummy || // 0 = error
 		// Note: an invalid CP entry causes a java.lang.Verify error and
 		//       is caught before execution of the program begins.
 		// This bytecode does not load longs or doubles
 		CPe.EntryType == classloader.DoubleConst ||
 		CPe.EntryType == classloader.LongConst {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, LDC: Invalid type for bytecode operand",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		errMsg := fmt.Sprintf("in %s.%s, LDC: Invalid type for bytecode operand: %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, CPe.EntryType)
 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
