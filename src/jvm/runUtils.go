@@ -125,8 +125,8 @@ func pop(f *frames.Frame) interface{} {
 	var value interface{}
 
 	if f.TOS == -1 {
-		errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s",
-			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+		errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s%s",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 		if status != exceptions.Caught {
 			return nil // applies only if in test
@@ -183,14 +183,17 @@ func pop(f *frames.Frame) interface{} {
 	if globals.TraceVerbose {
 		LogTraceStack(f)
 	} // trace the resultant stack
+
+	// Return value to caller.
 	return value
+
 }
 
 // returns the value at the top of the stack without popping it off.
 func peek(f *frames.Frame) interface{} {
 	if f.TOS == -1 {
-		errMsg := fmt.Sprintf("stack underflow in peek() in %s.%s",
-			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName)
+		errMsg := fmt.Sprintf("stack underflow in peek() in %s.%s%s",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
 		if status != exceptions.Caught {
 			return nil // applies only if in test
@@ -218,8 +221,8 @@ func peek(f *frames.Frame) interface{} {
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
 	if f.TOS == len(f.OpStack)-1 {
-		errMsg := fmt.Sprintf("in %s.%s, exceeded op stack size of %d",
-			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, len(f.OpStack))
+		errMsg := fmt.Sprintf("in %s.%s%s, exceeded op stack size of %d",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType, len(f.OpStack))
 		status := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
 		if status != exceptions.Caught {
 			return // applies only if in test

@@ -217,9 +217,9 @@ func doubleToRawLongBits(params []interface{}) interface{} {
 func doubleToLongBits(params []interface{}) interface{} {
 	value := params[0].(float64)
 	if !math.IsNaN(value) {
-		return *(*int64)(unsafe.Pointer(&value))
+		return int64(math.Float64bits(value))
 	}
-	return 0x7ff8000000000000 // equivalent to Java's 0x7ff8000000000000L
+	return int64(0x7ff8000000000000) // equivalent to Java's 0x7ff8000000000000L
 }
 
 // Simulating longBitsToDouble in Go

@@ -84,8 +84,8 @@ func StartExec(className string, mainThread *thread.ExecThread, globalStruct *gl
 	}
 
 	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s, maxStack=%d, maxLocals=%d, code size=%d",
-			f.ClName, f.MethName, m.MaxStack, m.MaxLocals, len(m.Code))
+		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+			f.ClName, f.MethName, f.MethType, m.MaxStack, m.MaxLocals, len(m.Code))
 		trace.Trace(traceInfo)
 	}
 
