@@ -14,7 +14,6 @@ import (
 	"jacobin/types"
 	"math"
 	"strconv"
-	"unsafe"
 )
 
 func Load_Lang_Double() {
@@ -209,7 +208,7 @@ func doubleToString(params []interface{}) interface{} {
 // "java/lang/Double.doubleToRawLongBits(D)J"
 func doubleToRawLongBits(params []interface{}) interface{} {
 	value := params[0].(float64)
-	return *(*int64)(unsafe.Pointer(&value))
+	return int64(math.Float64bits(value))
 }
 
 // Simulating doubleToLongBits in Go

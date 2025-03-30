@@ -8,7 +8,6 @@ package gfunction
 
 import (
 	"math"
-	"unsafe"
 )
 
 func Load_Lang_Float() {
@@ -52,7 +51,7 @@ func intBitsToFloat(params []interface{}) interface{} {
 // "java/lang/Float.floatToRawIntBits(F)I"
 func floatToRawIntBits(params []interface{}) interface{} {
 	value := params[0].(float64)
-	return *(*int64)(unsafe.Pointer(&value))
+	return int64(math.Float64bits(value))
 }
 
 // Simulating floatToIntBits in Go
@@ -60,7 +59,7 @@ func floatToRawIntBits(params []interface{}) interface{} {
 func floatToIntBits(params []interface{}) interface{} {
 	value := params[0].(float64)
 	if !math.IsNaN(float64(value)) {
-		return *(*int64)(unsafe.Pointer(&value))
+		return int64(math.Float64bits(value))
 	}
 	return 0x7fc00000 // equivalent to Java's 0x7fc00000
 }

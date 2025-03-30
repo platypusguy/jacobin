@@ -119,6 +119,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Lang_Long()
 	Load_Lang_Math()
 	Load_Lang_Object()
+	Load_Lang_Process_Handle_Impl()
 	Load_Lang_Runtime()
 	Load_Lang_SecurityManager()
 	Load_Lang_Short()
