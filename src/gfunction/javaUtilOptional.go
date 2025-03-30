@@ -254,7 +254,7 @@ func optionalToString(params []interface{}) interface{} {
 	}
 
 	// Return stringified value.
-	return object.StringObjectFromGoString(fmt.Sprintf("%T :: %v", thisFvalue, thisFvalue))
+	return object.StringObjectFromGoString(fmt.Sprintf("Optional[%T :: %v]", thisFvalue, thisFvalue))
 
 }
 

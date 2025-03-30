@@ -308,19 +308,19 @@ func Load_Math_Big_Integer() {
 	MethodSignatures["java/math/BigInteger.setBit(I)Ljava/math/BigInteger;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerSetBit,
 		}
 
 	MethodSignatures["java/math/BigInteger.shiftLeft(I)Ljava/math/BigInteger;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerShiftLeft,
 		}
 
 	MethodSignatures["java/math/BigInteger.shiftRight(I)Ljava/math/BigInteger;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerShiftRight,
 		}
 
 	MethodSignatures["java/math/BigInteger.shortValueExact()S"] =
@@ -356,7 +356,7 @@ func Load_Math_Big_Integer() {
 	MethodSignatures["java/math/BigInteger.testBit(I)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigIntegerTestBit,
 		}
 
 	MethodSignatures["java/math/BigInteger.toByteArray()[B"] =
@@ -391,7 +391,7 @@ func Load_Math_Big_Integer() {
 
 }
 
-var bigIntegerClassName = "java/math/BigInteger"
+var classNameBigInteger = "java/math/BigInteger"
 
 // Get a prime number formatted as a big.Int.
 func getPrime(bitLength int) (*big.Int, string) {
@@ -412,17 +412,17 @@ func getPrime(bitLength int) (*big.Int, string) {
 
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
 func addStaticBigInteger(argName string, argValue int64) {
-	name := fmt.Sprintf("%s.%s", bigIntegerClassName, argName)
-	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
+	name := fmt.Sprintf("%s.%s", classNameBigInteger, argName)
+	obj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
 	InitBigIntegerField(obj, argValue)
 	_ = statics.AddStatic(name, statics.Static{Type: "Ljava/math/BigInteger;", Value: obj})
 }
 
 // "java/math/BigInteger.<clinit>()V"
 func bigIntegerClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(bigIntegerClassName)
+	klass := classloader.MethAreaFetch(classNameBigInteger)
 	if klass == nil {
-		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", bigIntegerClassName)
+		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", classNameBigInteger)
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -628,7 +628,7 @@ func bigIntegerAbs(params []interface{}) interface{} {
 	zz.Abs(xx)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -654,7 +654,7 @@ func bigIntegerAdd(params []interface{}) interface{} {
 	zz.Add(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -680,7 +680,7 @@ func bigIntegerAnd(params []interface{}) interface{} {
 	zz.And(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -706,7 +706,7 @@ func bigIntegerAndNot(params []interface{}) interface{} {
 	zz.AndNot(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -790,7 +790,7 @@ func bigIntegerDivide(params []interface{}) interface{} {
 	zz.Div(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -823,12 +823,12 @@ func bigIntegerDivideAndRemainder(params []interface{}) interface{} {
 	rr.Rem(xx, yy)
 
 	// Create xx / yy and xx % yy objects
-	obj1 := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
-	obj2 := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, rr)
+	obj1 := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
+	obj2 := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, rr)
 
 	// Create the return object with the object-array
 	var objectArray = []*object.Object{obj1, obj2}
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, objectArray)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, objectArray)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -882,7 +882,7 @@ func bigIntegerGCD(params []interface{}) interface{} {
 	zz.GCD(nil, nil, xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -943,7 +943,7 @@ func bigIntegerMax(params []interface{}) interface{} {
 	}
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -973,7 +973,7 @@ func bigIntegerMin(params []interface{}) interface{} {
 	}
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1004,7 +1004,7 @@ func bigIntegerMod(params []interface{}) interface{} {
 	zz.Mod(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1044,7 +1044,7 @@ func bigIntegerModInverse(params []interface{}) interface{} {
 	}
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1079,7 +1079,7 @@ func bigIntegerModPow(params []interface{}) interface{} {
 	zz.Exp(xx, ee, mm)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1114,7 +1114,7 @@ func bigIntegerMultiply(params []interface{}) interface{} {
 	zz.Mul(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1137,7 +1137,7 @@ func bigIntegerNegate(params []interface{}) interface{} {
 	zz.Neg(xx)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1160,7 +1160,7 @@ func bigIntegerNot(params []interface{}) interface{} {
 	zz.Not(xx)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1186,7 +1186,7 @@ func bigIntegerOr(params []interface{}) interface{} {
 	zz.Or(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1216,7 +1216,7 @@ func bigIntegerPow(params []interface{}) interface{} {
 	zz.Exp(xx, yy, nil)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1247,7 +1247,7 @@ func bigIntegerRemainder(params []interface{}) interface{} {
 	zz.Rem(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1268,7 +1268,7 @@ func bigIntegerProbablyPrime(params []interface{}) interface{} {
 	zz, errMsg := getPrime(int(bitLength))
 	if zz != nil {
 		// Create return object.
-		obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+		obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 		// Set signum field to the sign.
 		signum := zz.Sign()
@@ -1306,7 +1306,7 @@ func bigIntegerSqrt(params []interface{}) interface{} {
 	zz.Sqrt(xx)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1332,7 +1332,7 @@ func bigIntegerSubtract(params []interface{}) interface{} {
 	zz.Sub(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1391,7 +1391,7 @@ func bigIntegerValueOf(params []interface{}) interface{} {
 	// params[0]:  long value for returned big.Int object
 
 	argValue := params[0].(int64)
-	obj := object.MakeEmptyObjectWithClassName(&bigIntegerClassName)
+	obj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
 	InitBigIntegerField(obj, argValue)
 
 	return obj
@@ -1413,7 +1413,7 @@ func bigIntegerXor(params []interface{}) interface{} {
 	zz.Xor(xx, yy)
 
 	// Create return object
-	obj := object.MakePrimitiveObject(bigIntegerClassName, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := zz.Sign()
@@ -1421,4 +1421,46 @@ func bigIntegerXor(params []interface{}) interface{} {
 	obj.FieldTable["signum"] = fld
 
 	return obj
+}
+
+// "java/math/BigInteger.testBit(I)Z"
+func bigIntegerTestBit(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	bitN := int(params[1].(int64))
+	bi := obj.FieldTable["value"].Fvalue.(*big.Int)
+	if bi.Bit(bitN) == 1 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// "java/math/BigInteger.setBit(I)Ljava/math/BigInteger;"
+func bigIntegerSetBit(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	bitN := int(params[1].(int64))
+	fld := obj.FieldTable["value"]
+	bigInt := fld.Fvalue.(*big.Int)
+	newBigInt := new(big.Int).Set(bigInt)
+	newBigInt.SetBit(newBigInt, bitN, 1)
+	return object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, newBigInt)
+}
+
+// "java/math/BigInteger.shiftLeft(I)Ljava/math/BigInteger;"
+func bigIntegerShiftLeft(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	bitN := uint(params[1].(int64))
+	fld := obj.FieldTable["value"]
+	bigInt := fld.Fvalue.(*big.Int)
+	newBigInt := new(big.Int).Lsh(bigInt, bitN)
+	return object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, newBigInt)
+}
+
+// "java/math/BigInteger.shiftLeft(I)Ljava/math/BigInteger;"
+func bigIntegerShiftRight(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	bitN := uint(params[1].(int64))
+	fld := obj.FieldTable["value"]
+	bigInt := fld.Fvalue.(*big.Int)
+	newBigInt := new(big.Int).Rsh(bigInt, bitN)
+	return object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, newBigInt)
 }
