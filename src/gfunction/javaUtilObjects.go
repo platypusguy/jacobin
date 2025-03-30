@@ -13,9 +13,6 @@ import (
 	"jacobin/types"
 )
 
-// Implementation of some of the functions in Java/util/Locale.
-// Strategy: Locale = jacobin Object wrapping a Go string.
-
 func Load_Util_Objects() {
 
 	MethodSignatures["java/util/Objects.<clinit>()V"] =

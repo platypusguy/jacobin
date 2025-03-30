@@ -119,7 +119,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Lang_Long()
 	Load_Lang_Math()
 	Load_Lang_Object()
-	Load_Lang_Process_Handle_Impl()
+	Load_Lang_Process_Handle_Impl() // includes ProcessHandleImpl, ProcessHandle, and ProcessHandle.Info
 	Load_Lang_Runtime()
 	Load_Lang_SecurityManager()
 	Load_Lang_Short()
@@ -150,6 +150,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Util_Locale()
 	Load_Util_Properties()
 	Load_Util_Objects()
+	Load_Util_Optional()
 	Load_Util_Random()
 	Load_Util_Zip_Adler32()
 	Load_Util_Zip_Crc32_Crc32c()
