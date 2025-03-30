@@ -36,6 +36,7 @@ const LongArray = "[J"
 const RefArray = "[L"
 const RuneArray = CharArray // used only in strings that are not compact
 const ShortArray = "[S"
+const MultiArray = "[["
 
 // Jacobin-specific types
 const Interface = "i"

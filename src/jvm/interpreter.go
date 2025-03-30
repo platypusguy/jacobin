@@ -861,7 +861,8 @@ func doAastore(fr *frames.Frame, _ int64) int {
 	arrayObj := *arrayRef
 	rawArrayObj := arrayObj.FieldTable["value"]
 
-	if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) {
+	if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) &&
+		!strings.HasPrefix(rawArrayObj.Ftype, types.MultiArray) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, AASTORE: field type must start with '[L', got %s",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, rawArrayObj.Ftype)
