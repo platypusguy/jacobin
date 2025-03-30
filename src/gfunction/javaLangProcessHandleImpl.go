@@ -24,7 +24,7 @@ func Load_Lang_Process_Handle_Impl() {
 			GFunction:  processHandleImplClinit,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle.Info<clinit>()V"] =
+	MethodSignatures["java/lang/ProcessHandle$Info<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  clinitGeneric,
