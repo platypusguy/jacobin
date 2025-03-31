@@ -485,6 +485,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			kdf.NameStr = fullyParsedClass.utf8Refs[kdf.Name].content // temporarily include field name. JACOBIN-611
 			kdf.Desc = uint16(fullyParsedClass.fields[i].description)
 			kdf.IsStatic = fullyParsedClass.fields[i].isStatic
+			kdf.ConstValue = fullyParsedClass.fields[i].constValue
 			if len(fullyParsedClass.fields[i].attributes) > 0 {
 				for j := 0; j < len(fullyParsedClass.fields[i].attributes); j++ {
 					kdfa := Attr{}

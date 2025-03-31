@@ -270,40 +270,47 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		// is static and should be fetched from the Statics
 		// table.
 		fieldToAdd.Ftype = types.Static + presentType
+		if f.ConstValue != nil { // if the field has a constant value, set it
+			fieldToAdd.Fvalue = f.ConstValue
+		}
 	}
 
-	// static fields can have ConstantValue attributes,
-	// which specify their initial value.
-	if len(f.Attributes) > 0 {
-		for j := 0; j < len(f.Attributes); j++ {
-			attr := k.Data.CP.Utf8Refs[int(f.Attributes[j].AttrName)]
-			if attr == "ConstantValue" && f.IsStatic { // only statics can have ConstantValue attribute
-				valueIndex := int(f.Attributes[j].AttrContent[0])*256 +
-					int(f.Attributes[j].AttrContent[1])
-				valueType := k.Data.CP.CpIndex[valueIndex].Type
-				valueSlot := k.Data.CP.CpIndex[valueIndex].Slot
-				switch valueType {
-				case classloader.IntConst:
-					fieldToAdd.Fvalue = int64(k.Data.CP.IntConsts[valueSlot])
-				case classloader.LongConst:
-					fieldToAdd.Fvalue = k.Data.CP.LongConsts[valueSlot]
-				case classloader.FloatConst:
-					fieldToAdd.Fvalue = float64(k.Data.CP.Floats[valueSlot])
-				case classloader.DoubleConst:
-					fieldToAdd.Fvalue = k.Data.CP.Doubles[valueSlot]
-				case classloader.StringConst:
-					str := k.Data.CP.Utf8Refs[valueSlot]
-					fieldToAdd.Fvalue = object.StringObjectFromGoString(str)
-				default:
-					errMsg := fmt.Sprintf(
-						"createField: Unexpected ConstantValue type in instantiate: %d", valueType)
-					trace.Error(errMsg)
-					return nil, errors.New(errMsg)
-				} // end of ConstantValue type switch
-			} // end of ConstantValue attribute processing
-		} // end of processing attributes
-	} // end of search through attributes
-
+	/* The following code is no longer needed as it handled only the ConstValue attribute.
+		Howvever, at a future point, we may want to add the ability process other field attributes
+		and this code will give us a template for doing so.
+	    //
+		// static fields can have ConstantValue attributes,
+		// which specify their initial value.
+		if len(f.Attributes) > 0 {
+			for j := 0; j < len(f.Attributes); j++ {
+				attr := k.Data.CP.Utf8Refs[int(f.Attributes[j].AttrName)]
+				if attr == "ConstantValue" && f.IsStatic { // only statics can have ConstantValue attribute
+					valueIndex := int(f.Attributes[j].AttrContent[0])*256 +
+						int(f.Attributes[j].AttrContent[1])
+					valueType := k.Data.CP.CpIndex[valueIndex].Type
+					valueSlot := k.Data.CP.CpIndex[valueIndex].Slot
+					switch valueType {
+					case classloader.IntConst:
+						fieldToAdd.Fvalue = int64(k.Data.CP.IntConsts[valueSlot])
+					case classloader.LongConst:
+						fieldToAdd.Fvalue = k.Data.CP.LongConsts[valueSlot]
+					case classloader.FloatConst:
+						fieldToAdd.Fvalue = float64(k.Data.CP.Floats[valueSlot])
+					case classloader.DoubleConst:
+						fieldToAdd.Fvalue = k.Data.CP.Doubles[valueSlot]
+					case classloader.StringConst:
+						str := k.Data.CP.Utf8Refs[valueSlot]
+						fieldToAdd.Fvalue = object.StringObjectFromGoString(str)
+					default:
+						errMsg := fmt.Sprintf(
+							"createField: Unexpected ConstantValue type in instantiate: %d", valueType)
+						trace.Error(errMsg)
+						return nil, errors.New(errMsg)
+					} // end of ConstantValue type switch
+				} // end of ConstantValue attribute processing
+			} // end of processing attributes
+		} // end of search through attributes
+	*/
 	if f.IsStatic {
 		s := statics.Static{
 			Type:  presentType, // we use the type without the 'X' prefix in the statics table.

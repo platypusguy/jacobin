@@ -482,7 +482,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					if f.isStatic {
-						f.constValue = klass.intConsts[entryInCp.slot]
+						f.constValue = int64(klass.intConsts[entryInCp.slot])
 					} else {
 						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
@@ -496,7 +496,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					if f.isStatic {
-						f.constValue = klass.intConsts[entryInCp.slot]
+						f.constValue = int64(klass.intConsts[entryInCp.slot])
 					} else {
 						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
@@ -524,7 +524,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					if f.isStatic {
-						f.constValue = klass.floats[entryInCp.slot]
+						f.constValue = float64(klass.floats[entryInCp.slot])
 					} else {
 						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
@@ -538,7 +538,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					if f.isStatic {
-						f.constValue = klass.intConsts[entryInCp.slot]
+						f.constValue = int64(klass.intConsts[entryInCp.slot])
 					} else {
 						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}
@@ -566,7 +566,7 @@ func parseFields(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 							klass.utf8Refs[f.name].content)
 					}
 					if f.isStatic {
-						f.constValue = klass.intConsts[entryInCp.slot]
+						f.constValue = int64(klass.intConsts[entryInCp.slot])
 					} else {
 						f.constValue = nil // JVM spec says to ignore this attribute if field is not static
 					}

@@ -82,10 +82,11 @@ type AccessFlags struct {
 type Field struct {
 	AccessFlags int
 	NameStr     string
-	Name        uint16 // index of the UTF-8 entry in the CP
-	Desc        uint16 // index of the UTF-8 entry in the CP
-	IsStatic    bool   // is the field static?
-	Attributes  []Attr
+	Name        uint16      // index of the UTF-8 entry in the CP
+	Desc        uint16      // index of the UTF-8 entry in the CP
+	IsStatic    bool        // is the field static?
+	ConstValue  interface{} // if static and has constant value, it's stored here.
+	Attributes  []Attr      // all attributes for this field other than ConstantValue
 }
 
 // the methods of the class, including the constructors
