@@ -511,6 +511,9 @@ func checkGetfield() int {
 func checkGoto() int {
 	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+		errMsg := fmt.Sprintf("%s:\n GOTO at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpTo)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 	return 3
@@ -520,6 +523,9 @@ func checkGoto() int {
 func checkGotow() int {
 	jumpTo := int(types.FourBytesToInt64(Code[PC+1], Code[PC+2], Code[PC+3], Code[PC+4]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
+		errMsg := fmt.Sprintf("%s:\n GOTO_W at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpTo)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 	return 5
@@ -529,6 +535,9 @@ func checkGotow() int {
 func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
+		errMsg := fmt.Sprintf("%s:\n IF_ACMPEQ at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpSize)
+		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
 	return 3
