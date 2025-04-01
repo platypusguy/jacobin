@@ -448,8 +448,13 @@ var Code []byte
 
 func CheckCodeValidity(code []byte, cp *CPool) error {
 	// check that the code is valid
-	if code == nil || cp == nil {
-		errMsg := "CheckCodeValidity: nil code or constant pool"
+	if code == nil {
+		errMsg := "CheckCodeValidity: code to be checked is nil"
+		return errors.New(errMsg)
+	}
+
+	if cp == nil {
+		errMsg := "CheckCodeValidity: ptr to constant pool is nil"
 		return errors.New(errMsg)
 	}
 
