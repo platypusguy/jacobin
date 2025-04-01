@@ -1153,6 +1153,10 @@ func doIdiv(fr *frames.Frame, _ int64) int {
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
+		} else {
+			fs := fr.FrameStack
+			fr = fs.Front().Value.(*frames.Frame)
+			return 0
 		}
 	} else {
 		push(fr, val2/val1)
@@ -1193,6 +1197,10 @@ func doIrem(fr *frames.Frame, _ int64) int {
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
+		} else {
+			fs := fr.FrameStack
+			fr = fs.Front().Value.(*frames.Frame)
+			return 0
 		}
 	} else {
 		res := val1 % val2
