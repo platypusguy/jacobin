@@ -1154,9 +1154,10 @@ func doIdiv(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		} else {
+			// Make the current frame the caught exception frame.
 			fs := fr.FrameStack
 			fr = fs.Front().Value.(*frames.Frame)
-			return 0
+			return 0 // PC is already set up so indicate that to caller.
 		}
 	} else {
 		push(fr, val2/val1)
@@ -1198,9 +1199,10 @@ func doIrem(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		} else {
+			// Make the current frame the caught exception frame.
 			fs := fr.FrameStack
 			fr = fs.Front().Value.(*frames.Frame)
-			return 0
+			return 0 // PC is already set up so indicate that to caller.
 		}
 	} else {
 		res := val1 % val2
