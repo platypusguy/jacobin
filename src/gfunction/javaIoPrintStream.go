@@ -403,12 +403,18 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 					fmt.Fprintf(params[0].(*os.File), "class: %s, fields: ", className)
 				}
 				str = ""
+				count := 0
 				for name, _ := range inObj.FieldTable {
+					count += 1
 					if newLine {
 						str += fmt.Sprintf("%s=%s\n", name, object.ObjectFieldToString(inObj, name))
 					} else {
 						str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
 					}
+				}
+				if count < 1 {
+					str = "<none>"
+					break
 				}
 				if newLine {
 					fmt.Fprint(params[0].(*os.File), str)

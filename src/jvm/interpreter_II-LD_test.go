@@ -650,6 +650,7 @@ func TestNewIushr(t *testing.T) {
 	f := newFrame(opcodes.IUSHR)
 	push(&f, int64(-200))
 	push(&f, int64(3)) // shift right 3 bits
+	expected := int64(536870887)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -657,8 +658,8 @@ func TestNewIushr(t *testing.T) {
 
 	value := pop(&f).(int64)
 
-	if value != 25 { // 200 >> 3 = 25
-		t.Errorf("IUSHR: expected a result of 25, but got: %d", value)
+	if value != expected {
+		t.Errorf("IUSHR: expected a result of %d, but got: %d", expected, value)
 	}
 
 	if f.TOS != -1 {

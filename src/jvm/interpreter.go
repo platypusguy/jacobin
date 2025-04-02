@@ -1246,26 +1246,17 @@ func doIshl(fr *frames.Frame, _ int64) int {
 // 0x7A, 0x7B ISHR, LSHR shift int/long to the right
 func doIshr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
-	val1 := pop(fr).(int64)
-	var val2 int64
-	if val1 < 0 { // if neg, shift as pos, then make neg
-		val2 = (-val1) >> (shiftBy & 0x1F) // only the bottom five bits are used
-		push(fr, -val2)
-	} else {
-		push(fr, val1>>(shiftBy&0x1F)) // only the bottom five bits are used
-	}
+	value := pop(fr).(int64)
+	shiftedVal := value >> (shiftBy&0x1F)
+	push(fr, shiftedVal)
 	return 1
 }
 
 // 0x7C, 0x7D IUSHR, LUSHR unsigned shift right of int/long
 func doIushr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
-	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
-	val1 := pop(fr).(int64)
-	if val1 < 0 { // per spec, cancel the negative sign
-		val1 = -val1
-	}
-	shiftedVal := val1 >> ushiftBy
+	value := pop(fr).(int64)
+	shiftedVal := int64(uint32(value) >> (shiftBy & 0x1F))
 	push(fr, shiftedVal)
 	return 1
 }
