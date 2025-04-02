@@ -268,7 +268,10 @@ func PrintlnChar(params []interface{}) interface{} {
 // "java/io/PrintStream.println(I)V"
 // "java/io/PrintStream.println(S)V"
 func PrintlnBIS(params []interface{}) interface{} {
-	intToPrint := params[1].(int64) // contains an int
+	intToPrint, ok := params[1].(int64) // contains an int
+	if !ok {
+		intToPrint = int64(params[1].(int8))
+	}
 	fmt.Fprintln(params[0].(*os.File), intToPrint)
 	return nil
 }
@@ -318,7 +321,10 @@ func PrintChar(params []interface{}) interface{} {
 // "java/io/PrintStream.print(I)V"
 // "java/io/PrintStream.print(S)V"
 func PrintBIS(params []interface{}) interface{} {
-	intToPrint := params[1].(int64) // contains an int
+	intToPrint, ok := params[1].(int64) // contains an int
+	if !ok {
+		intToPrint = int64(params[1].(int8))
+	}
 	fmt.Fprint(params[0].(*os.File), intToPrint)
 	return nil
 }
