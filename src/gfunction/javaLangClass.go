@@ -23,12 +23,6 @@ import (
 
 func Load_Lang_Class() {
 
-	MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  getPrimitiveClass,
-		}
-
 	MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
 		GMeth{
 			ParamSlots: 0,
@@ -41,10 +35,16 @@ func Load_Lang_Class() {
 			GFunction:  getAssertionsEnabledStatus,
 		}
 
-	MethodSignatures["java/lang/Class.registerNatives()V"] =
+	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  getName,
+		}
+
+	MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  getPrimitiveClass,
 		}
 
 	MethodSignatures["java/lang/Class.isArray()Z"] =
@@ -53,10 +53,10 @@ func Load_Lang_Class() {
 			GFunction:  classIsArray,
 		}
 
-	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
+	MethodSignatures["java/lang/Class.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getName,
+			GFunction:  clinitGeneric,
 		}
 
 }
