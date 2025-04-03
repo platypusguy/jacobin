@@ -1247,7 +1247,7 @@ func doIshl(fr *frames.Frame, _ int64) int {
 func doIshr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
 	value := pop(fr).(int64)
-	shiftedVal := value >> (shiftBy&0x1F)
+	shiftedVal := value >> (shiftBy & 0x1F)
 	push(fr, shiftedVal)
 	return 1
 }
@@ -2247,7 +2247,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		return 3 // 2 for CP slot + 1 for next bytecode
 	}
 
-	if mtEntry.MType == 'J' { // it's a Java or Native function
+	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&0x0100 > 0 {
 			// Native code
@@ -2258,6 +2258,33 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
 		}
+
+		if len(m.Code) == 0 {
+			// empty code attribute, so check if it's abstract (which it should be)
+			if m.AccessFlags&0x0400 > 0 {
+				cl := peek(fr).(*object.Object)
+				clNameIdx := cl.KlassName
+				mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
+				if err != nil || mtEntry.Meth == nil {
+					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + className + "." + methodName + methodType
+					status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+					if status != exceptions.Caught {
+						return exceptions.ERROR_OCCURRED // applies only if in test
+					}
+				}
+				className = *(stringPool.GetStringPointer(clNameIdx))
+				m = mtEntry.Meth.(classloader.JmEntry)
+			} else {
+				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + className + "." + methodName + methodType
+				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
+				if status != exceptions.Caught {
+					return exceptions.ERROR_OCCURRED // applies only if in test
+				}
+			}
+		}
+
 		fram, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
