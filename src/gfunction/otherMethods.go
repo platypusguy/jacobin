@@ -110,6 +110,24 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["jdk/internal/misc/VM.initialize()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["jdk/internal/misc/CDS.getRandomSeedForDumping()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnRandomLong,
+		}
+
+	MethodSignatures["jdk/internal/misc/CDS.isDumpingClassList0()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
 	MethodSignatures["jdk/internal/util/ArraysSupport.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
