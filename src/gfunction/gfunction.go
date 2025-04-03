@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"crypto/rand"
 	"fmt"
 	"jacobin/classloader"
 	"jacobin/excNames"
@@ -277,4 +278,23 @@ func InitBigIntegerField(obj *object.Object, argValue int64) {
 		fldSign = object.Field{Ftype: types.BigInteger, Fvalue: int64(+1)}
 	}
 	obj.FieldTable["signum"] = fldSign
+}
+
+// Return a random long.
+func returnRandomLong([]interface{}) interface{} {
+	// Generate random int64.
+	var result int64
+	byteArray := make([]byte, 8) // int64 is 8 bytes
+	_, err := rand.Read(byteArray)
+	if err != nil {
+		trace.Warning(fmt.Sprintf("secureRandomNextInt: Failed to generate random int64: %v", err))
+		return int64(42)
+	}
+
+	// Convert bytes to int64.
+	for i := 0; i < 8; i++ {
+		result = (result << 8) | int64(byteArray[i])
+	}
+
+	return result
 }

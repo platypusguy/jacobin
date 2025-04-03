@@ -36,7 +36,7 @@ func Load_Lang_Object() {
 	MethodSignatures["java/lang/Object.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  objectEquals,
 		}
 
 	MethodSignatures["java/lang/Object.finalize()V"] =
@@ -177,4 +177,23 @@ func objectHashCode(params []interface{}) interface{} {
 
 	errMsg := fmt.Sprintf("objectHashCode: Unsupported parameter type: %T", params[0])
 	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+}
+
+func objectEquals(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	that, ok := params[1].(*object.Object)
+	if !ok {
+		return types.JavaBoolFalse
+	}
+
+	// If they are the same object, even if null, return true.
+	if this == that {
+		return types.JavaBoolTrue
+	}
+
+	// Not the same object.
+	return types.JavaBoolFalse
 }

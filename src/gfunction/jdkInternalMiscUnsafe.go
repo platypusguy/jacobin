@@ -9,7 +9,10 @@ package gfunction
 import (
 	"jacobin/excNames"
 	"jacobin/object"
+	"jacobin/trace"
+	"reflect"
 	"strings"
+	"unsafe"
 )
 
 /*
@@ -36,16 +39,22 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
+	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  arrayBaseOffset,
+			GFunction:  unsafeArrayBaseOffset,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
+	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayIndexScale(Ljava/lang/Class;)I"] =
 		GMeth{
-			ParamSlots: 2,
-			GFunction:  unsafeGetIntVolatile,
+			ParamSlots: 1,
+			GFunction:  unsafeArrayIndexScale,
+		}
+
+	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayIndexScale0(Ljava/lang/Class;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  unsafeArrayIndexScale0,
 		}
 
 	MethodSignatures["jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z"] =
@@ -60,6 +69,18 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  unsafeCompareAndSetInt,
 		}
 
+	MethodSignatures["jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  unsafeGetIntVolatile,
+		}
+
+	MethodSignatures["jdk/internal/misc/Unsafe.getLong(Ljava/lang/Object;J)J"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  unsafeGetLong,
+		}
+
 	MethodSignatures["jdk/internal/misc/Unsafe.getUnsafe()Ljdk/internal/misc/Unsafe;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -72,46 +93,35 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  unsafeObjectFieldOffset1,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  arrayIndexScale,
-		}
-
-	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  arrayIndexScale0,
-		}
 }
 
 var classUnsafeName = "jdk/internal/misc/Unsafe"
 
 // Return the number of bytes between the beginning of the object and the first element.
 // This is used in computing the pointer to a given element
-// "jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"
-func arrayBaseOffset(params []interface{}) interface{} {
+// "jdk/internal/misc/Unsafe.unsafeArrayBaseOffset(Ljava/lang/Class;)I"
+func unsafeArrayBaseOffset(params []interface{}) interface{} {
 	p := params[0]
 	if p == nil || p == object.Null {
-		errMsg := "arrayBaseOffset: Object is a null pointer"
+		errMsg := "unsafeArrayBaseOffset: Object is a null pointer"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 	return int64(0) // this should work...
 }
 
 // Return the size of the elements of an array
-func arrayIndexScale(params []interface{}) interface{} {
+func unsafeArrayIndexScale(params []interface{}) interface{} {
 	arrObj := params[0] // array class whose scale factor is to be returned
 	if arrObj == object.Null {
-		errMsg := "arrayIndexScale: Object is a null pointer"
+		errMsg := "unsafeArrayIndexScale: Object is a null pointer"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	return arrayIndexScale0(params)
+	return unsafeArrayIndexScale0(params)
 }
 
-// Utility fundtion that does the work of arrayIndexScale()
-func arrayIndexScale0(params []interface{}) interface{} {
+// Utility function that does the work of Unsafe.unsafeArrayIndexScale()
+func unsafeArrayIndexScale0(params []interface{}) interface{} {
 	// The array class is passed in as a string, so we need to convert it to an object
 	// to get the class name.
 	arrClass := params[0].(*object.Object).FieldTable["value"].Ftype
@@ -173,4 +183,35 @@ func unsafeGetUnsafe([]interface{}) interface{} {
 
 func unsafeObjectFieldOffset1([]interface{}) interface{} {
 	return int64(0)
+}
+
+func unsafeGetLong(params []interface{}) interface{} {
+	obj, ok := params[1].(*object.Object)
+	if !ok {
+		trace.Warning("unsafeGetLong: Not an object, returning 0")
+		return int64(0)
+	}
+	offset, ok := params[2].(int64)
+	if !ok {
+		trace.Warning("unsafeGetLong: Invalid offset, returning 0")
+		return int64(0)
+	}
+
+	// Get the reflect.Value of obj.
+	value := reflect.ValueOf(obj)
+
+	// Ensure that the reflect value is addressable.
+	if value.Kind() != reflect.Ptr {
+		trace.Warning("unsafeGetLong: Object must be a pointer, returning 0")
+		return int64(0)
+	}
+
+	// Get the unsafe pointer to the object.
+	ptr := unsafe.Pointer(value.Pointer())
+
+	// Compute the target memory location.
+	target := unsafe.Pointer(uintptr(ptr) + uintptr(offset))
+
+	// Read the int64 value at the computed address and hope for no ka-boom!
+	return *(*int64)(target)
 }
