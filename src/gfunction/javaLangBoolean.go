@@ -165,10 +165,10 @@ func booleanGetBoolean(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Call getProperty() to get the property value.
+	// Call systemGetProperty() to get the property value.
 	var sysParams []interface{}
 	sysParams = append(sysParams, object.StringObjectFromGoString(propName))
-	propObj := getProperty(sysParams).(*object.Object)
+	propObj := systemGetProperty(sysParams).(*object.Object)
 	propStr := object.GoStringFromStringObject(propObj)
 	switch propStr {
 	case "true":
@@ -178,7 +178,7 @@ func booleanGetBoolean(params []interface{}) interface{} {
 	}
 
 	// Neither true nor false ==> exception.
-	errMsg := fmt.Sprintf("booleanGetBoolean: getProperty returned neither \"true\" nor \"false\": %v", propStr)
+	errMsg := fmt.Sprintf("booleanGetBoolean: systemGetProperty returned neither \"true\" nor \"false\": %v", propStr)
 	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 }
 
