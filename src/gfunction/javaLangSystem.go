@@ -49,22 +49,28 @@ func Load_Lang_System() {
 			GFunction:  systemClinit,
 		}
 
+	MethodSignatures["java/lang/System.allowSecurityManager()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
 	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
 			ParamSlots: 5,
 			GFunction:  arrayCopy,
 		}
 
+	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getConsole,
+		}
+
 	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  currentTimeMillis,
-		}
-
-	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  nanoTime,
 		}
 
 	MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
@@ -79,22 +85,16 @@ func Load_Lang_System() {
 			GFunction:  forceGC,
 		}
 
-	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;)Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  getProperty,
-		}
-
-	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  getConsole,
-		}
-
 	MethodSignatures["java/lang/System.getenv(Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  systemGetenv,
+		}
+
+	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  systemGetProperty,
 		}
 
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
@@ -103,10 +103,10 @@ func Load_Lang_System() {
 			GFunction:  systemGetSecurityManager,
 		}
 
-	MethodSignatures["java/lang/System.allowSecurityManager()Z"] =
+	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  returnFalse,
+			GFunction:  nanoTime,
 		}
 
 	MethodSignatures["java/lang/System.registerNatives()V"] =
@@ -339,16 +339,26 @@ func systemGetSecurityManager(params []interface{}) interface{} {
 	return object.MakePrimitiveObject("java/lang/SecurityManager", types.Int, 42)
 }
 
-// Get a property
-func getProperty(params []interface{}) interface{} {
+// Get a system property - high level function.
+func systemGetProperty(params []interface{}) interface{} {
 	propObj := params[0].(*object.Object) // string
 	propStr := object.GoStringFromStringObject(propObj)
 
+	value := getProperty(propStr)
+
+	if value == "" {
+		return object.Null
+	}
+	obj := object.StringObjectFromGoString(value)
+	return obj
+}
+
+func getProperty(arg string) string {
 	var value string
 	g := globals.GetGlobalRef()
 	operSys := runtime.GOOS
 
-	switch propStr {
+	switch arg {
 	case "file.encoding":
 		value = g.FileEncoding
 	case "file.separator":
@@ -414,9 +424,8 @@ func getProperty(params []interface{}) interface{} {
 		now := time.Now()
 		value, _ = now.Zone()
 	default:
-		return object.Null
+		value = ""
 	}
 
-	obj := object.StringObjectFromGoString(value)
-	return obj
+	return value
 }
