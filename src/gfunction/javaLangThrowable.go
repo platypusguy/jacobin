@@ -68,18 +68,18 @@ func Load_Lang_Throwable() {
 func throwableClinit([]interface{}) interface{} {
 	emptyStackTraceElementArray := object.Make1DimRefArray("java/lang/StackTraceElement", 0)
 	_ = statics.AddStatic("Throwable.UNASSIGNED_STACK", statics.Static{
-		Type:  "[Ljava/lang/StackTraceElement",
+		Type:  "[Ljava/lang/StackTraceElement;",
 		Value: emptyStackTraceElementArray,
 	})
 
 	// for the time being, SUPPRESSED SENTINEL is set to nil.
 	// We might later need to set it to an empty List.
 	_ = statics.AddStatic("Throwable.SUPPRESSED_SENTINEL", statics.Static{
-		Type: "Ljava/util/List", Value: nil})
+		Type: "Ljava/util/List;", Value: nil})
 
 	emptyThrowableArray := object.Make1DimRefArray("java/lang/Throwable", 0)
 	_ = statics.AddStatic("Throwable.EMPTY_THROWABLE_ARRAY", statics.Static{
-		Type:  "[Ljava/lang/Throwable",
+		Type:  "[Ljava/lang/Throwable;",
 		Value: emptyThrowableArray,
 	})
 	return nil

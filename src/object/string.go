@@ -275,3 +275,16 @@ func GoStringFromJavaCharArray(inArray []int64) string {
 	}
 	return sb.String()
 }
+
+// EqualStringObjects: Compare two string objects for equality.
+func EqualStringObjects(argA, argB *Object) bool {
+	if !IsStringObject(argA) {
+		return false
+	}
+	if !IsStringObject(argB) {
+		return false
+	}
+	strA := GoStringFromStringObject(argA)
+	strB := GoStringFromStringObject(argB)
+	return strA == strB
+}
