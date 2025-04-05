@@ -148,6 +148,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Util_Hash_Map()
 	Load_Util_Hash_Set()
 	Load_Util_HexFormat()
+	Load_Util_LinkedList()
 	Load_Util_Locale()
 	Load_Util_Properties()
 	Load_Util_Objects()
