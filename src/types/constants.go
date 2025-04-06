@@ -25,6 +25,7 @@ var ObjectPoolStringIndex = uint32(2) // points to the string pool slice for "ja
 // Constants related to "java/lang/String":
 var StringClassName = "java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
+var ModuleClassRef = "Ljava/lang/Module;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
 var EmptyString = ""
 var NullString = "null"

@@ -23,6 +23,9 @@ import (
 
 func Load_Lang_Class() {
 
+	// There is no <clinit> for java/lang/Class.
+	// The <clinit> type of code is executed in gfunction.go classClinitIsh().
+
 	MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
 		GMeth{
 			ParamSlots: 0,
@@ -33,6 +36,12 @@ func Load_Lang_Class() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  getAssertionsEnabledStatus,
+		}
+
+	MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  classGetModule,
 		}
 
 	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
@@ -159,4 +168,13 @@ func classIsArray(params []interface{}) interface{} {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+// classgetModule returns the unnamed module for any Class object
+func classGetModule(params []interface{}) interface{} {
+	if unnamedModule == nil {
+		errMsg := "classGetModule: unnamed module not initialized"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+	return unnamedModule
 }
