@@ -122,7 +122,25 @@ func Load_Other_methods() {
 			GFunction:  returnRandomLong,
 		}
 
+	MethodSignatures["jdk/internal/misc/CDS.initializeFromArchive(Ljava/lang/Class;)V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
+	MethodSignatures["jdk/internal/misc/CDS.isDumpingArchive0()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
 	MethodSignatures["jdk/internal/misc/CDS.isDumpingClassList0()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
+	MethodSignatures["jdk/internal/misc/CDS.isSharingEnabled0()Z"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  returnFalse,
