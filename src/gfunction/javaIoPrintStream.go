@@ -471,7 +471,12 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	// Handle null strings as well as []byte.
-	fld := param1.FieldTable["value"]
+	fld, ok := param1.FieldTable["value"]
+	if !ok {
+		className := object.GoStringFromStringPoolIndex(param1.KlassName)
+		errMsg := fmt.Sprintf("_printString: Class %s (String?), \"value\" field is missing", className)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	if fld.Fvalue == nil {
 		str = ""
 	} else {

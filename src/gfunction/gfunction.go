@@ -114,6 +114,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	Load_Lang_Byte()
 	Load_Lang_Character()
 	Load_Lang_Class()
+	classClinitIsh()
 	Load_Lang_Double()
 	Load_Lang_Float()
 	Load_Lang_Integer()
@@ -298,4 +299,39 @@ func returnRandomLong([]interface{}) interface{} {
 	}
 
 	return result
+}
+
+// Class is handled special because the natural <clinit> function is never called.
+/*
+JVM spec:
+"The java.lang.Class class is automatically initialized when the JVM is started. However, because it is
+so tightly integrated with the JVM itself, its static initializer is not necessarily
+run in the same way as other classes."
+*/
+
+var unnamedModule = object.Null
+var classNameModule = "java/lang/Module"
+
+// Called from <clinit> of java/lang/Class
+func classClinitIsh() {
+	// Initialize the unnamedModule singleton.
+	if unnamedModule == nil {
+		unnamedModule = &object.Object{
+			KlassName: object.StringPoolIndexFromGoString(classNameModule),
+			FieldTable: map[string]object.Field{
+				"name": {
+					Ftype:  types.StringClassRef,
+					Fvalue: nil,
+				},
+				"isNamed": {
+					Ftype:  types.Bool,
+					Fvalue: types.JavaBoolFalse,
+				},
+				"value": {
+					Ftype:  types.ModuleClassRef,
+					Fvalue: nil,
+				},
+			},
+		}
+	}
 }

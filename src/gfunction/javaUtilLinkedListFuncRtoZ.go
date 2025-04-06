@@ -395,3 +395,272 @@ func linkedlistSort(args []interface{}) interface{} {
 
 	return nil
 }
+
+func linkedlistToArray(args []interface{}) interface{} {
+	if len(args) != 1 {
+		errMsg := "linkedlistToArray: expected 1 argument (list object)"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	listObj, ok := args[0].(*object.Object)
+	if !ok || listObj == nil {
+		errMsg := "linkedlistToArray: argument is not a valid list object"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	field, ok := listObj.FieldTable["value"]
+	if !ok || field.Ftype != types.LinkedList {
+		errMsg := "linkedlistToArray: list object has no value field of type LinkedList"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+
+	ll, ok := field.Fvalue.(*list.List)
+	if !ok {
+		errMsg := "linkedlistToArray: value field is not a *list.List"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+
+	n := ll.Len()
+	result := make([]interface{}, n)
+
+	i := 0
+	for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+		result[i] = e.Value
+	}
+
+	arrayObj := &object.Object{
+		FieldTable: map[string]object.Field{
+			"value": {
+				Ftype:  "[Ljava/lang/Object;",
+				Fvalue: result,
+			},
+		},
+	}
+
+	return arrayObj
+}
+
+func linkedlistToArrayTyped(args []interface{}) interface{} {
+	if len(args) != 2 {
+		errMsg := "linkedlistToArrayTyped: expected 2 arguments (list object, array)"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	listObj, ok := args[0].(*object.Object)
+	if !ok || listObj == nil {
+		errMsg := "linkedlistToArrayTyped: first argument is not a valid list object"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	arrayObj, ok := args[1].(*object.Object)
+	if !ok || arrayObj == nil {
+		errMsg := "linkedlistToArrayTyped: second argument is not a valid array object"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	// Extracting the linked list from the list object
+	listField, ok := listObj.FieldTable["value"]
+	if !ok || listField.Ftype != types.LinkedList {
+		errMsg := "linkedlistToArrayTyped: list object does not contain a LinkedList in value field"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+
+	ll, ok := listField.Fvalue.(*list.List)
+	if !ok {
+		errMsg := "linkedlistToArrayTyped: value field is not a *list.List"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+
+	// Extracting the array from the second argument
+	arrayField, ok := arrayObj.FieldTable["value"]
+	if !ok || arrayField.Ftype[0] != '[' {
+		errMsg := "linkedlistToArrayTyped: array argument is not an array"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	listLen := ll.Len()
+	runtimeType := arrayField.Ftype
+	klass := arrayObj.KlassName
+
+	// Switch to handle different array types
+	switch input := arrayField.Fvalue.(type) {
+	case []interface{}:
+		if len(input) >= listLen {
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				input[i] = e.Value
+			}
+			if len(input) > listLen {
+				input[listLen] = nil
+			}
+			return arrayObj
+		} else {
+			newArr := make([]interface{}, listLen)
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				newArr[i] = e.Value
+			}
+			return &object.Object{
+				KlassName: klass,
+				FieldTable: map[string]object.Field{
+					"value": {
+						Ftype:  runtimeType,
+						Fvalue: newArr,
+					},
+				},
+			}
+		}
+
+	case []*object.Object:
+		if len(input) >= listLen {
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				obj, ok := e.Value.(*object.Object)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not an *object.Object"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				input[i] = obj
+			}
+			if len(input) > listLen {
+				input[listLen] = nil
+			}
+			return arrayObj
+		} else {
+			newArr := make([]*object.Object, listLen)
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				obj, ok := e.Value.(*object.Object)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not an *object.Object"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				newArr[i] = obj
+			}
+			return &object.Object{
+				KlassName: klass,
+				FieldTable: map[string]object.Field{
+					"value": {
+						Ftype:  runtimeType,
+						Fvalue: newArr,
+					},
+				},
+			}
+		}
+
+	case []int64:
+		if len(input) >= listLen {
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(int64)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not an int64"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				input[i] = val
+			}
+			if len(input) > listLen {
+				input[listLen] = 0
+			}
+			return arrayObj
+		} else {
+			newArr := make([]int64, listLen)
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(int64)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not an int64"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				newArr[i] = val
+			}
+			return &object.Object{
+				KlassName: klass,
+				FieldTable: map[string]object.Field{
+					"value": {
+						Ftype:  runtimeType,
+						Fvalue: newArr,
+					},
+				},
+			}
+		}
+
+	case []float64:
+		if len(input) >= listLen {
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(float64)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not a float64"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				input[i] = val
+			}
+			if len(input) > listLen {
+				input[listLen] = 0.0
+			}
+			return arrayObj
+		} else {
+			newArr := make([]float64, listLen)
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(float64)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not a float64"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				newArr[i] = val
+			}
+			return &object.Object{
+				KlassName: klass,
+				FieldTable: map[string]object.Field{
+					"value": {
+						Ftype:  runtimeType,
+						Fvalue: newArr,
+					},
+				},
+			}
+		}
+
+	case []types.JavaByte:
+		if len(input) >= listLen {
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(types.JavaByte)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not a types.JavaByte"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				input[i] = val
+			}
+			if len(input) > listLen {
+				input[listLen] = 0
+			}
+			return arrayObj
+		} else {
+			newArr := make([]types.JavaByte, listLen)
+			i := 0
+			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
+				val, ok := e.Value.(types.JavaByte)
+				if !ok {
+					errMsg := "linkedlistToArrayTyped: element is not a types.JavaByte"
+					return getGErrBlk(excNames.ArrayStoreException, errMsg)
+				}
+				newArr[i] = val
+			}
+			return &object.Object{
+				KlassName: klass,
+				FieldTable: map[string]object.Field{
+					"value": {
+						Ftype:  runtimeType,
+						Fvalue: newArr,
+					},
+				},
+			}
+		}
+
+	default:
+		errMsg := "linkedlistToArrayTyped: unsupported array type"
+		return getGErrBlk(excNames.ArrayStoreException, errMsg)
+	}
+}

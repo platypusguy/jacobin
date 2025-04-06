@@ -88,6 +88,12 @@ func Load_Util_LinkedList() {
 			GFunction:  linkedlistContains,
 		}
 
+	MethodSignatures["java/util/LinkedList.descendingIterator()Ljava/util/Iterator;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/util/LinkedList.element()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -124,10 +130,22 @@ func Load_Util_LinkedList() {
 			GFunction:  linkedlistIsEmpty,
 		}
 
+	MethodSignatures["java/util/LinkedList.iterator()Ljava/util/Iterator;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/util/LinkedList.lastIndexOf(Ljava/lang/Object;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  linkedlistLastIndexOf,
+		}
+
+	MethodSignatures["java/util/LinkedList.listIterator(I)Ljava/util/ListIterator;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/util/LinkedList.offer(Ljava/lang/Object;)Z"] =
@@ -272,15 +290,14 @@ func Load_Util_LinkedList() {
 	MethodSignatures["java/util/LinkedList.toArray()[Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  linkedlistToArray,
 		}
 
 	MethodSignatures["java/util/LinkedList.toArray([Ljava/lang/Object;)[Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  linkedlistToArrayTyped,
 		}
-
 }
 
 var classNameLinkedList = "java/util/LinkedList"
