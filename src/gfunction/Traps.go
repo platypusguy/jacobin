@@ -90,17 +90,23 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/util/Iterator.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
 	MethodSignatures["java/io/PipedWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/io/PrintWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
+	/*MethodSignatures["java/io/PrintWriter.<clinit>()V"] =
+	GMeth{
+		ParamSlots: 0,
+		GFunction:  trapClass,
+	}*/
 
 	MethodSignatures["java/io/StringWriter.<clinit>()V"] =
 		GMeth{
