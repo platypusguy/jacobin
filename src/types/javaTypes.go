@@ -42,14 +42,6 @@ const MultiArray = "[["
 const Interface = "i"
 const NonArrayObject = "n"
 
-const StringIndex = "T" // The index into the string pool
-const GolangString = "G"
-const FileHandle = "FH" // The related Fvalue is a Golang *os.File
-const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
-const HashMap = "HM"    // The related Fvalue is a Golang map[interface{}]interface{}
-const Properties = "PT" // The related Fvalue is a Golang map[interface{}]interface{}
-const LinkedList = "LL" // The related Fvalue is a Golang *List
-
 type DefHashMap map[any]any
 type DefProperties map[string]string
 
@@ -61,6 +53,16 @@ const GoMeth = "G" // a go mehod
 
 const Error = "0"  // if an error occurred in getting a type
 const Struct = "9" // used primarily in returning items from the CP
+
+const StringIndex = "T" // The index into the string pool
+const GolangString = "G"
+
+// References to types created and used in gfunctions
+const BigInteger = "*BI" // The related Fvalue is a Golang *big.Int
+const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
+const HashMap = "*HM"    // The related Fvalue is a Golang map[interface{}]interface{}
+const LinkedList = "*LL" // The related Fvalue is a Golang *List
+const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
 
 func IsIntegral(t string) bool {
 	if t == Byte || t == Char || t == Int ||
