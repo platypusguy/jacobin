@@ -44,10 +44,12 @@ const NonArrayObject = "n"
 
 const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
-const FileHandle = "FH" // The related Fvalue is a Golang *os.File
-const BigInteger = "BI" // The related Fvalue is a Golang *big.Int
-const HashMap = "HM"    // The related Fvalue is a Golang map[interface{}]interface{}
-const Properties = "PT" // The related Fvalue is a Golang map[interface{}]interface{}
+
+// References to various objects used in gfunctions
+const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
+const BigInteger = "*BI" // The related Fvalue is a Golang *big.Int
+const HashMap = "*HM"    // The related Fvalue is a Golang map[interface{}]interface{}
+const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
 type DefHashMap map[any]any
 type DefProperties map[string]string
 
