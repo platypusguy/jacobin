@@ -395,49 +395,53 @@ func Printf(params []interface{}) interface{} {
 // Called by PrintObject and PrintlnObject
 func _printObject(params []interface{}, newLine bool) interface{} {
 	var str string
-	switch params[1].(type) {
-	case *object.Object:
-		inObj := params[1].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "FilePath")
-		if str == types.NullString {
-			str = object.ObjectFieldToString(inObj, "value")
+	if params[1] == nil || object.IsNull(params[1]) {
+		str = "null"
+	} else {
+		switch params[1].(type) {
+		case *object.Object:
+			inObj := params[1].(*object.Object)
+			str = object.ObjectFieldToString(inObj, "FilePath")
 			if str == types.NullString {
-				className := object.GoStringFromStringPoolIndex(inObj.KlassName)
-				if newLine {
-					fmt.Fprintf(params[0].(*os.File), "class: %s, fields:\n", className)
-				} else {
-					fmt.Fprintf(params[0].(*os.File), "class: %s, fields: ", className)
-				}
-				str = ""
-				count := 0
-				for name, _ := range inObj.FieldTable {
-					count += 1
+				str = object.ObjectFieldToString(inObj, "value")
+				if str == types.NullString {
+					className := object.GoStringFromStringPoolIndex(inObj.KlassName)
 					if newLine {
-						str += fmt.Sprintf("%s=%s\n", name, object.ObjectFieldToString(inObj, name))
+						fmt.Fprintf(params[0].(*os.File), "class: %s, fields:\n", className)
 					} else {
-						str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+						fmt.Fprintf(params[0].(*os.File), "class: %s, fields: ", className)
+					}
+					str = ""
+					count := 0
+					for name, _ := range inObj.FieldTable {
+						count += 1
+						if newLine {
+							str += fmt.Sprintf("%s=%s\n", name, object.ObjectFieldToString(inObj, name))
+						} else {
+							str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
+						}
+					}
+					if count < 1 {
+						str = "<none>"
+						break
+					}
+					if newLine {
+						fmt.Fprint(params[0].(*os.File), str)
+						return nil
+					} else {
+						str = str[:len(str)-2]
+						fmt.Fprint(params[0].(*os.File), str)
+						return nil
 					}
 				}
-				if count < 1 {
-					str = "<none>"
-					break
-				}
-				if newLine {
-					fmt.Fprint(params[0].(*os.File), str)
-					return nil
-				} else {
-					str = str[:len(str)-2]
-					fmt.Fprint(params[0].(*os.File), str)
-					return nil
-				}
-			}
 
+			}
+		case nil:
+			str = types.NullString
+		default:
+			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-	case nil:
-		str = types.NullString
-	default:
-		errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	if newLine {
@@ -471,23 +475,27 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	// Handle null strings as well as []byte.
-	fld, ok := param1.FieldTable["value"]
-	if !ok {
-		className := object.GoStringFromStringPoolIndex(param1.KlassName)
-		errMsg := fmt.Sprintf("_printString: Class %s (String?), \"value\" field is missing", className)
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	if fld.Fvalue == nil {
-		str = ""
+	if param1 == nil || object.IsNull(param1) {
+		str = "null"
 	} else {
-		switch fld.Fvalue.(type) {
-		case []byte:
-			str = string(fld.Fvalue.([]byte))
-		case []types.JavaByte:
-			str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-		default:
-			errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+		fld, ok := param1.FieldTable["value"]
+		if !ok {
+			className := object.GoStringFromStringPoolIndex(param1.KlassName)
+			errMsg := fmt.Sprintf("_printString: Class %s (String?), \"value\" field is missing", className)
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		if fld.Fvalue == nil {
+			str = ""
+		} else {
+			switch fld.Fvalue.(type) {
+			case []byte:
+				str = string(fld.Fvalue.([]byte))
+			case []types.JavaByte:
+				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			default:
+				errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+				return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+			}
 		}
 	}
 

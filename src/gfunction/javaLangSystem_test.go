@@ -535,9 +535,10 @@ func TestGetProperty_OsVersion(t *testing.T) {
 	propObj := object.StringObjectFromGoString("os.version")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
-	expected := object.StringObjectFromGoString("not yet available")
-	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+	observed := object.GoStringFromStringObject(result.(*object.Object))
+	errPhrase := "cmd.CombinedOutput() failed"
+	if strings.Contains(observed, errPhrase) {
+		t.Errorf("Was not expecting: %s", observed)
 	}
 }
 

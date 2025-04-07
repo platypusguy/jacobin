@@ -18,11 +18,13 @@ import (
 	"jacobin/trace"
 	"jacobin/types"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 /*
@@ -409,7 +411,7 @@ func getProperty(arg string) string {
 	case "os.name":
 		value = operSys
 	case "os.version":
-		value = "not yet available"
+		value = getOSVersion()
 	case "path.separator":
 		value = string(os.PathSeparator)
 	case "user.dir": // present working directory
@@ -428,4 +430,32 @@ func getProperty(arg string) string {
 	}
 
 	return value
+}
+
+// getOSVersion: Get the O/S version string and return it to caller.
+func getOSVersion() string {
+	var cmd *exec.Cmd
+
+	operSys := runtime.GOOS
+	switch operSys {
+	case "windows":
+		cmd = exec.Command("cmd", "/C", "ver")
+	default:
+		cmd = exec.Command("uname", "-r")
+	}
+
+	cmdBytes, err := cmd.CombinedOutput()
+	if err != nil {
+		errMsg := fmt.Sprintf("getOSVersion: cmd.CombinedOutput() failed on %s: %v", operSys, err)
+		return errMsg
+	}
+
+	var cleanBytes []byte
+	for ix := 0; ix < len(cmdBytes); ix++ {
+		if unicode.IsPrint(rune(cmdBytes[ix])) {
+			cleanBytes = append(cleanBytes, cmdBytes[ix])
+		}
+	}
+
+	return string(cleanBytes)
 }
