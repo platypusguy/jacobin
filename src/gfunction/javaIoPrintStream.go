@@ -471,23 +471,27 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	// Handle null strings as well as []byte.
-	fld, ok := param1.FieldTable["value"]
-	if !ok {
-		className := object.GoStringFromStringPoolIndex(param1.KlassName)
-		errMsg := fmt.Sprintf("_printString: Class %s (String?), \"value\" field is missing", className)
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	if fld.Fvalue == nil {
-		str = ""
+	if object.IsNull(param1) {
+		str = "null"
 	} else {
-		switch fld.Fvalue.(type) {
-		case []byte:
-			str = string(fld.Fvalue.([]byte))
-		case []types.JavaByte:
-			str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-		default:
-			errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+		fld, ok := param1.FieldTable["value"]
+		if !ok {
+			className := object.GoStringFromStringPoolIndex(param1.KlassName)
+			errMsg := fmt.Sprintf("_printString: Class %s (String?), \"value\" field is missing", className)
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		if fld.Fvalue == nil {
+			str = ""
+		} else {
+			switch fld.Fvalue.(type) {
+			case []byte:
+				str = string(fld.Fvalue.([]byte))
+			case []types.JavaByte:
+				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			default:
+				errMsg := fmt.Sprintf("_printString: Expected value field to be type byte but observed type %T\n", fld.Fvalue)
+				return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+			}
 		}
 	}
 
