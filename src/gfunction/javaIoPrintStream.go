@@ -471,7 +471,7 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	// Handle null strings as well as []byte.
-	if object.IsNull(param1) {
+	if param1 == nil || object.IsNull(param1) {
 		str = "null"
 	} else {
 		fld, ok := param1.FieldTable["value"]
