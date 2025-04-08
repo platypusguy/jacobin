@@ -458,28 +458,16 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 		switch params[1].(type) {
 		case *object.Object:
 			inObj := params[1].(*object.Object)
-			str = object.ObjectFieldToString(inObj, "FilePath")
-			if str == types.NullString {
-				str = object.ObjectFieldToString(inObj, "value")
-				if str == types.NullString {
-					className := object.GetClassNameSuffix(inObj, true)
-					fmt.Fprintf(params[0].(*os.File), "%s{", className)
-					str = ""
-					count := 0
-					for name, field := range inObj.FieldTable {
-						count += 1
-						str += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
-					}
-					str = str[:len(str)-2] + "}"
-					if newLine {
-						fmt.Fprintln(params[0].(*os.File), str)
-						return nil
-					} else {
-						fmt.Fprint(params[0].(*os.File), str)
-						return nil
-					}
-				}
-
+			for name, field := range inObj.FieldTable {
+				str += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
+			}
+			str = str[:len(str)-2] + "}"
+			if newLine {
+				fmt.Fprintln(params[0].(*os.File), str)
+				return nil
+			} else {
+				fmt.Fprint(params[0].(*os.File), str)
+				return nil
 			}
 		default:
 			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])

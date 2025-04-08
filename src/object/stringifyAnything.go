@@ -1,6 +1,7 @@
 package object
 
 import (
+	"container/list"
 	"encoding/hex"
 	"fmt"
 	"jacobin/types"
@@ -127,7 +128,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			// Format a small report of the class name and the FieldTable.
 			// Concoct a string buffer formatted as: class{name1=value1, name2=value2, ...}.
 			strBuffer := classNameSuffix + "{"
-			for name, _ := range obj.FieldTable {
+			for name := range obj.FieldTable {
 				strBuffer += name + "=" + ObjectFieldToString(obj, name) + ", "
 			}
 			return strBuffer[:len(strBuffer)-2] + "}"
@@ -145,7 +146,11 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.StringClassRef:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case types.Byte:
-			return "0x" + hex.EncodeToString([]byte{fld.Fvalue.(byte)})
+			ba1 := []byte{byte(fld.Fvalue.(types.JavaByte))}
+			return "0x" + hex.EncodeToString(ba1)
+		case types.ByteArray:
+			bytes := GoByteArrayFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			return "0x" + hex.EncodeToString(bytes)
 		case types.Bool:
 			if fld.Fvalue == types.JavaBoolTrue {
 				return "true"
@@ -157,6 +162,16 @@ func StringifyAnythingGo(arg interface{}) string {
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
 		case types.BigInteger:
 			return fmt.Sprint(fld.Fvalue)
+		case types.LinkedList:
+			strBuffer := "["
+			llst := fld.Fvalue.(*list.List)
+			element := llst.Front()
+			for ix := 0; ix < llst.Len(); ix++ {
+				strBuffer += StringifyAnythingGo(element.Value)
+				strBuffer += ", "
+				element = element.Next()
+			}
+			return strBuffer[:len(strBuffer)-2] + "]"
 		default:
 			errMsg := fmt.Sprintf("StringifyAnythingGo: unrecognized argument type, value: %T, %v", arg, arg)
 			return errMsg

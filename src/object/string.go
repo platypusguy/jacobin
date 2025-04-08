@@ -261,7 +261,7 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 
 	// None of the above!
 	// Just return the class name, field name, and the field type.
-	result := fmt.Sprintf("ObjectFieldToString UNRECOGNIZED FTYPE: %s.%s(Ftype: %s, Fvalue: %v)",
+	result := fmt.Sprintf("%s.%s(Ftype: %s, Fvalue: %v)",
 		GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype, fld.Fvalue)
 	return result
 
