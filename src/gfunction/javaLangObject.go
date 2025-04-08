@@ -152,13 +152,11 @@ func objectGetClass(params []interface{}) interface{} {
 // "java/lang/Object.toString()Ljava/lang/String;"
 func objectToString(params []interface{}) interface{} {
 	// params[0]: input Object
-	var str string
 
 	switch params[0].(type) {
 	case *object.Object:
 		inObj := params[0].(*object.Object)
-		str = object.ObjectFieldToString(inObj, "value")
-		return object.StringObjectFromGoString(str)
+		return object.StringifyAnythingJava(inObj)
 	}
 
 	errMsg := fmt.Sprintf("objectToString: Unsupported parameter type: %T", params[0])
