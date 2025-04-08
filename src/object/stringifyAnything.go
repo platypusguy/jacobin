@@ -146,7 +146,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.StringClassRef:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case types.Byte:
-			ba1 := []byte{byte(fld.Fvalue.(types.JavaByte))}
+			ba1 := []byte{byte(fld.Fvalue.(int64))}
 			return "0x" + hex.EncodeToString(ba1)
 		case types.ByteArray:
 			bytes := GoByteArrayFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
