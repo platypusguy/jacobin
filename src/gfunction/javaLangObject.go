@@ -156,6 +156,10 @@ func objectToString(params []interface{}) interface{} {
 	switch params[0].(type) {
 	case *object.Object:
 		inObj := params[0].(*object.Object)
+		classNameSuffix := object.GetClassNameSuffix(inObj, false)
+		if classNameSuffix == "LinkedList" {
+			return linkedlistToString(params)
+		}
 		return object.StringifyAnythingJava(inObj)
 	}
 

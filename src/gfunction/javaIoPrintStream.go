@@ -458,6 +458,8 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 		switch params[1].(type) {
 		case *object.Object:
 			inObj := params[1].(*object.Object)
+			classNameSuffix := object.GetClassNameSuffix(inObj, true)
+			str := classNameSuffix + "{"
 			for name, field := range inObj.FieldTable {
 				str += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
 			}

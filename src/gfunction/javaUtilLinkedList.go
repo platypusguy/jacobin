@@ -315,6 +315,7 @@ func linkedlistInit(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, "linkedlistInit: Invalid self argument")
 	}
 
+	object.ClearFieldTable(self)
 	self.FieldTable["value"] = object.Field{
 		Ftype:  types.LinkedList,
 		Fvalue: list.New(),

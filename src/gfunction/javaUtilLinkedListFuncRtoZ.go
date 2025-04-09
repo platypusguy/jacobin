@@ -666,17 +666,35 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 }
 
 func linkedlistToString(params []interface{}) interface{} {
+	// Get the linked list.
 	obj, ok := params[0].(*object.Object)
 	if !ok || obj == nil {
 		errMsg := "linkedlistToString: Not a valid list object"
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
-
 	field, ok := obj.FieldTable["value"]
 	if !ok || field.Ftype != types.LinkedList {
 		errMsg := "linkedlistToString: Field is not a valid linked list"
-		return getGErrBlk(excNames.NullPointerException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	llst, ok := field.Fvalue.(*list.List)
+	if !ok || field.Ftype != types.LinkedList {
+		errMsg := "linkedlistToString: Linked list is corrupt"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	return object.StringifyAnythingJava(field)
+	// Walk the linked list, appending its elements to the string buffer.
+	classNameSuffix := object.GetClassNameSuffix(obj, false)
+	strBuffer := classNameSuffix + "{"
+	counter := 0
+	for element := llst.Front(); element != nil; element = element.Next() {
+		strBuffer += object.StringifyAnythingGo(element.Value) + ", "
+		counter += 1
+	}
+
+	// Return the complete string buffer.
+	if counter > 0 {
+		return object.StringObjectFromGoString(strBuffer[:len(strBuffer)-2] + "}")
+	}
+	return object.StringObjectFromGoString("{}")
 }
