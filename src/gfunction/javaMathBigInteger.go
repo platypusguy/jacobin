@@ -483,6 +483,7 @@ func bigIntegerInitByteArray(params []interface{}) interface{} {
 	// params[0]: base object
 	// params[1]: byte array object
 	obj := params[0].(*object.Object)
+	object.ClearFieldTable(obj)
 	fld := obj.FieldTable["value"]
 	jba := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
 	bytes := object.GoByteArrayFromJavaByteArray(jba)
@@ -508,6 +509,7 @@ func bigIntegerInitProbablyPrime(params []interface{}) interface{} {
 	// params[3]: Random object (TODO: currently ignored).
 
 	obj := params[0].(*object.Object)
+	object.ClearFieldTable(obj)
 	fld := obj.FieldTable["value"]
 	bitLength := params[1].(int64)
 
@@ -534,6 +536,7 @@ func bigIntegerInitRandom(params []interface{}) interface{} {
 	//            will be set to a random value in the rang given by [0 : 2**(numbits) - 1].
 	// params[2]: Random object
 	obj := params[0].(*object.Object)
+	object.ClearFieldTable(obj)
 	fld := obj.FieldTable["value"]
 	numBits := params[1].(int64)
 	// TODO: Ignored for now: objRandom := params[2].(*object.Object)
@@ -565,6 +568,7 @@ func bigIntegerInitString(params []interface{}) interface{} {
 	// params[0]: base object
 	// params[1]: String object
 	obj := params[0].(*object.Object)
+	object.ClearFieldTable(obj)
 	fld := obj.FieldTable["value"]
 	str := object.GoStringFromStringObject(params[1].(*object.Object))
 	var zz = new(big.Int)
@@ -592,6 +596,7 @@ func bigIntegerInitStringRadix(params []interface{}) interface{} {
 	// params[1]: String object
 	// params[2]: radix int64
 	obj := params[0].(*object.Object)
+	object.ClearFieldTable(obj)
 	fld := obj.FieldTable["value"]
 	str := object.GoStringFromStringObject(params[1].(*object.Object))
 	rdx := params[2].(int64)
