@@ -449,24 +449,30 @@ func PrintlnString(params []interface{}) interface{} {
 
 // Called by PrintObject and PrintlnObject
 func _printObject(params []interface{}, newLine bool) interface{} {
-	var str string
+	var strBuffer string
 
 	// Watch out for a null object.
 	if params[1] == nil || object.IsNull(params[1]) {
-		str = types.NullString
+		strBuffer = types.NullString
 	} else {
 		switch params[1].(type) {
 		case *object.Object:
 			inObj := params[1].(*object.Object)
-			for name, field := range inObj.FieldTable {
-				str += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
+			classNameSuffix := object.GetClassNameSuffix(inObj, true)
+			if classNameSuffix == "String" {
+				strBuffer = object.GoStringFromStringObject(inObj)
+				break
 			}
-			str = str[:len(str)-2] + "}"
+			strBuffer = classNameSuffix + "{"
+			for name, field := range inObj.FieldTable {
+				strBuffer += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
+			}
+			strBuffer = strBuffer[:len(strBuffer)-2] + "}"
 			if newLine {
-				fmt.Fprintln(params[0].(*os.File), str)
+				fmt.Fprintln(params[0].(*os.File), strBuffer)
 				return nil
 			} else {
-				fmt.Fprint(params[0].(*os.File), str)
+				fmt.Fprint(params[0].(*os.File), strBuffer)
 				return nil
 			}
 		default:
@@ -476,9 +482,9 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 	}
 
 	if newLine {
-		fmt.Fprintln(params[0].(*os.File), str)
+		fmt.Fprintln(params[0].(*os.File), strBuffer)
 	} else {
-		fmt.Fprint(params[0].(*os.File), str)
+		fmt.Fprint(params[0].(*os.File), strBuffer)
 	}
 
 	return nil

@@ -40,7 +40,7 @@ func NewStringObject() *Object {
 	// enable compact strings.
 
 	value := make([]types.JavaByte, 0)
-	valueField := Field{Ftype: types.ByteArray, Fvalue: value} // empty string
+	valueField := Field{Ftype: types.StringClassRef, Fvalue: value} // empty string
 	s.FieldTable["value"] = valueField
 
 	// coder has two possible values:

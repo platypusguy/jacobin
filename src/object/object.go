@@ -89,9 +89,9 @@ func MakeOneFieldObject(classString string, fname string, ftype string, arg any)
 	return objPtr
 }
 
-// UpdateValueFieldFromJavaBytes: Set the value field of the given object to the given JavaByte array
+// UpdateValueFieldFromJavaBytes: Set the value field of the given String object to the given JavaByte array
 func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
-	fld := Field{Ftype: types.ByteArray, Fvalue: argBytes}
+	fld := Field{Ftype: types.StringClassRef, Fvalue: argBytes}
 	objPtr.FieldTable["value"] = fld
 }
 
