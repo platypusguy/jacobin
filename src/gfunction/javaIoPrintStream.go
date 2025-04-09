@@ -145,6 +145,7 @@ func Load_Io_PrintStream() {
 			ParamSlots: 1,
 			GFunction:  PrintString,
 		}
+
 	MethodSignatures["java/io/PrintStream.print(B)V"] = // print byte
 		GMeth{
 			ParamSlots: 1,
@@ -392,79 +393,6 @@ func Printf(params []interface{}) interface{} {
 
 }
 
-// Called by PrintObject and PrintlnObject
-func _printObject(params []interface{}, newLine bool) interface{} {
-	var str string
-	if params[1] == nil || object.IsNull(params[1]) {
-		str = "null"
-	} else {
-		switch params[1].(type) {
-		case *object.Object:
-			inObj := params[1].(*object.Object)
-			str = object.ObjectFieldToString(inObj, "FilePath")
-			if str == types.NullString {
-				str = object.ObjectFieldToString(inObj, "value")
-				if str == types.NullString {
-					className := object.GoStringFromStringPoolIndex(inObj.KlassName)
-					if newLine {
-						fmt.Fprintf(params[0].(*os.File), "class: %s, fields:\n", className)
-					} else {
-						fmt.Fprintf(params[0].(*os.File), "class: %s, fields: ", className)
-					}
-					str = ""
-					count := 0
-					for name, _ := range inObj.FieldTable {
-						count += 1
-						if newLine {
-							str += fmt.Sprintf("%s=%s\n", name, object.ObjectFieldToString(inObj, name))
-						} else {
-							str += fmt.Sprintf("%s=%s, ", name, object.ObjectFieldToString(inObj, name))
-						}
-					}
-					if count < 1 {
-						str = "<none>"
-						break
-					}
-					if newLine {
-						fmt.Fprint(params[0].(*os.File), str)
-						return nil
-					} else {
-						str = str[:len(str)-2]
-						fmt.Fprint(params[0].(*os.File), str)
-						return nil
-					}
-				}
-
-			}
-		case nil:
-			str = types.NullString
-		default:
-			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-		}
-	}
-
-	if newLine {
-		fmt.Fprintln(params[0].(*os.File), str)
-	} else {
-		fmt.Fprint(params[0].(*os.File), str)
-	}
-
-	return nil
-}
-
-// Print an Object's contents
-// "java/io/PrintStream.print(Ljava/lang/Object;)V"
-func PrintObject(params []interface{}) interface{} {
-	return _printObject(params, false)
-}
-
-// Println an Object's contents
-// "java/io/PrintStream.println(Ljava/lang/Object;)V"
-func PrintlnObject(params []interface{}) interface{} {
-	return _printObject(params, true)
-}
-
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func _printString(params []interface{}, newLine bool) interface{} {
 	var str string
@@ -474,9 +402,9 @@ func _printString(params []interface{}, newLine bool) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Handle null strings as well as []byte.
+	// Handle null strings.
 	if param1 == nil || object.IsNull(param1) {
-		str = "null"
+		str = types.NullString
 	} else {
 		fld, ok := param1.FieldTable["value"]
 		if !ok {
@@ -517,4 +445,129 @@ func PrintString(params []interface{}) interface{} {
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func PrintlnString(params []interface{}) interface{} {
 	return _printString(params, true)
+}
+
+// Called by PrintObject and PrintlnObject
+func _printObject(params []interface{}, newLine bool) interface{} {
+	var str string
+
+	// Watch out for a null object.
+	if params[1] == nil || object.IsNull(params[1]) {
+		str = types.NullString
+	} else {
+		switch params[1].(type) {
+		case *object.Object:
+			inObj := params[1].(*object.Object)
+			for name, field := range inObj.FieldTable {
+				str += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))
+			}
+			str = str[:len(str)-2] + "}"
+			if newLine {
+				fmt.Fprintln(params[0].(*os.File), str)
+				return nil
+			} else {
+				fmt.Fprint(params[0].(*os.File), str)
+				return nil
+			}
+		default:
+			errMsg := fmt.Sprintf("_printObject: Unsupported parameter type: %T", params[1])
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	if newLine {
+		fmt.Fprintln(params[0].(*os.File), str)
+	} else {
+		fmt.Fprint(params[0].(*os.File), str)
+	}
+
+	return nil
+}
+
+// Print an Object's contents
+// "java/io/PrintStream.print(Ljava/lang/Object;)V"
+func PrintObject(params []interface{}) interface{} {
+	// Check for null object.
+	if params[1] == nil || object.IsNull(params[1]) {
+		fmt.Fprint(params[0].(*os.File), types.NullString)
+		return nil
+	}
+
+	// Check for linked list object.
+	if object.GoStringFromStringPoolIndex(params[1].(*object.Object).KlassName) == classNameLinkedList {
+		return _printLinkedList(params, false)
+	}
+
+	// It's some other object.
+	return _printObject(params, false)
+}
+
+// Println an Object's contents
+// "java/io/PrintStream.println(Ljava/lang/Object;)V"
+func PrintlnObject(params []interface{}) interface{} {
+	// Check for null object.
+	if params[1] == nil || object.IsNull(params[1]) {
+		fmt.Fprintln(params[0].(*os.File), types.NullString)
+		return nil
+	}
+
+	// Check for linked list object.
+	if object.GoStringFromStringPoolIndex(params[1].(*object.Object).KlassName) == classNameLinkedList {
+		return _printLinkedList(params, true)
+	}
+
+	// It's some other object.
+	return _printObject(params, true)
+}
+
+// Print a linked list like this: [A, B, C]
+func _printLinkedList(params []interface{}, newLine bool) interface{} {
+	var strBuffer string
+
+	// Get linked list object.
+	param1, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("_printLinkedList: Expected params[1] of type *object.Object but observed type %T\n", params[1])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Handle null LinkedList objects.
+	if param1 == nil || object.IsNull(param1) {
+		strBuffer = types.NullString
+	} else {
+		// Get value field, holding the linked list reference.
+		fld, ok := param1.FieldTable["value"]
+		if !ok || fld.Ftype != types.LinkedList {
+			className := object.GoStringFromStringPoolIndex(param1.KlassName)
+			errMsg := fmt.Sprintf("_printLinkedList: Class %s (LinkedList?), \"value\" field is missing or is not a LinkedList", className)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+
+		// Get the linked list.
+		llst, gerr := getLinkedListFromObject(param1)
+		if gerr != nil {
+			return gerr
+		}
+
+		// Start with the front element.
+		// Continue to the end.
+		element := llst.Front()
+		fmt.Fprint(params[0].(*os.File), "[")
+		for ix := 0; ix < llst.Len(); ix++ {
+			strBuffer += object.StringifyAnythingGo(element.Value)
+			strBuffer += ", "
+			element = element.Next()
+		}
+	}
+
+	// Remove the final ", " and add a closing right bracket.
+	strBuffer = strBuffer[:len(strBuffer)-2] + "]"
+
+	if newLine {
+		fmt.Fprintln(params[0].(*os.File), strBuffer)
+	} else {
+		fmt.Fprint(params[0].(*os.File), strBuffer)
+	}
+
+	return nil
 }

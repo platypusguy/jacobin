@@ -664,3 +664,19 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 }
+
+func linkedlistToString(params []interface{}) interface{} {
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		errMsg := "linkedlistToString: Not a valid list object"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	field, ok := obj.FieldTable["value"]
+	if !ok || field.Ftype != types.LinkedList {
+		errMsg := "linkedlistToString: Field is not a valid linked list"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	return object.StringifyAnythingJava(field)
+}

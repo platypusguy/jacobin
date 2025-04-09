@@ -184,7 +184,7 @@ func IsStringObject(unknown any) bool {
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return types.NullString.
-	if IsNull(obj) {
+	if obj == nil || IsNull(obj) {
 		return types.NullString
 	}
 
@@ -202,6 +202,8 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 
 	// What type is the field?
 	switch fld.Ftype {
+	case types.StringClassRef:
+		return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 	case types.BigInteger:
 		return fmt.Sprint(fld.Fvalue)
 	case types.Bool:
@@ -255,13 +257,11 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 		return "FileHandle"
 	case types.Ref, types.RefArray, "[Ljava/lang/Object;":
 		return GoStringFromStringPoolIndex(obj.KlassName)
-	case "[Ljava/lang/Object":
-		return "[Ljava/lang/Object;"
 	}
 
 	// None of the above!
 	// Just return the class name, field name, and the field type.
-	result := fmt.Sprintf("ObjectFieldToString UNRECOGNIZED FTYPE: %s.%s(Ftype: %s, Fvalue: %v)",
+	result := fmt.Sprintf("%s.%s(Ftype: %s, Fvalue: %v)",
 		GoStringFromStringPoolIndex(obj.KlassName), fieldName, fld.Ftype, fld.Fvalue)
 	return result
 

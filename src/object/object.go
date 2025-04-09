@@ -9,6 +9,8 @@ package object
 import (
 	"jacobin/stringPool"
 	"jacobin/types"
+	"path"
+	"strings"
 	"unsafe"
 )
 
@@ -130,4 +132,34 @@ func CloneObject(oldObject *Object) *Object {
 // Clear the field table of the given object.
 func ClearFieldTable(object *Object) {
 	object.FieldTable = make(map[string]Field)
+}
+
+// Get a class name suffix (E.g. String from java/lang/String) from an object.
+// If inner is true, we will try for an inner class name.
+func GetClassNameSuffix(arg *Object, inner bool) string {
+
+	// Guard against trouble.
+	if arg == nil || arg == Null {
+		return types.NullString
+	}
+
+	// Get the class name.
+	className := GoStringFromStringPoolIndex(arg.KlassName)
+	className = strings.ReplaceAll(className, ".", "/")
+
+	// Return the full suffix?
+	if !inner {
+		// Return the full suffix including class names that end in A$B (inner classes).
+		return path.Base(className)
+	}
+
+	// Get the last segment
+	base := path.Base(className)
+
+	// If there's an inner class, return only the inner class name.
+	if idx := strings.LastIndex(base, "$"); idx != -1 {
+		return base[idx+1:]
+	}
+	return base
+
 }

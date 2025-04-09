@@ -298,6 +298,12 @@ func Load_Util_LinkedList() {
 			ParamSlots: 1,
 			GFunction:  linkedlistToArrayTyped,
 		}
+
+	MethodSignatures["java/util/LinkedList.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  linkedlistToString,
+		}
 }
 
 var classNameLinkedList = "java/util/LinkedList"
