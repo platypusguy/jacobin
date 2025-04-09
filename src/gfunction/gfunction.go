@@ -39,6 +39,8 @@ var CreateFilePermissions os.FileMode = 0664 // When creating, read and write fo
 // Radix boundaries:
 var MinRadix int64 = 2
 var MaxRadix int64 = 36
+
+// int64 value boundaries:
 var MaxIntValue int64 = 2147483647
 var MinIntValue int64 = -2147483648
 
@@ -173,7 +175,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	//	now, with the accumulated MethodSignatures maps, load MTable.
 	loadlib(MTable, MethodSignatures)
-
+	TestGfunctionsLoaded = true
 }
 
 // load the test gfunctions in testGfunctions.go
