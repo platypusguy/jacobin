@@ -162,10 +162,26 @@ func StringifyAnythingGo(arg interface{}) string {
 		case types.StringClassRef:
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case types.Byte:
-			ba1 := []byte{byte(fld.Fvalue.(int64))}
+			var ba1 []byte
+			switch fld.Fvalue.(type) {
+			case int64:
+				ba1 = []byte{byte(fld.Fvalue.(int64))}
+			case byte:
+				ba1 = []byte{byte(fld.Fvalue.(byte))}
+			default:
+				return "StringifyAnythingGo Field types.Byte: corrupted byte \"value\" field"
+			}
 			return "0x" + hex.EncodeToString(ba1)
 		case types.ByteArray:
-			bytes := GoByteArrayFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			var bytes []byte
+			switch fld.Fvalue.(type) {
+			case []types.JavaByte:
+				bytes = GoByteArrayFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+			case []byte:
+				bytes = fld.Fvalue.([]byte)
+			default:
+				return "StringifyAnythingGo Field types.ByteArray: corrupted byte array \"value\" field"
+			}
 			return "0x" + hex.EncodeToString(bytes)
 		case types.Bool:
 			if fld.Fvalue == types.JavaBoolTrue {
@@ -173,7 +189,25 @@ func StringifyAnythingGo(arg interface{}) string {
 			}
 			return "false"
 		case types.Int, types.Short, types.Long:
-			return strconv.FormatInt(fld.Fvalue.(int64), 10)
+			var strValue string
+			switch fld.Fvalue.(type) {
+			case int64:
+				strValue = strconv.FormatInt(fld.Fvalue.(int64), 10)
+			case uint64:
+				strValue = strconv.FormatInt(int64(fld.Fvalue.(uint64)), 10)
+			case int32:
+				strValue = strconv.FormatInt(int64(fld.Fvalue.(int32)), 10)
+			case uint32:
+				strValue = strconv.FormatInt(int64(fld.Fvalue.(uint32)), 10)
+			case int16:
+				strValue = strconv.FormatInt(int64(fld.Fvalue.(int16)), 10)
+			case uint16:
+				strValue = strconv.FormatInt(int64(fld.Fvalue.(uint16)), 10)
+			default:
+				errMsg := fmt.Sprintf("StringifyAnythingGo  Field types.Int: unrecognized field value type, value: %T, %v", arg, arg)
+				return errMsg
+			}
+			return strValue
 		case types.Double:
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
 		case types.Float:
@@ -191,7 +225,7 @@ func StringifyAnythingGo(arg interface{}) string {
 			}
 			return strBuffer[:len(strBuffer)-2] + "]"
 		default:
-			errMsg := fmt.Sprintf("StringifyAnythingGo: unrecognized argument type, value: %T, %v", arg, arg)
+			errMsg := fmt.Sprintf("StringifyAnythingGo Field default: unrecognized argument type, value: %T, %v", arg, arg)
 			return errMsg
 		}
 		/*
@@ -203,7 +237,7 @@ func StringifyAnythingGo(arg interface{}) string {
 		End of Field
 	*/
 
-	errMsg := fmt.Sprintf("StringifyAnythingGo: unrecognized argument type, value: %T, %v", arg, arg)
+	errMsg := fmt.Sprintf("StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
 	return errMsg
 
 }
