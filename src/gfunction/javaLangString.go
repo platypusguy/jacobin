@@ -790,8 +790,9 @@ func stringClinit([]interface{}) interface{} {
 // Instantiate a new empty string - "java/lang/String.<init>()V"
 func newEmptyString(params []interface{}) interface{} {
 	// params[0] = target object for string (updated)
+	obj := params[0].(*object.Object)
 	bytes := make([]types.JavaByte, 0)
-	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
 }
 
@@ -800,14 +801,15 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
+	obj := params[0].(*object.Object)
 	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
 	case []byte:
 		bytes := object.JavaByteArrayFromGoByteArray(
 			params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
-		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	case []types.JavaByte:
 		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
-		object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	}
 	return nil
 }
@@ -819,6 +821,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[1] = byte array object
 	// params[2] = start offset
 	// params[3] = end offset
+	obj := params[0].(*object.Object)
 	var bytes []types.JavaByte
 	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
 	case []byte:
@@ -842,7 +845,7 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 
 	// Compute subarray and update params[0].
 	bytes = bytes[ssStart : ssStart+ssEnd]
-	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
 }
 
@@ -851,13 +854,14 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 func newStringFromChars(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
+	obj := params[0].(*object.Object)
 	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
 
 	var bytes []types.JavaByte
 	for _, ii := range ints {
 		bytes = append(bytes, types.JavaByte(ii&0xFF))
 	}
-	object.UpdateValueFieldFromJavaBytes(params[0].(*object.Object), bytes)
+	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
 }
 
@@ -1166,7 +1170,7 @@ func StringFormatter(params []interface{}) interface{} {
 		fld := valuesIn[ii].FieldTable["value"]
 
 		// If type is string object, process it.
-		if fld.Ftype == types.ByteArray {
+		if fld.Ftype == types.StringClassRef {
 			var str string
 			switch fld.Fvalue.(type) {
 			case []byte:
