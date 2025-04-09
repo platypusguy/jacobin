@@ -56,12 +56,18 @@ func StringifyAnythingGo(arg interface{}) string {
 				return "StringifyAnythingGo: corrupted Character object, missing \"value\" field"
 			}
 			return fmt.Sprintf("%d", fld.Fvalue.(int64)&0xff)
-		case "Double", "Float":
+		case "Double":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
-				return "StringifyAnythingGo: corrupted Double/Float object, missing \"value\" field"
+				return "StringifyAnythingGo: corrupted Double object, missing \"value\" field"
 			}
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
+		case "Float":
+			fld, ok := obj.FieldTable["value"]
+			if !ok {
+				return "StringifyAnythingGo: corrupted Float object, missing \"value\" field"
+			}
+			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
 		case "Integer", "Long", "Short":
 			fld, ok := obj.FieldTable["value"]
 			if !ok {
@@ -102,14 +108,24 @@ func StringifyAnythingGo(arg interface{}) string {
 			}
 			strBuffer = strBuffer[:len(strBuffer)-2] + "]"
 			return strBuffer
-		case types.DoubleArray, types.FloatArray:
+		case types.DoubleArray:
 			array, ok := obj.FieldTable["value"].Fvalue.([]float64)
 			if !ok {
-				return "StringifyAnythingGo: double/float array missing \"value\" field or array value corrupted"
+				return "StringifyAnythingGo: double array missing \"value\" field or array value corrupted"
 			}
 			strBuffer := "["
 			for ix := 0; ix < len(array); ix++ {
 				strBuffer += strconv.FormatFloat(array[ix], 'g', -1, 64) + ", "
+			}
+			return strBuffer[:len(strBuffer)-2] + "]"
+		case types.FloatArray:
+			array, ok := obj.FieldTable["value"].Fvalue.([]float64)
+			if !ok {
+				return "StringifyAnythingGo: float array missing \"value\" field or array value corrupted"
+			}
+			strBuffer := "["
+			for ix := 0; ix < len(array); ix++ {
+				strBuffer += strconv.FormatFloat(array[ix], 'g', -1, 32) + ", "
 			}
 			return strBuffer[:len(strBuffer)-2] + "]"
 		case types.IntArray, types.LongArray, types.ShortArray:
@@ -158,8 +174,10 @@ func StringifyAnythingGo(arg interface{}) string {
 			return "false"
 		case types.Int, types.Short, types.Long:
 			return strconv.FormatInt(fld.Fvalue.(int64), 10)
-		case types.Double, types.Float:
+		case types.Double:
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 64)
+		case types.Float:
+			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
 		case types.BigInteger:
 			return fmt.Sprint(fld.Fvalue)
 		case types.LinkedList:
