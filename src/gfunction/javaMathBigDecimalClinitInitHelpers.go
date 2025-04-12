@@ -192,9 +192,6 @@ func parseBigDecimalString(argStr string) (*big.Int, int64, interface{}) {
 		wholePart = "0"
 	}
 
-	// Remove trailing zeros from fractional part.
-	fracPart = strings.TrimRight(fracPart, "0")
-
 	// Form the precision string.
 	precisionStr := wholePart + fracPart
 	if precisionStr == "" {
