@@ -58,19 +58,20 @@ func bigdecimalByteValueExact(params []interface{}) interface{} {
 	// Extract BigDecimal object
 	bd := params[0].(*object.Object)
 
-	// Extract BigInteger intVal field
-	intVal := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	// Extract BigInteger intVal field.
+	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
 
-	// Convert BigInteger object to big.Int
-	val := intVal.FieldTable["value"].Fvalue.(*big.Int)
+	// Convert BigInteger object to *big.Int, then to int64.
+	bigInt := bi.FieldTable["value"].Fvalue.(*big.Int)
+	i64 := bigInt.Int64()
 
-	// Check if the value fits in a byte
-	if val.BitLen() > 8 || val.Sign() < 0 {
+	// Check if the value fits in a Java byte.
+	if i64 > 127 || i64 < -128 {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalByteValueExact: out of range for byte value")
 	}
 
-	// Return the exact byte value (int8 type)
-	return types.JavaByte(val.Int64())
+	// Return the exact byte value.
+	return types.JavaByte(bigInt.Int64())
 }
 
 // bigdecimalCompareTo compares this BigDecimal to the specified BigDecimal.
@@ -239,7 +240,7 @@ func bigdecimalIntValue(params []interface{}) interface{} {
 func bigdecimalIntValueExact(params []interface{}) interface{} {
 	// Get BigDecimal object and scale value (must be 0).
 	bd := params[0].(*object.Object)
-	scale := bd.FieldTable["intVal"].Fvalue.(int64)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
 	if scale != int64(0) {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalIntValueExact: scale is non-zero")
 	}
@@ -269,7 +270,7 @@ func bigdecimalLongValue(params []interface{}) interface{} {
 func bigdecimalLongValueExact(params []interface{}) interface{} {
 	// Get BigDecimal object and scale value (must be 0).
 	bd := params[0].(*object.Object)
-	scale := bd.FieldTable["intVal"].Fvalue.(int64)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
 	if scale != int64(0) {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalLongValueExact: scale is non-zero")
 	}
