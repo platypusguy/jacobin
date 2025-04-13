@@ -7,7 +7,6 @@
 package gfunction
 
 import (
-	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
 	"math"
@@ -130,16 +129,14 @@ func bigdecimalScaleByPowerOfTen(params []interface{}) interface{} {
 
 	// Get current unscaled value and scale
 	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-	unscaled := bi.FieldTable["value"].Fvalue.(*big.Int)
+	bigInt := bi.FieldTable["value"].Fvalue.(*big.Int)
 	scale := bd.FieldTable["scale"].Fvalue.(int64)
+	precision := bd.FieldTable["precision"].Fvalue.(int64)
 
-	// Adjust scale: newScale = scale - n
+	// Adjust scale: newScale = scale - num
 	newScale := scale - num
 
-	// Precision stays the same
-	precision := int64(len(unscaled.String()))
-
-	return bigDecimalObjectFromBigInt(unscaled, precision, newScale)
+	return bigDecimalObjectFromBigInt(bigInt, precision, newScale)
 }
 
 // bigdecimalSetScale returns a new BigDecimal with the specified scale.
@@ -291,43 +288,6 @@ func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
 	return makeBigIntegerFromBigInt(bigInt)
 }
 
-// bigdecimalToEngineeringString returns the engineering string representation of this BigDecimal.
-func bigdecimalToEngineeringString(params []interface{}) interface{} {
-	// Implements BigDecimal.toEngineeringString()
-	bd := params[0].(*object.Object)
-
-	// Extract BigInteger intVal field
-	intValObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-
-	// Retrieve the big.Int from the BigInteger object
-	bigIntValue := intValObj.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Convert the big.Int to an engineering string
-	// In Go, the best way to get the engineering string would involve adjusting the scale
-	// and then formatting the result to match the engineering representation
-	// Assuming scientific formatting for now
-	engineeringString := fmt.Sprintf("%e", bigIntValue)
-
-	return object.StringObjectFromGoString(engineeringString)
-}
-
-// bigdecimalToPlainString returns the plain string representation of this BigDecimal without scientific notation.
-func bigdecimalToPlainString(params []interface{}) interface{} {
-	// Implements BigDecimal.toPlainString()
-	bd := params[0].(*object.Object)
-
-	// Extract BigInteger intVal field
-	intValObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-
-	// Retrieve the big.Int from the BigInteger object
-	bigIntValue := intValObj.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Convert the big.Int to a plain string (no scientific notation)
-	plainString := bigIntValue.String()
-
-	return object.StringObjectFromGoString(plainString)
-}
-
 // bigdecimalToString returns the string representation of this BigDecimal.
 func bigdecimalToString(params []interface{}) interface{} {
 	// Implements BigDecimal.toString()
@@ -342,40 +302,10 @@ func bigdecimalToString(params []interface{}) interface{} {
 	// Retrieve the scale
 	scale := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Format the string representation, including the scale
-	// Handle the scale to produce decimal point position if necessary
-	decimalString := bigIntValue.String()
-	if scale > 0 {
-		// Add the decimal point
-		if len(decimalString) <= int(scale) {
-			decimalString = "0." + fmt.Sprintf("%0*s", int(scale)-len(decimalString), decimalString)
-		} else {
-			decimalString = decimalString[:len(decimalString)-int(scale)] + "." + decimalString[len(decimalString)-int(scale):]
-		}
-	}
-
+	// Format the string representation, including the scale.
+	// Handle the scale to produce decimal point position if necessary.
+	decimalString := formatDecimalString(bigIntValue, scale)
 	return object.StringObjectFromGoString(decimalString)
-}
-
-func bigdecimalUlp(params []interface{}) interface{} {
-	bd := params[0].(*object.Object)
-
-	// Extract the BigInteger intVal field from BigDecimal
-	dv := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Compute ULP by creating a BigDecimal with a value of 1 (smallest possible unit)
-	// and subtracting the current BigDecimal value from it
-	ulp := new(big.Int).Add(dvBigInt, big.NewInt(1)) // ULP is current value + 1
-	if dvBigInt.Sign() < 0 {
-		ulp = new(big.Int).Sub(dvBigInt, big.NewInt(1)) // If the value is negative, ULP is current value - 1
-	}
-
-	// Create a new BigDecimal object with the computed ULP value
-	// Set scale to 0 and precision to 1 (since this is the smallest difference)
-	ulpBigDecimal := bigDecimalObjectFromBigInt(ulp, int64(len(ulp.String())), int64(0))
-
-	return ulpBigDecimal
 }
 
 // bigdecimalUnscaledValue returns the unscaled value of this BigDecimal as a BigInteger.

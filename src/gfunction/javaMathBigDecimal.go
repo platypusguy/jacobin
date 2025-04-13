@@ -411,13 +411,13 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".toEngineeringString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalToEngineeringString,
+			GFunction:  bigdecimalToString,
 		}
 
 	MethodSignatures[classNameBigDecimal+".toPlainString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalToPlainString,
+			GFunction:  bigdecimalToString,
 		}
 
 	MethodSignatures[classNameBigDecimal+".toString()Ljava/lang/String;"] =
@@ -429,7 +429,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".ulp()Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalUlp,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures[classNameBigDecimal+".unscaledValue()Ljava/math/BigInteger;"] =
