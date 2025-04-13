@@ -12,6 +12,7 @@ import (
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -29,13 +30,20 @@ func bigdecimalInitDouble(params []interface{}) interface{} {
 	valStr := strconv.FormatFloat(valObj, 'g', -1, 64)
 
 	// Get *big.Int value and scale.
-	bigInt, scale := parseDecimalString(valStr)
+	bigInt, scale, ok := parseDecimalString(valStr)
+	if !ok {
+		errMsg := fmt.Sprintf("bigdecimalInitDouble: Failed to parse '%s'", valStr)
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
 
 	// Create BigInteger from string
 	bigIntObj := makeBigIntegerFromBigInt(bigInt)
 
 	// Estimate precision
 	precision := int64(len(strings.ReplaceAll(valStr, ".", "")))
+	if bigInt.Sign() < 0 {
+		precision -= 1
+	}
 
 	// Set fields
 	setupBasicFields(self, bigIntObj, precision, scale)
@@ -53,6 +61,9 @@ func bigdecimalInitIntLong(params []interface{}) interface{} {
 
 	// Compute precision: number of decimal digits in value.
 	precision := int64(len(strconv.FormatInt(valInt64, 10)))
+	if valInt64 < 0 {
+		precision -= 1
+	}
 
 	// Assign fields to the BigDecimal object.
 	setupBasicFields(self, bigIntObj, precision, int64(0))
@@ -71,10 +82,14 @@ func bigdecimalInitString(params []interface{}) interface{} {
 	str := object.GoStringFromStringObject(strObj)
 
 	// Parse the string into a *big.Int (unscaled value) and a scale.
-	bigInt, scale := parseDecimalString(str)
+	bigInt, scale, ok := parseDecimalString(str)
+	if !ok {
+		errMsg := fmt.Sprintf("bigdecimalInitString: Failed to parse '%s'", str)
+		return getGErrBlk(excNames.NumberFormatException, errMsg)
+	}
 
 	// Compute precision: number of decimal digits in unscaled value.
-	precision := int64(len(bigInt.Text(10)))
+	precision := precisionFromBigInt(bigInt)
 
 	// Create BigInteger object for field intVal.
 	bigIntObj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
@@ -90,7 +105,7 @@ func bigdecimalInitBigInteger(params []interface{}) interface{} {
 	self := params[0].(*object.Object)
 	biObj := params[1].(*object.Object)
 	bigInt := biObj.FieldTable["value"].Fvalue.(*big.Int)
-	precision := int64(len(bigInt.Text(10)))
+	precision := precisionFromBigInt(bigInt)
 	scale := int64(0)
 	setupBasicFields(self, biObj, precision, scale)
 
@@ -101,6 +116,13 @@ func bigdecimalInitBigInteger(params []interface{}) interface{} {
 Helper Functions
 */
 
+// precisionFromBigInt: From a *big.Int, compute the precision.
+// Note that the absolute value of the argument *big.Int must be used.
+func precisionFromBigInt(arg *big.Int) int64 {
+	return int64(len((new(big.Int).Abs(arg)).Text(10)))
+}
+
+// loadStaticsBigDouble: Load the static fields for BigDouble.
 func loadStaticsBigDouble() {
 	INFLATED := int64(-9223372036854775808)
 	_ = statics.AddStatic(classNameBigDecimal+".INFLATED", statics.Static{Type: types.Long, Value: INFLATED})
@@ -154,44 +176,71 @@ func bigIntegerFromInt64(arg int64) *object.Object {
 	return obj
 }
 
-// Parse a String into decimal precision and scale values.
-func parseDecimalString(s string) (*big.Int, int64) {
-	neg := false
-	if strings.HasPrefix(s, "-") {
-		neg = true
-		s = s[1:]
+// parseDecimalString parses a string representation of a decimal number
+// and returns the unscaled big integer, the scale, and a boolean indicating success.
+func parseDecimalString(s string) (*big.Int, int64, bool) {
+	// Trim any whitespace
+	s = strings.TrimSpace(s)
+
+	// Handle scientific notation (e.g., "3.1416E0" or "314.16e-2")
+	exponentIndex := strings.IndexAny(s, "eE")
+
+	// Initialize scale and exponent
+	scale := int64(0)
+	exponent := int64(0)
+
+	// If there's an exponent, separate the number and exponent
+	if exponentIndex != -1 {
+		// Split into number part and exponent part
+		numberPart := s[:exponentIndex]
+		exponentPart := s[exponentIndex+1:]
+
+		// Parse the exponent
+		exp, err := strconv.ParseInt(exponentPart, 10, 64)
+		if err != nil {
+			return nil, 0, false // Invalid exponent
+		}
+		exponent = exp
+
+		// Update the input string to the number part only (without the exponent)
+		s = numberPart
 	}
 
-	parts := strings.SplitN(s, ".", 2)
-	intPart := parts[0]
-	fracPart := ""
-	if len(parts) == 2 {
-		fracPart = parts[1]
+	// Split the number into integer and fractional parts
+	parts := strings.Split(s, ".")
+
+	// If the string does not contain at least one part (integer or fractional), it's invalid
+	if len(parts) == 0 || len(parts[0]) == 0 {
+		return nil, 0, false // Invalid number
 	}
 
-	// Remove leading zeros in intPart to avoid incorrect precision
-	intPart = strings.TrimLeft(intPart, "0")
-	if intPart == "" {
-		intPart = "0"
+	// Default scale is the number of digits after the decimal
+	if len(parts) > 1 {
+		scale = int64(len(parts[1])) // Scale is based on the number of digits after the decimal
 	}
 
-	scale := int64(len(fracPart))
-	fullDigits := intPart + fracPart
-	fullDigits = strings.TrimLeft(fullDigits, "0")
+	// Remove the decimal point for the unscaled value
+	unscaledStr := strings.Replace(s, ".", "", -1)
 
-	if fullDigits == "" {
-		fullDigits = "0"
+	// Now, convert the string (without the decimal) to a big integer
+	unscaled := new(big.Int)
+	unscaled.SetString(unscaledStr, 10)
+
+	// If the string cannot be converted to a big integer, it's invalid
+	if unscaled.Cmp(big.NewInt(0)) == 0 && s != "0" {
+		return nil, 0, false // Invalid number (like "ABC")
+	}
+
+	// Adjust the scale based on the exponent
+	scale -= exponent
+
+	// If the scale becomes negative, set it to 0 (as we can't have negative scale)
+	if scale < 0 {
 		scale = 0
 	}
 
-	bi := new(big.Int)
-	bi.SetString(fullDigits, 10)
-
-	if neg {
-		bi.Neg(bi)
-	}
-
-	return bi, scale
+	// Return the unscaled value, scale, and success flag
+	return unscaled, scale, true
 }
 
 // setBigIntegerFields: Given the BigInteger object and the *big.Int, set the BigInteger object fields.
@@ -236,4 +285,86 @@ func makeArray2ElemsOfBigDecimal(bd1, bd2 *object.Object) *object.Object {
 	arr := []*object.Object{bd1, bd2}
 	obj := object.MakePrimitiveObject("["+classNameBigDecimal, ref, arr)
 	return obj
+}
+
+// stripTrailingZeros removes trailing zeros from a string representation of a decimal.
+// It returns a new *big.Int and the adjusted scale.
+func stripTrailingZeros(unscaled *big.Int, scale int64) (*big.Int, int64) {
+	// If the scale is 0, no need to strip any zeros
+	if scale == 0 {
+		return unscaled, scale
+	}
+
+	// Convert the big integer to a string to handle its decimal representation
+	unscaledStr := unscaled.String()
+
+	// Check for trailing zeros in the unscaled number string
+	for {
+		// Check if the last character is a zero (trailing zero)
+		if len(unscaledStr) > 1 && unscaledStr[len(unscaledStr)-1] == '0' {
+			// Remove the trailing zero and decrease the scale
+			unscaledStr = unscaledStr[:len(unscaledStr)-1]
+			scale--
+		} else {
+			break
+		}
+	}
+
+	// If the string is empty or just "0", reset the unscaled value to 0
+	if len(unscaledStr) == 0 || unscaledStr == "0" {
+		unscaled.SetInt64(0)
+		scale = 0
+	} else {
+		// Convert the modified string back to big.Int
+		unscaled.SetString(unscaledStr, 10)
+	}
+
+	return unscaled, scale
+}
+
+// float64ToDecimalComponents converts a float64 to unscaled *big.Int, precision, and scale
+func float64ToDecimalComponents(arg float64) (*big.Int, int64, int64) {
+	// Handle special cases
+	if math.IsNaN(arg) || math.IsInf(arg, 0) {
+		return nil, 0, 0
+	}
+
+	// Format with high precision to preserve all decimal digits
+	str := strconv.FormatFloat(arg, 'f', -1, 64)
+
+	// Remove sign for analysis
+	negative := strings.HasPrefix(str, "-")
+	if negative {
+		str = str[1:]
+	}
+
+	parts := strings.Split(str, ".")
+	intPart := parts[0]
+	fracPart := ""
+	if len(parts) > 1 {
+		fracPart = parts[1]
+	}
+
+	// Count significant digits
+	sigDigits := strings.TrimLeft(intPart, "0") + fracPart
+	sigDigits = strings.TrimLeft(sigDigits, "0")
+	precision := int64(len(sigDigits))
+
+	// Calculate scale
+	scale := int64(len(fracPart))
+
+	// Form unscaled string by removing dot
+	unscaledStr := intPart + fracPart
+	unscaledStr = strings.TrimLeft(unscaledStr, "0")
+	if unscaledStr == "" {
+		unscaledStr = "0"
+	}
+
+	unscaled := new(big.Int)
+	unscaled.SetString(unscaledStr, 10)
+	if negative {
+		unscaled.Neg(unscaled)
+	}
+
+	return unscaled, precision, scale
 }

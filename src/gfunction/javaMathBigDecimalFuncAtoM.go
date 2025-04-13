@@ -12,7 +12,6 @@ import (
 	"jacobin/types"
 	"math"
 	"math/big"
-	"strings"
 )
 
 // bigdecimalAbs returns the absolute value of the BigDecimal
@@ -43,14 +42,14 @@ func bigdecimalAdd(params []interface{}) interface{} {
 	val2 := intVal2.FieldTable["value"].Fvalue.(*big.Int)
 
 	// Perform the addition
-	result := new(big.Int).Add(val1, val2)
+	bigInt := new(big.Int).Add(val1, val2)
 
 	// Calculate the precision and scale (same scale as the first BigDecimal)
-	precision := int64(len(result.String()))
+	precision := precisionFromBigInt(bigInt)
 	scale := bd1.FieldTable["scale"].Fvalue.(int64)
 
 	// Create a new BigDecimal object with the result
-	return bigDecimalObjectFromBigInt(result, precision, scale)
+	return bigDecimalObjectFromBigInt(bigInt, precision, scale)
 }
 
 // bigdecimalByteValueExact returns the exact byte value of this BigDecimal
@@ -320,19 +319,16 @@ func bigdecimalMovePointLeft(params []interface{}) interface{} {
 	scale := bd.FieldTable["scale"].Fvalue.(int64)
 
 	// Get the underlying *big.Int value
-	unscaled := bi.FieldTable["value"].Fvalue.(*big.Int)
+	bigInt := bi.FieldTable["value"].Fvalue.(*big.Int)
 
 	// New scale is original scale + num
 	newScale := scale + num
 
 	// Precision is length of digits in unscaled value
-	precision := int64(len(strings.TrimLeft(unscaled.String(), "-0")))
-	if precision == 0 {
-		precision = 1 // Java treats 0 as precision 1
-	}
+	precision := precisionFromBigInt(bigInt)
 
 	// Create new BigDecimal object
-	newBigInt := new(big.Int).Set(unscaled)
+	newBigInt := new(big.Int).Set(bigInt)
 	newBD := bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
 
 	return newBD
@@ -365,7 +361,7 @@ func bigdecimalMovePointRight(params []interface{}) interface{} {
 	}
 
 	// Compute precision
-	precision := int64(len(newBigInt.Text(10)))
+	precision := precisionFromBigInt(newBigInt)
 
 	// Construct and return a new BigDecimal object
 	return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)

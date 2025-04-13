@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
-	"jacobin/types"
 	"math"
 	"math/big"
 	"strconv"
@@ -221,21 +220,17 @@ func bigdecimalSignum(params []interface{}) interface{} {
 
 func bigdecimalStripTrailingZeros(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
-
-	// Extract BigInteger intVal field
+	oldScale := bd.FieldTable["scale"].Fvalue.(int64)
 	biObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-	dvBigInt := biObj.FieldTable["value"].Fvalue.(*big.Int)
+	oldBigInt := biObj.FieldTable["value"].Fvalue.(*big.Int)
 
-	// Strip trailing zeros by dividing by 10 until the remainder is non-zero.
-	for dvBigInt.BitLen() > 0 && dvBigInt.Mod(dvBigInt, big.NewInt(10)).Sign() == 0 {
-		dvBigInt.Div(dvBigInt, big.NewInt(10))
-	}
+	newBigInt, newScale := stripTrailingZeros(oldBigInt, oldScale)
+	newPrecision := precisionFromBigInt(newBigInt)
 
 	// Update BigDecimal with new value and adjusted precision.
-	bd.FieldTable["intVal"] = object.Field{Ftype: types.BigInteger, Fvalue: biObj}
-	bd.FieldTable["precision"] = object.Field{Ftype: types.Int, Fvalue: int64(len(dvBigInt.String()))}
+	newBD := bigDecimalObjectFromBigInt(newBigInt, newPrecision, newScale)
 
-	return bd
+	return newBD
 }
 
 // bigdecimalSubtract returns a BigDecimal representing the result of subtracting the specified BigDecimal from this BigDecimal.
@@ -282,8 +277,8 @@ func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 
 	// Extract the BigInteger intVal field from BigDecimal
-	dv := bd.FieldTable["intVal"].Fvalue.(*object.Object)
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
+	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	bigInt := bi.FieldTable["value"].Fvalue.(*big.Int)
 
 	// Check for any fractional part (scale != 0)
 	scale := bd.FieldTable["scale"].Fvalue.(int64)
@@ -293,7 +288,7 @@ func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
 	}
 
 	// Return the BigInteger value
-	return dvBigInt
+	return makeBigIntegerFromBigInt(bigInt)
 }
 
 // bigdecimalToEngineeringString returns the engineering string representation of this BigDecimal.
@@ -401,23 +396,11 @@ func bigdecimalUnscaledValue(params []interface{}) interface{} {
 // bigdecimalValueOfDouble returns a BigDecimal initialized with the given double value.
 func bigdecimalValueOfDouble(params []interface{}) interface{} {
 	// Implements BigDecimal.valueOf(double val)
-	val := params[0].(float64)
+	value := params[0].(float64)
 
-	// Convert the double value to a string, and then to a BigInteger object
-	valStr := strconv.FormatFloat(val, 'f', -1, 64)
-	bigIntObj, gerr := makeBigIntegerFromString(valStr)
-	if gerr != nil {
-		return gerr
-	}
-
-	// Extract the *big.Int from the BigInteger object
-	bigIntVal := bigIntObj.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Calculate the precision: number of digits in the string representation of the value
-	precision := int64(len(valStr))
-
-	// Create a BigDecimal object with the BigInteger value, scale 0, and precision based on the string length
-	bd := bigDecimalObjectFromBigInt(bigIntVal, precision, 0)
+	// Create a BigDecimal object.
+	bigInt, precision, scale := float64ToDecimalComponents((value))
+	bd := bigDecimalObjectFromBigInt(bigInt, precision, scale)
 
 	return bd
 }
@@ -432,6 +415,9 @@ func bigdecimalValueOfLong(params []interface{}) interface{} {
 
 	// Calculate precision
 	precision := int64(len(strconv.FormatInt(val, 10)))
+	if val < 0 {
+		precision -= 1
+	}
 
 	// Create BigDecimal object with scale 0
 	bd := bigDecimalObjectFromBigInt(bigIntObj.FieldTable["value"].Fvalue.(*big.Int), precision, 0)
@@ -450,6 +436,9 @@ func bigdecimalValueOfLongInt(params []interface{}) interface{} {
 
 	// Calculate precision
 	precision := int64(len(strconv.FormatInt(val, 10)))
+	if val < 0 {
+		precision -= 1
+	}
 
 	// Create BigDecimal object with the provided scale
 	bd := bigDecimalObjectFromBigInt(bigIntObj.FieldTable["value"].Fvalue.(*big.Int), precision, int64(scale))
