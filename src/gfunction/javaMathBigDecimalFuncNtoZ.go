@@ -14,6 +14,7 @@ import (
 	"math"
 	"math/big"
 	"strconv"
+	"strings"
 )
 
 // bigdecimalNegate returns a BigDecimal whose value is the negation of the current BigDecimal.
@@ -38,24 +39,18 @@ func bigdecimalNegate(params []interface{}) interface{} {
 
 // bigdecimalPlus returns a BigDecimal whose value is the sum of the current BigDecimal and the specified one.
 func bigdecimalPlus(params []interface{}) interface{} {
-	bd1 := params[0].(*object.Object)
-	bd2 := params[1].(*object.Object)
+	bd := params[0].(*object.Object)
 
-	// Extract BigInteger intVal fields
-	dv1 := bd1.FieldTable["intVal"].Fvalue.(*object.Object)
-	dv2 := bd2.FieldTable["intVal"].Fvalue.(*object.Object)
+	// Clone intVal
+	intVal := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	value := intVal.FieldTable["value"].Fvalue.(*big.Int)
+	newBigInt := new(big.Int).Set(value)
 
-	// Convert BigInteger objects to big.Int
-	dv1BigInt := dv1.FieldTable["value"].Fvalue.(*big.Int)
-	dv2BigInt := dv2.FieldTable["value"].Fvalue.(*big.Int)
+	// Extract precision and scale
+	precision := bd.FieldTable["precision"].Fvalue.(int64)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Perform addition
-	resultValue := new(big.Int).Add(dv1BigInt, dv2BigInt)
-
-	// Create result BigDecimal object for the sum
-	result := bigDecimalObjectFromBigInt(resultValue, int64(len(resultValue.String())), int64(0))
-
-	return result
+	return bigDecimalObjectFromBigInt(newBigInt, precision, scale)
 }
 
 // bigdecimalPow returns a BigDecimal whose value is the result of raising this BigDecimal to the specified power.
@@ -131,37 +126,57 @@ func bigdecimalScale(params []interface{}) interface{} {
 
 // bigdecimalScaleByPowerOfTen scales the BigDecimal by the specified power of ten.
 func bigdecimalScaleByPowerOfTen(params []interface{}) interface{} {
-	// Implements BigDecimal.scaleByPowerOfTen(int n)
 	bd := params[0].(*object.Object)
 	num := params[1].(int64)
 
-	// Retrieve the current scale and adjust it by the power of ten
-	currentScale := bd.FieldTable["scale"].Fvalue.(int64)
-	newScale := currentScale + num
+	// Get current unscaled value and scale
+	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	unscaled := bi.FieldTable["value"].Fvalue.(*big.Int)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Update the scale in the BigDecimal's FieldTable
-	bd.FieldTable["scale"] = object.Field{Fvalue: newScale, Ftype: types.Int}
+	// Adjust scale: newScale = scale - n
+	newScale := scale - num
 
-	return bd
+	// Precision stays the same
+	precision := int64(len(unscaled.String()))
+
+	return bigDecimalObjectFromBigInt(unscaled, precision, newScale)
 }
 
 // bigdecimalSetScale returns a new BigDecimal with the specified scale.
 func bigdecimalSetScale(params []interface{}) interface{} {
-	// Implements BigDecimal.setScale(int newScale)
 	bd := params[0].(*object.Object)
 	newScale := params[1].(int64)
 
-	// Extract BigInteger intVal field
-	biObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	intVal := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	oldBigInt := intVal.FieldTable["value"].Fvalue.(*big.Int)
+	oldScale := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Convert BigInteger to big.Int
-	dvBigInt := biObj.FieldTable["value"].Fvalue.(*big.Int)
+	// If newScale is equal to current, return original
+	if newScale == oldScale {
+		return bd
+	}
 
-	// Create result BigDecimal object with new scale
-	// Assuming that the scale adjustment doesn't change the underlying value
-	result := bigDecimalObjectFromBigInt(dvBigInt, int64(len(dvBigInt.String())), newScale)
+	diff := newScale - oldScale
+	var newBigInt *big.Int
 
-	return result
+	if diff > 0 {
+		// Scale increased: multiply by 10^diff
+		multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(diff), nil)
+		newBigInt = new(big.Int).Mul(oldBigInt, multiplier)
+	} else {
+		// Scale decreased: divide by 10^(-diff)
+		divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(-diff), nil)
+		newBigInt = new(big.Int).Div(oldBigInt, divisor)
+	}
+
+	// Precision is recomputed from digit count
+	precision := int64(len(strings.TrimLeft(newBigInt.String(), "-0")))
+	if precision == 0 {
+		precision = 1
+	}
+
+	return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
 }
 
 // bigdecimalShortValueExact returns the exact short value of this BigDecimal.

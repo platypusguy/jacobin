@@ -7,12 +7,12 @@
 package gfunction
 
 import (
-	"fmt"
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
 	"math"
 	"math/big"
+	"strings"
 )
 
 // bigdecimalAbs returns the absolute value of the BigDecimal
@@ -195,24 +195,28 @@ func bigdecimalDoubleValue(params []interface{}) interface{} {
 func bigdecimalEquals(params []interface{}) interface{} {
 	bd1 := params[0].(*object.Object)
 	bd2 := params[1].(*object.Object)
-	intVal1, ok := bd1.FieldTable["intVal"].Fvalue.(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("bigdecimalEquals: bd1.FieldTable[\"intVal\"] is missing")
-		return getGErrBlk(excNames.VirtualMachineError, errMsg)
-	}
-	intVal2, ok := bd2.FieldTable["intVal"].Fvalue.(*object.Object)
-	if !ok {
-		errMsg := fmt.Sprintf("bigdecimalEquals: bd2.FieldTable[\"intVal\"] is missing")
-		return getGErrBlk(excNames.VirtualMachineError, errMsg)
-	}
-	bi1 := intVal1.FieldTable["value"].Fvalue.(*big.Int)
-	bi2 := intVal2.FieldTable["value"].Fvalue.(*big.Int)
+
+	// Compare scales first
 	scale1 := bd1.FieldTable["scale"].Fvalue.(int64)
 	scale2 := bd2.FieldTable["scale"].Fvalue.(int64)
-	if bi1.Cmp(bi2) == 0 && scale1 == scale2 {
-		return types.JavaBoolTrue
+
+	if scale1 != scale2 {
+		return false // different scales means not equal
 	}
-	return types.JavaBoolFalse
+
+	// Compare unscaled values (bigInt)
+	bi1 := bd1.FieldTable["intVal"].Fvalue.(*object.Object)
+	bi2 := bd2.FieldTable["intVal"].Fvalue.(*object.Object)
+
+	unscaled1 := bi1.FieldTable["value"].Fvalue.(*big.Int)
+	unscaled2 := bi2.FieldTable["value"].Fvalue.(*big.Int)
+
+	if unscaled1.Cmp(unscaled2) != 0 {
+		return false // different unscaled values means not equal
+	}
+
+	// If both scale and unscaled value are the same, they are equal
+	return true
 }
 
 // bigdecimalFloatValue returns the BigDecimal as a float64 (same as doubleValue)
@@ -310,22 +314,61 @@ func bigdecimalMin(params []interface{}) interface{} {
 func bigdecimalMovePointLeft(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	num := params[1].(int64)
-	newScale := bd.FieldTable["scale"].Fvalue.(int64) + num
-	newObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	*newObj = *bd
-	newObj.FieldTable["scale"] = object.Field{Ftype: types.Int, Fvalue: newScale}
-	return newObj
+
+	// Extract intVal and scale
+	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
+
+	// Get the underlying *big.Int value
+	unscaled := bi.FieldTable["value"].Fvalue.(*big.Int)
+
+	// New scale is original scale + num
+	newScale := scale + num
+
+	// Precision is length of digits in unscaled value
+	precision := int64(len(strings.TrimLeft(unscaled.String(), "-0")))
+	if precision == 0 {
+		precision = 1 // Java treats 0 as precision 1
+	}
+
+	// Create new BigDecimal object
+	newBigInt := new(big.Int).Set(unscaled)
+	newBD := bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
+
+	return newBD
 }
 
 // bigdecimalMovePointRight shifts the decimal point to the right by n
 func bigdecimalMovePointRight(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	num := params[1].(int64)
-	newScale := bd.FieldTable["scale"].Fvalue.(int64) - num
-	newObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	*newObj = *bd
-	newObj.FieldTable["scale"] = object.Field{Ftype: types.Int, Fvalue: newScale}
-	return newObj
+
+	intVal := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
+
+	// Extract the unscaled big.Int
+	bigInt := intVal.FieldTable["value"].Fvalue.(*big.Int)
+
+	var newBigInt *big.Int
+	var newScale int64
+
+	if num <= scale {
+		// Just reduce the scale
+		newBigInt = new(big.Int).Set(bigInt)
+		newScale = scale - num
+	} else {
+		// Shift the decimal point right by multiplying
+		shift := num - scale
+		factor := new(big.Int).Exp(big.NewInt(10), big.NewInt(shift), nil)
+		newBigInt = new(big.Int).Mul(bigInt, factor)
+		newScale = 0
+	}
+
+	// Compute precision
+	precision := int64(len(newBigInt.Text(10)))
+
+	// Construct and return a new BigDecimal object
+	return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
 }
 
 // bigdecimalMultiply returns the result of multiplying two BigDecimals

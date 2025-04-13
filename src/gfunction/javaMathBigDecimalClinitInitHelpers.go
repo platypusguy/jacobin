@@ -29,10 +29,7 @@ func bigdecimalInitDouble(params []interface{}) interface{} {
 	valStr := strconv.FormatFloat(valObj, 'g', -1, 64)
 
 	// Get *big.Int value and scale.
-	bigInt, scale, gerr := parseBigDecimalString(valStr)
-	if gerr != nil {
-		return gerr
-	}
+	bigInt, scale := parseDecimalString(valStr)
 
 	// Create BigInteger from string
 	bigIntObj := makeBigIntegerFromBigInt(bigInt)
@@ -74,10 +71,7 @@ func bigdecimalInitString(params []interface{}) interface{} {
 	str := object.GoStringFromStringObject(strObj)
 
 	// Parse the string into a *big.Int (unscaled value) and a scale.
-	bigInt, scale, gerr := parseBigDecimalString(str)
-	if gerr != nil {
-		return gerr
-	}
+	bigInt, scale := parseDecimalString(str)
 
 	// Compute precision: number of decimal digits in unscaled value.
 	precision := int64(len(bigInt.Text(10)))
@@ -161,58 +155,43 @@ func bigIntegerFromInt64(arg int64) *object.Object {
 }
 
 // Parse a String into decimal precision and scale values.
-func parseBigDecimalString(argStr string) (*big.Int, int64, interface{}) {
-	// Check for empty string.
-	argStr = strings.TrimSpace(argStr)
-	if argStr == "" {
-		argStr = "0"
+func parseDecimalString(s string) (*big.Int, int64) {
+	neg := false
+	if strings.HasPrefix(s, "-") {
+		neg = true
+		s = s[1:]
 	}
 
-	// Set up negative flag.
-	negative := false
-	if argStr[0] == '+' {
-		argStr = argStr[1:]
-	} else if argStr[0] == '-' {
-		negative = true
-		argStr = argStr[1:]
-	}
-
-	// wholePart = left of '.' substring.
-	// fracPart = right of '.' substring.
-	parts := strings.SplitN(argStr, ".", 2)
-	wholePart := parts[0]
+	parts := strings.SplitN(s, ".", 2)
+	intPart := parts[0]
 	fracPart := ""
 	if len(parts) == 2 {
 		fracPart = parts[1]
 	}
 
-	// Remove leading zeros from whole part, keeping at least one digit.
-	wholePart = strings.TrimLeft(wholePart, "0")
-	if wholePart == "" {
-		wholePart = "0"
+	// Remove leading zeros in intPart to avoid incorrect precision
+	intPart = strings.TrimLeft(intPart, "0")
+	if intPart == "" {
+		intPart = "0"
 	}
 
-	// Form the precision string.
-	precisionStr := wholePart + fracPart
-	if precisionStr == "" {
-		precisionStr = "0"
-	}
-	if negative {
-		precisionStr = "-" + precisionStr
-	}
-
-	// Compute the precision.
-	precision := new(big.Int)
-	_, ok := precision.SetString(precisionStr, 10)
-	if !ok {
-		errMsg := fmt.Sprintf("bigdecimalObjectFromBigDecimal: invalid digits detected: %s", argStr)
-		return nil, int64(0), getGErrBlk(excNames.NumberFormatException, errMsg)
-	}
-
-	// Compute the scale.
 	scale := int64(len(fracPart))
+	fullDigits := intPart + fracPart
+	fullDigits = strings.TrimLeft(fullDigits, "0")
 
-	return precision, scale, nil
+	if fullDigits == "" {
+		fullDigits = "0"
+		scale = 0
+	}
+
+	bi := new(big.Int)
+	bi.SetString(fullDigits, 10)
+
+	if neg {
+		bi.Neg(bi)
+	}
+
+	return bi, scale
 }
 
 // setBigIntegerFields: Given the BigInteger object and the *big.Int, set the BigInteger object fields.
