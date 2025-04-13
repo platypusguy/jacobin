@@ -215,12 +215,13 @@ func parseDecimalString(s string) (*big.Int, int64, bool) {
 	}
 
 	// Default scale is the number of digits after the decimal
-	if len(parts) > 1 {
+	var unscaledStr string
+	if len(parts) > 1 && parts[1] != "0" {
 		scale = int64(len(parts[1])) // Scale is based on the number of digits after the decimal
+		unscaledStr = parts[0] + parts[1]
+	} else {
+		unscaledStr = parts[0]
 	}
-
-	// Remove the decimal point for the unscaled value
-	unscaledStr := strings.Replace(s, ".", "", -1)
 
 	// Now, convert the string (without the decimal) to a big integer
 	unscaled := new(big.Int)
@@ -233,11 +234,6 @@ func parseDecimalString(s string) (*big.Int, int64, bool) {
 
 	// Adjust the scale based on the exponent
 	scale -= exponent
-
-	// If the scale becomes negative, set it to 0 (as we can't have negative scale)
-	if scale < 0 {
-		scale = 0
-	}
 
 	// Return the unscaled value, scale, and success flag
 	return unscaled, scale, true
@@ -367,4 +363,40 @@ func float64ToDecimalComponents(arg float64) (*big.Int, int64, int64) {
 	}
 
 	return unscaled, precision, scale
+}
+
+// formatDecimalString: Given a *big.Int signed & unscaled quantity and the int64 scale, produce a Go string.
+func formatDecimalString(unscaled *big.Int, scale int64) string {
+	isNegative := unscaled.Sign() < 0
+	absStr := new(big.Int).Abs(unscaled).String()
+
+	// Add leading zeros if absStr is too short for the scale
+	if int64(len(absStr)) <= scale {
+		zerosToAdd := int(scale) - len(absStr) + 1
+		absStr = strings.Repeat("0", zerosToAdd) + absStr
+	}
+
+	// Preliminary intPart and fracPart.
+	intPart := absStr[:len(absStr)-int(scale)]
+	fracPart := absStr[len(absStr)-int(scale):]
+
+	// If intPart is empty, replace it with "0".
+	var result string
+	if intPart == "" {
+		intPart = "0"
+	}
+
+	// If fracPart is empty, do not include the decimal place nor the fracPart in the result.
+	if fracPart == "" {
+		result = intPart
+	} else {
+		result = intPart + "." + fracPart
+	}
+
+	// If negative, prepend the minus sign.
+	if isNegative {
+		result = "-" + result
+	}
+
+	return result
 }
