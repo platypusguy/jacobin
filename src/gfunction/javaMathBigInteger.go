@@ -859,16 +859,20 @@ func bigIntegerEquals(params []interface{}) interface{} {
 	// params[0]:  base object (xx)
 	// params[1]:  argument object (yy)
 	objBase := params[0].(*object.Object)
-	objArg := params[1].(*object.Object)
+	objArg, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "bigIntegerEquals: argument not an object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	if objArg.FieldTable["value"].Ftype != types.BigInteger {
-		return int64(0)
+		return types.JavaBoolFalse
 	}
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 	if xx.Cmp(yy) != 0 {
-		return int64(0)
+		return types.JavaBoolFalse
 	}
-	return int64(1)
+	return types.JavaBoolTrue
 }
 
 // "java/math/BigInteger.gcd(Ljava/math/BigInteger;)Ljava/math/BigInteger;"

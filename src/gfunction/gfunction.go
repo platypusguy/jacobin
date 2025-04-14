@@ -138,6 +138,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/math/*
 	Load_Math_Big_Integer()
+	Load_Math_Big_Decimal()
 
 	// java/security/*
 	Load_Security_SecureRandom()

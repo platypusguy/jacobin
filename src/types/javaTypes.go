@@ -59,6 +59,7 @@ const GolangString = "G"
 
 // Field types created and used in gfunctions
 const BigInteger = "*BI" // The related Fvalue is a Golang *big.Int
+const BigDecimal = "*BD"
 const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
 const HashMap = "*HM"    // The related Fvalue is a Golang map[interface{}]interface{}
 const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
