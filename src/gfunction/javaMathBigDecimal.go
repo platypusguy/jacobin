@@ -150,10 +150,16 @@ func Load_Math_Big_Decimal() {
 			GFunction:  trapDeprecated,
 		}
 
-	MethodSignatures[classNameBigDecimal+".divide(Ljava/math/BigDecimal;IILjava/math/RoundingMode;)Ljava/math/BigDecimal;"] = // Deprecated
+	MethodSignatures[classNameBigDecimal+".divide(Ljava/math/BigDecimal;II)Ljava/math/BigDecimal;"] = // Deprecated
 		GMeth{
-			ParamSlots: 4,
+			ParamSlots: 3,
 			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures[classNameBigDecimal+".divide(Ljava/math/BigDecimal;ILjava/math/RoundingMode;)Ljava/math/BigDecimal;"] = // Deprecated
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures[classNameBigDecimal+".divide(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
@@ -177,7 +183,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".divideAndRemainder(Ljava/math/BigDecimal;Ljava/math/MathContext;)[Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapDeprecated,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures[classNameBigDecimal+".divideToIntegralValue(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"] =
@@ -189,7 +195,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".divideToIntegralValue(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapDeprecated,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures[classNameBigDecimal+".doubleValue()D"] =
