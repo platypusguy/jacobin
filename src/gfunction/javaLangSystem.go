@@ -127,7 +127,7 @@ func Load_Lang_System() {
 
 	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
-			ParamSlots: 1,
+			ParamSlots: 2,
 			GFunction:  systemGetPropertyDefault,
 		}
 
