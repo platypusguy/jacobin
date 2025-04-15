@@ -53,11 +53,11 @@ func TestArrayCopyNonOverlapping(t *testing.T) {
 	params[3] = int64(0)
 	params[4] = int64(5)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err != nil {
 		e := err.(error)
-		t.Errorf("Unexpected error in test of arrayCopy(): %s", error.Error(e))
+		t.Errorf("Unexpected error in test of systemArrayCopy(): %s", error.Error(e))
 	}
 
 	rawDestArray := dest.FieldTable["value"].Fvalue.([]int64)
@@ -96,11 +96,11 @@ func TestArrayCopyOverlappingSameArray(t *testing.T) {
 
 	// result should be 2,3,4,5,6,5,6,7,8,9 (which totals 55)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err != nil {
 		e := err.(error)
-		t.Errorf("Unexpected error in test of arrayCopy(): %s", error.Error(e))
+		t.Errorf("Unexpected error in test of systemArrayCopy(): %s", error.Error(e))
 	}
 
 	j := types.JavaByte(0)
@@ -131,7 +131,7 @@ func TestArrayInvalidParmCount(t *testing.T) {
 	params[3] = int64(0)
 	// params[4] = int64(5)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err == nil {
 		t.Errorf("Expecting error, but got none")
@@ -161,7 +161,7 @@ func TestArrayCopyInvalidPos(t *testing.T) {
 	params[3] = int64(0)
 	params[4] = int64(5)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err == nil {
 		t.Errorf("Exoected an error message, but got none")
@@ -191,7 +191,7 @@ func TestArrayCopyNullArray(t *testing.T) {
 	params[3] = int64(0)
 	params[4] = int64(5)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err == nil {
 		t.Errorf("Exoected an error message, but got none")
@@ -224,7 +224,7 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 	params[3] = int64(0)
 	params[4] = int64(5)
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err == nil {
 		t.Errorf("Exoected an error message, but got none")
@@ -254,7 +254,7 @@ func TestArrayCopyInvalidLength(t *testing.T) {
 	params[3] = int64(0)
 	params[4] = int64(200) // the invalid length
 
-	err := arrayCopy(params)
+	err := systemArrayCopy(params)
 
 	if err == nil {
 		t.Errorf("Exoected an error message, but got none")
@@ -268,7 +268,7 @@ func TestArrayCopyInvalidLength(t *testing.T) {
 
 func TestGetMilliTime(t *testing.T) {
 	globals.InitGlobals("test")
-	ret := currentTimeMillis(nil).(int64)
+	ret := systemCurrentTimeMillis(nil).(int64)
 	if ret < 1739512706877 { // milli time on 13 Feb 2025 at roughtly 10PM PST
 		t.Errorf("Expected a greater value from nanoTime(), got %d", ret)
 	}
@@ -276,7 +276,7 @@ func TestGetMilliTime(t *testing.T) {
 
 func TestGetNanoTime(t *testing.T) {
 	globals.InitGlobals("test")
-	ret := nanoTime(nil).(int64)
+	ret := systemNanoTime(nil).(int64)
 	if ret < 1739512706877498200 { // nanotime on 13 Feb 2025 at roughtly 10PM PST
 		t.Errorf("Expected a greater value from nanoTime(), got %d", ret)
 	}
@@ -284,7 +284,7 @@ func TestGetNanoTime(t *testing.T) {
 
 func TestExitI(t *testing.T) {
 	globals.InitGlobals("test")
-	ret := exitI([]interface{}{int64(17)})
+	ret := systemExitI([]interface{}{int64(17)})
 	if ret.(int64) != 17 {
 		t.Errorf("Expected exit code of 17, got %d", ret.(int64))
 	}
@@ -299,7 +299,7 @@ func TestGetConsole(t *testing.T) {
 	statics.PreloadStatics()
 	_ = systemClinit(nil)
 
-	ret := getConsole(nil)
+	ret := systemConsole(nil)
 	if ret.(*os.File) != os.Stdin {
 		t.Errorf("Expected getConsole() to return stdin, got %v", ret)
 	}
@@ -319,6 +319,7 @@ func TestGetProperty_FileEncoding(t *testing.T) {
 }
 
 func TestGetProperty_FileSeparator(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("file.separator")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -329,6 +330,7 @@ func TestGetProperty_FileSeparator(t *testing.T) {
 }
 
 func TestGetProperty_JavaClassPath(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.class.path")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -339,6 +341,7 @@ func TestGetProperty_JavaClassPath(t *testing.T) {
 }
 
 func TestGetProperty_JavaCompiler(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.compiler")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -360,6 +363,7 @@ func TestGetProperty_JavaHome(t *testing.T) {
 }
 
 func TestGetProperty_JavaIoTmpdir(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.io.tmpdir")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -381,6 +385,7 @@ func TestGetProperty_JavaLibraryPath(t *testing.T) {
 }
 
 func TestGetProperty_JavaVendor(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vendor")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -391,6 +396,7 @@ func TestGetProperty_JavaVendor(t *testing.T) {
 }
 
 func TestGetProperty_JavaVendorUrl(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vendor.url")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -435,6 +441,7 @@ func TestGetProperty_JavaVmName(t *testing.T) {
 }
 
 func TestGetProperty_JavaVmSpecificationName(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vm.specification.name")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -445,6 +452,7 @@ func TestGetProperty_JavaVmSpecificationName(t *testing.T) {
 }
 
 func TestGetProperty_JavaVmSpecificationVendor(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vm.specification.vendor")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -466,6 +474,7 @@ func TestGetProperty_JavaVmSpecificationVersion(t *testing.T) {
 }
 
 func TestGetProperty_JavaVmVendor(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vm.vendor")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -487,6 +496,7 @@ func TestGetProperty_JavaVmVersion(t *testing.T) {
 }
 
 func TestGetProperty_LineSeparator(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("line.separator")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -502,6 +512,7 @@ func TestGetProperty_LineSeparator(t *testing.T) {
 }
 
 func TestGetProperty_NativeEncoding(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("native.encoding")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -512,6 +523,7 @@ func TestGetProperty_NativeEncoding(t *testing.T) {
 }
 
 func TestGetProperty_OsArch(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("os.arch")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -522,6 +534,7 @@ func TestGetProperty_OsArch(t *testing.T) {
 }
 
 func TestGetProperty_OsName(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("os.name")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -532,6 +545,7 @@ func TestGetProperty_OsName(t *testing.T) {
 }
 
 func TestGetProperty_OsVersion(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("os.version")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -543,6 +557,7 @@ func TestGetProperty_OsVersion(t *testing.T) {
 }
 
 func TestGetProperty_PathSeparator(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("path.separator")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -553,6 +568,7 @@ func TestGetProperty_PathSeparator(t *testing.T) {
 }
 
 func TestGetProperty_UserDir(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("user.dir")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -563,6 +579,7 @@ func TestGetProperty_UserDir(t *testing.T) {
 }
 
 func TestGetProperty_UserHome(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("user.home")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -574,6 +591,7 @@ func TestGetProperty_UserHome(t *testing.T) {
 }
 
 func TestGetProperty_UserName(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("user.name")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -585,6 +603,7 @@ func TestGetProperty_UserName(t *testing.T) {
 }
 
 func TestGetProperty_UserTimezone(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("user.timezone")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
@@ -596,10 +615,120 @@ func TestGetProperty_UserTimezone(t *testing.T) {
 }
 
 func TestGetProperty_Default(t *testing.T) {
+	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("unknown.property")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
 	if result != object.Null {
 		t.Errorf("Expected null, got %v", result)
 	}
+}
+
+func TestSetProperty_JavaIoTmpdir(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.io.tmpdir")
+	params := []interface{}{propObj}
+	result := systemGetProperty(params)
+	observed := object.GoStringFromStringObject(result.(*object.Object))
+	expected := os.TempDir()
+	if observed != expected {
+		t.Errorf("1. Expected %s, observed %s", expected, observed)
+		return
+	}
+
+	newValueObj := object.StringObjectFromGoString("rubbish")
+	params = []interface{}{propObj, newValueObj}
+	result = systemSetProperty(params)
+	observed = object.GoStringFromStringObject(result.(*object.Object))
+	if observed != expected {
+		t.Errorf("2. Expected %s, observed %s", expected, observed)
+		return
+	}
+	params = []interface{}{propObj}
+	result = systemGetProperty(params)
+	observed = object.GoStringFromStringObject(result.(*object.Object))
+	expected = "rubbish"
+	if observed != expected {
+		t.Errorf("3. Expected %s, observed %s", expected, observed)
+		return
+	}
+
+}
+
+func TestClearProperty_JavaIoTmpdir(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("java.io.tmpdir")
+	params := []interface{}{propObj}
+	result := systemClearProperty(params)
+	observed := object.GoStringFromStringObject(result.(*object.Object))
+	expected := os.TempDir()
+	if observed != expected {
+		t.Errorf("1. Expected %s, observed %s", expected, observed)
+		return
+	}
+
+	result = systemGetProperty(params)
+	observed = object.GoStringFromStringObject(result.(*object.Object))
+	if observed != "" {
+		t.Errorf("Expected \"\", observed %s", observed)
+		return
+	}
+
+}
+
+func TestSetProperties(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a Properties object.
+	propsObj := object.MakeEmptyObjectWithClassName(&classNameProperties)
+	params := []interface{}{propsObj}
+	propertiesInit(params)
+
+	// Add 2 elements to the Properties object.
+	key1Obj := object.StringObjectFromGoString("color")
+	value1Obj := object.StringObjectFromGoString("green")
+	params = []interface{}{propsObj, key1Obj, value1Obj}
+	_ = propertiesSetProperty(params)
+	key2Obj := object.StringObjectFromGoString("sound")
+	value2Obj := object.StringObjectFromGoString("soft")
+	params = []interface{}{propsObj, key2Obj, value2Obj}
+	_ = propertiesSetProperty(params)
+
+	// Replace the system properties.
+	propsMap := propsObj.FieldTable[fieldNameProperties].Fvalue.(types.DefProperties)
+	globals.ReplaceSystemProperties(propsMap)
+
+	// Try to get tmp dir.
+	propObj := object.StringObjectFromGoString("java.io.tmpdir")
+	params = []interface{}{propObj}
+	result := systemGetProperty(params)
+	observed := object.GoStringFromStringObject(result.(*object.Object))
+	expected := ""
+	if observed != expected {
+		t.Errorf("3. Expected \"\", observed %s", observed)
+		return
+	}
+
+	// Try to get "color".
+	propObj = object.StringObjectFromGoString("color")
+	params = []interface{}{propObj}
+	result = systemGetProperty(params)
+	observed = object.GoStringFromStringObject(result.(*object.Object))
+	expected = "green"
+	if observed != expected {
+		t.Errorf("3. Expected %s, observed %s", expected, observed)
+		return
+	}
+
+	// Try to get "sound".
+	propObj = object.StringObjectFromGoString("sound")
+	params = []interface{}{propObj}
+	result = systemGetProperty(params)
+	observed = object.GoStringFromStringObject(result.(*object.Object))
+	expected = "soft"
+	if observed != expected {
+		t.Errorf("3. Expected %s, observed %s", expected, observed)
+		return
+	}
+
 }
