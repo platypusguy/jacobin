@@ -9,6 +9,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/types"
 	"math/bits"
@@ -796,7 +797,7 @@ func integerGetInteger(params []interface{}) interface{} {
 	}
 
 	// Get the System.getProperty(name) value.
-	value := getProperty(name)
+	value := globals.GetSystemProperty(name)
 	if value == "" {
 		// If no system property by that name is available, return the default value if available.
 		if hasDefault {

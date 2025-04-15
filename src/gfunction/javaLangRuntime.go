@@ -43,7 +43,7 @@ func Load_Lang_Runtime() {
 	MethodSignatures["java/lang/Runtime.exit(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  exitI, // javaLangSystem.go
+			GFunction:  systemExitI, // javaLangSystem.go
 		}
 
 	MethodSignatures["java/lang/Runtime.getRuntime()Ljava/lang/Runtime;"] =
@@ -55,7 +55,7 @@ func Load_Lang_Runtime() {
 	MethodSignatures["java/lang/Runtime.halt(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  exitI, // javaLangSystem.go
+			GFunction:  systemExitI, // javaLangSystem.go
 		}
 
 	MethodSignatures["java/lang/Runtime.load(Ljava/lang/String;)V"] =

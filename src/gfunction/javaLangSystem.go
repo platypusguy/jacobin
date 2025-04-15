@@ -18,13 +18,9 @@ import (
 	"jacobin/trace"
 	"jacobin/types"
 	"os"
-	"os/exec"
-	"os/user"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
-	"unicode"
 )
 
 /*
@@ -60,31 +56,43 @@ func Load_Lang_System() {
 	MethodSignatures["java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V"] = // copy array (full or partial)
 		GMeth{
 			ParamSlots: 5,
-			GFunction:  arrayCopy,
+			GFunction:  systemArrayCopy,
+		}
+
+	MethodSignatures["java/lang/System.clearProperty(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  systemClearProperty,
 		}
 
 	MethodSignatures["java/lang/System.console()Ljava/io/Console;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getConsole,
+			GFunction:  systemConsole,
 		}
 
 	MethodSignatures["java/lang/System.currentTimeMillis()J"] = // get time in ms since Jan 1, 1970, returned as long
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  currentTimeMillis,
+			GFunction:  systemCurrentTimeMillis,
 		}
 
 	MethodSignatures["java/lang/System.exit(I)V"] = // shutdown the app
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  exitI,
+			GFunction:  systemExitI,
 		}
 
 	MethodSignatures["java/lang/System.gc()V"] = // for a GC cycle
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  forceGC,
+			GFunction:  systemForceGC,
+		}
+
+	MethodSignatures["java/lang/System.getenv()Ljava/util/Map;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/System.getenv(Ljava/lang/String;)Ljava/lang/String;"] =
@@ -93,22 +101,82 @@ func Load_Lang_System() {
 			GFunction:  systemGetenv,
 		}
 
+	MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;)Ljava/lang/System/Logger;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.getLogger(Ljava/lang/String;Ljava/util/ResourceBundle;)Ljava/lang/System/Logger;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.getProperties()Ljava/util/Properties;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  systemGetProperties,
+		}
+
 	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  systemGetProperty,
 		}
 
+	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  systemGetPropertyDefault,
+		}
+
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  systemGetSecurityManager,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/lang/System.identityHashCode(Ljava/lang/Object;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.inheritedChannel()Ljava/nio/channels/Channel;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.lineSeparator()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  systemLineSeparator,
+		}
+
+	MethodSignatures["java/lang/System.load(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.loadLibrary(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.mapLibraryName(Ljava/lang/String;)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/System.nanoTime()J"] = // get nanoseconds time, returned as long
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  nanoTime,
+			GFunction:  systemNanoTime,
 		}
 
 	MethodSignatures["java/lang/System.registerNatives()V"] =
@@ -117,21 +185,50 @@ func Load_Lang_System() {
 			GFunction:  justReturn,
 		}
 
+	MethodSignatures["java/lang/System.runFinalization()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/lang/System.setErr(Ljava/io/PrintStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.setIn(Ljava/io/InputStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.setOut(Ljava/io/PrintStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/System.setProperties(Ljava/util/Properties;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  systemSetProperties,
+		}
+
+	MethodSignatures["java/lang/System.setProperty(Ljava/lang/String;Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  systemSetProperty,
+		}
+
+	MethodSignatures["java/lang/System.setSecurityManager(Ljava/lang/SecurityManager;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapDeprecated,
+		}
+
 }
 
-/*
-		 check whether this systemClinit() has been previously run. If not, have it duplicate the
-	   following bytecodes from JDK 17 java/lang/System:
-			static {};
-			0: invokestatic  #637                // Method registerNatives:()V
-			3: aconst_null
-			4: putstatic     #640                // Field in:Ljava/io/InputStream;
-			7: aconst_null
-			8: putstatic     #387                // Field out:Ljava/io/PrintStream;
-			11: aconst_null
-			12: putstatic     #384                // Field err:Ljava/io/PrintStream;
-			15: return
-*/
 func systemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil {
@@ -148,12 +245,12 @@ func systemClinit([]interface{}) interface{} {
 	return nil
 }
 
-// arrayCopy copies an array or subarray from one array to another, both of which must exist.
+// systemArrayCopy copies an array or subarray from one array to another, both of which must exist.
 // It is a complex native function in the JDK. Javadoc here:
 // docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
-func arrayCopy(params []interface{}) interface{} {
+func systemArrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
-		errMsg := fmt.Sprintf("arrayCopy: Expected 5 parameters, got %d", len(params))
+		errMsg := fmt.Sprintf("systemArrayCopy: Expected 5 parameters, got %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -164,13 +261,13 @@ func arrayCopy(params []interface{}) interface{} {
 	length := params[4].(int64)
 
 	if object.IsNull(src) || object.IsNull(dest) {
-		errMsg := fmt.Sprintf("arrayCopy: null src or dest")
+		errMsg := fmt.Sprintf("systemArrayCopy: null src or dest")
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
 		errMsg := fmt.Sprintf(
-			"arrayCopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+			"systemArrayCopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -178,7 +275,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
 	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
-		errMsg := fmt.Sprintf("arrayCopy: invalid src or dest array")
+		errMsg := fmt.Sprintf("systemArrayCopy: invalid src or dest array")
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 
@@ -186,7 +283,7 @@ func arrayCopy(params []interface{}) interface{} {
 	destLen := object.ArrayLength(dest)
 
 	if srcPos+length > srcLen || destPos+length > destLen {
-		errMsg := fmt.Sprintf("arrayCopy: Array position + length exceeds array size")
+		errMsg := fmt.Sprintf("systemArrayCopy: Array position + length exceeds array size")
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
@@ -300,24 +397,24 @@ func arrayCopy(params []interface{}) interface{} {
 }
 
 // Return the system input console as a *os.File.
-func getConsole([]interface{}) interface{} {
+func systemConsole([]interface{}) interface{} {
 	return statics.GetStaticValue("java/lang/System", "in")
 }
 
 // Return time in milliseconds, measured since midnight of Jan 1, 1970
-func currentTimeMillis([]interface{}) interface{} {
+func systemCurrentTimeMillis([]interface{}) interface{} {
 	return time.Now().UnixMilli() // is int64
 }
 
 // Return time in nanoseconds. Note that in golang this function has a lower (that is, less good)
 // resolution than Java: two successive calls often return the same value.
-func nanoTime([]interface{}) interface{} {
+func systemNanoTime([]interface{}) interface{} {
 	return time.Now().UnixNano() // is int64
 }
 
 // Exits the program directly, returning the passed in value
 // exit is a static function, so no object ref and exit value is in params[0]
-func exitI(params []interface{}) interface{} {
+func systemExitI(params []interface{}) interface{} {
 	exitCode := params[0].(int64)
 	var exitStatus = int(exitCode)
 	shutdown.Exit(exitStatus)
@@ -325,7 +422,7 @@ func exitI(params []interface{}) interface{} {
 }
 
 // Force a garbage collection cycle.
-func forceGC([]interface{}) interface{} {
+func systemForceGC([]interface{}) interface{} {
 	runtime.GC()
 	return nil
 }
@@ -336,126 +433,108 @@ func systemGetenv(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(os.Getenv(key))
 }
 
-// Get the fake SecurityManager.
-func systemGetSecurityManager(params []interface{}) interface{} {
-	return object.MakePrimitiveObject("java/lang/SecurityManager", types.Int, 42)
+// Get a system property - high level function.
+func systemClearProperty(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object) // string
+	propStr := object.GoStringFromStringObject(propObj)
+
+	value := globals.GetSystemProperty(propStr)
+	if value == "" {
+		return object.Null
+	}
+
+	globals.RemoveSystemProperty(propStr)
+
+	return object.StringObjectFromGoString(value)
 }
 
 // Get a system property - high level function.
 func systemGetProperty(params []interface{}) interface{} {
-	propObj := params[0].(*object.Object) // string
+	propObj := params[0].(*object.Object)
 	propStr := object.GoStringFromStringObject(propObj)
 
-	value := getProperty(propStr)
-
+	value := globals.GetSystemProperty(propStr)
 	if value == "" {
 		return object.Null
 	}
-	obj := object.StringObjectFromGoString(value)
-	return obj
+	return object.StringObjectFromGoString(value)
 }
 
-func getProperty(arg string) string {
-	var value string
-	g := globals.GetGlobalRef()
-	operSys := runtime.GOOS
+// Get a system property - high level function.
+func systemGetPropertyDefault(params []interface{}) interface{} {
+	propObj := params[0].(*object.Object)
+	propStr := object.GoStringFromStringObject(propObj)
 
-	switch arg {
-	case "file.encoding":
-		value = g.FileEncoding
-	case "file.separator":
-		value = string(os.PathSeparator)
-	case "java.class.path":
-		value = "." // OpenJDK JVM default value
-	case "java.compiler": // the name of the JIT compiler (we don't have a JIT)
-		value = "no JIT"
-	case "java.home":
-		value = g.JavaHome
-	case "java.io.tmpdir":
-		value = os.TempDir()
-	case "java.library.path":
-		value = g.JavaHome
-	case "java.vendor":
-		value = "Jacobin"
-	case "java.vendor.url":
-		value = "https://jacobin.org"
-	case "java.vendor.version":
-		value = g.Version
-	case "java.version":
-		value = strconv.Itoa(g.MaxJavaVersion)
-	// case "java.version.date":
-	// 	need to get this
-	case "java.vm.name":
-		value = fmt.Sprintf(
-			"Jacobin VM v. %s (Java %d) 64-bit VM", g.Version, g.MaxJavaVersion)
-	case "java.vm.specification.name":
-		value = "Java Virtual Machine Specification"
-	case "java.vm.specification.vendor":
-		value = "Oracle and Jacobin"
-	case "java.vm.specification.version":
-		value = strconv.Itoa(g.MaxJavaVersion)
-	case "java.vm.vendor":
-		value = "Jacobin"
-	case "java.vm.version":
-		value = strconv.Itoa(g.MaxJavaVersion)
-	case "line.separator":
-		if operSys == "windows" {
-			value = "\\r\\n"
-		} else {
-			value = "\\n"
-		}
-	case "native.encoding":
-		value = globals.GetCharsetName()
-	case "os.arch":
-		value = runtime.GOARCH
-	case "os.name":
-		value = operSys
-	case "os.version":
-		value = getOSVersion()
-	case "path.separator":
-		value = string(os.PathSeparator)
-	case "user.dir": // present working directory
-		value, _ = os.Getwd()
-	case "user.home":
-		currentUser, _ := user.Current()
-		value = currentUser.HomeDir
-	case "user.name":
-		currentUser, _ := user.Current()
-		value = currentUser.Name
-	case "user.timezone":
-		now := time.Now()
-		value, _ = now.Zone()
-	default:
-		value = ""
+	value := globals.GetSystemProperty(propStr)
+	if value == "" {
+		return params[1].(*object.Object)
 	}
-
-	return value
+	return object.StringObjectFromGoString(value)
 }
 
-// getOSVersion: Get the O/S version string and return it to caller.
-func getOSVersion() string {
-	var cmd *exec.Cmd
+// systemGetProperties: Create a Properties object and set its map elements to system properties.
+func systemGetProperties([]interface{}) interface{} {
+	var propMap types.DefProperties
+	propMap = make(types.DefProperties)
 
-	operSys := runtime.GOOS
-	switch operSys {
-	case "windows":
-		cmd = exec.Command("cmd", "/C", "ver")
-	default:
-		cmd = exec.Command("uname", "-r")
-	}
+	propMap["file.encoding"] = globals.GetSystemProperty("file.encoding")
+	propMap["file.separator"] = globals.GetSystemProperty("file.separator")
+	propMap["java.compiler"] = globals.GetSystemProperty("java.compiler")
+	propMap["java.home"] = globals.GetSystemProperty("java.home")
+	propMap["java.io.tmpdir"] = globals.GetSystemProperty("java.io.tmpdir")
+	propMap["java.library.path"] = globals.GetSystemProperty("java.library.path")
+	propMap["java.vendor"] = globals.GetSystemProperty("java.vendor")
+	propMap["java.vendor.url"] = globals.GetSystemProperty("java.vendor.url")
+	propMap["java.vendor.version"] = globals.GetSystemProperty("java.vendor.version")
+	propMap["java.version"] = globals.GetSystemProperty("java.version")
+	propMap["java.vm.name"] = globals.GetSystemProperty("java.vm.name")
+	propMap["java.vm.specification.name"] = globals.GetSystemProperty("java.vm.specification.name")
+	propMap["java.vm.specification.vendor"] = globals.GetSystemProperty("java.vm.specification.vendor")
+	propMap["java.vm.specification.version"] = globals.GetSystemProperty("java.vm.specification.version")
+	propMap["java.vm.vendor"] = globals.GetSystemProperty("java.vm.vendor")
+	propMap["java.vm.version"] = globals.GetSystemProperty("java.vm.version")
+	propMap["line.separator"] = globals.GetSystemProperty("line.separator")
+	propMap["native.encoding"] = globals.GetSystemProperty("native.encoding")
+	propMap["os.arch"] = globals.GetSystemProperty("os.arch")
+	propMap["os.name"] = globals.GetSystemProperty("os.name")
+	propMap["os.version"] = globals.GetSystemProperty("os.version")
+	propMap["path.separator"] = globals.GetSystemProperty("path.separator")
+	propMap["stdout.encoding"] = globals.GetSystemProperty("stdout.encoding")
+	propMap["stderr.encoding"] = globals.GetSystemProperty("stderr.encoding")
+	propMap["user.dir"] = globals.GetSystemProperty("user.dir")
+	propMap["user.home"] = globals.GetSystemProperty("user.home")
+	propMap["user.name"] = globals.GetSystemProperty("user.name")
+	propMap["user.timezone"] = globals.GetSystemProperty("user.timezone")
 
-	cmdBytes, err := cmd.CombinedOutput()
-	if err != nil {
-		errMsg := fmt.Sprintf("getOSVersion: cmd.CombinedOutput() failed on %s: %v", operSys, err)
-		return errMsg
-	}
+	return object.MakeOneFieldObject(classNameProperties, fieldNameProperties, types.Properties, propMap)
 
-	var cleanBytes []byte
-	for ix := 0; ix < len(cmdBytes); ix++ {
-		if unicode.IsPrint(rune(cmdBytes[ix])) {
-			cleanBytes = append(cleanBytes, cmdBytes[ix])
-		}
-	}
+}
 
-	return string(cleanBytes)
+// Get the system line separator.
+func systemLineSeparator([]interface{}) interface{} {
+	str := globals.GetSystemProperty("line.separator")
+	return object.StringObjectFromGoString(str)
+}
+
+// Set a system property.
+func systemSetProperties(params []interface{}) interface{} {
+	propertiesObj := params[0].(*object.Object)
+	newMap := propertiesObj.FieldTable[fieldNameProperties].Fvalue.(types.DefProperties)
+
+	globals.ReplaceSystemProperties(newMap)
+
+	return nil
+}
+
+// Set a system property.
+func systemSetProperty(params []interface{}) interface{} {
+	keyObj := params[0].(*object.Object)
+	keyStr := object.GoStringFromStringObject(keyObj)
+	valueObj := params[1].(*object.Object)
+	valueStr := object.GoStringFromStringObject(valueObj)
+
+	value := globals.GetSystemProperty(keyStr)
+	globals.SetSystemProperty(keyStr, valueStr)
+
+	return object.StringObjectFromGoString(value)
 }

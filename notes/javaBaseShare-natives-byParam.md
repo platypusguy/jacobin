@@ -124,7 +124,7 @@ java.base/share/classes/sun/nio/ch/Net.java:812:    native short pollnvalValue()
 java.base/share/classes/sun/nio/ch/Net.java:813:    native short pollconnValue();
 
 ### ()J
-java.base/share/classes/java/lang/System.java:528:    native long currentTimeMillis();
+java.base/share/classes/java/lang/System.java:528:    native long systemCurrentTimeMillis();
 java.base/share/classes/jdk/internal/foreign/abi/fallback/LibFallback.java:213: native long ffi_type_void();
 java.base/share/classes/jdk/internal/foreign/abi/fallback/LibFallback.java:214: native long ffi_type_uint8();
 java.base/share/classes/jdk/internal/foreign/abi/fallback/LibFallback.java:215: native long ffi_type_sint8();
