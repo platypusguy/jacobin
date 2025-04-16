@@ -142,7 +142,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/security/*
 	Load_Security_SecureRandom()
-	Load_Security_AccessController()
 
 	// java/util/*
 	Load_Util_Arrays()
