@@ -134,7 +134,7 @@ func Load_Lang_System() {
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapDeprecated,
+			GFunction:  systemGetSecurityManager,
 		}
 
 	MethodSignatures["java/lang/System.identityHashCode(Ljava/lang/Object;)I"] =
@@ -508,6 +508,11 @@ func systemGetProperties([]interface{}) interface{} {
 
 	return object.MakeOneFieldObject(classNameProperties, fieldNameProperties, types.Properties, propMap)
 
+}
+
+// systemGetSecurityManager
+func systemGetSecurityManager(params []interface{}) interface{} {
+	return object.MakeEmptyObjectWithClassName(&classNameSecurityManager)
 }
 
 // Get the system line separator.

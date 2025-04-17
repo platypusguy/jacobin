@@ -44,16 +44,16 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["java/lang/SecurityManager.checkRead(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  justReturn,
-		}
-
-	MethodSignatures["java/math/BigDecimal.<clinit>()V"] =
+	MethodSignatures["java/lang/ThreadLocal.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/lang/ThreadLocal.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/math/MathContext.<clinit>()V"] =

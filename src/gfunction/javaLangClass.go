@@ -38,6 +38,12 @@ func Load_Lang_Class() {
 			GFunction:  getAssertionsEnabledStatus,
 		}
 
+	MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
 		GMeth{
 			ParamSlots: 0,
