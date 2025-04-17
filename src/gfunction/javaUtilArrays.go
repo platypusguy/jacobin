@@ -19,6 +19,12 @@ func Load_Util_Arrays() {
 			ParamSlots: 2,
 			GFunction:  copyOfObjectPointers,
 		}
+
+	MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
 }
 
 // Copy the specified array of pointers, truncating or padding with nulls so the copy has the specified length.
