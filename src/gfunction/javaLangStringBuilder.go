@@ -454,7 +454,7 @@ func stringBuilderInitString(params []any) any {
 // F                           float64
 // I                           int64
 // J                           int64
-// Ljava/lang/Object;          *object.Object [diagnosed with an error]
+// Ljava/lang/Object;          *object.Object
 // Ljava/lang/String;          *object.Object
 // Ljava/lang/StringBuffer;    *object.Object
 func stringBuilderAppend(params []any) any {
@@ -494,9 +494,8 @@ func stringBuilderAppend(params []any) any {
 				}
 			}
 		default:
-			errMsg := fmt.Sprintf("stringBuilderAppend: Object value field value type (%T) is not a byte array nor a char array",
-				params[1])
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+			str := object.StringifyAnythingGo(fvalue)
+			parmArray = object.JavaByteArrayFromGoString(str)
 		}
 	case int64: // int, long, short
 		str := fmt.Sprintf("%d", params[1].(int64))
@@ -506,8 +505,8 @@ func stringBuilderAppend(params []any) any {
 		str := strconv.FormatFloat(ff, 'f', -1, 64)
 		parmArray = object.JavaByteArrayFromGoString(str)
 	default:
-		errMsg := fmt.Sprintf("stringBuilderAppend: Parameter type (%T) is illegal", params[1])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		str := object.StringifyAnythingGo(params[1])
+		parmArray = object.JavaByteArrayFromGoString(str)
 	}
 
 	// Append parmArray to the byteArray.

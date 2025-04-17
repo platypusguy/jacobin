@@ -114,18 +114,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/lang/SecurityManager.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
-	MethodSignatures["java/lang/SecurityManager.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
 	MethodSignatures["java/nio/ByteBuffer.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
