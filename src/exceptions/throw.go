@@ -68,10 +68,15 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	// the name of the exception as shown to the user
-	exceptionNameForUser := excNames.JVMexceptionNames[which]
+	var exceptionNameForUser string
+	if glob.StrictJDK {
+		exceptionNameForUser = excNames.JVMexceptionNames[which]
+	} else {
+		exceptionNameForUser = excNames.JVMexceptionNamesJacobin[which]
+	}
 
 	// the internal format used in the constant pool
-	exceptionCPname := util.ConvertClassFilenameToInternalFormat(exceptionNameForUser)
+	exceptionCPname := util.ConvertClassFilenameToInternalFormat(excNames.JVMexceptionNames[which])
 
 	// capture the PC where the exception was thrown, if it hasn't been captured yet.
 	// (saved b/c later we modify the value of f.PC)
@@ -133,10 +138,10 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	throwObject, err := glob.FuncInstantiateClass(exceptionCPname, fs)
 	if err != nil {
 		fmt.Printf("InstantiateClass failed, FQN: %s, %s", frames.FormatFQN(f), err.Error())
-		if throwObject != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "%v\n", throwObject)
-			_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
-		}
+		// if throwObject != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "throwObject: %v\n", throwObject)
+		_ = shutdown.Exit(shutdown.JVM_EXCEPTION)
+		// }
 	}
 
 	throwObj := throwObject.(*object.Object)
