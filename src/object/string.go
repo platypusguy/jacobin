@@ -45,7 +45,7 @@ func NewStringObject() *Object {
 
 	// coder has two possible values:
 	// LATIN(e.g., 0 = bytes for compact strings) or UTF16(e.g., 1 = UTF16)
-	coderField := Field{Ftype: types.Byte, Fvalue: byte(0)}
+	coderField := Field{Ftype: types.Byte, Fvalue: types.JavaByte(0)}
 	s.FieldTable["coder"] = coderField
 
 	// the hash code, which is initialized to 0
@@ -53,7 +53,7 @@ func NewStringObject() *Object {
 	s.FieldTable["hash"] = hash
 
 	// hashIsZero: only true in rare case where compute hash is 0
-	hashIsZero := Field{Ftype: types.Byte, Fvalue: byte(0)}
+	hashIsZero := Field{Ftype: types.Byte, Fvalue: types.JavaByte(0)}
 	s.FieldTable["hashIsZero"] = hashIsZero
 
 	// The following static fields are preloaded in statics/LoadStaticsString()

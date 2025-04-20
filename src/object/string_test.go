@@ -33,7 +33,7 @@ func TestNewStringObject(t *testing.T) {
 		t.Errorf("value field should be an empty byte, observed length of %d", len(value))
 	}
 
-	coder := str.FieldTable["coder"].Fvalue.(byte)
+	coder := str.FieldTable["coder"].Fvalue.(types.JavaByte)
 	if coder != 0 && coder != 1 {
 		t.Errorf("coder field should be 0 or 1, observed: %d", coder)
 	}
@@ -43,7 +43,7 @@ func TestNewStringObject(t *testing.T) {
 		t.Errorf("hash field should be 0, observed: %d", hash)
 	}
 
-	hashIsZero := str.FieldTable["hashIsZero"].Fvalue.(byte)
+	hashIsZero := str.FieldTable["hashIsZero"].Fvalue.(types.JavaByte)
 	if hashIsZero != 0 {
 		t.Errorf("hashIsZero field should be false(0), observed: %d", hashIsZero)
 	}
