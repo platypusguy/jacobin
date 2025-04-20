@@ -25,10 +25,33 @@ func TestExceptionTableAlignment(t *testing.T) {
 	details(t, UTFDataFormatException, "java.io.UTFDataFormatException")
 }
 
+// Make sure that the enum for the exception correctly matches the string. Exceptions tested here
+// are spaced more or less evenly through the list of exceptions. This tests the Jacobin-specific
+// exceptions. The test is similar to the one above, but it uses the Jacobin-default exception names
+func TestJacobinExceptionTableAlignment(t *testing.T) {
+	detailsJacobin(t, IllegalArgumentException, "java.lang.IllegalArgumentException")
+	detailsJacobin(t, NoSuchDynamicMethodException, "jdk.dynalink.NoSuchDynamicMethodException")
+	detailsJacobin(t, WrongMethodTypeException, "java.lang.invoke.WrongMethodTypeException")
+	detailsJacobin(t, ClassNotLoadedException, "org.jacobin.ClassNotLoadedException")
+	detailsJacobin(t, InvalidTypeException, "org.jacobin.InvalidTypeException")
+	detailsJacobin(t, PrintException, "javax.print.PrintException")
+	detailsJacobin(t, UnmodifiableClassException, "java.lang.instrument.UnmodifiableClassException")
+	detailsJacobin(t, XMLParseException, "javax.management.modelmbean.XMLParseException")
+	detailsJacobin(t, VirtualMachineError, "java.lang.VirtualMachineError")
+	detailsJacobin(t, VMStartException, "org.jacobin.connect.VMStartException")
+}
+
 // utility function for previous unit test
 func details(t *testing.T, index int, expected string) {
 	observed := JVMexceptionNames[index]
 	if observed != expected {
 		t.Errorf("JVMexceptionNames[%d]: expected %s, but observed %s\n", index, expected, observed)
+	}
+}
+
+func detailsJacobin(t *testing.T, index int, expected string) {
+	observed := JVMexceptionNamesJacobin[index]
+	if observed != expected {
+		t.Errorf("JVMexceptionNamesJacobin[%d]: expected %s, but observed %s\n", index, expected, observed)
 	}
 }
