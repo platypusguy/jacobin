@@ -94,84 +94,90 @@ func returnCharsetName([]interface{}) interface{} {
 // they make available.
 func MTableLoadGFunctions(MTable *classloader.MT) {
 
-	// java/awt/*
-	Load_Awt_Graphics_Environment()
+	if globals.Galt {
+		Load_Experiment()
+	} else {
 
-	// java/io/*
-	Load_Io_BufferedReader()
-	Load_Io_Console()
-	Load_Io_File()
-	Load_Io_FileInputStream()
-	Load_Io_FileOutputStream()
-	Load_Io_FileReader()
-	Load_Io_FileWriter()
-	Load_Io_FilterInputStream()
-	Load_Io_InputStreamReader()
-	Load_Io_OutputStreamWriter()
-	Load_Io_PrintStream()
-	Load_Io_RandomAccessFile()
+		// java/awt/*
+		Load_Awt_Graphics_Environment()
 
-	// java/lang/*
-	Load_Lang_Boolean()
-	Load_Lang_Byte()
-	Load_Lang_Character()
-	Load_Lang_Class()
-	classClinitIsh()
-	Load_Lang_Double()
-	Load_Lang_Float()
-	Load_Lang_Integer()
-	Load_Lang_Long()
-	Load_Lang_Math()
-	Load_Lang_Object()
-	Load_Lang_Process_Handle_Impl() // includes ProcessHandleImpl, ProcessHandle, and ProcessHandle.Info
-	Load_Lang_Runtime()
-	Load_Lang_SecurityManager()
-	Load_Lang_Short()
-	Load_Lang_StackTraceELement()
-	Load_Lang_String()
-	Load_Lang_StringBuffer()
-	Load_Lang_StringBuilder()
-	Load_Lang_System()
-	Load_Lang_Thread()
-	Load_Lang_Throwable()
-	Load_Lang_UTF16()
+		// java/io/*
+		Load_Io_BufferedReader()
+		Load_Io_Console()
+		Load_Io_File()
+		Load_Io_FileInputStream()
+		Load_Io_FileOutputStream()
+		Load_Io_FileReader()
+		Load_Io_FileWriter()
+		Load_Io_FilterInputStream()
+		Load_Io_InputStreamReader()
+		Load_Io_OutputStreamWriter()
+		Load_Io_PrintStream()
+		Load_Io_RandomAccessFile()
 
-	// java/math/*
-	Load_Math_Big_Integer()
-	Load_Math_Big_Decimal()
+		// java/lang/*
+		Load_Lang_Boolean()
+		Load_Lang_Byte()
+		Load_Lang_Character()
+		Load_Lang_Class()
+		classClinitIsh()
+		Load_Lang_Double()
+		Load_Lang_Float()
+		Load_Lang_Integer()
+		Load_Lang_Long()
+		Load_Lang_Math()
+		Load_Lang_Object()
+		Load_Lang_Process_Handle_Impl()
+		Load_Lang_Runtime()
+		Load_Lang_SecurityManager()
+		Load_Lang_Short()
+		Load_Lang_StackTraceELement()
+		Load_Lang_String()
+		Load_Lang_StringBuffer()
+		Load_Lang_StringBuilder()
+		Load_Lang_System()
+		Load_Lang_Thread()
+		Load_Lang_Throwable()
+		Load_Lang_UTF16()
 
-	// java/security/*
-	Load_Security_SecureRandom()
+		// java/math/*
+		Load_Math_Big_Integer()
+		Load_Math_Big_Decimal()
 
-	// java/util/*
-	Load_Util_Arrays()
-	Load_Util_Base64()
-	Load_Util_Concurrent_Atomic_AtomicInteger()
-	Load_Util_Concurrent_Atomic_Atomic_Long()
-	Load_Util_Hash_Map()
-	Load_Util_Hash_Set()
-	Load_Util_HexFormat()
-	Load_Util_LinkedList()
-	Load_Util_Locale()
-	Load_Util_Properties()
-	Load_Util_Objects()
-	Load_Util_Optional()
-	Load_Util_Random()
-	Load_Util_Zip_Adler32()
-	Load_Util_Zip_Crc32_Crc32c()
+		// java/security/*
+		Load_Security_SecureRandom()
 
-	// jdk/internal/misc/*
-	Load_Jdk_Internal_Misc_Unsafe()
-	Load_Jdk_Internal_Misc_ScopedMemoryAccess()
+		// java/util/*
+		Load_Util_Arrays()
+		Load_Util_Base64()
+		Load_Util_Concurrent_Atomic_AtomicInteger()
+		Load_Util_Concurrent_Atomic_Atomic_Long()
+		Load_Util_Hash_Map()
+		Load_Util_Hash_Set()
+		Load_Util_HexFormat()
+		Load_Util_LinkedList()
+		Load_Util_Locale()
+		Load_Util_Properties()
+		Load_Util_Objects()
+		Load_Util_Optional()
+		Load_Util_Random()
+		Load_Util_Zip_Adler32()
+		Load_Util_Zip_Crc32_Crc32c()
 
-	// Load functions that invoke clinitGeneric() and do nothing else.
-	Load_Other_methods()
+		// jdk/internal/misc/*
+		Load_Jdk_Internal_Misc_Unsafe()
+		Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
-	// Load traps that lead to unconditional error returns.
-	Load_Traps()
+		// Load functions that invoke clinitGeneric() and do nothing else.
+		Load_Other_methods()
 
-	// jacobin JVM diagnostic routines
-	Load_jj()
+		// Load traps that lead to unconditional error returns.
+		Load_Traps()
+
+		// Load diagnostic helper functions.
+		Load_jj()
+
+	}
 
 	//	now, with the accumulated MethodSignatures maps, load MTable.
 	loadlib(MTable, MethodSignatures)
