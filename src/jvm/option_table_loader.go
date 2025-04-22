@@ -21,7 +21,7 @@ import (
 //
 // The table is initially created in globals.go and its declaration contains a
 // key consisting of a string with the option as typed on the command line, and
-// a value concisting of an Option struct (also defined in global.go), having
+// a value consisting of an Option struct (also defined in global.go), having
 // this layout:
 //     type Option struct {
 //	        supported bool      // is this option supported in Jacobin?
@@ -29,7 +29,7 @@ import (
 //	        argStyle  int16     // what is the format for the argument values to this option?
 //                              // 0 = no argument      1 = value follows a :
 //                              // 2 = value follows =  4 = value follows a space
-//                              // 8 = option has multiple values separated by a single character (such as in -trace and -cp)
+//                              // 10 = option has multiple values separated by a single character (such as in -trace and -cp)
 //	        action  func(position int, name string, gl pointer to globasl) error
 //                              // which is the action to perform when this option found.
 //      }
@@ -86,9 +86,6 @@ func LoadOptionsTable(Global globals.Globals) {
 	Global.Options["-jar"] = jarFile
 	jarFile.Set = true
 
-	// newInterpreter := globals.Option{true, false, 0, newInterpeter}
-	// Global.Options["-new"] = newInterpreter
-
 	showversion := globals.Option{true, false, 0, showVersionStderr}
 	Global.Options["-showversion"] = showversion
 
@@ -100,6 +97,9 @@ func LoadOptionsTable(Global globals.Globals) {
 
 	traceInstruction := globals.Option{true, false, 10, enableTrace}
 	Global.Options["-trace"] = traceInstruction
+
+	JJ := globals.Option{true, false, 10, enableJJ}
+	Global.Options["-JJ"] = JJ
 
 	version := globals.Option{true, false, 1, versionStderrThenExit}
 	Global.Options["-version"] = version
@@ -216,6 +216,20 @@ func enableAssertions(pos int, name string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-ea", gl)
 	statics.AddStatic("main.$assertionsDisabled",
 		statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
+	return pos, nil
+}
+
+func enableJJ(pos int, argValue string, gl *globals.Globals) (int, error) {
+	setOptionToSeen("-trace", gl)
+	array := strings.Split(argValue, TraceSep)
+	for i := 0; i < len(array); i++ {
+		switch array[i] {
+		case "galt":
+			globals.Galt = true
+		default:
+			return 0, fmt.Errorf("unknown -JJ option: %s", array[i])
+		}
+	}
 	return pos, nil
 }
 

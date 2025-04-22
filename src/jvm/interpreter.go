@@ -1245,7 +1245,28 @@ func doIshl(fr *frames.Frame, _ int64) int {
 
 // 0x7A, 0x7B ISHR, LSHR shift int/long to the right
 func doIshr(fr *frames.Frame, _ int64) int {
-	shiftBy := pop(fr).(int64)
+	var shiftBy int64
+	shiftArg := pop(fr)
+	switch shiftArg.(type) {
+	case int64:
+		shiftBy = shiftArg.(int64)
+	case byte:
+		shiftBy = int64(shiftArg.(byte))
+	case types.JavaByte:
+		shiftBy = int64(shiftArg.(types.JavaByte))
+	default:
+		errMsg := fmt.Sprintf("in %s.%s%s illegal ISHR amount type: %T",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, shiftArg)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return exceptions.ERROR_OCCURRED // applies only if in test
+		} else {
+			// Make the current frame the caught exception frame.
+			fs := fr.FrameStack
+			fr = fs.Front().Value.(*frames.Frame)
+			return 0 // PC is already set up so indicate that to caller.
+		}
+	}
 	value := pop(fr).(int64)
 	shiftedVal := value >> (shiftBy & 0x1F)
 	push(fr, shiftedVal)

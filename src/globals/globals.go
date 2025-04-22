@@ -108,6 +108,9 @@ type Globals struct {
 	FuncFillInStackTrace func([]any) any
 }
 
+// ---- JJ options
+var Galt bool
+
 // ---- trace categories
 var TraceInit bool
 var TraceCloadi bool
@@ -163,6 +166,10 @@ func InitGlobals(progName string) Globals {
 		FuncMinimalAbort:     fakeMinimalAbort,
 	}
 
+	// ----- G function alternative processing flag
+	Galt = false
+
+	// ----- Tracing flags
 	TraceInit = false
 	TraceCloadi = false
 	TraceInst = false
