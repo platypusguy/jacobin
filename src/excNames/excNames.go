@@ -1,17 +1,17 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-5 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
 package excNames
 
-// List of Java exceptions (as of Java 17)
+// List of Java exceptions
 
 // -----------------------------------------------------------------------//
 // IMPORTANT! Do not modify this list unless you modify the corresponding
-// entries in JVMExceptionNames in exactly the same way.
-// This list and that table must be kept strictly in sync.
+// entries in JVMExceptionNames and JVMexceptionNamesJacobin in *exactly*
+// the same way. these lists must be kept strictly in sync.
 const (
 	Unknown = iota
 
@@ -234,8 +234,9 @@ const (
 
 // -----------------------------------------------------------------------//
 // IMPORTANT! Do not modify this list unless you modify the corresponding
-// entries in the preceding list of constants in exactly the same way.
-// This table and that list must be kept strictly in sync.
+// entries in the preceding and succeeding lists of constants in *exactly*
+// the same way.
+// All three lists must be kept strictly in sync.
 var JVMexceptionNamesJacobin = []string{
 	"",                                    // no exception (present because list of consts begins at 1)
 	"java.nio.file.AccessDeniedException", // VERIFIED
@@ -454,6 +455,10 @@ var JVMexceptionNamesJacobin = []string{
 	"java.io.UTFDataFormatException",            // VERIFIED
 }
 
+// -----------------------------------------------------------------------//
+// IMPORTANT! Do not modify this list unless you modify the corresponding
+// entries in the preceding lists of constants in *exactly* the same way.
+// All three lists must be kept strictly in sync.
 var JVMexceptionNames = []string{
 	"",                                    // no exception (present because list of consts begins at 1)
 	"java.nio.file.AccessDeniedException", // VERIFIED
