@@ -146,9 +146,10 @@ func MethAreaDump() {
 		return true
 	})
 	sort.Strings(entries)
-	fmt.Println("---- start of method area dump ----")
+	fmt.Fprintln(os.Stderr, "---- start of method area dump ----")
 	for _, str := range entries {
-		fmt.Println(str)
+		fmt.Fprintln(os.Stderr, str)
 	}
-	fmt.Println("---- end of method area dump ----")
+	fmt.Fprintln(os.Stderr, "---- end of method area dump ----")
 }
+
