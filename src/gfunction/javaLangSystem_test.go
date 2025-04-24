@@ -730,5 +730,21 @@ func TestSetProperties(t *testing.T) {
 		t.Errorf("3. Expected %s, observed %s", expected, observed)
 		return
 	}
+}
 
+func TestRunGc(t *testing.T) {
+	globals.InitGlobals("test")
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+	initialGcCount := memStats.NumGC
+
+	systemForceGC(nil)
+
+	runtime.ReadMemStats(&memStats)
+	finalGcCount := memStats.NumGC
+
+	if finalGcCount <= initialGcCount {
+		t.Errorf("TestRunGc: GC Count does not reflect a run of GC. Initial: %d, Final: %d",
+			initialGcCount, finalGcCount)
+	}
 }
