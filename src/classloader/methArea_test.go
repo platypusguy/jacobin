@@ -1,15 +1,18 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2023-5 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
 package classloader
 
 import (
+	"io"
 	"jacobin/globals"
 	"jacobin/trace"
 	"jacobin/types"
+	"os"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -116,4 +119,24 @@ func TestMethArea42(t *testing.T) {
 	tryMethod(t, "java/io/BufferedOutputStream", "<init>", "(Ljava/io/OutputStream;)V")
 	tryMethod(t, "java/io/BufferedOutputStream", "<init>", "(Ljava/io/OutputStream;I)V")
 	tryMethod(t, "java/io/InputStream", "<init>", "()V")
+}
+
+func TestMethAreadDump(t *testing.T) {
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	InitMethodArea()
+	MethAreaPreload()
+	MethAreaDump()
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+	if !strings.Contains(msg, "[B\n[D") {
+		t.Errorf("Expecting different content in dump of MethArea, got: %s", msg)
+	}
 }
