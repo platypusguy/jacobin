@@ -448,10 +448,19 @@ func systemClearProperty(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(value)
 }
 
-// Get a system property - high level function.
+// Get a system property - high-level function.
 func systemGetProperty(params []interface{}) interface{} {
+	if params[0] == nil {
+		errMsg := fmt.Sprintf("java/lang/System.systemGetProperty(): nil property string")
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
 	propObj := params[0].(*object.Object)
 	propStr := object.GoStringFromStringObject(propObj)
+	if propStr == "" {
+		errMsg := fmt.Sprintf("java/lang/System.systemGetProperty(): empty property string")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 
 	value := globals.GetSystemProperty(propStr)
 	if value == "" {
