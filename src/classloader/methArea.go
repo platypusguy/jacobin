@@ -13,6 +13,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -136,7 +137,7 @@ func WaitForClassStatus(className string) error {
 	return nil
 }
 
-// MethAreaDump dumps the contents of the method area in a sorted list to stdout
+// MethAreaDump dumps the contents of the method area in a sorted list to stderr
 // used only for testing/debugging
 func MethAreaDump() {
 	var entries []string
@@ -146,9 +147,9 @@ func MethAreaDump() {
 		return true
 	})
 	sort.Strings(entries)
-	fmt.Println("---- start of method area dump ----")
+	fmt.Fprintln(os.Stderr, "---- start of method area dump ----")
 	for _, str := range entries {
-		fmt.Println(str)
+		fmt.Fprintln(os.Stderr, str)
 	}
-	fmt.Println("---- end of method area dump ----")
+	fmt.Fprintln(os.Stderr, "---- end of method area dump ----")
 }
