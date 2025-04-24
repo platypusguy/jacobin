@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-24 by Jacobin Authors. All rights reserved.
+ * Copyright (c) 2021-25 by Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -13,6 +13,7 @@ import (
 	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
+	"os"
 	"sort"
 	"sync"
 	"time"
