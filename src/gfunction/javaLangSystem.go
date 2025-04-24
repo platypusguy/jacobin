@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-5 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -470,13 +470,23 @@ func systemGetProperty(params []interface{}) interface{} {
 }
 
 // Get a system property - high level function.
+// Get the system property, but if it's not found, returns the default value, which is passed in params[1]
 func systemGetPropertyDefault(params []interface{}) interface{} {
+	if params[0] == nil {
+		errMsg := fmt.Sprintf("java/lang/System.systemGetProperty(): nil property string")
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
 	propObj := params[0].(*object.Object)
 	propStr := object.GoStringFromStringObject(propObj)
+	if propStr == "" {
+		errMsg := fmt.Sprintf("java/lang/System.systemGetProperty(): empty property string")
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 
 	value := globals.GetSystemProperty(propStr)
 	if value == "" {
-		return params[1].(*object.Object)
+		return params[1].(*object.Object) // return the default value
 	}
 	return object.StringObjectFromGoString(value)
 }
