@@ -940,6 +940,49 @@ func TestStringSplitLimit(t *testing.T) {
 	}
 }
 
+func TestStringMatches(t *testing.T) {
+	// Test case: valid string and regex (match)
+	params := []any{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString("hello"),
+	}
+	result := stringMatches(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true for matching regex, got %v", result)
+	}
+
+	// Test case: valid string and regex (no match)
+	params = []any{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString("worlds"),
+	}
+	result = stringMatches(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false for non-matching regex, got %v", result)
+	}
+
+	// Test case: invalid regex
+	params = []any{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString("[a-"),
+	}
+	result = stringMatches(params)
+	errBlk, ok := result.(*GErrBlk)
+	if !ok || errBlk.ExceptionType != excNames.PatternSyntaxException {
+		t.Errorf("Expected PatternSyntaxException, got %v", result)
+	}
+
+	// Test case: incorrect number of parameters
+	params = []any{
+		object.StringObjectFromGoString("hello world"),
+	}
+	result = stringMatches(params)
+	errBlk, ok = result.(*GErrBlk)
+	if !ok || errBlk.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("Expected IllegalArgumentException, got %v", result)
+	}
+}
+
 // --- utility functions for tests above ---
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
