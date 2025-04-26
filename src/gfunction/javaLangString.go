@@ -1440,7 +1440,6 @@ func substringToTheEnd(params []interface{}) interface{} {
 	// Return new string in an object.
 	obj := object.StringObjectFromGoString(str)
 	return obj
-
 }
 
 // "java/lang/String.substring(II)Ljava/lang/String;"

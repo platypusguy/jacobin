@@ -1033,6 +1033,64 @@ func TestStringReplaceCC(t *testing.T) {
 	}
 }
 
+func TestSubstringToTheEnd(t *testing.T) {
+	// Test case: Valid substring
+	params := []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64(6),
+	}
+	result := substringToTheEnd(params).(*object.Object)
+	expected := "world"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: Start offset is 0
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64(0),
+	}
+	result = substringToTheEnd(params).(*object.Object)
+	expected = "hello world"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: Start offset is out of bounds (negative)
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64(-1),
+	}
+
+	res := substringToTheEnd(params)
+	errBlk, ok := res.(*GErrBlk)
+	if !ok || errBlk.ExceptionType != excNames.StringIndexOutOfBoundsException {
+		t.Errorf("Expected StringIndexOutOfBoundsException, got %v", res)
+	}
+
+	// Test case: Start offset is out of bounds (greater than length)
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64(12),
+	}
+
+	res = substringToTheEnd(params)
+	errBlk, ok = res.(*GErrBlk)
+	if !ok || errBlk.ExceptionType != excNames.StringIndexOutOfBoundsException {
+		t.Errorf("Expected StringIndexOutOfBoundsException, got %v", res)
+	}
+
+	// Test case: Empty string
+	params = []interface{}{
+		object.StringObjectFromGoString(""),
+		int64(0),
+	}
+	res = substringToTheEnd(params).(*GErrBlk)
+	if !ok || errBlk.ExceptionType != excNames.StringIndexOutOfBoundsException {
+		t.Errorf("Expected StringIndexOutOfBoundsException, got %v", res)
+	}
+}
+
 // --- utility functions for tests above ---
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
