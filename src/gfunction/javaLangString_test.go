@@ -983,6 +983,56 @@ func TestStringMatches(t *testing.T) {
 	}
 }
 
+func TestStringReplaceCC(t *testing.T) {
+	// Test case: Replace a character that exists in the string
+	params := []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64('o'),
+		int64('a'),
+	}
+	result := stringReplaceCC(params).(*object.Object)
+	expected := "hella warld"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: Replace a character that does not exist in the string
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		int64('x'),
+		int64('y'),
+	}
+	result = stringReplaceCC(params).(*object.Object)
+	expected = "hello world"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: Replace a character in an empty string
+	params = []interface{}{
+		object.StringObjectFromGoString(""),
+		int64('a'),
+		int64('b'),
+	}
+	result = stringReplaceCC(params).(*object.Object)
+	expected = ""
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+
+	// Test case: Replace a character with itself
+	params = []interface{}{
+		object.StringObjectFromGoString("hello"),
+		int64('e'),
+		int64('e'),
+	}
+	result = stringReplaceCC(params).(*object.Object)
+	expected = "hello"
+	if object.GoStringFromStringObject(result) != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, object.GoStringFromStringObject(result))
+	}
+}
+
 // --- utility functions for tests above ---
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)

@@ -1414,7 +1414,6 @@ func stringReplaceCC(params []interface{}) interface{} {
 	// Return final string in an object.
 	obj := object.StringObjectFromGoString(newStr)
 	return obj
-
 }
 
 // "java/lang/String.substring(I)Ljava/lang/String;"
