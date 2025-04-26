@@ -1091,7 +1091,7 @@ func TestSubstringToTheEnd(t *testing.T) {
 	}
 }
 
-// tests HasSuffix()
+// stringEndsWith()
 func TestStringEndsWith(t *testing.T) {
 	// Test case: Base string ends with the given suffix
 	params := []interface{}{
@@ -1141,6 +1141,38 @@ func TestStringEndsWith(t *testing.T) {
 	result = stringEndsWith(params)
 	if result != types.JavaBoolTrue {
 		t.Errorf("Expected true, got %v", result)
+	}
+}
+
+func TestStringHashCode(t *testing.T) {
+	// Test case: Non-empty string
+	params := []interface{}{
+		createStringObject("Napoleon"),
+	}
+	result := stringHashCode(params).(int64)
+	expected := int64(2001057578)
+	if result != expected {
+		t.Errorf("Expected hash %d, got %d", expected, result)
+	}
+
+	// Test case: Empty string
+	params = []interface{}{
+		createStringObject(""),
+	}
+	result = stringHashCode(params).(int64)
+	expected = int64(0) // Hash of an empty string
+	if result != expected {
+		t.Errorf("Expected hash %d, got %d", expected, result)
+	}
+
+	// Test case: Single character string
+	params = []interface{}{
+		createStringObject("A"),
+	}
+	result = stringHashCode(params).(int64)
+	expected = int64(65) // ASCII value of 'A'
+	if result != expected {
+		t.Errorf("Expected hash %d, got %d", expected, result)
 	}
 }
 
