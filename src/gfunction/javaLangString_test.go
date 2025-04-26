@@ -1091,6 +1091,59 @@ func TestSubstringToTheEnd(t *testing.T) {
 	}
 }
 
+// tests HasSuffix()
+func TestStringEndsWith(t *testing.T) {
+	// Test case: Base string ends with the given suffix
+	params := []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString("world"),
+	}
+	result := stringEndsWith(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true, got %v", result)
+	}
+
+	// Test case: Base string does not end with the given suffix
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString("hello"),
+	}
+	result = stringEndsWith(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false, got %v", result)
+	}
+
+	// Test case: Base string is empty
+	params = []interface{}{
+		object.StringObjectFromGoString(""),
+		object.StringObjectFromGoString("world"),
+	}
+	result = stringEndsWith(params)
+	if result != types.JavaBoolFalse {
+		t.Errorf("Expected false, got %v", result)
+	}
+
+	// Test case: Suffix is empty
+	params = []interface{}{
+		object.StringObjectFromGoString("hello world"),
+		object.StringObjectFromGoString(""),
+	}
+	result = stringEndsWith(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true, got %v", result)
+	}
+
+	// Test case: Both base string and suffix are empty
+	params = []interface{}{
+		object.StringObjectFromGoString(""),
+		object.StringObjectFromGoString(""),
+	}
+	result = stringEndsWith(params)
+	if result != types.JavaBoolTrue {
+		t.Errorf("Expected true, got %v", result)
+	}
+}
+
 // --- utility functions for tests above ---
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
