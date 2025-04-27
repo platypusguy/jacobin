@@ -135,3 +135,21 @@ func TestVariousInitialDefaultValues(t *testing.T) {
 		t.Errorf("Some global variables intialized to unexpected values.")
 	}
 }
+
+func TestGetSystemProperty(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	ret := GetSystemProperty("java.version")
+	if ret < "21" {
+		t.Errorf("Expecting a java.version of 21 or more, got: %s", ret)
+	}
+}
+
+func TestGetSystemPropertyNotFound(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	ret := GetSystemProperty("java.version.notfound")
+	if ret != "" {
+		t.Errorf("Expecting a java.version.notfound of '', got: %s", ret)
+	}
+}
