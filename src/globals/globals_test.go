@@ -153,3 +153,46 @@ func TestGetSystemPropertyNotFound(t *testing.T) {
 		t.Errorf("Expecting a java.version.notfound of '', got: %s", ret)
 	}
 }
+
+func TestSetSystemProperty(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	SetSystemProperty("java.version", "22")
+	ret := GetSystemProperty("java.version")
+	if ret != "22" {
+		t.Errorf("Expecting a java.version of 22, got: %s", ret)
+	}
+}
+
+func TestRemoveSystemProperty(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	SetSystemProperty("java.version", "22")
+	ret := GetSystemProperty("java.version")
+	if ret != "22" {
+		t.Errorf("Expecting a java.version of 22, got: %s", ret)
+	}
+	RemoveSystemProperty("java.version")
+	ret = GetSystemProperty("java.version")
+	if ret != "" {
+		t.Errorf("Expecting a java.version of '', got: %s", ret)
+	}
+}
+
+func TestReplaceSystemProperties(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	SetSystemProperty("java.version", "22")
+	ret := GetSystemProperty("java.version")
+	if ret != "22" {
+		t.Errorf("Expecting a java.version of 22, got: %s", ret)
+	}
+
+	newMap := make(map[string]string)
+	newMap["java.version"] = "23"
+	ReplaceSystemProperties(newMap)
+	ret = GetSystemProperty("java.version")
+	if ret != "23" {
+		t.Errorf("Expecting a java.version of 23, got: %s", ret)
+	}
+}
