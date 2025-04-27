@@ -182,7 +182,7 @@ func TestInvalidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	options := "-trace=inst" + TraceSep + "class" + TraceSep + "mickey"
+	options := "-trace:inst" + TraceSep + "class" + TraceSep + "mickey"
 	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 
@@ -211,7 +211,7 @@ func TestValidTraceSelection(t *testing.T) {
 	_, werr, _ := os.Pipe()
 	os.Stderr = werr
 
-	options := "-trace=inst" + TraceSep + "class" + TraceSep + "inst"
+	options := "-trace:inst" + TraceSep + "class" + TraceSep + "inst"
 	args := []string{"jacobin", options}
 	err = HandleCli(args, &global)
 
