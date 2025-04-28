@@ -257,7 +257,8 @@ func InitJacobinHome() {
 
 func JacobinHome() string { return global.JacobinHome }
 
-// InitJavaHome gets JAVA_HOME from the environment and formats it as expected
+// InitJavaHome gets JAVA_HOME from the environment and formats it as expected. (It
+// also checks that the directory is valid by looking for the release file.)
 // Note: any trailing separator is removed from the retrieved string per JACOBIN-184
 func InitJavaHome() {
 
@@ -270,6 +271,7 @@ func InitJavaHome() {
 	javaHome = cleanupPath(javaHome)
 	global.JavaHome = javaHome
 
+	// Check if JAVA_HOME is a valid directory by looking for the release file.
 	releasePath := javaHome + string(os.PathSeparator) + "release"
 	handle, err := os.Open(releasePath)
 	if err != nil {
@@ -279,6 +281,8 @@ func InitJavaHome() {
 	}
 	defer handle.Close()
 	scanner := bufio.NewScanner(handle)
+
+	// Scan the release file for a mandatory JAVA_VERSION record.
 	for scanner.Scan() {
 		// do something with a line
 		line := scanner.Text()
@@ -293,7 +297,9 @@ func InitJavaHome() {
 		}
 	}
 
-	// At this pint, we did not find a Java version record
+	// At this pint, we did not find a Java version record,
+	// so either the JAVA_HOME is not a valid JDK or the release file is corrupted.
+	// Either way, we cannot proceed.
 	_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n", releasePath)
 	os.Exit(1)
 
@@ -384,23 +390,20 @@ func SortCaseInsensitive(ptrSlice *[]string) {
 	})
 }
 
-/*
-System Properties Map: JVM System Properties
-
-Jacobin uses information from the operating system, startup arguments, and the host environment to set up its initial system properties.
-
-Properties are stored in the globalPropertiesMap, fetched with System.getProperties() or System.getProperty(key), and include items like:
-* os.name, os.arch, os.version
-* user.name, user.home, user.dir
-* java.home, java.class.path
-* file.separator, line.separator
-
-These values are derived from:
-* Environment variables (HOME, PATH, etc.)
-* The current working directory
-* Command-line -D options passed when launching the JVM
-
-*/
+// the System Properties Map: JVM System Properties
+//
+// Jacobin uses information from the operating system, startup arguments, and the host environment to set up its initial system properties.
+//
+// Properties are stored in the globalPropertiesMap, fetched with System.getProperties() or System.getProperty(key), and include items like:
+// * os.name, os.arch, os.version
+// * user.name, user.home, user.dir
+// * java.home, java.class.path
+// * file.separator, line.separator
+//
+// These values are derived from:
+// * Environment variables (HOME, PATH, etc.)
+// * The current working directory
+// * Command-line -D options passed when launching the JVM
 
 var systemPropertiesMap types.DefProperties
 var systemPropertiesMutex = sync.RWMutex{}
