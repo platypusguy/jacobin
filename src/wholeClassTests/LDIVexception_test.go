@@ -77,7 +77,7 @@ func TestRunLDIVexception(t *testing.T) {
 		t.Skip()
 	}
 
-	_JVM_ARGS = "-trace=inst"
+	_JVM_ARGS = "-trace:inst"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
 	if len(_JVM_ARGS) > 0 {

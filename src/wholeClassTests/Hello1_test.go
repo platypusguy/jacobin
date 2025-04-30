@@ -150,7 +150,7 @@ func TestRunHelloTraceClass(t *testing.T) {
 
 	var cmd *exec.Cmd
 
-	_JVM_ARGS = "-trace=class"
+	_JVM_ARGS = "-trace:class"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
 	if len(_JVM_ARGS) > 0 {
@@ -207,7 +207,7 @@ func TestRunHelloTraceInit(t *testing.T) {
 
 	var cmd *exec.Cmd
 
-	_JVM_ARGS = "-trace=init"
+	_JVM_ARGS = "-trace:init"
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
 	if len(_JVM_ARGS) > 0 {

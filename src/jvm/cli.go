@@ -96,16 +96,30 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 }
 
 // pass in the option potentially with embedded arguments and get back
-// the option name and the embedded argument(s), if any
+// the option name and the embedded argument(s) as a single string, if any
+//
+// Return, 3 patterns:
+// (1) Pattern is -key:value
+// * 	option name (key) - string (E.g. "-cp")
+// * 	option argument(s) - string (E.g. ".;C:\home\user\classes")
+// * 	error struct - nil (indicates success)
+// (2) Pattern is -key
+// * 	option name (key) - string (E.g. "--help")
+// * 	option argument(s) - ""
+// * 	error struct - nil (indicates success)
+// (3) Error
+// * 	option name (key) - ""
+// * 	option argument(s) - ""
+// * 	error struct - !nil (indicates failure)
 func getOptionRootAndArgs(option string) (string, string, error) {
 	if len(option) == 0 {
 		return "", "", errors.New("empty option error")
 	}
 
-	// if the option has an embedded arg value, it'll come after the first =
-	argMarker := strings.Index(option, "=")
+	// if the option has an embedded arg value, it'll come after the first colon (:).
+	argMarker := strings.Index(option, ":")
 
-	// if there's no embedded : or = then the option doesn't contain an arg value
+	// if there's no embedded colon (:), then the option doesn't contain an arg value
 	if argMarker == -1 {
 		return option, "", nil
 	}
@@ -114,7 +128,7 @@ func getOptionRootAndArgs(option string) (string, string, error) {
 
 }
 
-// you can can set JVM options using the three environment variables that are
+// you can set JVM options using the three environment variables that are
 // inspected in this function. Note: order is important because later options
 // can override earlier ones. These are checked before any of the command-line
 // options are processed.
