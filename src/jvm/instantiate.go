@@ -211,8 +211,9 @@ runInitializer:
 				code, &k.Data.CP)
 			if err != nil {
 				methName := k.Data.CP.Utf8Refs[m.Name]
-				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s:\n\t%s",
-					classname, methName, err.Error())
+				methDesc := k.Data.CP.Utf8Refs[m.Desc]
+				errMsg := fmt.Sprintf("InstantiateClass: CheckCodeValidity failed in %s.%s%s: %s",
+					classname, methName, methDesc, err.Error())
 				status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, nil)
 				if status != exceptions.Caught {
 					return nil, errors.New(errMsg) // applies only if in test

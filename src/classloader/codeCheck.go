@@ -449,7 +449,7 @@ var Code []byte
 func CheckCodeValidity(code []byte, cp *CPool) error {
 	// check that the code is valid
 	if code == nil {
-		errMsg := "CheckCodeValidity: code to be checked is nil"
+		errMsg := "CheckCodeValidity: Empty code segment"
 		return errors.New(errMsg)
 	}
 
