@@ -284,7 +284,7 @@ func interpret(fs *list.List) {
 	}
 
 	fr := fs.Front().Value.(*frames.Frame)
-	if fr.FrameStack == nil { // make sure the can reference the frame stack
+	if fr.FrameStack == nil { // make sure we can reference the frame stack
 		fr.FrameStack = fs
 	}
 
