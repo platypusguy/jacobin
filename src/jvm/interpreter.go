@@ -1993,8 +1993,8 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	}
 
 	// Check reference for a nil pointer.
-	if ref.(*object.Object) == nil {
-		errMsg := fmt.Sprintf("GETFIELD: Invalid (null) reference to a field: %s.%s", fr.ClName, fieldName)
+	if object.IsNull(ref) {
+		errMsg := fmt.Sprintf("GETFIELD: Null object reference, fieldName: %s.%s", fr.ClName, fieldName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
