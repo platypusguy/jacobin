@@ -1990,6 +1990,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE
 	}
 
 	// Check reference for a nil pointer.
@@ -1999,6 +2000,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE
 	}
 
 	// Extract field.
