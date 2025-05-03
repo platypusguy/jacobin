@@ -184,3 +184,23 @@ func classGetModule(params []interface{}) interface{} {
 	}
 	return unnamedModule
 }
+
+// Create a java/lang/Class instance -- that is a class ready for reflection
+func classCreateClassInstance(className string) (*object.Object, error) {
+	cl, err := simpleClassLoadByName(className)
+	if err != nil {
+		return nil, err
+	}
+	if cl == nil {
+		errMsg := fmt.Sprintf("classCreateClassInstance: failed to load class %s", className)
+		return nil, errors.New(errMsg)
+	}
+
+	kl := object.MakeEmptyObject()
+	if kl == nil {
+		errMsg := fmt.Sprintf("classCreateClassInstance: failed to create new object of class %s", className)
+		return nil, errors.New(errMsg)
+	}
+
+	return kl, nil
+}
