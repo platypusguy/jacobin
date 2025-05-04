@@ -423,6 +423,7 @@ func doLdc2w(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	return 3 // 2 for idx + 1 for next bytecode
 }
@@ -481,6 +482,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		array = obj.FieldTable["value"].Fvalue.([]int64)
 	case []int64:
@@ -493,6 +495,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	if index >= int64(len(array)) {
@@ -503,6 +506,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	var value = array[index]
@@ -528,6 +532,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
 	default:
@@ -538,6 +543,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	if index >= int64(len(array)) {
@@ -548,6 +554,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	var value = array[index]
@@ -566,6 +573,7 @@ func doAaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
@@ -599,6 +607,7 @@ func doBaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	var bAref *object.Object
@@ -636,6 +645,7 @@ func doBaload(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	if !pushValueReady { // if pushValue was already set up due to []int8 being handled, skip this
@@ -648,6 +658,7 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		var value = array[index]
 		pushValue = int64(value)
@@ -748,6 +759,7 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.IntArray {
@@ -758,6 +770,7 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		array = fld.Fvalue.([]int64)
 	case []int64:
@@ -770,6 +783,7 @@ func doIastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	size := int64(len(array))
@@ -781,6 +795,7 @@ func doIastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	array[index] = value
 	return 1
@@ -803,6 +818,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.FloatArray && fld.Ftype != types.DoubleArray {
@@ -813,6 +829,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		array = fld.Fvalue.([]float64)
 	case []float64:
@@ -825,6 +842,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	size := int64(len(array))
@@ -836,6 +854,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	array[index] = value
@@ -856,6 +875,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	arrayObj := *arrayRef
@@ -870,6 +890,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// get pointer to the actual array
@@ -883,6 +904,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	rawArray[index] = value
@@ -906,6 +928,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.ByteArray {
@@ -916,6 +939,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		rawArray = fld.Fvalue.([]types.JavaByte)
 	// case []byte:
@@ -932,6 +956,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	size := int64(len(rawArray))
@@ -943,6 +968,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	rawArray[index] = value
 	return 1
@@ -960,6 +986,7 @@ func doPop(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	fr.TOS -= 1
 	return 1
@@ -1761,6 +1788,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// get the field entry
@@ -1786,6 +1814,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 	}
 
@@ -1799,6 +1828,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	switch prevLoaded.Value.(type) {
@@ -1990,6 +2020,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// Check reference for a nil pointer.
@@ -1999,6 +2030,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// Extract field.
@@ -2130,6 +2162,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
@@ -2140,6 +2173,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		objField.Fvalue = value
@@ -2215,6 +2249,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				if status != exceptions.Caught {
 					return exceptions.ERROR_OCCURRED // applies only if in test
 				}
+				return exceptions.RESUME_HERE // caught
 			}
 		}
 	}
@@ -2258,7 +2293,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					// from which processing should continue. This is used primarily
 					// when a frame has caught an exception and we're point the
 					// interpreter to the first bytecode in the exception handler.
-					return exceptions.RESUME_HERE
+					return exceptions.RESUME_HERE // caught
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
@@ -2278,6 +2313,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		if len(m.Code) == 0 {
@@ -2293,6 +2329,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					if status != exceptions.Caught {
 						return exceptions.ERROR_OCCURRED // applies only if in test
 					}
+					return exceptions.RESUME_HERE // caught
 				}
 				className = *(stringPool.GetStringPointer(clNameIdx))
 				m = mtEntry.Meth.(classloader.JmEntry)
@@ -2315,6 +2352,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // 2 for PC slot, move to next bytecode before exiting
@@ -2356,6 +2394,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	if mtEntry.MType == 'G' { // it's a golang method
@@ -2408,6 +2447,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
 		if err != nil {
@@ -2417,6 +2457,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // point to the next bytecode for when we return from the invoked method.
@@ -2450,6 +2491,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// before we can run the method, we need to either instantiate the class and/or
@@ -2466,6 +2508,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 	}
 
@@ -2507,6 +2550,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		fram, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, false, fr)
@@ -2517,6 +2561,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
@@ -2542,6 +2587,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	method := CP.InterfaceRefs[CPentry.Slot]
@@ -2577,6 +2623,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// get the name of the objectRef's class, and make sure it's loaded
@@ -2596,6 +2643,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	var mtEntry classloader.MTentry
@@ -2668,6 +2716,7 @@ func doNew(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// the classref points to a UTF8 record with the name of the class to instantiate
@@ -2685,6 +2734,7 @@ func doNew(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	push(fr, ref.(*object.Object))
 	return 3 // 2 for CPslot + 1 for next bytecode
@@ -2700,6 +2750,7 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	arrayType := int(fr.Meth[fr.PC+1])
@@ -2712,6 +2763,7 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	arrayPtr := object.Make1DimArray(uint8(actualType), size)
@@ -2731,6 +2783,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
@@ -2743,6 +2796,7 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	var refTypeName = ""
@@ -2808,6 +2862,7 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
 			}
+			return exceptions.RESUME_HERE // caught
 		}
 		size = object.ArrayLength(r)
 	default:
@@ -2817,6 +2872,7 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	push(fr, size)
 	return 1
@@ -2981,6 +3037,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	// at this point, we know we have a non-nil/non-null pointer to an object;
@@ -3020,6 +3077,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	if checkcastStatus == false {
@@ -3030,6 +3088,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	return 3 // 2 for CPslot + 1 for next byte
 }
@@ -3065,6 +3124,7 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 					if status != exceptions.Caught {
 						return exceptions.ERROR_OCCURRED // applies only if in test
 					}
+					return exceptions.RESUME_HERE // caught
 				} else {
 					className = *(classNamePtr.StringVal)
 					if globals.TraceVerbose {
@@ -3081,6 +3141,7 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 						if status != exceptions.Caught {
 							return exceptions.ERROR_OCCURRED // applies only if in test
 						}
+						return exceptions.RESUME_HERE // caught
 					}
 					classPtr = classloader.MethAreaFetch(className)
 				}
@@ -3152,6 +3213,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 
 	dimSizes := make([]int64, dimensionCount)
@@ -3284,6 +3346,7 @@ func ldc(fr *frames.Frame, width int) int {
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
 		}
+		return exceptions.RESUME_HERE // caught
 	}
 	// if no error
 	switch CPe.RetType {
