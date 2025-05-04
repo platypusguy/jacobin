@@ -14,12 +14,14 @@ import (
 	"jacobin/object"
 	"jacobin/shutdown"
 	"jacobin/statics"
+	"jacobin/stringPool"
 	"jacobin/trace"
 	"jacobin/types"
 	"strings"
 )
 
-// Implementation of some of the functions in Java/lang/Class.
+// Implementation of some of the functions in Java/lang/Class. Note that a class
+// implemented for reflection is referred to here a a Clazz. It is an object.
 
 func Load_Lang_Class() {
 
@@ -185,7 +187,7 @@ func classGetModule(params []interface{}) interface{} {
 	return unnamedModule
 }
 
-// Create a java/lang/Class instance -- that is a class ready for reflection
+// Create a java/lang/Class instance -- that is a class ready for reflection from an existing object
 func classCreateClassInstance(className string) (*object.Object, error) {
 	cl, err := simpleClassLoadByName(className)
 	if err != nil {
@@ -203,4 +205,21 @@ func classCreateClassInstance(className string) (*object.Object, error) {
 	}
 
 	return kl, nil
+}
+
+func classGetField(params []interface{}) interface{} {
+	cl := params[0].(*object.Object)
+	if object.IsNull(params[1]) {
+		errMsg := "classGetField: null field name"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+	fieldName := params[1].(string)
+	_, ok := cl.FieldTable[fieldName]
+	if !ok {
+		errMsg := fmt.Sprintf("classGetField: field %s not found in %s",
+			fieldName, *stringPool.GetStringPointer(cl.KlassName))
+		return getGErrBlk(excNames.NoSuchFieldException, errMsg)
+	}
+
+	return NewField(cl, fieldName)
 }
