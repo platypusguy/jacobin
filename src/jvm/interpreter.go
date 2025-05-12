@@ -367,11 +367,13 @@ func doIconst4(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(4)) }
 func doIconst5(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(5)) }
 func doLconst0(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(0)) }
 func doLconst1(fr *frames.Frame, _ int64) int  { return pushInt(fr, int64(1)) }
-func doFconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
-func doFconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
-func doFconst2(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(2)) }
-func doDconst0(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(0)) }
-func doDconst1(fr *frames.Frame, _ int64) int  { return pushFloat(fr, int64(1)) }
+
+// 0x0B - 0x0F push float
+func doFconst0(fr *frames.Frame, _ int64) int { return pushFloat(fr, int64(0)) }
+func doFconst1(fr *frames.Frame, _ int64) int { return pushFloat(fr, int64(1)) }
+func doFconst2(fr *frames.Frame, _ int64) int { return pushFloat(fr, int64(2)) }
+func doDconst0(fr *frames.Frame, _ int64) int { return pushFloat(fr, int64(0)) }
+func doDconst1(fr *frames.Frame, _ int64) int { return pushFloat(fr, int64(1)) }
 
 // 0x10 BIPUSH push following byte onto stack
 func doBipush(fr *frames.Frame, _ int64) int {

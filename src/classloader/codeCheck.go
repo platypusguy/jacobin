@@ -238,28 +238,28 @@ var WideInEffect = false
 
 var CheckTable = [203]BytecodeFunc{
 	return1,              // NOP             0x00
-	return1,              // ACONST_NULL     0x01
-	return1,              // ICONST_M1       0x02
-	return1,              // ICONST_0        0x03
-	return1,              // ICONST_1        0x04
-	return1,              // ICONST_2        0x05
-	return1,              // ICONST_3        0x06
-	return1,              // ICONST_4        0x07
-	return1,              // ICONST_5        0x08
-	return1,              // LCONST_0        0x09
-	return1,              // LCONST_1        0x0A
-	return1,              // FCONST_0        0x0B
-	return1,              // FCONST_1        0x0C
-	return1,              // FCONST_2        0x0D
-	return1,              // DCONST_0        0x0E
-	return1,              // DCONST_1        0x0F
-	return2,              // BIPUSH          0x10
-	return3,              // SIPUSH          0x11
+	checkAconstnull,      // ACONST_NULL     0x01
+	pushInt,              // ICONST_M1       0x02
+	pushInt,              // ICONST_0        0x03
+	pushInt,              // ICONST_1        0x04
+	pushInt,              // ICONST_2        0x05
+	pushInt,              // ICONST_3        0x06
+	pushInt,              // ICONST_4        0x07
+	pushInt,              // ICONST_5        0x08
+	pushInt,              // LCONST_0        0x09
+	pushInt,              // LCONST_1        0x0A
+	pushFloat,            // FCONST_0        0x0B
+	pushFloat,            // FCONST_1        0x0C
+	pushFloat,            // FCONST_2        0x0D
+	pushFloat,            // DCONST_0        0x0E
+	pushFloat,            // DCONST_1        0x0F
+	checkBipush,          // BIPUSH          0x10
+	checkSipush,          // SIPUSH          0x11
 	return2,              // LDC             0x12
 	return3,              // LDC_W           0x13
 	return3,              // LDC2_W          0x14
-	return2,              // ILOAD           0x15
-	return2,              // LLOAD           0x16
+	pushIntRet2,          // ILOAD           0x15
+	pushIntRet2,          // LLOAD           0x16
 	return2,              // FLOAD           0x17
 	return2,              // DLOAD           0x18
 	return2,              // ALOAD           0x19
@@ -445,8 +445,10 @@ var CheckTable = [203]BytecodeFunc{
 var PC int
 var CP *CPool
 var Code []byte
+var StackEntries int
+var MaxStack int
 
-func CheckCodeValidity(code []byte, cp *CPool) error {
+func CheckCodeValidity(code []byte, cp *CPool, maxStack int) error {
 	// check that the code is valid
 	if code == nil {
 		errMsg := "CheckCodeValidity: Empty code segment"
@@ -466,6 +468,9 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 
 	Code = code
 	PC = 0
+	MaxStack = maxStack
+	StackEntries = 0
+
 	for PC < len(code) {
 		opcode := code[PC]
 		ret := CheckTable[opcode]()
@@ -492,6 +497,39 @@ func CheckCodeValidity(code []byte, cp *CPool) error {
 }
 
 // === check functions in alpha order by name of bytecode ===
+// ACONST_NULL 0x01 Push null onto op stack
+func checkAconstnull() int {
+	StackEntries += 1
+	return 1
+}
+
+// BIPUSH 0x10 Push following byte onto op stack
+func checkBipush() int {
+	if len(Code) >= PC+1 {
+		StackEntries += 1
+		return 2
+	} else {
+		return ERROR_OCCURRED
+	}
+}
+
+// FCONST and DCONST Push a float onto the op stack
+func pushFloat() int {
+	StackEntries += 1
+	return 1
+}
+
+// ICONST* and LCONST Push an int or long onto op stack
+func pushInt() int {
+	StackEntries += 1
+	return 1
+}
+
+// ILOAD* and LLOAD* Push an int or long from local onto op stack
+func pushIntRet2() int {
+	StackEntries += 1
+	return 2
+}
 
 // GETFIELD 0xB4 Get field from object and push it onto the stack
 func checkGetfield() int {
@@ -698,6 +736,16 @@ func checkMultianewarray() int {
 	}
 
 	return 4
+}
+
+// SIPUSH 0x11 create int from next 2 bytes and push it
+func checkSipush() int {
+	if len(Code) >= PC+2 {
+		StackEntries += 1
+		return 3
+	} else {
+		return ERROR_OCCURRED
+	}
 }
 
 // === utility functions ===
