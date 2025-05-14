@@ -260,37 +260,37 @@ var CheckTable = [203]BytecodeFunc{
 	return3,              // LDC2_W          0x14
 	pushIntRet2,          // ILOAD           0x15
 	pushIntRet2,          // LLOAD           0x16
-	return2,              // FLOAD           0x17
-	return2,              // DLOAD           0x18
-	return2,              // ALOAD           0x19
-	return1,              // ILOAD_0         0x1A
-	return1,              // ILOAD_1         0x1B
-	return1,              // ILOAD_2         0x1C
-	return1,              // ILOAD_3         0x1D
-	return1,              // LLOAD_0         0x1E
-	return1,              // LLOAD_1         0x1F
-	return1,              // LLOAD_2         0x20
-	return1,              // LLOAD_3         0x21
-	return1,              // FLOAD_0         0x22
-	return1,              // FLOAD_1         0x23
-	return1,              // FLOAD_2         0x24
-	return1,              // FLOAD_3         0x25
-	return1,              // DLOAD_0         0x26
-	return1,              // DLOAD_1         0x27
-	return1,              // DLOAD_2         0x28
-	return1,              // DLOAD_3         0x29
-	return1,              // ALOAD_0         0x2A
-	return1,              // ALOAD_1         0x2B
-	return1,              // ALOAD_2         0x2C
-	return1,              // ALOAD_3         0x2D
-	return1,              // IALOAD          0x2E
-	return1,              // LALOAD          0x2F
-	return1,              // FALOAD          0x30
-	return1,              // DALOAD          0x31
-	return1,              // AALOAD          0x32
-	return1,              // BALOAD          0x33
-	return1,              // CALOAD          0x34
-	return1,              // SALOAD          0x35
+	pushFloatRet2,        // FLOAD           0x17
+	pushFloatRet2,        // DLOAD           0x18
+	pushIntRet2,          // ALOAD           0x19
+	pushInt,              // ILOAD_0         0x1A
+	pushInt,              // ILOAD_1         0x1B
+	pushInt,              // ILOAD_2         0x1C
+	pushInt,              // ILOAD_3         0x1D
+	pushInt,              // LLOAD_0         0x1E
+	pushInt,              // LLOAD_1         0x1F
+	pushInt,              // LLOAD_2         0x20
+	pushInt,              // LLOAD_3         0x21
+	pushFloat,            // FLOAD_0         0x22
+	pushFloat,            // FLOAD_1         0x23
+	pushFloat,            // FLOAD_2         0x24
+	pushFloat,            // FLOAD_3         0x25
+	pushFloat,            // DLOAD_0         0x26
+	pushFloat,            // DLOAD_1         0x27
+	pushFloat,            // DLOAD_2         0x28
+	pushFloat,            // DLOAD_3         0x29
+	pushInt,              // ALOAD_0         0x2A
+	pushInt,              // ALOAD_1         0x2B
+	pushInt,              // ALOAD_2         0x2C
+	pushInt,              // ALOAD_3         0x2D
+	pushInt,              // IALOAD          0x2E
+	pushInt,              // LALOAD          0x2F
+	pushInt,              // FALOAD          0x30
+	pushInt,              // DALOAD          0x31
+	pushInt,              // AALOAD          0x32
+	pushInt,              // BALOAD          0x33
+	pushInt,              // CALOAD          0x34
+	pushInt,              // SALOAD          0x35
 	return2,              // ISTORE          0x36
 	return2,              // LSTORE          0x37
 	return2,              // FSTORE          0x38
@@ -517,6 +517,12 @@ func checkBipush() int {
 func pushFloat() int {
 	StackEntries += 1
 	return 1
+}
+
+// FLOAD* and DLOAD* Push an int or long from local onto op stack
+func pushFloatRet2() int {
+	StackEntries += 1
+	return 2
 }
 
 // ICONST* and LCONST Push an int or long onto op stack
