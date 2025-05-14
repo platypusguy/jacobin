@@ -296,34 +296,34 @@ var CheckTable = [203]BytecodeFunc{
 	return2,              // FSTORE          0x38
 	return2,              // DSTORE          0x39
 	return2,              // ASTORE          0x3A
-	return1,              // ISTORE_0        0x3B
-	return1,              // ISTORE_1        0x3C
-	return1,              // ISTORE_2        0x3D
-	return1,              // ISTORE_3        0x3E
-	return1,              // LSTORE_0        0x3F
-	return1,              // LSTORE_1        0x40
-	return1,              // LSTORE_2        0x41
-	return1,              // LSTORE_3        0x42
-	return1,              // FSTORE_0        0x43
-	return1,              // FSTORE_1        0x44
-	return1,              // FSTORE_2        0x45
-	return1,              // FSTORE_3        0x46
-	return1,              // DSTORE_0        0x47
-	return1,              // DSTORE_1        0x48
-	return1,              // DSTORE_2        0x49
-	return1,              // DSTORE_3        0x4A
-	return1,              // ASTORE_0        0x4B
-	return1,              // ASTORE_1        0x4C
-	return1,              // ASTORE_2        0x4D
-	return1,              // ASTORE_3        0x4E
-	return1,              // IASTORE         0x4F
-	return1,              // LASTORE         0x50
-	return1,              // FASTORE         0x51
-	return1,              // DASTORE         0x52
-	return1,              // AASTORE         0x53
-	return1,              // BASTORE         0x54
-	return1,              // CASTORE         0x55
-	return1,              // SASTORE         0x56
+	storeInt,             // ISTORE_0        0x3B
+	storeInt,             // ISTORE_1        0x3C
+	storeInt,             // ISTORE_2        0x3D
+	storeInt,             // ISTORE_3        0x3E
+	storeInt,             // LSTORE_0        0x3F
+	storeInt,             // LSTORE_1        0x40
+	storeInt,             // LSTORE_2        0x41
+	storeInt,             // LSTORE_3        0x42
+	storeFloat,           // FSTORE_0        0x43
+	storeFloat,           // FSTORE_1        0x44
+	storeFloat,           // FSTORE_2        0x45
+	storeFloat,           // FSTORE_3        0x46
+	storeFloat,           // DSTORE_0        0x47
+	storeFloat,           // DSTORE_1        0x48
+	storeFloat,           // DSTORE_2        0x49
+	storeFloat,           // DSTORE_3        0x4A
+	storeInt,             // ASTORE_0        0x4B
+	storeInt,             // ASTORE_1        0x4C
+	storeInt,             // ASTORE_2        0x4D
+	storeInt,             // ASTORE_3        0x4E
+	storeInt,             // IASTORE         0x4F
+	storeInt,             // LASTORE         0x50
+	storeInt,             // FASTORE         0x51
+	storeInt,             // DASTORE         0x52
+	storeInt,             // AASTORE         0x53
+	storeInt,             // BASTORE         0x54
+	storeInt,             // CASTORE         0x55
+	storeInt,             // SASTORE         0x56
 	return1,              // POP             0x57
 	return1,              // POP2            0x58
 	return1,              // DUP             0x59
@@ -525,6 +525,12 @@ func pushFloatRet2() int {
 	return 2
 }
 
+// FSORE* and DSTORE*
+func storeFloat() int {
+	StackEntries -= 1
+	return 1
+}
+
 // ICONST* and LCONST Push an int or long onto op stack
 func pushInt() int {
 	StackEntries += 1
@@ -675,6 +681,12 @@ func checkInvokevirtual() int {
 		return ERROR_OCCURRED
 	}
 	return 3
+}
+
+// ISTORE
+func storeInt() int {
+	StackEntries -= 1
+	return 1
 }
 
 // LOOKUPSWITCH 0xAB
