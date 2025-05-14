@@ -255,9 +255,9 @@ var CheckTable = [203]BytecodeFunc{
 	pushFloat,            // DCONST_1        0x0F
 	checkBipush,          // BIPUSH          0x10
 	checkSipush,          // SIPUSH          0x11
-	return2,              // LDC             0x12
-	return3,              // LDC_W           0x13
-	return3,              // LDC2_W          0x14
+	pushIntRet2,          // LDC             0x12
+	pushIntRet3,          // LDC_W           0x13
+	pushIntRet3,          // LDC2_W          0x14
 	pushIntRet2,          // ILOAD           0x15
 	pushIntRet2,          // LLOAD           0x16
 	pushFloatRet2,        // FLOAD           0x17
@@ -291,11 +291,11 @@ var CheckTable = [203]BytecodeFunc{
 	pushInt,              // BALOAD          0x33
 	pushInt,              // CALOAD          0x34
 	pushInt,              // SALOAD          0x35
-	return2,              // ISTORE          0x36
-	return2,              // LSTORE          0x37
-	return2,              // FSTORE          0x38
-	return2,              // DSTORE          0x39
-	return2,              // ASTORE          0x3A
+	storeIntRet2,         // ISTORE          0x36
+	storeIntRet2,         // LSTORE          0x37
+	storeFloatRet2,       // FSTORE          0x38
+	storeFloatRet2,       // DSTORE          0x39
+	storeIntRet2,         // ASTORE          0x3A
 	storeInt,             // ISTORE_0        0x3B
 	storeInt,             // ISTORE_1        0x3C
 	storeInt,             // ISTORE_2        0x3D
@@ -324,8 +324,8 @@ var CheckTable = [203]BytecodeFunc{
 	storeInt,             // BASTORE         0x54
 	storeInt,             // CASTORE         0x55
 	storeInt,             // SASTORE         0x56
-	return1,              // POP             0x57
-	return1,              // POP2            0x58
+	checkPop,             // POP             0x57
+	checkPop2,            // POP2            0x58
 	return1,              // DUP             0x59
 	return1,              // DUP_X1          0x5A
 	return1,              // DUP_X2          0x5B
@@ -531,6 +531,11 @@ func storeFloat() int {
 	return 1
 }
 
+func storeFloatRet2() int {
+	StackEntries -= 1
+	return 2
+}
+
 // ICONST* and LCONST Push an int or long onto op stack
 func pushInt() int {
 	StackEntries += 1
@@ -541,6 +546,12 @@ func pushInt() int {
 func pushIntRet2() int {
 	StackEntries += 1
 	return 2
+}
+
+// for LDC variants (but not LDC itself)
+func pushIntRet3() int {
+	StackEntries += 1
+	return 3
 }
 
 // GETFIELD 0xB4 Get field from object and push it onto the stack
@@ -689,6 +700,11 @@ func storeInt() int {
 	return 1
 }
 
+func storeIntRet2() int {
+	StackEntries -= 1
+	return 2
+}
+
 // LOOKUPSWITCH 0xAB
 func checkLookupswitch() int { // need to check this
 	basePC := PC
@@ -707,6 +723,16 @@ func checkLookupswitch() int { // need to check this
 	basePC += int(npairs) * 8
 
 	return (basePC - PC) + 1
+}
+
+func checkPop() int {
+	StackEntries -= 1
+	return 1
+}
+
+func checkPop2() int {
+	StackEntries -= 2
+	return 1
 }
 
 // TABLESWITCH 0xAA
