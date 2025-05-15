@@ -326,49 +326,49 @@ var CheckTable = [203]BytecodeFunc{
 	storeInt,             // SASTORE         0x56
 	checkPop,             // POP             0x57
 	checkPop2,            // POP2            0x58
-	return1,              // DUP             0x59
-	return1,              // DUP_X1          0x5A
-	return1,              // DUP_X2          0x5B
-	return1,              // DUP2            0x5C
-	return1,              // DUP2_X1         0x5D
-	return1,              // DUP2_X2         0x5E
+	dup1,                 // DUP             0x59
+	dup1,                 // DUP_X1          0x5A
+	dup1,                 // DUP_X2          0x5B
+	dup2,                 // DUP2            0x5C
+	dup2,                 // DUP2_X1         0x5D
+	dup2,                 // DUP2_X2         0x5E
 	return1,              // SWAP            0x5F
-	return1,              // IADD            0x60
-	return1,              // LADD            0x61
-	return1,              // FADD            0x62
-	return1,              // DADD            0x63
-	return1,              // ISUB            0x64
-	return1,              // LSUB            0x65
-	return1,              // FSUB            0x66
-	return1,              // DSUB            0x67
-	return1,              // IMUL            0x68
-	return1,              // LMUL            0x69
-	return1,              // FMUL            0x6A
-	return1,              // DMUL            0x6B
-	return1,              // IDIV            0x6C
-	return1,              // LDIV            0x6D
-	return1,              // FDIV            0x6E
-	return1,              // DDIV            0x6F
-	return1,              // IREM            0x70
-	return1,              // LREM            0x71
-	return1,              // FREM            0x72
-	return1,              // DREM            0x73
-	return1,              // INEG            0x74
-	return1,              // LNEG            0x75
-	return1,              // FNEG            0x76
-	return1,              // DNEG            0x77
-	return1,              // ISHL            0x78
-	return1,              // LSHL            0x79
-	return1,              // ISHR            0x7A
-	return1,              // LSHR            0x7B
-	return1,              // IUSHR           0x7C
-	return1,              // LUSHR           0x7D
-	return1,              // IAND            0x7E
-	return1,              // LAND            0x7F
-	return1,              // IOR             0x80
-	return1,              // LOR             0x81
-	return1,              // IXOR            0x82
-	return1,              // LXOR            0x83
+	arith,                // IADD            0x60
+	arith,                // LADD            0x61
+	arith,                // FADD            0x62
+	arith,                // DADD            0x63
+	arith,                // ISUB            0x64
+	arith,                // LSUB            0x65
+	arith,                // FSUB            0x66
+	arith,                // DSUB            0x67
+	arith,                // IMUL            0x68
+	arith,                // LMUL            0x69
+	arith,                // FMUL            0x6A
+	arith,                // DMUL            0x6B
+	arith,                // IDIV            0x6C
+	arith,                // LDIV            0x6D
+	arith,                // FDIV            0x6E
+	arith,                // DDIV            0x6F
+	arith,                // IREM            0x70
+	arith,                // LREM            0x71
+	arith,                // FREM            0x72
+	arith,                // DREM            0x73
+	arith,                // INEG            0x74
+	arith,                // LNEG            0x75
+	arith,                // FNEG            0x76
+	arith,                // DNEG            0x77
+	arith,                // ISHL            0x78
+	arith,                // LSHL            0x79
+	arith,                // ISHR            0x7A
+	arith,                // LSHR            0x7B
+	arith,                // IUSHR           0x7C
+	arith,                // LUSHR           0x7D
+	arith,                // IAND            0x7E
+	arith,                // LAND            0x7F
+	arith,                // IOR             0x80
+	arith,                // LOR             0x81
+	arith,                // IXOR            0x82
+	arith,                // LXOR            0x83
 	return3,              // IINC            0x84
 	return1,              // I2L             0x85
 	return1,              // I2F             0x86
@@ -385,17 +385,17 @@ var CheckTable = [203]BytecodeFunc{
 	return1,              // I2B             0x91
 	return1,              // I2C             0x92
 	return1,              // I2S             0x93
-	return1,              // LCMP            0x94
-	return1,              // FCMPL           0x95
-	return1,              // FCMPG           0x96
-	return1,              // DCMPL           0x97
-	return1,              // DCMPG           0x98
-	checkIf,              // IFEQ            0x99
-	checkIf,              // IFNE            0x9A
-	checkIf,              // IFLT            0x9B
-	checkIf,              // IFGE            0x9C
-	checkIf,              // IFGT            0x9D
-	checkIf,              // IFLE            0x9E
+	arith,                // LCMP            0x94
+	arith,                // FCMPL           0x95
+	arith,                // FCMPG           0x96
+	arith,                // DCMPL           0x97
+	arith,                // DCMPG           0x98
+	checkIfZero,          // IFEQ            0x99
+	checkIfZero,          // IFNE            0x9A
+	checkIfZero,          // IFLT            0x9B
+	checkIfZero,          // IFGE            0x9C
+	checkIfZero,          // IFGT            0x9D
+	checkIfZero,          // IFLE            0x9E
 	checkIf,              // IF_ICMPEQ       0x9F
 	checkIf,              // IF_ICMPNE       0xA0
 	checkIf,              // IF_ICMPLT       0xA1
@@ -497,6 +497,13 @@ func CheckCodeValidity(code []byte, cp *CPool, maxStack int) error {
 }
 
 // === check functions in alpha order by name of bytecode ===
+
+// *ADD (pop 2 values, add/sub/multiply/divide/modulo them, push result)
+func arith() int {
+	StackEntries -= 1
+	return 1
+}
+
 // ACONST_NULL 0x01 Push null onto op stack
 func checkAconstnull() int {
 	StackEntries += 1
@@ -511,6 +518,16 @@ func checkBipush() int {
 	} else {
 		return ERROR_OCCURRED
 	}
+}
+
+func dup1() int {
+	StackEntries += 1
+	return 1
+}
+
+func dup2() int {
+	StackEntries += 2
+	return 1
 }
 
 // FCONST and DCONST Push a float onto the op stack
@@ -606,6 +623,18 @@ func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
 	}
+	return 3
+}
+
+func checkIfZero() int { // Jump if condition w.r.t 0 is met
+	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
+	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
+		errMsg := fmt.Sprintf("%s:\n IF* test at %d: illegal jump to %d",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, PC+jumpSize)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	StackEntries -= 1
 	return 3
 }
 
