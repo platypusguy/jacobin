@@ -403,7 +403,7 @@ var CheckTable = [203]BytecodeFunc{
 	checkIf,              // IF_ICMPGT       0xA3
 	checkIf,              // IF_ICMPLE       0xA4
 	checkIf,              // IF_ACMPEQ       0xA5
-	checkIf,              // IF_ACMPNE       0xA6
+	checkIf,              // IF_ACMPNE       0xA6 // stack-checking code got this far
 	checkGoto,            // GOTO            0xA7
 	checkGoto,            // JSR             0xA8
 	return2,              // RET             0xA9
