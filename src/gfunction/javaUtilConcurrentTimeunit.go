@@ -7,8 +7,8 @@
 package gfunction
 
 import (
-	"errors"
 	"jacobin/excNames"
+	"jacobin/object"
 )
 
 // TimeUnit constants
