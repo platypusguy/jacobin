@@ -161,5 +161,4 @@ func GetClassNameSuffix(arg *Object, inner bool) string {
 		return base[idx+1:]
 	}
 	return base
-
 }
