@@ -43,7 +43,7 @@ func Load_Lang_Class() {
 	MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  getComponentType,
 		}
 
 	MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
@@ -76,6 +76,64 @@ func Load_Lang_Class() {
 			GFunction:  clinitGeneric,
 		}
 
+}
+
+// getComponentType() returns a pointer to class of the type of an array.
+// primitive arrays return the boxed class type, e.g. int[] returns Integer.class.
+// multidimensional arrays return an array one dimension less, e.g. int[][] returns int[].class.
+// Note: at present, this function returns a pointer to the loaded (but not instantiated) class.
+func getComponentType(params []interface{}) interface{} {
+	objPtr := params[0].(*object.Object)
+
+	field := (*objPtr).FieldTable["value"]
+	// If the object is not an array, return null.
+	if !types.IsArray(field.Ftype) {
+		return object.Null
+	}
+
+	componentType := field.Ftype[1:] // remove the leading '['
+	if types.IsArray(componentType) {
+		// If it's a multidimensional array, we return the pointer to the next dimension.
+		return field.Fvalue
+	}
+
+	// If it's a primitive array, we return the boxed class type.
+	if types.IsPrimitive(componentType) {
+		// Convert the primitive type to its boxed class type.
+		switch componentType {
+		case types.Byte:
+			componentType = "java/lang/Byte"
+		case types.Char:
+			componentType = "java/lang/Character"
+		case types.Double:
+			componentType = "java/lang/Double"
+		case types.Float:
+			componentType = "java/lang/Float"
+		case types.Int:
+			componentType = "java/lang/Integer"
+		case types.Long:
+			componentType = "java/lang/Long"
+		case types.Short:
+			componentType = "java/lang/Short"
+		case types.Bool:
+			componentType = "java/lang/Boolean"
+		default:
+			errMsg := fmt.Sprintf("getComponentType: unrecognized primitive type %s", componentType)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	} else {
+		componentType = strings.TrimPrefix(componentType, types.Ref) // remove the leading 'L'
+		componentType = strings.TrimSuffix(componentType, ";")       // remove the trailing ';'
+	}
+
+	// Load the class for the component type.
+	cl, err := simpleClassLoadByName(componentType)
+	if err != nil {
+		errMsg := fmt.Sprintf("getComponentType: failed to load class %s: %s", componentType, err.Error())
+		return getGErrBlk(excNames.ClassNotFoundException, errMsg)
+	}
+
+	return cl
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and
