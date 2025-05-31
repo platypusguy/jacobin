@@ -80,6 +80,13 @@ func IsFloatingPoint(t string) bool {
 	return false
 }
 
+func IsPrimitive(t string) bool {
+	if IsIntegral(t) || IsFloatingPoint(t) || t == Rune || t == Bool {
+		return true
+	}
+	return false
+}
+
 func IsArray(t string) bool {
 	return strings.HasPrefix(t, Array)
 }
