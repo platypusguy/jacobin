@@ -25,7 +25,7 @@ type JavaLangClass struct {
 	Fields      map[string]*ClassField  // Map of field names to Field objects
 	Methods     map[string]*ClassMethod // Map of method names to Method objects
 	Interfaces  []string                // List of implemented interfaces
-	SuperClass  *JavaLangClass          // Reference to the superclass
+	SuperClass  *Klass                  // Reference to the superclass as it appears in the method area
 	Annotations map[string]*Annotation  // Map of annotations
 	IsPrimitive bool                    // Indicates if the class represents a primitive type
 	IsArray     bool                    // Indicates if the class represents an array type
@@ -96,6 +96,9 @@ func ClassFromInstance(obj *object.Object) *JavaLangClass {
 		globals.GetGlobalRef().FuncThrowException(excNames.InternalException, errMsg)
 		return nil
 	}
+
+	superclassName := stringPool.GetStringPointer(klass.Data.SuperclassIndex)
+	cl.SuperClass = MethAreaFetch(*superclassName)
 
 	value, ok := obj.FieldTable["value"]
 	if ok {
