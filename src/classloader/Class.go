@@ -13,9 +13,9 @@ package classloader
 import (
 	"fmt"
 	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/stringPool"
-	"jacobin/trace"
 	"jacobin/types"
 )
 
@@ -89,10 +89,11 @@ func ClassFromInstance(obj *object.Object) *JavaLangClass {
 
 	klass := MethAreaFetch(*objName)
 	if klass == nil {
+		// this should never happen as getClass is alwasy called on an existing object
 		errMsg := fmt.Sprintf(
 			"%s\n\tClassFromInstance(): Class %s not found in method area",
 			excNames.JVMexceptionNamesJacobin[excNames.InternalException], *objName)
-		trace.Error(errMsg) // TODO: check for circularity circumventing ptr
+		globals.GetGlobalRef().FuncThrowException(excNames.InternalException, errMsg)
 		return nil
 	}
 
@@ -101,6 +102,20 @@ func ClassFromInstance(obj *object.Object) *JavaLangClass {
 		valueType := value.Ftype
 		if types.IsArray(valueType) {
 			cl.IsArray = true
+		}
+	}
+
+	for _, fld := range klass.Data.Fields {
+		fldName := fld.NameStr
+		cl.Fields[fldName] = &ClassField{
+			Name:        fldName,
+			Type:        fld.DescStr,
+			Modifiers:   0, // Default to 0, can be set later
+			Annotations: make(map[string]*Annotation),
+			IsStatic:    fld.IsStatic,
+			IsFinal:     false, // Default to false, can be set later
+			IsVolatile:  false, // Default to false, can be set later
+			IsTransient: false, // Default to false, can be set later
 		}
 	}
 
