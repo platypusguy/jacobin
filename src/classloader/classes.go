@@ -84,6 +84,7 @@ type Field struct {
 	NameStr     string
 	Name        uint16      // index of the UTF-8 entry in the CP
 	Desc        uint16      // index of the UTF-8 entry in the CP
+	DescStr     string      // the type of the field, as a string (using Desc) JACOBIN-720
 	IsStatic    bool        // is the field static?
 	ConstValue  interface{} // if static and has constant value, it's stored here.
 	Attributes  []Attr      // all attributes for this field other than ConstantValue
