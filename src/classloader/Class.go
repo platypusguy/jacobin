@@ -122,5 +122,15 @@ func ClassFromInstance(obj *object.Object) *JavaLangClass {
 		}
 	}
 
+	for key, _ := range klass.Data.MethodTable {
+		cl.Methods[key] = &ClassMethod{
+			Name:           key,
+			IsStatic:       false, // Default to false, can be set later
+			IsAbstract:     false, // Default to false, can be set later
+			IsFinal:        false, // Default to false, can be set later
+			IsSynchronized: false, // Default to false, can be set later
+		}
+	}
+
 	return &cl
 }
