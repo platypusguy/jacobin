@@ -16,7 +16,7 @@ import (
 )
 
 // this file contains the parser for the constant pool and the verifier.
-// Refer to: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4-140
+// Refer to: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.4-140
 
 // the various types of entries in the constant pool. Similar list in exec.classes
 const (

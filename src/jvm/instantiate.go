@@ -269,7 +269,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		// in the instantiated class, add a types.Static before the
 		// type, which notifies future users that the field
 		// is static and should be fetched from the Statics
-		// table.
+		// table. TODO: This can probably be removed.
 		fieldToAdd.Ftype = types.Static + presentType
 		if f.ConstValue != nil { // if the field has a constant value, set it
 			fieldToAdd.Fvalue = f.ConstValue

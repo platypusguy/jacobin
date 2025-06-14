@@ -204,7 +204,7 @@ func parseAccessFlags(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 }
 
 // The value for this item points to a CP entry of type Class_info. (See:
-// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.1 )
+// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.4.1 )
 // In turn, that entry points to the UTF-8 name of the class. This name includes
 // the package name as a path, but not the extension of .class. So, for example,
 // ParsePosition.class in the core Java string library has a class name of:
@@ -372,7 +372,7 @@ func parseFieldCount(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 }
 
 // parse the fields in a class. The contents of each field is explained here:
-// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.5
+// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.5
 // The layout, per that spec:
 // field_info {
 //    u2             access_flags;
