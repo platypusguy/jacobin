@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -21,6 +21,7 @@ type Klass struct {
 	Loader      string
 	Data        *ClData
 	CodeChecked bool // has the code been checked for this class?
+	Resolved    bool // has the CP been resolved for this class?
 }
 
 // the class data, as it's posted to the method area
