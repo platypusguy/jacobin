@@ -93,6 +93,18 @@ func MethAreaInsert(name string, klass *Klass) {
 	}
 }
 
+// MethAreaUpdate updates a class to the method area, using a pointer to the parsed class.
+// This is the same as MethAreaInsert, but it does not increment the size counter.
+func MethAreaUpdate(name string, klass *Klass) {
+	MethAreaMutex.Lock()
+	MethArea.Store(name, klass)
+	MethAreaMutex.Unlock()
+
+	if globals.TraceClass {
+		trace.Trace("Method area update: " + klass.Data.Name + ", loader: " + klass.Loader)
+	}
+}
+
 // MethAreaSize returns the number of entries in MethArea. Because the golang's sync.Map
 // does not have a len() function, we need to track our additions with a counter, which is
 // returned here.
@@ -153,4 +165,3 @@ func MethAreaDump() {
 	}
 	fmt.Fprintln(os.Stderr, "---- end of method area dump ----")
 }
-
