@@ -68,11 +68,6 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if !k.Resolved {
-		classloader.ResolveCPmethRefs(&k.Data.CP)
-		k.Resolved = true // mark the class as resolved
-	}
-
 	// go up the chain of superclasses until we hit java/lang/Object
 	superclasses := []string{}
 	superclassNamePtr := stringPool.GetStringPointer(k.Data.SuperclassIndex)

@@ -799,6 +799,9 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 		}
 	}
 
+	// now resolve the class references in the constant pool. we do this eagerly in Jacobin
+	_ = ResolveCPmethRefs(&kd.CP)
+
 	return kd
 }
 
