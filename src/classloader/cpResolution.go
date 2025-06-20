@@ -15,14 +15,14 @@ import (
 )
 
 // ResolveCPmethRefs resolves the method references in the constant pool of a class
-func ResolveCPmethRefs(k *Klass) error {
-	if k == nil || k.Data == nil || &k.Data.CP == nil {
-		return errors.New("invalid class or class data in ResolveCPmethRefs")
+func ResolveCPmethRefs(cpp *CPool) error {
+	cp := *cpp
+	if cp.CpIndex == nil || cp.MethodRefs == nil {
+		return errors.New("invalid constant pool or class data passed to classloader.ResolveCPmethRefs()")
 	}
-	cp := k.Data.CP
-	resEntry := ResolvedMethodRefEntry{}
 
 	for _, methEntry := range cp.MethodRefs {
+		resEntry := ResolvedMethodRefEntry{}
 		// get the class name as an index into the string pool
 		classIndex := methEntry.ClassIndex
 		classRefIdx := cp.CpIndex[classIndex].Slot
@@ -48,7 +48,7 @@ func ResolveCPmethRefs(k *Klass) error {
 		fqn := *stringPool.GetStringPointer(resEntry.ClassIndex) + "." + methName + methSig
 		resEntry.FQNameIndex = stringPool.GetStringIndex(&fqn)
 
-		k.Data.CP.ResolvedMethodRefs = append(k.Data.CP.ResolvedMethodRefs, resEntry)
+		cpp.ResolvedMethodRefs = append(cpp.ResolvedMethodRefs, resEntry)
 		if globals.TraceInst {
 			fmt.Fprintf(os.Stderr, "Resolved method ref: %s\n", fqn)
 		}

@@ -179,29 +179,36 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 // and returns the class name, method name and method signature. Note that checks on the
 // validity of the cpIndex are performed in codeCheck.go in the various invoke* methods tested there.
 func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
+	cp := *CP
+	meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
+	return *stringPool.GetStringPointer(meth.ClassIndex), *stringPool.GetStringPointer(meth.NameIndex),
+		*stringPool.GetStringPointer(meth.TypeIndex)
 
-	methodRef := CP.CpIndex[cpIndex].Slot
-	classIndex := CP.MethodRefs[methodRef].ClassIndex
+	/*
+		methodRef := CP.CpIndex[cpIndex].Slot
+		classIndex := CP.MethodRefs[methodRef].ClassIndex
 
-	classRefIdx := CP.CpIndex[classIndex].Slot
-	classIdx := CP.ClassRefs[classRefIdx]
-	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
-	className := *classNamePtr
+		classRefIdx := CP.CpIndex[classIndex].Slot
+		classIdx := CP.ClassRefs[classRefIdx]
+		classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
+		className := *classNamePtr
 
-	// now get the method signature
-	nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType
-	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
-	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
-	methNameCPindex := nameAndType.NameIndex
-	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
-	methName := CP.Utf8Refs[methNameUTF8index]
+		// now get the method signature
+		nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType
+		nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
+		nameAndType := CP.NameAndTypes[nameAndTypeIndex]
+		methNameCPindex := nameAndType.NameIndex
+		methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
+		methName := CP.Utf8Refs[methNameUTF8index]
 
-	// and get the method signature/description
-	methSigCPindex := nameAndType.DescIndex
-	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
-	methSig := CP.Utf8Refs[methSigUTF8index]
+		// and get the method signature/description
+		methSigCPindex := nameAndType.DescIndex
+		methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
+		methSig := CP.Utf8Refs[methSigUTF8index]
 
-	return className, methName, methSig
+		return className, methName, methSig
+
+	*/
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {

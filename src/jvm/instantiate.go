@@ -69,7 +69,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	if !k.Resolved {
-		classloader.ResolveCPmethRefs(k)
+		classloader.ResolveCPmethRefs(&k.Data.CP)
 		k.Resolved = true // mark the class as resolved
 	}
 

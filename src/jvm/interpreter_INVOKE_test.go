@@ -166,6 +166,7 @@ func TestNewInvokeSpecialJavaLangObject(t *testing.T) {
 	CP.Utf8Refs[1] = "()V"
 
 	f.CP = &CP
+	classloader.ResolveCPmethRefs(&CP)
 	classname := "java/lang/Object"
 	push(&f, object.MakeEmptyObjectWithClassName(&classname))
 	fs := frames.CreateFrameStack()
@@ -236,6 +237,7 @@ func TestNewInvokeSpecialGmethodNoParams(t *testing.T) {
 	CP.Utf8Refs[1] = "()Ljava/lang/Object;"
 
 	f.CP = &CP
+	classloader.ResolveCPmethRefs(&CP)
 	obj := object.MakeEmptyObject()
 	push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
 
@@ -306,6 +308,7 @@ func TestNewInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 	CP.Utf8Refs[1] = "()D"
 
 	f.CP = &CP
+	classloader.ResolveCPmethRefs(&CP)
 	obj := object.MakeEmptyObject()
 	push(&f, obj) // INVOKESPECIAL expects a pointer to an object on the op stack
 
@@ -376,6 +379,7 @@ func TestNewInvokeSpecialGmethodErrorReturn(t *testing.T) {
 	CP.Utf8Refs[1] = "(D)E"
 
 	f.CP = &CP
+	classloader.ResolveCPmethRefs(&CP)
 	obj := object.MakeEmptyObject()
 	push(&f, obj)        // INVOKESPECIAL expects a pointer to an object on the op stack
 	push(&f, int64(999)) // push the one param
@@ -447,6 +451,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 	CP.Utf8Refs[1] = "()Ljava/lang/Object;"
 
 	f.CP = &CP
+	classloader.ResolveCPmethRefs(&CP)
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
@@ -542,7 +547,8 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 	CP.Utf8Refs[1] = "(D)E"
 
 	f.CP = &CP
-
+	classloader.ResolveCPmethRefs(&CP)
+	
 	push(&f, int64(999)) // push the one param
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function

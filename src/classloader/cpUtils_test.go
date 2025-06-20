@@ -55,6 +55,7 @@ func TestMeInfoFromMethRefValid(t *testing.T) {
 
 	f.CP = &CP
 
+	ResolveCPmethRefs(&CP)
 	_, s2, s3 := GetMethInfoFromCPmethref(&CP, 1)
 	if s2 != "<init>" && s3 != "()V" {
 		t.Errorf("Expect to get a method: <init>()V, got %s%s", s2, s2)
