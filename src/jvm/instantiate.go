@@ -70,6 +70,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if !k.Resolved {
 		classloader.ResolveCPmethRefs(k)
+		k.Resolved = true // mark the class as resolved
 	}
 
 	// go up the chain of superclasses until we hit java/lang/Object
