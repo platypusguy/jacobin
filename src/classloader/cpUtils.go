@@ -176,39 +176,17 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 }
 
 // GetMethInfoFromCPmethref receives a CP entry index that points to a method or interface
-// and returns the class name, method name and method signature. Note that checks on the
-// validity of the cpIndex are performed in codeCheck.go in the various invoke* methods tested there.
-func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string) {
+// and returns the class name, method name, method signature, and these three combined as a
+// fully qualified name (FQN). Note that checks on the validity of the cpIndex are performed
+// in codeCheck.go.
+func GetMethInfoFromCPmethref(CP *CPool, cpIndex int) (string, string, string, string) {
 	cp := *CP
 	meth := cp.ResolvedMethodRefs[cp.CpIndex[cpIndex].Slot]
-	return *stringPool.GetStringPointer(meth.ClassIndex), *stringPool.GetStringPointer(meth.NameIndex),
-		*stringPool.GetStringPointer(meth.TypeIndex)
-
-	/*
-		methodRef := CP.CpIndex[cpIndex].Slot
-		classIndex := CP.MethodRefs[methodRef].ClassIndex
-
-		classRefIdx := CP.CpIndex[classIndex].Slot
-		classIdx := CP.ClassRefs[classRefIdx]
-		classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
-		className := *classNamePtr
-
-		// now get the method signature
-		nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType
-		nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
-		nameAndType := CP.NameAndTypes[nameAndTypeIndex]
-		methNameCPindex := nameAndType.NameIndex
-		methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
-		methName := CP.Utf8Refs[methNameUTF8index]
-
-		// and get the method signature/description
-		methSigCPindex := nameAndType.DescIndex
-		methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
-		methSig := CP.Utf8Refs[methSigUTF8index]
-
-		return className, methName, methSig
-
-	*/
+	cls := *stringPool.GetStringPointer(meth.ClassIndex)
+	mth := *stringPool.GetStringPointer(meth.NameIndex)
+	typ := *stringPool.GetStringPointer(meth.TypeIndex)
+	fqn := *stringPool.GetStringPointer(meth.FQNameIndex)
+	return cls, mth, typ, fqn
 }
 
 func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, string) {

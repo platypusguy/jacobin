@@ -2187,7 +2187,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
-	className, methodName, methodType :=
+	className, methodName, methodType, fqn :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	/* // JACOBIN-575 reactivate this code when ready to complete this task
 	k := classloader.MethAreaFetch(className) // we know the class is already loaded
@@ -2243,7 +2243,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			if err != nil || mtEntry.Meth == nil { // method was not found in interfaces, so throw an exception
 				// TODO: search the classpath and retry
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Class method not found: " + className + "." + methodName + methodType
+				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
 				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 				if status != exceptions.Caught {
 					return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2278,7 +2278,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 
-		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+		ret := gfunction.RunGfunction(
+			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
 		if ret != nil {
 			switch ret.(type) {
 			case error: // only occurs in testing
@@ -2307,7 +2308,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		if m.AccessFlags&0x0100 > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Native method requested: " + className + "." + methodName + methodType
+			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2323,7 +2324,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
 				if err != nil || mtEntry.Meth == nil {
 					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + className + "." + methodName + methodType
+					errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
 					status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 					if status != exceptions.Caught {
 						return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2334,7 +2335,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				m = mtEntry.Meth.(classloader.JmEntry)
 			} else {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + className + "." + methodName + methodType
+				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + fqn
 				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 				if status != exceptions.Caught {
 					return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2346,7 +2347,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Error creating frame in: " + className + "." + methodName + methodType
+			errMsg := "INVOKEVIRTUAL: Error creating frame in: " + fqn
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2363,7 +2364,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 // OxB7 INVOKESPECIAL
 func doInvokespecial(fr *frames.Frame, _ int64) int {
-	var className, methodName, methodType string
+	var className, methodName, methodType, fqn string
 
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
@@ -2373,14 +2374,14 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType =
+		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	}
 
 	// if it's a call to java/lang/Object."<init>"()V, which happens frequently,
 	// that function simply returns. So test for it here and if it is, skip the rest
-	fullConstructorName := className + "." + methodName + methodType
-	if fullConstructorName == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
+	// fullConstructorName := className + "." + methodName + methodType
+	if fqn == "java/lang/Object.<init>()V" { // the java/lang/Object plain constructor just returns
 		return 3 // 2 for the CPslot + 1 for next bytecode
 	}
 
@@ -2388,7 +2389,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	if err != nil || mtEntry.Meth == nil {
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKESPECIAL: Class method not found: " + className + "." + methodName + methodType
+		errMsg := "INVOKESPECIAL: Class method not found: " + fqn
 		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2416,7 +2417,8 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 
-		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+		ret := gfunction.RunGfunction(
+			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
 		if ret != nil {
 			switch ret.(type) {
 			case error:
@@ -2441,7 +2443,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		if m.AccessFlags&0x0100 > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Native method requested: " + className + "." + methodName + methodType
+			errMsg := "INVOKESPECIAL: Native method requested: " + fqn
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2451,7 +2453,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKESPECIAL: Error creating frame in: " + className + "." + methodName + methodType
+			errMsg := "INVOKESPECIAL: Error creating frame in: " + fqn
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2468,7 +2470,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 
 // 0xB8 INVOKESTATIC
 func doInvokestatic(fr *frames.Frame, _ int64) int {
-	var className, methodName, methodType string
+	var className, methodName, methodType, fqn string
 
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
@@ -2478,14 +2480,14 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		className, methodName, methodType =
 			classloader.GetMethInfoFromCPinterfaceRef(CP, CPslot)
 	} else {
-		className, methodName, methodType =
+		className, methodName, methodType, fqn = // fqn is the fully qualified name of the method
 			classloader.GetMethInfoFromCPmethref(CP, CPslot)
 	}
 	mtEntry, err := classloader.FetchMethodAndCP(className, methodName, methodType)
 	if err != nil || mtEntry.Meth == nil {
 		// TODO: search the classpath and retry
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKESTATIC: Class method not found: " + className + "." + methodName + methodType
+		errMsg := "INVOKESTATIC: Class method not found: " + fqn
 		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
 			return exceptions.ERROR_OCCURRED // applies only if in test
@@ -2501,8 +2503,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		err = runInitializationBlock(k, nil, fr.FrameStack)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s",
-				className+"."+methodName+methodType)
+			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
 			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
 			if status != exceptions.Caught {
 				return exceptions.ERROR_OCCURRED // applies only if in test
