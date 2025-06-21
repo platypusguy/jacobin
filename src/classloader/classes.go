@@ -60,8 +60,9 @@ type CPool struct {
 	MethodTypes    []uint16
 	NameAndTypes   []NameAndTypeEntry
 	//	StringRefs     []uint16 // all StringRefs are converted into utf8Refs
-	Utf8Refs           []string
-	ResolvedMethodRefs []ResolvedMethodRefEntry // resolved method references
+	Utf8Refs              []string
+	ResolvedInterfaceRefs []ResolvedInterfaceRefEntry // resolved interface references
+	ResolvedMethodRefs    []ResolvedMethodRefEntry    // resolved method references
 }
 
 type AccessFlags struct {
@@ -166,6 +167,13 @@ type ResolvedMethodRefEntry struct { // type: 10 (method reference, resolved)
 type InterfaceRefEntry struct { // type: 11 (interface reference)
 	ClassIndex  uint16
 	NameAndType uint16
+}
+
+type ResolvedInterfaceRefEntry struct { // type: 11 (interface reference, resolved)
+	ClassIndex  uint32 // all of these are indices into the StringPool
+	NameIndex   uint32
+	TypeIndex   uint32
+	FQNameIndex uint32 // the three previous strings appended into one entry (the most common usage)
 }
 
 type NameAndTypeEntry struct { // type 12 (name and type reference)
