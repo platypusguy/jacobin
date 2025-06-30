@@ -2949,8 +2949,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 					errMsg += fmt.Sprintf(": %s", str)
 				}
 			default:
-				str := fmt.Sprintf(": %v", appMsg)
-				errMsg += fmt.Sprintf(": %s", str)
+				errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
 			}
 		}
 		trace.Error(errMsg)
