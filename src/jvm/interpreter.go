@@ -2924,14 +2924,20 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		}
 
 		appMsg := objectRef.FieldTable["detailMessage"].Fvalue
-		if appMsg != nil {
+		if appMsg != object.Null {
 			switch appMsg.(type) {
 			case []types.JavaByte:
 				jbarray := appMsg.([]types.JavaByte)
 				errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(jbarray))
 			case *object.Object:
+				var value any
 				obj := appMsg.(*object.Object)
-				value := obj.FieldTable["value"].Fvalue
+				fld, ok := obj.FieldTable["value"]
+				if !ok {
+					value = "<missing>"
+				} else {
+					value = fld.Fvalue
+				}
 				switch value.(type) {
 				case []byte:
 					errMsg += fmt.Sprintf(": %s", string(obj.FieldTable["value"].Fvalue.([]byte)))
@@ -2943,8 +2949,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 					errMsg += fmt.Sprintf(": %s", str)
 				}
 			default:
-				str := fmt.Sprintf(": %v", appMsg)
-				errMsg += fmt.Sprintf(": %s", str)
+				errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
 			}
 		}
 		trace.Error(errMsg)
