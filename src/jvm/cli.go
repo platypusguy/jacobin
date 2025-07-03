@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -81,16 +81,16 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 				trace.Error(errMsg)
 				return err
 			}
+			// if the option is a JAR file, then all remaining args have been captureed
+			// in the optAction function, so we can exit here
+			if option == "-jar" {
+				return nil
+			}
 		} else {
 			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
 			trace.Error(errMsg)
 			return err
 		}
-
-		// TODO: check for JAR specified and process the JAR. At present, it will
-		// recognize the JAR file and insert it into globPtr, and copy all succeeding args
-		// to app args. However, it does not recognize the JAR file as an executable.
-
 	}
 	return nil
 }
