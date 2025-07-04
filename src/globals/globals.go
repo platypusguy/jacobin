@@ -30,7 +30,8 @@ var StringEnvVarHeadless = "java.awt.headless"
 
 // Globals contains variables that need to be globally accessible,
 // such as VM and program args, etc.
-// Note: globals cannot depend on exec package to avoid circularity.
+//
+// Note: to avoid circularity, globals cannot depend on exec package.
 // As a result, exec contains its own globals
 type Globals struct {
 	// ---- jacobin version number ----
@@ -55,6 +56,8 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
+	ClasspathRaw      string   // the raw classpath as passed in by the user
+	Classpath         []string // the classpath as a list of directories and JARs
 
 	// ---- Java Home and Version ----
 	JavaHome    string
@@ -75,7 +78,6 @@ type Globals struct {
 
 	// ---- special switches ----
 	StrictJDK bool // hew closely to actions and error messages of the JDK
-	// NewInterpreter bool // use the new experimental interpreter
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
@@ -137,6 +139,7 @@ var global Globals
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 	global = Globals{
+		Classpath:         make([]string, 1),          // at least one element, the current directory
 		Version:           config.GetJacobinVersion(), // gets version and build #
 		VmModel:           "server",
 		ExitNow:           false,
@@ -150,10 +153,9 @@ func InitGlobals(progName string) Globals {
 		MaxJavaVersion:    21, // this value and MaxJavaVersionRaw must *always* be in sync
 		MaxJavaVersionRaw: 65, // this value and MaxJavaVersion must *always* be in sync
 		// Threads:            ThreadList{list.New(), sync.Mutex{}},
-		ThreadNumber:     0, // first thread will be numbered 1, as increment occurs prior
-		JacobinBuildData: nil,
-		StrictJDK:        false,
-		// NewInterpreter:       false,
+		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
+		JacobinBuildData:     nil,
+		StrictJDK:            false,
 		ArrayAddressList:     InitArrayAddressList(),
 		JmodBaseBytes:        nil,
 		ErrorGoStack:         "",
@@ -204,12 +206,30 @@ func InitGlobals(progName string) Globals {
 		}
 	}
 
-	// Capture system properties from the O/S and its environment.
+	InitClasspath()
+
+	// Capture system properties from the OS and its environment.
 	buildGlobalProperties()
 
 	global.Threads = make(map[int]interface{})
 
 	return global
+}
+
+// InitClasspath initializes the classpath from the CLASSPATH environment variable.
+// If CLASSPATH is not set, it uses the current working directory as the classpath.
+func InitClasspath() {
+	cp := os.Getenv("CLASSPATH")
+	if cp != "" {
+		cp = strings.TrimSpace(cp)
+		cp = strings.TrimRight(cp, "\\/") // remove any trailing separator
+		cp = cleanupPath(cp)              // convert slashes to current platform's path separator
+		global.ClasspathRaw = cp
+		global.Classpath = strings.Split(cp, string(os.PathListSeparator))
+	} else {
+		global.ClasspathRaw, _ = os.Getwd()
+		global.Classpath[0] = global.ClasspathRaw
+	}
 }
 
 // GetGlobalRef returns a pointer to the singleton instance of Globals
