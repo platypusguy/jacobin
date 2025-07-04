@@ -38,6 +38,29 @@ func TestGlobalsInit(t *testing.T) {
 	}
 }
 
+func TestInitClasspath(t *testing.T) {
+	g := InitGlobals("testInit")
+	pwd, _ := os.Getwd()
+	if g.ClasspathRaw != pwd {
+		t.Errorf("Expected ClassPath to be set to current working directory, got: %s", g.ClasspathRaw)
+	}
+
+	if g.Classpath[0] != pwd {
+		t.Errorf("Expected ClassPath[0] to be set to current working directory, got: %s", g.Classpath[0])
+	}
+}
+
+func TestInitClasspathWithEnv(t *testing.T) {
+	origClasspath := os.Getenv("CLASSPATH")
+	_ = os.Setenv("CLASSPATH", "home")
+	defer os.Setenv("CLASSPATH", origClasspath)
+
+	g := InitGlobals("testInit")
+	if g.ClasspathRaw != "home" {
+		t.Errorf("Expected ClassPath to be set to 'home', got: %s", g.ClasspathRaw)
+	}
+}
+
 // make sure the JAVA_HOME environment variable is extracted and the embedded slashes
 // are reformatted correctly
 func TestJavaHomeFormat(t *testing.T) {

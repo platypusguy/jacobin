@@ -138,34 +138,34 @@ var global Globals
 
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
-	global = Globals{
-		Classpath:         make([]string, 1),          // at least one element, the current directory
-		Version:           config.GetJacobinVersion(), // gets version and build #
-		VmModel:           "server",
-		ExitNow:           false,
-		JacobinName:       progName,
-		JacobinHome:       "",
-		JavaHome:          "",
-		JavaVersion:       "",
-		Options:           make(map[string]Option),
-		StartingClass:     "",
-		StartingJar:       "",
-		MaxJavaVersion:    21, // this value and MaxJavaVersionRaw must *always* be in sync
-		MaxJavaVersionRaw: 65, // this value and MaxJavaVersion must *always* be in sync
-		// Threads:            ThreadList{list.New(), sync.Mutex{}},
-		ThreadNumber:         0, // first thread will be numbered 1, as increment occurs prior
-		JacobinBuildData:     nil,
-		StrictJDK:            false,
+	global = Globals{ // in alpha order
 		ArrayAddressList:     InitArrayAddressList(),
-		JmodBaseBytes:        nil,
+		Classpath:            make([]string, 1), // at least one element, the current directory
+		ClasspathRaw:         "",
 		ErrorGoStack:         "",
-		PanicCauseShown:      false,
+		ExitNow:              false,
+		FuncInstantiateClass: fakeInstantiateClass,
+		FuncMinimalAbort:     fakeMinimalAbort,
+		FuncThrowException:   fakeThrowEx,
+		GoStackShown:         false,
+		JacobinBuildData:     nil,
+		JacobinHome:          "",
+		JacobinName:          progName,
+		JavaHome:             "",
+		JavaVersion:          "",
+		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
-		GoStackShown:         false,
-		FuncInstantiateClass: fakeInstantiateClass,
-		FuncThrowException:   fakeThrowEx,
-		FuncMinimalAbort:     fakeMinimalAbort,
+		MaxJavaVersion:       21, // this value and MaxJavaVersionRaw must *always* be in sync
+		MaxJavaVersionRaw:    65, // this value and MaxJavaVersion must *always* be in sync
+		Options:              make(map[string]Option),
+		PanicCauseShown:      false,
+		StartingClass:        "",
+		StartingJar:          "",
+		StrictJDK:            false,
+		ThreadNumber:         0,                          // first thread will be numbered 1, as increment occurs prior
+		Version:              config.GetJacobinVersion(), // gets version and build #
+		VmModel:              "server",
 	}
 
 	// ----- G function alternative processing flag
