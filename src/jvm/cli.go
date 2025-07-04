@@ -239,6 +239,6 @@ func showCopyright(g *globals.Globals) {
 			strings.Contains(g.CommandLine, "-version") ||
 			strings.Contains(g.CommandLine, "--version")) {
 		fmt.Println("Jacobin VM, Copyright " +
-			"© 2021-4 by the Jacobin authors. MPL 2.0 License. www.jacobin.org")
+			"© 2021-5 by the Jacobin authors. MPL 2.0 License. www.jacobin.org")
 	}
 }
