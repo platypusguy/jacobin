@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -67,6 +67,9 @@ func LoadOptionsTable(Global globals.Globals) {
 	Global.Options["-client"] = client
 	client.Set = true
 
+	// --dry-run option is a valid HotSpot option, but not supported in Jacobin.
+	// including it here so that we can test the unsupported option.
+	// in Hotpot, it is used to run the VM without actually running the main method.
 	dryRun := globals.Option{false, false, 0, notSupported}
 	Global.Options["--dry-run"] = dryRun
 	dryRun.Set = true
