@@ -63,6 +63,12 @@ import (
 // LoadOptionsTable loads the table with all the options Jacobin recognizes.
 func LoadOptionsTable(Global globals.Globals) {
 
+	classpath := globals.Option{true, false, 4, getClasspath}
+	Global.Options["-classpath"] = classpath
+	Global.Options["--class-path"] = classpath
+	Global.Options["-cp"] = classpath
+	classpath.Set = true
+
 	client := globals.Option{true, false, 0, clientVM}
 	Global.Options["-client"] = client
 	client.Set = true
@@ -119,6 +125,18 @@ func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 	gl.VmModel = "client"
 	setOptionToSeen("-client", gl)
 	return pos, nil
+}
+
+func getClasspath(pos int, name string, gl *globals.Globals) (int, error) {
+	setOptionToSeen("-cp", gl)
+	setOptionToSeen("-classpath", gl)
+	setOptionToSeen("--class-path", gl)
+	if len(gl.Args) > pos+1 {
+		gl.ClasspathRaw = gl.Args[pos+1]
+		return pos + 1, nil
+	} else {
+		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
+	}
 }
 
 // for -jar option. Get the next arg, which must be the JAR filename, and then all remaining args
