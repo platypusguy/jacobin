@@ -127,7 +127,8 @@ func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-func getClasspath(pos int, name string, gl *globals.Globals) (int, error) {
+// extracts the classpath from the command line, and break it into it components
+func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-cp", gl)
 	setOptionToSeen("-classpath", gl)
 	setOptionToSeen("--class-path", gl)
