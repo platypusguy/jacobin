@@ -48,6 +48,51 @@ func TestGetClasspathMissingArgument(t *testing.T) {
 	}
 }
 
+func TestGetJarFilenameValid(t *testing.T) {
+	global := globals.InitGlobals("test")
+	global.Args = []string{"-jar", "filename.jar"}
+
+	pos, _ := getJarFilename(0, "", &global)
+	if global.StartingJar != "filename.jar" {
+		t.Errorf("Did not get expected JAR file name, got: %s", global.StartingJar)
+	}
+
+	if pos != 2 {
+		t.Errorf("Expected position 2, got %d", pos)
+	}
+}
+
+func TestGetJarFilenameWithAppArgs(t *testing.T) {
+	global := globals.InitGlobals("test")
+	global.Args = []string{"-jar", "filename.jar", "arg1", "arg2"}
+
+	pos, _ := getJarFilename(0, "", &global)
+	if global.StartingJar != "filename.jar" {
+		t.Errorf("Did not get expected JAR file name, got: %s", global.StartingJar)
+	}
+
+	if global.AppArgs[0] != "arg1" {
+		t.Errorf("Did not get expected app arg, got: %s", global.AppArgs[0])
+	}
+
+	if pos != 4 {
+		t.Errorf("Expected position 2, got %d", pos)
+	}
+}
+func TestGetJarFilenameMissingArgument(t *testing.T) {
+	global := globals.InitGlobals("test")
+	global.Args = []string{"-jar"}
+
+	pos, err := getJarFilename(0, "", &global)
+	if err != os.ErrInvalid {
+		t.Errorf("Expected error for missing jar file name, got: %v", err)
+	}
+
+	if pos != 0 {
+		t.Errorf("Expected position 0, got %d", pos)
+	}
+}
+
 // Helper function to compare slices
 func equalSlices(a, b []string) bool {
 	if len(a) != len(b) {
