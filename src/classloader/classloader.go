@@ -266,6 +266,7 @@ func LoadClassFromNameOnly(name string) error {
 	var err error
 	className := name
 
+	// we loop here in order to load the class and all its superclasses.
 loadAclass:
 
 	if className == "" {
