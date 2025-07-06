@@ -256,12 +256,6 @@ func enableJJ(pos int, argValue string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-// func newInterpeter(pos int, name string, gl *globals.Globals) (int, error) {
-// 	gl.NewInterpreter = true
-// 	setOptionToSeen("-new", gl)
-// 	return pos, nil
-// }
-
 // Marks the given option as having been 'set' that is, specified on the command line
 func setOptionToSeen(optionKey string, gl *globals.Globals) {
 	o := gl.Options[optionKey]

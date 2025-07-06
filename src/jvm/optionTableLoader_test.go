@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2025 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2025 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -8,10 +8,33 @@ package jvm
 
 import (
 	"jacobin/globals"
+	"jacobin/statics"
+	"jacobin/types"
 	"os"
 	"strings"
 	"testing"
 )
+
+func TestEnableAssertions(t *testing.T) {
+	global := globals.InitGlobals("test")
+	statics.LoadProgramStatics()
+
+	global.Args = []string{"-ea"}
+
+	pos, err := enableAssertions(0, "", &global)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	assertStatus := statics.GetStaticValue("main", "$assertionsDisabled")
+	if assertStatus.(int64) != (types.JavaBoolFalse) {
+		t.Error("Expected assertions to be enabled, but it is not.")
+	}
+
+	if pos != 0 {
+		t.Errorf("Expected position 0, got %d", pos)
+	}
+}
 
 func TestGetClasspathValidInput(t *testing.T) {
 	global := globals.InitGlobals("test")
