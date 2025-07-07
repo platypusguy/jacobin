@@ -135,6 +135,11 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 	if len(gl.Args) > pos+1 {
 		gl.ClasspathRaw = gl.Args[pos+1]
 		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
+		for i, path := range gl.Classpath { // make sure each path ends with a path separator
+			if !strings.HasSuffix(path, string(os.PathSeparator)) {
+				gl.Classpath[i] = path + string(os.PathSeparator)
+			}
+		}
 		return pos + 1, nil
 	} else {
 		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")

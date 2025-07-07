@@ -48,6 +48,11 @@ func TestGetClasspathValidInput(t *testing.T) {
 	}
 
 	expected := strings.Split(pathArg, string(os.PathListSeparator))
+	for i, path := range expected {
+		if !strings.HasSuffix(path, string(os.PathSeparator)) {
+			expected[i] = path + string(os.PathSeparator)
+		}
+	}
 	if !equalSlices(global.Classpath, expected) {
 		t.Errorf("Expected classpath %v, got %v", expected, global.Classpath)
 	}
