@@ -352,12 +352,40 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		debug.PrintStack()
 		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg)
 	}
-	rawBytes, err := os.ReadFile(filename)
-	if err != nil {
-		errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
-		globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
-		return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
+
+	// read the file, starting with the first entry in the classpath
+	var rawBytes []byte
+	var err error
+	for i, path := range globals.GetGlobalRef().Classpath {
+		// if the filepath is not absolute and does not start with the classpath entry, prepend the classpath entry
+		if !filepath.IsAbs(filename) && !strings.HasPrefix(filename, path) {
+			filename = filepath.Join(globals.GetGlobalRef().Classpath[0], filename)
+			if globals.TraceClass {
+				trace.Trace("LoadClassFromFile: File " + filename + " will be read")
+			}
+		}
+
+		// now read the file
+		rawBytes, err = os.ReadFile(filename)
+		if err == nil {
+			break
+		}
+		// if the file was not found, try the next entry in the classpath
+		// if we are at the last entry in the classpath, throw an exception
+		if i >= len(globals.GetGlobalRef().Classpath)-1 {
+			errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
+			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+			return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
+		}
 	}
+
+	// rawBytes, err := os.ReadFile(filename)
+	//
+	// if err != nil {
+	// 	errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
+	// 	globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+	// 	return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
+	// }
 	if globals.TraceClass {
 		trace.Trace("LoadClassFromFile: File " + fname + " was read")
 	}
