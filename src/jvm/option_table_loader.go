@@ -57,7 +57,8 @@ import (
 //     the position in the command line where the present option is located (first
 //     option is at position zero), a string which contains any parameters (if it has
 //     no parameters an empty string is passed in), and finally a pointer to the
-//     globals data structure, which contains the Options table.
+//     globals data structure, which contains the Options table. The function returns
+//     an int showing the last arg processed, and an error if any.
 //
 
 // LoadOptionsTable loads the table with all the options Jacobin recognizes.
@@ -140,7 +141,7 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 				gl.Classpath[i] = path + string(os.PathSeparator)
 			}
 		}
-		return pos + 1, nil
+		return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
 	} else {
 		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
 	}

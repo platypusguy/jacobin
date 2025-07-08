@@ -75,7 +75,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
 		opt, ok := Global.Options[option]
 		if ok {
-			_, err = opt.Action(i, arg, Global)
+			newPos, err := opt.Action(i, arg, Global)
 			if err != nil {
 				errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
 				trace.Error(errMsg)
@@ -86,6 +86,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 			if option == "-jar" {
 				return nil
 			}
+			i = newPos // advance the index by the number of args consumed by this option
 		} else {
 			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
 			trace.Error(errMsg)
