@@ -9,7 +9,7 @@
 
 A more-than-minimal JVM written in Go. 
 
-<img src="https://github.com/platypusguy/jacobin/blob/0aedac33af431ca3befd67d96d0d95db84096b0c/assets/img/JacobinLogo.jpg" width=30% height=30%>
+<img src="https://github.com/platypusguy/jacobin/blob/0aedac33af431ca3befd67d96d0d95db84096b0c/assets/img/JacobinLogo.jpg" width=60% height=60%>
 
 
 # Status
