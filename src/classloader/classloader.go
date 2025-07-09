@@ -292,7 +292,8 @@ loadAclass:
 		}
 		classBytes, err := GetClassBytes(jmodFileName, className)
 		if err != nil {
-			errMsg := "LoadClassFromNameOnly: GetClassBytes className=" + className + " from jmodFileName=" + jmodFileName + " failed, err: " + err.Error()
+			errMsg := "LoadClassFromNameOnly: GetClassBytes className=" + className +
+				" from jmodFileName=" + jmodFileName + " failed, err: " + err.Error()
 			trace.Error(errMsg)
 		}
 		_, _, err = loadClassFromBytes(AppCL, className, classBytes)
@@ -313,12 +314,12 @@ loadAclass:
 		return err
 	}
 
-	// Loading from a local file system class
-	// TODO: classpath
 	validName := util.ConvertToPlatformPathSeparators(className)
 	if globals.TraceClass {
 		trace.Trace("LoadClassFromNameOnly: Loaded class from file " + validName)
 	}
+
+	// load the class from a file, using the classpath
 	_, superclassIndex, err := LoadClassFromFile(AppCL, validName)
 	if err != nil {
 		errMsg := fmt.Sprintf("LoadClassFromNameOnly for %s failed, err: %v", className, err)
@@ -332,13 +333,12 @@ loadAclass:
 		goto loadAclass
 	}
 
-	// at this point, we know the class and all its superclasses have been loaded. So,
-	// we can add all the superclass methods to the present class.
+	// at this point, we know the class and all its superclasses have been loaded.
 	return err
 }
 
-// LoadClassFromFile first canonicalizes the filename, and reads
-// the indicated file, and runs it through the classloader.
+// LoadClassFromFile first canonicalizes the filename, and reads the file from the classpath,
+// and class the classloader to load it.
 func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	var filename string
 	if !strings.HasSuffix(fname, ".class") {
@@ -379,13 +379,6 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		}
 	}
 
-	// rawBytes, err := os.ReadFile(filename)
-	//
-	// if err != nil {
-	// 	errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
-	// 	globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
-	// 	return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
-	// }
 	if globals.TraceClass {
 		trace.Trace("LoadClassFromFile: File " + fname + " was read")
 	}
