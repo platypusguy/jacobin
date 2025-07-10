@@ -218,12 +218,12 @@ func InitGlobals(progName string) Globals {
 
 // InitClasspath initializes the classpath from the CLASSPATH environment variable.
 // If CLASSPATH is not set, it uses the current working directory as the classpath.
+// This will be overriden by the -cp or -classpath command-line options.
 func InitClasspath() {
 	cp := os.Getenv("CLASSPATH")
 	if cp != "" {
 		cp = strings.TrimSpace(cp)
-		cp = strings.TrimRight(cp, "\\/") // remove any trailing separator
-		cp = cleanupPath(cp)              // convert slashes to current platform's path separator
+		cp = cleanupPath(cp) // convert slashes to current platform's path separator
 		global.ClasspathRaw = cp
 		global.Classpath = strings.Split(cp, string(os.PathListSeparator))
 	} else {

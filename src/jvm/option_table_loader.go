@@ -134,6 +134,13 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 	setOptionToSeen("-cp", gl)
 	setOptionToSeen("-classpath", gl)
 	setOptionToSeen("--class-path", gl)
+
+	// because the -cp and -classpath options override the default classpath as well
+	// as the one set in the environment variable CLASSPATH, we need to clear the
+	// classpath in the globals structure.
+	gl.ClasspathRaw = ""
+	gl.Classpath = make([]string, 1) // there will always be least one element
+	
 	if len(gl.Args) > pos+1 {
 		gl.ClasspathRaw = gl.Args[pos+1]
 		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
