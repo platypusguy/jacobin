@@ -357,9 +357,10 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	var rawBytes []byte
 	var err error
 	for i, path := range globals.GetGlobalRef().Classpath {
+		filename = fname
 		// if the filepath is not absolute and does not start with the classpath entry, prepend the classpath entry
 		if !filepath.IsAbs(filename) && !strings.HasPrefix(filename, path) {
-			filename = filepath.Join(globals.GetGlobalRef().Classpath[0], filename)
+			filename = filepath.Join(globals.GetGlobalRef().Classpath[i], filename)
 			if globals.TraceClass {
 				trace.Trace("LoadClassFromFile: File " + filename + " will be read")
 			}
