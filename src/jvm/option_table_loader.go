@@ -83,6 +83,7 @@ func LoadOptionsTable(Global globals.Globals) {
 
 	ea := globals.Option{false, false, 0, enableAssertions}
 	Global.Options["-ea"] = ea
+	Global.Options["-enableassertions"] = ea
 
 	help := globals.Option{true, false, 0, showHelpStderrAndExit}
 	Global.Options["-h"] = help
@@ -137,7 +138,7 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 		gl.ClasspathRaw = gl.Args[pos+1]
 		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
 		for i, path := range gl.Classpath {
-			if gl.Classpath[i] == "." { // expand the . to the current working directory
+			if gl.Classpath[i] == "." { // expand the . to the present working directory
 				gl.Classpath[i], _ = os.Getwd()
 			}
 			// make sure each path ends with a path separator
