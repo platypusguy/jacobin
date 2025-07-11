@@ -140,18 +140,25 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 	// classpath in the globals structure.
 	gl.ClasspathRaw = ""
 	gl.Classpath = make([]string, 1) // there will always be least one element
-	
+
 	if len(gl.Args) > pos+1 {
 		gl.ClasspathRaw = gl.Args[pos+1]
 		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
 		for i, path := range gl.Classpath {
-			if gl.Classpath[i] == "." { // expand the . to the present working directory
-				gl.Classpath[i], _ = os.Getwd()
+			var entry string
+			if strings.HasPrefix(path, `"`) && strings.HasSuffix(path, `"`) {
+				entry = path[1 : len(path)-1] // remove the quotes
 			}
+
+			if entry == "." { // expand the . to the present working directory
+				entry, _ = os.Getwd()
+			}
+
 			// make sure each path ends with a path separator
 			if !strings.HasSuffix(path, string(os.PathSeparator)) {
-				gl.Classpath[i] = path + string(os.PathSeparator)
+				entry = path + string(os.PathSeparator)
 			}
+			gl.Classpath[i] = entry
 		}
 		return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
 	} else {
