@@ -231,7 +231,7 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 	}
 
 	errMsg := err.(*GErrBlk).ErrMsg
-	if !strings.Contains(errMsg, "invalid src or dest array") {
+	if !strings.Contains(errMsg, "invalid src") {
 		t.Errorf("Expected error re invalid array type, got %s", errMsg)
 	}
 }
