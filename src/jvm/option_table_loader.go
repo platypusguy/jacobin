@@ -143,6 +143,19 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 
 	if len(gl.Args) > pos+1 {
 		gl.ClasspathRaw = gl.Args[pos+1]
+		expandClasspth(gl)  // expand the classpath to its components
+		return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
+	} else {
+		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
+	}
+}
+
+func expandClasspth(gl *globals.Globals) {
+	// if the classpath is not set, then set it to the current directory
+	if gl.ClasspathRaw == "" {
+		gl.ClasspathRaw, _ = os.Getwd()
+		gl.Classpath[0] = gl.ClasspathRaw
+	} else {
 		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
 		for i, path := range gl.Classpath {
 			var entry string
@@ -160,9 +173,6 @@ func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
 			}
 			gl.Classpath[i] = entry
 		}
-		return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
-	} else {
-		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
 	}
 }
 
