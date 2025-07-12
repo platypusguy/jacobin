@@ -71,6 +71,10 @@ func JVMrun() int {
 	// load static variables. Needs to be here b/c CLI might modify their values
 	statics.PreloadStatics()
 
+	// check for environmental variables that set JVM options
+	globPtr.ClasspathRaw = os.Getenv("CLASSPATH")
+	expandClasspth(globPtr)
+
 	// handle the command-line interface (CLI) -- i.e., process the args
 	LoadOptionsTable(*globPtr)
 	err := HandleCli(os.Args, globPtr)
