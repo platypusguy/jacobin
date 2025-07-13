@@ -340,13 +340,13 @@ loadAclass:
 // LoadClassFromFile first canonicalizes the filename, and reads the file from the classpath,
 // and class the classloader to load it.
 func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
-	var filename string
+	var classFilename string
 	if !strings.HasSuffix(fname, ".class") {
-		filename = fname + ".class"
+		classFilename = fname + ".class"
 	} else {
-		filename = fname
+		classFilename = fname
 	}
-	if filename == ".class" || strings.HasSuffix(filename, ";.class") {
+	if classFilename == ".class" || strings.HasSuffix(classFilename, ";.class") {
 		errMsg := "LoadClassFromFile: class name" + fname + " is invalid"
 		trace.Error(errMsg)
 		debug.PrintStack()
@@ -356,7 +356,9 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	// read the file, starting with the first entry in the classpath
 	var rawBytes []byte
 	var err error
+	var filename string
 	for i, path := range globals.GetGlobalRef().Classpath {
+		filename = classFilename
 		// if the filepath is not absolute and does not start with the classpath entry, prepend the classpath entry
 		if !filepath.IsAbs(filename) && !strings.HasPrefix(filename, path) {
 			filename = filepath.Join(globals.GetGlobalRef().Classpath[i], filename)
