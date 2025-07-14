@@ -275,7 +275,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
 	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
-		errMsg := fmt.Sprintf("systemArrayCopy: invalid src or dest array")
+		errMsg := fmt.Sprintf("systemArrayCopy: invalid src (%s) or dest (%s) array", srcType, destType)
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
 
