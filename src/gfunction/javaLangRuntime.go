@@ -40,10 +40,58 @@ func Load_Lang_Runtime() {
 			GFunction:  runtimeAvailableProcessors,
 		}
 
+	MethodSignatures["java/lang/Runtime.exec(Ljava/lang/String;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/lang/Runtime.exec([Ljava/lang/String;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Runtime.exec([Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Runtime.exec([Ljava/lang/String;[Ljava/lang/String;Ljava/io/File;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Runtime.exec(Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/lang/Runtime.exec(Ljava/lang/String;[Ljava/lang/String;Ljava/io/File;)Ljava/lang/Process;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapDeprecated,
+		}
+
 	MethodSignatures["java/lang/Runtime.exit(I)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  systemExitI, // javaLangSystem.go
+		}
+
+	MethodSignatures["java/lang/Runtime.freeMemory()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Runtime.gc()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn, // TODO: implement
 		}
 
 	MethodSignatures["java/lang/Runtime.getRuntime()Ljava/lang/Runtime;"] =
