@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+// This file contains the code for loading and managing JAR files.
+
 type ResourceType int16
 type ArchiveType int16
 
@@ -114,7 +116,7 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 
 	contents := string(data)
 
-	lines := strings.Split(contents, "\r\n")
+	lines := strings.Split(contents, "\r\n") // TODO: handle both \r\n and \n line endings
 
 	for _, line := range lines {
 		parts := strings.Split(line, ":")
