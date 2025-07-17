@@ -11,13 +11,13 @@ func Load_Lang_Process() {
 	MethodSignatures["javaLangProcess.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["javaLangProcess.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["javaLangProcess.destroy()V"] =
