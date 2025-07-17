@@ -76,7 +76,7 @@ func StringObjectFromGoString(str string) *Object {
 	return newStr
 }
 
-// StringObjectArrayFromGoStringArray: convenience method to create a string object array from a Golang string array
+// StringObjectArrayFromGoStringArray: convenience method to create a Java String object array from a Golang string array
 func StringObjectArrayFromGoStringArray(strArray []string) []*Object {
 	outArray := make([]*Object, len(strArray))
 	for ix, str := range strArray {
@@ -106,6 +106,15 @@ func GoStringFromStringObject(obj *Object) string {
 	}
 
 	return ""
+}
+
+// StringObjectArrayFromGoStringArray: convenience method to create a Golang string array from a Java String object array
+func GoStringArrayFromStringObjectArray(objArray []*Object) []string {
+	outArray := make([]string, len(objArray))
+	for ix, obj := range objArray {
+		outArray[ix] = GoStringFromStringObject(obj)
+	}
+	return outArray
 }
 
 // ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)

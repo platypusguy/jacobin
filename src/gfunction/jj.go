@@ -7,13 +7,19 @@
 package gfunction
 
 import (
+	"bytes"
 	"fmt"
+	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/types"
+	"os"
+	"os/exec"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 // jj (Jacobin JVM) functions are functions that can be inserted inside Java programs
@@ -46,6 +52,12 @@ func Load_jj() {
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  jjGetFieldString,
+		}
+
+	MethodSignatures["jj._subProcess(Ljava/lang/Object;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  jjSubProcess,
 		}
 }
 
@@ -219,4 +231,127 @@ func jjDumpObject(params []interface{}) interface{} {
 	indent := params[2].(int64)
 	this.DumpObject(title, int(indent))
 	return nil
+}
+
+/*
+params[0] *object.Object:
+
+	class jjSubProcessObject {
+		String[] commandLine; // input
+		String[] classpath; // input; empty means use existing
+		String stdout; // output
+		String stderr; // output
+	}
+
+The returned int64 indicates the sub-process exit code.
+*/
+func jjSubProcess(params []interface{}) interface{} {
+
+	// Subprocess execution handle.
+	var cmd *exec.Cmd
+
+	// params[0] should have subprocess object.
+	subpObj, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "jjSubProcess: Missing/Misformatted subprocess object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Replace the CLASSPATH environment variable if the classpath field is non-empty.
+	cpArray, ok := subpObj.FieldTable["classpath"].Fvalue.([]*object.Object)
+	if !ok {
+		errMsg := "jjSubProcess: Missing/Misformatted subprocess classpath field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	if len(cpArray) > 0 {
+		cpStrArray := object.GoStringArrayFromStringObjectArray(cpArray)
+
+		// Join with platform-specific separator.
+		sep := ":"
+		if runtime.GOOS == "windows" {
+			sep = ";"
+		}
+		classpath := strings.Join(cpStrArray, sep)
+
+		// Clone environment and replace any existing CLASSPATH entry.
+		env := os.Environ()
+		newEnv := make([]string, 0, len(env)+1)
+		for _, kv := range env {
+			if !strings.HasPrefix(kv, "CLASSPATH=") {
+				newEnv = append(newEnv, kv)
+			}
+		}
+		newEnv = append(newEnv, "CLASSPATH="+classpath)
+
+		// Update subprocess environment with new classpath.
+		cmd.Env = newEnv
+	}
+
+	// Build command line.
+	objArray, ok := subpObj.FieldTable["commandLine"].Fvalue.([]*object.Object)
+	if !ok {
+		errMsg := "jjSubProcess: Missing/Misformatted subprocess commandLine field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	strArray := object.GoStringArrayFromStringObjectArray(objArray)
+	switch len(strArray) {
+	case 0:
+		errMsg := "jjSubProcess: Nil subprocess commandLine field"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	case 1:
+		cmd = exec.Command(strArray[0])
+	default:
+		cmd = exec.Command(strArray[0], strArray[1:]...)
+	}
+
+	// Buffers to capture stdout and stderr
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
+	// Run the command and wait for it to finish
+	err := cmd.Run()
+
+	// Collect output from pipes.
+	stdout := stdoutBuf.String()
+	stderr := stderrBuf.String()
+	subpObj.FieldTable["stdout"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stdout)}
+	subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
+
+	// Handle exit code or POSIX signal.
+	exitCode := int64(0)
+	var signal syscall.Signal
+	if err != nil {
+		// Something went wrong. Indicate err.Error() in stderr.
+		cmdString := strings.Join(strArray, " ")
+		stderr = fmt.Sprintf("jjSubProcess: Process %s failed, err: %s", cmdString, err.Error())
+		subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
+
+		// Is err of type *exec.ExitError?
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// The subprocess exited with a non-zero exit status.
+			// POSIX?
+			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				// POSIX system.
+				// Signalled?
+				if status.Signaled() {
+					signal = status.Signal()
+					return int64(signal)
+				} else {
+					// Not signalled.
+					return int64(status.ExitStatus())
+				}
+			} else {
+				// Not a POSIX system (e.g. Windows).
+				return int64(exitErr.ExitCode())
+			}
+		} else {
+			// The erris not of type *exec.ExitError.
+			// Command probably did not even start (E.g. file not found).
+			// stderr should already have been set with an error message.
+			return int64(-1)
+		}
+	}
+
+	return exitCode
 }
