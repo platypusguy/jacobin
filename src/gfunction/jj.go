@@ -12,6 +12,7 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/statics"
+	"jacobin/trace"
 	"jacobin/types"
 	"os"
 	"os/exec"
@@ -325,6 +326,7 @@ func jjSubProcess(params []interface{}) interface{} {
 		// Something went wrong. Indicate err.Error() in stderr.
 		cmdString := strings.Join(strArray, " ")
 		stderr = fmt.Sprintf("jjSubProcess: Process %s failed, err: %s", cmdString, err.Error())
+		trace.Error(stderr)
 		subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
 
 		// Is err of type *exec.ExitError?
@@ -346,7 +348,7 @@ func jjSubProcess(params []interface{}) interface{} {
 				return int64(exitErr.ExitCode())
 			}
 		} else {
-			// The erris not of type *exec.ExitError.
+			// The err is not of type *exec.ExitError.
 			// Command probably did not even start (E.g. file not found).
 			// stderr should already have been set with an error message.
 			return int64(-1)
