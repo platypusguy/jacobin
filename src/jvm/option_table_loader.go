@@ -13,6 +13,7 @@ import (
 	"jacobin/trace"
 	"jacobin/types"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -155,24 +156,43 @@ func expandClasspth(gl *globals.Globals) {
 	if gl.ClasspathRaw == "" {
 		gl.ClasspathRaw, _ = os.Getwd()
 		gl.Classpath[0] = gl.ClasspathRaw
-	} else {
-		gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
-		for i, path := range gl.Classpath {
-			var entry string
-			if strings.HasPrefix(path, `"`) && strings.HasSuffix(path, `"`) {
-				entry = path[1 : len(path)-1] // remove the quotes
-			}
+		return
+	}
 
-			if entry == "." { // expand the . to the present working directory
-				entry, _ = os.Getwd()
-			}
+	// if the classpath is set by env variable or CLI, then split it into its components and expand them
+	gl.Classpath = strings.Split(gl.ClasspathRaw, string(os.PathListSeparator))
 
-			// make sure each path ends with a path separator
-			if !strings.HasSuffix(path, string(os.PathSeparator)) {
-				entry = path + string(os.PathSeparator)
-			}
-			gl.Classpath[i] = entry
+	jarFiles := make([]string, 0, 10) // for the JAR files, if any, specified in the classpath or via wildcard
+	for i, path := range gl.Classpath {
+		var entry string
+		if strings.HasPrefix(path, `"`) && strings.HasSuffix(path, `"`) {
+			entry = path[1 : len(path)-1] // remove the quotes
 		}
+
+		if entry == "." { // expand the . to the present working directory
+			entry, _ = os.Getwd()
+		}
+
+		wildcard := string(os.PathSeparator) + "*"
+		if strings.HasSuffix(path, wildcard) {
+			// if the path ends with a wildcard, then we need to expand it
+			// to all files in that directory
+			loweriles, _ := filepath.Glob(path + ".jar")
+			upperFiles, _ := filepath.Glob(path + ".JAR")
+			jarFiles = append(jarFiles, loweriles...)  // add the lower-case jar filenames
+			jarFiles = append(jarFiles, upperFiles...) // add the upper-case JAR filenames
+		}
+
+		// make sure each path ends with a path separator
+		if !strings.HasSuffix(path, string(os.PathSeparator)) {
+			entry = path + string(os.PathSeparator)
+		}
+		gl.Classpath[i] = entry
+	}
+
+	if len(jarFiles) > 0 {
+		// if there are JAR files, then add them to the classpath
+		gl.Classpath = append(gl.Classpath, jarFiles...)
 	}
 }
 
