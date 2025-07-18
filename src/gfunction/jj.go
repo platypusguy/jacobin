@@ -56,7 +56,7 @@ func Load_jj() {
 			GFunction:  jjGetFieldString,
 		}
 
-	MethodSignatures["jj._subProcess(jjSubProcessObject;)I"] =
+	MethodSignatures["jj._subProcess(LjjSubProcessObject;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  jjSubProcess,
