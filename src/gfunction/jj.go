@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"jacobin/excNames"
+	"jacobin/globals"
 	"jacobin/object"
 	"jacobin/statics"
 	"jacobin/trace"
@@ -55,10 +56,16 @@ func Load_jj() {
 			GFunction:  jjGetFieldString,
 		}
 
-	MethodSignatures["jj._subProcess(Ljava/lang/Object;)I"] =
+	MethodSignatures["jj._subProcess(LjjSubProcessObject;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  jjSubProcess,
+		}
+
+	MethodSignatures["jj._getProgramName()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  jjGetProgramName,
 		}
 }
 
@@ -356,4 +363,10 @@ func jjSubProcess(params []interface{}) interface{} {
 	}
 
 	return exitCode
+}
+
+func jjGetProgramName([]interface{}) interface{} {
+	glob := globals.GetGlobalRef()
+	str := glob.JacobinName
+	return object.StringObjectFromGoString(str)
 }

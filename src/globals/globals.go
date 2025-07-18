@@ -99,8 +99,9 @@ type Globals struct {
 	AtomicIntegerLock sync.Mutex
 
 	// ---- misc properties
-	FileEncoding string // what file encoding are we using?
-	Headless     bool   // Headless?
+	FileEncoding     string // what file encoding are we using?
+	FileNameEncoding string // System.getProperty("sun.jnu.encoding")
+	Headless         bool   // Headless?
 
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
@@ -196,6 +197,9 @@ func InitGlobals(progName string) Globals {
 	} else {
 		global.FileEncoding = "UTF-8"
 	}
+
+	// Make the encoding for filesystem names be the same as for file contents.
+	global.FileNameEncoding = global.FileEncoding
 
 	// Set up headlass boolean.
 	strHeadless := os.Getenv(StringEnvVarHeadless)
@@ -486,6 +490,8 @@ func getOsProperty(arg string) string {
 		value = getOSVersion()
 	case "path.separator":
 		value = string(os.PathSeparator)
+	case "sun.jnu.encoding":
+		value = global.FileNameEncoding
 	case "user.dir": // present working directory
 		value, _ = os.Getwd()
 	case "user.home":

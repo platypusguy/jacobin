@@ -520,6 +520,7 @@ func systemGetProperties([]interface{}) interface{} {
 	propMap["path.separator"] = globals.GetSystemProperty("path.separator")
 	propMap["stdout.encoding"] = globals.GetSystemProperty("stdout.encoding")
 	propMap["stderr.encoding"] = globals.GetSystemProperty("stderr.encoding")
+	propMap["sun.jnu.encoding"] = globals.GetSystemProperty("sun.jnu.encoding")
 	propMap["user.dir"] = globals.GetSystemProperty("user.dir")
 	propMap["user.home"] = globals.GetSystemProperty("user.home")
 	propMap["user.name"] = globals.GetSystemProperty("user.name")
