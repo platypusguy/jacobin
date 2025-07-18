@@ -416,9 +416,11 @@ func SortCaseInsensitive(ptrSlice *[]string) {
 
 // the System Properties Map: JVM System Properties
 //
-// Jacobin uses information from the operating system, startup arguments, and the host environment to set up its initial system properties.
+// Jacobin uses information from the operating system, startup arguments, and the host environment to
+// set up its initial system properties.
 //
-// Properties are stored in the globalPropertiesMap, fetched with System.getProperties() or System.getProperty(key), and include items like:
+// Properties are stored in the globalPropertiesMap, fetched with System.getProperties() or
+// System.getProperty(key), and include items such as:
 // * os.name, os.arch, os.version
 // * user.name, user.home, user.dir
 // * java.home, java.class.path
@@ -428,6 +430,7 @@ func SortCaseInsensitive(ptrSlice *[]string) {
 // * Environment variables (HOME, PATH, etc.)
 // * The current working directory
 // * Command-line -D options passed when launching the JVM
+// * Other means
 
 var systemPropertiesMap types.DefProperties
 var systemPropertiesMutex = sync.RWMutex{}
@@ -474,6 +477,8 @@ func getOsProperty(arg string) string {
 		value = "Jacobin"
 	case "java.vm.version":
 		value = strconv.Itoa(global.MaxJavaVersion)
+	case "jdk.version":
+		value = GetJDKversion() // returns "" if not found
 	case "line.separator":
 		if operSys == "windows" {
 			value = "\\r\\n"
@@ -533,6 +538,7 @@ func buildGlobalProperties() {
 	systemPropertiesMap["java.vm.specification.version"] = getOsProperty("java.vm.specification.version")
 	systemPropertiesMap["java.vm.vendor"] = getOsProperty("java.vm.vendor")
 	systemPropertiesMap["java.vm.version"] = getOsProperty("java.vm.version")
+	systemPropertiesMap["jdk.version"] = getOsProperty("jdk.version") // returns "" if not found
 	systemPropertiesMap["line.separator"] = getOsProperty("line.separator")
 	systemPropertiesMap["native.encoding"] = getOsProperty("native.encoding")
 	systemPropertiesMap["os.arch"] = getOsProperty("os.arch")
@@ -599,4 +605,37 @@ func getOSVersion() string {
 	}
 
 	return string(cleanBytes)
+}
+
+func GetJDKversion() string {
+	releaseFilePath := global.JavaHome + string(os.PathSeparator) + "release"
+	file, err := os.Open(releaseFilePath)
+	if err != nil {
+		if TraceVerbose {
+			fmt.Fprintf(os.Stderr, "GetJDKversion(): open release file failed: %v\n", err)
+			return ""
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "JAVA_VERSION=") {
+				// Extract the value after "JAVA_VERSION="
+				return strings.Trim(line[len("JAVA_VERSION="):], "\"")
+			}
+		}
+
+		if err = scanner.Err(); err != nil {
+			if TraceVerbose {
+				fmt.Fprintf(os.Stderr, "error reading release file in getJDKversion(): %v", err)
+			}
+			return ""
+		}
+	}
+
+	if TraceVerbose {
+		fmt.Fprintf(os.Stderr, "getJDKversion(): JAVA_VERSION not found in release file")
+	}
+	return ""
 }
