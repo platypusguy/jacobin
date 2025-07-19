@@ -304,29 +304,17 @@ func InitJavaHome() {
 		return
 	}
 	defer handle.Close()
-	scanner := bufio.NewScanner(handle)
 
 	// Scan the release file for a mandatory JAVA_VERSION record.
-	for scanner.Scan() {
-		// do something with a line
-		line := scanner.Text()
-		tokens := strings.Split(line, "=")
-		if len(tokens) != 2 {
-			_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: File format error in %s. Exiting.\n", releasePath)
-			return
-		}
-		if tokens[0] == "JAVA_VERSION" {
-			global.JavaVersion = strings.Trim(tokens[1], "\"")
-			return
-		}
+	ver := GetJDKversion()
+	if ver == "" {
+		global.JavaVersion = "" // Set to empty string to signal failure
+		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n",
+			releasePath)
+		return
+	} else {
+		global.JavaVersion = ver // Set the Java version from the release file
 	}
-
-	// At this pint, we did not find a Java version record,
-	// so either the JAVA_HOME is not a valid JDK or the release file is corrupted.
-	// Either way, we cannot proceed.
-	_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n", releasePath)
-	os.Exit(1)
-
 }
 
 func JavaHome() string    { return global.JavaHome }
@@ -615,23 +603,23 @@ func GetJDKversion() string {
 			fmt.Fprintf(os.Stderr, "GetJDKversion(): open release file failed: %v\n", err)
 			return ""
 		}
-		defer file.Close()
+	}
+	defer file.Close()
 
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "JAVA_VERSION=") {
-				// Extract the value after "JAVA_VERSION="
-				return strings.Trim(line[len("JAVA_VERSION="):], "\"")
-			}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "JAVA_VERSION=") {
+			// Extract the value after "JAVA_VERSION="
+			return strings.Trim(line[len("JAVA_VERSION="):], "\"")
 		}
+	}
 
-		if err = scanner.Err(); err != nil {
-			if TraceVerbose {
-				fmt.Fprintf(os.Stderr, "error reading release file in getJDKversion(): %v", err)
-			}
-			return ""
+	if err = scanner.Err(); err != nil {
+		if TraceVerbose {
+			fmt.Fprintf(os.Stderr, "error reading release file in getJDKversion(): %v", err)
 		}
+		return ""
 	}
 
 	if TraceVerbose {

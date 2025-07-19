@@ -219,3 +219,103 @@ func TestReplaceSystemProperties(t *testing.T) {
 		t.Errorf("Expecting a java.version of 23, got: %s", ret)
 	}
 }
+
+func TestGetJDKversionSuccess(t *testing.T) {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "test_java_home")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a release file with JAVA_VERSION
+	releaseFilePath := tempDir + string(os.PathSeparator) + "release"
+	err = os.WriteFile(releaseFilePath, []byte("JAVA_VERSION=\"17.0.1\"\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create release file: %v", err)
+	}
+
+	// Set JAVA_HOME to the temporary directory
+	os.Setenv("JAVA_HOME", tempDir)
+	defer os.Unsetenv("JAVA_HOME")
+	gl := InitGlobals("test")
+	gl.JavaHome = tempDir // Ensure the global variable is set to the temp directory
+
+	// Call GetJDKversion
+	version := GetJDKversion()
+	if version != "17.0.1" {
+		t.Errorf("Expected JAVA_VERSION '17.0.1', got '%s'", version)
+	}
+}
+
+func TestGetJDKversionFileNotFound(t *testing.T) {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "test_java_home")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Set JAVA_HOME to the temporary directory
+	os.Setenv("JAVA_HOME", tempDir)
+	defer os.Unsetenv("JAVA_HOME")
+
+	// Call GetJDKversion
+	version := GetJDKversion()
+	if version != "" {
+		t.Errorf("Expected empty JAVA_VERSION, got '%s'", version)
+	}
+}
+
+func TestGetJDKversionMalformedFile(t *testing.T) {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "test_java_home")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a malformed release file
+	releaseFilePath := tempDir + string(os.PathSeparator) + "release"
+	err = os.WriteFile(releaseFilePath, []byte("MALFORMED_LINE\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create release file: %v", err)
+	}
+
+	// Set JAVA_HOME to the temporary directory
+	os.Setenv("JAVA_HOME", tempDir)
+	defer os.Unsetenv("JAVA_HOME")
+
+	// Call GetJDKversion
+	version := GetJDKversion()
+	if version != "" {
+		t.Errorf("Expected empty JAVA_VERSION for malformed file, got '%s'", version)
+	}
+}
+
+func TestGetJDKversionScannerError(t *testing.T) {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "test_java_home")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a release file with a large line to simulate scanner error
+	releaseFilePath := tempDir + string(os.PathSeparator) + "release"
+	largeLine := make([]byte, 1+64*1024) // 64 KB line
+	err = os.WriteFile(releaseFilePath, largeLine, 0644)
+	if err != nil {
+		t.Fatalf("Failed to create release file: %v", err)
+	}
+
+	// Set JAVA_HOME to the temporary directory
+	os.Setenv("JAVA_HOME", tempDir)
+	defer os.Unsetenv("JAVA_HOME")
+
+	// Call GetJDKversion
+	version := GetJDKversion()
+	if version != "" {
+		t.Errorf("Expected empty JAVA_VERSION for scanner error, got '%s'", version)
+	}
+}
