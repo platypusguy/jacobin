@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -91,7 +91,7 @@ func SearchDirByFileExtension(dir, extension string) *[]string {
 }
 
 // ListJarFiles walks through the specified directory and returns a slice of
-// all files with a .jar extension or JAR. Returns an error if the directory cannot be accessed.
+// all files with a .jar or .JAR extension. Returns an error if the directory cannot be accessed.
 func ListJarFiles(dirname string) ([]string, error) {
 	var jarFiles []string
 
