@@ -242,7 +242,7 @@ func TestGetJDKversionSuccess(t *testing.T) {
 	gl.JavaHome = tempDir // Ensure the global variable is set to the temp directory
 
 	// Call GetJDKversion
-	version := GetJDKversion()
+	_, version := GetJDKmajorVersion()
 	if version != "17.0.1" {
 		t.Errorf("Expected JAVA_VERSION '17.0.1', got '%s'", version)
 	}
@@ -257,11 +257,11 @@ func TestGetJDKversionFileNotFound(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// Set JAVA_HOME to the temporary directory
-	os.Setenv("JAVA_HOME", tempDir)
+	_ = os.Setenv("JAVA_HOME", tempDir)
 	defer os.Unsetenv("JAVA_HOME")
 
 	// Call GetJDKversion
-	version := GetJDKversion()
+	_, version := GetJDKmajorVersion()
 	if version != "" {
 		t.Errorf("Expected empty JAVA_VERSION, got '%s'", version)
 	}
@@ -283,11 +283,11 @@ func TestGetJDKversionMalformedFile(t *testing.T) {
 	}
 
 	// Set JAVA_HOME to the temporary directory
-	os.Setenv("JAVA_HOME", tempDir)
+	_ = os.Setenv("JAVA_HOME", tempDir)
 	defer os.Unsetenv("JAVA_HOME")
 
 	// Call GetJDKversion
-	version := GetJDKversion()
+	_, version := GetJDKmajorVersion()
 	if version != "" {
 		t.Errorf("Expected empty JAVA_VERSION for malformed file, got '%s'", version)
 	}
@@ -313,8 +313,8 @@ func TestGetJDKversionScannerError(t *testing.T) {
 	os.Setenv("JAVA_HOME", tempDir)
 	defer os.Unsetenv("JAVA_HOME")
 
-	// Call GetJDKversion
-	version := GetJDKversion()
+	// get JDK version
+	_, version := GetJDKmajorVersion()
 	if version != "" {
 		t.Errorf("Expected empty JAVA_VERSION for scanner error, got '%s'", version)
 	}
