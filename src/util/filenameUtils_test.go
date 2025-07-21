@@ -7,7 +7,9 @@
 package util
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -168,5 +170,201 @@ func TestSearchDirByFileExtension_HandlesErrors(t *testing.T) {
 	result := SearchDirByFileExtension(tempDir, "txt")
 	if result != nil {
 		t.Fatal("Expected nil result due to absent directory")
+	}
+}
+
+// test listing jar files in a directory
+func TestListJarFiles_ValidDirectoryWithJars(t *testing.T) {
+	// Create a temporary directory for testing
+	tmpDir, err := ioutil.TempDir("", "test_jars")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir) // Clean up the temporary directory
+
+	// Create dummy files
+	jar1Path := filepath.Join(tmpDir, "app.jar")
+	jar2Path := filepath.Join(tmpDir, "lib.JAR")
+	txtPath := filepath.Join(tmpDir, "notes.txt")
+	subDirPath := filepath.Join(tmpDir, "subdir")
+	subDirJarPath := filepath.Join(subDirPath, "nested.jar")
+
+	// Create files and a subdirectory
+	if err := ioutil.WriteFile(jar1Path, []byte("jar content"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", jar1Path, err)
+	}
+	if err := ioutil.WriteFile(jar2Path, []byte("jar content"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", jar2Path, err)
+	}
+	if err := ioutil.WriteFile(txtPath, []byte("text content"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", txtPath, err)
+	}
+	if err := os.Mkdir(subDirPath, 0755); err != nil {
+		t.Fatalf("Failed to create subdir %s: %v", subDirPath, err)
+	}
+	if err := ioutil.WriteFile(subDirJarPath, []byte("nested jar content"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", subDirJarPath, err)
+	}
+
+	expectedJars := []string{jar1Path, jar2Path, subDirJarPath}
+
+	foundJars, err := ListJarFiles(tmpDir)
+	if err != nil {
+		t.Errorf("ListJarFiles returned an unexpected error: %v", err)
+	}
+
+	if len(foundJars) != len(expectedJars) {
+		t.Errorf("Expected %d jar files, got %d. Found: %v, Expected: %v",
+			len(expectedJars), len(foundJars), foundJars, expectedJars)
+	}
+
+	// Check if all expected jars are found, regardless of order
+	foundMap := make(map[string]bool)
+	for _, jar := range foundJars {
+		foundMap[jar] = true
+	}
+
+	for _, expectedJar := range expectedJars {
+		if _, ok := foundMap[expectedJar]; !ok {
+			t.Errorf("Expected jar file %s not found in results: %v", expectedJar, foundJars)
+		}
+	}
+}
+
+func TestListJarFiles_EmptyDirectory(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "test_empty")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	foundJars, err := ListJarFiles(tmpDir)
+	if err != nil {
+		t.Errorf("ListJarFiles returned an unexpected error for empty directory: %v", err)
+	}
+	if len(foundJars) != 0 {
+		t.Errorf("Expected 0 jar files for empty directory, got %d: %v", len(foundJars), foundJars)
+	}
+}
+
+func TestListJarFiles_NoJarsInDirectory(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "test_no_jars")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := ioutil.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("content"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(tmpDir, "document.pdf"), []byte("content"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	foundJars, err := ListJarFiles(tmpDir)
+	if err != nil {
+		t.Errorf("ListJarFiles returned an unexpected error for directory with no jars: %v", err)
+	}
+	if len(foundJars) != 0 {
+		t.Errorf("Expected 0 jar files, got %d: %v", len(foundJars), foundJars)
+	}
+}
+
+func TestListJarFiles_NonExistentDirectory(t *testing.T) {
+	nonExistentDir := filepath.Join(os.TempDir(), "non_existent_dir_12345") // Use a unique name
+	// Ensure it doesn't exist before the test
+	os.RemoveAll(nonExistentDir)
+
+	_, err := ListJarFiles(nonExistentDir)
+	if err == nil {
+		t.Errorf("Expected an error for non-existent directory, but got none")
+	}
+	// Check if the error message indicates a "no such file or directory" error
+	if !os.IsNotExist(err) && !strings.Contains(err.Error(), "no such file or directory") {
+		t.Errorf("Expected 'no such file or directory' error, but got: %v", err)
+	}
+}
+
+func TestListJarFiles_OnlySubdirectories(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "test_only_subdirs")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := os.Mkdir(filepath.Join(tmpDir, "subdir1"), 0755); err != nil {
+		t.Fatalf("Failed to create subdir: %v", err)
+	}
+	if err := os.Mkdir(filepath.Join(tmpDir, "subdir2"), 0755); err != nil {
+		t.Fatalf("Failed to create subdir: %v", err)
+	}
+
+	foundJars, err := ListJarFiles(tmpDir)
+	if err != nil {
+		t.Errorf("ListJarFiles returned an unexpected error: %v", err)
+	}
+	if len(foundJars) != 0 {
+		t.Errorf("Expected 0 jar files, got %d: %v", len(foundJars), foundJars)
+	}
+}
+
+func TestListJarFiles_MixedContent(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "test_mixed_content")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create files and directories
+	jarRoot := filepath.Join(tmpDir, "root.jar")
+	txtRoot := filepath.Join(tmpDir, "root.txt")
+	dir1 := filepath.Join(tmpDir, "dir1")
+	jarDir1 := filepath.Join(dir1, "dir1_app.jar")
+	dir2 := filepath.Join(tmpDir, "dir2")
+	txtDir2 := filepath.Join(dir2, "dir2_file.txt")
+	dir3 := filepath.Join(tmpDir, "dir3") // Empty directory
+
+	if err := ioutil.WriteFile(jarRoot, []byte("root jar"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", jarRoot, err)
+	}
+	if err := ioutil.WriteFile(txtRoot, []byte("root txt"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", txtRoot, err)
+	}
+	if err := os.Mkdir(dir1, 0755); err != nil {
+		t.Fatalf("Failed to create %s: %v", dir1, err)
+	}
+	if err := ioutil.WriteFile(jarDir1, []byte("dir1 jar"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", jarDir1, err)
+	}
+	if err := os.Mkdir(dir2, 0755); err != nil {
+		t.Fatalf("Failed to create %s: %v", dir2, err)
+	}
+	if err := ioutil.WriteFile(txtDir2, []byte("dir2 txt"), 0644); err != nil {
+		t.Fatalf("Failed to create %s: %v", txtDir2, err)
+	}
+	if err := os.Mkdir(dir3, 0755); err != nil {
+		t.Fatalf("Failed to create %s: %v", dir3, err)
+	}
+
+	expectedJars := []string{jarRoot, jarDir1} // The order might vary, so we'll check content
+	foundJars, err := ListJarFiles(tmpDir)
+	if err != nil {
+		t.Errorf("ListJarFiles returned an unexpected error: %v", err)
+	}
+
+	if len(foundJars) != len(expectedJars) {
+		t.Errorf("Expected %d jar files, got %d. Found: %v, Expected: %v",
+			len(expectedJars), len(foundJars), foundJars, expectedJars)
+	}
+
+	foundMap := make(map[string]bool)
+	for _, jar := range foundJars {
+		foundMap[jar] = true
+	}
+
+	for _, expectedJar := range expectedJars {
+		if _, ok := foundMap[expectedJar]; !ok {
+			t.Errorf("Expected jar file %s not found in results: %v", expectedJar, foundJars)
+		}
 	}
 }
