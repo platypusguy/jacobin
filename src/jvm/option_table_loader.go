@@ -12,6 +12,7 @@ import (
 	"jacobin/statics"
 	"jacobin/trace"
 	"jacobin/types"
+	"jacobin/util"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,7 +157,7 @@ func expandClasspth(gl *globals.Globals) {
 	if gl.ClasspathRaw == "" {
 		gl.ClasspathRaw, _ = os.Getwd()
 		gl.Classpath[0] = gl.ClasspathRaw
-		return
+		checkForPreJDK9(gl)
 	}
 
 	// if the classpath is set by env variable or CLI, then split it into its components and expand them
@@ -199,6 +200,39 @@ func expandClasspth(gl *globals.Globals) {
 			entry = path + string(os.PathSeparator)
 			gl.Classpath = append(gl.Classpath, entry)
 			continue
+		}
+	}
+
+	checkForPreJDK9(gl)
+
+}
+
+// checkForPreJDK9 checks if the JDK version is pre-JDK9 and adds the jar files in the JRE's
+// jre/lib/ext directory to the classpath. This option was discontinued in JDK9
+func checkForPreJDK9(gl *globals.Globals) {
+	// if JDK is pre-JDK9, then we need to add the JRE lib directory to the classpath
+	if globals.JavaVersion() == "" {
+		globals.GetJDKversion()
+	}
+	if globals.JavaVersion() != "" && globals.JavaVersion() < "9.0.0" {
+		jreLibExt :=
+			"jre" + string(os.PathSeparator) + "lib" + string(os.PathSeparator) + "ext" + string(os.PathSeparator)
+		if !strings.HasSuffix(gl.JavaHome, string(os.PathListSeparator)) {
+			gl.ClasspathRaw += string(os.PathListSeparator)
+		}
+		jreLibExtPath := filepath.Join(gl.JavaHome, jreLibExt)
+		jars, err := util.ListJarFiles(jreLibExtPath)
+		if err != nil || len(jars) == 0 {
+			return
+		} else {
+			// add the JRE lib directory to the classpath
+			for _, jar := range jars {
+				if globals.TraceVerbose {
+					trace.Trace("Adding JRE lib jar to classpath: " + jar)
+				}
+				gl.Classpath = append(gl.Classpath, jar)
+			}
+			gl.ClasspathRaw = gl.ClasspathRaw + string(os.PathListSeparator) + jreLibExtPath
 		}
 	}
 }

@@ -89,3 +89,25 @@ func SearchDirByFileExtension(dir, extension string) *[]string {
 	}
 	return &filenames
 }
+
+// ListJarFiles walks through the specified directory and returns a slice of
+// all files with a .jar extension or JAR. Returns an error if the directory cannot be accessed.
+func ListJarFiles(dirname string) ([]string, error) {
+	var jarFiles []string
+
+	err := filepath.Walk(dirname, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && (strings.HasSuffix(info.Name(), ".jar") || strings.HasSuffix(info.Name(), ".JAR")) {
+			jarFiles = append(jarFiles, path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jarFiles, nil
+}
