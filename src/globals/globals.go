@@ -60,8 +60,9 @@ type Globals struct {
 	Classpath         []string // the classpath as a list of directories and JARs
 
 	// ---- Java Home and Version ----
-	JavaHome    string
-	JavaVersion string
+	JavaHome        string
+	JavaVersion     string
+	JDKmajorVersion int // the major version of the JDK, e.g. 11 for Java 11
 
 	// ---- Jacobin Home ----
 	JacobinHome string
@@ -126,7 +127,6 @@ var StringPoolTable map[string]uint32
 var StringPoolList []string
 var StringPoolNext uint32
 var StringPoolLock sync.Mutex
-var StringIndexString uint32
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
@@ -154,6 +154,7 @@ func InitGlobals(progName string) Globals {
 		JacobinName:          progName,
 		JavaHome:             "",
 		JavaVersion:          "",
+		JDKmajorVersion:      0,
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
@@ -305,15 +306,17 @@ func InitJavaHome() {
 	}
 	defer handle.Close()
 
-	// Scan the release file for a mandatory JAVA_VERSION record.
-	ver := GetJDKversion()
-	if ver == "" {
+	// Get the JDK major version and the full version string from the release file.
+	major, versionString := GetJDKmajorVersion()
+	if major == 0 {
 		global.JavaVersion = "" // Set to empty string to signal failure
+		global.JDKmajorVersion = 0
 		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Did not find the JAVA_VERSION record in %s. Exiting.\n",
 			releasePath)
 		return
 	} else {
-		global.JavaVersion = ver // Set the Java version from the release file
+		global.JavaVersion = versionString // Set the Java version from the release file
+		global.JDKmajorVersion = major
 	}
 }
 
@@ -465,8 +468,9 @@ func getOsProperty(arg string) string {
 		value = "Jacobin"
 	case "java.vm.version":
 		value = strconv.Itoa(global.MaxJavaVersion)
-	case "jdk.version":
-		value = GetJDKversion() // returns "" if not found
+	case "jdk.major.version":
+		ver, _ := GetJDKmajorVersion() // = 0 if not found
+		value = strconv.Itoa(ver)
 	case "line.separator":
 		if operSys == "windows" {
 			value = "\\r\\n"
@@ -526,7 +530,7 @@ func buildGlobalProperties() {
 	systemPropertiesMap["java.vm.specification.version"] = getOsProperty("java.vm.specification.version")
 	systemPropertiesMap["java.vm.vendor"] = getOsProperty("java.vm.vendor")
 	systemPropertiesMap["java.vm.version"] = getOsProperty("java.vm.version")
-	systemPropertiesMap["jdk.version"] = getOsProperty("jdk.version") // returns "" if not found
+	systemPropertiesMap["jdk.major.version"] = getOsProperty("jdk.version") // returns 0 if not found
 	systemPropertiesMap["line.separator"] = getOsProperty("line.separator")
 	systemPropertiesMap["native.encoding"] = getOsProperty("native.encoding")
 	systemPropertiesMap["os.arch"] = getOsProperty("os.arch")
@@ -595,13 +599,14 @@ func getOSVersion() string {
 	return string(cleanBytes)
 }
 
-func GetJDKversion() string {
+// Reads the JDK release file and returns the major version number and the full version string.
+func GetJDKmajorVersion() (int, string) {
 	releaseFilePath := global.JavaHome + string(os.PathSeparator) + "release"
 	file, err := os.Open(releaseFilePath)
 	if err != nil {
 		if TraceVerbose {
 			fmt.Fprintf(os.Stderr, "GetJDKversion(): open release file failed: %v\n", err)
-			return ""
+			return 0, ""
 		}
 	}
 	defer file.Close()
@@ -611,7 +616,10 @@ func GetJDKversion() string {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "JAVA_VERSION=") {
 			// Extract the value after "JAVA_VERSION="
-			return strings.Trim(line[len("JAVA_VERSION="):], "\"")
+			versionString := strings.Trim(line[len("JAVA_VERSION="):], "\"")
+			parts := strings.Split(versionString, ".")
+			majorVersion, _ := strconv.Atoi(parts[0])
+			return majorVersion, versionString // Return major version number as an int and version string
 		}
 	}
 
@@ -619,11 +627,11 @@ func GetJDKversion() string {
 		if TraceVerbose {
 			fmt.Fprintf(os.Stderr, "error reading release file in getJDKversion(): %v", err)
 		}
-		return ""
+		return 0, ""
 	}
 
 	if TraceVerbose {
 		fmt.Fprintf(os.Stderr, "getJDKversion(): JAVA_VERSION not found in release file")
 	}
-	return ""
+	return 0, ""
 }

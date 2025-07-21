@@ -210,17 +210,18 @@ func expandClasspth(gl *globals.Globals) {
 // checkForPreJDK9 checks if the JDK version is pre-JDK9 and adds the jar files in the JRE's
 // jre/lib/ext directory to the classpath. This option was discontinued in JDK9
 func checkForPreJDK9(gl *globals.Globals) {
-	// if JDK is pre-JDK9, then we need to add the JRE lib directory to the classpath
 	if globals.JavaVersion() == "" {
-		globals.GetJDKversion()
+		globals.GetJDKmajorVersion() // if JDKmajorVersion is 0, then set it to the JDK version
 	}
-	if globals.JavaVersion() != "" && globals.JavaVersion() < "9.0.0" {
-		jreLibExt :=
-			"jre" + string(os.PathSeparator) + "lib" + string(os.PathSeparator) + "ext" + string(os.PathSeparator)
+
+	// if JDK is pre-JDK9, then we need to add the JRE lib directory to the classpath
+	if globals.GetGlobalRef().JDKmajorVersion != 0 || globals.GetGlobalRef().JDKmajorVersion < 9 {
+		jreLibExt := "jre" + string(os.PathSeparator) + "lib" + string(os.PathSeparator) +
+			"ext" + string(os.PathSeparator)
 		if !strings.HasSuffix(gl.JavaHome, string(os.PathListSeparator)) {
-			gl.ClasspathRaw += string(os.PathListSeparator)
+			jreLibExt += string(os.PathListSeparator)
 		}
-		jreLibExtPath := filepath.Join(gl.JavaHome, jreLibExt)
+		jreLibExtPath := filepath.Join(gl.JavaHome, jreLibExt) // full path to the JDK's jre/lib/ext directory
 		jars, err := util.ListJarFiles(jreLibExtPath)
 		if err != nil || len(jars) == 0 {
 			return
