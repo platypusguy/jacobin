@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2021 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2021-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -8,7 +8,10 @@ package globals
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -110,6 +113,67 @@ func TestJavaHomeRemovalOfTrailingSlash(t *testing.T) {
 		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
 	}
 	_ = os.Setenv("JAVA_HOME", origJavaHome)
+}
+
+func TestJavaHomeNotSet(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Save the original JAVA_HOME environment variable
+	origJavaHome := os.Getenv("JAVA_HOME")
+	// Unset JAVA_HOME
+	_ = os.Unsetenv("JAVA_HOME")
+
+	// Initialize JavaHome
+	InitJavaHome()
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "Environment variable JAVA_HOME missing but is required. Exiting.") {
+		t.Errorf("Expected error message 'JAVA_HOME environment variable is not set.', got: %s", errMsg)
+	}
+
+	// Restore the original JAVA_HOME environment variable
+	_ = os.Setenv("JAVA_HOME", origJavaHome)
+}
+
+func TestInitJavaHomeWithInvalidReleasFile(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Create a temporary directory
+	tempDir := t.TempDir()
+
+	// Define the path for the release file
+	releaseFilePath := filepath.Join(tempDir, "release")
+
+	// Write "nonsense" to the release file
+	err := os.WriteFile(releaseFilePath, []byte("nonsense\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create release file: %v", err)
+	}
+
+	// Set JAVA_HOME to the temporary directory
+	prevJavaHomeEnv := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", tempDir)
+
+	// Initialize JavaHome
+	InitJavaHome()
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "InitJavaHome: Did not find the JAVA_VERSION record") {
+		t.Errorf("Expected error message 'InitJavaHome: Did not find the JAVA_VERSION record', got: %s", errMsg)
+	}
+	defer os.Setenv("JAVA_HOME", prevJavaHomeEnv)
 }
 
 // make sure the JACOBIN_HOME environment variable is extracted and reformatted correctly
