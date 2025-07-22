@@ -25,12 +25,11 @@ A more-than-minimal JVM written in Go.
 ## What we've done so far and what we need to do:
 ### Command-line parsing
 * Gets options from the three environment variables. [Details here](https://github.com/platypusguy/jacobin/wiki/Command-line-Processing)
-* Parses the command line; identify JVM options and application options
+* Parses the command line; identify JVM options and application options; handles complex class paths
 * Responds to most options listed in the `java -help` output
 
 **To do**:
  * Handling @files (which contain command-line options)
- * Parsing complex classpaths
 
 ### Class loading
 * Correctly reads and parses most classes
