@@ -241,6 +241,27 @@ func TestGetSystemPropertyNotFound(t *testing.T) {
 	}
 }
 
+func TestGetSystemClasspath(t *testing.T) {
+	InitGlobals("testInit")
+	buildGlobalProperties()
+	ret := GetSystemProperty("java.class.path")
+	if ret != "." {
+		t.Errorf("Expecting a java.class.path of ., got: %s", ret)
+	}
+}
+
+func TestGetJDKmajorVersion(t *testing.T) {
+	prevJavaHomeEnv := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", "nonexistent")
+	InitGlobals("test")
+	ret := GetSystemProperty("jdk.major.version")
+	if ret != "" {
+		t.Errorf("Expecting a jdk.major.version of '', got: %s", ret)
+	}
+	_ = os.Setenv("JAVA_HOME", prevJavaHomeEnv)
+
+}
+
 func TestSetSystemProperty(t *testing.T) {
 	InitGlobals("testInit")
 	buildGlobalProperties()

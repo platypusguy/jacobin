@@ -139,6 +139,8 @@ var global Globals
 
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
+	verNumber, verString := GetJDKmajorVersion()
+
 	global = Globals{ // in alpha order
 		ArrayAddressList:     InitArrayAddressList(),
 		Classpath:            make([]string, 1), // at least one element, the current directory
@@ -153,8 +155,8 @@ func InitGlobals(progName string) Globals {
 		JacobinHome:          "",
 		JacobinName:          progName,
 		JavaHome:             "",
-		JavaVersion:          "",
-		JDKmajorVersion:      0,
+		JavaVersion:          verString,
+		JDKmajorVersion:      verNumber,
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
@@ -185,11 +187,16 @@ func InitGlobals(progName string) Globals {
 
 	InitJavaHome()
 	if global.JavaHome == "" || global.JavaVersion == "" {
-		os.Exit(1)
+		if progName != "test" {
+			os.Exit(1)
+		}
 	}
+
 	InitJacobinHome()
 	if global.JacobinHome == "" {
-		os.Exit(1)
+		if progName != "test" {
+			os.Exit(1)
+		}
 	}
 	InitArrayAddressList()
 
@@ -452,7 +459,8 @@ func getOsProperty(arg string) string {
 	case "java.vendor.version":
 		value = global.Version
 	case "java.version":
-		value = strconv.Itoa(global.MaxJavaVersion)
+		_, versionString := GetJDKmajorVersion()
+		value = versionString
 	// case "java.version.date":
 	// 	need to get this
 	case "java.vm.name":
@@ -515,7 +523,7 @@ func buildGlobalProperties() {
 
 	systemPropertiesMap["file.encoding"] = getOsProperty("file.encoding")
 	systemPropertiesMap["file.separator"] = getOsProperty("file.separator")
-	systemPropertiesMap["java.class.path"] = "." // TODO - fix this during CLASSPATH development
+	systemPropertiesMap["java.class.path"] = "."
 	systemPropertiesMap["java.compiler"] = getOsProperty("java.compiler")
 	systemPropertiesMap["java.home"] = getOsProperty("java.home")
 	systemPropertiesMap["java.io.tmpdir"] = getOsProperty("java.io.tmpdir")
@@ -530,7 +538,7 @@ func buildGlobalProperties() {
 	systemPropertiesMap["java.vm.specification.version"] = getOsProperty("java.vm.specification.version")
 	systemPropertiesMap["java.vm.vendor"] = getOsProperty("java.vm.vendor")
 	systemPropertiesMap["java.vm.version"] = getOsProperty("java.vm.version")
-	systemPropertiesMap["jdk.major.version"] = getOsProperty("jdk.version") // returns 0 if not found
+	systemPropertiesMap["jdk.major.version"] = getOsProperty("java.version")
 	systemPropertiesMap["line.separator"] = getOsProperty("line.separator")
 	systemPropertiesMap["native.encoding"] = getOsProperty("native.encoding")
 	systemPropertiesMap["os.arch"] = getOsProperty("os.arch")

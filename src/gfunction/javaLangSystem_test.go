@@ -422,7 +422,8 @@ func TestGetProperty_JavaVersion(t *testing.T) {
 	propObj := object.StringObjectFromGoString("java.version")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
-	expected := object.StringObjectFromGoString(strconv.Itoa(globals.GetGlobalRef().MaxJavaVersion))
+	_, verString := globals.GetJDKmajorVersion()
+	expected := object.StringObjectFromGoString(verString)
 	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
