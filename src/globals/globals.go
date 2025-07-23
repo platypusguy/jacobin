@@ -617,8 +617,8 @@ func GetJDKmajorVersion() (int, string) {
 	if err != nil {
 		if TraceVerbose {
 			fmt.Fprintf(os.Stderr, "GetJDKversion(): open release file failed: %v\n", err)
-			return 0, ""
 		}
+		return 0, ""
 	}
 	defer file.Close()
 
