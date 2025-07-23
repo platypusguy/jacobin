@@ -139,7 +139,6 @@ var global Globals
 
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
-	verNumber, verString := GetJDKmajorVersion()
 
 	global = Globals{ // in alpha order
 		ArrayAddressList:     InitArrayAddressList(),
@@ -157,8 +156,6 @@ func InitGlobals(progName string) Globals {
 		JacobinHome:          "",
 		JacobinName:          progName,
 		JavaHome:             "",
-		JavaVersion:          verString,
-		JDKmajorVersion:      verNumber,
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
@@ -193,6 +190,10 @@ func InitGlobals(progName string) Globals {
 			os.Exit(1)
 		}
 	}
+
+	verNumber, verString := GetJDKmajorVersion() // JDK version depends on JAVA_HOME, so place here
+	global.JavaVersion = verString
+	global.JDKmajorVersion = verNumber
 
 	InitJacobinHome()
 	if global.JacobinHome == "" {
