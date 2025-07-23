@@ -498,7 +498,7 @@ func getOsProperty(arg string) string {
 	case "path.separator":
 		value = string(os.PathSeparator)
 	case "sun.jnu.encoding":
-		value = global.FileNameEncoding
+		value = "UTF-8" // this is the default encoding for file names in Java
 	case "user.dir": // present working directory
 		value, _ = os.Getwd()
 	case "user.home":
@@ -549,7 +549,7 @@ func buildGlobalProperties() {
 	systemPropertiesMap["path.separator"] = getOsProperty("path.separator")
 	systemPropertiesMap["stdout.encoding"] = getOsProperty("stdout.encoding")
 	systemPropertiesMap["stderr.encoding"] = getOsProperty("stderr.encoding")
-	systemPropertiesMap["sun.jnu.encoding"] = getOsProperty("sun.jnu.encoding")
+	systemPropertiesMap["sun.jnu.encoding"] = "UTF-8"
 	systemPropertiesMap["user.dir"] = getOsProperty("user.dir")
 	systemPropertiesMap["user.home"] = getOsProperty("user.home")
 	systemPropertiesMap["user.name"] = getOsProperty("user.name")

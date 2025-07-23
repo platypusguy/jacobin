@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -253,7 +254,11 @@ func TestGetFileEncoding(t *testing.T) {
 	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("file.encoding")
-	if ret == "UTF-8" {
+	if runtime.GOOS == "windows" {
+		if ret != "windows-1252" && ret != "UTF-8" {
+			t.Errorf("Expecting a file.encoding of windows-1252 or UTF-8 on Windows, got: %s", ret)
+		}
+	} else if ret != "UTF-8" {
 		t.Errorf("Expecting a file.encoding of UTF-8, got: %s", ret)
 	}
 }
@@ -262,7 +267,7 @@ func TestGetFileNameEncoding(t *testing.T) {
 	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("sun.jnu.encoding")
-	if ret == "UTF-8" {
+	if ret != "UTF-8" {
 		t.Errorf("Expecting a filename encoding (sun.jnu.encoding) of UTF-8, got: %s", ret)
 	}
 }
