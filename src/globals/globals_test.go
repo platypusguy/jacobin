@@ -85,7 +85,7 @@ func TestJavaHomeInvalidDir(t *testing.T) {
 
 	errMsg := string(msg)
 
-	if !strings.Contains(errMsg, "The system cannot find the path specified.") {
+	if !strings.Contains(errMsg, "Cannot find the specified path: ") {
 		t.Errorf("Expecting error message containing 'The system cannot find the path specified.', got: %s",
 			errMsg)
 	}
@@ -290,8 +290,8 @@ func TestGetJDKmajorVersionInvalid(t *testing.T) {
 	os.Stderr = normalStderr
 	errMsg := string(msg)
 
-	if !strings.Contains(errMsg, "The system cannot find the path specified.") {
-		t.Errorf("Expecting error message 'The system cannot find the path specified.', got: %s", errMsg)
+	if !strings.Contains(errMsg, "Cannot find the specified path: ") {
+		t.Errorf("Expected error message containing 'Cannot find the specified path: ', got: %s", errMsg)
 	}
 	_ = os.Setenv("JAVA_HOME", prevJavaHomeEnv)
 }

@@ -309,8 +309,7 @@ func InitJavaHome() {
 	releasePath := javaHome + string(os.PathSeparator) + "release"
 	handle, err := os.Open(releasePath)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: os.Open(%s) failed. Exiting.\n", releasePath)
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "InitJavaHome: Cannot find the specified path: %s. Exiting.\n", releasePath)
 		return
 	}
 	defer handle.Close()
