@@ -549,6 +549,7 @@ func buildGlobalProperties() {
 	systemPropertiesMap["path.separator"] = getOsProperty("path.separator")
 	systemPropertiesMap["stdout.encoding"] = getOsProperty("stdout.encoding")
 	systemPropertiesMap["stderr.encoding"] = getOsProperty("stderr.encoding")
+	systemPropertiesMap["sun.jnu.encoding"] = getOsProperty("sun.jnu.encoding")
 	systemPropertiesMap["user.dir"] = getOsProperty("user.dir")
 	systemPropertiesMap["user.home"] = getOsProperty("user.home")
 	systemPropertiesMap["user.name"] = getOsProperty("user.name")
