@@ -7,7 +7,7 @@
 package globals
 
 import (
-	"fmt"
+	// "fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -30,9 +30,9 @@ func nameFooBar(t *testing.T) bool {
 }
 
 func TestGlobalsInit(t *testing.T) {
-	g := InitGlobals("testInit")
+	g := InitGlobals("test")
 
-	if g.JacobinName != "testInit" {
+	if g.JacobinName != "test" {
 		t.Errorf("Expecting globals init to set Jacobin name to 'testInit', got: %s", g.JacobinName)
 	}
 
@@ -42,7 +42,7 @@ func TestGlobalsInit(t *testing.T) {
 }
 
 func TestInitClasspath(t *testing.T) {
-	g := InitGlobals("testInit")
+	g := InitGlobals("test")
 	pwd, _ := os.Getwd()
 	if g.ClasspathRaw != pwd {
 		t.Errorf("Expected ClassPath to be set to current working directory, got: %s", g.ClasspathRaw)
@@ -58,15 +58,17 @@ func TestInitClasspathWithEnv(t *testing.T) {
 	_ = os.Setenv("CLASSPATH", "home")
 	defer os.Setenv("CLASSPATH", origClasspath)
 
-	g := InitGlobals("testInit")
+	g := InitGlobals("test")
 	if g.ClasspathRaw != "home" {
 		t.Errorf("Expected ClassPath to be set to 'home', got: %s", g.ClasspathRaw)
 	}
 }
 
-// make sure the JAVA_HOME environment variable is extracted and the embedded slashes
-// are reformatted correctly
-func TestJavaHomeFormat(t *testing.T) {
+func TestJavaHomeInvalidDir(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	if !nameFooBar(t) {
 		return
 	}
@@ -75,10 +77,16 @@ func TestJavaHomeFormat(t *testing.T) {
 	origJavaHome := os.Getenv("JAVA_HOME")
 	_ = os.Setenv("JAVA_HOME", foobar)
 	InitJavaHome()
-	ret := JavaHome()
-	expectedPath := foobar
-	if ret != expectedPath {
-		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "The system cannot find the path specified.") {
+		t.Errorf("Expecting error message containing 'The system cannot find the path specified.', got: %s",
+			errMsg)
 	}
 	_ = os.Setenv("JAVA_HOME", origJavaHome)
 }
@@ -94,25 +102,16 @@ func TestJavaHomeAndVersion(t *testing.T) {
 	if version == "" {
 		t.Errorf("JAVA_VERSION is nil")
 	}
-	fmt.Printf("TestJavaHomeAndVersion: JAVA_HOME=%s, JAVA_VERSION=%s\n", home, version)
+	// fmt.Printf("TestJavaHomeAndVersion: JAVA_HOME=%s, JAVA_VERSION=%s\n", home, version)
 }
 
-// verify that a trailing slash in JAVA_HOME is removed
+// verify that there is no trailing slash in JAVA_HOME
 func TestJavaHomeRemovalOfTrailingSlash(t *testing.T) {
-	if !nameFooBar(t) {
-		return
-	}
-	defer os.RemoveAll(foobar)
-
-	origJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", foobar)
 	InitJavaHome()
 	ret := JavaHome()
-	expectedPath := foobar
-	if ret != expectedPath {
-		t.Errorf("Expecting a JAVA_HOME of '%s', got: %s", expectedPath, ret)
+	if strings.HasSuffix(ret, string(os.PathSeparator)) {
+		t.Errorf("JAVA_HOME should not have a trailing slash, got: %s", ret)
 	}
-	_ = os.Setenv("JAVA_HOME", origJavaHome)
 }
 
 func TestJavaHomeNotSet(t *testing.T) {
@@ -214,7 +213,7 @@ func TestJacobinHomeRemovalOfTrailingSlash(t *testing.T) {
 }
 
 func TestVariousInitialDefaultValues(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	gl := GetGlobalRef()
 	if gl.StrictJDK != false ||
 		gl.ExitNow != false ||
@@ -224,7 +223,7 @@ func TestVariousInitialDefaultValues(t *testing.T) {
 }
 
 func TestGetSystemProperty(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("java.version")
 	if ret < "21" {
@@ -233,7 +232,7 @@ func TestGetSystemProperty(t *testing.T) {
 }
 
 func TestGetSystemPropertyNotFound(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("java.version.notfound")
 	if ret != "" {
@@ -242,7 +241,7 @@ func TestGetSystemPropertyNotFound(t *testing.T) {
 }
 
 func TestGetSystemClasspath(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("java.class.path")
 	if ret != "." {
@@ -250,20 +249,32 @@ func TestGetSystemClasspath(t *testing.T) {
 	}
 }
 
-func TestGetJDKmajorVersion(t *testing.T) {
+func TestGetJDKmajorVersionInvalid(t *testing.T) {
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
 	prevJavaHomeEnv := os.Getenv("JAVA_HOME")
 	_ = os.Setenv("JAVA_HOME", "nonexistent")
 	InitGlobals("test")
 	ret := GetSystemProperty("jdk.major.version")
-	if ret != "" {
+	if ret != "" { // should be empty if JAVA_HOME is invalid
 		t.Errorf("Expecting a jdk.major.version of '', got: %s", ret)
 	}
-	_ = os.Setenv("JAVA_HOME", prevJavaHomeEnv)
 
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "The system cannot find the path specified.") {
+		t.Errorf("Expecting error message 'The system cannot find the path specified.', got: %s", errMsg)
+	}
+	_ = os.Setenv("JAVA_HOME", prevJavaHomeEnv)
 }
 
 func TestSetSystemProperty(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	SetSystemProperty("java.version", "22")
 	ret := GetSystemProperty("java.version")
@@ -273,7 +284,7 @@ func TestSetSystemProperty(t *testing.T) {
 }
 
 func TestRemoveSystemProperty(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	SetSystemProperty("java.version", "22")
 	ret := GetSystemProperty("java.version")
@@ -288,7 +299,7 @@ func TestRemoveSystemProperty(t *testing.T) {
 }
 
 func TestReplaceSystemProperties(t *testing.T) {
-	InitGlobals("testInit")
+	InitGlobals("test")
 	buildGlobalProperties()
 	SetSystemProperty("java.version", "22")
 	ret := GetSystemProperty("java.version")

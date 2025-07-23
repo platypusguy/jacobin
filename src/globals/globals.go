@@ -230,7 +230,7 @@ func InitGlobals(progName string) Globals {
 
 // InitClasspath initializes the classpath from the CLASSPATH environment variable.
 // If CLASSPATH is not set, it uses the current working directory as the classpath.
-// This will be overriden by the -cp or -classpath command-line options.
+// This will be overriden by the -cp or -classpath command-line options, if any.
 func InitClasspath() {
 	cp := os.Getenv("CLASSPATH")
 	if cp != "" {
@@ -443,7 +443,7 @@ func getOsProperty(arg string) string {
 	case "file.separator":
 		value = string(os.PathSeparator)
 	case "java.class.path":
-		value = "." // OpenJDK JVM default value
+		value = global.ClasspathRaw
 	case "java.compiler": // the name of the JIT compiler (we don't have a JIT)
 		value = "no JIT"
 	case "java.home":
@@ -477,8 +477,8 @@ func getOsProperty(arg string) string {
 	case "java.vm.version":
 		value = strconv.Itoa(global.MaxJavaVersion)
 	case "jdk.major.version":
-		ver, _ := GetJDKmajorVersion() // = 0 if not found
-		value = strconv.Itoa(ver)
+		_, ver := GetJDKmajorVersion() // "" if not found
+		value = ver
 	case "line.separator":
 		if operSys == "windows" {
 			value = "\\r\\n"

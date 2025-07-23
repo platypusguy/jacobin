@@ -429,6 +429,18 @@ func TestGetProperty_JavaVersion(t *testing.T) {
 	}
 }
 
+func TestGetProperty_JDKmajorVersion(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("jdk.major.version")
+	params := []interface{}{propObj}
+	result := systemGetProperty(params)
+	_, verString := globals.GetJDKmajorVersion()
+	expected := object.StringObjectFromGoString(verString)
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
 func TestGetProperty_JavaVmName(t *testing.T) {
 	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("java.vm.name")
