@@ -147,6 +147,8 @@ func InitGlobals(progName string) Globals {
 		ClasspathRaw:         "",
 		ErrorGoStack:         "",
 		ExitNow:              false,
+		FileEncoding:         "UTF-8", // default encoding for file contents
+		FileNameEncoding:     "UTF-8", // default encoding for file names
 		FuncInstantiateClass: fakeInstantiateClass,
 		FuncMinimalAbort:     fakeMinimalAbort,
 		FuncThrowException:   fakeThrowEx,

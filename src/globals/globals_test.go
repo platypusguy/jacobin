@@ -249,6 +249,24 @@ func TestGetSystemClasspath(t *testing.T) {
 	}
 }
 
+func TestGetFileEncoding(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("file.encoding")
+	if ret == "UTF-8" {
+		t.Errorf("Expecting a file.encoding of UTF-8, got: %s", ret)
+	}
+}
+
+func TestGetFileNameEncoding(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("sun.jnu.encoding")
+	if ret == "UTF-8" {
+		t.Errorf("Expecting a filename encoding (sun.jnu.encoding) of UTF-8, got: %s", ret)
+	}
+}
+
 func TestGetJDKmajorVersionInvalid(t *testing.T) {
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
