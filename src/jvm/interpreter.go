@@ -2924,7 +2924,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		}
 
 		appMsg := objectRef.FieldTable["detailMessage"].Fvalue
-		if appMsg != object.Null {
+		if appMsg != object.Null && appMsg != nil {
 			switch appMsg.(type) {
 			case []types.JavaByte:
 				jbarray := appMsg.([]types.JavaByte)
