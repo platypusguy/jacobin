@@ -7,7 +7,6 @@
 package globals
 
 import (
-	// "fmt"
 	"io"
 	"os"
 	"path/filepath"

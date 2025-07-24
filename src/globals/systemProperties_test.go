@@ -14,32 +14,7 @@ import (
 	"testing"
 )
 
-func TestGetSystemProperty(t *testing.T) {
-	InitGlobals("test")
-	buildGlobalProperties()
-	ret := GetSystemProperty("java.vm.vendor")
-	if ret < "Jacobin" {
-		t.Errorf("Expecting java.vm.vendor = 'Jacobin', got: %s", ret)
-	}
-}
-
-func TestGetSystemPropertyNotFound(t *testing.T) {
-	InitGlobals("test")
-	buildGlobalProperties()
-	ret := GetSystemProperty("java.version.notfound")
-	if ret != "" {
-		t.Errorf("Expecting a java.version.notfound of '', got: %s", ret)
-	}
-}
-
-func TestGetSystemClasspath(t *testing.T) {
-	InitGlobals("test")
-	buildGlobalProperties()
-	ret := GetSystemProperty("java.class.path")
-	if ret != "." {
-		t.Errorf("Expecting a java.class.path of ., got: %s", ret)
-	}
-}
+// tests are in alphabetical order
 
 func TestGetFileEncoding(t *testing.T) {
 	InitGlobals("test")
@@ -87,13 +62,30 @@ func TestGetJDKmajorVersionInvalid(t *testing.T) {
 	_ = os.Setenv("JAVA_HOME", prevJavaHomeEnv)
 }
 
-func TestSetSystemProperty(t *testing.T) {
+func TestGetSystemClasspath(t *testing.T) {
 	InitGlobals("test")
 	buildGlobalProperties()
-	SetSystemProperty("java.version", "22")
-	ret := GetSystemProperty("java.version")
-	if ret != "22" {
-		t.Errorf("Expecting a java.version of 22, got: %s", ret)
+	ret := GetSystemProperty("java.class.path")
+	if ret != "." {
+		t.Errorf("Expecting a java.class.path of ., got: %s", ret)
+	}
+}
+
+func TestGetSystemProperty(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("java.vm.vendor")
+	if ret < "Jacobin" {
+		t.Errorf("Expecting java.vm.vendor = 'Jacobin', got: %s", ret)
+	}
+}
+
+func TestGetSystemPropertyNotFound(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("java.version.notfound")
+	if ret != "" {
+		t.Errorf("Expecting a java.version.notfound of '', got: %s", ret)
 	}
 }
 
@@ -127,5 +119,15 @@ func TestReplaceSystemProperties(t *testing.T) {
 	ret = GetSystemProperty("java.version")
 	if ret != "23" {
 		t.Errorf("Expecting a java.version of 23, got: %s", ret)
+	}
+}
+
+func TestSetSystemProperty(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	SetSystemProperty("java.version", "22")
+	ret := GetSystemProperty("java.version")
+	if ret != "22" {
+		t.Errorf("Expecting a java.version of 22, got: %s", ret)
 	}
 }
