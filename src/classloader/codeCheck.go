@@ -448,11 +448,15 @@ var Code []byte
 var StackEntries int
 var MaxStack int
 
-func CheckCodeValidity(code []byte, cp *CPool, maxStack int) error {
+func CheckCodeValidity(code []byte, cp *CPool, maxStack int, access AccessFlags) error {
 	// check that the code is valid
 	if code == nil {
-		errMsg := "CheckCodeValidity: Empty code segment"
-		return errors.New(errMsg)
+		if access.ClassIsAbstract {
+			return nil
+		} else {
+			errMsg := "CheckCodeValidity: Empty code segment"
+			return errors.New(errMsg)
+		}
 	}
 
 	if cp == nil {
