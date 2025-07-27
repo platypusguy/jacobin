@@ -36,7 +36,9 @@ func TestCodeCheckForGetfield(t *testing.T) {
 
 	f.CP = &CP
 
-	err := classloader.CheckCodeValidity(f.Meth, f.CP.(*classloader.CPool), 5)
+	af := classloader.AccessFlags{}
+
+	err := classloader.CheckCodeValidity(f.Meth, f.CP.(*classloader.CPool), 5, af)
 	if err == nil {
 		t.Errorf("GETFIELD: Expected error but did not get one.")
 	}
@@ -79,7 +81,8 @@ func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
 
 	f.CP = &CP
 
-	err := classloader.CheckCodeValidity(f.Meth, f.CP.(*classloader.CPool), 5)
+	af := classloader.AccessFlags{}
+	err := classloader.CheckCodeValidity(f.Meth, f.CP.(*classloader.CPool), 5, af)
 	if err == nil {
 		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
 	}
