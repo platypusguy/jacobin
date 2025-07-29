@@ -71,12 +71,21 @@ func TestGetSystemClasspath(t *testing.T) {
 	}
 }
 
-func TestGetSystemProperty(t *testing.T) {
+func TestGetSystemPropertyJavaVMvendor(t *testing.T) { // testing a random property
 	InitGlobals("test")
 	buildGlobalProperties()
 	ret := GetSystemProperty("java.vm.vendor")
 	if ret < "Jacobin" {
 		t.Errorf("Expecting java.vm.vendor = 'Jacobin', got: %s", ret)
+	}
+}
+
+func TestGetSystemPropertyJNUencoding(t *testing.T) { // not tested elsewhere, so why not here?
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("sun.jnu.encoding")
+	if ret != "UTF-8" {
+		t.Errorf("Expecting a sun.jnu.encoding of UTF-8, got: %s", ret)
 	}
 }
 
@@ -86,15 +95,6 @@ func TestGetSystemPropertyNonExistent(t *testing.T) {
 	ret := GetSystemProperty("non.existent.property")
 	if ret != "" {
 		t.Errorf("Expecting a non.existent.property of '', got: %s", ret)
-	}
-}
-
-func TestGetSystemPropertyJNUencoding(t *testing.T) {
-	InitGlobals("test")
-	buildGlobalProperties()
-	ret := GetSystemProperty("sun.jnu.encoding")
-	if ret != "UTF-8" {
-		t.Errorf("Expecting a sun.jnu.encoding of UTF-8, got: %s", ret)
 	}
 }
 
