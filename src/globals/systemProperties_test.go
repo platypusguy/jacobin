@@ -80,12 +80,21 @@ func TestGetSystemProperty(t *testing.T) {
 	}
 }
 
-func TestGetSystemPropertyNotFound(t *testing.T) {
+func TestGetSystemPropertyNonExistent(t *testing.T) {
 	InitGlobals("test")
 	buildGlobalProperties()
-	ret := GetSystemProperty("java.version.notfound")
+	ret := GetSystemProperty("non.existent.property")
 	if ret != "" {
-		t.Errorf("Expecting a java.version.notfound of '', got: %s", ret)
+		t.Errorf("Expecting a non.existent.property of '', got: %s", ret)
+	}
+}
+
+func TestGetSystemPropertyJNUencoding(t *testing.T) {
+	InitGlobals("test")
+	buildGlobalProperties()
+	ret := GetSystemProperty("sun.jnu.encoding")
+	if ret != "UTF-8" {
+		t.Errorf("Expecting a sun.jnu.encoding of UTF-8, got: %s", ret)
 	}
 }
 
