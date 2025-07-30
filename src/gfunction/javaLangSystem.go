@@ -313,15 +313,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				}
 			}
 
-		case types.RefArray: // TODO: make sure refs are to the same object types
-			sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
-			dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
-			for i := int64(0); i < length; i++ {
-				dArr[d] = sArr[s]
-				d += 1
-				s += 1
-			}
-		case types.FloatArray:
+		case types.FloatArray, types.DoubleArray:
 			sArr := src.FieldTable["value"].Fvalue.([]float64)
 			dArr := dest.FieldTable["value"].Fvalue.([]float64)
 			for i := int64(0); i < length; i++ {
@@ -329,13 +321,26 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 				s += 1
 			}
-		case types.IntArray:
+		case types.IntArray, types.LongArray, types.ShortArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
 				dArr[d] = sArr[s]
 				d += 1
 				s += 1
+			}
+		default:
+			if strings.HasPrefix(srcType, types.RefArray) && strings.HasPrefix(destType, types.RefArray) {
+				sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
+				dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
+				for i := int64(0); i < length; i++ {
+					dArr[d] = sArr[s]
+					d += 1
+					s += 1
+				}
+			} else {
+				errMsg := fmt.Sprintf("java/lang/System.arraycopy: src or dest type not an array")
+				return getGErrBlk(excNames.ArrayStoreException, errMsg)
 			}
 		}
 	} else { // overlapping copy uses a temporary array
@@ -354,19 +359,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 			}
 
-		case types.RefArray: // TODO: make sure refs are to the same object types
-			sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
-			dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
-			for i := int64(0); i < length; i++ {
-				tempArray[i] = sArr[s]
-				s += 1
-			}
-			for i := int64(0); i < length; i++ {
-				dArr[d] = tempArray[i].(*object.Object)
-				d += 1
-			}
-
-		case types.FloatArray:
+		case types.FloatArray, types.DoubleArray:
 			sArr := src.FieldTable["value"].Fvalue.([]float64)
 			dArr := dest.FieldTable["value"].Fvalue.([]float64)
 			for i := int64(0); i < length; i++ {
@@ -378,7 +371,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 			}
 
-		case types.IntArray:
+		case types.IntArray, types.LongArray, types.ShortArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
@@ -390,6 +383,22 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 			}
 
+		default:
+			if strings.HasPrefix(srcType, types.RefArray) && strings.HasPrefix(destType, types.RefArray) {
+				sArr := src.FieldTable["value"].Fvalue.([]*object.Object)
+				dArr := dest.FieldTable["value"].Fvalue.([]*object.Object)
+				for i := int64(0); i < length; i++ {
+					tempArray[i] = sArr[s]
+					s += 1
+				}
+				for i := int64(0); i < length; i++ {
+					dArr[d] = tempArray[i].(*object.Object)
+					d += 1
+				}
+			} else {
+				errMsg := fmt.Sprintf("java/lang/System.arraycopy: src or dest type not an array")
+				return getGErrBlk(excNames.ArrayStoreException, errMsg)
+			}
 		}
 	}
 
