@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"jacobin/globals"
 	"jacobin/stringPool"
-	"os"
+	"jacobin/trace"
 )
 
 // ResolveCPmethRefs resolves the method references in the constant pool of a class
@@ -49,8 +49,9 @@ func ResolveCPinterfaceRefs(cpp *CPool) error {
 		resEntry.FQNameIndex = stringPool.GetStringIndex(&fqn)
 
 		cpp.ResolvedInterfaceRefs = append(cpp.ResolvedInterfaceRefs, resEntry)
-		if globals.TraceInst {
-			fmt.Fprintf(os.Stderr, "Resolved interface ref: %s\n", fqn)
+		if globals.TraceClass {
+			msg := fmt.Sprintf("ResolveCPinterfaceRefs: Resolved interface ref: %s\n", fqn)
+			trace.Trace(msg)
 		}
 	}
 	return nil
@@ -91,8 +92,9 @@ func ResolveCPmethRefs(cpp *CPool) error {
 		resEntry.FQNameIndex = stringPool.GetStringIndex(&fqn)
 
 		cpp.ResolvedMethodRefs = append(cpp.ResolvedMethodRefs, resEntry)
-		if globals.TraceInst {
-			fmt.Fprintf(os.Stderr, "Resolved method ref: %s\n", fqn)
+		if globals.TraceClass {
+			msg := fmt.Sprintf("ResolveCPmethRefs: Resolved method ref: %s\n", fqn)
+			trace.Trace(msg)
 		}
 	}
 	return nil
