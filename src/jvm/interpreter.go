@@ -167,7 +167,7 @@ var DispatchTable = [203]BytecodeFunc{
 	doIshr,            // ISHR            0x7A
 	doIshr,            // LSHR            0x7B
 	doIushr,           // IUSHR           0x7C
-	doIushr,           // LUSHR           0x7D
+	doLushr,           // LUSHR           0x7D
 	doIand,            // IAND            0x7E
 	doIand,            // LAND            0x7F
 	doIor,             // IOR             0x80
@@ -627,10 +627,6 @@ func doBaload(fr *frames.Frame, _ int64) int {
 					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
 			}
 		}
-	// case *[]uint8:
-	// 	array = *(ref.(*[]uint8))
-	// case []uint8:
-	// 	array = ref.([]uint8)
 	case []int8:
 		arr := ref.([]int8)
 		val := arr[index]
@@ -1299,11 +1295,20 @@ func doIshr(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x7C, 0x7D IUSHR, LUSHR unsigned shift right of int/long
+// 0x7C IUSHR unsigned shift right of int (32 bits)
 func doIushr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
 	value := pop(fr).(int64)
 	shiftedVal := int64(uint32(value) >> (shiftBy & 0x1F))
+	push(fr, shiftedVal)
+	return 1
+}
+
+// 0x7D LUSHR unsigned shift right of long (64 bits)
+func doLushr(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	value := pop(fr).(int64)
+	shiftedVal := int64(uint64(value) >> (shiftBy & 0x3F))
 	push(fr, shiftedVal)
 	return 1
 }

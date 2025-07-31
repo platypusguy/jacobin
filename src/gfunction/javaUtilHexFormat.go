@@ -352,9 +352,9 @@ func hfByteToHexDigits(params []interface{}) interface{} {
 	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%02X", input)
+			str = fmt.Sprintf("%02X", uint64(input))
 		} else { // lowercase
-			str = fmt.Sprintf("%02x", input)
+			str = fmt.Sprintf("%02x", uint64(input))
 		}
 	default:
 		return trapFunction(params)
@@ -371,9 +371,9 @@ func hfCharToHexDigits(params []interface{}) interface{} {
 	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%04X", input)
+			str = fmt.Sprintf("%04X", uint64(input))
 		} else { // lowercase
-			str = fmt.Sprintf("%04x", input)
+			str = fmt.Sprintf("%04x", uint64(input))
 		}
 	default:
 		return trapFunction(params)
@@ -390,9 +390,9 @@ func hfIntToHexDigits(params []interface{}) interface{} {
 	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%08X", input)
+			str = fmt.Sprintf("%08X", uint32(input))
 		} else { // lowercase
-			str = fmt.Sprintf("%08x", input)
+			str = fmt.Sprintf("%08x", uint32(input))
 		}
 	default:
 		return trapFunction(params)
@@ -409,9 +409,9 @@ func hfLongToHexDigits(params []interface{}) interface{} {
 	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%016X", input)
+			str = fmt.Sprintf("%016X", uint64(input))
 		} else { // lowercase
-			str = fmt.Sprintf("%016x", input)
+			str = fmt.Sprintf("%016x", uint64(input))
 		}
 		if len(params) > 2 {
 			outlen := int(params[2].(int64))
@@ -432,9 +432,9 @@ func hfShortToHexDigits(params []interface{}) interface{} {
 	case int64:
 		digits := obj.FieldTable["digits"].Fvalue.([]types.JavaByte)
 		if digits[15] == 'F' { // uppercase
-			str = fmt.Sprintf("%04X", input)
+			str = fmt.Sprintf("%04X", uint64(input))
 		} else { // lowercase
-			str = fmt.Sprintf("%04x", input)
+			str = fmt.Sprintf("%04x", uint64(input))
 		}
 	default:
 		return trapFunction(params)
