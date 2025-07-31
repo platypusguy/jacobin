@@ -1308,7 +1308,7 @@ func doIushr(fr *frames.Frame, _ int64) int {
 func doLushr(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
 	value := pop(fr).(int64)
-	shiftedVal := int64(uint64(value) >> (shiftBy & 0x1F))
+	shiftedVal := int64(uint64(value) >> (shiftBy & 0x3F))
 	push(fr, shiftedVal)
 	return 1
 }
