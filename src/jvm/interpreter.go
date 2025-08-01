@@ -757,9 +757,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			return exceptions.RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.IntArray {
+		if fld.Ftype != types.IntArray && fld.Ftype != types.LongArray && fld.Ftype != types.CharArray && fld.Ftype != types.ShortArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: field type expected=[I, observed=%s",
+			errMsg := fmt.Sprintf("in %s.%s, I/J/C/S/LASTORE: field type expected=[I|J|C|S, observed=%s",
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
 			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 			if status != exceptions.Caught {
