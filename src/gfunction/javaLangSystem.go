@@ -321,7 +321,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 				s += 1
 			}
-		case types.IntArray, types.LongArray, types.ShortArray:
+		case types.BoolArray, types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
@@ -371,7 +371,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 			}
 
-		case types.IntArray, types.LongArray, types.ShortArray:
+		case types.BoolArray, types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
