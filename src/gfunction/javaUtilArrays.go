@@ -54,8 +54,8 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 	oldLen := len(rawArrayOld)
 
 	// Create a new array of the desired length.
-	newArray := object.Make1DimRefArray("Ljava/lang/Object;", int64(newLen))
-	rawArrayNew := newArray.FieldTable["value"].Fvalue.([]*object.Object)
+	newArrayObj := object.Make1DimRefArray("java/lang/Object;", int64(newLen))
+	rawArrayNew := newArrayObj.FieldTable["value"].Fvalue.([]*object.Object)
 
 	// Copy the elements from the old array to the new array.
 	for i := 0; i < oldLen && i < newLen; i++ {
@@ -68,5 +68,5 @@ func copyOfObjectPointers(params []interface{}) interface{} {
 		}
 	}
 
-	return newArray
+	return newArrayObj
 }
