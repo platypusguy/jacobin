@@ -101,7 +101,7 @@ func initFilterInputStreamFile(params []interface{}) interface{} {
 	}
 
 	// Get the file path.
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Open the file for read-only, yielding a file handle.
 	osFile, err := os.Open(pathStr)

@@ -65,7 +65,7 @@ func initFileReader(params []interface{}) interface{} {
 		errMsg := "initFileReader: File object lacks a FilePath field"
 		return getGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
-	inPathStr := string(fld1.Fvalue.([]byte))
+	inPathStr := object.GoStringFromJavaByteArray(fld1.Fvalue.([]types.JavaByte))
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("initFileReader: os.Open(%s) failed, reason: %s", inPathStr, err.Error())
@@ -93,7 +93,7 @@ func initFileReaderString(params []interface{}) interface{} {
 	}
 
 	// Copy java/io/File path
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
 	params[0].(*object.Object).FieldTable[FilePath] = fld
 
 	// Field FileHandle = Golang *os.File

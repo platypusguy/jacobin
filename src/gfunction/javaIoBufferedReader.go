@@ -98,7 +98,7 @@ func bufferedReaderInit(params []interface{}) interface{} {
 		errMsg := "Reader object lacks a FilePath field"
 		return getGErrBlk(excNames.InvalidTypeException, errMsg)
 	}
-	inPathStr := string(fld1.Fvalue.([]byte))
+	inPathStr := object.GoStringFromJavaByteArray(fld1.Fvalue.([]types.JavaByte))
 	osFile, err := os.Open(inPathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("os.Open(%s) failed, reason: %s", inPathStr, err.Error())
