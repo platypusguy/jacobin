@@ -13,7 +13,7 @@ import "strconv"
 // v 0.6.200 made   6 Nov 24 - first version with the new interpreter
 // v 0.7.000 made  28 Feb 24 at 3,733 GitHub commits (technically, this file updated on 2 Mar 24)
 
-var JacobinVersion = "0.7.003"
+var JacobinVersion = "0.7.100"
 
 // GetJacobinVersion returns a manually updated version number and an
 // automatically updated build #. The latter being updated by bumpbuildno.go
