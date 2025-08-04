@@ -142,7 +142,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.nextInt()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  randomNextIntLong,
+			GFunction:  randomNextInt,
 		}
 
 	MethodSignatures["java/util/Random.nextInt(I)I"] =
@@ -154,7 +154,7 @@ func Load_Util_Random() {
 	MethodSignatures["java/util/Random.nextLong()J"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  randomNextIntLong,
+			GFunction:  randomNextLong,
 		}
 
 	MethodSignatures["java/util/Random.setSeed(J)V"] =
@@ -241,9 +241,16 @@ func randomSetSeed(params []interface{}) interface{} {
 	return nil
 }
 
-// randomNextIntLong returns the next pseudorandom, uniformly distributed int64 value.
-// ChatGPT: func (r *Random) NextInt() int {
-func randomNextIntLong(params []interface{}) interface{} {
+// randomNextInt returns the next pseudorandom, uniformly distributed int31 value as an int64.
+func randomNextInt(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	output := int64(r.rand.Int31())
+	return output
+}
+
+// randomNextLong returns the next pseudorandom, uniformly distributed int63 value as an int64.
+func randomNextLong(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	r := GetStructFromRandomObject(obj)
 	output := r.rand.Int63()
@@ -260,7 +267,7 @@ func randomNextIntBound(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("randomNextIntBound: Bound must be positive, observed: %d", bound)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	output := r.rand.Int63n(bound)
+	output := int64(r.rand.Int31n(int32(bound)))
 	return output
 }
 
