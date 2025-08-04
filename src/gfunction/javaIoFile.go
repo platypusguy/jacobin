@@ -54,6 +54,12 @@ func Load_Io_File() {
 			GFunction:  fileCreate,
 		}
 
+	MethodSignatures["java/io/File.getName()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  fileGetPath,
+		}
+
 	MethodSignatures["java/io/File.isInvalid()Z"] =
 		GMeth{
 			ParamSlots: 0,
@@ -97,19 +103,19 @@ func fileInit(params []interface{}) interface{} {
 
 	// Fill in File attributes that might get accessed by OpenJDK library member functions.
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte(absPathStr)}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte(absPathStr))}
 	objFile.FieldTable[FilePath] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
 	objFile.FieldTable["separatorChar"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathSeparator}}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathSeparator})}
 	objFile.FieldTable["separator"] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathListSeparator}
 	objFile.FieldTable["pathSeparatorChar"] = fld
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: []byte{os.PathListSeparator}}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte{os.PathListSeparator})}
 	objFile.FieldTable["pathSeparator"] = fld
 
 	// Set status to "checked" (=1).
