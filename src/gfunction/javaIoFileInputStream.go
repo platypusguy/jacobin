@@ -129,7 +129,7 @@ func initFileInputStreamFile(params []interface{}) interface{} {
 	}
 
 	// Get the file path.
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Open the file for read-only, yielding a file handle.
 	osFile, err := os.Open(pathStr)
@@ -160,7 +160,7 @@ func initFileInputStreamString(params []interface{}) interface{} {
 	}
 
 	// Copy the file path field into the FileInputStream object.
-	fld := object.Field{Ftype: types.ByteArray, Fvalue: []byte(pathStr)}
+	fld := object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(pathStr)}
 	params[0].(*object.Object).FieldTable[FilePath] = fld
 
 	// Copy the file handle into the FileInputStream object.
@@ -183,7 +183,7 @@ func fisAvailable(params []interface{}) interface{} {
 	// Compute total file size.
 	fileInfo, err := osFile.Stat()
 	if err != nil {
-		path := string(params[0].(*object.Object).FieldTable["path"].Fvalue.([]byte))
+		path := object.GoStringFromJavaByteArray(params[0].(*object.Object).FieldTable["path"].Fvalue.([]types.JavaByte))
 		errMsg := fmt.Sprintf("fisAvailable: osFile.Stat(%s) failed, reason: %s", path, err.Error())
 		return getGErrBlk(excNames.IOException, errMsg)
 	}

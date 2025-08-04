@@ -103,7 +103,7 @@ func fileInit(params []interface{}) interface{} {
 
 	// Fill in File attributes that might get accessed by OpenJDK library member functions.
 
-	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoByteArray([]byte(absPathStr))}
+	fld = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(absPathStr)}
 	objFile.FieldTable[FilePath] = fld
 
 	fld = object.Field{Ftype: types.Int, Fvalue: os.PathSeparator}
@@ -132,16 +132,7 @@ func fileGetPath(params []interface{}) interface{} {
 		errMsg := "fileGetPath: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-
-	var bytes []types.JavaByte
-	switch fld.Fvalue.(type) {
-	case []byte:
-		bytes = object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
-	case []types.JavaByte:
-		bytes = fld.Fvalue.([]types.JavaByte)
-	}
-
-	return object.StringObjectFromJavaByteArray(bytes)
+	return object.StringObjectFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 }
 
 // "java/io/File.isInvalid()Z"
@@ -167,12 +158,12 @@ func fileDelete(params []interface{}) interface{} {
 	}
 
 	// Get file path string.
-	bytes, ok := params[0].(*object.Object).FieldTable[FilePath].Fvalue.([]byte)
+	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "fileDelete: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	pathStr := string(bytes)
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	err := os.Remove(pathStr)
 	if err != nil {
@@ -185,13 +176,13 @@ func fileDelete(params []interface{}) interface{} {
 
 // "java/io/File.createNewFile()Z"
 func fileCreate(params []interface{}) interface{} {
-	// Get path string.
+	// Get file path string.
 	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
 		errMsg := "fileCreate: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Create the file.
 	osFile, err := os.Create(pathStr)

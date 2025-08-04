@@ -93,7 +93,7 @@ func initFileOutputStreamFile(params []interface{}) interface{} {
 		errMsg := "initFileOutputStreamFile: File object lacks a FilePath field"
 		return getGErrBlk(excNames.IOException, errMsg)
 	}
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Open the file for write-only, yielding a file handle.
 	osFile, err := os.Create(pathStr)
@@ -123,7 +123,7 @@ func initFileOutputStreamFileBoolean(params []interface{}) interface{} {
 	}
 
 	// Get the file path.
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Get the boolean argument.
 	boolarg, ok := params[2].(int64)

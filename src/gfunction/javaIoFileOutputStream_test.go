@@ -19,7 +19,7 @@ func TestInitFileOutputStreamFile(t *testing.T) {
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 	fileObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"FilePath": {Ftype: types.ByteArray, Fvalue: []byte(filePath)},
+			"FilePath": {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
 		},
 	}
 	emptyObj := object.MakeEmptyObject()
@@ -44,7 +44,7 @@ func TestInitFileOutputStreamFileBoolean(t *testing.T) {
 	filePath := filepath.Join(tmpDir, "testfile.txt")
 	fileObj := &object.Object{
 		FieldTable: map[string]object.Field{
-			"FilePath": {Ftype: types.ByteArray, Fvalue: []byte(filePath)},
+			"FilePath": {Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(filePath)},
 		},
 	}
 	emptyObj := object.MakeEmptyObject()

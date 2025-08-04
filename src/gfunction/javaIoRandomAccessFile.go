@@ -127,7 +127,7 @@ func rafInitFile(params []interface{}) interface{} {
 		errMsg := "rafInitFile: java/io/File object is missing the FilePath field"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	pathStr := string(fld.Fvalue.([]byte))
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Mode.
 	var modeInt int
