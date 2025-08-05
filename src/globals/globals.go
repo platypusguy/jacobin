@@ -112,7 +112,7 @@ type Globals struct {
 }
 
 // ---- JJ options
-var Galt bool
+var Galt bool // gfunction alternative processing flag -- used strictly for testing
 
 // ---- trace categories
 var TraceInit bool
@@ -211,7 +211,7 @@ func InitGlobals(progName string) Globals {
 	// Make the encoding for filesystem names be the same as for file contents.
 	global.FileNameEncoding = global.FileEncoding
 
-	// Set up headlass boolean.
+	// Set up headlass mode for AWT from enviromment varialbe. May eventually be removed as we don't support AWT.
 	strHeadless := os.Getenv(StringEnvVarHeadless)
 	global.Headless = false
 	if strHeadless != "" {
