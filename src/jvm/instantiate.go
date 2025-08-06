@@ -207,8 +207,7 @@ runInitializer:
 		for _, m := range k.Data.MethodTable {
 			code := m.CodeAttr.Code
 			err := classloader.CheckCodeValidity(
-				// code, &k.Data.CP, m.CodeAttr.MaxStack, m.CodeAttr.MaxLocals, and )
-				code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access)
+				&code, &k.Data.CP, m.CodeAttr.MaxStack, k.Data.Access)
 			if err != nil {
 				methName := k.Data.CP.Utf8Refs[m.Name]
 				methDesc := k.Data.CP.Utf8Refs[m.Desc]

@@ -448,7 +448,12 @@ var Code []byte
 var StackEntries int
 var MaxStack int
 
-func CheckCodeValidity(code []byte, cp *CPool, maxStack int, access AccessFlags) error {
+func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags) error {
+	if codePtr == nil {
+		errMsg := "CheckCodeValidity: ptr to code segment is nil"
+		return errors.New(errMsg)
+	}
+	code := *codePtr
 	// check that the code is valid
 	if code == nil {
 		if access.ClassIsAbstract {
@@ -529,7 +534,16 @@ func dup1() int {
 	return 1
 }
 
+// DUP2 is like DUP, but duplicates the top 2 stack values--most frequenly used for longs and doubles,
+// which take up 2 stack entries on HotSpot and other OpemJDK JVMs. On Jacobin, doubles and longs
+// take up 1 stack entry, so we need to be checked whether the operation is on a double or long. If
+// it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func dup2() int {
+	if byteCodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
+		Code[PC] = 0x59 // change DUP2 to DUP
+		StackEntries += 1
+		return 1
+	}
 	StackEntries += 2
 	return 1
 }
@@ -846,4 +860,19 @@ func return4() int {
 
 func return5() int {
 	return 5
+}
+
+func byteCodeIsForLongOrDouble(bytecode byte) bool {
+	switch bytecode {
+	case
+		0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x1E, 0x1F, // LCONST_0, LCONST_1, DCONST_0, DCONST_1, LDC2_W, LLOAD, LLOAD_0, LLOAD_1
+		0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x3F, 0x40, // LLOAD_2, LLOAD_3, DLOAD_0, DLOAD_1, DLOAD_2, DLOAD_3, LSTORE_0, LSTORE_1
+		0x41, 0x42, 0x47, 0x48, 0x49, 0x4A, 0x62, 0x63, // LSTORE_2, LSTORE_3, DSTORE_0, DSTORE_1, DSTORE_2, DSTORE_3, LADD, DADD
+		0x65, 0x66, 0x69, 0x6A, 0x6D, 0x6E, 0x71, 0x72, // LSUB, DSUB, LMUL, DMUL, LDIV, DDIV, LREM, DREM
+		0x75, 0x76, 0x79, 0x7A, 0x7D, 0x7E, 0x81, 0x83, // LNEG, DNEG, LSHL, ISHR, LUSHR, LAND, LOR, LXOR
+		0x94, 0x98: // LCMP, DCMPG
+		return true
+	default:
+		return false
+	}
 }
