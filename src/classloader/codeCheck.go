@@ -534,9 +534,9 @@ func dup1() int {
 	return 1
 }
 
-// DUP2 is like DUP, but duplicates the top 2 stack values--most frequenly used for longs and doubles,
-// which take up 2 stack entries on HotSpot and other OpemJDK JVMs. On Jacobin, doubles and longs
-// take up 1 stack entry, so we need to be checked whether the operation is on a double or long. If
+// DUP2 is like DUP, but duplicates the top 2 stack values-- frequenly generated for longs and doubles,
+// which take up 2 stack entries on HotSpot and other OpenJDK JVMs. On Jacobin, doubles and longs
+// take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func dup2() int {
 	if byteCodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
