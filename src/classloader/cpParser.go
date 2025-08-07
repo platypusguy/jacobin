@@ -56,6 +56,7 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 	pos := 9 // position of the last byte before the constant pool
 
 	klass.moduleName = ""
+	klass.packageName = ""
 
 	var tempClassRefs = []int{}
 	klass.classRefs = []uint32{}
@@ -238,8 +239,11 @@ func parseConstantPool(rawBytes []byte, klass *ParsedClass) (int, error) {
 			nameIndex, _ := intFrom2Bytes(rawBytes, pos+1)
 			packageName, err := FetchUTF8string(klass, nameIndex)
 			if err != nil {
-				break // error message will already have been shown
+				return pos + 2, err // Return immediately with the error
 			}
+			// if err != nil {
+			// 	break // error message will already have been shown
+			// }
 			if klass.packageName != "" {
 				return pos + 2, cfe("Class " + klass.className + " has two package names: " + klass.packageName +
 					" and " + packageName)
