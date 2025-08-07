@@ -443,6 +443,7 @@ var CheckTable = [203]BytecodeFunc{
 }
 
 var PC int
+var prevPC int // allows us to view the preceding opcode if we need it for analysis
 var CP *CPool
 var Code []byte
 var StackEntries int
@@ -477,6 +478,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 
 	Code = code
 	PC = 0
+	prevPC = -1 // -1 means no previous PC
 	MaxStack = maxStack
 	StackEntries = 0
 
@@ -499,6 +501,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 					return errors.New(errMsg)
 				}
 			}
+			prevPC = PC
 			PC += ret
 		}
 	}
