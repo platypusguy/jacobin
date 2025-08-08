@@ -32,6 +32,18 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 	MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -84,6 +96,12 @@ func Load_Other_methods() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  returnCharsetName,
+		}
+
+	MethodSignatures["java/security/AccessController.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
@@ -158,16 +176,16 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			ParamSlots: 1,
+			GFunction:  returnNull,
 		}
 
-	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
+	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			ParamSlots: 2,
+			GFunction:  returnNull,
 		}
 
 }

@@ -669,7 +669,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.toLowerCase(Ljava/util/Locale;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  toLowerCase, // TODO: Locale processing
 		}
 
 	// Return the base string as-is.

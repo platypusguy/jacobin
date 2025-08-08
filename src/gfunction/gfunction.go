@@ -170,6 +170,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Jdk_Internal_Misc_Unsafe()
 		Load_Jdk_Internal_Misc_ScopedMemoryAccess()
 
+		// Sun
+		Load_Sun_Security_Action_GetPropertyAction()
+
 		// Load functions that invoke clinitGeneric() and do nothing else.
 		Load_Other_methods()
 
@@ -299,7 +302,7 @@ func returnRandomLong([]interface{}) interface{} {
 	byteArray := make([]byte, 8) // int64 is 8 bytes
 	_, err := rand.Read(byteArray)
 	if err != nil {
-		trace.Warning(fmt.Sprintf("secureRandomNextInt: Failed to generate random int64: %v", err))
+		trace.Warning(fmt.Sprintf("returnRandomLong: Failed to generate random int64: %v", err))
 		return int64(42)
 	}
 

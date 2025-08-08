@@ -128,7 +128,7 @@ func Load_Lang_System() {
 	MethodSignatures["java/lang/System.getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  systemGetPropertyDefault,
+			GFunction:  systemGetProperty,
 		}
 
 	MethodSignatures["java/lang/System.getSecurityManager()Ljava/lang/SecurityManager;"] =
@@ -473,8 +473,16 @@ func systemGetProperty(params []interface{}) interface{} {
 
 	value := globals.GetSystemProperty(propStr)
 	if value == "" {
-		return object.Null
+
+		if len(params) < 2 {
+			return object.Null
+		}
+
+		// Use the default value.
+		defaultObj := params[1].(*object.Object)
+		value = object.GoStringFromStringObject(defaultObj)
 	}
+
 	return object.StringObjectFromGoString(value)
 }
 
