@@ -102,12 +102,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	/*MethodSignatures["java/io/PrintWriter.<clinit>()V"] =
-	GMeth{
-		ParamSlots: 0,
-		GFunction:  trapClass,
-	}*/
-
 	MethodSignatures["java/io/StringWriter.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -148,24 +142,6 @@ func Load_Traps() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapDeprecated,
-		}
-
-	MethodSignatures["java/security/AccessController.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapDeprecated,
-		}
-
-	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  returnNull,
-		}
-
-	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  returnNull,
 		}
 
 }
