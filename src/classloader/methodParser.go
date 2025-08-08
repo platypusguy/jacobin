@@ -49,6 +49,15 @@ func parseMethods(bytes []byte, loc int, klass *ParsedClass) (int, error) {
 
 		descIndex, err3 := intFrom2Bytes(bytes, pos+1)
 		pos += 2
+		//
+		// if err2 != nil {
+		// 	return pos, cfe("Invalid fetch of method name index in class: " + klass.className)
+		// }
+		// if err3 != nil {
+		// 	return pos, cfe("Invalid fetch of method description index in method: " +
+		// 		klass.utf8Refs[nameSlot].content)
+		// }
+
 		if err2 != nil || err3 != nil {
 			return pos, cfe("Invalid fetch of method description index in method: " +
 				klass.utf8Refs[nameSlot].content)
