@@ -627,13 +627,25 @@ func TestGetProperty_UserTimezone(t *testing.T) {
 	}
 }
 
-func TestGetProperty_Default(t *testing.T) {
+func TestGetProperty_DefaultNull(t *testing.T) {
 	globals.InitGlobals("test")
 	propObj := object.StringObjectFromGoString("unknown.property")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
 	if result != object.Null {
 		t.Errorf("Expected null, got %v", result)
+	}
+}
+
+func TestGetProperty_DefaultValue(t *testing.T) {
+	globals.InitGlobals("test")
+	propObj := object.StringObjectFromGoString("hokey")
+	dfltObj := object.StringObjectFromGoString("pokey")
+	params := []interface{}{propObj, dfltObj}
+	result := systemGetProperty(params)
+	expected := dfltObj
+	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }
 
