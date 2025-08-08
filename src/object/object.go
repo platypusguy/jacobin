@@ -7,7 +7,9 @@
 package object
 
 import (
+	"jacobin/globals"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"path"
 	"strings"
@@ -91,6 +93,12 @@ func MakeOneFieldObject(classString string, fname string, ftype string, arg any)
 
 // UpdateValueFieldFromJavaBytes: Set the value field of the given String object to the given JavaByte array
 func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
+	if objPtr == nil || argBytes == nil {
+		if globals.TraceInst || globals.TraceVerbose {
+			trace.Error("UpdateValueFieldFromJavaBytes: nil object or argBytes")
+		}
+		return
+	}
 	fld := Field{Ftype: types.StringClassRef, Fvalue: argBytes}
 	objPtr.FieldTable["value"] = fld
 }
