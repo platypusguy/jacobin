@@ -20,7 +20,9 @@ package object
 
 import (
 	"fmt"
+	"jacobin/globals"
 	"jacobin/stringPool"
+	"jacobin/trace"
 	"jacobin/types"
 	"strconv"
 	"strings"
@@ -212,7 +214,17 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	// What type is the field?
 	switch fld.Ftype {
 	case types.StringClassRef:
-		return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		switch fld.Fvalue.(type) {
+		case []byte: // this should never happen, but just in case
+			if globals.TraceInst || globals.TraceVerbose {
+				trace.Error(fmt.Sprintf("ObjectFieldToString: Converting unexpected byte array to string: %x",
+					string(fld.Fvalue.([]byte))))
+			}
+			return string(fld.Fvalue.([]byte))
+		case []types.JavaByte:
+			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		}
+
 	case types.BigInteger:
 		return fmt.Sprint(fld.Fvalue)
 	case types.Bool:
@@ -287,6 +299,10 @@ func GoStringFromJavaCharArray(inArray []int64) string {
 
 // EqualStringObjects: Compare two string objects for equality.
 func EqualStringObjects(argA, argB *Object) bool {
+	if argA == nil || argB == nil {
+		return false
+	}
+
 	if !IsStringObject(argA) {
 		return false
 	}
