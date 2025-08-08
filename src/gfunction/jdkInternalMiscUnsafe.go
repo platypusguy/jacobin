@@ -39,19 +39,19 @@ func Load_Jdk_Internal_Misc_Unsafe() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayBaseOffset(Ljava/lang/Class;)I"] = // offset to start of first item in an array
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  unsafeArrayBaseOffset,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayIndexScale(Ljava/lang/Class;)I"] =
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale(Ljava/lang/Class;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  unsafeArrayIndexScale,
 		}
 
-	MethodSignatures["jdk/internal/misc/Unsafe.unsafeArrayIndexScale0(Ljava/lang/Class;)I"] =
+	MethodSignatures["jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  unsafeArrayIndexScale0,
