@@ -25,5 +25,11 @@ func Load_Sun_Security_Action_GetPropertyAction() {
 			ParamSlots: 2,
 			GFunction:  systemGetProperty,
 		}
-		
+
+	MethodSignatures["sun/security/action/GetPropertyAction.privilegedGetTimeoutProp(Ljava/lang/String;ILsun/security/util/Debug;)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
 }
