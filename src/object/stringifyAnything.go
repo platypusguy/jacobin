@@ -1,3 +1,9 @@
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2024 by the Jacobin authors. Consult jacobin.org.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
+ */
+
 package object
 
 import (
@@ -20,9 +26,6 @@ func StringifyAnythingGo(arg interface{}) string {
 	// Begin outer switch on arg type.
 	switch arg.(type) {
 	case *Object:
-		/*
-			Start of objects
-		*/
 		obj := arg.(*Object)
 		if IsNull(obj) {
 			return types.NullString
@@ -149,14 +152,8 @@ func StringifyAnythingGo(arg interface{}) string {
 			}
 			return strBuffer[:len(strBuffer)-2] + "}"
 		}
-		/*
-			End of objects
-		*/
-		// ------------------------------------------------------------------------------------------------------
+		/* end of case for *Object */
 	case Field:
-		/*
-			Start of Field
-		*/
 		fld := arg.(Field)
 		switch fld.Ftype {
 		case types.StringClassRef:
@@ -214,32 +211,30 @@ func StringifyAnythingGo(arg interface{}) string {
 			return strconv.FormatFloat(fld.Fvalue.(float64), 'g', -1, 32)
 		case types.BigInteger:
 			return fmt.Sprint(fld.Fvalue)
-		case types.LinkedList:
+		case types.LinkedList: // LinkedList must contain objects, not primitives due to recursive call to this function
 			strBuffer := "["
 			llst := fld.Fvalue.(*list.List)
-			element := llst.Front()
-			for ix := 0; ix < llst.Len(); ix++ {
-				strBuffer += StringifyAnythingGo(element.Value)
-				strBuffer += ", "
-				element = element.Next()
+			if llst.Len() > 0 {
+				element := llst.Front()
+				for ix := 0; ix < llst.Len(); ix++ {
+					strBuffer += StringifyAnythingGo(element.Value)
+					strBuffer += ", "
+					element = element.Next()
+				}
+				return strBuffer[:len(strBuffer)-2] + "]"
+			} else {
+				return "[]"
 			}
-			return strBuffer[:len(strBuffer)-2] + "]"
 		default:
 			errMsg := fmt.Sprintf("StringifyAnythingGo Field default: unrecognized argument type, value: %T, %v", arg, arg)
 			return errMsg
 		}
-		/*
-			End of Field
-		*/
-		// ------------------------------------------------------------------------------------------------------
+		/* end of case Field */
 	}
-	/*
-		End of Field
-	*/
 
+	// If we got here, then the argument was neither an *Object nor a Field.
 	errMsg := fmt.Sprintf("StringifyAnythingGo: neither *Object nor Field, value: %T, %v", arg, arg)
 	return errMsg
-
 }
 
 // StringifyAnythingJava: Stringify anything and return the Java String version of that string.
