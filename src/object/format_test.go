@@ -274,5 +274,327 @@ func TestFmtHelper(t *testing.T) {
 	if !strings.Contains(str, "array of zero") {
 		t.Errorf("TestFmtHelper: expected fmtHelper to return \"array of zero\", got \"%v\"", str)
 	}
-
 }
+
+// === the following tests were geenerated by JetBrains Junie to cover gaps in testing
+
+// Test DEBUGGING flag when enabled
+func TestFmtHelperWithDebuggingEnabled(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Save original DEBUGGING state and restore after test
+	originalDebugging := DEBUGGING
+	defer func() { DEBUGGING = originalDebugging }()
+
+	// Enable debugging
+	DEBUGGING = true
+
+	field := Field{Ftype: types.Int, Fvalue: int64(42)}
+	result := fmtHelper(field, "TestClass", "testField")
+
+	// The function should still work correctly with debugging enabled
+	if result != "42" {
+		t.Errorf("Expected '42', got '%s'", result)
+	}
+	// Note: The debug output goes to stdout, which is hard to capture in tests
+}
+
+// Test String handling with trailing newline characters
+func TestFmtHelperStringWithNewline(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test with JavaByte array ending with newline
+	javaBytes := []types.JavaByte{'H', 'e', 'l', 'l', 'o', '\n'}
+	field := Field{Ftype: types.StringClassRef, Fvalue: javaBytes}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "\"Hello\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+
+	// Test with []byte ending with newline
+	bytes := []byte{'W', 'o', 'r', 'l', 'd', '\n'}
+	field = Field{Ftype: types.StringClassRef, Fvalue: bytes}
+	result = fmtHelper(field, "TestClass", "testField")
+	expected = "\"World\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+
+	// Test with *[]byte ending with newline
+	bytesPtr := &[]byte{'T', 'e', 's', 't', '\n'}
+	field = Field{Ftype: types.StringClassRef, Fvalue: bytesPtr}
+	result = fmtHelper(field, "TestClass", "testField")
+	expected = "\"Test\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test String handling with empty arrays
+func TestFmtHelperStringWithEmptyArrays(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test with empty JavaByte array
+	javaBytes := []types.JavaByte{}
+	field := Field{Ftype: types.StringClassRef, Fvalue: javaBytes}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "\"\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+
+	// Test with empty []byte
+	bytes := []byte{}
+	field = Field{Ftype: types.StringClassRef, Fvalue: bytes}
+	result = fmtHelper(field, "TestClass", "testField")
+	expected = "\"\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+
+	// Test with empty *[]byte
+	emptyBytes := []byte{}
+	field = Field{Ftype: types.StringClassRef, Fvalue: &emptyBytes}
+	result = fmtHelper(field, "TestClass", "testField")
+	expected = "\"\""
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test String handling with nil fvalue
+func TestFmtHelperStringWithNilValue(t *testing.T) {
+	globals.InitGlobals("test")
+
+	field := Field{Ftype: types.StringClassRef, Fvalue: nil}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "<nil>"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test static boolean handling
+func TestFmtHelperStaticBoolean(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+
+	// Test static boolean field
+	field := Field{Ftype: types.Static + types.Bool, Fvalue: true}
+	result := fmtHelper(field, "TestClass", "testField")
+
+	// Should contain "static" in the result
+	if !strings.Contains(result, "static") {
+		t.Errorf("Expected result to contain 'static', got '%s'", result)
+	}
+}
+
+// Test boolean with int64 values
+func TestFmtHelperBooleanInt64Values(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test boolean with int64 value of 0 (should be false)
+	field := Field{Ftype: types.Bool, Fvalue: int64(0)}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "false"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+
+	// Test boolean with int64 value non-zero (should be true)
+	field = Field{Ftype: types.Bool, Fvalue: int64(42)}
+	result = fmtHelper(field, "TestClass", "testField")
+	expected = "true"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test boolean with unexpected type
+func TestFmtHelperBooleanUnexpectedType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test boolean with unexpected type (string)
+	field := Field{Ftype: types.Bool, Fvalue: "not a boolean"}
+	result := fmtHelper(field, "TestClass", "testField")
+
+	if !strings.Contains(result, "ERROR") || !strings.Contains(result, "unexpected Fvalue variable type") {
+		t.Errorf("Expected error message about unexpected type, got '%s'", result)
+	}
+}
+
+// Test static byte array handling
+func TestFmtHelperStaticByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+
+	field := Field{Ftype: types.Static + types.ByteArray, Fvalue: []byte{1, 2, 3}}
+	result := fmtHelper(field, "TestClass", "testField")
+
+	// Should contain "static" in the result
+	if !strings.Contains(result, "static") {
+		t.Errorf("Expected result to contain 'static', got '%s'", result)
+	}
+}
+
+// Test byte array with nil fvalue
+func TestFmtHelperByteArrayNilValue(t *testing.T) {
+	globals.InitGlobals("test")
+
+	field := Field{Ftype: types.ByteArray, Fvalue: nil}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "<ERROR nil Fvalue>"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test byte array with embedded *Object
+func TestFmtHelperByteArrayWithEmbeddedObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	embeddedObj := MakeEmptyObject()
+	field := Field{Ftype: types.ByteArray, Fvalue: embeddedObj}
+	result := fmtHelper(field, "TestClass", "testField")
+	expected := "*** embedded object ***"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test FormatField with invalid KlassName
+func TestFormatFieldInvalidKlassName(t *testing.T) {
+	globals.InitGlobals("test")
+
+	obj := MakeEmptyObject()
+	obj.KlassName = types.InvalidStringIndex
+	obj.FieldTable["testField"] = Field{Ftype: types.Int, Fvalue: 42}
+
+	result := obj.FormatField("testField")
+	expected := "<ERROR nil class pointer>"
+	if result != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, result)
+	}
+}
+
+// Test FormatField with empty fieldName and DEBUGGING enabled
+func TestFormatFieldEmptyFieldNameWithDebugging(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Save original DEBUGGING state and restore after test
+	originalDebugging := DEBUGGING
+	defer func() { DEBUGGING = originalDebugging }()
+
+	// Enable debugging
+	DEBUGGING = true
+
+	obj := MakeEmptyObject()
+	klassType := "TestClass"
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
+
+	// Call with empty fieldName - should trigger debugging path
+	result := obj.FormatField("")
+
+	// Should return the class name
+	if result != klassType {
+		t.Errorf("Expected '%s', got '%s'", klassType, result)
+	}
+}
+
+// Test FormatField with non-empty FieldTable but empty fieldName and DEBUGGING
+func TestFormatFieldNonEmptyTableEmptyFieldNameWithDebugging(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Save original DEBUGGING state and restore after test
+	originalDebugging := DEBUGGING
+	defer func() { DEBUGGING = originalDebugging }()
+
+	// Enable debugging
+	DEBUGGING = true
+
+	obj := MakeEmptyObject()
+	klassType := "TestClass"
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
+	obj.FieldTable["existingField"] = Field{Ftype: types.Int, Fvalue: 42}
+
+	// Call with empty fieldName but non-empty FieldTable
+	result := obj.FormatField("")
+
+	// Should return the class name
+	if result != klassType {
+		t.Errorf("Expected '%s', got '%s'", klassType, result)
+	}
+}
+
+// Test FormatField with empty field table and DEBUGGING enabled
+func TestFormatFieldEmptyTableWithDebugging(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Save original DEBUGGING state and restore after test
+	originalDebugging := DEBUGGING
+	defer func() { DEBUGGING = originalDebugging }()
+
+	// Enable debugging
+	DEBUGGING = true
+
+	obj := MakeEmptyObject()
+	klassType := "TestClass"
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
+
+	// Call with empty field table
+	result := obj.FormatField("")
+
+	// Should return the class name
+	if result != klassType {
+		t.Errorf("Expected '%s', got '%s'", klassType, result)
+	}
+}
+
+// Test DumpObject with missing KlassName
+func TestDumpObjectMissingKlassName(t *testing.T) {
+	globals.InitGlobals("test")
+
+	obj := MakeEmptyObject()
+	obj.KlassName = types.InvalidStringIndex
+
+	// Capture output by redirecting stdout (or just test that it doesn't panic)
+	obj.DumpObject("Test with missing class name", 0)
+	// If we reach here without panicking, the test passes
+}
+
+// Test DumpObject with field table lookup error simulation
+func TestDumpObjectFieldTableLookupError(t *testing.T) {
+	globals.InitGlobals("test")
+
+	obj := MakeEmptyObject()
+	klassType := "TestClass"
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
+
+	// Add a field
+	obj.FieldTable["testField"] = Field{Ftype: types.Int, Fvalue: 42}
+
+	// This tests the normal case, but the error case (lines 252-253) is hard to trigger
+	// since Go's map implementation is consistent. The error case would only occur
+	// in race conditions or if the map is modified during iteration.
+	obj.DumpObject("Test field table", 2)
+	// If we reach here without panicking, the test passes
+}
+
+// Test DumpObject with various indent levels
+func TestDumpObjectWithIndents(t *testing.T) {
+	globals.InitGlobals("test")
+
+	obj := MakeEmptyObject()
+	klassType := "TestClass"
+	obj.KlassName = stringPool.GetStringIndex(&klassType)
+	obj.FieldTable["testField"] = Field{Ftype: types.Int, Fvalue: 42}
+
+	// Test with different indent levels
+	obj.DumpObject("Test indent 0", 0)
+	obj.DumpObject("Test indent 4", 4)
+	obj.DumpObject("Test indent 8", 8)
+	// If we reach here without panicking, the test passes
+}
+
+// === end of tests generated by JetBrains Junie
