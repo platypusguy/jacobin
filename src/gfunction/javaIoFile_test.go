@@ -91,7 +91,7 @@ func TestFileInit_EmptyPath(t *testing.T) {
 }
 
 func TestFileGetPath_Success(t *testing.T) {
-	pathStr := "/tmp/testpath"
+	pathStr := t.TempDir()
 	byteArr := object.JavaByteArrayFromGoString(pathStr)
 	fileObj := &object.Object{
 		FieldTable: map[string]object.Field{
@@ -270,6 +270,16 @@ func TestFileCreate_Success(t *testing.T) {
 	}
 	if _, ok := fh.Fvalue.(*os.File); !ok {
 		t.Errorf("FileHandle field value is not *os.File")
+	}
+
+	// Work-around to prevent Windows from getting lost in TempDir RemoveAll cleanup
+	err := fh.Fvalue.(*os.File).Close()
+	if err != nil {
+		t.Fatalf("Failed to close file handle: %v", err)
+	}
+	err = os.Remove(newFile)
+	if err != nil {
+		t.Fatalf("Failed to remove test file: %v", err)
 	}
 }
 

@@ -242,6 +242,17 @@ func TestFisReadOne_SuccessAndEOF(t *testing.T) {
 	if val != int64(-1) {
 		t.Errorf("Expected -1 at EOF, got %d", val)
 	}
+
+	// Work-around to prevent Windows from getting lost in TempDir RemoveAll cleanup
+	err := fisObj.FieldTable[FileHandle].Fvalue.(*os.File).Close()
+	if err != nil {
+		t.Fatalf("Failed to close file handle: %v", err)
+	}
+	err = os.Remove(path)
+	if err != nil {
+		t.Fatalf("Failed to remove test file: %v", err)
+	}
+
 }
 
 func TestFisReadOne_NoFileHandle(t *testing.T) {
