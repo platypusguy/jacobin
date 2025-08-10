@@ -8,10 +8,10 @@ package gfunction
 
 import (
 	"fmt"
+	"io"
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
-	"os"
 	"strconv"
 )
 
@@ -254,14 +254,24 @@ func Load_Io_PrintStream() {
 // PrintlnV = java/io/Prinstream.println() -- println() prints a newline (V = void)
 // "java/io/PrintStream.println()V"
 func PrintlnV(params []interface{}) interface{} {
-	fmt.Fprintln(params[0].(*os.File), "")
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnV: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	fmt.Fprintln(writer, "")
 	return nil
 }
 
 // "java/io/PrintStream.println(C)V"
 func PrintlnChar(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnChar: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	bb := byte(params[1].(int64))
-	fmt.Fprintln(params[0].(*os.File), string(bb))
+	fmt.Fprintln(writer, string(bb))
 	return nil
 }
 
@@ -269,16 +279,26 @@ func PrintlnChar(params []interface{}) interface{} {
 // "java/io/PrintStream.println(I)V"
 // "java/io/PrintStream.println(S)V"
 func PrintlnBIS(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnBIS: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	intToPrint, ok := params[1].(int64) // contains an int
 	if !ok {
 		intToPrint = int64(params[1].(int8))
 	}
-	fmt.Fprintln(params[0].(*os.File), intToPrint)
+	fmt.Fprintln(writer, intToPrint)
 	return nil
 }
 
 // "java/io/PrintStream.println(Z)V"
 func PrintlnBoolean(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnBoolean: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	var boolToPrint bool
 	boolAsInt64 := params[1].(int64) // contains an int64
 	if boolAsInt64 > 0 {
@@ -286,35 +306,55 @@ func PrintlnBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Fprintln(params[0].(*os.File), boolToPrint)
+	fmt.Fprintln(writer, boolToPrint)
 	return nil
 }
 
 // "java/io/PrintStream.println(J)V"
 func PrintlnLong(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnLong: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Fprintln(params[0].(*os.File), longToPrint)
+	fmt.Fprintln(writer, longToPrint)
 	return nil
 }
 
 // PrintlnDouble = java/io/Prinstream.print(double)
 func PrintlnDouble(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnDouble: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintln(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 64))
+	fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 64))
 	return nil
 }
 
 // PrintlnFloat = java/io/Prinstream.print(float)
 func PrintlnFloat(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintlnFloat: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprintln(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 32))
+	fmt.Fprintln(writer, strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
 // "java/io/PrintStream.print(C)V"
 func PrintChar(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintChar: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	bb := byte(params[1].(int64))
-	fmt.Fprint(params[0].(*os.File), string(bb))
+	fmt.Fprint(writer, string(bb))
 	return nil
 }
 
@@ -322,17 +362,27 @@ func PrintChar(params []interface{}) interface{} {
 // "java/io/PrintStream.print(I)V"
 // "java/io/PrintStream.print(S)V"
 func PrintBIS(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintBIS: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	intToPrint, ok := params[1].(int64) // contains an int
 	if !ok {
 		intToPrint = int64(params[1].(int8))
 	}
-	fmt.Fprint(params[0].(*os.File), intToPrint)
+	fmt.Fprint(writer, intToPrint)
 	return nil
 }
 
 // PrintBoolean = java/io/Prinstream.print(boolean)
 // "java/io/PrintStream.print(Z)V"
 func PrintBoolean(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintBoolean: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	var boolToPrint bool
 	boolAsInt64 := params[1].(int64) // contains an int64
 	if boolAsInt64 > 0 {
@@ -340,7 +390,7 @@ func PrintBoolean(params []interface{}) interface{} {
 	} else {
 		boolToPrint = false
 	}
-	fmt.Fprint(params[0].(*os.File), boolToPrint)
+	fmt.Fprint(writer, boolToPrint)
 	return nil
 }
 
@@ -348,28 +398,49 @@ func PrintBoolean(params []interface{}) interface{} {
 // Long in Java are 64-bit ints, so we just duplicated the logic for println(int)
 // "java/io/PrintStream.print(J)V"
 func PrintLong(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintLong: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	longToPrint := params[1].(int64) // contains to an int64--the equivalent of a Java long
-	fmt.Fprint(params[0].(*os.File), longToPrint)
+	fmt.Fprint(writer, longToPrint)
 	return nil
 }
 
 // PrintDouble = java/io/Prinstream.print(double)
 func PrintDouble(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintDouble: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprint(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 64))
+	fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 64))
 	return nil
 }
 
 // PrintFloat = java/io/Prinstream.print(float)
 func PrintFloat(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("PrintFloat: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	xx := params[1].(float64) // contains to a float64--the equivalent of a Java double
-	fmt.Fprint(params[0].(*os.File), strconv.FormatFloat(xx, 'g', -1, 32))
+	fmt.Fprint(writer, strconv.FormatFloat(xx, 'g', -1, 32))
 	return nil
 }
 
 // Printf -- handle the variable args and then call golang's own printf function
 // "java/io/PrintStream.printf(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;"
 func Printf(params []interface{}) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("Printf: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	var intfSprintf = new([]interface{})
 	*intfSprintf = append(*intfSprintf, params[1]) // The format string
 	*intfSprintf = append(*intfSprintf, params[2]) // The object array
@@ -381,20 +452,20 @@ func Printf(params []interface{}) interface{} {
 	}
 	objPtr := retval.(*object.Object)
 	str := object.GoStringFromStringObject(objPtr)
-	switch params[0].(type) {
-	case *os.File:
-		break
-	default:
-		errMsg := fmt.Sprintf("Printf: Expected parameter type *os.File, observed: %T", params[0])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	fmt.Fprint(params[0].(*os.File), str)
-	return params[0] // Return the PrintStream object
 
+	fmt.Fprint(writer, str)
+
+	return params[0] // Return the PrintStream object
 }
 
 // "java/io/PrintStream.println(Ljava/lang/String;)V"
 func _printString(params []interface{}, newLine bool) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("_printString: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	var str string
 	param1, ok := params[1].(*object.Object)
 	if !ok {
@@ -428,9 +499,9 @@ func _printString(params []interface{}, newLine bool) interface{} {
 	}
 
 	if newLine {
-		fmt.Fprintln(params[0].(*os.File), str)
+		fmt.Fprintln(writer, str)
 	} else {
-		fmt.Fprint(params[0].(*os.File), str)
+		fmt.Fprint(writer, str)
 	}
 
 	return nil
@@ -449,6 +520,12 @@ func PrintlnString(params []interface{}) interface{} {
 
 // Called by PrintObject and PrintlnObject
 func _printObject(params []interface{}, newLine bool) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("_printObject: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	var strBuffer string
 
 	// Watch out for a null object.
@@ -469,10 +546,10 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 			}
 			strBuffer = strBuffer[:len(strBuffer)-2] + "}"
 			if newLine {
-				fmt.Fprintln(params[0].(*os.File), strBuffer)
+				fmt.Fprintln(writer, strBuffer)
 				return nil
 			} else {
-				fmt.Fprint(params[0].(*os.File), strBuffer)
+				fmt.Fprint(writer, strBuffer)
 				return nil
 			}
 		default:
@@ -482,9 +559,9 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 	}
 
 	if newLine {
-		fmt.Fprintln(params[0].(*os.File), strBuffer)
+		fmt.Fprintln(writer, strBuffer)
 	} else {
-		fmt.Fprint(params[0].(*os.File), strBuffer)
+		fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil
@@ -495,7 +572,12 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 func PrintObject(params []interface{}) interface{} {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
-		fmt.Fprint(params[0].(*os.File), types.NullString)
+		writer, ok := params[0].(io.Writer)
+		if !ok {
+			errMsg := fmt.Sprintf("PrintObject: Expected io.Writer, observed %T", params[0])
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		fmt.Fprint(writer, types.NullString)
 		return nil
 	}
 
@@ -513,7 +595,12 @@ func PrintObject(params []interface{}) interface{} {
 func PrintlnObject(params []interface{}) interface{} {
 	// Check for null object.
 	if params[1] == nil || object.IsNull(params[1]) {
-		fmt.Fprintln(params[0].(*os.File), types.NullString)
+		writer, ok := params[0].(io.Writer)
+		if !ok {
+			errMsg := fmt.Sprintf("PrintlnObject: Expected io.Writer, observed %T", params[0])
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		fmt.Fprintln(writer, types.NullString)
 		return nil
 	}
 
@@ -528,6 +615,12 @@ func PrintlnObject(params []interface{}) interface{} {
 
 // Print a linked list like this: [A, B, C]
 func _printLinkedList(params []interface{}, newLine bool) interface{} {
+	writer, ok := params[0].(io.Writer)
+	if !ok {
+		errMsg := fmt.Sprintf("_printLinkedList: Expected io.Writer, observed %T", params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	var strBuffer string
 
 	// Get linked list object.
@@ -558,7 +651,7 @@ func _printLinkedList(params []interface{}, newLine bool) interface{} {
 		// Start with the front element.
 		// Continue to the end.
 		element := llst.Front()
-		fmt.Fprint(params[0].(*os.File), "[")
+		fmt.Fprint(writer, "[")
 		for ix := 0; ix < llst.Len(); ix++ {
 			strBuffer += object.StringifyAnythingGo(element.Value)
 			strBuffer += ", "
@@ -570,9 +663,9 @@ func _printLinkedList(params []interface{}, newLine bool) interface{} {
 	strBuffer = strBuffer[:len(strBuffer)-2] + "]"
 
 	if newLine {
-		fmt.Fprintln(params[0].(*os.File), strBuffer)
+		fmt.Fprintln(writer, strBuffer)
 	} else {
-		fmt.Fprint(params[0].(*os.File), strBuffer)
+		fmt.Fprint(writer, strBuffer)
 	}
 
 	return nil

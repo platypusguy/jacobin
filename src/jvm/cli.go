@@ -195,7 +195,8 @@ Jacobin-specific options:
                           * cloadi - classloader initialization
                           * inst - bytecode interpreter trace
                           * class - class & method support for the interpreter
-                          * verbose - inst, class, and more details of the interpreter `
+                          * verbose - inst, class, and more details of the interpreter
+    -JJ:galt              Do not use this unless you are a Jacobin developer! `
 
 	_, _ = fmt.Fprintln(outStream, userMessage)
 }
