@@ -351,7 +351,7 @@ var classNameInteger = "java/lang/Integer"
 func integerByteValue(params []interface{}) interface{} {
 	var ii int64
 	parmObj := params[0].(*object.Object)
-	ii = parmObj.FieldTable["value"].Fvalue.(int64)
+	ii = (parmObj.FieldTable["value"].Fvalue.(int64)) & 0xFF
 	return ii
 }
 

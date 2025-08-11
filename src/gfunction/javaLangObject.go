@@ -75,23 +75,23 @@ func Load_Lang_Object() {
 			GFunction:  objectToString,
 		}
 
-	MethodSignatures["java/lang/Object.wait()V"] =
+	MethodSignatures["java/lang/Object.wait()V"] = // wait until awakened, typically by being notified or interrupted
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Object.wait(J)V"] =
+	MethodSignatures["java/lang/Object.wait(J)V"] = // wait(long timeoutMillis)
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	/*MethodSignatures["java/lang/Object.wait(JI)V"] =
-	GMeth{
-		ParamSlots: 2,
-		GFunction:  trapFunction,
-	}*/
+	MethodSignatures["java/lang/Object.wait(JI)V"] = // wait(long timeoutMillis, int nanos)
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
 
 }
 
