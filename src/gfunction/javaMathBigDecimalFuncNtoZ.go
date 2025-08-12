@@ -15,7 +15,9 @@ import (
 	"strings"
 )
 
-// bigdecimalNegate returns a BigDecimal whose value is the negation of the current BigDecimal.
+// bigdecimalNegate returns a BigDecimal with value = -this
+// Extracts the internal unscaled BigInteger, negates it,
+// and creates a new BigDecimal with scale = 0 and recalculated precision.
 func bigdecimalNegate(params []interface{}) interface{} {
 	// Implements BigDecimal.negate()
 	bd := params[0].(*object.Object)
@@ -35,7 +37,8 @@ func bigdecimalNegate(params []interface{}) interface{} {
 	return result
 }
 
-// bigdecimalPlus returns a BigDecimal whose value is the sum of the current BigDecimal and the specified one.
+// bigdecimalPlus returns a new BigDecimal identical to the input (unary plus).
+// This effectively clones the BigDecimal, preserving precision and scale.
 func bigdecimalPlus(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 
@@ -51,7 +54,9 @@ func bigdecimalPlus(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(newBigInt, precision, scale)
 }
 
-// bigdecimalPow returns a BigDecimal whose value is the result of raising this BigDecimal to the specified power.
+// bigdecimalPow computes this^exponent for non-negative exponents.
+// Uses big.Int.Exp for exponentiation on the unscaled value,
+// and sets scale = 0 because pow affects unscaled value directly.
 func bigdecimalPow(params []interface{}) interface{} {
 	// Implements BigDecimal.pow(int exponent)
 	bd := params[0].(*object.Object)
@@ -72,7 +77,7 @@ func bigdecimalPow(params []interface{}) interface{} {
 	return result
 }
 
-// bigdecimalPrecision returns the precision of this BigDecimal, i.e., the number of decimal digits.
+// bigdecimalPrecision simply returns the precision stored in the BigDecimal's FieldTable.
 func bigdecimalPrecision(params []interface{}) interface{} {
 	// Implements BigDecimal.precision()
 	bd := params[0].(*object.Object)
@@ -83,7 +88,9 @@ func bigdecimalPrecision(params []interface{}) interface{} {
 	return precision
 }
 
-// bigdecimalRemainder returns the remainder when this BigDecimal is divided by the specified one.
+// bigdecimalRemainder computes this % divisor.
+// If divisor == 0, returns ArithmeticException to avoid division by zero.
+// Result scale is 0 (remainder is integral).
 func bigdecimalRemainder(params []interface{}) interface{} {
 	// Implements BigDecimal.remainder(BigDecimal divisor)
 	dividend := params[0].(*object.Object)
@@ -102,8 +109,8 @@ func bigdecimalRemainder(params []interface{}) interface{} {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalRemainder: divide by zero")
 	}
 
-	// Perform remainder operation
-	remainder := new(big.Int).Mod(dvBigInt, drBigInt)
+	// Perform Java-like remainder operation.
+	remainder := javaLikeRemainder(dvBigInt, drBigInt)
 
 	// Create result BigDecimal object for the remainder
 	remObj := bigDecimalObjectFromBigInt(remainder, int64(len(remainder.String())), int64(0))
@@ -111,7 +118,8 @@ func bigdecimalRemainder(params []interface{}) interface{} {
 	return remObj
 }
 
-// bigdecimalScale returns the scale of the BigDecimal object.
+// bigdecimalScale returns the current scale of the BigDecimal.
+// Scale represents the number of digits to the right of the decimal point.
 func bigdecimalScale(params []interface{}) interface{} {
 	// Implements BigDecimal.scale()
 	bd := params[0].(*object.Object)
@@ -122,7 +130,8 @@ func bigdecimalScale(params []interface{}) interface{} {
 	return scale
 }
 
-// bigdecimalScaleByPowerOfTen scales the BigDecimal by the specified power of ten.
+// bigdecimalScaleByPowerOfTen adjusts the scale by subtracting 'num'.
+// This corresponds to shifting the decimal point to the right by 'num' places.
 func bigdecimalScaleByPowerOfTen(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	num := params[1].(int64)
@@ -139,7 +148,10 @@ func bigdecimalScaleByPowerOfTen(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(bigInt, precision, newScale)
 }
 
-// bigdecimalSetScale returns a new BigDecimal with the specified scale.
+// bigdecimalSetScale changes the scale of the BigDecimal to 'newScale'.
+// If increasing scale, multiply unscaled value by 10^(newScale - oldScale).
+// If decreasing, divide unscaled value by 10^(oldScale - newScale).
+// Recomputes precision based on the new unscaled value.
 func bigdecimalSetScale(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	newScale := params[1].(int64)
@@ -175,7 +187,8 @@ func bigdecimalSetScale(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
 }
 
-// bigdecimalShortValueExact returns the exact short value of this BigDecimal.
+// bigdecimalShortValueExact converts the BigDecimal to an int16 exactly.
+// Returns ArithmeticException if the value is out of the int16 range.
 func bigdecimalShortValueExact(params []interface{}) interface{} {
 	// Implements BigDecimal.shortValueExact()
 	bd := params[0].(*object.Object)
@@ -197,8 +210,8 @@ func bigdecimalShortValueExact(params []interface{}) interface{} {
 	return int64(shortValue)
 }
 
-// bigdecimalSignum returns the signum function of this BigDecimal.
-// It returns -1, 0, or 1 depending on whether the value is negative, zero, or positive, respectively.
+// bigdecimalSignum returns the sign of the BigDecimal unscaled value:
+// -1 if negative, 0 if zero, 1 if positive.
 func bigdecimalSignum(params []interface{}) interface{} {
 	// Implements BigDecimal.signum()
 	bd := params[0].(*object.Object)
@@ -215,22 +228,63 @@ func bigdecimalSignum(params []interface{}) interface{} {
 	return int64(sign) // -1, 0, or 1
 }
 
+// bigdecimalStripTrailingZeros removes trailing zeros from the unscaled value
+// and adjusts the scale accordingly. Updates precision to match.
 func bigdecimalStripTrailingZeros(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	oldScale := bd.FieldTable["scale"].Fvalue.(int64)
 	biObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
 	oldBigInt := biObj.FieldTable["value"].Fvalue.(*big.Int)
 
-	newBigInt, newScale := stripTrailingZeros(oldBigInt, oldScale)
-	newPrecision := precisionFromBigInt(newBigInt)
+	stripTrailingZeros := func(unscaled *big.Int, scale int64) (*big.Int, int64) {
+		if unscaled.Sign() == 0 {
+			//println("stripTrailingZeros: input unscaled is zero")
+			return big.NewInt(0), 0
+		}
 
-	// Update BigDecimal with new value and adjusted precision.
+		ten := big.NewInt(10)
+		mod := new(big.Int)
+		u := new(big.Int).Set(unscaled)
+		s := scale
+
+		for s > 0 {
+			u.QuoRem(u, ten, mod)
+			//println("stripTrailingZeros: mod =", mod.String(), "scale =", s)
+			if mod.Sign() != 0 {
+				break
+			}
+			s--
+		}
+		return u, s
+	}
+
+	precisionFromBigInt := func(bi *big.Int) int64 {
+		if bi.Sign() == 0 {
+			//println("precisionFromBigInt: input is zero")
+			return 1
+		}
+		str := bi.String()
+		str = strings.TrimLeft(str, "-0")
+		if len(str) == 0 {
+			//println("precisionFromBigInt: trimmed string is empty")
+			return 1
+		}
+		return int64(len(str))
+	}
+
+	newBigInt, newScale := stripTrailingZeros(oldBigInt, oldScale)
+	//println("bigdecimalStripTrailingZeros: newBigInt =", newBigInt.String(), "newScale =", newScale)
+
+	newPrecision := precisionFromBigInt(newBigInt)
+	//println("bigdecimalStripTrailingZeros: newPrecision =", newPrecision)
+
 	newBD := bigDecimalObjectFromBigInt(newBigInt, newPrecision, newScale)
 
 	return newBD
 }
 
-// bigdecimalSubtract returns a BigDecimal representing the result of subtracting the specified BigDecimal from this BigDecimal.
+// bigdecimalSubtract subtracts the specified BigDecimal from this one.
+// Operates on unscaled values directly and returns a new BigDecimal.
 func bigdecimalSubtract(params []interface{}) interface{} {
 	// Implements BigDecimal.subtract(BigDecimal subtrahend)
 	minuendBD := params[0].(*object.Object)
@@ -253,7 +307,8 @@ func bigdecimalSubtract(params []interface{}) interface{} {
 	return result
 }
 
-// bigdecimalToBigInteger returns the BigInteger value represented by this BigDecimal.
+// bigdecimalToBigInteger returns the floor of this BigDecimal as a BigInteger.
+// Simply returns the unscaled BigInteger (ignoring scale).
 func bigdecimalToBigInteger(params []interface{}) interface{} {
 	// Implements BigDecimal.toBigInteger()
 	bd := params[0].(*object.Object)
@@ -269,8 +324,9 @@ func bigdecimalToBigInteger(params []interface{}) interface{} {
 	return biObj
 }
 
+// bigdecimalToBigIntegerExact converts the BigDecimal to BigInteger exactly.
+// Throws ArithmeticException if BigDecimal has a fractional part (non-zero scale).
 func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
-	// Implements BigDecimal.toBigIntegerExact()
 	bd := params[0].(*object.Object)
 
 	// Extract the BigInteger intVal field from BigDecimal
@@ -288,7 +344,8 @@ func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
 	return makeBigIntegerFromBigInt(bigInt)
 }
 
-// bigdecimalToString returns the string representation of this BigDecimal.
+// bigdecimalToString returns a string representation of the BigDecimal,
+// properly inserting a decimal point based on the scale.
 func bigdecimalToString(params []interface{}) interface{} {
 	// Implements BigDecimal.toString()
 	bd := params[0].(*object.Object)
@@ -308,7 +365,7 @@ func bigdecimalToString(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(decimalString)
 }
 
-// bigdecimalUnscaledValue returns the unscaled value of this BigDecimal as a BigInteger.
+// bigdecimalUnscaledValue returns the unscaled BigInteger value underlying this BigDecimal.
 func bigdecimalUnscaledValue(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 
@@ -323,7 +380,8 @@ func bigdecimalUnscaledValue(params []interface{}) interface{} {
 	return biObj
 }
 
-// bigdecimalValueOfDouble returns a BigDecimal initialized with the given double value.
+// bigdecimalValueOfDouble constructs a BigDecimal from a double (float64),
+// decomposing it into unscaled value, precision, and scale.
 func bigdecimalValueOfDouble(params []interface{}) interface{} {
 	// Implements BigDecimal.valueOf(double val)
 	value := params[0].(float64)
@@ -335,7 +393,7 @@ func bigdecimalValueOfDouble(params []interface{}) interface{} {
 	return bd
 }
 
-// bigdecimalValueOfLong creates a BigDecimal from a long value.
+// bigdecimalValueOfLong creates a BigDecimal with scale 0 from an int64.
 func bigdecimalValueOfLong(params []interface{}) interface{} {
 	// Implements BigDecimal.valueOf(long val)
 	val := params[0].(int64)
@@ -355,7 +413,7 @@ func bigdecimalValueOfLong(params []interface{}) interface{} {
 	return bd
 }
 
-// bigdecimalValueOfLongInt creates a BigDecimal from a long and an int value.
+// bigdecimalValueOfLongInt creates a BigDecimal with a specified scale from an int64.
 func bigdecimalValueOfLongInt(params []interface{}) interface{} {
 	// Implements BigDecimal.valueOf(long val, int scale)
 	val := params[0].(int64)

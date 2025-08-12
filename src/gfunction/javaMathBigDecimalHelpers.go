@@ -71,33 +71,84 @@ func bigdecimalInitIntLong(params []interface{}) interface{} {
 	return nil
 }
 
-// bigdecimalInitString: Set up a BigDecimal object based on a string object argument.
+/*
+bigdecimalInitString: Set up a BigDecimal object based on a string object argument.
+Handles optional leading + or - sign.
+Splits on decimal point correctly.
+Keeps fractional zeros for scale.
+Uses the combined integer+fraction string as the unscaled value.
+Computes precision as the number of digits excluding leading zeros.
+Builds the intVal BigInteger object.
+Returns nil on success, or a NumberFormatException on invalid input.
+*/
 func bigdecimalInitString(params []interface{}) interface{} {
-	self := params[0].(*object.Object)   // BigDecimal
-	strObj := params[1].(*object.Object) // String
+	bd := params[0].(*object.Object)
+	strObj := params[1].(*object.Object)
 
-	if !object.IsStringObject(strObj) {
-		return getGErrBlk(excNames.IllegalArgumentException, "bigdecimalInitString: argument is not a string")
+	s := object.GoStringFromStringObject(strObj)
+	s = strings.TrimSpace(s)
+	if len(s) == 0 {
+		return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: empty string")
 	}
-	str := object.GoStringFromStringObject(strObj)
 
-	// Parse the string into a *big.Int (unscaled value) and a scale.
-	bigInt, scale, ok := parseDecimalString(str)
+	negative := false
+	if s[0] == '-' {
+		negative = true
+		s = s[1:]
+	} else if s[0] == '+' {
+		s = s[1:]
+	}
+
+	// Split integer and fractional parts
+	parts := strings.SplitN(s, ".", 2)
+	intPart := parts[0]
+	fracPart := ""
+	if len(parts) == 2 {
+		fracPart = parts[1]
+	}
+
+	// Remove leading zeros from intPart; if empty, set to "0"
+	intPart = strings.TrimLeft(intPart, "0")
+	if intPart == "" {
+		intPart = "0"
+	}
+
+	// Keep fracPart as is for scale calculation (including trailing zeros)
+	// Build unscaled string by concatenating intPart and fracPart
+	unscaledStr := intPart + fracPart
+	if unscaledStr == "" {
+		unscaledStr = "0"
+	}
+
+	// Parse unscaledStr into big.Int
+	unscaledBigInt := new(big.Int)
+	_, ok := unscaledBigInt.SetString(unscaledStr, 10)
 	if !ok {
-		errMsg := fmt.Sprintf("bigdecimalInitString: Failed to parse '%s'", str)
-		return getGErrBlk(excNames.NumberFormatException, errMsg)
+		return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid number format")
 	}
 
-	// Compute precision: number of decimal digits in unscaled value.
-	precision := precisionFromBigInt(bigInt)
+	if negative {
+		unscaledBigInt.Neg(unscaledBigInt)
+	}
 
-	// Create BigInteger object for field intVal.
-	bigIntObj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
-	setBigIntegerFields(bigIntObj, bigInt)
+	// Scale is length of fractional part
+	scale := int64(len(fracPart))
 
-	// Set fields into the BigDecimal object.
-	setupBasicFields(self, bigIntObj, precision, scale)
+	// Precision is number of digits in unscaled value excluding sign and leading zeros
+	// Trim leading zeros from unscaledStr for precision calculation
+	precStr := strings.TrimLeft(unscaledStr, "0")
+	if precStr == "" {
+		precStr = "0"
+	}
+	precision := int64(len(precStr))
 
+	// Create BigInteger object from unscaledBigInt
+	biObj := makeBigIntegerFromBigInt(unscaledBigInt)
+
+	// Set fields on BigDecimal object
+	bd.FieldTable["intVal"] = object.Field{Fvalue: biObj}
+	bd.FieldTable["scale"] = object.Field{Fvalue: scale}
+	bd.FieldTable["precision"] = object.Field{Fvalue: precision}
 	return nil
 }
 
@@ -398,5 +449,24 @@ func formatDecimalString(unscaled *big.Int, scale int64) string {
 		result = "-" + result
 	}
 
+	return result
+}
+
+/*
+javaLikeRemainder - be like Java when returning remainders (signed).
+
+big.Int.Mod returns remainder in [0, divisor).
+Java’s BigDecimal.remainder returns remainder with sign same as dividend.
+To mimic Java in Go, adjust the result when dividend is negative.
+*/
+func javaLikeRemainder(dividend, divisor *big.Int) *big.Int {
+	result := new(big.Int).Mod(dividend, divisor)
+	if dividend.Sign() < 0 && result.Sign() != 0 {
+		if divisor.Sign() > 0 {
+			result.Sub(result, divisor) // r = r - divisor (divisor > 0)
+		} else {
+			result.Add(result, divisor) // r = r + divisor (divisor < 0)
+		}
+	}
 	return result
 }
