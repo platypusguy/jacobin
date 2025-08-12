@@ -22,7 +22,7 @@ import (
 // to performs the check. It then uses the skip table to determine the number of bytes
 // to skip to the next bytecode. If an error occurs, a ClassFormatException is thrown.
 
-// NOTE: The unit tests for these functions are in codeCheck_test.go in the jvm directory.
+// NOTE: The unit tests for these functions are in codeCheck_support.go in the jvm directory.
 // Placed there to avoid circular dependencies.
 
 var bytecodeSkipTable = map[byte]int{
@@ -524,7 +524,7 @@ func checkAconstnull() int {
 
 // BIPUSH 0x10 Push following byte onto op stack
 func checkBipush() int {
-	if len(Code) >= PC+1 {
+	if len(Code) > PC+1 {
 		StackEntries += 1
 		return 2
 	} else {
@@ -834,7 +834,7 @@ func checkMultianewarray() int {
 
 // SIPUSH 0x11 create int from next 2 bytes and push it
 func checkSipush() int {
-	if len(Code) >= PC+2 {
+	if len(Code) > PC+2 {
 		StackEntries += 1
 		return 3
 	} else {
@@ -867,13 +867,15 @@ func return5() int {
 
 func byteCodeIsForLongOrDouble(bytecode byte) bool {
 	switch bytecode {
-	case
-		0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x1E, 0x1F, // LCONST_0, LCONST_1, DCONST_0, DCONST_1, LDC2_W, LLOAD, LLOAD_0, LLOAD_1
-		0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x3F, 0x40, // LLOAD_2, LLOAD_3, DLOAD_0, DLOAD_1, DLOAD_2, DLOAD_3, LSTORE_0, LSTORE_1
-		0x41, 0x42, 0x47, 0x48, 0x49, 0x4A, 0x62, 0x63, // LSTORE_2, LSTORE_3, DSTORE_0, DSTORE_1, DSTORE_2, DSTORE_3, LADD, DADD
-		0x65, 0x66, 0x69, 0x6A, 0x6D, 0x6E, 0x71, 0x72, // LSUB, DSUB, LMUL, DMUL, LDIV, DDIV, LREM, DREM
-		0x75, 0x76, 0x79, 0x7A, 0x7D, 0x7E, 0x81, 0x83, // LNEG, DNEG, LSHL, ISHR, LUSHR, LAND, LOR, LXOR
-		0x94, 0x98: // LCMP, DCMPG
+	case 0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18, 0x1E,
+		0x1F, 0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x2F,
+		0x31, 0x37, 0x39, 0x3F, 0x40, 0x41, 0x42, 0x47,
+		0x48, 0x49, 0x4A, 0x50, 0x52, 0x61, 0x63, 0x65,
+		0x67, 0x69, 0x6B, 0x6D, 0x6F, 0x71, 0x73, 0x75,
+		0x77, 0x79, 0x7B, 0x7D, 0x7F, 0x81, 0x83, 0x85,
+		0x87, 0x88, 0x89, 0x8A, 0x8C, 0x8D, 0x8E, 0x8F,
+		0x90, 0x94, 0x97, 0x98, 0xAD, 0xAF:
+		// handle long/double bytecodes
 		return true
 	default:
 		return false
