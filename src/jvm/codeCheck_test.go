@@ -246,10 +246,10 @@ func TestCheckCodeValidity_InvalidBytecodeLength(t *testing.T) {
 func TestArith_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// Set up global variables that arith() uses
+	// Set up global variables that Arith() uses
 	classloader.StackEntries = 5
 
-	result := classloader.TestArith() // We'll need to expose this function for testing
+	result := classloader.Arith() // We'll need to expose this function for testing
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -535,7 +535,7 @@ func TestCheckIf_ValidJump(t *testing.T) {
 	classloader.Code = []byte{opcodes.IF_ICMPEQ, 0x00, 0x02, opcodes.NOP, opcodes.NOP, opcodes.NOP}
 	classloader.PC = 0
 
-	result := classloader.TestCheckIf()
+	result := classloader.CheckIf()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -549,7 +549,7 @@ func TestCheckIfZero_ValidJump(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 2
 
-	result := classloader.TestCheckIfZero()
+	result := classloader.CheckIfzero()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -569,7 +569,7 @@ func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00} // count=2, zero=0
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokeinterface()
+	result := classloader.CheckInvokeinterface()
 
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
@@ -584,7 +584,7 @@ func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEINTERFACE, 0xFF, 0xFF, 0x02, 0x00}
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokeinterface()
+	result := classloader.CheckInvokeinterface()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)
@@ -599,7 +599,7 @@ func TestCheckInvokeinterface_ZeroCountByte(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x00, 0x00} // count=0
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokeinterface()
+	result := classloader.CheckInvokeinterface()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for zero count byte, got: %d", result)
@@ -614,7 +614,7 @@ func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x01} // zero byte != 0
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokeinterface()
+	result := classloader.CheckInvokeinterface()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for non-zero zero byte, got: %d", result)
@@ -629,7 +629,7 @@ func TestCheckInvokevirtual_ValidMethodRef(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEVIRTUAL, 0x00, 0x01}
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokevirtual()
+	result := classloader.CheckInvokevirtual()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -644,7 +644,7 @@ func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
 	classloader.Code = []byte{opcodes.INVOKEVIRTUAL, 0xFF, 0xFF}
 	classloader.PC = 0
 
-	result := classloader.TestCheckInvokevirtual()
+	result := classloader.CheckInvokevirtual()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)
@@ -654,35 +654,35 @@ func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
 // ==================== Utility Functions Tests ====================
 
 func TestReturn1(t *testing.T) {
-	result := classloader.TestReturn1()
+	result := classloader.Return1()
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
 	}
 }
 
 func TestReturn2(t *testing.T) {
-	result := classloader.TestReturn2()
+	result := classloader.Return2()
 	if result != 2 {
 		t.Errorf("Expected return value 2, got: %d", result)
 	}
 }
 
 func TestReturn3(t *testing.T) {
-	result := classloader.TestReturn3()
+	result := classloader.Return3()
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
 	}
 }
 
 func TestReturn4(t *testing.T) {
-	result := classloader.TestReturn4()
+	result := classloader.Return4()
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
 	}
 }
 
 func TestReturn5(t *testing.T) {
-	result := classloader.TestReturn5()
+	result := classloader.Return5()
 	if result != 5 {
 		t.Errorf("Expected return value 5, got: %d", result)
 	}
@@ -703,7 +703,7 @@ func TestByteCodeIsForLongOrDouble_LongDoubleCodes(t *testing.T) {
 	}
 
 	for _, code := range longDoubleCodes {
-		result := classloader.TestByteCodeIsForLongOrDouble(code)
+		result := classloader.BytecodeIsForLongOrDouble(code)
 		if !result {
 			t.Errorf("Expected true for bytecode 0x%02x, got false", code)
 		}
@@ -719,7 +719,7 @@ func TestByteCodeIsForLongOrDouble_OtherCodes(t *testing.T) {
 	}
 
 	for _, code := range otherCodes {
-		result := classloader.TestByteCodeIsForLongOrDouble(code)
+		result := classloader.BytecodeIsForLongOrDouble(code)
 		if result {
 			t.Errorf("Expected false for bytecode 0x%02x, got true", code)
 		}
@@ -745,7 +745,7 @@ func TestCheckTableswitch_ValidRange(t *testing.T) {
 	}
 	classloader.PC = 0
 
-	result := classloader.TestCheckTableswitch()
+	result := classloader.CheckTableSwitch()
 
 	// Should return the total number of bytes consumed
 	if result <= 0 {
@@ -766,7 +766,7 @@ func TestCheckTableswitch_InvalidRange(t *testing.T) {
 	}
 	classloader.PC = 0
 
-	result := classloader.TestCheckTableswitch()
+	result := classloader.CheckTableSwitch()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for invalid range, got: %d", result)
@@ -781,7 +781,7 @@ func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
 	classloader.Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02} // dimensions = 2
 	classloader.PC = 0
 
-	result := classloader.TestCheckMultianewarray()
+	result := classloader.CheckMultianewarray()
 
 	if result != 4 {
 		t.Errorf("Expected return value 4, got: %d", result)
@@ -796,7 +796,7 @@ func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
 	classloader.Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x00} // dimensions = 0
 	classloader.PC = 0
 
-	result := classloader.TestCheckMultianewarray()
+	result := classloader.CheckMultianewarray()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED for zero dimensions, got: %d", result)
