@@ -492,7 +492,7 @@ func TestCheckGoto_ValidJump(t *testing.T) {
 	classloader.Code = []byte{opcodes.GOTO, 0x00, 0x02, opcodes.NOP, opcodes.NOP, opcodes.NOP}
 	classloader.PC = 0
 
-	result := classloader.TestCheckGoto()
+	result := classloader.CheckGoto()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -505,7 +505,7 @@ func TestCheckGoto_InvalidJumpNegative(t *testing.T) {
 	errMsg := captureStderr(t, func() {
 		classloader.Code = []byte{opcodes.GOTO, 0xFF, 0xFE} // Jump to negative location
 		classloader.PC = 0
-		classloader.TestCheckGoto()
+		classloader.CheckGoto()
 	})
 
 	if !strings.Contains(errMsg, "GOTO") || !strings.Contains(errMsg, "illegal jump") {
@@ -519,7 +519,7 @@ func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
 	errMsg := captureStderr(t, func() {
 		classloader.Code = []byte{opcodes.GOTO, 0x00, 0xFF} // Jump beyond code bounds
 		classloader.PC = 0
-		classloader.TestCheckGoto()
+		classloader.CheckGoto()
 	})
 
 	if !strings.Contains(errMsg, "GOTO") || !strings.Contains(errMsg, "illegal jump") {
