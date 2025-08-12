@@ -22,7 +22,7 @@ import (
 // to performs the check. It then uses the skip table to determine the number of bytes
 // to skip to the next bytecode. If an error occurs, a ClassFormatException is thrown.
 
-// NOTE: The unit tests for these functions are in codeCheck_test.go in the jvm directory.
+// NOTE: The unit tests for these functions are in codeCheck_support.go in the jvm directory.
 // Placed there to avoid circular dependencies.
 
 var bytecodeSkipTable = map[byte]int{
@@ -237,7 +237,7 @@ var ERROR_OCCURRED = math.MaxInt32
 var WideInEffect = false
 
 var CheckTable = [203]BytecodeFunc{
-	return1,              // NOP             0x00
+	Return1,              // NOP             0x00
 	checkAconstnull,      // ACONST_NULL     0x01
 	pushInt,              // ICONST_M1       0x02
 	pushInt,              // ICONST_0        0x03
@@ -332,114 +332,114 @@ var CheckTable = [203]BytecodeFunc{
 	dup2,                 // DUP2            0x5C
 	dup2,                 // DUP2_X1         0x5D
 	dup2,                 // DUP2_X2         0x5E
-	return1,              // SWAP            0x5F
-	arith,                // IADD            0x60
-	arith,                // LADD            0x61
-	arith,                // FADD            0x62
-	arith,                // DADD            0x63
-	arith,                // ISUB            0x64
-	arith,                // LSUB            0x65
-	arith,                // FSUB            0x66
-	arith,                // DSUB            0x67
-	arith,                // IMUL            0x68
-	arith,                // LMUL            0x69
-	arith,                // FMUL            0x6A
-	arith,                // DMUL            0x6B
-	arith,                // IDIV            0x6C
-	arith,                // LDIV            0x6D
-	arith,                // FDIV            0x6E
-	arith,                // DDIV            0x6F
-	arith,                // IREM            0x70
-	arith,                // LREM            0x71
-	arith,                // FREM            0x72
-	arith,                // DREM            0x73
-	arith,                // INEG            0x74
-	arith,                // LNEG            0x75
-	arith,                // FNEG            0x76
-	arith,                // DNEG            0x77
-	arith,                // ISHL            0x78
-	arith,                // LSHL            0x79
-	arith,                // ISHR            0x7A
-	arith,                // LSHR            0x7B
-	arith,                // IUSHR           0x7C
-	arith,                // LUSHR           0x7D
-	arith,                // IAND            0x7E
-	arith,                // LAND            0x7F
-	arith,                // IOR             0x80
-	arith,                // LOR             0x81
-	arith,                // IXOR            0x82
-	arith,                // LXOR            0x83
-	return3,              // IINC            0x84
-	return1,              // I2L             0x85
-	return1,              // I2F             0x86
-	return1,              // I2D             0x87
-	return1,              // L2I             0x88
-	return1,              // L2F             0x89
-	return1,              // L2D             0x8A
-	return1,              // F2I             0x8B
-	return1,              // F2L             0x8C
-	return1,              // F2D             0x8D
-	return1,              // D2I             0x8E
-	return1,              // D2L             0x8F
-	return1,              // D2F             0x90
-	return1,              // I2B             0x91
-	return1,              // I2C             0x92
-	return1,              // I2S             0x93
-	arith,                // LCMP            0x94
-	arith,                // FCMPL           0x95
-	arith,                // FCMPG           0x96
-	arith,                // DCMPL           0x97
-	arith,                // DCMPG           0x98
-	checkIfZero,          // IFEQ            0x99
-	checkIfZero,          // IFNE            0x9A
-	checkIfZero,          // IFLT            0x9B
-	checkIfZero,          // IFGE            0x9C
-	checkIfZero,          // IFGT            0x9D
-	checkIfZero,          // IFLE            0x9E
-	checkIf,              // IF_ICMPEQ       0x9F
-	checkIf,              // IF_ICMPNE       0xA0
-	checkIf,              // IF_ICMPLT       0xA1
-	checkIf,              // IF_ICMPGE       0xA2
-	checkIf,              // IF_ICMPGT       0xA3
-	checkIf,              // IF_ICMPLE       0xA4
-	checkIf,              // IF_ACMPEQ       0xA5
-	checkIf,              // IF_ACMPNE       0xA6 // stack-checking code got this far
-	checkGoto,            // GOTO            0xA7
-	checkGoto,            // JSR             0xA8
-	return2,              // RET             0xA9
-	checkTableswitch,     // TABLESWITCH     0xAA
+	Return1,              // SWAP            0x5F
+	Arith,                // IADD            0x60
+	Arith,                // LADD            0x61
+	Arith,                // FADD            0x62
+	Arith,                // DADD            0x63
+	Arith,                // ISUB            0x64
+	Arith,                // LSUB            0x65
+	Arith,                // FSUB            0x66
+	Arith,                // DSUB            0x67
+	Arith,                // IMUL            0x68
+	Arith,                // LMUL            0x69
+	Arith,                // FMUL            0x6A
+	Arith,                // DMUL            0x6B
+	Arith,                // IDIV            0x6C
+	Arith,                // LDIV            0x6D
+	Arith,                // FDIV            0x6E
+	Arith,                // DDIV            0x6F
+	Arith,                // IREM            0x70
+	Arith,                // LREM            0x71
+	Arith,                // FREM            0x72
+	Arith,                // DREM            0x73
+	Arith,                // INEG            0x74
+	Arith,                // LNEG            0x75
+	Arith,                // FNEG            0x76
+	Arith,                // DNEG            0x77
+	Arith,                // ISHL            0x78
+	Arith,                // LSHL            0x79
+	Arith,                // ISHR            0x7A
+	Arith,                // LSHR            0x7B
+	Arith,                // IUSHR           0x7C
+	Arith,                // LUSHR           0x7D
+	Arith,                // IAND            0x7E
+	Arith,                // LAND            0x7F
+	Arith,                // IOR             0x80
+	Arith,                // LOR             0x81
+	Arith,                // IXOR            0x82
+	Arith,                // LXOR            0x83
+	Return3,              // IINC            0x84
+	Return1,              // I2L             0x85
+	Return1,              // I2F             0x86
+	Return1,              // I2D             0x87
+	Return1,              // L2I             0x88
+	Return1,              // L2F             0x89
+	Return1,              // L2D             0x8A
+	Return1,              // F2I             0x8B
+	Return1,              // F2L             0x8C
+	Return1,              // F2D             0x8D
+	Return1,              // D2I             0x8E
+	Return1,              // D2L             0x8F
+	Return1,              // D2F             0x90
+	Return1,              // I2B             0x91
+	Return1,              // I2C             0x92
+	Return1,              // I2S             0x93
+	Arith,                // LCMP            0x94
+	Arith,                // FCMPL           0x95
+	Arith,                // FCMPG           0x96
+	Arith,                // DCMPL           0x97
+	Arith,                // DCMPG           0x98
+	CheckIfzero,          // IFEQ            0x99
+	CheckIfzero,          // IFNE            0x9A
+	CheckIfzero,          // IFLT            0x9B
+	CheckIfzero,          // IFGE            0x9C
+	CheckIfzero,          // IFGT            0x9D
+	CheckIfzero,          // IFLE            0x9E
+	CheckIf,              // IF_ICMPEQ       0x9F
+	CheckIf,              // IF_ICMPNE       0xA0
+	CheckIf,              // IF_ICMPLT       0xA1
+	CheckIf,              // IF_ICMPGE       0xA2
+	CheckIf,              // IF_ICMPGT       0xA3
+	CheckIf,              // IF_ICMPLE       0xA4
+	CheckIf,              // IF_ACMPEQ       0xA5
+	CheckIf,              // IF_ACMPNE       0xA6 // stack-checking code got this far
+	CheckGoto,            // GOTO            0xA7
+	CheckGoto,            // JSR             0xA8
+	Return2,              // RET             0xA9
+	CheckTableSwitch,     // TABLESWITCH     0xAA
 	checkLookupswitch,    // LOOKUPSWITCH    0xAB
-	return1,              // IRETURN         0xAC
-	return1,              // LRETURN         0xAD
-	return1,              // FRETURN         0xAE
-	return1,              // DRETURN         0xAF
-	return1,              // ARETURN         0xB0
-	return1,              // RETURN          0xB1
-	return3,              // GETSTATIC       0xB2
-	return3,              // PUTSTATIC       0xB3
+	Return1,              // IRETURN         0xAC
+	Return1,              // LRETURN         0xAD
+	Return1,              // FRETURN         0xAE
+	Return1,              // DRETURN         0xAF
+	Return1,              // ARETURN         0xB0
+	Return1,              // RETURN          0xB1
+	Return3,              // GETSTATIC       0xB2
+	Return3,              // PUTSTATIC       0xB3
 	checkGetfield,        // GETFIELD        0xB4
-	return3,              // PUTFIELD        0xB5
-	checkInvokevirtual,   // INVOKEVIRTUAL   0xB6
+	Return3,              // PUTFIELD        0xB5
+	CheckInvokevirtual,   // INVOKEVIRTUAL   0xB6
 	checkInvokespecial,   // INVOKESPECIAL   0xB7
 	checkInvokestatic,    // INVOKESTATIC    0xB8
-	checkInvokeinterface, // INVOKEINTERFACE 0xB9
-	return5,              // INVOKEDYNAMIC   0xBA
-	return3,              // NEW             0xBB
-	return2,              // NEWARRAY        0xBC
-	return3,              // ANEWARRAY       0xBD
-	return1,              // ARRAYLENGTH     0xBE
-	return1,              // ATHROW          0xBF
-	return3,              // CHECKCAST       0xC0
-	return3,              // INSTANCEOF      0xC1
-	return1,              // MONITORENTER    0xC2
-	return1,              // MONITOREXIT     0xC3
-	return1,              // WIDE            0xC4
-	checkMultianewarray,  // MULTIANEWARRAY  0xC5
-	return3,              // IFNULL          0xC6
-	return3,              // IFNONNULL       0xC7
-	checkGotow,           // GOTO_W          0xC8
-	return5,              // JSR_W           0xC9
-	return1,              // BREAKPOINT      0xCA
+	CheckInvokeinterface, // INVOKEINTERFACE 0xB9
+	Return5,              // INVOKEDYNAMIC   0xBA
+	Return3,              // NEW             0xBB
+	Return2,              // NEWARRAY        0xBC
+	Return3,              // ANEWARRAY       0xBD
+	Return1,              // ARRAYLENGTH     0xBE
+	Return1,              // ATHROW          0xBF
+	Return3,              // CHECKCAST       0xC0
+	Return3,              // INSTANCEOF      0xC1
+	Return1,              // MONITORENTER    0xC2
+	Return1,              // MONITOREXIT     0xC3
+	Return1,              // WIDE            0xC4
+	CheckMultianewarray,  // MULTIANEWARRAY  0xC5
+	Return3,              // IFNULL          0xC6
+	Return3,              // IFNONNULL       0xC7
+	CheckGotow,           // GOTO_W          0xC8
+	Return5,              // JSR_W           0xC9
+	Return1,              // BREAKPOINT      0xCA
 }
 
 var PC int
@@ -511,7 +511,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 // === check functions in alpha order by name of bytecode ===
 
 // *ADD (pop 2 values, add/sub/multiply/divide/modulo them, push result)
-func arith() int {
+func Arith() int {
 	StackEntries -= 1
 	return 1
 }
@@ -524,7 +524,7 @@ func checkAconstnull() int {
 
 // BIPUSH 0x10 Push following byte onto op stack
 func checkBipush() int {
-	if len(Code) >= PC+1 {
+	if len(Code) > PC+1 {
 		StackEntries += 1
 		return 2
 	} else {
@@ -542,7 +542,7 @@ func dup1() int {
 // take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func dup2() int {
-	if byteCodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
+	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
 		Code[PC] = 0x59 // change DUP2 to DUP
 		StackEntries += 1
 		return 1
@@ -612,7 +612,7 @@ func checkGetfield() int {
 }
 
 // GOTO 0xA7
-func checkGoto() int {
+func CheckGoto() int {
 	jumpTo := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
 		errMsg := fmt.Sprintf("%s:\n GOTO at %d: illegal jump to %d",
@@ -624,7 +624,7 @@ func checkGoto() int {
 }
 
 // GOTO_W 0xC8
-func checkGotow() int {
+func CheckGotow() int {
 	jumpTo := int(types.FourBytesToInt64(Code[PC+1], Code[PC+2], Code[PC+3], Code[PC+4]))
 	if PC+jumpTo < 0 || PC+jumpTo >= len(Code) {
 		errMsg := fmt.Sprintf("%s:\n GOTO_W at %d: illegal jump to %d",
@@ -636,7 +636,7 @@ func checkGotow() int {
 }
 
 // IF_ACMPEQ 0xA5 (and the many other IF* bytecodes)
-func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
+func CheckIf() int { // most IF* bytecodes come here. Jump if condition is met
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
 		errMsg := fmt.Sprintf("%s:\n IF_ACMPEQ at %d: illegal jump to %d",
@@ -647,7 +647,7 @@ func checkIf() int { // most IF* bytecodes come here. Jump if condition is met
 	return 3
 }
 
-func checkIfZero() int { // Jump if condition w.r.t 0 is met
+func CheckIfzero() int { // Jump if condition w.r.t 0 is met
 	jumpSize := int(int16(Code[PC+1])*256 + int16(Code[PC+2]))
 	if PC+jumpSize < 0 || PC+jumpSize >= len(Code) {
 		errMsg := fmt.Sprintf("%s:\n IF* test at %d: illegal jump to %d",
@@ -660,7 +660,7 @@ func checkIfZero() int { // Jump if condition w.r.t 0 is met
 }
 
 // INVOKEINTERFACE 0xB9
-func checkInvokeinterface() int {
+func CheckInvokeinterface() int {
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
 		return ERROR_OCCURRED
@@ -726,7 +726,7 @@ func checkInvokestatic() int {
 }
 
 // INVOKEVIRTUAL 0xB6
-func checkInvokevirtual() int {
+func CheckInvokevirtual() int {
 	// check that the index points to a method reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
@@ -786,7 +786,7 @@ func checkPop2() int {
 }
 
 // TABLESWITCH 0xAA
-func checkTableswitch() int {
+func CheckTableSwitch() int {
 	basePC := PC
 
 	paddingBytes := 4 - ((PC + 1) % 4)
@@ -809,7 +809,7 @@ func checkTableswitch() int {
 }
 
 // MULTIANEWARRAY 0xC5 (create a multidimensional array)
-func checkMultianewarray() int {
+func CheckMultianewarray() int {
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
 		return ERROR_OCCURRED
@@ -834,7 +834,7 @@ func checkMultianewarray() int {
 
 // SIPUSH 0x11 create int from next 2 bytes and push it
 func checkSipush() int {
-	if len(Code) >= PC+2 {
+	if len(Code) > PC+2 {
 		StackEntries += 1
 		return 3
 	} else {
@@ -845,35 +845,37 @@ func checkSipush() int {
 // === utility functions ===
 
 // a one-byte opcode that has nothing that can be checked
-func return1() int {
+func Return1() int {
 	return 1
 }
 
-func return2() int {
+func Return2() int {
 	return 2
 }
 
-func return3() int {
+func Return3() int {
 	return 3
 }
 
-func return4() int {
+func Return4() int {
 	return 4
 }
 
-func return5() int {
+func Return5() int {
 	return 5
 }
 
-func byteCodeIsForLongOrDouble(bytecode byte) bool {
+func BytecodeIsForLongOrDouble(bytecode byte) bool {
 	switch bytecode {
-	case
-		0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x1E, 0x1F, // LCONST_0, LCONST_1, DCONST_0, DCONST_1, LDC2_W, LLOAD, LLOAD_0, LLOAD_1
-		0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x3F, 0x40, // LLOAD_2, LLOAD_3, DLOAD_0, DLOAD_1, DLOAD_2, DLOAD_3, LSTORE_0, LSTORE_1
-		0x41, 0x42, 0x47, 0x48, 0x49, 0x4A, 0x62, 0x63, // LSTORE_2, LSTORE_3, DSTORE_0, DSTORE_1, DSTORE_2, DSTORE_3, LADD, DADD
-		0x65, 0x66, 0x69, 0x6A, 0x6D, 0x6E, 0x71, 0x72, // LSUB, DSUB, LMUL, DMUL, LDIV, DDIV, LREM, DREM
-		0x75, 0x76, 0x79, 0x7A, 0x7D, 0x7E, 0x81, 0x83, // LNEG, DNEG, LSHL, ISHR, LUSHR, LAND, LOR, LXOR
-		0x94, 0x98: // LCMP, DCMPG
+	case 0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18, 0x1E,
+		0x1F, 0x20, 0x21, 0x26, 0x27, 0x28, 0x29, 0x2F,
+		0x31, 0x37, 0x39, 0x3F, 0x40, 0x41, 0x42, 0x47,
+		0x48, 0x49, 0x4A, 0x50, 0x52, 0x61, 0x63, 0x65,
+		0x67, 0x69, 0x6B, 0x6D, 0x6F, 0x71, 0x73, 0x75,
+		0x77, 0x79, 0x7B, 0x7D, 0x7F, 0x81, 0x83, 0x85,
+		0x87, 0x88, 0x89, 0x8A, 0x8C, 0x8D, 0x8E, 0x8F,
+		0x90, 0x94, 0x97, 0x98, 0xAD, 0xAF:
+		// handle long/double bytecodes
 		return true
 	default:
 		return false
