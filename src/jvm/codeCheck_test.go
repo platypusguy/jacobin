@@ -265,7 +265,7 @@ func TestCheckAconstnull_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 0
-	result := classloader.TestCheckAconstnull()
+	result := classloader.CheckAconstnull()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -279,7 +279,7 @@ func TestPushFloat_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 0
-	result := classloader.TestPushFloat()
+	result := classloader.PushFloat()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -293,7 +293,7 @@ func TestPushInt_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 0
-	result := classloader.TestPushInt()
+	result := classloader.PushInt()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -312,7 +312,7 @@ func TestCheckBipush_ValidLength(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 0
 
-	result := classloader.TestCheckBipush()
+	result := classloader.CheckBipush()
 
 	if result != 2 {
 		t.Errorf("Expected return value 2, got: %d", result)
@@ -329,7 +329,7 @@ func TestCheckBipush_InsufficientLength(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 0
 
-	result := classloader.TestCheckBipush()
+	result := classloader.CheckBipush()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)
@@ -343,7 +343,7 @@ func TestCheckSipush_ValidLength(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 0
 
-	result := classloader.TestCheckSipush()
+	result := classloader.CheckSipush()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -360,7 +360,7 @@ func TestCheckSipush_InsufficientLength(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 0
 
-	result := classloader.TestCheckSipush()
+	result := classloader.CheckSipush()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)

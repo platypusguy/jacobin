@@ -22,7 +22,7 @@ import (
 // to performs the check. It then uses the skip table to determine the number of bytes
 // to skip to the next bytecode. If an error occurs, a ClassFormatException is thrown.
 
-// NOTE: The unit tests for these functions are in codeCheck_support.go in the jvm directory.
+// NOTE: The unit tests for these functions are in codeCheck_test.go in the jvm package.
 // Placed there to avoid circular dependencies.
 
 var bytecodeSkipTable = map[byte]int{
@@ -238,59 +238,59 @@ var WideInEffect = false
 
 var CheckTable = [203]BytecodeFunc{
 	Return1,              // NOP             0x00
-	checkAconstnull,      // ACONST_NULL     0x01
-	pushInt,              // ICONST_M1       0x02
-	pushInt,              // ICONST_0        0x03
-	pushInt,              // ICONST_1        0x04
-	pushInt,              // ICONST_2        0x05
-	pushInt,              // ICONST_3        0x06
-	pushInt,              // ICONST_4        0x07
-	pushInt,              // ICONST_5        0x08
-	pushInt,              // LCONST_0        0x09
-	pushInt,              // LCONST_1        0x0A
-	pushFloat,            // FCONST_0        0x0B
-	pushFloat,            // FCONST_1        0x0C
-	pushFloat,            // FCONST_2        0x0D
-	pushFloat,            // DCONST_0        0x0E
-	pushFloat,            // DCONST_1        0x0F
-	checkBipush,          // BIPUSH          0x10
-	checkSipush,          // SIPUSH          0x11
-	pushIntRet2,          // LDC             0x12
-	pushIntRet3,          // LDC_W           0x13
-	pushIntRet3,          // LDC2_W          0x14
-	pushIntRet2,          // ILOAD           0x15
-	pushIntRet2,          // LLOAD           0x16
-	pushFloatRet2,        // FLOAD           0x17
-	pushFloatRet2,        // DLOAD           0x18
-	pushIntRet2,          // ALOAD           0x19
-	pushInt,              // ILOAD_0         0x1A
-	pushInt,              // ILOAD_1         0x1B
-	pushInt,              // ILOAD_2         0x1C
-	pushInt,              // ILOAD_3         0x1D
-	pushInt,              // LLOAD_0         0x1E
-	pushInt,              // LLOAD_1         0x1F
-	pushInt,              // LLOAD_2         0x20
-	pushInt,              // LLOAD_3         0x21
-	pushFloat,            // FLOAD_0         0x22
-	pushFloat,            // FLOAD_1         0x23
-	pushFloat,            // FLOAD_2         0x24
-	pushFloat,            // FLOAD_3         0x25
-	pushFloat,            // DLOAD_0         0x26
-	pushFloat,            // DLOAD_1         0x27
-	pushFloat,            // DLOAD_2         0x28
-	pushFloat,            // DLOAD_3         0x29
-	pushInt,              // ALOAD_0         0x2A
-	pushInt,              // ALOAD_1         0x2B
-	pushInt,              // ALOAD_2         0x2C
-	pushInt,              // ALOAD_3         0x2D
-	pushInt,              // IALOAD          0x2E
-	pushInt,              // LALOAD          0x2F
-	pushInt,              // FALOAD          0x30
-	pushInt,              // DALOAD          0x31
-	pushInt,              // AALOAD          0x32
-	pushInt,              // BALOAD          0x33
-	pushInt,              // CALOAD          0x34
-	pushInt,              // SALOAD          0x35
+	CheckAconstnull,      // ACONST_NULL     0x01
+	PushInt,              // ICONST_M1       0x02
+	PushInt,              // ICONST_0        0x03
+	PushInt,              // ICONST_1        0x04
+	PushInt,              // ICONST_2        0x05
+	PushInt,              // ICONST_3        0x06
+	PushInt,              // ICONST_4        0x07
+	PushInt,              // ICONST_5        0x08
+	PushInt,              // LCONST_0        0x09
+	PushInt,              // LCONST_1        0x0A
+	PushFloat,            // FCONST_0        0x0B
+	PushFloat,            // FCONST_1        0x0C
+	PushFloat,            // FCONST_2        0x0D
+	PushFloat,            // DCONST_0        0x0E
+	PushFloat,            // DCONST_1        0x0F
+	CheckBipush,          // BIPUSH          0x10
+	CheckSipush,          // SIPUSH          0x11
+	PushIntRet2,          // LDC             0x12
+	PushIntRet3,          // LDC_W           0x13
+	PushIntRet3,          // LDC2_W          0x14
+	PushIntRet2,          // ILOAD           0x15
+	PushIntRet2,          // LLOAD           0x16
+	PushFloatRet2,        // FLOAD           0x17
+	PushFloatRet2,        // DLOAD           0x18
+	PushIntRet2,          // ALOAD           0x19
+	PushInt,              // ILOAD_0         0x1A
+	PushInt,              // ILOAD_1         0x1B
+	PushInt,              // ILOAD_2         0x1C
+	PushInt,              // ILOAD_3         0x1D
+	PushInt,              // LLOAD_0         0x1E
+	PushInt,              // LLOAD_1         0x1F
+	PushInt,              // LLOAD_2         0x20
+	PushInt,              // LLOAD_3         0x21
+	PushFloat,            // FLOAD_0         0x22
+	PushFloat,            // FLOAD_1         0x23
+	PushFloat,            // FLOAD_2         0x24
+	PushFloat,            // FLOAD_3         0x25
+	PushFloat,            // DLOAD_0         0x26
+	PushFloat,            // DLOAD_1         0x27
+	PushFloat,            // DLOAD_2         0x28
+	PushFloat,            // DLOAD_3         0x29
+	PushInt,              // ALOAD_0         0x2A
+	PushInt,              // ALOAD_1         0x2B
+	PushInt,              // ALOAD_2         0x2C
+	PushInt,              // ALOAD_3         0x2D
+	PushInt,              // IALOAD          0x2E
+	PushInt,              // LALOAD          0x2F
+	PushInt,              // FALOAD          0x30
+	PushInt,              // DALOAD          0x31
+	PushInt,              // AALOAD          0x32
+	PushInt,              // BALOAD          0x33
+	PushInt,              // CALOAD          0x34
+	PushInt,              // SALOAD          0x35
 	storeIntRet2,         // ISTORE          0x36
 	storeIntRet2,         // LSTORE          0x37
 	storeFloatRet2,       // FSTORE          0x38
@@ -517,13 +517,13 @@ func Arith() int {
 }
 
 // ACONST_NULL 0x01 Push null onto op stack
-func checkAconstnull() int {
+func CheckAconstnull() int {
 	StackEntries += 1
 	return 1
 }
 
 // BIPUSH 0x10 Push following byte onto op stack
-func checkBipush() int {
+func CheckBipush() int {
 	if len(Code) > PC+1 {
 		StackEntries += 1
 		return 2
@@ -552,13 +552,13 @@ func CheckDup2() int {
 }
 
 // FCONST and DCONST Push a float onto the op stack
-func pushFloat() int {
+func PushFloat() int {
 	StackEntries += 1
 	return 1
 }
 
 // FLOAD* and DLOAD* Push an int or long from local onto op stack
-func pushFloatRet2() int {
+func PushFloatRet2() int {
 	StackEntries += 1
 	return 2
 }
@@ -575,19 +575,19 @@ func storeFloatRet2() int {
 }
 
 // ICONST* and LCONST Push an int or long onto op stack
-func pushInt() int {
+func PushInt() int {
 	StackEntries += 1
 	return 1
 }
 
 // ILOAD* and LLOAD* Push an int or long from local onto op stack
-func pushIntRet2() int {
+func PushIntRet2() int {
 	StackEntries += 1
 	return 2
 }
 
 // for LDC variants (but not LDC itself)
-func pushIntRet3() int {
+func PushIntRet3() int {
 	StackEntries += 1
 	return 3
 }
@@ -833,7 +833,7 @@ func CheckMultianewarray() int {
 }
 
 // SIPUSH 0x11 create int from next 2 bytes and push it
-func checkSipush() int {
+func CheckSipush() int {
 	if len(Code) > PC+2 {
 		StackEntries += 1
 		return 3
