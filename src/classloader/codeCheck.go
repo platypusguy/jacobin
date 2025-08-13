@@ -324,14 +324,14 @@ var CheckTable = [203]BytecodeFunc{
 	storeInt,             // BASTORE         0x54
 	storeInt,             // CASTORE         0x55
 	storeInt,             // SASTORE         0x56
-	checkPop,             // POP             0x57
-	checkPop2,            // POP2            0x58
-	dup1,                 // DUP             0x59
-	dup1,                 // DUP_X1          0x5A
-	dup1,                 // DUP_X2          0x5B
-	dup2,                 // DUP2            0x5C
-	dup2,                 // DUP2_X1         0x5D
-	dup2,                 // DUP2_X2         0x5E
+	CheckPop,             // POP             0x57
+	CheckPop2,            // POP2            0x58
+	CheckDup1,            // DUP             0x59
+	CheckDup1,            // DUP_X1          0x5A
+	CheckDup1,            // DUP_X2          0x5B
+	CheckDup2,            // DUP2            0x5C
+	CheckDup2,            // DUP2_X1         0x5D
+	CheckDup2,            // DUP2_X2         0x5E
 	Return1,              // SWAP            0x5F
 	Arith,                // IADD            0x60
 	Arith,                // LADD            0x61
@@ -417,7 +417,7 @@ var CheckTable = [203]BytecodeFunc{
 	Return1,              // RETURN          0xB1
 	Return3,              // GETSTATIC       0xB2
 	Return3,              // PUTSTATIC       0xB3
-	checkGetfield,        // GETFIELD        0xB4
+	CheckGetfield,        // GETFIELD        0xB4
 	Return3,              // PUTFIELD        0xB5
 	CheckInvokevirtual,   // INVOKEVIRTUAL   0xB6
 	checkInvokespecial,   // INVOKESPECIAL   0xB7
@@ -532,7 +532,7 @@ func checkBipush() int {
 	}
 }
 
-func dup1() int {
+func CheckDup1() int {
 	StackEntries += 1
 	return 1
 }
@@ -541,7 +541,7 @@ func dup1() int {
 // which take up 2 stack entries on HotSpot and other OpenJDK JVMs. On Jacobin, doubles and longs
 // take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
-func dup2() int {
+func CheckDup2() int {
 	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
 		Code[PC] = 0x59 // change DUP2 to DUP
 		StackEntries += 1
@@ -593,7 +593,7 @@ func pushIntRet3() int {
 }
 
 // GETFIELD 0xB4 Get field from object and push it onto the stack
-func checkGetfield() int {
+func CheckGetfield() int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
 	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
@@ -775,12 +775,12 @@ func checkLookupswitch() int { // need to check this
 	return (basePC - PC) + 1
 }
 
-func checkPop() int {
+func CheckPop() int {
 	StackEntries -= 1
 	return 1
 }
 
-func checkPop2() int {
+func CheckPop2() int {
 	StackEntries -= 2
 	return 1
 }

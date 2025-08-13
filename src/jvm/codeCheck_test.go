@@ -373,7 +373,7 @@ func TestDup1_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 1
-	result := classloader.TestDup1()
+	result := classloader.CheckDup1()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -391,7 +391,7 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 1
 
-	result := classloader.TestDup2()
+	result := classloader.CheckDup2()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -413,7 +413,7 @@ func TestDup2_RegularOperation(t *testing.T) {
 	classloader.PC = 0
 	classloader.StackEntries = 2
 
-	result := classloader.TestDup2()
+	result := classloader.CheckDup2()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -427,7 +427,7 @@ func TestCheckPop_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 3
-	result := classloader.TestCheckPop()
+	result := classloader.CheckPop()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -441,7 +441,7 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
 	classloader.StackEntries = 3
-	result := classloader.TestCheckPop2()
+	result := classloader.CheckPop2()
 
 	if result != 1 {
 		t.Errorf("Expected return value 1, got: %d", result)
@@ -461,7 +461,7 @@ func TestCheckGetfield_ValidFieldRef(t *testing.T) {
 	classloader.Code = []byte{opcodes.GETFIELD, 0x00, 0x01}
 	classloader.PC = 0
 
-	result := classloader.TestCheckGetfield()
+	result := classloader.CheckGetfield()
 
 	if result != 3 {
 		t.Errorf("Expected return value 3, got: %d", result)
@@ -476,7 +476,7 @@ func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
 	classloader.Code = []byte{opcodes.GETFIELD, 0xFF, 0xFF} // Invalid CP slot
 	classloader.PC = 0
 
-	result := classloader.TestCheckGetfield()
+	result := classloader.CheckGetfield()
 
 	if result != classloader.ERROR_OCCURRED {
 		t.Errorf("Expected ERROR_OCCURRED, got: %d", result)

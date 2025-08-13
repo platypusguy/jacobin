@@ -13,14 +13,14 @@ func TestPushFloat() int       { return pushFloat() }
 func TestPushInt() int         { return pushInt() }
 func TestCheckBipush() int     { return checkBipush() }
 func TestCheckSipush() int     { return checkSipush() }
-func TestDup1() int            { return dup1() }
-func TestDup2() int            { return dup2() }
-func TestCheckPop() int        { return checkPop() }
-func TestCheckPop2() int       { return checkPop2() }
-func TestCheckGetfield() int   { return checkGetfield() }
 
+// func TestDup1() int            { return dup1() }
+// func TestDup2() int            { return dup2() }
+
+// func TestCheckPop() int        { return checkPop() }
+// func TestCheckPop2() int       { return checkPop2() }
+// func TestCheckGetfield() int   { return checkGetfield() }
 // func TestCheckGoto() int       { return checkGoto() }
-
 // func TestCheckIf() int         { return checkIf() }
 // func TestCheckIfZero() int     { return checkIfZero() }
 // func TestCheckInvokeinterface() int { return checkInvokeinterface() }
