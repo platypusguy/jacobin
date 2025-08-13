@@ -200,7 +200,7 @@ func bigdecimalEquals(params []interface{}) interface{} {
 	scale2 := bd2.FieldTable["scale"].Fvalue.(int64)
 
 	if scale1 != scale2 {
-		return false // different scales means not equal
+		return types.JavaBoolFalse // different scales means not equal
 	}
 
 	// Compare unscaled values (bigInt)
@@ -211,11 +211,11 @@ func bigdecimalEquals(params []interface{}) interface{} {
 	unscaled2 := bi2.FieldTable["value"].Fvalue.(*big.Int)
 
 	if unscaled1.Cmp(unscaled2) != 0 {
-		return false // different unscaled values means not equal
+		return types.JavaBoolFalse // different unscaled values means not equal
 	}
 
 	// If both scale and unscaled value are the same, they are equal
-	return true
+	return types.JavaBoolTrue
 }
 
 // bigdecimalFloatValue returns the BigDecimal as a float64 (same as doubleValue)

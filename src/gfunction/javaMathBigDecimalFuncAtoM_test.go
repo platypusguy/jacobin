@@ -331,21 +331,21 @@ func Test_gfunction_bigdecimal_all(t *testing.T) {
 		bdutInit()
 		a := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 2) // 10.00
 		b := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 2) // 10.00
-		res := bigdecimalEquals([]interface{}{a, b})
-		if res != true {
-			t.Fatalf("expected true equals, got %v", res)
+		res := bigdecimalEquals([]interface{}{a, b}).(int64)
+		if !object.GoBooleanFromJavaBoolean(res) {
+			t.Fatalf("expected true equals, got false")
 		}
 		// different scale
 		c := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 1)
-		res2 := bigdecimalEquals([]interface{}{a, c})
-		if res2 != false {
-			t.Fatalf("expected false for different scale, got %v", res2)
+		res = bigdecimalEquals([]interface{}{a, c}).(int64)
+		if object.GoBooleanFromJavaBoolean(res) {
+			t.Fatalf("expected false for different scale, got true")
 		}
 		// different value same scale
 		d := bigDecimalObjectFromBigInt(big.NewInt(2000), 4, 2)
-		res3 := bigdecimalEquals([]interface{}{a, d})
-		if res3 != false {
-			t.Fatalf("expected false for different unscaled, got %v", res3)
+		res = bigdecimalEquals([]interface{}{a, d}).(int64)
+		if object.GoBooleanFromJavaBoolean(res) {
+			t.Fatalf("expected false for different unscaled, got true")
 		}
 	})
 
