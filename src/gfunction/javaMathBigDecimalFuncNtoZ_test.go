@@ -71,13 +71,9 @@ func TestBigDecimalNtoZFunctions(t *testing.T) {
 
 	t.Run("bigdecimalStripTrailingZeros", func(t *testing.T) {
 		bdutInit()
-		t.Logf("!!! Commented out: TestBigDecimalNtoZFunctions bigdecimalStripTrailingZeros")
-		t.Logf("!!! TODO: Uncomment when investigating strip-trailing-zeros")
-		/***
 		buildStripCvt(t, "123.45", 2, 2)
-		buildStripCvt(t, "0.31416e+1", 4, 4)
-		buildStripCvt(t, "-3141600e-6", 6, 4)
-		***/
+		buildStripCvt(t, "3.1416", 4, 4)
+		buildStripCvt(t, "-3.141600", 6, 4)
 	})
 
 	t.Run("bigdecimalNegate", func(t *testing.T) {

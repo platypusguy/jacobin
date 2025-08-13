@@ -247,10 +247,12 @@ func bigdecimalStripTrailingZeros(params []interface{}) interface{} {
 		u := new(big.Int).Set(unscaled)
 		s := scale
 
-		for s > 0 {
+		for {
 			u.QuoRem(u, ten, mod)
 			//println("stripTrailingZeros: mod =", mod.String(), "scale =", s)
 			if mod.Sign() != 0 {
+				// Restore u to its previous value since the division left a remainder
+				u.Mul(u, ten).Add(u, mod)
 				break
 			}
 			s--
