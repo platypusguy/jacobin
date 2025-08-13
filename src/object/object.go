@@ -171,18 +171,18 @@ func GetClassNameSuffix(arg *Object, inner bool) string {
 	return base
 }
 
-// Convert a Go boolean to a Jacobin Boolean object.
-func BooleanObjectFromGoBoolean(b bool) *Object {
-	if b {
-		return MakePrimitiveObject("java/lang/Boolean", "Z", true)
+// Convert a Go boolean to a Jacobin Boolean.
+func JavaBooleanFromGoBoolean(arg bool) int64 {
+	if arg {
+		return types.JavaBoolTrue
 	}
-	return MakePrimitiveObject("java/lang/Boolean", "Z", false)
+	return types.JavaBoolFalse
 }
 
-// Convert a Jacobin Boolean object to a Go boolean.
-func GoBooleanFromBooleanObject(obj *Object) bool {
-	if obj == nil {
-		return false
+// Convert a Jacobin Boolean to a Go boolean.
+func GoBooleanFromJavaBoolean(arg int64) bool {
+	if arg == types.JavaBoolTrue {
+		return true
 	}
-	return obj.FieldTable["value"].Fvalue.(bool)
+	return false
 }
