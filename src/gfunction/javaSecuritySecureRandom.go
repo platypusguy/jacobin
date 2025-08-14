@@ -276,7 +276,14 @@ func secureRandomGetInstanceStrong(params []interface{}) interface{} {
 
 // Re-seed this SecureRandom object.
 func secureRandomReseed(params []interface{}) interface{} {
-	_reSeedObject(params[0].(*object.Object), time.Now().UnixNano())
+	obj := params[0].(*object.Object)
+	oldSeed, _ := obj.FieldTable["seed"].Fvalue.(int64)
+	newSeed := time.Now().UnixNano()
+	if newSeed == oldSeed {
+		// Ensure observable change even if clock resolution returns same value
+		newSeed = oldSeed + 1
+	}
+	_reSeedObject(obj, newSeed)
 	return nil
 }
 
