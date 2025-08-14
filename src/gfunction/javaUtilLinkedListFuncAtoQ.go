@@ -324,20 +324,19 @@ func linkedlistLastIndexOf(args []interface{}) interface{} {
 	}
 
 	// Iterate through the linked list from the back to the front to find the last occurrence
-	index := int64(-1)
 	for ix, elem := int64(0), linkedList.Back(); elem != nil; elem = elem.Prev() {
-		// If we find the matching element, update the index
+		// If we find the matching element (closest to the end), return its distance-from-end immediately
 		equal, gerr := equalLinkedListElements(elementObj, elem.Value)
 		if gerr != nil {
 			return gerr
 		}
 		if equal {
-			index = ix
+			return ix
 		}
 
 		ix++
 	}
 
-	// If the element was found, return the last index; otherwise, return -1
-	return index
+	// The element was not found; return -1
+	return int64(-1)
 }

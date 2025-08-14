@@ -173,13 +173,14 @@ func hashsetAdd(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Hash the argument.
+	// Hash the argument and build a composite key including the element's class name
 	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetAdd: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
-	keyString := strconv.FormatUint(hashedUint64, 10)
+	className := *stringPool.GetStringPointer(that.KlassName)
+	keyString := className + ":" + strconv.FormatUint(hashedUint64, 10)
 
 	// Remember whether the key already exists.
 	flagReturn := types.JavaBoolTrue // Assume not existing yet.
@@ -236,13 +237,14 @@ func hashsetRemove(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Hash the argument.
+	// Hash the argument and build a composite key including the element's class name
 	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetRemove: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
-	hashedString := strconv.FormatUint(hashedUint64, 10)
+	className := *stringPool.GetStringPointer(that.KlassName)
+	hashedString := className + ":" + strconv.FormatUint(hashedUint64, 10)
 
 	// Remove this argument.
 	var extparams = new([]interface{})
@@ -288,13 +290,14 @@ func hashsetContains(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Hash the argument.
+	// Hash the argument and build a composite key including the element's class name
 	hashedUint64, err := util.HashAnything(fld.Fvalue)
 	if err != nil {
 		errMsg := fmt.Sprintf("hashsetContains: util.HashAnything failed, err: %v", err)
 		return getGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
-	hashedString := strconv.FormatUint(hashedUint64, 10)
+	className := *stringPool.GetStringPointer(that.KlassName)
+	hashedString := className + ":" + strconv.FormatUint(hashedUint64, 10)
 
 	// Do the search.
 	var extparams = new([]interface{})

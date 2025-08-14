@@ -276,7 +276,14 @@ func secureRandomGetInstanceStrong(params []interface{}) interface{} {
 
 // Re-seed this SecureRandom object.
 func secureRandomReseed(params []interface{}) interface{} {
-	_reSeedObject(params[0].(*object.Object), time.Now().UnixNano())
+	obj := params[0].(*object.Object)
+	oldSeed, _ := obj.FieldTable["seed"].Fvalue.(int64)
+	newSeed := time.Now().UnixNano()
+	if newSeed == oldSeed {
+		// Ensure observable change even if clock resolution returns same value
+		newSeed = oldSeed + 1
+	}
+	_reSeedObject(obj, newSeed)
 	return nil
 }
 
@@ -431,8 +438,9 @@ func secureRandomGenerateSeed(params []interface{}) interface{} {
 		return getGErrBlk(excNames.RuntimeException, fmt.Sprintf("secureRandomGenerateSeed: rng.Read(byteArray) failed, err: %v", err))
 	}
 
-	classStr := "[B"
-	result := object.MakePrimitiveObject(classStr, types.ByteArray, byteArray)
+	// Wrap as a String object holding the Java byte array, consistent with project conventions
+	jb := object.JavaByteArrayFromGoByteArray(byteArray)
+	result := object.StringObjectFromJavaByteArray(jb)
 	return result
 }
 
@@ -475,8 +483,8 @@ func secureRandomGetSeed(params []interface{}) interface{} {
 
 	// Form byte array for return to caller.
 	byteArray := _genSeed(size)
-	classStr := "[B"
-	result := object.MakePrimitiveObject(classStr, types.ByteArray, byteArray[:size])
+	jb := object.JavaByteArrayFromGoByteArray(byteArray)
+	result := object.StringObjectFromJavaByteArray(jb)
 	return result
 
 }

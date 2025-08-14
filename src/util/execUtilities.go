@@ -7,8 +7,6 @@
 package util
 
 import (
-	"fmt"
-	"jacobin/trace"
 	"jacobin/types"
 )
 
@@ -39,59 +37,45 @@ func ParseIncomingParamsFromMethTypeString(s string) []string {
 		case 'D':
 			params = append(params, types.Double)
 		case 'L':
-			params = append(params, types.Ref)
+			// validate reference descriptor terminates with ';' before appending
 			var j int
-			for j = i + 1; j < paramLen; j++ {
-				if paramChars[j] != ';' { // the end of the link is a ;
-					continue
-				} else {
-					i = j // j now points to the ;, continue will add 1
-					break
-				}
+			for j = i + 1; j < paramLen && paramChars[j] != ';'; j++ {
+				// scan to terminating ';'
 			}
 			if j >= paramLen {
-				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case 'L': failed to find final ';'")
-				trace.Error(errMsg)
+				// invalid reference descriptor: missing terminating ';'
 				return make([]string, 0)
 			}
+			params = append(params, types.Ref)
+			i = j
 		case '[': // arrays
 			elements := make([]byte, 0)
-			for paramChars[i] == '[' && i < paramLen {
+			for i < paramLen && paramChars[i] == '[' {
 				elements = append(elements, '[')
-				i += 1
+				i++
 			}
 			if i >= paramLen {
-				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': unending '[' repetitions")
-				trace.Error(errMsg)
 				return make([]string, 0)
 			}
 			if paramChars[i] == ')' {
-				errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': no array type specified")
-				trace.Error(errMsg)
 				return make([]string, 0)
 			}
-			// i is now pointing to the type-character of the array
-			elements = append(elements, paramChars[i])
-			params = append(params, string(elements))
+			// validate reference arrays fully, then append
+			var j int
 			if paramChars[i] == 'L' {
-				var j int
-				for j = i + 1; j < paramLen; j++ {
-					if paramChars[j] != ';' { // the end of the link is a ;
-						continue
-					} else {
-						i = j // j now points to the ;, continue will add 1
-						break
-					}
+				for j = i + 1; j < paramLen && paramChars[j] != ';'; j++ {
 				}
 				if j >= paramLen {
-					errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString case '[': failed to find final ';'")
-					trace.Error(errMsg)
 					return make([]string, 0)
 				}
 			}
+			elements = append(elements, paramChars[i])
+			params = append(params, string(elements))
+			if paramChars[i] == 'L' {
+				i = j
+			}
 		default:
-			errMsg := fmt.Sprintf("ParseIncomingParamsFromMethTypeString default: illegal character '%c'", paramChars[i])
-			trace.Error(errMsg)
+			// illegal or unexpected character encountered
 			return make([]string, 0)
 		}
 	}

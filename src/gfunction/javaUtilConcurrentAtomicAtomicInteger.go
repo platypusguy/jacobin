@@ -388,6 +388,11 @@ func fnAtomicIntegerAdd(params []interface{}, newFlag bool) interface{} {
 		}
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
+	// Guard against a typed nil object (null in Java terms)
+	if obj == nil || object.IsNull(obj) {
+		errMsg := "fnAtomicIntegerAdd: First parameter is null"
+		return getGErrBlk(excNames.ClassCastException, errMsg)
+	}
 
 	// Validate the second parameter (int64 value to add)
 	addend, ok := params[1].(int64)

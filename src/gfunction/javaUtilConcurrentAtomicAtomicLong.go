@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"jacobin/object"
 	"runtime"
 )
 
@@ -48,9 +49,9 @@ func atomicLongVMSupportsCS8([]interface{}) interface{} {
 
 	// Check if the current architecture is in the supported list
 	if supported, ok := supportedArchitectures[arch]; ok {
-		return supported
+		return object.JavaBooleanFromGoBoolean(supported)
 	}
 
 	// If architecture is not recognized or supported, return false by default
-	return false
+	return object.JavaBooleanFromGoBoolean(false)
 }
