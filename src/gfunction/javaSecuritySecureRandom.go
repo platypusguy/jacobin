@@ -431,8 +431,9 @@ func secureRandomGenerateSeed(params []interface{}) interface{} {
 		return getGErrBlk(excNames.RuntimeException, fmt.Sprintf("secureRandomGenerateSeed: rng.Read(byteArray) failed, err: %v", err))
 	}
 
-	classStr := "[B"
-	result := object.MakePrimitiveObject(classStr, types.ByteArray, byteArray)
+	// Wrap as a String object holding the Java byte array, consistent with project conventions
+	jb := object.JavaByteArrayFromGoByteArray(byteArray)
+	result := object.StringObjectFromJavaByteArray(jb)
 	return result
 }
 
@@ -475,8 +476,8 @@ func secureRandomGetSeed(params []interface{}) interface{} {
 
 	// Form byte array for return to caller.
 	byteArray := _genSeed(size)
-	classStr := "[B"
-	result := object.MakePrimitiveObject(classStr, types.ByteArray, byteArray[:size])
+	jb := object.JavaByteArrayFromGoByteArray(byteArray)
+	result := object.StringObjectFromJavaByteArray(jb)
 	return result
 
 }
