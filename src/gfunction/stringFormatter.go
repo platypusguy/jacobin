@@ -5,6 +5,9 @@ import (
 	"jacobin/excNames"
 	"jacobin/object"
 	"jacobin/types"
+	"math"
+	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -47,7 +50,6 @@ func StringFormatter(params []interface{}) interface{} {
 	}
 
 	// Make sure that the argument slice is a reference array.
-	valuesOut := []any{}
 	field := params[1].(*object.Object).FieldTable["value"]
 	if !strings.HasPrefix(field.Ftype, types.RefArray) {
 		errMsg := fmt.Sprintf("StringFormatter: Expected Ftype=%s for params[1]: fld.Ftype=%s, fld.Fvalue=%v",
@@ -58,13 +60,15 @@ func StringFormatter(params []interface{}) interface{} {
 	// valuesIn = the reference array
 	valuesIn := field.Fvalue.([]*object.Object)
 
-	// Main loop for reference array.
+	// Convert input arguments but keep unknown refs for later handling
+	rawArgs := make([]interface{}, 0, len(valuesIn))
 	for ii := 0; ii < len(valuesIn); ii++ {
-
-		// Get the current object's value field.
-		fld := valuesIn[ii].FieldTable["value"]
-
-		// If type is string object, process it.
+		obj := valuesIn[ii]
+		if obj == nil || object.IsNull(obj) {
+			rawArgs = append(rawArgs, nil)
+			continue
+		}
+		fld := obj.FieldTable["value"]
 		if fld.Ftype == types.StringClassRef {
 			var str string
 			switch fld.Fvalue.(type) {
@@ -73,52 +77,345 @@ func StringFormatter(params []interface{}) interface{} {
 			case []types.JavaByte:
 				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			}
-			valuesOut = append(valuesOut, str)
-		} else {
-			// Not a string object.
-			switch fld.Ftype {
-			case types.ByteArray:
-				var str string
-				switch fld.Fvalue.(type) {
-				case []byte:
-					str = string(fld.Fvalue.([]byte))
-				case []types.JavaByte:
-					str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-				}
-				valuesOut = append(valuesOut, str)
-			case types.Byte:
-				valuesOut = append(valuesOut, uint8(fld.Fvalue.(int64)))
-			case types.Bool:
-				var zz bool
-				if fld.Fvalue.(int64) == 0 {
-					zz = false
-				} else {
-					zz = true
-				}
-				valuesOut = append(valuesOut, zz)
-			case types.Char:
-				rooney := rune(fld.Fvalue.(int64))
-				valuesOut = append(valuesOut, rooney)
-			case types.Double:
-				valuesOut = append(valuesOut, fld.Fvalue.(float64))
-			case types.Float:
-				valuesOut = append(valuesOut, fld.Fvalue.(float64))
-			case types.Int:
-				valuesOut = append(valuesOut, fld.Fvalue.(int64))
-			case types.Long:
-				valuesOut = append(valuesOut, fld.Fvalue.(int64))
-			case types.Short:
-				valuesOut = append(valuesOut, fld.Fvalue.(int64))
-			default:
-				errMsg := fmt.Sprintf("StringFormatter: Invalid parameter %d is of type %s", ii+1, fld.Ftype)
-				return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+			rawArgs = append(rawArgs, str)
+			continue
+		}
+		switch fld.Ftype {
+		case types.ByteArray:
+			var str string
+			switch fld.Fvalue.(type) {
+			case []byte:
+				str = string(fld.Fvalue.([]byte))
+			case []types.JavaByte:
+				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			}
+			rawArgs = append(rawArgs, str)
+		case types.Byte:
+			rawArgs = append(rawArgs, uint8(fld.Fvalue.(int64)))
+		case types.Bool:
+			var zz bool
+			if fld.Fvalue.(int64) == 0 {
+				zz = false
+			} else {
+				zz = true
+			}
+			rawArgs = append(rawArgs, zz)
+		case types.Char:
+			rooney := rune(fld.Fvalue.(int64))
+			rawArgs = append(rawArgs, rooney)
+		case types.Double:
+			rawArgs = append(rawArgs, fld.Fvalue.(float64))
+		case types.Float:
+			rawArgs = append(rawArgs, fld.Fvalue.(float64))
+		case types.Int, types.Long, types.Short:
+			rawArgs = append(rawArgs, fld.Fvalue.(int64))
+		default:
+			// keep the full object for later processing (e.g., %s/%b/%h)
+			rawArgs = append(rawArgs, obj)
 		}
 	}
 
-	// Use golang fmt.Sprintf to do the heavy lifting.
-	str := fmt.Sprintf(formatString, valuesOut...)
+	// Transform Java format string and arguments to Go compatible ones
+	newFmt, newArgs := translateJavaFormat(formatString, rawArgs)
 
-	// Return a pointer to an object.Object that wraps the string byte array.
+	str := fmt.Sprintf(newFmt, newArgs...)
 	return object.StringObjectFromGoString(str)
+}
+
+// translateJavaFormat parses a Java String.format-style format and maps it to a Go fmt format,
+// returning the rewritten format string and adjusted argument slice.
+func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []interface{}) {
+	var b strings.Builder
+	outArgs := make([]interface{}, 0)
+
+	nextIndex := 0
+	lastIndex := -1
+	newline := "\n"
+	if runtime.GOOS == "windows" {
+		newline = "\r\n"
+	}
+
+	for i := 0; i < len(fmtJava); i++ {
+		ch := fmtJava[i]
+		if ch != '%' {
+			b.WriteByte(ch)
+			continue
+		}
+		// handle %% literal
+		if i+1 < len(fmtJava) && fmtJava[i+1] == '%' {
+			b.WriteString("%%")
+			i++
+			continue
+		}
+		j := i + 1
+		// parse argument_index (digits+$) but only accept if a trailing '$' is present
+		argIndex := -1
+		// tentatively scan digits
+		tmp := j
+		for tmp < len(fmtJava) && fmtJava[tmp] >= '0' && fmtJava[tmp] <= '9' {
+			tmp++
+		}
+		if tmp < len(fmtJava) && fmtJava[tmp] == '$' && tmp > i+1 {
+			idxStr := fmtJava[i+1 : tmp]
+			if v, err := strconv.Atoi(idxStr); err == nil && v > 0 {
+				argIndex = v - 1
+			}
+			j = tmp + 1
+		} else {
+			// no argument index; keep j right after '%'
+			j = i + 1
+		}
+		// parse flags (we will collect but drop '<')
+		flagsStart := j
+		reusePrev := false
+		for j < len(fmtJava) {
+			c := fmtJava[j]
+			if strings.ContainsRune("-#+ 0,(<", rune(c)) {
+				if c == '<' {
+					reusePrev = true
+				}
+				j++
+			} else {
+				break
+			}
+		}
+		flags := fmtJava[flagsStart:j]
+		flags = strings.ReplaceAll(flags, "<", "") // we'll resolve it ourselves
+
+		// width
+		widthStart := j
+		for j < len(fmtJava) && fmtJava[j] >= '0' && fmtJava[j] <= '9' {
+			j++
+		}
+		width := fmtJava[widthStart:j]
+		// precision
+		precision := ""
+		if j < len(fmtJava) && fmtJava[j] == '.' {
+			k := j + 1
+			for k < len(fmtJava) && fmtJava[k] >= '0' && fmtJava[k] <= '9' {
+				k++
+			}
+			precision = fmtJava[j:k]
+			j = k
+		}
+		if j >= len(fmtJava) {
+			// malformed, copy as-is
+			b.WriteString(fmtJava[i:])
+			break
+		}
+		conv := fmtJava[j]
+
+		// %n newline (no arg consumed)
+		if conv == 'n' {
+			b.WriteString(newline)
+			i = j
+			continue
+		}
+
+		// Resolve which argument index to use
+		useIndex := -1
+		if argIndex >= 0 {
+			useIndex = argIndex
+		} else if reusePrev {
+			useIndex = lastIndex
+		} else {
+			useIndex = nextIndex
+			nextIndex++
+		}
+		lastIndex = useIndex
+
+		// Prepare Go conv and value
+		goConv := string(conv)
+		switch conv {
+		case 'b', 'B':
+			goConv = "t"
+			val := coerceJavaBoolean(rawArgs, useIndex)
+			outArgs = append(outArgs, val)
+		case 's', 'S':
+			goConv = "s"
+			val := coerceJavaString(rawArgs, useIndex)
+			if conv == 'S' {
+				val = strings.ToUpper(val)
+			}
+			outArgs = append(outArgs, val)
+		case 'h', 'H':
+			// Java %h/%H produces hex hash of arg (null -> "null")
+			if rawArgs == nil || useIndex < 0 || useIndex >= len(rawArgs) || rawArgs[useIndex] == nil {
+				goConv = "s"
+				outArgs = append(outArgs, "null")
+			} else {
+				goConv = string(conv) // x or X
+				if conv == 'h' {
+					goConv = "x"
+				} else {
+					goConv = "X"
+				}
+				outArgs = append(outArgs, javaHashValue(rawArgs[useIndex]))
+			}
+		case 't', 'T':
+			// Not fully supported: degrade to %s on placeholder
+			goConv = "s"
+			val := coerceJavaString(rawArgs, useIndex)
+			outArgs = append(outArgs, val)
+		case 'f':
+			// Ensure Java-like zero-padding works identically
+			val := normalizeForGo(rawArgs, useIndex)
+			switch val.(type) {
+			case float64, int64:
+				var f64 float64
+				if vv, ok := val.(float64); ok {
+					f64 = vv
+				} else {
+					f64 = float64(val.(int64))
+				}
+				// Base formatting with precision only
+				base := "%" + precision + "f"
+				res := fmt.Sprintf(base, f64)
+				// sign handling for + or space flags
+				if strings.Contains(flags, "+") && f64 >= 0.0 {
+					res = "+" + res
+				} else if strings.Contains(flags, " ") && f64 >= 0.0 {
+					res = " " + res
+				}
+				// zero-padding to width (if requested and not left-justified)
+				if strings.Contains(flags, "0") && !strings.Contains(flags, "-") && len(width) > 0 {
+					if w, err := strconv.Atoi(width); err == nil {
+						if lw := len(res); lw < w {
+							pad := w - lw
+							zeros := strings.Repeat("0", pad)
+							if strings.HasPrefix(res, "+") || strings.HasPrefix(res, " ") || strings.HasPrefix(res, "-") {
+								res = res[:1] + zeros + res[1:]
+							} else {
+								res = zeros + res
+							}
+						}
+					}
+				}
+				goConv = "s"
+				flags, width, precision = "", "", ""
+				outArgs = append(outArgs, res)
+			default:
+				// Fallback: let Go handle with original spec
+				goConv = "f"
+				outArgs = append(outArgs, val)
+			}
+		default:
+			// Pass-through, but ensure we supply the raw argument in Go-native type
+			outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
+		}
+
+		// Rebuild the format specifier without index or '<'
+		b.WriteByte('%')
+		b.WriteString(flags)
+		b.WriteString(width)
+		b.WriteString(precision)
+		b.WriteString(goConv)
+
+		i = j
+	}
+	return b.String(), outArgs
+}
+
+func coerceJavaBoolean(args []interface{}, idx int) bool {
+	if args == nil || idx < 0 || idx >= len(args) {
+		return false
+	}
+	v := args[idx]
+	switch vv := v.(type) {
+	case bool:
+		return vv
+	case *object.Object:
+		if vv == nil || object.IsNull(vv) {
+			return false
+		}
+		return true
+	default:
+		// primitives and strings are considered non-null in Java formatting
+		return true
+	}
+}
+
+func coerceJavaString(args []interface{}, idx int) string {
+	if args == nil || idx < 0 || idx >= len(args) {
+		return "null"
+	}
+	v := args[idx]
+	switch vv := v.(type) {
+	case string:
+		return vv
+	case *object.Object:
+		if vv == nil || object.IsNull(vv) {
+			return "null"
+		}
+		// For non-String ref, mimic minimal Object.toString(): ClassName@hex
+		klass := object.GetClassNameSuffix(vv, true)
+		addr := fmt.Sprintf("%p", vv) // e.g., 0x1234abcd
+		if strings.HasPrefix(addr, "0x") {
+			addr = addr[2:]
+		}
+		return fmt.Sprintf("%s@%s", klass, addr)
+	default:
+		return fmt.Sprintf("%v", vv)
+	}
+}
+
+func normalizeForGo(args []interface{}, idx int) interface{} {
+	if args == nil || idx < 0 || idx >= len(args) {
+		return nil
+	}
+	v := args[idx]
+	switch vv := v.(type) {
+	case *object.Object:
+		// For unknown object refs, format as their toString-like string
+		return coerceJavaString(args, idx)
+	default:
+		return vv
+	}
+}
+
+func javaHashValue(v interface{}) uint64 {
+	switch vv := v.(type) {
+	case nil:
+		return 0
+	case bool:
+		if vv {
+			return 1231
+		}
+		return 1237
+	case int64:
+		return uint64(vv)
+	case float64:
+		// use IEEE bits as basis
+		return uint64(mathFloat64bits(vv))
+	case rune:
+		return uint64(vv)
+	case string:
+		return uint64(javaStringHashCode(vv))
+	case *object.Object:
+		if vv == nil || object.IsNull(vv) {
+			return 0
+		}
+		// use pointer address as identity hash surrogate
+		addrStr := fmt.Sprintf("%p", vv)
+		if strings.HasPrefix(addrStr, "0x") {
+			addrStr = addrStr[2:]
+		}
+		ui, _ := strconv.ParseUint(addrStr, 16, 64)
+		return ui
+	default:
+		return 0
+	}
+}
+
+func javaStringHashCode(s string) int32 {
+	var h int32 = 0
+	for i := 0; i < len(s); i++ {
+		h = 31*h + int32(s[i])
+	}
+	return h
+}
+
+// mathFloat64bits avoids importing math for a single call
+func mathFloat64bits(f float64) uint64 {
+	return math.Float64bits(f)
 }
