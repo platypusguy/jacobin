@@ -45,7 +45,7 @@ jobs:
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
         export JACOBIN_EXE=`pwd`/jacobin 
-        go test -v -timeout 3m ./...
+        go test -timeout 3m ./...
 
   windows-build-and-test:
     strategy:
@@ -88,4 +88,4 @@ jobs:
         $Env:JACOBIN_EXE += '\src\jacobin.exe'
         $Env:JACOBIN_EXE
         go mod tidy
-        go test -v -timeout 3m ./...
+        go test -timeout 3m ./...
