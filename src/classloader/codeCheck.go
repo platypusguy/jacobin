@@ -443,7 +443,7 @@ var CheckTable = [203]BytecodeFunc{
 }
 
 var PC int
-var prevPC int // allows us to view the preceding opcode if we need it for analysis
+var PrevPC int // allows us to view the preceding opcode if we need it for analysis
 var CP *CPool
 var Code []byte
 var StackEntries int
@@ -478,7 +478,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 
 	Code = code
 	PC = 0
-	prevPC = -1 // -1 means no previous PC
+	PrevPC = -1 // -1 means no previous PC
 	MaxStack = maxStack
 	StackEntries = 0
 
@@ -501,7 +501,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 					return errors.New(errMsg)
 				}
 			}
-			prevPC = PC
+			PrevPC = PC
 			PC += ret
 		}
 	}
@@ -542,11 +542,16 @@ func CheckDup1() int {
 // take up 1 stack entry, so we need to be check whether the operation is on a double or long. If
 // it is, then we convert DUP2 to DUP, which duplicates only the top stack entry.
 func CheckDup2() int {
+	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+		goto dup2 // if so, we can safely use DUP2
+	}
+
 	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
 		Code[PC] = 0x59 // change DUP2 to DUP
 		StackEntries += 1
 		return 1
 	}
+dup2:
 	StackEntries += 2
 	return 1
 }
@@ -876,6 +881,29 @@ func BytecodeIsForLongOrDouble(bytecode byte) bool {
 		0x87, 0x88, 0x89, 0x8A, 0x8C, 0x8D, 0x8E, 0x8F,
 		0x90, 0x94, 0x97, 0x98, 0xAD, 0xAF:
 		// handle long/double bytecodes
+		return true
+	default:
+		return false
+	}
+}
+
+func BytecodePushes32BitValue(bytecode byte) bool {
+	switch bytecode {
+	case 0x02, 0x03, 0x04, 0x05, // ICONST_M1, ICONST_0, ICONST_1, ICONST_2
+		0x06, 0x07, 0x08, 0x0B, // ICONST_3, ICONST_4, ICONST_5, FCONST_0
+		0x0C, 0x0D, 0x10, 0x11, // FCONST_1, FCONST_2, BIPUSH, SIPUSH
+		0x12, 0x13, 0x15, 0x17, // LDC, LDC_W, ILOAD, FLOAD
+		0x1A, 0x1B, 0x1C, 0x1D, // ILOAD_0, ILOAD_1, ILOAD_2, ILOAD_3
+		0x22, 0x23, 0x24, 0x25, // FLOAD_0, FLOAD_1, FLOAD_2, FLOAD_3
+		0x2E, 0x30, 0x33, 0x34, // IALOAD, FALOAD, BALOAD, CALOAD
+		0x35, 0x60, 0x62, 0x64, // SALOAD, IADD, FADD, ISUB
+		0x66, 0x68, 0x6A, 0x6C, // FSUB, IMUL, FMUL, IDIV
+		0x6E, 0x70, 0x72, 0x74, // FDIV, IREM, FREM, INEG
+		0x76, 0x78, 0x7A, 0x7C, // FNEG, ISHL, ISHR, IUSHR
+		0x7E, 0x80, 0x82, 0x86, // IAND, IOR, IXOR, I2F
+		0x88, 0x89, 0x8B, 0x8E, // L2I, L2F, F2I, D2I
+		0x90, 0x91, 0x92, 0x93, // D2F, I2B, I2C, I2S
+		0x95, 0x96: // FCMPL, FCMPG
 		return true
 	default:
 		return false

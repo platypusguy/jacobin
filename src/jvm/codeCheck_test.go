@@ -387,8 +387,9 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 	globals.InitGlobals("test")
 
 	// Create code where next bytecode is for long/double
-	classloader.Code = []byte{opcodes.DUP2, opcodes.LADD}
-	classloader.PC = 0
+	classloader.Code = []byte{opcodes.NOP, opcodes.DUP2, opcodes.LADD}
+	classloader.PC = 1
+	classloader.PrevPC = 0
 	classloader.StackEntries = 1
 
 	result := classloader.CheckDup2()
@@ -400,8 +401,8 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 		t.Errorf("Expected StackEntries to increase by 1, got: %d", classloader.StackEntries)
 	}
 	// Check that DUP2 was converted to DUP
-	if classloader.Code[0] != opcodes.DUP {
-		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", classloader.Code[0])
+	if classloader.Code[classloader.PC] != opcodes.DUP {
+		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", classloader.Code[classloader.PC])
 	}
 }
 
