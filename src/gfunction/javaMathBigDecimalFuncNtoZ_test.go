@@ -37,7 +37,6 @@ func buildStripCvt(t *testing.T, startString string, scale1, scale2 int64) {
 	startDouble, err := strconv.ParseFloat(startString, 64)
 	if err != nil {
 		t.Errorf("ERROR buildStripCvt: failed to parse start string %q: %v", startString, err)
-		return
 	}
 	// Make BigDecimal from a Go string.
 	original := makeBigDecimalFromString(t, startString)
@@ -74,6 +73,12 @@ func TestBigDecimalNtoZFunctions(t *testing.T) {
 		buildStripCvt(t, "123.45", 2, 2)
 		buildStripCvt(t, "3.1416", 4, 4)
 		buildStripCvt(t, "-3.141600", 6, 4)
+		buildStripCvt(t, "-3.141600E0", 6, 4)
+		buildStripCvt(t, "-3.141600e+0", 6, 4)
+		buildStripCvt(t, "-3.141600e-0", 6, 4)
+		buildStripCvt(t, "-31.41600e-1", 6, 4)
+		buildStripCvt(t, "-.3141600E+001", 6, 4)
+		buildStripCvt(t, "-.31416E+001", 4, 4)
 	})
 
 	t.Run("bigdecimalNegate", func(t *testing.T) {

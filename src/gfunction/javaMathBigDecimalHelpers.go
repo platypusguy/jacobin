@@ -91,6 +91,7 @@ func bigdecimalInitString(params []interface{}) interface{} {
 		return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: empty string")
 	}
 
+	// Handle optional leading sign
 	negative := false
 	if s[0] == '-' {
 		negative = true
@@ -98,13 +99,62 @@ func bigdecimalInitString(params []interface{}) interface{} {
 	} else if s[0] == '+' {
 		s = s[1:]
 	}
+	if len(s) == 0 { // sign only is invalid
+		return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid number format")
+	}
 
-	// Split integer and fractional parts
-	parts := strings.SplitN(s, ".", 2)
+	// Extract optional exponent part (scientific notation)
+	exponent := int64(0)
+	numPart := s
+	if idx := strings.IndexAny(s, "eE"); idx != -1 {
+		numPart = s[:idx]
+		expPart := s[idx+1:]
+		if len(expPart) == 0 {
+			return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid exponent")
+		}
+		// Parse exponent with optional sign
+		if expPart[0] == '+' || expPart[0] == '-' {
+			if len(expPart) == 1 {
+				return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid exponent")
+			}
+		}
+		expVal, err := strconv.ParseInt(expPart, 10, 64)
+		if err != nil {
+			return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid exponent")
+		}
+		exponent = expVal
+	}
+
+	// numPart should contain at least one digit
+	hasDigit := false
+	for i := 0; i < len(numPart); i++ {
+		if numPart[i] >= '0' && numPart[i] <= '9' {
+			hasDigit = true
+			break
+		}
+	}
+	if !hasDigit {
+		return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid number format")
+	}
+
+	// Split integer and fractional parts of mantissa
+	parts := strings.SplitN(numPart, ".", 2)
 	intPart := parts[0]
 	fracPart := ""
 	if len(parts) == 2 {
 		fracPart = parts[1]
+	}
+
+	// Validate that intPart and fracPart contain only digits (intPart may include leading zeros or be empty)
+	for i := 0; i < len(intPart); i++ {
+		if intPart[i] < '0' || intPart[i] > '9' {
+			return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid number format")
+		}
+	}
+	for i := 0; i < len(fracPart); i++ {
+		if fracPart[i] < '0' || fracPart[i] > '9' {
+			return getGErrBlk(excNames.NumberFormatException, "bigdecimalInitString: invalid number format")
+		}
 	}
 
 	// Remove leading zeros from intPart; if empty, set to "0"
@@ -113,10 +163,9 @@ func bigdecimalInitString(params []interface{}) interface{} {
 		intPart = "0"
 	}
 
-	// Keep fracPart as is for scale calculation (including trailing zeros)
-	// Build unscaled string by concatenating intPart and fracPart
+	// Build unscaled string by concatenating intPart and fracPart (keep fractional zeros)
 	unscaledStr := intPart + fracPart
-	if unscaledStr == "" {
+	if unscaledStr == "" { // should not happen due to hasDigit check, but keep safe
 		unscaledStr = "0"
 	}
 
@@ -131,11 +180,10 @@ func bigdecimalInitString(params []interface{}) interface{} {
 		unscaledBigInt.Neg(unscaledBigInt)
 	}
 
-	// Scale is length of fractional part
-	scale := int64(len(fracPart))
+	// Scale is length of fractional part adjusted by exponent
+	scale := int64(len(fracPart)) - exponent
 
 	// Precision is number of digits in unscaled value excluding sign and leading zeros
-	// Trim leading zeros from unscaledStr for precision calculation
 	precStr := strings.TrimLeft(unscaledStr, "0")
 	if precStr == "" {
 		precStr = "0"
