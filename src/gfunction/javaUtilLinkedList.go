@@ -343,33 +343,50 @@ func newLinkedListObject() *object.Object {
 
 // getLinkedListFromObject (internal function) extracts the *list.List from the object
 func equalLinkedListElements(argA any, argB any) (bool, *GErrBlk) {
-	switch argA.(type) {
+	// Compare based on the actual type of the searched element (argA).
+	switch a := argA.(type) {
 	case *object.Object:
-		if !object.IsStringObject(argA) {
+		// Only String objects are supported for object comparisons per current implementation.
+		if !object.IsStringObject(a) {
 			gerr := getGErrBlk(excNames.UnsupportedOperationException, "linkedlistContains: Cannot yet suport non-String objects")
 			return false, gerr
 		}
-		objA := argA.(*object.Object)
-		objB := argB.(*object.Object)
-		if object.EqualStringObjects(objA, objB) {
-			return true, nil
-		} else {
+		// If the list element is not an object, it's definitely not equal to a String object.
+		bObj, ok := argB.(*object.Object)
+		if !ok || bObj == nil {
 			return false, nil
 		}
+		// If the list element is not a String object, not equal.
+		if !object.IsStringObject(bObj) {
+			return false, nil
+		}
+		if object.EqualStringObjects(a, bObj) {
+			return true, nil
+		}
+		return false, nil
 	case int64:
-		if argA.(int64) == argB.(int64) {
-			return true, nil
-		} else {
+		// Only equal if the list element is also an int64 with same value.
+		bInt, ok := argB.(int64)
+		if !ok {
 			return false, nil
 		}
+		if a == bInt {
+			return true, nil
+		}
+		return false, nil
 	case float64:
-		if argA.(float64) == argB.(float64) {
-			return true, nil
-		} else {
+		// Only equal if the list element is also a float64 with same value.
+		bFlt, ok := argB.(float64)
+		if !ok {
 			return false, nil
 		}
+		if a == bFlt {
+			return true, nil
+		}
+		return false, nil
 	}
 
+	// Unsupported search element type.
 	errMsg := fmt.Sprintf("linkedlistContains: Cannot yet suport element type %T", argA)
 	gerr := getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 	return false, gerr
