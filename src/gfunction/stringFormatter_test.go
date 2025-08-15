@@ -98,3 +98,29 @@ func TestStringFormatter_FloatZeroPad(t *testing.T) {
         t.Fatalf("got %q want %q", got, expected)
     }
 }
+
+
+func TestStringFormatter_HexNegativeInt_ZeroPad(t *testing.T) {
+    fmtObj := object.StringObjectFromGoString("%08x")
+    i := Populator("java/lang/Integer", types.Int, int64(-64))
+    argsArr := makeObjectRefArray(i)
+    out := StringFormatter([]interface{}{fmtObj, argsArr})
+    got := object.GoStringFromStringObject(out.(*object.Object))
+   	expected := "ffffffc0"
+    if got != expected {
+        t.Fatalf("got %q want %q", got, expected)
+    }
+}
+
+
+func TestStringFormatter_HexByte_Negative_TwoDigits(t *testing.T) {
+    fmtObj := object.StringObjectFromGoString("%02x")
+    b := Populator("java/lang/Byte", types.Byte, int64(-1))
+    argsArr := makeObjectRefArray(b)
+    out := StringFormatter([]interface{}{fmtObj, argsArr})
+    got := object.GoStringFromStringObject(out.(*object.Object))
+    expected := "ff"
+    if got != expected {
+        t.Fatalf("got %q want %q", got, expected)
+    }
+}

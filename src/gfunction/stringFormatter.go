@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+// helper wrapper to keep Java integral bit-width for formatting
+// bits=32 for int/short/byte, bits=64 for long
+type intWithBits struct {
+	v    int64
+	bits int
+}
+
 // String formatting given a format string and a slice of arguments.
 // Called by sprintf, javaIoConsole.go, and javaIoPrintStream.go.
 func StringFormatter(params []interface{}) interface{} {
@@ -90,8 +97,6 @@ func StringFormatter(params []interface{}) interface{} {
 				str = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 			}
 			rawArgs = append(rawArgs, str)
-		case types.Byte:
-			rawArgs = append(rawArgs, uint8(fld.Fvalue.(int64)))
 		case types.Bool:
 			var zz bool
 			if fld.Fvalue.(int64) == 0 {
@@ -107,8 +112,14 @@ func StringFormatter(params []interface{}) interface{} {
 			rawArgs = append(rawArgs, fld.Fvalue.(float64))
 		case types.Float:
 			rawArgs = append(rawArgs, fld.Fvalue.(float64))
-		case types.Int, types.Long, types.Short:
-			rawArgs = append(rawArgs, fld.Fvalue.(int64))
+		case types.Int:
+			rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 32})
+		case types.Long:
+			rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 64})
+		case types.Short:
+			rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 16})
+		case types.Byte:
+			rawArgs = append(rawArgs, intWithBits{v: fld.Fvalue.(int64), bits: 8})
 		default:
 			// keep the full object for later processing (e.g., %s/%b/%h)
 			rawArgs = append(rawArgs, obj)
@@ -257,6 +268,28 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 			goConv = "s"
 			val := coerceJavaString(rawArgs, useIndex)
 			outArgs = append(outArgs, val)
+		case 'x', 'X', 'o':
+			// For hex/octal, Java uses two's complement unsigned representation of the primitive width
+			v := rawArgs[useIndex]
+			switch iv := v.(type) {
+			case intWithBits:
+				var u uint64
+				switch iv.bits {
+				case 64:
+					u = uint64(iv.v)
+				case 32:
+					u = uint64(uint32(iv.v))
+				case 16:
+					u = uint64(uint16(iv.v))
+				case 8:
+					u = uint64(uint8(iv.v))
+				default:
+					u = uint64(uint32(iv.v))
+				}
+				outArgs = append(outArgs, u)
+			default:
+				outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
+			}
 		case 'f':
 			// Ensure Java-like zero-padding works identically
 			val := normalizeForGo(rawArgs, useIndex)
@@ -368,6 +401,8 @@ func normalizeForGo(args []interface{}, idx int) interface{} {
 	case *object.Object:
 		// For unknown object refs, format as their toString-like string
 		return coerceJavaString(args, idx)
+	case intWithBits:
+		return vv.v
 	default:
 		return vv
 	}
