@@ -9,7 +9,9 @@ package gfunction
 import (
 	"jacobin/classloader"
 	"jacobin/globals"
+	"jacobin/object"
 	"jacobin/trace"
+	"jacobin/types"
 	"testing"
 )
 
@@ -90,4 +92,66 @@ func TestCheckKey(t *testing.T) {
 		t.Errorf("got unexpected error checking key %s",
 			"java/lang/Object.toString(I)Ljava/lang/String;")
 	}
+}
+
+
+func TestPopulator_PrimitivesAndString(t *testing.T) {
+    globals.InitGlobals("test")
+    globals.InitStringPool()
+
+    // Integer primitive object
+    iobj := Populator("java/lang/Integer", "I", int64(42))
+    if iobj == nil {
+        t.Fatalf("Populator returned nil for Integer")
+    }
+    fld, ok := iobj.FieldTable["value"]
+    if !ok || fld.Ftype != "I" {
+        t.Fatalf("Integer value field missing or wrong type: %#v", iobj.FieldTable["value"])
+    }
+    if v, ok := fld.Fvalue.(int64); !ok || v != 42 {
+        t.Fatalf("Integer value mismatch: %v", fld.Fvalue)
+    }
+
+    // String via StringIndex path returns a proper String object
+    sobj := Populator("java/lang/String", "T", "hello")
+    if sobj == nil {
+        t.Fatalf("Populator returned nil for String")
+    }
+    if !object.IsStringObject(sobj) {
+        t.Fatalf("Populator did not create a String object")
+    }
+    if s := object.GoStringFromStringObject(sobj); s != "hello" {
+        t.Fatalf("String content mismatch: %q", s)
+    }
+}
+
+func TestReturnNullTrueFalse(t *testing.T) {
+    if v := returnNull(nil); v != object.Null {
+        t.Fatalf("returnNull did not return object.Null: %v", v)
+    }
+    if v := returnTrue(nil); v != types.JavaBoolTrue {
+        t.Fatalf("returnTrue != true: %v", v)
+    }
+    if v := returnFalse(nil); v != types.JavaBoolFalse {
+        t.Fatalf("returnFalse != false: %v", v)
+    }
+}
+
+func TestEOFSetGet(t *testing.T) {
+    obj := object.MakeEmptyObject()
+    eofSet(obj, true)
+    if !eofGet(obj) {
+        t.Fatalf("eofGet expected true")
+    }
+    eofSet(obj, false)
+    if eofGet(obj) {
+        t.Fatalf("eofGet expected false")
+    }
+}
+
+func TestReturnRandomLong_Type(t *testing.T) {
+    v := returnRandomLong(nil)
+    if _, ok := v.(int64); !ok {
+        t.Fatalf("returnRandomLong did not return int64, got %T", v)
+    }
 }
