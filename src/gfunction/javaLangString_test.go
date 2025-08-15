@@ -1180,3 +1180,58 @@ func TestStringHashCode(t *testing.T) {
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
 }
+
+
+// Additional tests added for String: isLatin1 and getBytes
+func TestString_IsLatin1(t *testing.T) {
+	globals.InitStringPool()
+	obj := object.StringObjectFromGoString("Hello")
+	res := stringIsLatin1([]interface{}{obj})
+	if res != types.JavaBoolTrue {
+		t.Fatalf("stringIsLatin1 expected true, got %v", res)
+	}
+}
+
+// helper to extract Go []byte from a returned byte-array object
+func bytesFromByteArrayObject(o *object.Object) []byte {
+	f := o.FieldTable["value"]
+	switch v := f.Fvalue.(type) {
+	case []byte:
+		return v
+	case []types.JavaByte:
+		return object.GoByteArrayFromJavaByteArray(v)
+	default:
+		return nil
+	}
+}
+
+func TestString_GetBytes_Basic(t *testing.T) {
+	globals.InitStringPool()
+	in := "Hello, world!"
+	strObj := object.StringObjectFromGoString(in)
+	out := getBytesFromString([]interface{}{strObj})
+	arrObj, ok := out.(*object.Object)
+	if !ok {
+		t.Fatalf("getBytesFromString did not return object, got %T", out)
+	}
+	// type should be byte array and contents should match
+	ft := arrObj.FieldTable["value"].Ftype
+	if ft != types.ByteArray {
+		t.Fatalf("expected Ftype %s, got %s", types.ByteArray, ft)
+	}
+	gotBytes := bytesFromByteArrayObject(arrObj)
+	if string(gotBytes) != in {
+		t.Fatalf("byte content mismatch: got %q want %q", string(gotBytes), in)
+	}
+}
+
+func TestString_GetBytes_Empty(t *testing.T) {
+	globals.InitStringPool()
+	strObj := object.StringObjectFromGoString("")
+	out := getBytesFromString([]interface{}{strObj})
+	arrObj := out.(*object.Object)
+	gotBytes := bytesFromByteArrayObject(arrObj)
+	if len(gotBytes) != 0 {
+		t.Fatalf("expected empty byte array, got len=%d", len(gotBytes))
+	}
+}
