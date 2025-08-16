@@ -115,7 +115,7 @@ func vd(params []any) any {
 func vl(params []any) any {
 	obj := object.MakeEmptyObject()
 	obj.KlassName = types.ObjectPoolStringIndex
-	return &obj
+	return obj
 }
 
 func iv(params []any) any {
@@ -141,7 +141,7 @@ func id(params []any) any {
 func il(params []any) any {
 	obj := object.MakeEmptyObject()
 	obj.KlassName = types.ObjectPoolStringIndex
-	return &obj
+	return obj
 }
 
 func li(params []any) any {
@@ -151,7 +151,7 @@ func li(params []any) any {
 func ll(params []any) any {
 	obj := object.MakeEmptyObject()
 	obj.KlassName = types.ObjectPoolStringIndex
-	return &obj
+	return obj
 }
 
 func ld(params []any) any {
