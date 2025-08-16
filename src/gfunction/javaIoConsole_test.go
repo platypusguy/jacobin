@@ -111,13 +111,12 @@ func TestConsolePrintf_WritesToSystemOut(t *testing.T) {
 		t.Fatalf("consolePrintf expected to return *os.File, got %T", ret)
 	}
 
-	// Read what was written
-	_ = w.Sync()
-	_ = w.Close()
-	buf, _ := io.ReadAll(r)
-	if string(buf) != "Hello World!" {
-		t.Fatalf("unexpected output: %q", string(buf))
-	}
+ // Read what was written (Close signals EOF for the reader; Sync on pipes is not portable)
+ _ = w.Close()
+ buf, _ := io.ReadAll(r)
+ if string(buf) != "Hello World!" {
+     t.Fatalf("unexpected output: %q", string(buf))
+ }
 }
 
 func TestConsoleReadLine_ReadsUntilNewline(t *testing.T) {
