@@ -421,7 +421,7 @@ func addStaticBigInteger(argName string, argValue int64) {
 // "java/math/BigInteger.<clinit>()V"
 func bigIntegerClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(classNameBigInteger)
-	if klass == nil {
+	if klass == nil || klass.Data == nil {
 		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", classNameBigInteger)
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)

@@ -779,7 +779,7 @@ func Load_Lang_String() {
 // "java/lang/String.<clinit>()V" -- String class initialisation
 func stringClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch(types.StringClassName)
-	if klass == nil {
+	if klass == nil || klass.Data == nil {
 		errMsg := fmt.Sprintf("stringClinit: Could not find class %s in the MethodArea", types.StringClassName)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}

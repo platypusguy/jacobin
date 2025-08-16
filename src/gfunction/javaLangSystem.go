@@ -231,7 +231,7 @@ func Load_Lang_System() {
 
 func systemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
-	if klass == nil {
+	if klass == nil || klass.Data == nil {
 		errMsg := "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not"
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
