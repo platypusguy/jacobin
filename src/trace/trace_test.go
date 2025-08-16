@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/globals"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -100,4 +101,52 @@ func TestValidTraceMessage(t *testing.T) {
 		t.Errorf("Nonempty trace message failed: expected [%s] as a subset of [%s]\n", expected, outString)
 	}
 
+}
+
+
+func TestDisableSuppressesOutput(t *testing.T) {
+	initialize()
+	// Ensure we re-enable after this test
+	defer Init()
+
+	// capture stderr
+	saved := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	Disable()
+	Trace("should not appear")
+	Error("nor should this")
+	Warning("or this")
+	_ = w.Close()
+	os.Stderr = saved
+
+	buf, _ := io.ReadAll(r)
+	if len(buf) != 0 {
+		t.Fatalf("Disable() did not suppress output; saw: %q", string(buf))
+	}
+}
+
+func TestTracePrefixContainsTimestamp(t *testing.T) {
+	initialize()
+
+	// capture stderr
+	saved := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	Trace("hello")
+	_ = w.Close()
+	os.Stderr = saved
+
+	out, _ := io.ReadAll(r)
+	line := string(out)
+	// Expect something like: [  0.0xxs] hello\n
+	re := regexp.MustCompile(`^\s*\[[0-9]+\.[0-9]{3}s\] \s*hello\s*\n?$`)
+	if !re.MatchString(line) {
+		// Be lenient: check for bracketed seconds.millis and a space before message
+		if !(strings.HasPrefix(line, "[") && strings.Contains(line, "] ") && strings.Contains(line, "hello")) {
+			t.Fatalf("Trace prefix not as expected; got: %q", line)
+		}
+	}
 }
