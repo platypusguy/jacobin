@@ -8,7 +8,6 @@ package gfunction
 
 import (
 	"fmt"
-	"golang.org/x/term"
 	"jacobin/classloader"
 	"jacobin/excNames"
 	"jacobin/object"
@@ -16,6 +15,8 @@ import (
 	"jacobin/types"
 	"os"
 	"syscall"
+
+	"golang.org/x/term"
 )
 
 // Implementation of some of the functions in Java/lang/Class.
@@ -104,7 +105,7 @@ func Load_Io_Console() {
 // "java/io/Console.<clinit>()V" - Initialise class Console.
 func consoleClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/io/Console")
-	if klass == nil {
+	if klass == nil || klass.Data == nil {
 		errMsg := "consoleClinit: Could not find java/io/Console in the MethodArea"
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
