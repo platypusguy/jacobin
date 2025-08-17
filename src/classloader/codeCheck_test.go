@@ -1010,6 +1010,223 @@ func TestPushIntRet3_StackIncrement(t *testing.T) {
 	}
 }
 
+// Test checkLookupswitch with zero padding (PC+1 is already 4-byte aligned)
+func TestLookupswitch_ZeroPadding(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH at position 3 (PC+1=4, which is 4-byte aligned, so no padding needed)
+	code := []byte{
+		0x00, 0x00, 0x00, // 3 NOPs to align LOOKUPSWITCH at position 3
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=3
+		0x00, 0x00, 0x00, 0x10, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x02, // npairs = 2 (4 bytes)
+		0x00, 0x00, 0x00, 0x01, // match1 = 1 (4 bytes)
+		0x00, 0x00, 0x00, 0x20, // offset1 = 32 (4 bytes)
+		0x00, 0x00, 0x00, 0x05, // match2 = 5 (4 bytes)
+		0x00, 0x00, 0x00, 0x30, // offset2 = 48 (4 bytes)
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for zero padding case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with 1-byte padding
+func TestLookupswitch_OneBytePadding(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH at position 0 (PC+1=1, needs 3 padding bytes to align to 4)
+	code := []byte{
+		opcodes.LOOKUPSWITCH, // 0xAB - LOOKUPSWITCH at PC=0
+		0x00, 0x00, 0x00,     // 3 padding bytes
+		0x00, 0x00, 0x00, 0x18, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x01, // npairs = 1 (4 bytes)
+		0x00, 0x00, 0x00, 0x42, // match1 = 66 (4 bytes)
+		0x00, 0x00, 0x00, 0x28, // offset1 = 40 (4 bytes)
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for one byte padding case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with 2-byte padding
+func TestLookupswitch_TwoBytePadding(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH at position 1 (PC+1=2, needs 2 padding bytes to align to 4)
+	code := []byte{
+		0x00,                 // NOP to position LOOKUPSWITCH at PC=1
+		opcodes.LOOKUPSWITCH, // 0xAB - LOOKUPSWITCH at PC=1
+		0x00, 0x00,           // 2 padding bytes
+		0x00, 0x00, 0x00, 0x14, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x01, // npairs = 1 (4 bytes)
+		0x00, 0x00, 0x00, 0x7B, // match1 = 123 (4 bytes)
+		0x00, 0x00, 0x00, 0x24, // offset1 = 36 (4 bytes)
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for two byte padding case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with 3-byte padding
+func TestLookupswitch_ThreeBytePadding(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH at position 2 (PC+1=3, needs 1 padding byte to align to 4)
+	code := []byte{
+		0x00, 0x00, // 2 NOPs to position LOOKUPSWITCH at PC=2
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=2
+		0x00,                   // 1 padding byte
+		0x00, 0x00, 0x00, 0x10, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x01, // npairs = 1 (4 bytes)
+		0x00, 0x00, 0x00, 0x99, // match1 = 153 (4 bytes)
+		0x00, 0x00, 0x00, 0x20, // offset1 = 32 (4 bytes)
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for three byte padding case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with zero pairs (npairs = 0)
+func TestLookupswitch_ZeroPairs(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH with 0 pairs
+	code := []byte{
+		0x00, 0x00, 0x00, // 3 NOPs to align LOOKUPSWITCH at position 3
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=3
+		0x00, 0x00, 0x00, 0x0C, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x00, // npairs = 0 (4 bytes)
+		// No match/offset pairs since npairs = 0
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for zero pairs case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with multiple pairs (npairs > 1)
+func TestLookupswitch_MultiplePairs(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH with 3 pairs
+	code := []byte{
+		0x00, 0x00, 0x00, // 3 NOPs to align LOOKUPSWITCH at position 3
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=3
+		0x00, 0x00, 0x00, 0x24, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x03, // npairs = 3 (4 bytes)
+		0x00, 0x00, 0x00, 0x0A, // match1 = 10 (4 bytes)
+		0x00, 0x00, 0x00, 0x30, // offset1 = 48 (4 bytes)
+		0x00, 0x00, 0x00, 0x14, // match2 = 20 (4 bytes)
+		0x00, 0x00, 0x00, 0x38, // offset2 = 56 (4 bytes)
+		0x00, 0x00, 0x00, 0x1E, // match3 = 30 (4 bytes)
+		0x00, 0x00, 0x00, 0x40, // offset3 = 64 (4 bytes)
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for multiple pairs case: %v", err)
+	}
+}
+
+// Test checkLookupswitch with large npairs value
+func TestLookupswitch_LargePairs(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH with 255 pairs (testing larger npairs)
+	npairs := 255
+
+	code := []byte{
+		0x00, 0x00, 0x00, // 3 NOPs to align LOOKUPSWITCH at position 3
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=3
+		0x00, 0x00, 0x01, 0x08, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0xFF, // npairs = 255 (4 bytes)
+	}
+
+	// Add 255 match/offset pairs
+	for i := 0; i < npairs; i++ {
+		matchValue := uint32(i + 1)
+		offsetValue := uint32(0x100 + i*4)
+
+		code = append(code, byte(matchValue>>24), byte(matchValue>>16), byte(matchValue>>8), byte(matchValue))
+		code = append(code, byte(offsetValue>>24), byte(offsetValue>>16), byte(offsetValue>>8), byte(offsetValue))
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed for large pairs case: %v", err)
+	}
+}
+
+// Test checkLookupswitch edge case where the calculated length exceeds available code
+func TestLookupswitch_CalculatedLengthExceedsCode(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// LOOKUPSWITCH claiming to have more pairs than the code contains
+	code := []byte{
+		0x00, 0x00, 0x00, // 3 NOPs to align LOOKUPSWITCH at position 3
+		opcodes.LOOKUPSWITCH,   // 0xAB - LOOKUPSWITCH at PC=3
+		0x00, 0x00, 0x00, 0x10, // default offset (4 bytes)
+		0x00, 0x00, 0x00, 0x10, // npairs = 16 (but we don't provide 16 pairs)
+		0x00, 0x00, 0x00, 0x01, // match1 = 1 (4 bytes)
+		0x00, 0x00, 0x00, 0x20, // offset1 = 32 (4 bytes)
+		// Missing 15 more pairs
+	}
+
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err == nil {
+		t.Errorf("Expected CheckCodeValidity to fail when calculated length exceeds code, but got no error")
+	}
+}
+
 // MULTIANEWARRAY
 
 func TestCheckMultianewarray_HighLevel(t *testing.T) {
