@@ -16,21 +16,6 @@ import (
 	"testing"
 )
 
-// Helper function to redirect stderr and capture error messages
-func captureStderr(t *testing.T, testFunc func()) string {
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	testFunc()
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	return string(msg)
-}
-
 // Helper function to create a basic constant pool
 func createBasicCP() CPool {
 	CP := CPool{}
@@ -48,7 +33,7 @@ func createCPWithEntry(index int, entryType int) CPool {
 	return CP
 }
 
-// ==================== CheckCodeValidity Main Function Tests ====================
+// ==================== CheckCodeValidity Main Functions ====================
 
 func TestCheckCodeValidity_NilCodePointer(t *testing.T) {
 	globals.InitGlobals("test")
@@ -154,7 +139,83 @@ func TestCheckCodeValidity_InvalidBytecodeLength(t *testing.T) {
 	}
 }
 
-// ==================== Individual function tests in alphabetical order of the instructions ========
+func TestArith_StackDecrement(t *testing.T) { // test whether this is recognized as a 32-bit value push
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.IADD} // IADD
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// ==================== Utility Functions Tests ====================
+
+func TestReturn1(t *testing.T) {
+	result := Return1()
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+}
+
+func TestReturn2(t *testing.T) {
+	result := Return2()
+	if result != 2 {
+		t.Errorf("Expected return value 2, got: %d", result)
+	}
+}
+
+func TestReturn3(t *testing.T) {
+	result := Return3()
+	if result != 3 {
+		t.Errorf("Expected return value 3, got: %d", result)
+	}
+}
+
+func TestReturn4(t *testing.T) {
+	result := Return4()
+	if result != 4 {
+		t.Errorf("Expected return value 4, got: %d", result)
+	}
+}
+
+func TestReturn5(t *testing.T) {
+	result := Return5()
+	if result != 5 {
+		t.Errorf("Expected return value 5, got: %d", result)
+	}
+}
+
+func TestByteCodeIsForLongOrDouble_LongDoubleCodes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test some long/double bytecodes
+	longDoubleCodes := []byte{0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18}
+	for _, code := range longDoubleCodes {
+		result := BytecodeIsForLongOrDouble(code)
+		if !result {
+			t.Errorf("Expected true for long/double bytecode 0x%02X, got false", code)
+		}
+	}
+}
+
+func TestByteCodeIsForLongOrDouble_OtherCodes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Test some non-long/double bytecodes
+	otherCodes := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x10, 0x11}
+	for _, code := range otherCodes {
+		result := BytecodeIsForLongOrDouble(code)
+		if result {
+			t.Errorf("Expected false for non-long/double bytecode 0x%02X, got true", code)
+		}
+	}
+}
+
+// ==================== Individual bytecode checks in alphabetical order of the instructions ========
 
 // ACONST_NULL
 
@@ -185,47 +246,9 @@ func TestCheckAconstnull_StackIncrement(t *testing.T) {
 	}
 }
 
-func TestArith_StackDecrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x60} // IADD
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestPushFloat_StackIncrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x0B} // FCONST_0
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestPushInt_StackIncrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x03} // ICONST_0
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
 // BIPUSH
-func TestCheckBipush_ValidLength(t *testing.T) {
+
+func TestCheckBipush_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
 	code := []byte{opcodes.BIPUSH, 0x42}
@@ -238,7 +261,7 @@ func TestCheckBipush_ValidLength(t *testing.T) {
 	}
 }
 
-func TestCheckBipush_ValidLength2(t *testing.T) {
+func TestCheckBipush_ValidLength(t *testing.T) {
 	globals.InitGlobals("test")
 
 	Code = []byte{opcodes.BIPUSH, 0x42}
@@ -258,13 +281,542 @@ func TestCheckBipush_ValidLength2(t *testing.T) {
 func TestCheckBipush_InsufficientLength(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{0x10} // BIPUSH with missing byte
+	code := []byte{opcodes.BIPUSH} // BIPUSH with missing byte
 	cp := createBasicCP()
 	af := AccessFlags{}
 
 	err := CheckCodeValidity(&code, &cp, 5, af)
 	if err == nil {
 		t.Errorf("Expected error for insufficient BIPUSH length, but got none")
+	}
+}
+
+// DUP
+
+func TestDup_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.DUP} // DUP
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestDup(t *testing.T) {
+	globals.InitGlobals("test")
+
+	StackEntries = 1
+	result := CheckDup1()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
+	}
+}
+
+// DUP2
+
+func TestDup2_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{0x09, 0x5C, 0x00} // LCONST_0, DUP2, NOP (extra byte for DUP2 to check next instruction)
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestDup2_HighLevel2(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{0x03, 0x5C} // ICONST_0, DUP2
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestDup2_LongDoubleOperation(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create code where next bytecode is for long/double
+	Code = []byte{opcodes.NOP, opcodes.DUP2, opcodes.LADD}
+	PC = 1
+	PrevPC = 0
+	StackEntries = 1
+
+	result := CheckDup2()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
+	}
+	// Check that DUP2 was converted to DUP
+	if Code[PC] != opcodes.DUP {
+		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", Code[PC])
+	}
+}
+
+func TestDup2_RegularOperation(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create code where next bytecode is NOT for long/double
+	Code = []byte{opcodes.DUP2, opcodes.IADD}
+	PC = 0
+	StackEntries = 2
+
+	result := CheckDup2()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 4 {
+		t.Errorf("Expected StackEntries to increase by 2, got: %d", StackEntries)
+	}
+}
+
+// FCONST_0
+
+func TestPushFloat0_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.FCONST_0} // FCONST_0
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// GETFIELD
+
+func TestCheckGetfield_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GETFIELD, 0x00, 0x01} // GETFIELD with CP index 1
+	cp := createCPWithEntry(1, int(FieldRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckGetfield_ValidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	cp := createCPWithEntry(1, FieldRef)
+	CP = &cp
+	Code = []byte{opcodes.GETFIELD, 0x00, 0x01}
+	PC = 0
+
+	result := CheckGetfield()
+
+	if result != 3 {
+		t.Errorf("Expected return value 3, got: %d", result)
+	}
+}
+
+func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GETFIELD, 0x00, 0xFF} // GETFIELD with invalid CP index
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid GETFIELD CP slot, but got none")
+	}
+}
+
+func TestCodeCheckGetfield(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.GETFIELD, 0x00, 0x01} // GETFIELD pointing to slot 1
+	CP := CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &CP, 5, af)
+	if err == nil {
+		t.Errorf("GETFIELD: Expected error but did not get one.")
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
+		t.Errorf("GETFIELD: Did not get expected error message, got: %s", errMsg)
+	}
+}
+
+// GOTO
+
+func TestCheckGoto_ValidJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GOTO, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00} // GOTO +3
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckGoto_InvalidJumpNegative(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GOTO, 0xFF, 0xFE} // GOTO -2 (invalid)
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid GOTO jump, but got none")
+	}
+}
+
+func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GOTO, 0x00, 0x10} // GOTO +16 (out of bounds)
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for out-of-bounds GOTO jump, but got none")
+	}
+}
+
+// ICONST_0
+
+func TestIconst0_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{0x03} // ICONST_0
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// IF_ACMPEQ
+
+func TestCheckIfAcmpeq_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.IF_ACMPEQ, 0x00, 0x03, 0x00, 0x00, 0x00} // IF_ACMPEQ +3
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// IFEQ
+
+func TestCheckIfeq_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.IFEQ, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00} // IFEQ +3
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// INVOKEINTERFACE
+
+func TestCheckInvokeinterface_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00} // INVOKEINTERFACE with CP index 1, count 2, zero
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
+	globals.InitGlobals("test")
+
+	cp := createCPWithEntry(1, Interface)
+	CP = &cp
+	Code = []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x00} // count=2, zero=0
+	PC = 0
+
+	result := CheckInvokeinterface()
+
+	if result != 4 {
+		t.Errorf("Expected return value 4, got: %d", result)
+	}
+}
+
+func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEINTERFACE, 0x00, 0xFF, 0x02, 0x00} // INVOKEINTERFACE with invalid CP index
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid INVOKEINTERFACE CP slot, but got none")
+	}
+}
+
+func TestCheckInvokeinterface_ZeroCountByte(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x00, 0x00} // INVOKEINTERFACE with count 0
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for zero count byte in INVOKEINTERFACE, but got none")
+	}
+}
+
+func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEINTERFACE, 0x00, 0x01, 0x02, 0x01} // INVOKEINTERFACE with non-zero zero byte
+	cp := createCPWithEntry(1, int(Interface))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for non-zero zero byte in INVOKEINTERFACE, but got none")
+	}
+}
+
+// INVOKEVIRTUAL
+
+func TestCheckInvokevirtual_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEVIRTUAL, 0x00, 0x01} // INVOKEVIRTUAL with CP index 1
+	cp := createCPWithEntry(1, int(MethodRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.INVOKEVIRTUAL, 0x00, 0xFF} // INVOKEVIRTUAL with invalid CP index
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid INVOKEVIRTUAL CP slot, but got none")
+	}
+}
+
+func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.INVOKEVIRTUAL, 0x00, 0x01} // INVOKEVIRTUAL pointing to slot 1
+	CP := CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: ClassRef, Slot: 0} // should be a method ref
+	// now create the pointed-to FieldRef
+	CP.FieldRefs = make([]ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = ResolvedFieldEntry{
+		ClName:  "testClass",
+		FldName: "testField",
+		FldType: "I",
+	}
+
+	af := AccessFlags{}
+	err := CheckCodeValidity(&code, &CP, 5, af)
+	if err == nil {
+		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if errMsg == "" {
+		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
+	}
+
+	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a method reference") {
+		t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got:\n %s", errMsg)
+	}
+}
+
+// MULTIANEWARRAY
+
+func TestCheckMultianewarray_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02} // MULTIANEWARRAY with CP index 1, dimensions 2
+	cp := createCPWithEntry(1, int(ClassRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	cp := createCPWithEntry(1, ClassRef)
+	CP = &cp
+	Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02} // dimensions = 2
+	PC = 0
+
+	result := CheckMultianewarray()
+
+	if result != 4 {
+		t.Errorf("Expected return value 4, got: %d", result)
+	}
+}
+
+func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x00} // MULTIANEWARRAY with 0 dimensions
+	cp := createCPWithEntry(1, int(ClassRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for zero dimensions in MULTIANEWARRAY, but got none")
+	}
+}
+
+// NOP
+
+func TestNop(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.NOP} // NOP
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// POP
+
+func TestCheckPop_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.POP} // POP
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckPop_StackDecrement(t *testing.T) {
+	globals.InitGlobals("test")
+
+	StackEntries = 3
+	result := CheckPop()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 2 {
+		t.Errorf("Expected StackEntries to decrease by 1, got: %d", StackEntries)
+	}
+}
+
+// POP2
+
+func TestCheckPop2_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.POP2}
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckPop2_StackDecrement(t *testing.T) {
+	globals.InitGlobals("test")
+
+	StackEntries = 3
+	result := CheckPop2()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 1 {
+		t.Errorf("Expected StackEntries to decrease by 2, got: %d", StackEntries)
 	}
 }
 
@@ -313,332 +865,7 @@ func TestCheckSipush_InsufficientLength(t *testing.T) {
 	}
 }
 
-func TestDup1_StackIncrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x59} // DUP
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestDup2_LongDoubleOperation(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x09, 0x5C, 0x00} // LCONST_0, DUP2, NOP (extra byte for DUP2 to check next instruction)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestDup2_RegularOperation(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x03, 0x5C} // ICONST_0, DUP2
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckPop_StackDecrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x57} // POP
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckPop2_StackDecrement(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x58} // POP2
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckGetfield_ValidFieldRef(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB4, 0x00, 0x01} // GETFIELD with CP index 1
-	cp := createCPWithEntry(1, int(FieldRef))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB4, 0x00, 0xFF} // GETFIELD with invalid CP index
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for invalid GETFIELD CP slot, but got none")
-	}
-}
-
-func TestCheckGoto_ValidJump(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xA7, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00} // GOTO +3
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckGoto_InvalidJumpNegative(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xA7, 0xFF, 0xFE} // GOTO -2 (invalid)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for invalid GOTO jump, but got none")
-	}
-}
-
-func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xA7, 0x00, 0x10} // GOTO +16 (out of bounds)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for out-of-bounds GOTO jump, but got none")
-	}
-}
-
-func TestCheckIf_ValidJump(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xA5, 0x00, 0x03, 0x00, 0x00, 0x00} // IF_ACMPEQ +3
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckIfZero_ValidJump(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x99, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00} // IFEQ +3
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB9, 0x00, 0x01, 0x02, 0x00} // INVOKEINTERFACE with CP index 1, count 2, zero
-	cp := createCPWithEntry(1, int(Interface))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB9, 0x00, 0xFF, 0x02, 0x00} // INVOKEINTERFACE with invalid CP index
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for invalid INVOKEINTERFACE CP slot, but got none")
-	}
-}
-
-func TestCheckInvokeinterface_ZeroCountByte(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB9, 0x00, 0x01, 0x00, 0x00} // INVOKEINTERFACE with count 0
-	cp := createCPWithEntry(1, int(Interface))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for zero count byte in INVOKEINTERFACE, but got none")
-	}
-}
-
-func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB9, 0x00, 0x01, 0x02, 0x01} // INVOKEINTERFACE with non-zero zero byte
-	cp := createCPWithEntry(1, int(Interface))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for non-zero zero byte in INVOKEINTERFACE, but got none")
-	}
-}
-
-func TestCheckInvokevirtual_ValidMethodRef(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB6, 0x00, 0x01} // INVOKEVIRTUAL with CP index 1
-	cp := createCPWithEntry(1, int(MethodRef))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB6, 0x00, 0xFF} // INVOKEVIRTUAL with invalid CP index
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for invalid INVOKEVIRTUAL CP slot, but got none")
-	}
-}
-
-func TestReturn1(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x00} // NOP (uses Return1)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestReturn2(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x15, 0x01} // ILOAD with index (uses Return2)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestReturn3(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0x13, 0x00, 0x01} // LDC_W (uses Return3)
-	cp := createCPWithEntry(1, int(IntConst))
-	cp.IntConsts = make([]int32, 1)
-	cp.IntConsts[0] = 42
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestReturn4(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xB9, 0x00, 0x01, 0x02, 0x00} // INVOKEINTERFACE (uses Return4)
-	cp := createCPWithEntry(1, int(Interface))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestReturn5(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xC8, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00} // GOTO_W (uses Return5)
-	cp := createBasicCP()
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestByteCodeIsForLongOrDouble_LongDoubleCodes(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Test some long/double bytecodes
-	longDoubleCodes := []byte{0x09, 0x0A, 0x0E, 0x0F, 0x14, 0x16, 0x18}
-	for _, code := range longDoubleCodes {
-		result := BytecodeIsForLongOrDouble(code)
-		if !result {
-			t.Errorf("Expected true for long/double bytecode 0x%02X, got false", code)
-		}
-	}
-}
-
-func TestByteCodeIsForLongOrDouble_OtherCodes(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Test some non-long/double bytecodes
-	otherCodes := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x10, 0x11}
-	for _, code := range otherCodes {
-		result := BytecodeIsForLongOrDouble(code)
-		if result {
-			t.Errorf("Expected false for non-long/double bytecode 0x%02X, got true", code)
-		}
-	}
-}
+// TABLESWITCH
 
 func TestCheckTableswitch_ValidRange(t *testing.T) {
 	globals.InitGlobals("test")
@@ -680,107 +907,5 @@ func TestCheckTableswitch_InvalidRange(t *testing.T) {
 	err := CheckCodeValidity(&code, &cp, 5, af)
 	if err == nil {
 		t.Errorf("Expected error for invalid TABLESWITCH range, but got none")
-	}
-}
-
-func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xC5, 0x00, 0x01, 0x02} // MULTIANEWARRAY with CP index 1, dimensions 2
-	cp := createCPWithEntry(1, int(ClassRef))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err != nil {
-		t.Errorf("CheckCodeValidity failed: %v", err)
-	}
-}
-
-func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
-	globals.InitGlobals("test")
-
-	code := []byte{0xC5, 0x00, 0x01, 0x00} // MULTIANEWARRAY with 0 dimensions
-	cp := createCPWithEntry(1, int(ClassRef))
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &cp, 5, af)
-	if err == nil {
-		t.Errorf("Expected error for zero dimensions in MULTIANEWARRAY, but got none")
-	}
-}
-
-// Original tests that use newFrame need to be converted
-
-func TestCodeCheckForGetfield2(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// redirect stderr so as not to pollute the test output with the expected error message
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	code := []byte{0xB4, 0x00, 0x01} // GETFIELD pointing to slot 1
-	CP := CPool{}
-	CP.CpIndex = make([]CpEntry, 10)
-	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
-
-	af := AccessFlags{}
-
-	err := CheckCodeValidity(&code, &CP, 5, af)
-	if err == nil {
-		t.Errorf("GETFIELD: Expected error but did not get one.")
-	}
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(msg)
-
-	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
-		t.Errorf("GETFIELD: Did not get expected error message, got: %s", errMsg)
-	}
-}
-
-func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// redirect stderr so as not to pollute the test output with the expected error message
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	code := []byte{0xB6, 0x00, 0x01} // INVOKEVIRTUAL pointing to slot 1
-	CP := CPool{}
-	CP.CpIndex = make([]CpEntry, 10)
-	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = CpEntry{Type: ClassRef, Slot: 0} // should be a method ref
-	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]ResolvedFieldEntry, 1)
-	CP.FieldRefs[0] = ResolvedFieldEntry{
-		ClName:  "testClass",
-		FldName: "testField",
-		FldType: "I",
-	}
-
-	af := AccessFlags{}
-	err := CheckCodeValidity(&code, &CP, 5, af)
-	if err == nil {
-		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
-	}
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(msg)
-
-	if errMsg == "" {
-		t.Errorf("INVOKEVIRTUAL: Expected error but did not get one.")
-	}
-
-	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a method reference") {
-		t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got:\n %s", errMsg)
 	}
 }

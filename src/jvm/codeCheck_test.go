@@ -383,47 +383,6 @@ func TestDup1_StackIncrement(t *testing.T) {
 	}
 }
 
-func TestDup2_LongDoubleOperation(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Create code where next bytecode is for long/double
-	classloader.Code = []byte{opcodes.NOP, opcodes.DUP2, opcodes.LADD}
-	classloader.PC = 1
-	classloader.PrevPC = 0
-	classloader.StackEntries = 1
-
-	result := classloader.CheckDup2()
-
-	if result != 1 {
-		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if classloader.StackEntries != 2 {
-		t.Errorf("Expected StackEntries to increase by 1, got: %d", classloader.StackEntries)
-	}
-	// Check that DUP2 was converted to DUP
-	if classloader.Code[classloader.PC] != opcodes.DUP {
-		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", classloader.Code[classloader.PC])
-	}
-}
-
-func TestDup2_RegularOperation(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Create code where next bytecode is NOT for long/double
-	classloader.Code = []byte{opcodes.DUP2, opcodes.IADD}
-	classloader.PC = 0
-	classloader.StackEntries = 2
-
-	result := classloader.CheckDup2()
-
-	if result != 1 {
-		t.Errorf("Expected return value 1, got: %d", result)
-	}
-	if classloader.StackEntries != 4 {
-		t.Errorf("Expected StackEntries to increase by 2, got: %d", classloader.StackEntries)
-	}
-}
-
 func TestCheckPop_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -724,83 +683,6 @@ func TestByteCodeIsForLongOrDouble_OtherCodes(t *testing.T) {
 		if result {
 			t.Errorf("Expected false for bytecode 0x%02x, got true", code)
 		}
-	}
-}
-
-// ==================== Additional Switch Operation Tests ====================
-
-func TestCheckTableswitch_ValidRange(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Create a valid tableswitch bytecode sequence
-	// tableswitch with padding, default, low=1, high=3, and 3 offsets
-	classloader.Code = []byte{
-		opcodes.TABLESWITCH,
-		0x00, 0x00, 0x00, // padding to align to 4-byte boundary
-		0x00, 0x00, 0x00, 0x10, // default offset
-		0x00, 0x00, 0x00, 0x01, // low = 1
-		0x00, 0x00, 0x00, 0x03, // high = 3
-		0x00, 0x00, 0x00, 0x14, // offset for case 1
-		0x00, 0x00, 0x00, 0x18, // offset for case 2
-		0x00, 0x00, 0x00, 0x1C, // offset for case 3
-	}
-	classloader.PC = 0
-
-	result := classloader.CheckTableSwitch()
-
-	// Should return the total number of bytes consumed
-	if result <= 0 {
-		t.Errorf("Expected positive return value, got: %d", result)
-	}
-}
-
-func TestCheckTableswitch_InvalidRange(t *testing.T) {
-	globals.InitGlobals("test")
-
-	// Create tableswitch with low > high (invalid)
-	classloader.Code = []byte{
-		opcodes.TABLESWITCH,
-		0x00, 0x00, 0x00, // padding
-		0x00, 0x00, 0x00, 0x10, // default
-		0x00, 0x00, 0x00, 0x05, // low = 5
-		0x00, 0x00, 0x00, 0x03, // high = 3 (invalid: low > high)
-	}
-	classloader.PC = 0
-
-	result := classloader.CheckTableSwitch()
-
-	if result != classloader.ERROR_OCCURRED {
-		t.Errorf("Expected ERROR_OCCURRED for invalid range, got: %d", result)
-	}
-}
-
-func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
-	globals.InitGlobals("test")
-
-	cp := createCPWithEntry(1, classloader.ClassRef)
-	classloader.CP = &cp
-	classloader.Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x02} // dimensions = 2
-	classloader.PC = 0
-
-	result := classloader.CheckMultianewarray()
-
-	if result != 4 {
-		t.Errorf("Expected return value 4, got: %d", result)
-	}
-}
-
-func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
-	globals.InitGlobals("test")
-
-	cp := createCPWithEntry(1, classloader.ClassRef)
-	classloader.CP = &cp
-	classloader.Code = []byte{opcodes.MULTIANEWARRAY, 0x00, 0x01, 0x00} // dimensions = 0
-	classloader.PC = 0
-
-	result := classloader.CheckMultianewarray()
-
-	if result != classloader.ERROR_OCCURRED {
-		t.Errorf("Expected ERROR_OCCURRED for zero dimensions, got: %d", result)
 	}
 }
 
