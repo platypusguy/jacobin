@@ -404,6 +404,69 @@ func TestPushFloat0_HighLevel(t *testing.T) {
 	}
 }
 
+// FLOAD
+
+func TestPushFloatRet2_StackIncrement(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with FLOAD (0x17) which calls PushFloatRet2
+	code := []byte{opcodes.FLOAD, 0x01} // FLOAD with local variable index 1
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// FSTORE
+
+func TestStore_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with FSTORE (0x38) which calls storeFloatRet2
+	code := []byte{opcodes.FSTORE, 0x01} // FSTORE with local variable index 1
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// FSTORE_0
+
+func TestStore0_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with FSTORE_0 (0x43) which calls storeFloat
+	code := []byte{opcodes.FSTORE_0}
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
 // GETFIELD
 
 func TestCheckGetfield_HighLevel(t *testing.T) {
@@ -517,6 +580,86 @@ func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
 	err := CheckCodeValidity(&code, &cp, 5, af)
 	if err == nil {
 		t.Errorf("Expected error for out-of-bounds GOTO jump, but got none")
+	}
+}
+
+// GOTO_W
+
+// Test CheckGotow via GOTO_W bytecode with valid jump
+func TestCheckGotow_ValidJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with GOTO_W (0xC8) with valid 4-byte offset
+	code := []byte{0xC8, 0x00, 0x00, 0x00, 0x05, 0x00} // GOTO_W, jump +5 bytes forward
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// Test CheckGotow via GOTO_W bytecode with invalid jump
+func TestCheckGotow_InvalidJumpFOrward(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with GOTO_W (0xC8) with valid 4-byte offset
+	code := []byte{opcodes.GOTO_W, 0x00, 0x00, 0x00, 0x05} // GOTO_W, jump +5 bytes forward, which is outside the code
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	// Redirect stderr to a pipe to avoid printing to console
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+		t.Errorf("Expected an error because forward jump is too large")
+	}
+}
+
+// Test CheckGotow via GOTO_W bytecode with invalid jump
+func TestCheckGotow_InvalidJumpNegative(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with GOTO_W (0xC8) with invalid negative jump beyond start
+	code := []byte{0x00, opcodes.GOTO_W, 0xFF, 0xFF, 0xFF, 0xFE} // NOP then GOTO_W, jump beyond start
+
+	// Create basic constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	// Redirect stderr to a pipe to avoid printing to console
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+		t.Errorf("Expected CheckCodeValidity to fail for invalid GOTO_W jump")
 	}
 }
 
@@ -634,6 +777,111 @@ func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
 	}
 }
 
+// INVOKESPECIAL
+
+// Test checkInvokespecial via INVOKESPECIAL bytecode with valid method ref
+func TestCheckInvokespecial_ValidMethodRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with INVOKESPECIAL (0xB7)
+	code := []byte{opcodes.INVOKESPECIAL, 0x00, 0x01} // INVOKESPECIAL with CP index 1
+
+	// Create constant pool with valid method ref
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// Test checkInvokespecial via INVOKESPECIAL bytecode with invalid CP slot
+func TestCheckInvokespecial_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with INVOKESPECIAL (0xB7) with invalid CP index
+	code := []byte{opcodes.INVOKESPECIAL, 0x00, 0xFF} // INVOKESPECIAL with invalid CP index
+
+	// Create small constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	// Redirect stderr to a pipe to avoid printing to console
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+
+		t.Errorf("Expected CheckCodeValidity to fail for invalid INVOKESPECIAL CP slot")
+	}
+}
+
+// INVOKESTATIC
+
+// Test checkInvokestatic via INVOKESTATIC bytecode with valid method ref
+func TestCheckInvokestatic_ValidMethodRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with INVOKESTATIC (0xB8)
+	code := []byte{opcodes.INVOKESTATIC, 0x00, 0x01} // INVOKESTATIC with CP index 1
+
+	// Create constant pool with valid method ref
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0}
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// Test checkInvokestatic via INVOKESTATIC bytecode with invalid CP slot
+
+func TestCheckInvokestatic_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with INVOKESTATIC (0xB8) with invalid CP index
+	code := []byte{opcodes.INVOKESTATIC, 0x00, 0xFF} // INVOKESTATIC with invalid CP index
+
+	// Create small constant pool
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+
+	af := AccessFlags{}
+
+	normalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+
+	_ = w.Close()
+	os.Stderr = normalStderr
+
+	if err == nil {
+		t.Errorf("Expected CheckCodeValidity to fail for invalid INVOKESTATIC CP slot")
+	}
+}
+
 // INVOKEVIRTUAL
 
 func TestCheckInvokevirtual_HighLevel(t *testing.T) {
@@ -701,6 +949,64 @@ func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
 
 	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a method reference") {
 		t.Errorf("INVOKEVIRTUAL: Did not get expected error message, got:\n %s", errMsg)
+	}
+}
+
+// ISTORE
+
+func TestIstore_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ISTORE, 0x01} // ISTORE with index
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// ISTORE_0
+
+func TestIstore0_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.ISTORE_0}
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+// LDC_W
+
+func TestPushIntRet3_StackIncrement(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create bytecode with LDC_W (0x13) which calls PushIntRet3
+	code := []byte{opcodes.LDC_W, 0x00, 0x01} // LDC_W with CP index 1
+
+	// Create basic constant pool with an integer constant
+	cp := CPool{}
+	cp.CpIndex = make([]CpEntry, 10)
+	cp.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	cp.CpIndex[1] = CpEntry{Type: IntConst, Slot: 0}
+	cp.IntConsts = make([]int32, 1)
+	cp.IntConsts[0] = 42
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 10, af)
+	if err != nil {
+		t.Errorf("CheckCodeValidity failed: %v", err)
 	}
 }
 
