@@ -47,7 +47,8 @@ jobs:
         git clone https://github.com/platypusguy/jacobin
         cd jacobin/src
         go get
-        go install -v ./...
+        go build -v ./...
+        mv src jacobin
         jacobin --version
         
     - name: Setup Jacotest
