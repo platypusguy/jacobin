@@ -8,7 +8,7 @@ package execdata
 
 import (
 	"fmt"
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"os"
 	"runtime/debug"
 )

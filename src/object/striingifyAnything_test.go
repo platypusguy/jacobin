@@ -8,9 +8,9 @@ package object
 
 import (
 	"container/list"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"math/big"
 	"strings"
 	"testing"

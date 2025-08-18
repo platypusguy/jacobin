@@ -7,7 +7,7 @@
 package stringPool
 
 import (
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"math/rand"
 	"testing"
 )

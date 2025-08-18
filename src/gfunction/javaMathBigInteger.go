@@ -9,12 +9,12 @@ package gfunction
 import (
 	"crypto/rand"
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"math/big"
 	"math/bits"
 )

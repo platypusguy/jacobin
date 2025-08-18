@@ -2,10 +2,10 @@ package gfunction_test
 
 import (
 	"bytes"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"strconv"
 	"testing"
 )

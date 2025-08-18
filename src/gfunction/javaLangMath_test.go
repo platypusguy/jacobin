@@ -1,7 +1,7 @@
 package gfunction
 
 import (
-    "jacobin/excNames"
+    "jacobin/src/excNames"
     "math"
     "math/big"
     "testing"

@@ -7,9 +7,9 @@
 package classloader
 
 import (
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/types"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/types"
 	"math"
 	"testing"
 )

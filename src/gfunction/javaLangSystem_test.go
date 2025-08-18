@@ -8,12 +8,12 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"os"
 	"os/user"
 	"runtime"

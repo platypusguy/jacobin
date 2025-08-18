@@ -7,11 +7,11 @@
 package gfunction
 
 import (
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"os"
 	"os/user"
 )

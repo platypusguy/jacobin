@@ -8,8 +8,8 @@ package classloader
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/trace"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
 	"os"
 	"sync"
 	"testing"

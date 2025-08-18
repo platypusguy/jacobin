@@ -10,9 +10,9 @@ import (
     "reflect"
     "testing"
 
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/types"
 )
 
 func TestLoad_Lang_Character_RegistersMethods(t *testing.T) {

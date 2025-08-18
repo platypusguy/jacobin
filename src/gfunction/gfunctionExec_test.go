@@ -9,11 +9,11 @@ package gfunction
 import (
 	"container/list"
 	"errors"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/object"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
 	"testing"
 )
 

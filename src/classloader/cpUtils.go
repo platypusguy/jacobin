@@ -11,7 +11,7 @@ package classloader
 // here to avoid circular dependencies.
 
 import (
-	"jacobin/stringPool"
+	"jacobin/src/stringPool"
 )
 
 type CpType struct {

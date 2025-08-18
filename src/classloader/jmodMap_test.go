@@ -6,9 +6,9 @@
 package classloader
 
 import (
-	"jacobin/globals"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"testing"
 	"time"

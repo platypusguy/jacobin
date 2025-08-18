@@ -10,7 +10,7 @@ import (
 	"container/list"
 	"encoding/hex"
 	"fmt"
-	"jacobin/types"
+	"jacobin/src/types"
 	"strconv"
 )
 

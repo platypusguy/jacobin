@@ -9,13 +9,13 @@ package exceptions
 import (
 	"container/list"
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/util"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/util"
 )
 
 // the three likely superclasses of a given exception

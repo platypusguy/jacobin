@@ -8,10 +8,10 @@ package shutdown
 
 import (
 	"fmt"
-	"jacobin/config"
-	"jacobin/globals"
-	"jacobin/statics"
-	"jacobin/trace"
+	"jacobin/src/config"
+	"jacobin/src/globals"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
 	"os"
 )
 

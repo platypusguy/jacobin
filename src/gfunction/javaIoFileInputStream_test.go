@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 func makeTempFile(t *testing.T, content []byte) (string, func()) {

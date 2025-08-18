@@ -3,7 +3,7 @@ package statics
 // Reference: https://docs.oracle.com/en/java/javase/17/docs/api/constant-values.html
 
 import (
-	"jacobin/types"
+	"jacobin/src/types"
 	"math"
 )
 

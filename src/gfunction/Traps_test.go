@@ -11,7 +11,7 @@ import (
     "strings"
     "testing"
 
-    "jacobin/excNames"
+    "jacobin/src/excNames"
 )
 
 func TestLoad_Traps_RegistersSomeMethods(t *testing.T) {

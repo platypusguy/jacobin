@@ -8,11 +8,11 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/types"
 	"os"
 	"syscall"
 

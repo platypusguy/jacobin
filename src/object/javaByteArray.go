@@ -7,8 +7,8 @@
 package object
 
 import (
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"strings"
 	"unicode"
 	"unsafe"

@@ -1,8 +1,8 @@
 package gfunction
 
 import (
-    "jacobin/globals"
-    "jacobin/types"
+    "jacobin/src/globals"
+    "jacobin/src/types"
     "runtime"
     "testing"
 )

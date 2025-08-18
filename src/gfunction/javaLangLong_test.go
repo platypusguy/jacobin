@@ -1,8 +1,8 @@
 package gfunction
 
 import (
-    "jacobin/excNames"
-    "jacobin/object"
+    "jacobin/src/excNames"
+    "jacobin/src/object"
     "testing"
 )
 

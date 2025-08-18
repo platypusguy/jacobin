@@ -8,16 +8,16 @@ package jvm
 
 import (
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/exceptions"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/shutdown"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/thread"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/exceptions"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/shutdown"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/thread"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 )
 

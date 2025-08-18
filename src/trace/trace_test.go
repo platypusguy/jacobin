@@ -8,7 +8,7 @@ package trace
 
 import (
 	"io"
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"os"
 	"regexp"
 	"strings"

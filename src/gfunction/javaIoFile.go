@@ -8,10 +8,10 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"path/filepath"
 )

@@ -1,9 +1,9 @@
 package gfunction
 
 import (
-    "jacobin/object"
-    "jacobin/types"
-    "jacobin/excNames"
+    "jacobin/src/object"
+    "jacobin/src/types"
+    "jacobin/src/excNames"
     "math"
     "testing"
     "fmt"

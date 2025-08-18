@@ -9,10 +9,10 @@ import (
     "path/filepath"
     "testing"
 
-    "jacobin/excNames"
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/excNames"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/types"
 )
 
 func makeTempFileFIS(t *testing.T, content []byte) (string, func()) {

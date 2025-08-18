@@ -1,10 +1,10 @@
 package gfunction
 
 import (
-    "jacobin/excNames"
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/excNames"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/types"
     "os"
     "path/filepath"
     "testing"

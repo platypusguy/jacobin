@@ -7,8 +7,8 @@
 package gfunction
 
 import (
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 func Load_Util_Zip_Adler32() {

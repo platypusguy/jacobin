@@ -10,8 +10,8 @@ package trace
 // At some future point, might allow the user to specify where logging should go.
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/globals"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"os"
 	"sync"
 	"time"

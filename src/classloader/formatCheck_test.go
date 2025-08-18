@@ -8,9 +8,9 @@ package classloader
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
 	"os"
 	"strings"
 	"testing"

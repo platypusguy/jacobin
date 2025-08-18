@@ -7,9 +7,9 @@
 package gfunction
 
 import (
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"math"
 	"math/big"
 )

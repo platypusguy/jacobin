@@ -2,8 +2,8 @@ package gfunction
 
 import (
     "hash/crc32"
-    "jacobin/globals"
-    "jacobin/object"
+    "jacobin/src/globals"
+    "jacobin/src/object"
     "testing"
 )
 

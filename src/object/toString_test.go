@@ -7,8 +7,8 @@
 package object
 
 import (
-	"jacobin/globals"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/types"
 	"math/big"
 	"strconv"
 	"testing"

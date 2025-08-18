@@ -9,9 +9,9 @@ package jvm
 import (
 	"errors"
 	"fmt"
-	"jacobin/execdata"
-	"jacobin/globals"
-	"jacobin/trace"
+	"jacobin/src/execdata"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
 	"os"
 	"strings"
 )

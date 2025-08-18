@@ -2,11 +2,11 @@ package gfunction
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"testing"

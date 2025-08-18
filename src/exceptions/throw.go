@@ -8,14 +8,14 @@ package exceptions
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/shutdown"
-	"jacobin/thread"
-	"jacobin/trace"
-	"jacobin/util"
+	"jacobin/src/excNames"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/shutdown"
+	"jacobin/src/thread"
+	"jacobin/src/trace"
+	"jacobin/src/util"
 	"os"
 	"runtime/debug"
 )

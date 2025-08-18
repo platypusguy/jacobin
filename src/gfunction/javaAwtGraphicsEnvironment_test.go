@@ -7,7 +7,7 @@
 package gfunction
 
 import (
-    "jacobin/globals"
+    "jacobin/src/globals"
     "testing"
 )
 

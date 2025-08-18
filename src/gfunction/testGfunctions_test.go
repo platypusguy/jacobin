@@ -10,10 +10,10 @@ import (
     "reflect"
     "testing"
 
-    "jacobin/classloader"
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/classloader"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/types"
 )
 
 func TestLoad_TestGfunctions_RegistersMethods(t *testing.T) {
@@ -29,18 +29,18 @@ func TestLoad_TestGfunctions_RegistersMethods(t *testing.T) {
         slots int
         fn    func([]interface{}) interface{}
     }{
-        {"jacobin/test/Object.test()D", 0, vd},
-        {"jacobin/test/Object.test()Ljava/lang/Object;", 0, vl},
-        {"jacobin/test/Object.test(I)V", 1, iv},
-        {"jacobin/test/Object.test(D)V", 1, dv},
-        {"jacobin/test/Object.test(Ljava/lang/Object;)V", 1, lv},
-        {"jacobin/test/Object.test(I)I", 1, ii},
-        {"jacobin/test/Object.test(I)D", 1, id},
-        {"jacobin/test/Object.test(I)Ljava/lang/Object;", 1, il},
-        {"jacobin/test/Object.test(Ljava/lang/Object;)I", 1, li},
-        {"jacobin/test/Object.test(Ljava/lang/Object;)Ljava/lang/Object;", 1, ll},
-        {"jacobin/test/Object.test(Ljava/lang/Object;)D", 1, ld},
-        {"jacobin/test/Object.test(D)E", 1, ie},
+        {"jacobin/src/test/Object.test()D", 0, vd},
+        {"jacobin/src/test/Object.test()Ljava/lang/Object;", 0, vl},
+        {"jacobin/src/test/Object.test(I)V", 1, iv},
+        {"jacobin/src/test/Object.test(D)V", 1, dv},
+        {"jacobin/src/test/Object.test(Ljava/lang/Object;)V", 1, lv},
+        {"jacobin/src/test/Object.test(I)I", 1, ii},
+        {"jacobin/src/test/Object.test(I)D", 1, id},
+        {"jacobin/src/test/Object.test(I)Ljava/lang/Object;", 1, il},
+        {"jacobin/src/test/Object.test(Ljava/lang/Object;)I", 1, li},
+        {"jacobin/src/test/Object.test(Ljava/lang/Object;)Ljava/lang/Object;", 1, ll},
+        {"jacobin/src/test/Object.test(Ljava/lang/Object;)D", 1, ld},
+        {"jacobin/src/test/Object.test(D)E", 1, ie},
     }
 
     for _, c := range checks {
@@ -75,9 +75,9 @@ func TestCheckTestGfunctionsLoaded_PopulatesMTable(t *testing.T) {
 
     // A couple of representative keys should be in the classloader MTable now
     keys := []string{
-        "jacobin/test/Object.test()D",
-        "jacobin/test/Object.test(I)I",
-        "jacobin/test/Object.test(D)E",
+        "jacobin/src/test/Object.test()D",
+        "jacobin/src/test/Object.test(I)I",
+        "jacobin/src/test/Object.test(D)E",
     }
 
     for _, k := range keys {

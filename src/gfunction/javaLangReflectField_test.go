@@ -7,9 +7,9 @@
 package gfunction
 
 import (
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/util"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/util"
     "testing"
 )
 

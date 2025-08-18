@@ -20,10 +20,10 @@ package object
 
 import (
 	"fmt"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"strconv"
 	"strings"
 )

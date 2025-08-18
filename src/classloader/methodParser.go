@@ -8,8 +8,8 @@ package classloader
 
 import (
 	"fmt"
-	"jacobin/stringPool"
-	"jacobin/util"
+	"jacobin/src/stringPool"
+	"jacobin/src/util"
 	"sort"
 	"strconv"
 )

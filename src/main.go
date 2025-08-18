@@ -6,7 +6,7 @@
 
 package main
 
-import "jacobin/jvm"
+import "jacobin/src/jvm"
 
 func main() {
 	jvm.JVMrun()

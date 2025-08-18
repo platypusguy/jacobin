@@ -8,10 +8,10 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/types"
 )
 
 // Implementation of some of the functions in in Java/lang/Class.

@@ -8,7 +8,7 @@ package classloader
 
 import (
 	"io"
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"os"
 	"strings"
 	"testing"

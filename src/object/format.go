@@ -8,10 +8,10 @@ package object
 
 import (
 	"fmt"
-	"jacobin/globals"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"strings"
 )
 

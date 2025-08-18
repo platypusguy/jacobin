@@ -7,8 +7,8 @@
 package gfunction
 
 import (
-	"jacobin/excNames"
-	"jacobin/object"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
 )
 
 // A partial implementation of the java/util/Arrays class.

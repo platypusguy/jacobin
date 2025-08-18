@@ -9,10 +9,10 @@ package classloader
 import (
 	"errors"
 	"fmt"
-	"jacobin/shutdown"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/shutdown"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 )
 
 // the definition of the class as it's stored in the method area

@@ -7,9 +7,9 @@
 package gfunction
 
 import (
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/trace"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/trace"
 	"reflect"
 	"strings"
 	"unsafe"

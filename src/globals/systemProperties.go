@@ -8,7 +8,7 @@ package globals
 
 import (
 	"fmt"
-	"jacobin/types"
+	"jacobin/src/types"
 	"os"
 	"os/user"
 	"runtime"

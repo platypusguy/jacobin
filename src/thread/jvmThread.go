@@ -8,7 +8,7 @@ package thread
 
 import (
 	"container/list"
-	"jacobin/globals"
+	"jacobin/src/globals"
 )
 
 // Creates a JVM program execution thread. These threads are extremely limited.

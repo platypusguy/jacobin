@@ -8,8 +8,8 @@ package exceptions
 
 import (
 	"io"
-	"jacobin/excNames"
-	"jacobin/globals"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"os"
 	"strings"
 	"testing"

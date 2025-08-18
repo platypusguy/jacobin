@@ -3,8 +3,8 @@ package statics
 import (
 	"fmt"
 	"io"
-	"jacobin/globals"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"testing"

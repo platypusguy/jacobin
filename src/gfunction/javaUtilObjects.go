@@ -8,9 +8,9 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 func Load_Util_Objects() {

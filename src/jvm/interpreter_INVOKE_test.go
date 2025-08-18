@@ -8,14 +8,14 @@ package jvm
 
 import (
 	"io"
-	"jacobin/classloader"
-	"jacobin/frames"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/opcodes"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/frames"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/opcodes"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"testing"
@@ -220,7 +220,7 @@ func TestNewInvokeSpecialGmethodNoParams(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/test/Object"
+	classname := "jacobin/src/test/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -291,7 +291,7 @@ func TestNewInvokeSpecialGmethodNoParamsReturnsD(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/test/Object"
+	classname := "jacobin/src/test/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -362,7 +362,7 @@ func TestNewInvokeSpecialGmethodErrorReturn(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/test/Object"
+	classname := "jacobin/src/test/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -434,7 +434,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/test/Object"
+	classname := "jacobin/src/test/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -455,7 +455,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
-		Name:      "jacobin/test/Object",
+		Name:      "jacobin/src/test/Object",
 		NameIndex: CP.ClassRefs[0],
 		// Superclass:      "java/lang/Object",
 		SuperclassIndex: types.ObjectPoolStringIndex,
@@ -478,7 +478,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 		Data:   &clData,
 	}
 
-	classloader.MethAreaInsert("jacobin/test/Object", &k)
+	classloader.MethAreaInsert("jacobin/src/test/Object", &k)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -530,7 +530,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/test/Object"
+	classname := "jacobin/src/test/Object"
 	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
@@ -553,7 +553,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
-		Name:      "jacobin/test/Object",
+		Name:      "jacobin/src/test/Object",
 		NameIndex: CP.ClassRefs[0],
 		// Superclass:      "java/lang/Object",
 		SuperclassIndex: types.ObjectPoolStringIndex,
@@ -575,7 +575,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 		Data:   &clData,
 	}
 
-	classloader.MethAreaInsert("jacobin/test/Object", &k)
+	classloader.MethAreaInsert("jacobin/src/test/Object", &k)
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame

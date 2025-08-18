@@ -7,7 +7,7 @@
 package gfunction
 
 import (
-	"jacobin/object"
+	"jacobin/src/object"
 	"runtime"
 )
 

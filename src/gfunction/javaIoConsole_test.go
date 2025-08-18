@@ -8,15 +8,15 @@ package gfunction
 
 import (
 	"io"
-	"jacobin/classloader"
+	"jacobin/src/classloader"
 	"os"
 	"reflect"
 	"testing"
 
-	"jacobin/excNames"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
 )
 
 func TestLoad_Io_Console_RegistersMethods(t *testing.T) {

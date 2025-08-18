@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 func TestFileInit_Success(t *testing.T) {

@@ -7,10 +7,10 @@
 package object
 
 import (
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"path"
 	"strings"
 	"unsafe"

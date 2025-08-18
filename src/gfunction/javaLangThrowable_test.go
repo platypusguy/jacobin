@@ -8,14 +8,14 @@ package gfunction
 
 import (
 	"container/list"
-	"jacobin/classloader"
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"strings"
 	"testing"
 )

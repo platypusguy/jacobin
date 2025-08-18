@@ -2,12 +2,12 @@ package testutil
 
 import (
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/frames"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
+	"jacobin/src/classloader"
+	"jacobin/src/frames"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
 	"os"
 	"testing"
 )

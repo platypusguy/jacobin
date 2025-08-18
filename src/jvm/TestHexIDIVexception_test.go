@@ -8,11 +8,11 @@ package jvm
 
 import (
 	"io"
-	"jacobin/classloader"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/thread"
-	"jacobin/trace"
+	"jacobin/src/classloader"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/thread"
+	"jacobin/src/trace"
 	"os"
 	"strings"
 	"testing"

@@ -11,8 +11,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"jacobin/globals"
-	"jacobin/trace"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
 	"strings"
 )
 

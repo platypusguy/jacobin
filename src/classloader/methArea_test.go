@@ -8,9 +8,9 @@ package classloader
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"sync"

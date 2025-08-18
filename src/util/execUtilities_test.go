@@ -7,7 +7,7 @@
 package util
 
 import (
-	"jacobin/types"
+	"jacobin/src/types"
 	"testing"
 )
 

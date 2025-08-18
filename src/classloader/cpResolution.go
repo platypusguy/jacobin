@@ -9,9 +9,9 @@ package classloader
 import (
 	"errors"
 	"fmt"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
 )
 
 // ResolveCPmethRefs resolves the method references in the constant pool of a class

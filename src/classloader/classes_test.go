@@ -7,9 +7,9 @@ package classloader
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"sync"

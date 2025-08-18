@@ -7,7 +7,7 @@
 package util
 
 import (
-	"jacobin/types"
+	"jacobin/src/types"
 )
 
 // ParseIncomingParamsFromMethTypeString takes a type string from a CP

@@ -7,7 +7,7 @@
 package gfunction
 
 import (
-	"jacobin/excNames"
+	"jacobin/src/excNames"
 )
 
 func Load_Traps() {

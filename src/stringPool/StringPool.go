@@ -61,8 +61,8 @@ DumpStringPool(context string) -
 
 import (
 	"fmt"
-	"jacobin/globals"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/types"
 	"os"
 	"sort"
 )

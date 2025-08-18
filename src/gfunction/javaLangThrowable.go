@@ -10,11 +10,11 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"jacobin/object"
-	"jacobin/shutdown"
-	"jacobin/statics"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/object"
+	"jacobin/src/shutdown"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 )
 
 func Load_Lang_Throwable() {

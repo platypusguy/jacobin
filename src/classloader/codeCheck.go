@@ -10,10 +10,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/globals"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"math"
 )
 

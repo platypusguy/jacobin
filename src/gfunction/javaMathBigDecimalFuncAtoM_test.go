@@ -5,16 +5,16 @@
 package gfunction
 
 import (
-	"jacobin/exceptions"
-	"jacobin/globals"
+	"jacobin/src/exceptions"
+	"jacobin/src/globals"
 	"math"
 	"math/big"
 	"reflect"
 	"testing"
 
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 // Required initialisation for BigDecimal unit tests.

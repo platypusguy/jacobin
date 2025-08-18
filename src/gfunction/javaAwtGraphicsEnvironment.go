@@ -7,7 +7,7 @@
 package gfunction
 
 import (
-	"jacobin/globals"
+	"jacobin/src/globals"
 )
 
 func Load_Awt_Graphics_Environment() {

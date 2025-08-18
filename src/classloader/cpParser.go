@@ -9,7 +9,7 @@ package classloader
 import (
 	"encoding/binary"
 	"fmt"
-	"jacobin/stringPool"
+	"jacobin/src/stringPool"
 	"math"
 	"os"
 	"strconv"

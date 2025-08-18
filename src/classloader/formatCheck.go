@@ -8,8 +8,8 @@ package classloader
 
 import (
 	"errors"
-	"jacobin/globals"
-	"jacobin/stringPool"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
 	"strconv"
 	"strings"
 )

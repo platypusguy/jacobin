@@ -1,8 +1,8 @@
 package gfunction
 
 import (
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/object"
+    "jacobin/src/types"
     "runtime"
     "strings"
     "testing"

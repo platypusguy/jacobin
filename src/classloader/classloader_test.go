@@ -9,9 +9,9 @@ package classloader
 import (
 	"errors"
 	"io"
-	"jacobin/globals"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"path/filepath"
 	"strings"

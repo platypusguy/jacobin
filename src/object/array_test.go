@@ -9,9 +9,9 @@ package object
 import (
 	"fmt"
 	"io"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"os"
 	"testing"
 )

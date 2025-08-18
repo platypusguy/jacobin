@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"jacobin/trace"
+	"jacobin/src/trace"
 	"strings"
 )
 

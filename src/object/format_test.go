@@ -7,9 +7,9 @@
 package object
 
 import (
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"path/filepath"
 	"strings"
 	"testing"

@@ -14,8 +14,8 @@ package gfunction
 
 import (
 	"hash/crc32"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 func Load_Util_Zip_Crc32_Crc32c() {

@@ -9,8 +9,8 @@ package gfunction
 // The implementation of a field in the Java reflection API.
 
 import (
-	"jacobin/object"
-	"jacobin/util"
+	"jacobin/src/object"
+	"jacobin/src/util"
 	"sync"
 )
 

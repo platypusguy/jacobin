@@ -1,7 +1,7 @@
 package gfunction
 
 import (
-	"jacobin/object"
+	"jacobin/src/object"
 	"math/big"
 	"strconv"
 	"testing"

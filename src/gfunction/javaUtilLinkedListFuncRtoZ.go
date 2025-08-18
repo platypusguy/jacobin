@@ -3,9 +3,9 @@ package gfunction
 import (
 	"container/list"
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"sort"
 )
 

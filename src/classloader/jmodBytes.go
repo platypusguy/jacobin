@@ -12,9 +12,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"jacobin/globals"
-	"jacobin/shutdown"
-	"jacobin/trace"
+	"jacobin/src/globals"
+	"jacobin/src/shutdown"
+	"jacobin/src/trace"
 	"os"
 )
 

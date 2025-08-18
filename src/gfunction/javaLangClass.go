@@ -9,14 +9,14 @@ package gfunction
 import (
 	"errors"
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/shutdown"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/shutdown"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"strings"
 )
 

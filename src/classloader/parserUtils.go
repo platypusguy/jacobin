@@ -8,7 +8,7 @@ package classloader
 
 import (
 	"errors"
-	"jacobin/stringPool"
+	"jacobin/src/stringPool"
 	"strconv"
 )
 

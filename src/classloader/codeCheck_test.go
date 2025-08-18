@@ -1,16 +1,15 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2025 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2025 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
-// Migrated tests from jvm/codeCheck_test.go for use in classloader package
 package classloader
 
 import (
 	"io"
-	"jacobin/globals"
-	"jacobin/opcodes"
+	"jacobin/src/globals"
+	"jacobin/src/opcodes"
 	"os"
 	"strings"
 	"testing"

@@ -9,10 +9,10 @@ package exceptions
 import (
 	"container/list"
 	"fmt"
-	"jacobin/frames"
-	"jacobin/globals"
-	"jacobin/thread"
-	"jacobin/trace"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
+	"jacobin/src/thread"
+	"jacobin/src/trace"
 	"math"
 	"runtime/debug"
 	"strings"
@@ -126,8 +126,8 @@ func ShowGoStackTrace(stackInfo any) {
 	for {
 		if i < len(entries) {
 			if strings.HasPrefix(entries[i], "runtime") ||
-				strings.HasPrefix(entries[i], "jacobin/exceptions.ShowGoStackTrace") ||
-				strings.HasPrefix(entries[i], "jacobin/exceptions.ThrowEx") {
+				strings.HasPrefix(entries[i], "jacobin/src/exceptions.ShowGoStackTrace") ||
+				strings.HasPrefix(entries[i], "jacobin/src/exceptions.ThrowEx") {
 				i += 2 // skip over runtime traces, we just want app data
 				continue
 			}

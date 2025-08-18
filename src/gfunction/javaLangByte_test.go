@@ -10,10 +10,10 @@ import (
     "reflect"
     "testing"
 
-    "jacobin/excNames"
-    "jacobin/globals"
-    "jacobin/object"
-    "jacobin/types"
+    "jacobin/src/excNames"
+    "jacobin/src/globals"
+    "jacobin/src/object"
+    "jacobin/src/types"
 )
 
 func TestLoad_Lang_Byte_RegistersMethods(t *testing.T) {

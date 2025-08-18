@@ -12,11 +12,11 @@ package classloader
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 )
 
 type JavaLangClass struct {

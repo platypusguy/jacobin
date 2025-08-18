@@ -2,12 +2,12 @@ package gfunction
 
 import (
 	"io"
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"os"
 	"testing"
 
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 // helper to create a new RandomAccessFile object with initialized FieldTable

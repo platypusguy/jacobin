@@ -8,10 +8,10 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"unsafe"
 )
 

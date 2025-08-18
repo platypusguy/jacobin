@@ -8,10 +8,10 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 )
 
 func Load_Util_Optional() {

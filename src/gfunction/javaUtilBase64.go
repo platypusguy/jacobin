@@ -10,10 +10,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/stringPool"
-	"jacobin/types"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
 )
 
 // Implementation of some of the functions in Java/util/Base64.

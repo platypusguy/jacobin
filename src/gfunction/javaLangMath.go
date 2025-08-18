@@ -7,9 +7,9 @@
 package gfunction
 
 import (
-	"jacobin/classloader"
-	"jacobin/excNames"
-	"jacobin/object"
+	"jacobin/src/classloader"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
 	"math"
 	"math/big"
 	"math/rand"

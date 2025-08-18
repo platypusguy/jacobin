@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"jacobin/gfunction"
-	"jacobin/object"
+	"jacobin/src/gfunction"
+	"jacobin/src/object"
 	"math"
 	"testing"
 )

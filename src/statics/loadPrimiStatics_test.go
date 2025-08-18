@@ -10,7 +10,7 @@ import (
     "math"
     "testing"
 
-    "jacobin/types"
+    "jacobin/src/types"
 )
 
 // helper to isolate Statics map between tests

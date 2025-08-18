@@ -7,9 +7,9 @@
 package jvm
 
 import (
-	"jacobin/globals"
-	"jacobin/statics"
-	"jacobin/types"
+	"jacobin/src/globals"
+	"jacobin/src/statics"
+	"jacobin/src/types"
 	"os"
 	"strings"
 	"testing"

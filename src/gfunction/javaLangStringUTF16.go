@@ -7,7 +7,7 @@
 package gfunction
 
 import (
-	"jacobin/types"
+	"jacobin/src/types"
 )
 
 /*

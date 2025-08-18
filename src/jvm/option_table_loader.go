@@ -8,11 +8,11 @@ package jvm
 
 import (
 	"fmt"
-	"jacobin/globals"
-	"jacobin/statics"
-	"jacobin/trace"
-	"jacobin/types"
-	"jacobin/util"
+	"jacobin/src/globals"
+	"jacobin/src/statics"
+	"jacobin/src/trace"
+	"jacobin/src/types"
+	"jacobin/src/util"
 	"os"
 	"path/filepath"
 	"strings"

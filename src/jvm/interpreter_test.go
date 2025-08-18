@@ -8,9 +8,9 @@ package jvm
 
 import (
 	"io"
-	"jacobin/exceptions"
-	"jacobin/frames"
-	"jacobin/globals"
+	"jacobin/src/exceptions"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
 	"os"
 	"strings"
 	"testing"

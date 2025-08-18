@@ -7,7 +7,7 @@
 package thread
 
 import (
-	"jacobin/globals"
+	"jacobin/src/globals"
 	"sync"
 	"testing"
 )

@@ -7,14 +7,14 @@
 package jvm
 
 import (
-	"jacobin/classloader"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/statics"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"os"
 	"testing"
 )

@@ -7,11 +7,11 @@
 package gfunction
 
 import (
-	"jacobin/classloader"
-	"jacobin/globals"
-	"jacobin/object"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 	"testing"
 )
 

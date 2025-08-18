@@ -8,11 +8,11 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/excNames"
-	"jacobin/object"
-	"jacobin/stringPool"
-	"jacobin/types"
-	"jacobin/util"
+	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/stringPool"
+	"jacobin/src/types"
+	"jacobin/src/util"
 	"strconv"
 )
 

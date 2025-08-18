@@ -10,13 +10,13 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"jacobin/classloader"
-	"jacobin/frames"
-	"jacobin/gfunction"
-	"jacobin/globals"
-	"jacobin/stringPool"
-	"jacobin/trace"
-	"jacobin/types"
+	"jacobin/src/classloader"
+	"jacobin/src/frames"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/stringPool"
+	"jacobin/src/trace"
+	"jacobin/src/types"
 )
 
 // Initialization blocks are code blocks that for all intents are methods. They're gathered up by the
