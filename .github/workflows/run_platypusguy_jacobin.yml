@@ -42,11 +42,13 @@ jobs:
       if: runner.os == 'Windows'
         
     - name: Setup Jacobin
+      shell: bash
       run: |
         git clone https://github.com/platypusguy/jacobin
         cd jacobin/src
         go get
-        go install -v ./...
+        go build -o . -v ./...
+        mv src $HOME/go/bin/jacobin
         jacobin --version
         
     - name: Setup Jacotest

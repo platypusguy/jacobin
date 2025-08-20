@@ -36,6 +36,7 @@ jobs:
       run: |
         cd src
         go build -o . -v ./...
+        mv src jacobin
         pwd
         ./jacobin -h
 
@@ -72,6 +73,7 @@ jobs:
       run: |
         cd src
         go build -o . -v ./...
+        ren src.exe jacobin.exe
         echo %CD%
         dir
         ./jacobin -h
