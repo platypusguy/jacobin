@@ -8,6 +8,9 @@ package gfunction
 
 import (
 	"jacobin/src/excNames"
+	"jacobin/src/object"
+	"jacobin/src/thread"
+	"jacobin/src/types"
 	"time"
 )
 
@@ -74,6 +77,28 @@ func Load_Lang_Thread() {
 			ParamSlots: 1,
 			GFunction:  threadSleep,
 		}
+
+	MethodSignatures["java/lang/Thread.init()Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadCreateNoarg,
+		}
+}
+
+var classname = "java/lang/Thread"
+
+func threadCreateNoarg(params []interface{}) any {
+
+	t := object.MakeEmptyObjectWithClassName(&classname)
+
+	nameField := object.Field{Ftype: types.GolangString, Fvalue: ""}
+	t.FieldTable["name"] = nameField
+
+	idField := object.Field{Ftype: types.Int,
+		Fvalue: int64(thread.IncrementThreadNumber())}
+	t.FieldTable["ID"] = idField
+
+	return &t
 
 }
 

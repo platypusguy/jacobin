@@ -25,7 +25,7 @@ type ExecThread struct {
 // All Jacobin execution threads *must* use this function to create a thread
 func CreateThread() ExecThread {
 	t := ExecThread{}
-	t.ID = incrementThreadNumber()
+	t.ID = IncrementThreadNumber()
 	t.Stack = nil
 	t.Trace = false
 	return t
@@ -41,8 +41,9 @@ func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 
 // threads are assigned a monotonically incrementing integer ID. This function
 // increments the counter and returns its value as the integer ID to use
-func incrementThreadNumber() int {
+func IncrementThreadNumber() int {
 	glob := globals.GetGlobalRef()
+
 	glob.ThreadLock.Lock()
 	forCaller := glob.ThreadNumber + 1 // ensure that caller sees this one
 	glob.ThreadNumber = forCaller
