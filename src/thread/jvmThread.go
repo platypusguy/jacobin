@@ -53,7 +53,7 @@ func IncrementThreadNumber() int {
 
 // ======= Items for Java threads ======
 // Thread state constants matching Java's Thread.State enum
-type State int
+type State int64
 
 const (
 	NEW           State = 0

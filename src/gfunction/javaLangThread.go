@@ -78,7 +78,7 @@ func Load_Lang_Thread() {
 			GFunction:  threadSleep,
 		}
 
-	MethodSignatures["java/lang/Thread.init()Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.Thread()Ljava/lang/Thread;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadCreateNoarg,
@@ -97,6 +97,17 @@ func threadCreateNoarg(params []interface{}) any {
 	idField := object.Field{Ftype: types.Int,
 		Fvalue: int64(thread.IncrementThreadNumber())}
 	t.FieldTable["ID"] = idField
+
+	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}
+	t.FieldTable["state"] = stateField
+
+	daemonFiled := object.Field{
+		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	t.FieldTable["daemon"] = daemonFiled
+
+	threadGroup := object.Field{
+		Ftype: types.Ref, Fvalue: nil}
+	t.FieldTable["threadgroup"] = threadGroup
 
 	return &t
 
