@@ -50,3 +50,16 @@ func IncrementThreadNumber() int {
 	glob.ThreadLock.Unlock() // I don't care if glob.ThreadNumber races ahead
 	return forCaller
 }
+
+// ======= Items for Java threads ======
+// Thread state constants matching Java's Thread.State enum
+type State int
+
+const (
+	NEW           State = 0
+	RUNNABLE            = 1
+	BLOCKED             = 2
+	WAITING             = 3
+	TIMED_WAITING       = 4
+	TERMINATED          = 5
+)

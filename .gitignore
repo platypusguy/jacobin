@@ -9,7 +9,7 @@
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the go coverage tool
 *.out
 
 #Jetbrains artifacts
@@ -17,6 +17,7 @@
 
 #Ancillary dirs and files that should not be checked in
 reports/
+myNotes/
 mytestdata/
 pkg/
 docs/
@@ -26,4 +27,5 @@ docs/
 *.sh
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+
+
