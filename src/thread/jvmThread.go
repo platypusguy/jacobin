@@ -63,3 +63,9 @@ const (
 	TIMED_WAITING       = 4
 	TERMINATED          = 5
 )
+
+const (
+	MIN_PRIORITY  = 1
+	NORM_PRIORITY = 5
+	MAX_PRIORITY  = 10
+)

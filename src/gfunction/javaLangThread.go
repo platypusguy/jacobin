@@ -65,6 +65,19 @@ type PublicFields struct {
 }
 
 func Load_Lang_Thread() {
+	// vanilla constructor
+	MethodSignatures["java/lang/Thread.Thread()Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadCreateNoarg,
+		}
+
+	// constructor with name
+	MethodSignatures["java/lang/Thread.Thread(Ljava/lang/String;)Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  threadCreateWithName,
+		}
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
@@ -76,12 +89,6 @@ func Load_Lang_Thread() {
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  threadSleep,
-		}
-
-	MethodSignatures["java/lang/Thread.Thread()Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadCreateNoarg,
 		}
 }
 
@@ -109,8 +116,18 @@ func threadCreateNoarg(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: nil}
 	t.FieldTable["threadgroup"] = threadGroup
 
-	return &t
+	priority := object.Field{
+		Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+	t.FieldTable["priority"] = priority
 
+	return &t
+}
+
+func threadCreateWithName(params []interface{}) any {
+	t := threadCreateNoarg(nil).(*object.Object)
+	t.FieldTable["name"] = object.Field{
+		Ftype: types.GolangString, Fvalue: params[0].(string)}
+	return t
 }
 
 // "java/lang/Thread.sleep(J)V"
