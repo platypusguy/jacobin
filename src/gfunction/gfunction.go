@@ -248,6 +248,17 @@ func Populator(classname string, fldtype string, fldvalue interface{}) *object.O
 	return objPtr
 }
 
+// Invoke invokes a G function without setting up a frame. It is used primarily for
+// calling constructors on libraries that are loaded as gfunctions.
+func Invoke(whichFunc string, params []interface{}) interface{} {
+	_, ret := MethodSignatures[whichFunc]
+	if !ret {
+		errMsg := fmt.Sprintf("Invoke: G function %s not found", whichFunc)
+		exceptions.ThrowExNil(excNames.NoSuchMethodException, errMsg)
+	}
+	return MethodSignatures[whichFunc].GFunction(params)
+}
+
 // File set EOF condition.
 func eofSet(obj *object.Object, value bool) {
 	obj.FieldTable[FileAtEOF] = object.Field{Ftype: types.Bool, Fvalue: value}
