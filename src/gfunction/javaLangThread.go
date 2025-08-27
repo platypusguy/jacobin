@@ -90,6 +90,13 @@ func Load_Lang_Thread() {
 			ParamSlots: 1,
 			GFunction:  threadSleep,
 		}
+
+	// various methods
+	MethodSignatures["java/lang/Thread.clone()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  cloneNotSupportedException,
+		}
 }
 
 var classname = "java/lang/Thread"
@@ -139,4 +146,9 @@ func threadSleep(params []interface{}) interface{} {
 	}
 	time.Sleep(time.Duration(sleepTime) * time.Millisecond)
 	return nil
+}
+
+func cloneNotSupportedException(params []interface{}) interface{} {
+	errMsg := "cloneNotSupportedException: Not supported for threads"
+	return getGErrBlk(excNames.CloneNotSupportedException, errMsg)
 }
