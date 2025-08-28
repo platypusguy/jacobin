@@ -291,47 +291,9 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 				outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
 			}
 		case 'f':
-			// Ensure Java-like zero-padding works identically
-			val := normalizeForGo(rawArgs, useIndex)
-			switch val.(type) {
-			case float64, int64:
-				var f64 float64
-				if vv, ok := val.(float64); ok {
-					f64 = vv
-				} else {
-					f64 = float64(val.(int64))
-				}
-				// Base formatting with precision only
-				base := "%" + precision + "f"
-				res := fmt.Sprintf(base, f64)
-				// sign handling for + or space flags
-				if strings.Contains(flags, "+") && f64 >= 0.0 {
-					res = "+" + res
-				} else if strings.Contains(flags, " ") && f64 >= 0.0 {
-					res = " " + res
-				}
-				// zero-padding to width (if requested and not left-justified)
-				if strings.Contains(flags, "0") && !strings.Contains(flags, "-") && len(width) > 0 {
-					if w, err := strconv.Atoi(width); err == nil {
-						if lw := len(res); lw < w {
-							pad := w - lw
-							zeros := strings.Repeat("0", pad)
-							if strings.HasPrefix(res, "+") || strings.HasPrefix(res, " ") || strings.HasPrefix(res, "-") {
-								res = res[:1] + zeros + res[1:]
-							} else {
-								res = zeros + res
-							}
-						}
-					}
-				}
-				goConv = "s"
-				flags, width, precision = "", "", ""
-				outArgs = append(outArgs, res)
-			default:
-				// Fallback: let Go handle with original spec
-				goConv = "f"
-				outArgs = append(outArgs, val)
-			}
+			// Let Go handle width/precision/flags for fixed-point
+			goConv = "f"
+			outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
 		default:
 			// Pass-through, but ensure we supply the raw argument in Go-native type
 			outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
