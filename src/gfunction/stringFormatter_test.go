@@ -284,12 +284,53 @@ func TestStringFormatter_SignFlags_For_Decimal(t *testing.T) {
 }
 
 func TestStringFormatter_Time_T_T_DegradesToString(t *testing.T) {
+	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%t %T")
 	s := object.StringObjectFromGoString("time")
 	argsArr := makeObjectRefArray(s, s)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
 	expected := "time time"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_Boolean_Uppercase(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%2B %2B")
+	// First arg: non-boolean non-null -> true; Second arg: nil -> false
+	i := Populator("java/lang/Boolean", types.Bool, int64(1))
+	argsArr := makeObjectRefArray(i, nil)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "TRUE FALSE"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_Hash_For_Double(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%h")
+	d := Populator("java/lang/Double", types.Double, float64(123.45))
+	argsArr := makeObjectRefArray(d)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "8c921001"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_Char_Uppercase_C(t *testing.T) {
+	fmtObj := object.StringObjectFromGoString("%C %C")
+	ch := Populator("java/lang/Character", types.Char, int64('a'))
+	code := Populator("java/lang/Integer", types.Int, int64('b'))
+	argsArr := makeObjectRefArray(ch, code)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "A B"
 	if got != expected {
 		t.Fatalf("got %q want %q", got, expected)
 	}
