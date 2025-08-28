@@ -147,10 +147,6 @@ func TestStringFormatter_FixedWidthNoZeroPad(t *testing.T) {
 	}
 }
 
-// (duplicate block removed)
-
-// New tests to cover additional Java format specifiers and padding variants
-
 func TestStringFormatter_LiteralPercent(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("Done: 100%%")
 	argsArr := makeObjectRefArray()
