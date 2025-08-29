@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // helper wrapper to keep Java integral bit-width for formatting
@@ -239,9 +240,17 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 		goConv := string(conv)
 		switch conv {
 		case 'b', 'B':
-			goConv = "t"
+			// Java %b/%B: boolean formatted as true/false; %B must be uppercased
 			val := coerceJavaBoolean(rawArgs, useIndex)
-			outArgs = append(outArgs, val)
+			str := "false"
+			if val {
+				str = "true"
+			}
+			if conv == 'B' {
+				str = strings.ToUpper(str)
+			}
+			goConv = "s"
+			outArgs = append(outArgs, str)
 		case 's', 'S':
 			goConv = "s"
 			val := coerceJavaString(rawArgs, useIndex)
@@ -268,6 +277,38 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 			goConv = "s"
 			val := coerceJavaString(rawArgs, useIndex)
 			outArgs = append(outArgs, val)
+		case 'c', 'C':
+			// Java %c/%C: character; %C is uppercased variant
+			// Determine rune code point from various input types
+			var r rune
+			if rawArgs == nil || useIndex < 0 || useIndex >= len(rawArgs) || rawArgs[useIndex] == nil {
+				// Java would throw on null for %c; degrade to 0 rune
+				r = 0
+			} else {
+				v := rawArgs[useIndex]
+				switch vv := v.(type) {
+				case rune:
+					r = vv
+				case intWithBits:
+					// Treat as Unicode code point (like Java Formatter)
+					r = rune(uint32(vv.v))
+				case int64:
+					r = rune(uint32(vv))
+				case string:
+					// If a string sneaks in, take first rune
+					for _, rr := range vv { r = rr; break }
+				default:
+					// Fallback via fmt to string then first rune
+					s := coerceJavaString(rawArgs, useIndex)
+					for _, rr := range s { r = rr; break }
+				}
+			}
+			if conv == 'C' {
+				// Uppercase the code point
+				r = unicode.ToUpper(r)
+			}
+			goConv = "c"
+			outArgs = append(outArgs, r)
 		case 'x', 'X', 'o':
 			// For hex/octal, Java uses two's complement unsigned representation of the primitive width
 			v := rawArgs[useIndex]
@@ -291,47 +332,9 @@ func translateJavaFormat(fmtJava string, rawArgs []interface{}) (string, []inter
 				outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
 			}
 		case 'f':
-			// Ensure Java-like zero-padding works identically
-			val := normalizeForGo(rawArgs, useIndex)
-			switch val.(type) {
-			case float64, int64:
-				var f64 float64
-				if vv, ok := val.(float64); ok {
-					f64 = vv
-				} else {
-					f64 = float64(val.(int64))
-				}
-				// Base formatting with precision only
-				base := "%" + precision + "f"
-				res := fmt.Sprintf(base, f64)
-				// sign handling for + or space flags
-				if strings.Contains(flags, "+") && f64 >= 0.0 {
-					res = "+" + res
-				} else if strings.Contains(flags, " ") && f64 >= 0.0 {
-					res = " " + res
-				}
-				// zero-padding to width (if requested and not left-justified)
-				if strings.Contains(flags, "0") && !strings.Contains(flags, "-") && len(width) > 0 {
-					if w, err := strconv.Atoi(width); err == nil {
-						if lw := len(res); lw < w {
-							pad := w - lw
-							zeros := strings.Repeat("0", pad)
-							if strings.HasPrefix(res, "+") || strings.HasPrefix(res, " ") || strings.HasPrefix(res, "-") {
-								res = res[:1] + zeros + res[1:]
-							} else {
-								res = zeros + res
-							}
-						}
-					}
-				}
-				goConv = "s"
-				flags, width, precision = "", "", ""
-				outArgs = append(outArgs, res)
-			default:
-				// Fallback: let Go handle with original spec
-				goConv = "f"
-				outArgs = append(outArgs, val)
-			}
+			// Let Go handle width/precision/flags for fixed-point
+			goConv = "f"
+			outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
 		default:
 			// Pass-through, but ensure we supply the raw argument in Go-native type
 			outArgs = append(outArgs, normalizeForGo(rawArgs, useIndex))
@@ -354,6 +357,9 @@ func coerceJavaBoolean(args []interface{}, idx int) bool {
 		return false
 	}
 	v := args[idx]
+	if v == nil {
+		return false
+	}
 	switch vv := v.(type) {
 	case bool:
 		return vv
@@ -409,6 +415,8 @@ func normalizeForGo(args []interface{}, idx int) interface{} {
 }
 
 func javaHashValue(v interface{}) uint64 {
+	// Return a 32-bit Java-style hash value (as uint64 for Go's fmt),
+	// matching Java Formatter's %h semantics which uses Wrapper.hashCode().
 	switch vv := v.(type) {
 	case nil:
 		return 0
@@ -417,26 +425,55 @@ func javaHashValue(v interface{}) uint64 {
 			return 1231
 		}
 		return 1237
+	case intWithBits:
+		// Emulate Java primitive wrapper hashCode()
+		if vv.bits == 64 {
+			u := uint64(vv.v)
+			h := uint32((u >> 32) ^ (u & 0xffffffff))
+			return uint64(h)
+		}
+		// 32/16/8-bit signed values, sign-extended to 32-bit
+		var i32 int32
+		switch vv.bits {
+		case 32:
+			i32 = int32(vv.v)
+		case 16:
+			i32 = int32(int16(vv.v))
+		case 8:
+			i32 = int32(int8(vv.v))
+		default:
+			i32 = int32(vv.v)
+		}
+		return uint64(uint32(i32))
 	case int64:
-		return uint64(vv)
+		// Treat as long
+		u := uint64(vv)
+		h := uint32((u >> 32) ^ (u & 0xffffffff))
+		return uint64(h)
 	case float64:
-		// use IEEE bits as basis
-		return uint64(mathFloat64bits(vv))
+		// Java Double.hashCode: int(bits ^ (bits >>> 32)) with canonical NaN
+		bits := mathFloat64bits(vv)
+		if math.IsNaN(vv) {
+			bits = 0x7ff8000000000000
+		}
+		h := uint32(uint32(bits>>32) ^ uint32(bits))
+		return uint64(h)
 	case rune:
-		return uint64(vv)
+		return uint64(uint32(vv))
 	case string:
-		return uint64(javaStringHashCode(vv))
+		return uint64(uint32(javaStringHashCode(vv)))
 	case *object.Object:
 		if vv == nil || object.IsNull(vv) {
 			return 0
 		}
-		// use pointer address as identity hash surrogate
+		// Use pointer address; fold to 32-bit like an int hash
 		addrStr := fmt.Sprintf("%p", vv)
 		if strings.HasPrefix(addrStr, "0x") {
 			addrStr = addrStr[2:]
 		}
 		ui, _ := strconv.ParseUint(addrStr, 16, 64)
-		return ui
+		h := uint32(uint32(ui) ^ uint32(ui>>32))
+		return uint64(h)
 	default:
 		return 0
 	}
