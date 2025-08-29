@@ -106,6 +106,7 @@ type Globals struct {
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
 	FuncInstantiateClass func(string, *list.List) (any, error)
+	FuncInvokeGFunction  func(string, []any) any
 	FuncMinimalAbort     func(int, string)
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
@@ -148,6 +149,7 @@ func InitGlobals(progName string) Globals {
 		FileEncoding:         "UTF-8", // default encoding for file contents
 		FileNameEncoding:     "UTF-8", // default encoding for file names
 		FuncInstantiateClass: fakeInstantiateClass,
+		FuncInvokeGFunction:  fakeInvokeGFunction,
 		FuncMinimalAbort:     fakeMinimalAbort,
 		FuncThrowException:   fakeThrowEx,
 		GoStackShown:         false,
@@ -165,9 +167,8 @@ func InitGlobals(progName string) Globals {
 		StartingClass:        "",
 		StartingJar:          "",
 		StrictJDK:            false,
-		//		ThreadNumber:         0,                          // first thread will be numbered 1, as increment occurs prior
-		Version: config.GetJacobinVersion(), // gets version and build #
-		VmModel: "server",
+		Version:              config.GetJacobinVersion(), // gets version and build #
+		VmModel:              "server",
 	}
 
 	// ----- G function alternative processing flag
@@ -368,6 +369,13 @@ func fakeThrowEx(whichEx int, msg string) bool {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized ThrowEx pointer func\n")
 	fmt.Fprintf(os.Stderr, "%s", errMsg)
 	return false
+}
+
+// Fake Invoke in gfunctions.go
+func fakeInvokeGFunction(name string, args []any) any {
+	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized InvokeGFunction pointer func: name=%s\n", name)
+	fmt.Fprintf(os.Stderr, "%s", errMsg)
+	return nil
 }
 
 func InitStringPool() {

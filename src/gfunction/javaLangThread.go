@@ -97,6 +97,19 @@ func Load_Lang_Thread() {
 			ParamSlots: 0,
 			GFunction:  cloneNotSupportedException,
 		}
+
+	// ThreadNumbering is a private static class in java/lang/Thread
+	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadNumbering,
+		}
+	MethodSignatures["java/lang/Thread.ThreadNumberingNext()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadNumberingNext,
+		}
+
 }
 
 var classname = "java/lang/Thread"
@@ -109,7 +122,7 @@ func threadCreateNoarg(params []interface{}) any {
 	t.FieldTable["name"] = nameField
 
 	idField := object.Field{Ftype: types.Int,
-		Fvalue: int64(thread.IncrementThreadNumber())}
+		Fvalue: threadNumberingNext(nil).(int64)}
 	t.FieldTable["ID"] = idField
 
 	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}

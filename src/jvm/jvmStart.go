@@ -170,6 +170,7 @@ func JVMrun() int {
 // so we use global function pointers.
 func InitGlobalFunctionPointers(globalPtr *globals.Globals) {
 	globalPtr.FuncInstantiateClass = InstantiateClass
+	globalPtr.FuncInvokeGFunction = gfunction.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort
 	globalPtr.FuncThrowException = exceptions.ThrowExNil
 	globalPtr.FuncFillInStackTrace = gfunction.FillInStackTrace

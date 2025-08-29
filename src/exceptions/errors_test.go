@@ -59,9 +59,7 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 // if the JVM stack is empty, then notify the user that
 // no additional data is available
 func TestShowFrameStackWithEmptyStack(t *testing.T) {
-	g := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	g.JacobinName = "test"
+	g := globals.InitGlobals("test")
 	g.StrictJDK = false
 
 	trace.Init()

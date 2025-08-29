@@ -9,6 +9,8 @@ package thread
 import (
 	"container/list"
 	"jacobin/src/globals"
+	"math/rand"
+	"time"
 )
 
 // Creates a JVM program execution thread. These threads are extremely limited.
@@ -28,8 +30,14 @@ var ThreadNumber int64
 // CreateThread creates an execution thread and initializes it with default values
 // All Jacobin execution threads *must* use this function to create a thread
 func CreateThread() ExecThread {
+	gl := globals.GetGlobalRef()
 	t := ExecThread{}
-	t.ID = IncrementThreadNumber()
+	if gl.JacobinName == "test" || gl.JacobinName == "testWithoutShutdown" {
+		t.ID = int(time.Now().UnixNano()) + rand.Int()
+	} else {
+		ID := gl.FuncInvokeGFunction("java/lang/Thread.ThreadNumberingNext()J", nil).(int64)
+		t.ID = int(ID)
+	}
 	t.Stack = nil
 	t.Trace = false
 	return t
@@ -43,17 +51,18 @@ func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 	glob.ThreadLock.Unlock()
 }
 
-// threads are assigned a monotonically incrementing integer ID. This function
-// increments the counter and returns its value as the integer ID to use
-func IncrementThreadNumber() int {
-	glob := globals.GetGlobalRef()
-
-	glob.ThreadLock.Lock()
-	forCaller := glob.ThreadNumber + 1 // ensure that caller sees this one
-	glob.ThreadNumber = forCaller
-	glob.ThreadLock.Unlock() // I don't care if glob.ThreadNumber races ahead
-	return forCaller
-}
+//
+// // threads are assigned a monotonically incrementing integer ID. This function
+// // increments the counter and returns its value as the integer ID to use
+// func IncrementThreadNumber() int {
+// 	glob := globals.GetGlobalRef()
+//
+// 	glob.ThreadLock.Lock()
+// 	forCaller := glob.ThreadNumber + 1 // ensure that caller sees this one
+// 	glob.ThreadNumber = forCaller
+// 	glob.ThreadLock.Unlock() // I don't care if glob.ThreadNumber races ahead
+// 	return forCaller
+// }
 
 // ======= Items for Java threads ======
 // Thread state constants matching Java's Thread.State enum

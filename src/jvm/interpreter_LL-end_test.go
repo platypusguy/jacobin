@@ -589,7 +589,7 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 		f.OpStack = append(f.OpStack, int64(0))
 	}
 	f.TOS = -1
-	f.Thread = gl.ThreadNumber
+	f.Thread = th.ID
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -665,7 +665,7 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 		f.OpStack = append(f.OpStack, int64(0))
 	}
 	f.TOS = -1
-	f.Thread = gl.ThreadNumber
+	f.Thread = th.ID
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -790,7 +790,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 		f.OpStack = append(f.OpStack, int64(0))
 	}
 	f.TOS = -1
-	f.Thread = gl.ThreadNumber
+	f.Thread = th.ID
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
@@ -968,7 +968,7 @@ func TestPushWithStackOverflow(t *testing.T) {
 		f.OpStack = append(f.OpStack, int64(0))
 	}
 	f.TOS = 4
-	f.Thread = gl.ThreadNumber
+	f.Thread = th.ID
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
