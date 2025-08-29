@@ -165,9 +165,9 @@ func InitGlobals(progName string) Globals {
 		StartingClass:        "",
 		StartingJar:          "",
 		StrictJDK:            false,
-		ThreadNumber:         0,                          // first thread will be numbered 1, as increment occurs prior
-		Version:              config.GetJacobinVersion(), // gets version and build #
-		VmModel:              "server",
+		//		ThreadNumber:         0,                          // first thread will be numbered 1, as increment occurs prior
+		Version: config.GetJacobinVersion(), // gets version and build #
+		VmModel: "server",
 	}
 
 	// ----- G function alternative processing flag

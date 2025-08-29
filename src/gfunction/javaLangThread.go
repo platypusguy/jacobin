@@ -152,3 +152,14 @@ func cloneNotSupportedException(params []interface{}) interface{} {
 	errMsg := "cloneNotSupportedException: Not supported for threads"
 	return getGErrBlk(excNames.CloneNotSupportedException, errMsg)
 }
+
+// ========= ThreadNumbering is a private static class in java/lang/Thread
+func threadNumbering(params []any) any { // initialize thread numbering
+	thread.ThreadNumber = int64(0)
+	return thread.ThreadNumber
+}
+
+func threadNumberingNext(params []any) any {
+	thread.ThreadNumber += 1
+	return int64(thread.ThreadNumber)
+}

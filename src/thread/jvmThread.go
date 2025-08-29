@@ -21,6 +21,10 @@ type ExecThread struct {
 	Trace bool       // do we trace instructions?
 }
 
+// ThreadNumber is a monotonic counter to number threads at creation
+// is set only in the threadNumbering functions in javalang/thread.go
+var ThreadNumber int64
+
 // CreateThread creates an execution thread and initializes it with default values
 // All Jacobin execution threads *must* use this function to create a thread
 func CreateThread() ExecThread {
