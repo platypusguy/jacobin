@@ -9,6 +9,7 @@ package thread
 import (
 	"container/list"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"math/rand"
 	"time"
 )
@@ -43,12 +44,35 @@ func CreateThread() ExecThread {
 	return t
 }
 
+func CreateMainThread() *object.Object {
+	gl := globals.GetGlobalRef()
+	params := []any{"main"}
+	t := gl.FuncInvokeGFunction("java/lang/Thread.Thread(Ljava/lang/String;)Ljava/lang/Thread;", params)
+	return t.(*object.Object)
+}
+
 // Adds a thread to the global thread table using the ID as the key,
 // and a pointer to the ExecThread as the value
 func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
 	glob.ThreadLock.Lock()
 	glob.Threads[t.ID] = t
 	glob.ThreadLock.Unlock()
+}
+
+func RegisterThread(t *object.Object) {
+	glob := globals.GetGlobalRef()
+	ID := int(t.FieldTable["ID"].Fvalue.(int64))
+	glob.ThreadLock.Lock()
+	glob.Threads[ID] = t
+	glob.ThreadLock.Unlock()
+}
+
+// Runs a thread. This is the function that is called by the JVM when a thread is started.
+// It calls the run method in the java/lang/Thread class.
+func Run(t *object.Object, methName *string) {
+	glob := globals.GetGlobalRef()
+	params := []any{t, methName}
+	glob.FuncInvokeGFunction("java/lang/Thread.run(Ljava/lang/Object;Ljava/lang/String;)V", params)
 }
 
 //

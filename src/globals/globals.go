@@ -69,7 +69,7 @@ type Globals struct {
 	// ---- thread management ----
 	// Threads ThreadList // list of all app execution threads
 	ThreadLock sync.Mutex
-	Threads    map[int]interface{} // in reality the interface is a threads.ExecThread, but
+	Threads    map[int]interface{} // in reality the interface is an object pointer, but
 	// due to circularity has to be described this way here.
 	ThreadNumber int
 

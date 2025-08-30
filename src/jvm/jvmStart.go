@@ -141,6 +141,7 @@ func JVMrun() int {
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	// create the main thread
+	main := thread.CreateMainThread()
 	MainThread = thread.CreateThread()
 	MainThread.AddThreadToTable(globPtr)
 
@@ -148,6 +149,8 @@ func JVMrun() int {
 	if globals.TraceInit {
 		trace.Trace("Starting execution with: " + *mainClass)
 	}
+
+	thread.Run(main, mainClass)
 
 	// StartExec() runs the main thread. It does not return an error because all errors
 	// will be handled one of three ways: 1) trapped in an exception, which shuts down the
