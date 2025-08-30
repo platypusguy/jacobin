@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/thread"
@@ -98,6 +99,12 @@ func Load_Lang_Thread() {
 			GFunction:  cloneNotSupportedException,
 		}
 
+	MethodSignatures["java/lang/Thread.run()V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  run,
+		}
+
 	// ThreadNumbering is a private static class in java/lang/Thread
 	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
 		GMeth{
@@ -109,7 +116,6 @@ func Load_Lang_Thread() {
 			ParamSlots: 0,
 			GFunction:  threadNumberingNext,
 		}
-
 }
 
 var classname = "java/lang/Thread"
@@ -148,6 +154,22 @@ func threadCreateWithName(params []interface{}) any {
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.GolangString, Fvalue: params[0].(string)}
 	return t
+}
+
+// "java/lang/Thread.run(Ljava/lang/Runnable;)V" This is the function for starting a thread
+func run(params []interface{}) interface{} {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("Run: Expected 2 parameters, got %d", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// gl := globals.GetGlobalRef()
+	th := params[0].(*object.Object)
+	// runnable := params[1].(*string)
+
+	// threads are registered only when they are started
+	thread.RegisterThread(th)
+	return nil
 }
 
 // "java/lang/Thread.sleep(J)V"
