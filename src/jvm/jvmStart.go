@@ -141,7 +141,7 @@ func JVMrun() int {
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	// create the main thread
-	main := thread.CreateMainThread()
+
 	MainThread = thread.CreateThread()
 	MainThread.AddThreadToTable(globPtr)
 
@@ -150,7 +150,8 @@ func JVMrun() int {
 		trace.Trace("Starting execution with: " + *mainClass)
 	}
 
-	thread.Run(main, mainClass)
+	// main := thread.CreateMainThread() -- uncomment when ready to test JACOBIN-732
+	// thread.Run(main, mainClass) -- uncomment when ready to test JACOBIN-732
 
 	// StartExec() runs the main thread. It does not return an error because all errors
 	// will be handled one of three ways: 1) trapped in an exception, which shuts down the
