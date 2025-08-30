@@ -1,6 +1,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -392,7 +393,6 @@ func TestStringFormatter_BigDecimal_Fixed(t *testing.T) {
 	}
 }
 
-
 func TestStringFormatter_BigInteger_Hash_h(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%h")
@@ -425,7 +425,6 @@ func TestStringFormatter_BigDecimal_Hash_h(t *testing.T) {
 	}
 }
 
-
 func TestStringFormatter_BigDecimal_Scientific_e(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%18.6e")
@@ -441,5 +440,28 @@ func TestStringFormatter_BigDecimal_Scientific_e(t *testing.T) {
 	expected := "      1.234500e+02"
 	if got != expected {
 		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+// Verify %h and %H when the argument is a real java/lang/String object
+func TestStringFormatter_StringObject_Hash_h_and_H(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Build a String object and expected hash hex using Java's String.hashCode semantics
+	content := "Mary had a little lamb"
+	strObj := object.StringObjectFromGoString(content)
+
+	expectedLower := fmt.Sprintf("%x", uint32(javaStringHashCode(content)))
+	expectedUpper := fmt.Sprintf("%X", uint32(javaStringHashCode(content)))
+
+	fmtObj := object.StringObjectFromGoString("%h %H")
+	argsArr := makeObjectRefArray(strObj, strObj)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	want := expectedLower + " " + expectedUpper
+
+	if got != want {
+		t.Fatalf("got %q want %q", got, want)
 	}
 }
