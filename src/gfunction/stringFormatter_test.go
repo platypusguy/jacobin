@@ -1,6 +1,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -323,6 +324,32 @@ func TestStringFormatter_Hash_For_Double(t *testing.T) {
 	}
 }
 
+func TestStringFormatter_Hash_For_Float_Positive(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%h")
+	f := Populator("java/lang/Float", types.Float, float64(123.45))
+	argsArr := makeObjectRefArray(f)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "42f6e666"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_Hash_For_Float_Negative_Upper(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%H")
+	f := Populator("java/lang/Float", types.Float, float64(-123.45))
+	argsArr := makeObjectRefArray(f)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "C2F6E666"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
 func TestStringFormatter_Char_Uppercase_C(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%C %C")
 	ch := Populator("java/lang/Character", types.Char, int64('a'))
@@ -333,5 +360,108 @@ func TestStringFormatter_Char_Uppercase_C(t *testing.T) {
 	expected := "A B"
 	if got != expected {
 		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_BigInteger_D_and_X(t *testing.T) {
+	fmtObj := object.StringObjectFromGoString("%d %x")
+	bi := bigIntegerFromInt64(255)
+	argsArr := makeObjectRefArray(bi, bi)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "255 ff"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_BigDecimal_Fixed(t *testing.T) {
+	fmtObj := object.StringObjectFromGoString("%.3f")
+	// Build BigDecimal from string "123.456"
+	bd := object.MakeEmptyObjectWithClassName(&classNameBigDecimal)
+	params := []interface{}{bd, object.StringObjectFromGoString("123.456")}
+	ret := bigdecimalInitString(params)
+	if ret != nil {
+		t.Fatalf("bigdecimalInitString returned error: %v", ret)
+	}
+	argsArr := makeObjectRefArray(bd)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "123.456"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_BigInteger_Hash_h(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%h")
+	bi := bigIntegerFromInt64(12345)
+	argsArr := makeObjectRefArray(bi)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "3039" // BigInteger(12345).hashCode() in Java is 12345 (0x3039)
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_BigDecimal_Hash_h(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%h")
+	// Build BigDecimal from string "123.45"
+	bd := object.MakeEmptyObjectWithClassName(&classNameBigDecimal)
+	params := []interface{}{bd, object.StringObjectFromGoString("123.45")}
+	ret := bigdecimalInitString(params)
+	if ret != nil {
+		t.Fatalf("bigdecimalInitString returned error: %v", ret)
+	}
+	argsArr := makeObjectRefArray(bd)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "5d6e9" // 31*hash(12345) + 2
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+func TestStringFormatter_BigDecimal_Scientific_e(t *testing.T) {
+	globals.InitGlobals("test")
+	fmtObj := object.StringObjectFromGoString("%18.6e")
+	bd := object.MakeEmptyObjectWithClassName(&classNameBigDecimal)
+	params := []interface{}{bd, object.StringObjectFromGoString("123.45")}
+	ret := bigdecimalInitString(params)
+	if ret != nil {
+		t.Fatalf("bigdecimalInitString returned error: %v", ret)
+	}
+	argsArr := makeObjectRefArray(bd)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	expected := "      1.234500e+02"
+	if got != expected {
+		t.Fatalf("got %q want %q", got, expected)
+	}
+}
+
+// Verify %h and %H when the argument is a real java/lang/String object
+func TestStringFormatter_StringObject_Hash_h_and_H(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Build a String object and expected hash hex using Java's String.hashCode semantics
+	content := "Mary had a little lamb"
+	strObj := object.StringObjectFromGoString(content)
+
+	expectedLower := fmt.Sprintf("%x", uint32(javaStringHashCode(content)))
+	expectedUpper := fmt.Sprintf("%X", uint32(javaStringHashCode(content)))
+
+	fmtObj := object.StringObjectFromGoString("%h %H")
+	argsArr := makeObjectRefArray(strObj, strObj)
+	out := StringFormatter([]interface{}{fmtObj, argsArr})
+
+	got := object.GoStringFromStringObject(out.(*object.Object))
+	want := expectedLower + " " + expectedUpper
+
+	if got != want {
+		t.Fatalf("got %q want %q", got, want)
 	}
 }
