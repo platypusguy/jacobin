@@ -544,7 +544,7 @@ func bigdecimalDivideScaleRoundingMode(params []interface{}) interface{} {
 			increment = true
 		} else if cmp < 0 {
 			increment = false
-		} else { // exactly half
+		} else {          // exactly half
 			if ord == 4 { // HALF_UP
 				increment = true
 			} else if ord == 5 { // HALF_DOWN
@@ -614,4 +614,32 @@ func bigdecimalDivideRoundingMode(params []interface{}) interface{} {
 
 	// Delegate to the precise divide-with-scale implementation
 	return bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, scaleParam, rmodeObj})
+}
+
+// bigdecimalDivideMathContext implements BigDecimal.divide(BigDecimal, MathContext)
+// Minimal behavior:
+// - Null MathContext -> NullPointerException
+// - Uses MathContext.getRoundingMode(); if null -> NullPointerException
+// - If precision <= 0: delegate to divide(BigDecimal, RoundingMode) using the MC's rounding mode
+// - Else: delegate to divide(BigDecimal, int scale, RoundingMode) using dividend's scale as target scale
+func bigdecimalDivideMathContext(params []interface{}) interface{} {
+	dividend := params[0].(*object.Object)
+	divisor := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalDivide: MathContext is null")
+	}
+	// Extract rounding mode from MathContext
+	rmObj := mconGetRoundingMode([]interface{}{mc}).(*object.Object)
+	if object.IsNull(rmObj) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalDivide: MathContext.roundingMode is null")
+	}
+	prec := mconGetPrecision([]interface{}{mc}).(int64)
+	if prec <= 0 {
+		// Unlimited precision: behave like divide(BigDecimal, RoundingMode)
+		return bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rmObj})
+	}
+	// For now, choose target scale as the dividend's scale and apply rounding mode.
+	sa := dividend.FieldTable["scale"].Fvalue.(int64)
+	return bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, sa, rmObj})
 }
