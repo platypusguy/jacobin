@@ -63,6 +63,21 @@ func bigdecimalAdd(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(sum, precision, s)
 }
 
+// bigdecimalAddContext implements BigDecimal.add(BigDecimal, MathContext)
+// Minimal behavior: NPE if MathContext is null; otherwise, delegate to add(BigDecimal)
+func bigdecimalAddContext(params []interface{}) interface{} {
+	bd1 := params[0].(*object.Object)
+	bd2 := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "BigDecimal.add(BigDecimal, MathContext): MathContext is null")
+	}
+	return bigdecimalAdd([]interface{}{bd1, bd2})
+}
+
+// Alias to satisfy any references to camelCase variant (defensive for build error)
+func bigDecimalAddContext(params []interface{}) interface{} { return bigdecimalAddContext(params) }
+
 // bigdecimalByteValueExact returns the exact byte value of this BigDecimal
 func bigdecimalByteValueExact(params []interface{}) interface{} {
 	// Extract BigDecimal object
@@ -84,23 +99,36 @@ func bigdecimalByteValueExact(params []interface{}) interface{} {
 	return types.JavaByte(bigInt.Int64())
 }
 
-// bigdecimalCompareTo compares this BigDecimal to the specified BigDecimal.
-// Returns a negative integer if this BigDecimal is less than the specified BigDecimal,
-// zero if they are equal, and a positive integer if this BigDecimal is greater.
+// bigdecimalCompareTo compares this BigDecimal to the specified BigDecimal numerically,
+// ignoring differences in scale (per JDK semantics). Returns a negative integer if this
+// BigDecimal is less than the specified BigDecimal, zero if they are equal in value,
+// and a positive integer if this BigDecimal is greater.
 func bigdecimalCompareTo(params []interface{}) interface{} {
 	// Extract BigDecimal objects
 	bd1 := params[0].(*object.Object)
 	bd2 := params[1].(*object.Object)
 
-	// Extract BigInteger intVal fields
+	// Extract unscaled values and scales
 	intVal1 := bd1.FieldTable["intVal"].Fvalue.(*object.Object)
 	intVal2 := bd2.FieldTable["intVal"].Fvalue.(*object.Object)
+	val1 := new(big.Int).Set(intVal1.FieldTable["value"].Fvalue.(*big.Int))
+	val2 := new(big.Int).Set(intVal2.FieldTable["value"].Fvalue.(*big.Int))
+	s1 := bd1.FieldTable["scale"].Fvalue.(int64)
+	s2 := bd2.FieldTable["scale"].Fvalue.(int64)
 
-	// Convert BigInteger objects to big.Int
-	val1 := intVal1.FieldTable["value"].Fvalue.(*big.Int)
-	val2 := intVal2.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Compare the two values
+	// Align to common scale = max(s1, s2)
+	s := s1
+	if s2 > s {
+		s = s2
+	}
+	if s > s1 {
+		mul := new(big.Int).Exp(big.NewInt(10), big.NewInt(s-s1), nil)
+		val1.Mul(val1, mul)
+	}
+	if s > s2 {
+		mul := new(big.Int).Exp(big.NewInt(10), big.NewInt(s-s2), nil)
+		val2.Mul(val2, mul)
+	}
 	return int64(val1.Cmp(val2))
 }
 
@@ -132,9 +160,9 @@ func bigdecimalDivide(params []interface{}) interface{} {
 
 	// Form fraction N/D corresponding to (a * 10^(-sa)) / (b * 10^(-sb))
 	// N = |a| * 10^sb ; D = |b| * 10^sa
-	powNum := new(big.Int).Exp(big.NewInt(10), big.NewInt(sb), nil)
+	powNum := pow10(sb)
 	N := new(big.Int).Mul(absA, powNum)
-	powDen := new(big.Int).Exp(big.NewInt(10), big.NewInt(sa), nil)
+	powDen := pow10(sa)
 	D := new(big.Int).Mul(absB, powDen)
 
 	// Reduce fraction by GCD
@@ -488,10 +516,10 @@ func bigdecimalDivideScaleRoundingMode(params []interface{}) interface{} {
 	absB := new(big.Int).Abs(drBigInt)
 
 	// Build power-of-ten factor for numerator: sb + scaleParam
-	powNum := new(big.Int).Exp(big.NewInt(10), big.NewInt(sb+scaleParam), nil)
+	powNum := pow10(sb + scaleParam)
 	N := new(big.Int).Mul(absA, powNum)
 	// Build power-of-ten factor for denominator: sa
-	powDen := new(big.Int).Exp(big.NewInt(10), big.NewInt(sa), nil)
+	powDen := pow10(sa)
 	D := new(big.Int).Mul(absB, powDen)
 
 	// Integer division and remainder with positive values
@@ -544,7 +572,7 @@ func bigdecimalDivideScaleRoundingMode(params []interface{}) interface{} {
 			increment = true
 		} else if cmp < 0 {
 			increment = false
-		} else {          // exactly half
+		} else { // exactly half
 			if ord == 4 { // HALF_UP
 				increment = true
 			} else if ord == 5 { // HALF_DOWN
@@ -639,7 +667,44 @@ func bigdecimalDivideMathContext(params []interface{}) interface{} {
 		// Unlimited precision: behave like divide(BigDecimal, RoundingMode)
 		return bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rmObj})
 	}
-	// For now, choose target scale as the dividend's scale and apply rounding mode.
-	sa := dividend.FieldTable["scale"].Fvalue.(int64)
-	return bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, sa, rmObj})
+	// Use the MathContext precision to set a sufficiently large fractional scale.
+	// This avoids truncating results like 1/5 to 0 when scale=0.
+	scaleParam := prec
+	return bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, scaleParam, rmObj})
+}
+
+// bigdecimalDivideAndRemainderContext implements BigDecimal.divideAndRemainder(BigDecimal, MathContext)
+// Minimal semantics: NPE if MathContext is null; otherwise delegate to non-context variant
+func bigdecimalDivideAndRemainderContext(params []interface{}) interface{} {
+	dividend := params[0].(*object.Object)
+	divisor := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalDivideAndRemainder: MathContext is null")
+	}
+	return bigdecimalDivideAndRemainder([]interface{}{dividend, divisor})
+}
+
+// bigdecimalDivideToIntegralValueContext implements BigDecimal.divideToIntegralValue(BigDecimal, MathContext)
+// Minimal semantics: NPE if MathContext is null; delegate to non-context variant
+func bigdecimalDivideToIntegralValueContext(params []interface{}) interface{} {
+	dividend := params[0].(*object.Object)
+	divisor := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalDivideToIntegralValue: MathContext is null")
+	}
+	return bigdecimalDivideToIntegralValue([]interface{}{dividend, divisor})
+}
+
+// bigdecimalMultiplyContext implements BigDecimal.multiply(BigDecimal, MathContext)
+// Minimal semantics: NPE if MathContext is null; delegate to multiply without context
+func bigdecimalMultiplyContext(params []interface{}) interface{} {
+	bd1 := params[0].(*object.Object)
+	bd2 := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalMultiply: MathContext is null")
+	}
+	return bigdecimalMultiply([]interface{}{bd1, bd2})
 }

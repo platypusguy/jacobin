@@ -49,7 +49,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".<init>(DLjava/math/MathContext;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalInitDoubleContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".<init>(I)V"] =
@@ -85,7 +85,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".<init>(Ljava/lang/String;Ljava/math/MathContext;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalInitStringContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".<init>(Ljava/math/BigInteger;)V"] =
@@ -97,13 +97,13 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".<init>(Ljava/math/BigInteger;I)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalInitBigIntegerScale,
 		}
 
 	MethodSignatures[classNameBigDecimal+".<init>(Ljava/math/BigInteger;Ljava/math/MathContext;)V"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalInitBigIntegerContext,
 		}
 
 	// ---------------- end of <clinit> and <init> -------------------------------------------
@@ -123,7 +123,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".add(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalAddContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".byteValueExact()B"] =
@@ -183,7 +183,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".divideAndRemainder(Ljava/math/BigDecimal;Ljava/math/MathContext;)[Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalDivideAndRemainderContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".divideToIntegralValue(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"] =
@@ -195,7 +195,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".divideToIntegralValue(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalDivideToIntegralValueContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".doubleValue()D"] =
@@ -279,7 +279,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".multiply(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalMultiplyContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".negate()Ljava/math/BigDecimal;"] =
@@ -291,7 +291,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".negate(Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalNegateContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".plus()Ljava/math/BigDecimal;"] =
@@ -303,7 +303,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".plus(Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalPlusContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".pow(I)Ljava/math/BigDecimal;"] =
@@ -315,7 +315,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".pow(ILjava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalPowContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".precision()I"] =
@@ -333,13 +333,13 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".remainder(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalRemainderContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".round(Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalRoundContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".scale()I"] =
@@ -360,10 +360,16 @@ func Load_Math_Big_Decimal() {
 			GFunction:  bigdecimalSetScale,
 		}
 
-	MethodSignatures[classNameBigDecimal+".setScale(II)Ljava/math/BigDecimal;"] =
+ MethodSignatures[classNameBigDecimal+".setScale(II)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures[classNameBigDecimal+".setScale(ILjava/math/RoundingMode;)Ljava/math/BigDecimal;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  bigdecimalSetScaleRoundingMode,
 		}
 
 	MethodSignatures[classNameBigDecimal+".shortValueExact()S"] =
@@ -381,7 +387,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".sqrt(Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalSqrtContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".stripTrailingZeros()Ljava/math/BigDecimal;"] =
@@ -399,7 +405,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".subtract(Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalSubtractContext,
 		}
 
 	MethodSignatures[classNameBigDecimal+".toBigInteger()Ljava/math/BigInteger;"] =
@@ -435,7 +441,7 @@ func Load_Math_Big_Decimal() {
 	MethodSignatures[classNameBigDecimal+".ulp()Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  bigdecimalUlp,
 		}
 
 	MethodSignatures[classNameBigDecimal+".unscaledValue()Ljava/math/BigInteger;"] =

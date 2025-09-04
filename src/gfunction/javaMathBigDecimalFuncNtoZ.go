@@ -15,26 +15,22 @@ import (
 	"strings"
 )
 
-// bigdecimalNegate returns a BigDecimal with value = -this
-// Extracts the internal unscaled BigInteger, negates it,
-// and creates a new BigDecimal with scale = 0 and recalculated precision.
+// bigdecimalNegate returns a BigDecimal with value = -this, preserving scale and precision.
 func bigdecimalNegate(params []interface{}) interface{} {
 	// Implements BigDecimal.negate()
 	bd := params[0].(*object.Object)
 
 	// Extract the BigInteger intVal field
-	dv := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	intValObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	origScale := bd.FieldTable["scale"].Fvalue.(int64)
+	origPrecision := bd.FieldTable["precision"].Fvalue.(int64)
 
-	// Convert BigInteger object to big.Int
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
+	// Convert BigInteger object to big.Int and negate
+	orig := intValObj.FieldTable["value"].Fvalue.(*big.Int)
+	negatedValue := new(big.Int).Neg(orig)
 
-	// Negate the value
-	negatedValue := new(big.Int).Neg(dvBigInt)
-
-	// Create result BigDecimal object for the negated value
-	result := bigDecimalObjectFromBigInt(negatedValue, int64(len(negatedValue.String())), int64(0))
-
-	return result
+	// Return new BigDecimal with same scale and precision
+	return bigDecimalObjectFromBigInt(negatedValue, origPrecision, origScale)
 }
 
 // bigdecimalPlus returns a new BigDecimal identical to the input (unary plus).
@@ -184,7 +180,113 @@ func bigdecimalSetScale(params []interface{}) interface{} {
 		precision = 1
 	}
 
-	return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
+ return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
+}
+
+// bigdecimalSetScaleRoundingMode changes the scale using the provided RoundingMode
+// Behavior:
+// - If newScale == oldScale: return this
+// - If newScale > oldScale: multiply unscaled by 10^(diff)
+// - If newScale < oldScale: divide unscaled by 10^(oldScale-newScale) and round per RoundingMode
+func bigdecimalSetScaleRoundingMode(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	newScale := params[1].(int64)
+	rmodeObj := params[2].(*object.Object)
+
+	if object.IsNull(rmodeObj) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalSetScale: RoundingMode is null")
+	}
+
+	intVal := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	oldBigInt := new(big.Int).Set(intVal.FieldTable["value"].Fvalue.(*big.Int))
+	oldScale := bd.FieldTable["scale"].Fvalue.(int64)
+
+	// Early return if scales match
+	if newScale == oldScale {
+		return bd
+	}
+
+	diff := newScale - oldScale
+	// Increasing scale: multiply
+	if diff > 0 {
+		multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(diff), nil)
+		newBigInt := new(big.Int).Mul(oldBigInt, multiplier)
+		precision := precisionFromBigInt(newBigInt)
+		return bigDecimalObjectFromBigInt(newBigInt, precision, newScale)
+	}
+
+	// Decreasing scale: need rounding
+	steps := new(big.Int).Exp(big.NewInt(10), big.NewInt(-diff), nil) // 10^(oldScale-newScale)
+	abs := new(big.Int).Abs(oldBigInt)
+	q := new(big.Int).Quo(abs, steps)
+	r := new(big.Int).Mod(abs, steps)
+
+	if r.Sign() == 0 {
+		// exact; UNNECESSARY is fine since no rounding needed
+		if oldBigInt.Sign() < 0 && q.Sign() != 0 {
+			q.Neg(q)
+		}
+		precision := precisionFromBigInt(q)
+		return bigDecimalObjectFromBigInt(q, precision, newScale)
+	}
+
+	ord, ok := extractRoundingModeOrdinal(rmodeObj)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "bigdecimalSetScale: invalid RoundingMode")
+	}
+	// UNNECESSARY with non-zero remainder -> ArithmeticException
+	if ord == 7 { // UNNECESSARY
+		return getGErrBlk(excNames.ArithmeticException, "bigdecimalSetScale: rounding necessary")
+	}
+
+	increment := false
+	positive := oldBigInt.Sign() >= 0
+	D := steps
+	switch ord {
+	case 0: // UP
+		increment = true
+	case 1: // DOWN
+		increment = false
+	case 2: // CEILING
+		increment = positive
+	case 3: // FLOOR
+		increment = !positive
+	case 4, 5, 6: // HALF_UP, HALF_DOWN, HALF_EVEN
+		twiceR := new(big.Int).Lsh(r, 1)
+		cmp := twiceR.Cmp(D)
+		if cmp > 0 {
+			increment = true
+		} else if cmp < 0 {
+			increment = false
+		} else { // exactly half
+			if ord == 4 { // HALF_UP
+				increment = true
+			} else if ord == 5 { // HALF_DOWN
+				increment = false
+			} else { // HALF_EVEN
+				// increment iff q is odd
+				if q.Bit(0) == 1 {
+					increment = true
+				}
+			}
+		}
+	default:
+		// Fallback to HALF_UP-like
+		twiceR := new(big.Int).Lsh(r, 1)
+		if twiceR.Cmp(D) >= 0 {
+			increment = true
+		}
+	}
+
+	if increment {
+		q.Add(q, big.NewInt(1))
+	}
+	if !positive && q.Sign() != 0 {
+		q.Neg(q)
+	}
+
+	precision := precisionFromBigInt(q)
+	return bigDecimalObjectFromBigInt(q, precision, newScale)
 }
 
 // bigdecimalShortValueExact converts the BigDecimal to an int16 exactly.
@@ -460,4 +562,100 @@ func bigdecimalValueOfLongInt(params []interface{}) interface{} {
 	bd := bigDecimalObjectFromBigInt(bigIntObj.FieldTable["value"].Fvalue.(*big.Int), precision, int64(scale))
 
 	return bd
+}
+
+// bigdecimalNegateContext implements BigDecimal.negate(MathContext)
+// Minimal: NPE if MathContext is null; else delegate to negate()
+func bigdecimalNegateContext(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	mc := params[1].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalNegate: MathContext is null")
+	}
+	return bigdecimalNegate([]interface{}{bd})
+}
+
+// bigdecimalPlusContext implements BigDecimal.plus(MathContext)
+// Minimal: NPE if MathContext is null; else delegate to plus()
+func bigdecimalPlusContext(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	mc := params[1].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalPlus: MathContext is null")
+	}
+	return bigdecimalPlus([]interface{}{bd})
+}
+
+// bigdecimalPowContext implements BigDecimal.pow(int, MathContext)
+// Minimal: NPE if MathContext is null; else delegate to pow(int)
+func bigdecimalPowContext(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	exponent := params[1].(int64)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalPow: MathContext is null")
+	}
+	return bigdecimalPow([]interface{}{bd, exponent})
+}
+
+// bigdecimalRemainderContext implements BigDecimal.remainder(BigDecimal, MathContext)
+// Minimal: NPE if MathContext is null; else delegate to remainder(BigDecimal)
+func bigdecimalRemainderContext(params []interface{}) interface{} {
+	dividend := params[0].(*object.Object)
+	divisor := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalRemainder: MathContext is null")
+	}
+	return bigdecimalRemainder([]interface{}{dividend, divisor})
+}
+
+// bigdecimalRoundContext implements BigDecimal.round(MathContext)
+// Minimal: NPE if MathContext is null; returns this unchanged
+func bigdecimalRoundContext(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	mc := params[1].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalRound: MathContext is null")
+	}
+	// Could implement precision-based rounding; minimal behavior returns bd unchanged
+	return bd
+}
+
+// bigdecimalSqrtContext implements BigDecimal.sqrt(MathContext)
+// Minimal: NPE if MathContext is null; ArithmeticException for negative values; else sqrt via float
+func bigdecimalSqrtContext(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	mc := params[1].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalSqrt: MathContext is null")
+	}
+	// Check for negative value using doubleValue
+	dv := bigdecimalDoubleValue([]interface{}{bd}).(float64)
+	if dv < 0 {
+		return getGErrBlk(excNames.ArithmeticException, "bigdecimalSqrt: square root of negative value")
+	}
+	res := math.Sqrt(dv)
+	return bigdecimalValueOfDouble([]interface{}{res})
+}
+
+// bigdecimalSubtractContext implements BigDecimal.subtract(BigDecimal, MathContext)
+// Minimal: NPE if MathContext is null; else delegate to subtract(BigDecimal)
+func bigdecimalSubtractContext(params []interface{}) interface{} {
+	bd1 := params[0].(*object.Object)
+	bd2 := params[1].(*object.Object)
+	mc := params[2].(*object.Object)
+	if object.IsNull(mc) {
+		return getGErrBlk(excNames.NullPointerException, "bigdecimalSubtract: MathContext is null")
+	}
+	return bigdecimalSubtract([]interface{}{bd1, bd2})
+}
+
+// bigdecimalUlp implements BigDecimal.ulp()
+// Returns a BigDecimal equal to 1 scaled by this.scale (i.e., 10^-scale)
+func bigdecimalUlp(params []interface{}) interface{} {
+	bd := params[0].(*object.Object)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
+	one := big.NewInt(1)
+	return bigDecimalObjectFromBigInt(one, 1, scale)
 }
