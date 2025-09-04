@@ -672,3 +672,39 @@ func Test_BigDecimal_Chain_Divide_Subtract_Divide_And_Multiply(t *testing.T) {
 		t.Fatalf("expected 753.885000, got unscaled=%s scale=%d", u4.String(), s4)
 	}
 }
+
+
+func Test_BigDecimal_CompareTo_ConsidersScale(t *testing.T) {
+	bdutInit()
+	// 0.005 vs 0.01 -> -1
+	bdA := bigDecimalObjectFromBigInt(big.NewInt(5), 1, 3)  // 0.005
+	bdB := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 2)  // 0.01
+	res := bigdecimalCompareTo([]interface{}{bdA, bdB}).(int64)
+	if res >= 0 {
+		t.Fatalf("compareTo(0.005, 0.01) expected < 0, got %d", res)
+	}
+	res2 := bigdecimalCompareTo([]interface{}{bdB, bdA}).(int64)
+	if res2 <= 0 {
+		t.Fatalf("compareTo(0.01, 0.005) expected > 0, got %d", res2)
+	}
+
+	// 1.0 vs 1 -> compareTo == 0, but equals() is false by spec
+	onePointZero := bigDecimalObjectFromBigInt(big.NewInt(10), 2, 1) // 1.0
+	one := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 0)          // 1
+	cmp := bigdecimalCompareTo([]interface{}{onePointZero, one}).(int64)
+	if cmp != 0 {
+		t.Fatalf("compareTo(1.0, 1) expected 0, got %d", cmp)
+	}
+	eq := bigdecimalEquals([]interface{}{onePointZero, one})
+	if eq != types.JavaBoolFalse {
+		t.Fatalf("equals(1.0, 1) expected false, got %v", eq)
+	}
+
+	// Negative numbers: -0.50 vs -0.2 -> -0.50 < -0.2, so compareTo < 0
+	negA := bigDecimalObjectFromBigInt(big.NewInt(-50), 2, 2) // -0.50
+	negB := bigDecimalObjectFromBigInt(big.NewInt(-2), 1, 1)  // -0.2
+	cmpNeg := bigdecimalCompareTo([]interface{}{negA, negB}).(int64)
+	if cmpNeg >= 0 {
+		t.Fatalf("compareTo(-0.50, -0.2) expected < 0, got %d", cmpNeg)
+	}
+}
