@@ -394,20 +394,15 @@ func Load_Math_Big_Integer() {
 var classNameBigInteger = "java/math/BigInteger"
 
 // Get a prime number formatted as a big.Int.
+// Uses crypto/rand.Prime which already returns a probable prime,
+// avoiding any custom unbounded loop here.
 func getPrime(bitLength int) (*big.Int, string) {
-	for { // TODO: Infinite loop ok?
-		// Generate a random number given the bit length.
-		zz, err := rand.Prime(rand.Reader, bitLength)
-		if err != nil {
-			errMsg := fmt.Sprintf("getPrime: rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
-			return nil, errMsg
-		}
-
-		// Check if the number is probably prime
-		if zz.ProbablyPrime(20) { // 20 is the number of Miller-Rabin tests
-			return zz, ""
-		}
+	zz, err := rand.Prime(rand.Reader, bitLength)
+	if err != nil {
+		errMsg := fmt.Sprintf("getPrime: rand.Reader(bitLength=%d) failed, reason: %s", bitLength, err.Error())
+		return nil, errMsg
 	}
+	return zz, ""
 }
 
 // addStaticBigInteger: Form a BigInteger object based on the parameter value.
