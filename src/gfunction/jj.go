@@ -332,7 +332,8 @@ func jjSubProcess(params []interface{}) interface{} {
 	if err != nil {
 		// Something went wrong. Indicate err.Error() in stderr.
 		cmdString := strings.Join(strArray, " ")
-		stderr = fmt.Sprintf("jjSubProcess: Process %s failed, err: %s", cmdString, err.Error())
+		stderrLines := strings.Split(stderr, "\n")
+		stderr = fmt.Sprintf("jjSubProcess: Process %s failed, err: %s\nstderr: %s", cmdString, err.Error(), stderrLines[0])
 		trace.Error(stderr)
 		subpObj.FieldTable["stderr"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(stderr)}
 
