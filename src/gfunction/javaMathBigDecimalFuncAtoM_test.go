@@ -17,6 +17,7 @@ import (
 	"jacobin/src/types"
 )
 
+
 // Required initialisation for BigDecimal unit tests.
 func bdutInit() {
 	// Initialise globals, string pool, etc.
@@ -159,6 +160,7 @@ func Test_gfunction_bigdecimal_all(t *testing.T) {
 
 	t.Run("bigdecimalAdd", func(t *testing.T) {
 		bdutInit()
+		// Simple same-scale addition: 100 + 23 = 123 (scale 0)
 		a := bigDecimalObjectFromBigInt(big.NewInt(100), 3, 0)
 		b := bigDecimalObjectFromBigInt(big.NewInt(23), 2, 0)
 		res := bigdecimalAdd([]interface{}{a, b})
@@ -172,6 +174,18 @@ func Test_gfunction_bigdecimal_all(t *testing.T) {
 		}
 		if scale != 0 {
 			t.Fatalf("unexpected scale: %d", scale)
+		}
+		// Different scales: 1.000 (unscaled 1000, scale 3) + 100 (scale 0) -> 101.000 (unscaled 101000, scale 3)
+		oneThousandth := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 3)
+		oneHundred := bigDecimalObjectFromBigInt(big.NewInt(100), 3, 0)
+		res2 := bigdecimalAdd([]interface{}{oneThousandth, oneHundred})
+		out2, ok := res2.(*object.Object)
+		if !ok {
+			t.Fatalf("expected *object.Object, got %T", res2)
+		}
+		u2, s2 := extractBigDecimalComponents(t, out2)
+		if s2 != 3 || u2.Cmp(big.NewInt(101000)) != 0 {
+			t.Fatalf("expected 101.000 (unscaled 101000, scale 3), got unscaled=%s scale=%d", u2.String(), s2)
 		}
 	})
 
@@ -198,25 +212,39 @@ func Test_gfunction_bigdecimal_all(t *testing.T) {
 		}
 	})
 
-	t.Run("bigdecimalDivide and divide by zero", func(t *testing.T) {
+	t.Run("bigdecimalDivide exact and exceptions", func(t *testing.T) {
 		bdutInit()
+		// Non-terminating: 10 / 3 -> ArithmeticException
 		dividend := bigDecimalObjectFromBigInt(big.NewInt(10), 2, 0)
 		divisor := bigDecimalObjectFromBigInt(big.NewInt(3), 1, 0)
 		res := bigdecimalDivide([]interface{}{dividend, divisor})
-		out, ok := res.(*object.Object)
+		assertGErrBlk(t, res, excNames.ArithmeticException)
+
+		// Terminating: 10 / 4 -> 2.5 (scale 1)
+		divisor2 := bigDecimalObjectFromBigInt(big.NewInt(4), 1, 0)
+		res2 := bigdecimalDivide([]interface{}{dividend, divisor2})
+		out2, ok := res2.(*object.Object)
 		if !ok {
-			t.Fatalf("expected *object.Object, got %T", res)
+			t.Fatalf("expected *object.Object, got %T", res2)
 		}
-		quot, _ := extractBigDecimalComponents(t, out)
-		// integer division 10/3 -> 3
-		if quot.Cmp(big.NewInt(3)) != 0 {
-			t.Fatalf("unexpected quotient %s", quot.String())
+		u2, s2 := extractBigDecimalComponents(t, out2)
+		if s2 != 1 || u2.Cmp(big.NewInt(25)) != 0 {
+			t.Fatalf("expected 2.5 (unscaled 25, scale 1), got unscaled=%s scale=%d", u2.String(), s2)
+		}
+
+		// Terminating with scales: 1.00 / 8 -> 0.125 (scale 3)
+		oneScaled := bigDecimalObjectFromBigInt(big.NewInt(100), 3, 2)
+		res3 := bigdecimalDivide([]interface{}{oneScaled, bigDecimalObjectFromBigInt(big.NewInt(8), 1, 0)})
+		out3 := res3.(*object.Object)
+		u3, s3 := extractBigDecimalComponents(t, out3)
+		if s3 != 3 || u3.Cmp(big.NewInt(125)) != 0 {
+			t.Fatalf("expected 0.125 (unscaled 125, scale 3), got unscaled=%s scale=%d", u3.String(), s3)
 		}
 
 		// divide by zero
 		zero := bigDecimalObjectFromBigInt(big.NewInt(0), 1, 0)
-		res2 := bigdecimalDivide([]interface{}{dividend, zero})
-		assertGErrBlk(t, res2, excNames.ArithmeticException)
+		res4 := bigdecimalDivide([]interface{}{dividend, zero})
+		assertGErrBlk(t, res4, excNames.ArithmeticException)
 	})
 
 	t.Run("bigdecimalDivideAndRemainder", func(t *testing.T) {
@@ -468,4 +496,179 @@ func Test_gfunction_bigdecimal_all(t *testing.T) {
 			t.Fatalf("unexpected scale multiply: %d", s)
 		}
 	})
+}
+
+func Test_BigDecimal_Divide_Scale_RMode_HalfUp(t *testing.T) {
+	bdutInit()
+	// 6.0 / 1.9 with scale=3 HALF_UP -> 3.158
+	dividend := bigDecimalObjectFromBigInt(big.NewInt(60), 2, 1) // 6.0
+	divisor := bigDecimalObjectFromBigInt(big.NewInt(19), 2, 1)  // 1.9
+	rm := rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})
+	if blk, ok := rm.(*GErrBlk); ok {
+		t.Fatalf("failed to get RoundingMode.HALF_UP: %v", blk)
+	}
+	res := bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, int64(3), rm})
+	if blk, isBlk := res.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error from divide(scale, RoundingMode): %v", blk)
+	}
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 3 {
+		t.Fatalf("expected scale 3, got %d", s)
+	}
+	if u.Cmp(big.NewInt(3158)) != 0 {
+		t.Fatalf("expected unscaled 3158 (3.158), got %s", u.String())
+	}
+}
+
+func Test_BigDecimal_Divide_Scale_RMode_Null_ThrowsNPE(t *testing.T) {
+	bdutInit()
+	dividend := bigDecimalObjectFromBigInt(big.NewInt(10), 2, 0)
+	divisor := bigDecimalObjectFromBigInt(big.NewInt(2), 1, 0)
+	res := bigdecimalDivideScaleRoundingMode([]interface{}{dividend, divisor, int64(1), object.Null})
+	assertGErrBlk(t, res, excNames.NullPointerException)
+}
+
+func Test_BigDecimal_Divide_RMode_UsesDividendScale(t *testing.T) {
+	bdutInit()
+	// 6.0 / 1.9 with HALF_UP using the RMode overload should yield 3.2 with scale 1 (dividend's scale)
+	dividend := bigDecimalObjectFromBigInt(big.NewInt(60), 2, 1) // 6.0
+	divisor := bigDecimalObjectFromBigInt(big.NewInt(19), 2, 1)  // 1.9
+	rm := rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})
+	if blk, ok := rm.(*GErrBlk); ok {
+		t.Fatalf("failed to get RoundingMode.HALF_UP: %v", blk)
+	}
+	res := bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rm})
+	if blk, isBlk := res.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error from divide(RoundingMode): %v", blk)
+	}
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 1 {
+		t.Fatalf("expected scale 1, got %d", s)
+	}
+	if u.Cmp(big.NewInt(32)) != 0 {
+		t.Fatalf("expected unscaled 32 (result 3.2), got %s", u.String())
+	}
+}
+
+func Test_BigDecimal_Divide_RMode_UsesDividendScale_ForMorePreciseDivisor(t *testing.T) {
+	bdutInit()
+	// 6.0 / 2.39 with HALF_UP -> expected 2.5 (scale 1) not 2.51
+	dividend := bigDecimalObjectFromBigInt(big.NewInt(60), 2, 1) // 6.0
+	divisor := bigDecimalObjectFromBigInt(big.NewInt(239), 3, 2) // 2.39
+	rm := rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})
+	if blk, ok := rm.(*GErrBlk); ok {
+		t.Fatalf("failed to get RoundingMode.HALF_UP: %v", blk)
+	}
+	res := bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rm})
+	if blk, isBlk := res.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error from divide(RoundingMode): %v", blk)
+	}
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 1 {
+		t.Fatalf("expected scale 1, got %d", s)
+	}
+	if u.Cmp(big.NewInt(25)) != 0 {
+		t.Fatalf("expected unscaled 25 (result 2.5), got %s", u.String())
+	}
+}
+
+func Test_BigDecimal_Divide_RMode_SixOverTwoPointOne_HalfUp(t *testing.T) {
+	bdutInit()
+	// 6.0 / 2.1 with HALF_UP -> expected 2.9 (scale 1)
+	dividend := bigDecimalObjectFromBigInt(big.NewInt(60), 2, 1) // 6.0
+	divisor := bigDecimalObjectFromBigInt(big.NewInt(21), 2, 1)  // 2.1
+	rm := rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})
+	if blk, ok := rm.(*GErrBlk); ok {
+		t.Fatalf("failed to get RoundingMode.HALF_UP: %v", blk)
+	}
+	res := bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rm})
+	if blk, isBlk := res.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error from divide(RoundingMode): %v", blk)
+	}
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 1 {
+		t.Fatalf("expected scale 1, got %d", s)
+	}
+	if u.Cmp(big.NewInt(29)) != 0 {
+		t.Fatalf("expected unscaled 29 (result 2.9), got %s", u.String())
+	}
+}
+
+// New test using valueOf(double) to mirror the external Java snippet
+func Test_BigDecimal_Divide_RMode_FromValueOfDoubles(t *testing.T) {
+	bdutInit()
+	// BigDecimal.valueOf(6.0) should produce scale=1 per Java semantics
+	dividend := bigdecimalValueOfDouble([]interface{}{float64(6.0)}).(*object.Object)
+	divisor := bigdecimalValueOfDouble([]interface{}{float64(1.9)}).(*object.Object)
+	rm := rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})
+	if blk, ok := rm.(*GErrBlk); ok {
+		t.Fatalf("failed to get RoundingMode.HALF_UP: %v", blk)
+	}
+	res := bigdecimalDivideRoundingMode([]interface{}{dividend, divisor, rm})
+	if blk, isBlk := res.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error from divide(RoundingMode): %v", blk)
+	}
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 1 {
+		t.Fatalf("expected scale 1, got %d", s)
+	}
+	if u.Cmp(big.NewInt(32)) != 0 {
+		t.Fatalf("expected unscaled 32 (result 3.2), got %s", u.String())
+	}
+}
+
+
+
+func Test_BigDecimal_Subtract_AlignsScales(t *testing.T) {
+	bdutInit()
+	onePoint000 := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 3) // 1.000
+	oneHundred := bigDecimalObjectFromBigInt(big.NewInt(100), 3, 0)   // 100
+	res := bigdecimalSubtract([]interface{}{onePoint000, oneHundred})
+	out := res.(*object.Object)
+	u, s := extractBigDecimalComponents(t, out)
+	if s != 3 {
+		t.Fatalf("expected scale 3, got %d", s)
+	}
+	if u.Cmp(big.NewInt(-99000)) != 0 { // -99.000
+		t.Fatalf("expected unscaled -99000 (-99.000), got %s", u.String())
+	}
+}
+
+func Test_BigDecimal_Chain_Divide_Subtract_Divide_And_Multiply(t *testing.T) {
+	bdutInit()
+	scale := int64(3)
+	thirteen := bigDecimalObjectFromBigInt(big.NewInt(13), 2, 0)
+	startingValue := bigdecimalValueOfLong([]interface{}{int64(100)}).(*object.Object)
+	answer2 := bigdecimalValueOfDouble([]interface{}{float64(-7.615)}).(*object.Object)
+
+	// v = 100/100 (scale=3, HALF_UP) -> 1.000
+	v1 := bigdecimalDivideScaleRoundingMode([]interface{}{startingValue, startingValue, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")} )})
+	if _, isBlk := v1.(*GErrBlk); isBlk { t.Fatalf("unexpected error in first divide") }
+	v1bd := v1.(*object.Object)
+
+	// subtract path: (1.000 - 100) / 13 @ scale=3 HALF_UP -> -7.615
+	sub := bigdecimalSubtract([]interface{}{v1bd, startingValue}).(*object.Object)
+	v2 := bigdecimalDivideScaleRoundingMode([]interface{}{sub, thirteen, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")} )})
+	if _, isBlk := v2.(*GErrBlk); isBlk { t.Fatalf("unexpected error in second divide") }
+	u2, s2 := extractBigDecimalComponents(t, v2.(*object.Object))
+	if s2 != 3 || u2.Cmp(big.NewInt(-7615)) != 0 {
+		t.Fatalf("expected -7.615, got unscaled=%s scale=%d", u2.String(), s2)
+	}
+	// multiply path: (1.000 - 100) * 13 -> -1287.000
+	mul := bigdecimalMultiply([]interface{}{sub, thirteen}).(*object.Object)
+	u3, s3 := extractBigDecimalComponents(t, mul)
+	if s3 != 3 || u3.Cmp(big.NewInt(-1287000)) != 0 {
+		t.Fatalf("expected -1287.000, got unscaled=%s scale=%d", u3.String(), s3)
+	}
+	// multiply with answer2: (1.000 - 100) * (-7.615) -> 753.885000
+	mul2 := bigdecimalMultiply([]interface{}{sub, answer2}).(*object.Object)
+	u4, s4 := extractBigDecimalComponents(t, mul2)
+	if s4 != 6 || u4.Cmp(big.NewInt(753885000)) != 0 {
+		t.Fatalf("expected 753.885000, got unscaled=%s scale=%d", u4.String(), s4)
+	}
 }

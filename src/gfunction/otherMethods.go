@@ -74,12 +74,6 @@ func Load_Other_methods() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["java/math/RoundingMode.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
-		}
-
 	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,

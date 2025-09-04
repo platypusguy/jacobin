@@ -286,27 +286,38 @@ func bigdecimalStripTrailingZeros(params []interface{}) interface{} {
 }
 
 // bigdecimalSubtract subtracts the specified BigDecimal from this one.
-// Operates on unscaled values directly and returns a new BigDecimal.
+// Aligns scales to the maximum of the two before subtracting, per BigDecimal semantics.
 func bigdecimalSubtract(params []interface{}) interface{} {
 	// Implements BigDecimal.subtract(BigDecimal subtrahend)
 	minuendBD := params[0].(*object.Object)
 	subtrahendBD := params[1].(*object.Object)
 
-	// Extract BigInteger intVal fields
+	// Extract unscaled values and scales
 	minuendBI := minuendBD.FieldTable["intVal"].Fvalue.(*object.Object)
 	subtrahendBI := subtrahendBD.FieldTable["intVal"].Fvalue.(*object.Object)
+	val1 := new(big.Int).Set(minuendBI.FieldTable["value"].Fvalue.(*big.Int))
+	val2 := new(big.Int).Set(subtrahendBI.FieldTable["value"].Fvalue.(*big.Int))
+	s1 := minuendBD.FieldTable["scale"].Fvalue.(int64)
+	s2 := subtrahendBD.FieldTable["scale"].Fvalue.(int64)
 
-	// Convert BigInteger objects to big.Int
-	dvBigInt := minuendBI.FieldTable["value"].Fvalue.(*big.Int)
-	drBigInt := subtrahendBI.FieldTable["value"].Fvalue.(*big.Int)
+	// Align scales to s = max(s1, s2)
+	s := s1
+	if s2 > s {
+		s = s2
+	}
+	if s > s1 {
+		mul := new(big.Int).Exp(big.NewInt(10), big.NewInt(s-s1), nil)
+		val1.Mul(val1, mul)
+	}
+	if s > s2 {
+		mul := new(big.Int).Exp(big.NewInt(10), big.NewInt(s-s2), nil)
+		val2.Mul(val2, mul)
+	}
 
-	// Perform subtraction
-	resultBigInt := new(big.Int).Sub(dvBigInt, drBigInt)
-
-	// Create a new BigDecimal object with the result
-	result := bigDecimalObjectFromBigInt(resultBigInt, int64(len(resultBigInt.String())), minuendBD.FieldTable["scale"].Fvalue.(int64))
-
-	return result
+	// Perform subtraction on aligned unscaled values: val1 - val2
+	resultBigInt := new(big.Int).Sub(val1, val2)
+	precision := precisionFromBigInt(resultBigInt)
+	return bigDecimalObjectFromBigInt(resultBigInt, precision, s)
 }
 
 // bigdecimalToBigInteger returns the floor of this BigDecimal as a BigInteger.
@@ -382,16 +393,31 @@ func bigdecimalUnscaledValue(params []interface{}) interface{} {
 	return biObj
 }
 
-// bigdecimalValueOfDouble constructs a BigDecimal from a double (float64),
-// decomposing it into unscaled value, precision, and scale.
+// bigdecimalValueOfDouble constructs a BigDecimal from a double (float64)
+// following Java semantics: BigDecimal.valueOf(double) == new BigDecimal(Double.toString(val)).
+// In particular, integral finite doubles like 6.0 must produce a decimal string with ".0" so the
+// resulting BigDecimal has a non-zero scale (e.g., 6.0 -> scale 1).
 func bigdecimalValueOfDouble(params []interface{}) interface{} {
 	// Implements BigDecimal.valueOf(double val)
 	value := params[0].(float64)
 
-	// Create a BigDecimal object.
-	bigInt, precision, scale := float64ToDecimalComponents((value))
-	bd := bigDecimalObjectFromBigInt(bigInt, precision, scale)
+	// Build a Java-like string for the double. Java's Double.toString(6.0) -> "6.0".
+	// Go's FormatFloat with 'g' may emit "6"; ensure a decimal point for integral values.
+	s := strconv.FormatFloat(value, 'g', -1, 64)
+	if !strings.ContainsAny(s, ".eE") {
+		// No decimal point or exponent -> append .0 to match Java
+		s = s + ".0"
+	}
 
+	// Delegate to string-based constructor logic to preserve fractional zeros in scale
+	bd := object.MakeEmptyObjectWithClassName(&classNameBigDecimal)
+	strObj := object.StringObjectFromGoString(s)
+	if res := bigdecimalInitString([]interface{}{bd, strObj}); res != nil {
+		// pass through error block if any
+		if _, ok := res.(*GErrBlk); ok {
+			return res
+		}
+	}
 	return bd
 }
 

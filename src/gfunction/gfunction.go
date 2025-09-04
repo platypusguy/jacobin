@@ -143,8 +143,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Lang_UTF16()
 
 		// java/math/*
-		Load_Math_Big_Integer()
 		Load_Math_Big_Decimal()
+		Load_Math_Big_Integer()
+		Load_Math_Math_Context()
+		Load_Math_Rounding_Mode()
 
 		// java/security/*
 		Load_Security_SecureRandom()
