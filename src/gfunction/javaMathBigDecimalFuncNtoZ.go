@@ -51,26 +51,32 @@ func bigdecimalPlus(params []interface{}) interface{} {
 }
 
 // bigdecimalPow computes this^exponent for non-negative exponents.
-// Uses big.Int.Exp for exponentiation on the unscaled value,
-// and sets scale = 0 because pow affects unscaled value directly.
+// For a BigDecimal with unscaled value u and scale s, (u * 10^{-s})^n = (u^n) * 10^{-s*n}.
+// Therefore, result unscaled = u^n and result scale = s*n. Negative n -> ArithmeticException.
 func bigdecimalPow(params []interface{}) interface{} {
 	// Implements BigDecimal.pow(int exponent)
 	bd := params[0].(*object.Object)
 	exponent := params[1].(int64)
 
-	// Extract BigInteger intVal field
-	dv := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	if exponent < 0 {
+		return getGErrBlk(excNames.ArithmeticException, "bigdecimalPow: negative exponent")
+	}
+	// Special case: x^0 = 1 with scale 0
+	if exponent == 0 {
+		one := big.NewInt(1)
+		return bigDecimalObjectFromBigInt(one, 1, 0)
+	}
 
-	// Convert BigInteger object to big.Int
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
+	// Extract BigInteger intVal and current scale
+	intValObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	u := intValObj.FieldTable["value"].Fvalue.(*big.Int)
+	s := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Perform exponentiation
-	resultValue := new(big.Int).Exp(dvBigInt, big.NewInt(exponent), nil)
-
-	// Create result BigDecimal object for the power
-	result := bigDecimalObjectFromBigInt(resultValue, int64(len(resultValue.String())), int64(0))
-
-	return result
+	// Compute u^n
+	resUnscaled := new(big.Int).Exp(u, big.NewInt(exponent), nil)
+	resScale := s * exponent
+	prec := precisionFromBigInt(resUnscaled)
+	return bigDecimalObjectFromBigInt(resUnscaled, prec, resScale)
 }
 
 // bigdecimalPrecision simply returns the precision stored in the BigDecimal's FieldTable.
@@ -84,34 +90,24 @@ func bigdecimalPrecision(params []interface{}) interface{} {
 	return precision
 }
 
-// bigdecimalRemainder computes this % divisor.
-// If divisor == 0, returns ArithmeticException to avoid division by zero.
-// Result scale is 0 (remainder is integral).
+// bigdecimalRemainder computes this - this.divideToIntegralValue(divisor) * divisor
 func bigdecimalRemainder(params []interface{}) interface{} {
-	// Implements BigDecimal.remainder(BigDecimal divisor)
 	dividend := params[0].(*object.Object)
 	divisor := params[1].(*object.Object)
 
-	// Extract BigInteger intVal fields
-	dv := dividend.FieldTable["intVal"].Fvalue.(*object.Object)
+	// Division by zero check
 	dr := divisor.FieldTable["intVal"].Fvalue.(*object.Object)
-
-	// Convert BigInteger objects to big.Int
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
 	drBigInt := dr.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Check for division by zero
 	if drBigInt.Sign() == 0 {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalRemainder: divide by zero")
 	}
-
-	// Perform Java-like remainder operation.
-	remainder := javaLikeRemainder(dvBigInt, drBigInt)
-
-	// Create result BigDecimal object for the remainder
-	remObj := bigDecimalObjectFromBigInt(remainder, int64(len(remainder.String())), int64(0))
-
-	return remObj
+	q := bigdecimalDivideToIntegralValue([]interface{}{dividend, divisor})
+	if blk, ok := q.(*GErrBlk); ok { return blk }
+	qbd := q.(*object.Object)
+	prod := bigdecimalMultiply([]interface{}{qbd, divisor})
+	if blk, ok := prod.(*GErrBlk); ok { return blk }
+	res := bigdecimalSubtract([]interface{}{dividend, prod.(*object.Object)})
+	return res
 }
 
 // bigdecimalScale returns the current scale of the BigDecimal.
@@ -422,21 +418,26 @@ func bigdecimalSubtract(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(resultBigInt, precision, s)
 }
 
-// bigdecimalToBigInteger returns the floor of this BigDecimal as a BigInteger.
-// Simply returns the unscaled BigInteger (ignoring scale).
+// bigdecimalToBigInteger returns the integer part of this BigDecimal as a BigInteger,
+// truncating toward zero (i.e., ignoring the fractional part implied by scale).
 func bigdecimalToBigInteger(params []interface{}) interface{} {
 	// Implements BigDecimal.toBigInteger()
 	bd := params[0].(*object.Object)
 
-	// Extract BigInteger intVal field
+	// Extract unscaled BigInteger and scale
 	intValObj := bd.FieldTable["intVal"].Fvalue.(*object.Object)
+	unscaled := intValObj.FieldTable["value"].Fvalue.(*big.Int)
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
 
-	// Retrieve the big.Int from the BigInteger object
-	bigIntValue := intValObj.FieldTable["value"].Fvalue.(*big.Int)
+	// If no fractional digits, return the unscaled value directly.
+	if scale <= 0 {
+		return makeBigIntegerFromBigInt(unscaled)
+	}
 
-	// Return the BigInteger object (as an *object.Object)
-	biObj := makeBigIntegerFromBigInt(bigIntValue)
-	return biObj
+	// Compute quotient = unscaled / 10^scale with truncation toward zero
+	div := pow10(scale)
+	q := new(big.Int).Quo(new(big.Int).Set(unscaled), div)
+	return makeBigIntegerFromBigInt(q)
 }
 
 // bigdecimalToBigIntegerExact converts the BigDecimal to BigInteger exactly.
