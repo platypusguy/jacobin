@@ -65,6 +65,12 @@ func Load_Io_FileInputStream() {
 			GFunction:  fisReadByteArrayOffset,
 		}
 
+	MethodSignatures["java/io/FileInputStream.readNBytes([BII)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  fisReadByteArrayOffset,
+		}
+
 	MethodSignatures["java/io/FileInputStream.skip(J)J"] =
 		GMeth{
 			ParamSlots: 1,

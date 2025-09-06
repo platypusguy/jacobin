@@ -1332,7 +1332,17 @@ func substringStartEnd(params []interface{}) interface{} {
 	// params[0] = base string
 	// params[1] = start offset
 	// params[2] = end offset
-	str := object.GoStringFromStringObject(params[0].(*object.Object))
+
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		if object.IsNull(params[0]) {
+			errMsg := "substringStartEnd: params[0] is null"
+			return getGErrBlk(excNames.NullPointerException, errMsg)
+		}
+		errMsg := "substringStartEnd: params[0] is not an object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str := object.GoStringFromStringObject(obj)
 
 	// Get substring start and end offset
 	ssStart := params[1].(int64)
@@ -1350,7 +1360,7 @@ func substringStartEnd(params []interface{}) interface{} {
 	str = str[ssStart:ssEnd]
 
 	// Return new string in an object.
-	obj := object.StringObjectFromGoString(str)
+	obj = object.StringObjectFromGoString(str)
 	return obj
 }
 

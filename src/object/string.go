@@ -107,7 +107,8 @@ func GoStringFromStringObject(obj *Object) string {
 		return bytes.(string)
 	}
 
-	return ""
+	return "*** GoStringFromStringObject: unexpected object class: " +
+		fmt.Sprint(GoStringFromStringPoolIndex(obj.KlassName))
 }
 
 // StringObjectArrayFromGoStringArray: convenience method to create a Golang string array from a Java String object array

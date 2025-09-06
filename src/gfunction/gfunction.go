@@ -148,6 +148,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Math_Math_Context()
 		Load_Math_Rounding_Mode()
 
+		// java/text/*
+		Load_Math_SimpleDateFormat()
+
 		// java/security/*
 		Load_Security_SecureRandom()
 
@@ -156,6 +159,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Util_Base64()
 		Load_Util_Concurrent_Atomic_AtomicInteger()
 		Load_Util_Concurrent_Atomic_Atomic_Long()
+		Load_Util_Date()
 		Load_Util_Hash_Map()
 		Load_Util_Hash_Set()
 		Load_Util_HexFormat()
@@ -165,6 +169,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Util_Objects()
 		Load_Util_Optional()
 		Load_Util_Random()
+		Load_Util_TimeZone()
 		Load_Util_Zip_Adler32()
 		Load_Util_Zip_Crc32_Crc32c()
 

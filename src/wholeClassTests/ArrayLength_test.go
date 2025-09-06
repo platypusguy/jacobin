@@ -83,7 +83,9 @@ func TestRunArrlen(t *testing.T) {
 	initErr := initVarsArrlen()
 	if initErr != nil {
 		t.Fatalf("Test failure due to: %s", initErr.Error())
+		//t.Skipf("Skipping TestRunArrlen: %s", initErr.Error()) // Created by Junie
 	}
+	t.Logf("initVarsArrlen() ok on class: %s", _TESTCLASS)
 
 	var cmd *exec.Cmd
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
