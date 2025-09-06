@@ -84,7 +84,7 @@ func TestGoStringFromInvalidObject(t *testing.T) {
 	obj := MakeEmptyObject()
 	obj.FieldTable["value"] = Field{Ftype: types.Int, Fvalue: 42}
 	str := GoStringFromStringObject(obj)
-	if str != "" {
+	if !strings.HasPrefix(str, "*** GoStringFromStringObject") {
 		t.Errorf("expected empty string, observed: '%s'", str)
 	}
 }
