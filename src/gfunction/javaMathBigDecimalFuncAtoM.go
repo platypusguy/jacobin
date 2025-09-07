@@ -220,61 +220,64 @@ func bigdecimalDivide(params []interface{}) interface{} {
 	return bigDecimalObjectFromBigInt(N, precision, addScale)
 }
 
-// bigdecimalDivideAndRemainder returns both the quotient and remainder of division
+// bigdecimalDivideAndRemainder returns {this.divideToIntegralValue(divisor), this.remainder(divisor)}
 func bigdecimalDivideAndRemainder(params []interface{}) interface{} {
 	dividend := params[0].(*object.Object)
 	divisor := params[1].(*object.Object)
 
-	// Extract BigInteger intVal fields
-	dv := dividend.FieldTable["intVal"].Fvalue.(*object.Object)
+	// Division by zero?
 	dr := divisor.FieldTable["intVal"].Fvalue.(*object.Object)
-
-	// Convert BigInteger objects to big.Int
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
 	drBigInt := dr.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Check for division by zero
 	if drBigInt.Sign() == 0 {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalDivideAndRemainder: divide by zero")
 	}
 
-	// Perform division and remainder
-	quotient := new(big.Int).Div(dvBigInt, drBigInt)
-	remainder := new(big.Int).Mod(dvBigInt, drBigInt)
-
-	// Create BigDecimal objects for the results
-	quotObj := bigDecimalObjectFromBigInt(quotient, int64(len(quotient.String())), int64(0))
-	remObj := bigDecimalObjectFromBigInt(remainder, int64(len(remainder.String())), int64(0))
-
-	arrObj := makeArray2ElemsOfBigDecimal(quotObj, remObj)
-	return arrObj
+	q := bigdecimalDivideToIntegralValue([]interface{}{dividend, divisor})
+	if blk, ok := q.(*GErrBlk); ok {
+		return blk
+	}
+	qbd := q.(*object.Object)
+	r := bigdecimalRemainder([]interface{}{dividend, divisor})
+	if blk, ok := r.(*GErrBlk); ok {
+		return blk
+	}
+	rbd := r.(*object.Object)
+	return makeArray2ElemsOfBigDecimal(qbd, rbd)
 }
 
-// bigdecimalDivideToIntegralValue returns the quotient of this BigDecimal divided by the divisor, truncating the result
+// bigdecimalDivideToIntegralValue returns truncating integer quotient of this/divisor with preferred scale = max(0, sa - sb)
 func bigdecimalDivideToIntegralValue(params []interface{}) interface{} {
 	dividend := params[0].(*object.Object)
 	divisor := params[1].(*object.Object)
 
-	// Extract BigInteger intVal fields
+	// Extract unscaled and scales
 	dv := dividend.FieldTable["intVal"].Fvalue.(*object.Object)
 	dr := divisor.FieldTable["intVal"].Fvalue.(*object.Object)
+	a := dv.FieldTable["value"].Fvalue.(*big.Int)
+	b := dr.FieldTable["value"].Fvalue.(*big.Int)
+	sa := dividend.FieldTable["scale"].Fvalue.(int64)
+	sb := divisor.FieldTable["scale"].Fvalue.(int64)
 
-	// Convert BigInteger objects to big.Int
-	dvBigInt := dv.FieldTable["value"].Fvalue.(*big.Int)
-	drBigInt := dr.FieldTable["value"].Fvalue.(*big.Int)
-
-	// Check for division by zero
-	if drBigInt.Sign() == 0 {
+	if b.Sign() == 0 {
 		return getGErrBlk(excNames.ArithmeticException, "bigdecimalDivideToIntegralValue: divide by zero")
 	}
 
-	// Do integer division
-	quotient := new(big.Int).Div(dvBigInt, drBigInt)
+	// Compute q = trunc( (a * 10^sb) / (b * 10^sa) )
+	N := new(big.Int).Mul(new(big.Int).Set(a), pow10(sb))
+	D := new(big.Int).Mul(new(big.Int).Set(b), pow10(sa))
+	qint := new(big.Int).Quo(N, D) // trunc toward zero per BigDecimal semantics
 
-	// Create result BigDecimal object
-	result := bigDecimalObjectFromBigInt(quotient, int64(len(quotient.String())), int64(0))
-
-	return result
+	// Preferred scale
+	prefScale := sa - sb
+	if prefScale < 0 {
+		prefScale = 0
+	}
+	unscaled := new(big.Int).Set(qint)
+	if prefScale > 0 {
+		unscaled.Mul(unscaled, pow10(prefScale))
+	}
+	precision := precisionFromBigInt(unscaled)
+	return bigDecimalObjectFromBigInt(unscaled, precision, prefScale)
 }
 
 // bigdecimalDoubleValue returns the BigDecimal as a float64
@@ -361,12 +364,19 @@ func bigdecimalIntValueExact(params []interface{}) interface{} {
 	return int64Value
 }
 
-// bigdecimalLongValue returns the BigDecimal as an int64.
+// bigdecimalLongValue returns the BigDecimal as an int64, truncating toward zero with scale applied.
 func bigdecimalLongValue(params []interface{}) interface{} {
 	bd := params[0].(*object.Object)
 	bi := bd.FieldTable["intVal"].Fvalue.(*object.Object)
 	val := bi.FieldTable["value"].Fvalue.(*big.Int)
-	return val.Int64()
+	scale := bd.FieldTable["scale"].Fvalue.(int64)
+	if scale <= 0 {
+		return val.Int64()
+	}
+	// Compute val / 10^scale with truncation toward zero.
+	div := new(big.Int).Exp(big.NewInt(10), big.NewInt(scale), nil)
+	q := new(big.Int).Quo(val, div) // truncates toward zero in Go
+	return q.Int64()
 }
 
 // bigdecimalLongValueExact returns int64 if value fits, else ArithmeticException
