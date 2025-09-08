@@ -188,12 +188,16 @@ func rmodeValueOfString(params []interface{}) interface{} {
 	if len(params) < 1 {
 		return getGErrBlk(excNames.IllegalArgumentException, "RoundingMode.valueOf(String): missing argument")
 	}
-	// Null check
-	if object.IsNull(params[0]) {
-		return getGErrBlk(excNames.NullPointerException, "RoundingMode.valueOf(String): name is null")
-	}
+	// Type and null checks
 	strObj, ok := params[0].(*object.Object)
 	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "RoundingMode.valueOf(String): argument is not a String")
+	}
+	if strObj == nil {
+		return getGErrBlk(excNames.NullPointerException, "RoundingMode.valueOf(String): name is null")
+	}
+	// Ensure it's actually a Java String object (not just any empty object)
+	if !object.IsStringObject(strObj) {
 		return getGErrBlk(excNames.IllegalArgumentException, "RoundingMode.valueOf(String): argument is not a String")
 	}
 	name := object.GoStringFromStringObject(strObj)
