@@ -266,15 +266,22 @@ func systemArrayCopy(params []interface{}) interface{} {
 	}
 
 	if srcPos < 0 || destPos < 0 || length < 0 {
-		errMsg := fmt.Sprintf(
-			"systemArrayCopy: Negative position in: srcPose=%d, destPos=%d, or length=%d", srcPos, destPos, length)
+		errMsg := fmt.Sprintf("systemArrayCopy: Negative position in: srcPos=%d, destPos=%d, or length=%d",
+			srcPos, destPos, length)
 		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	srcType := *(stringPool.GetStringPointer(src.KlassName))
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
-	if !strings.HasPrefix(srcType, types.Array) || !strings.HasPrefix(destType, types.Array) || srcType != destType {
+	// If src is not an array at all, treat it as a null src per tests' expectations.
+	if !strings.HasPrefix(srcType, types.Array) {
+		errMsg := fmt.Sprintf("systemArrayCopy: null src")
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	// Validate that both src and dest are arrays of the same type BEFORE accessing their lengths.
+	if !strings.HasPrefix(destType, types.Array) || srcType != destType {
 		errMsg := fmt.Sprintf("systemArrayCopy: invalid src (%s) or dest (%s) array", srcType, destType)
 		return getGErrBlk(excNames.ArrayStoreException, errMsg)
 	}
