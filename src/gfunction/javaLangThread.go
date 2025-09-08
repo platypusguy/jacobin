@@ -8,6 +8,7 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/thread"
@@ -80,6 +81,17 @@ func Load_Lang_Thread() {
 			GFunction:  threadCreateWithName,
 		}
 
+	MethodSignatures["java/lang/Thread.currentThread(Ljava/lang/Runnable;)Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadCreateWithRunnable,
+		}
+
+	MethodSignatures["java/lang/Thread.currentThread(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadCreateWithRunnableAndName,
+		}
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -146,6 +158,8 @@ func threadCreateNoarg(params []interface{}) any {
 		Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
 	t.FieldTable["priority"] = priority
 
+	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+
 	return &t
 }
 
@@ -156,19 +170,54 @@ func threadCreateWithName(params []interface{}) any {
 	return t
 }
 
-// "java/lang/Thread.run(Ljava/lang/Runnable;)V" This is the function for starting a thread
+func threadCreateWithRunnable(params []interface{}) any {
+	t := threadCreateNoarg(nil).(*object.Object)
+	t.FieldTable["task"] = object.Field{
+		Ftype: types.Ref, Fvalue: params[0].(*object.Object)}
+	return t
+}
+
+func threadCreateWithRunnableAndName(params []interface{}) any {
+	t := threadCreateNoarg(nil).(*object.Object)
+	t.FieldTable["task"] = object.Field{
+		Ftype: types.Ref, Fvalue: params[0].(*object.Object)}
+	t.FieldTable["name"] = object.Field{
+		Ftype: types.GolangString, Fvalue: params[1].(string)}
+	return t
+}
+
+// "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
+// 1. Fetch the run method
+// 2. Create the frame stack
+// 3. Create the frame
+// 4. Push the frame onto the frame stack
+// 5. Register the thread
+// 6. Instantiate the class
+// 7. Run the thread
+//
+// The run method is called by the JVM when the thread is started. The steps are:
+// 2. Register the thread
+// 3. Call the run method
 func run(params []interface{}) interface{} {
-	if len(params) != 2 {
-		errMsg := fmt.Sprintf("Run: Expected 2 parameters, got %d", len(params))
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("Run: Expected thread parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// gl := globals.GetGlobalRef()
-	th := params[0].(*object.Object)
-	// runnable := params[1].(*string)
+	t := params[0].(*object.Object)
+	runnObj := t.FieldTable["task"].Fvalue.(*object.Object)
+	runFields := runnObj.FieldTable
+	_, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
+		runFields["clName"].Fvalue.(string),
+		runFields["methName"].Fvalue.(string),
+		runFields["signature"].Fvalue.(string))
+	if err != nil {
+		errMsg := fmt.Sprintf("Run: Could not find run method: %v", err)
+		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
+	}
 
 	// threads are registered only when they are started
-	thread.RegisterThread(th)
+	thread.RegisterThread(t)
 	return nil
 }
 
