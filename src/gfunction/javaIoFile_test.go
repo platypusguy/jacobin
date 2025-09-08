@@ -1,6 +1,7 @@
 package gfunction
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -38,7 +39,7 @@ func TestJavaIoFile_MethodRegistration(t *testing.T) {
 	MethodSignatures = make(map[string]GMeth)
 	Load_Io_File()
 
-	checks := []struct{
+	checks := []struct {
 		key   string
 		slots int
 	}{
@@ -162,7 +163,9 @@ func TestJavaIoFile_List_And_ListFiles(t *testing.T) {
 	names, _ := arr.FieldTable["value"].Fvalue.([]*object.Object)
 	var got []string
 	for _, s := range names {
-		if s == nil { continue }
+		if s == nil {
+			continue
+		}
 		got = append(got, object.GoStringFromStringObject(s))
 	}
 	sort.Strings(got)
@@ -171,7 +174,10 @@ func TestJavaIoFile_List_And_ListFiles(t *testing.T) {
 	for k := range want {
 		found := false
 		for _, g := range got {
-			if g == k { found = true; break }
+			if g == k {
+				found = true
+				break
+			}
 		}
 		if !found {
 			t.Fatalf("list missing entry %q; got %v", k, got)
@@ -205,15 +211,39 @@ func TestJavaIoFile_Mkdir_Mkdirs_IsDirectory(t *testing.T) {
 
 func TestJavaIoFile_RenameTo(t *testing.T) {
 	globals.InitStringPool()
+
+	// get temp directory
 	dir := t.TempDir()
-	src := newFileObjFromPath(t, filepath.Join(dir, "src.txt"))
-	dst := newFileObjFromPath(t, filepath.Join(dir, "dst.txt"))
-	// create src
-	_ = fileCreate([]interface{}{src})
-	if fileRenameTo([]interface{}{src, dst}).(int64) != types.JavaBoolTrue {
-		t.Fatalf("renameTo expected true")
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+
+	// construct src and dst paths
+	srcpath := filepath.Join(dir, pidstr, ".src.txt")
+	dstpath := filepath.Join(dir, pidstr, ".dst.txt")
+
+	t.Logf("srcpath: %q", srcpath)
+	t.Logf("dstpath: %q", dstpath)
+
+	// ensure parent directory exists
+	srcDir := filepath.Dir(srcpath)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", srcDir, err)
 	}
-	// src path updated to dst
+
+	// create file objects
+	src := newFileObjFromPath(t, srcpath)
+	dst := newFileObjFromPath(t, dstpath)
+
+	// create the source file
+	if fileCreate([]interface{}{src}) != types.JavaBoolTrue {
+		t.Fatalf("fileCreate failed")
+	}
+
+	// rename src -> dst
+	if fileRenameTo([]interface{}{src, dst}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileRenameTo failed")
+	}
+
+	// check that dst exists
 	if fileExists([]interface{}{dst}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("dst should exist after rename")
 	}
@@ -222,12 +252,23 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	globals.InitStringPool()
 	dir := t.TempDir()
-	f := newFileObjFromPath(t, filepath.Join(dir, "ro.txt"))
+
+	fpath := filepath.Join(dir, "ro.txt")
+	f := newFileObjFromPath(t, fpath)
+
+	// ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", filepath.Dir(fpath), err)
+	}
+
+	// create the file
 	_ = fileCreate([]interface{}{f})
+
 	if fileSetReadOnly([]interface{}{f}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("setReadOnly expected true")
 	}
-	// These are minimal no-ops that return true
+
+	// minimal no-ops that return true
 	if fileSetReadable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("setReadable expected true")
 	}
@@ -272,15 +313,24 @@ func TestJavaIoFile_Equals_And_HashCode(t *testing.T) {
 	}
 }
 
-
 func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	globals.InitStringPool()
 	dir := t.TempDir()
-	f := newFileObjFromPath(t, filepath.Join(dir, "perm.bin"))
+
+	fpath := filepath.Join(dir, "perm.bin")
+	f := newFileObjFromPath(t, fpath)
+
+	// ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", filepath.Dir(fpath), err)
+	}
+
 	if fileCreate([]interface{}{f}).(int64) != 1 {
 		t.Fatalf("createNewFile failed")
 	}
+
 	goPath := getPath(t, f)
+
 	// Establish a known baseline of 0000; skip if not supported
 	if err := os.Chmod(goPath, 0o000); err != nil {
 		t.Skipf("skipping permission tests; chmod baseline unsupported: %v", err)
