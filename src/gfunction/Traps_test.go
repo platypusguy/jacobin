@@ -20,6 +20,7 @@ func TestLoad_Traps_RegistersSomeMethods(t *testing.T) {
     MethodSignatures = make(map[string]GMeth)
 
     Load_Traps()
+    Load_Traps_Java_Io()
 
     // Representative subset across class, function, deprecated
     checks := []struct{
@@ -29,7 +30,7 @@ func TestLoad_Traps_RegistersSomeMethods(t *testing.T) {
     }{
         {"java/io/BufferedOutputStream.<clinit>()V", 0, trapClass},
         {"java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;", 0, trapFunction},
-        {"java/io/FilterOutputStream.<init>(Ljava/io/OutputStream;)V", 1, trapFunction},
+        {"java/io/FileDescriptor.valid()Z", 0, trapFunction},
         {"java/rmi/RMISecurityManager.<clinit>()V", 0, trapDeprecated},
         {"java/rmi/RMISecurityManager.<init>()V", 0, trapDeprecated},
     }

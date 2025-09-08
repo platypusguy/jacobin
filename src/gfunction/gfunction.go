@@ -185,6 +185,8 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 		// Load traps that lead to unconditional error returns.
 		Load_Traps()
+		Load_Traps_Java_Io()
+		Load_Traps_Java_Nio()
 
 		// Load diagnostic helper functions.
 		Load_jj()

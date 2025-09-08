@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2025 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -12,126 +12,6 @@ import (
 
 func Load_Traps() {
 
-	MethodSignatures["java/io/BufferedOutputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/BufferedWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/ByteArrayOutputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/CharArrayReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/CharArrayWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/DefaultFileSystem.getFileSystem()Ljava/io/FileSystem;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/io/FileSystem.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/PipedReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/StringReader.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterOutputStream.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/FilterOutputStream.<init>(Ljava/io/OutputStream;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/io/FilterWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/util/Iterator.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/PipedWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/io/StringWriter.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/ByteBuffer.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -142,6 +22,42 @@ func Load_Traps() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapDeprecated,
+		}
+
+	MethodSignatures["java/sql/Driver.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/sql/DriverAction.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/sql/DriverPropertyInfo.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/sql/DriverPropertyInfo.<init>(Ljava/lang/String;Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/sql/DriverManager.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/util/Iterator.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
 		}
 
 }
