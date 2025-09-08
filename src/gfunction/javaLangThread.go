@@ -136,12 +136,15 @@ func threadCreateNoarg(params []interface{}) any {
 
 	t := object.MakeEmptyObjectWithClassName(&classname)
 
-	nameField := object.Field{Ftype: types.GolangString, Fvalue: ""}
-	t.FieldTable["name"] = nameField
-
 	idField := object.Field{Ftype: types.Int,
 		Fvalue: threadNumberingNext(nil).(int64)}
 	t.FieldTable["ID"] = idField
+
+	// the JDK defaults to "Thread-N" where N is the thread number
+	// the sole exception is the main thread, which is called "main"
+	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
+	nameField := object.Field{Ftype: types.GolangString, Fvalue: defaultName}
+	t.FieldTable["name"] = nameField
 
 	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}
 	t.FieldTable["state"] = stateField
@@ -194,10 +197,7 @@ func threadCreateWithRunnableAndName(params []interface{}) any {
 // 5. Register the thread
 // 6. Instantiate the class
 // 7. Run the thread
-//
-// The run method is called by the JVM when the thread is started. The steps are:
-// 2. Register the thread
-// 3. Call the run method
+
 func run(params []interface{}) interface{} {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("Run: Expected thread parameters, got %d parameters", len(params))
