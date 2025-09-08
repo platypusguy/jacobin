@@ -25,6 +25,22 @@ func newFileObjFromPath(t *testing.T, p string) *object.Object {
 	return f
 }
 
+// closeWithFOS creates a FileOutputStream with the given File object and closes it.
+// This mirrors the Java pattern:
+//   File f = new File("test.txt");
+//   FileOutputStream out = new FileOutputStream(f);
+//   out.close();
+func closeWithFOS(t *testing.T, f *object.Object) {
+	t.Helper()
+	fos := object.MakeEmptyObject() // represents new FileOutputStream()
+	if ret := initFileOutputStreamFile([]interface{}{fos, f}); ret != nil {
+		t.Fatalf("initFileOutputStreamFile error: %v", ret)
+	}
+	if ret := fosClose([]interface{}{fos}); ret != nil {
+		t.Fatalf("fosClose error: %v", ret)
+	}
+}
+
 func getPath(t *testing.T, f *object.Object) string {
 	t.Helper()
 	p, gerr := fileGetPathString(f)
@@ -140,6 +156,10 @@ func TestJavaIoFile_Create_Exists_Length_Delete(t *testing.T) {
 	if fileLength([]interface{}{f}).(int64) != 5 {
 		t.Fatalf("length expected 5 after write")
 	}
+
+	// After using the file, create a FileOutputStream and close it (Windows semantics)
+	closeWithFOS(t, f)
+
 	// delete
 	if fileDelete([]interface{}{f}).(int64) != 1 {
 		t.Fatalf("delete returned false")
@@ -247,6 +267,9 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 	if fileExists([]interface{}{dst}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("dst should exist after rename")
 	}
+
+	// After using the file, ensure a FileOutputStream is opened and closed on dst
+	closeWithFOS(t, dst)
 }
 
 func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
@@ -278,6 +301,9 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	if fileSetExecutable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("setExecutable expected true")
 	}
+
+	// Close the file via FileOutputStream at the end
+	closeWithFOS(t, f)
 }
 
 func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
@@ -433,4 +459,9 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	if (m & 0o111) != 0 {
 		t.Fatalf("setExecutable(false) should clear 0111; mode %o", m)
 	}
+
+	// Close the file via FileOutputStream at the end
+	// Ensure writable so that FileOutputStream can open on all platforms
+	_ = os.Chmod(goPath, 0o600)
+	closeWithFOS(t, f)
 }

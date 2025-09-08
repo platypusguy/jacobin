@@ -382,7 +382,7 @@ func fileCreate(params []interface{}) interface{} {
 	}
 	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
-	// Create the file.
+	// Create the file and keep it open, storing the handle in the File object.
 	osFile, err := os.Create(pathStr)
 	if err != nil {
 		errMsg := fmt.Sprintf("fileCreate: Failed to create file %s, reason: %s", pathStr, err.Error())
@@ -390,7 +390,7 @@ func fileCreate(params []interface{}) interface{} {
 		return int64(0)
 	}
 
-	// Copy the file handle into the File object.
+	// Copy the file handle into the File object; the test is responsible for closing it when finished.
 	fld = object.Field{Ftype: types.FileHandle, Fvalue: osFile}
 	params[0].(*object.Object).FieldTable[FileHandle] = fld
 
