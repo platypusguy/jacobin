@@ -388,8 +388,9 @@ func fnAtomicIntegerAdd(params []interface{}, newFlag bool) interface{} {
 		}
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
-	// Guard against a typed nil object (null in Java terms)
-	if obj == nil || object.IsNull(obj) {
+
+	// Guard against a typed nil object (Java null). Do not treat empty FieldTable as null here.
+	if obj == nil {
 		errMsg := "fnAtomicIntegerAdd: First parameter is null"
 		return getGErrBlk(excNames.ClassCastException, errMsg)
 	}
