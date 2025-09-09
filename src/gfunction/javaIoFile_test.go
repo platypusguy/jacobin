@@ -50,6 +50,32 @@ func getPath(t *testing.T, f *object.Object) string {
 	return p
 }
 
+func fileCreateThenClose(t *testing.T, params []interface{}) {
+	// Get file path string.
+	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
+	if !ok {
+		errMsg := "fileCreateThenClose: File object lacks a FilePath field"
+		t.Fatal(errMsg)
+	}
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+
+	// Create the file and keep it open, storing the handle in the File object.
+	osFile, err := os.Create(pathStr)
+	if err != nil {
+		errMsg := fmt.Sprintf("fileCreateThenClose: os.Create failed for file %s, reason: %s",
+			pathStr, err.Error())
+		t.Fatal(errMsg)
+	}
+
+	err = osFile.Close()
+	if err != nil {
+		errMsg := fmt.Sprintf("fileCreateThenClose: osFile.Close failed for file %s, reason: %s",
+			pathStr, err.Error())
+		t.Fatal(errMsg)
+	}
+
+}
+
 func TestJavaIoFile_MethodRegistration(t *testing.T) {
 	globals.InitStringPool()
 	MethodSignatures = make(map[string]GMeth)
@@ -137,10 +163,8 @@ func TestJavaIoFile_Create_Exists_Length_Delete(t *testing.T) {
 	if fileExists([]interface{}{f}).(int64) != types.JavaBoolFalse {
 		t.Fatalf("exists expected false initially")
 	}
-	// create
-	if fileCreate([]interface{}{f}).(int64) != 1 {
-		t.Fatalf("createNewFile returned false")
-	}
+	// create file
+	fileCreateThenClose(t, []interface{}{f})
 	if fileExists([]interface{}{f}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("exists expected true after create")
 	}
@@ -251,9 +275,7 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 	dst := newFileObjFromPath(t, dstpath)
 
 	// create the source file
-	if fileCreate([]interface{}{src}) != types.JavaBoolTrue {
-		t.Fatalf("fileCreate failed")
-	}
+	fileCreateThenClose(t, []interface{}{src})
 
 	// close the open handle from fileCreate
 	// required on Windows before renaming or deleting
@@ -285,9 +307,7 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	}
 
 	// create the file
-	if fileCreate([]interface{}{f}) != types.JavaBoolTrue {
-		t.Fatalf("fileCreate failed")
-	}
+	fileCreateThenClose(t, []interface{}{f})
 
 	// close the open handle from fileCreate (needed on Windows)
 	closeWithFIS(t, f)
@@ -355,12 +375,7 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	}
 
 	// create the file
-	if fileCreate([]interface{}{f}).(int64) != types.JavaBoolTrue {
-		t.Fatalf("createNewFile failed")
-	}
-
-	// close the open handle from fileCreate (needed on Windows)
-	closeWithFIS(t, f)
+	fileCreateThenClose(t, []interface{}{f})
 
 	goPath := getPath(t, f)
 
