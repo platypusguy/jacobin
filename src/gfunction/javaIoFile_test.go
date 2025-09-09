@@ -25,6 +25,22 @@ func newFileObjFromPath(t *testing.T, p string) *object.Object {
 	return f
 }
 
+// closeWithFIS creates a FileInputStream with the given File object and closes it.
+// This mirrors the Java pattern:
+//
+//	File f = new File("test.txt");
+//	FileInputStream in = new FileInputStream(f);
+//	in.close();
+func closeWithFIS(t *testing.T, f *object.Object) {
+	to := object.MakeEmptyObject() // represents new FileInputStream()
+	if ret := initFileInputStreamFile([]interface{}{to, f}); ret != nil {
+		t.Fatalf("initFileInputStreamFile error: %v", ret)
+	}
+	if ret := fisClose([]interface{}{to}); ret != nil {
+		t.Fatalf("fisClose error: %v", ret)
+	}
+}
+
 func getPath(t *testing.T, f *object.Object) string {
 	t.Helper()
 	p, gerr := fileGetPathString(f)
@@ -239,6 +255,10 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 		t.Fatalf("fileCreate failed")
 	}
 
+	// close the open handle from fileCreate
+	// required on Windows before renaming or deleting
+	closeWithFIS(t, src)
+
 	// rename src -> dst
 	if fileRenameTo([]interface{}{src, dst}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("fileRenameTo failed")
@@ -249,12 +269,7 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 		t.Fatalf("dst should exist after rename")
 	}
 
-	// Delete the temp directory.
-	err := os.RemoveAll(dir)
-	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
-	}
-
+	// no need to manually remove dir; t.TempDir cleanup handles it
 }
 
 func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
@@ -270,13 +285,17 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	}
 
 	// create the file
-	_ = fileCreate([]interface{}{f})
+	if fileCreate([]interface{}{f}) != types.JavaBoolTrue {
+		t.Fatalf("fileCreate failed")
+	}
 
+	// close the open handle from fileCreate (needed on Windows)
+	closeWithFIS(t, f)
+
+	// now run permission setters (all no-ops in your impl)
 	if fileSetReadOnly([]interface{}{f}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("setReadOnly expected true")
 	}
-
-	// minimal no-ops that return true
 	if fileSetReadable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("setReadable expected true")
 	}
@@ -287,11 +306,7 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 		t.Fatalf("setExecutable expected true")
 	}
 
-	// Delete the temp directory.
-	err := os.RemoveAll(dir)
-	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
-	}
+	// no explicit cleanup — t.TempDir handles it
 }
 
 func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
@@ -339,9 +354,13 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 		t.Fatalf("failed to create parent directory %q: %v", filepath.Dir(fpath), err)
 	}
 
-	if fileCreate([]interface{}{f}).(int64) != 1 {
+	// create the file
+	if fileCreate([]interface{}{f}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("createNewFile failed")
 	}
+
+	// close the open handle from fileCreate (needed on Windows)
+	closeWithFIS(t, f)
 
 	goPath := getPath(t, f)
 
@@ -449,14 +468,7 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	}
 
 	// Ensure writable so that FileOutputStream can open on all platforms
-	err := os.Chmod(goPath, 0o600)
-	if err != nil {
+	if err := os.Chmod(goPath, 0o600); err != nil {
 		t.Fatalf("os.Chmod(goPath, 0o600) failed, err: %s", err.Error())
-	}
-
-	// Delete the temp directory.
-	err = os.RemoveAll(dir)
-	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
 	}
 }
