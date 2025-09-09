@@ -25,19 +25,20 @@ func newFileObjFromPath(t *testing.T, p string) *object.Object {
 	return f
 }
 
-// closeWithFOS creates a FileOutputStream with the given File object and closes it.
+// closeWithFIS creates a FileOutputStream with the given File object and closes it.
 // This mirrors the Java pattern:
-//   File f = new File("test.txt");
-//   FileOutputStream out = new FileOutputStream(f);
-//   out.close();
-func closeWithFOS(t *testing.T, f *object.Object) {
+//
+//	File f = new File("test.txt");
+//	FileOutputStream out = new FileOutputStream(f);
+//	out.close();
+func closeWithFIS(t *testing.T, f *object.Object) {
 	t.Helper()
-	fos := object.MakeEmptyObject() // represents new FileOutputStream()
-	if ret := initFileOutputStreamFile([]interface{}{fos, f}); ret != nil {
-		t.Fatalf("initFileOutputStreamFile error: %v", ret)
+	fis := object.MakeEmptyObject() // represents new FileOutputStream()
+	if ret := initFileInputStreamFile([]interface{}{fis, f}); ret != nil {
+		t.Fatalf("initFileInputStreamFile error: %v", ret)
 	}
-	if ret := fosClose([]interface{}{fos}); ret != nil {
-		t.Fatalf("fosClose error: %v", ret)
+	if ret := fisClose([]interface{}{fis}); ret != nil {
+		t.Fatalf("fisClose error: %v", ret)
 	}
 }
 
@@ -158,7 +159,7 @@ func TestJavaIoFile_Create_Exists_Length_Delete(t *testing.T) {
 	}
 
 	// After using the file, create a FileOutputStream and close it (Windows semantics)
-	closeWithFOS(t, f)
+	closeWithFIS(t, f)
 
 	// delete
 	if fileDelete([]interface{}{f}).(int64) != 1 {
@@ -269,7 +270,7 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 	}
 
 	// After using the file, ensure a FileOutputStream is opened and closed on dst
-	closeWithFOS(t, dst)
+	closeWithFIS(t, dst)
 }
 
 func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
@@ -303,7 +304,7 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	}
 
 	// Close the file via FileOutputStream at the end
-	closeWithFOS(t, f)
+	closeWithFIS(t, f)
 }
 
 func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
@@ -463,5 +464,5 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	// Close the file via FileOutputStream at the end
 	// Ensure writable so that FileOutputStream can open on all platforms
 	_ = os.Chmod(goPath, 0o600)
-	closeWithFOS(t, f)
+	closeWithFIS(t, f)
 }
