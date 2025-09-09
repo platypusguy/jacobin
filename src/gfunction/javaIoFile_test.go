@@ -25,23 +25,6 @@ func newFileObjFromPath(t *testing.T, p string) *object.Object {
 	return f
 }
 
-// closeWithFIS creates a FileOutputStream with the given File object and closes it.
-// This mirrors the Java pattern:
-//
-//	File f = new File("test.txt");
-//	FileOutputStream out = new FileOutputStream(f);
-//	out.close();
-func closeWithFIS(t *testing.T, f *object.Object) {
-	t.Helper()
-	fis := object.MakeEmptyObject() // represents new FileOutputStream()
-	if ret := initFileInputStreamFile([]interface{}{fis, f}); ret != nil {
-		t.Fatalf("initFileInputStreamFile error: %v", ret)
-	}
-	if ret := fisClose([]interface{}{fis}); ret != nil {
-		t.Fatalf("fisClose error: %v", ret)
-	}
-}
-
 func getPath(t *testing.T, f *object.Object) string {
 	t.Helper()
 	p, gerr := fileGetPathString(f)
@@ -123,7 +106,7 @@ func TestJavaIoFile_Init_And_Getters(t *testing.T) {
 	absP := fileGetAbsolutePath([]interface{}{f}).(*object.Object)
 	canP := fileGetCanonicalPath([]interface{}{f}).(*object.Object)
 	if object.GoStringFromStringObject(absP) != object.GoStringFromStringObject(canP) {
-		// On our minimal impl these are same
+		// On our minimal impl these are the same
 		t.Fatalf("absolute and canonical path differ: %q vs %q", object.GoStringFromStringObject(absP), object.GoStringFromStringObject(canP))
 	}
 }
@@ -157,9 +140,6 @@ func TestJavaIoFile_Create_Exists_Length_Delete(t *testing.T) {
 	if fileLength([]interface{}{f}).(int64) != 5 {
 		t.Fatalf("length expected 5 after write")
 	}
-
-	// After using the file, create a FileOutputStream and close it (Windows semantics)
-	closeWithFIS(t, f)
 
 	// delete
 	if fileDelete([]interface{}{f}).(int64) != 1 {
@@ -217,7 +197,7 @@ func TestJavaIoFile_Mkdir_Mkdirs_IsDirectory(t *testing.T) {
 	dir := t.TempDir()
 	nested := filepath.Join(dir, "a", "b", "c")
 	f := newFileObjFromPath(t, nested)
-	// mkdir should fail on deep path (parent missing) and return false; mkdirs true
+	// mkdir should fail on a deep path (parent missing) and return false; mkdirs true
 	_ = fileDelete([]interface{}{f}) // ensure not exists
 	if fileMkdir([]interface{}{f}).(int64) != types.JavaBoolFalse {
 		// On some OS, Mkdir may fail with ENOENT as expected
@@ -269,15 +249,18 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 		t.Fatalf("dst should exist after rename")
 	}
 
-	// After using the file, ensure a FileOutputStream is opened and closed on dst
-	closeWithFIS(t, dst)
+	// Delete it.
+	if fileDelete([]interface{}{dst}).(int64) != 1 {
+		t.Fatalf("delete returned false")
+	}
+
 }
 
 func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	globals.InitStringPool()
 	dir := t.TempDir()
-
-	fpath := filepath.Join(dir, "ro.txt")
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+	fpath := filepath.Join(dir, pidstr, "ro.txt")
 	f := newFileObjFromPath(t, fpath)
 
 	// ensure parent directory exists
@@ -303,8 +286,10 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 		t.Fatalf("setExecutable expected true")
 	}
 
-	// Close the file via FileOutputStream at the end
-	closeWithFIS(t, f)
+	// Delete it.
+	if fileDelete([]interface{}{f}).(int64) != 1 {
+		t.Fatalf("delete returned false")
+	}
 }
 
 func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
@@ -329,7 +314,7 @@ func TestJavaIoFile_Equals_And_HashCode(t *testing.T) {
 	p := filepath.Join(dir, "same")
 	f1 := newFileObjFromPath(t, p)
 	f2 := newFileObjFromPath(t, p)
-	// equals should be true for same absolute path
+	// equals should be true for the same absolute path
 	if fileEquals([]interface{}{f1, f2}).(int64) != types.JavaBoolTrue {
 		t.Fatalf("equals expected true for same path")
 	}
@@ -343,8 +328,8 @@ func TestJavaIoFile_Equals_And_HashCode(t *testing.T) {
 func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	globals.InitStringPool()
 	dir := t.TempDir()
-
-	fpath := filepath.Join(dir, "perm.bin")
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+	fpath := filepath.Join(dir, pidstr, "perm.bin")
 	f := newFileObjFromPath(t, fpath)
 
 	// ensure parent directory exists
@@ -366,7 +351,7 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	stat := func() os.FileMode {
 		fi, err := os.Stat(goPath)
 		if err != nil {
-			t.Fatalf("stat error: %v", err)
+			t.Fatalf("os.Stat error: %v", err)
 		}
 		return fi.Mode()
 	}
@@ -461,8 +446,14 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 		t.Fatalf("setExecutable(false) should clear 0111; mode %o", m)
 	}
 
-	// Close the file via FileOutputStream at the end
 	// Ensure writable so that FileOutputStream can open on all platforms
-	_ = os.Chmod(goPath, 0o600)
-	closeWithFIS(t, f)
+	err := os.Chmod(goPath, 0o600)
+	if err != nil {
+		t.Fatalf("os.Chmod(goPath, 0o600) failed, err: %s", err.Error())
+	}
+
+	// Delete it.
+	if fileDelete([]interface{}{f}).(int64) != 1 {
+		t.Fatalf("delete returned false")
+	}
 }
