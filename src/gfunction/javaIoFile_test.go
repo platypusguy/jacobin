@@ -249,9 +249,10 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 		t.Fatalf("dst should exist after rename")
 	}
 
-	// Delete it.
-	if fileDelete([]interface{}{dst}).(int64) != 1 {
-		t.Fatalf("delete returned false")
+	// Delete the temp directory.
+	err := os.RemoveAll(dstpath)
+	if err != nil {
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dstpath, err)
 	}
 
 }
@@ -286,9 +287,10 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 		t.Fatalf("setExecutable expected true")
 	}
 
-	// Delete it.
-	if fileDelete([]interface{}{f}).(int64) != 1 {
-		t.Fatalf("delete returned false")
+	// Delete the temp directory.
+	err := os.RemoveAll(fpath)
+	if err != nil {
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", fpath, err)
 	}
 }
 
@@ -452,8 +454,9 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 		t.Fatalf("os.Chmod(goPath, 0o600) failed, err: %s", err.Error())
 	}
 
-	// Delete it.
-	if fileDelete([]interface{}{f}).(int64) != 1 {
-		t.Fatalf("delete returned false")
+	// Delete the temp directory.
+	err = os.RemoveAll(fpath)
+	if err != nil {
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", fpath, err)
 	}
 }
