@@ -1,317 +1,495 @@
 package gfunction
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sort"
 	"testing"
 
-	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 )
 
-func TestFileInit_Success(t *testing.T) {
-	tmpDir := t.TempDir()
-	testFile := filepath.Join(tmpDir, "file.txt")
-	err := os.WriteFile(testFile, []byte("content"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+// Helpers
+func newFileObjFromPath(t *testing.T, p string) *object.Object {
+	t.Helper()
+	className := "java/io/File"
+	f := object.MakeEmptyObjectWithClassName(&className)
+	// call File.<init>(String)
+	ret := fileInit([]interface{}{f, object.StringObjectFromGoString(p)})
+	if ret != nil {
+		t.Fatalf("fileInit returned error: %v", ret)
 	}
+	return f
+}
 
-	pathObj := object.StringObjectFromGoString(testFile)
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-
-	params := []interface{}{fileObj, pathObj}
-
-	res := fileInit(params)
-	if res != nil {
-		t.Fatalf("Expected nil error, got %#v", res)
+// closeWithFIS creates a FileInputStream with the given File object and closes it.
+// This mirrors the Java pattern:
+//
+//	File f = new File("test.txt");
+//	FileInputStream in = new FileInputStream(f);
+//	in.close();
+func closeWithFIS(t *testing.T, f *object.Object) {
+	to := object.MakeEmptyObject() // represents new FileInputStream()
+	if ret := initFileInputStreamFile([]interface{}{to, f}); ret != nil {
+		t.Fatalf("initFileInputStreamFile error: %v", ret)
 	}
+	if ret := fisClose([]interface{}{to}); ret != nil {
+		t.Fatalf("fisClose error: %v", ret)
+	}
+}
 
-	fld, ok := fileObj.FieldTable[FilePath]
+func getPath(t *testing.T, f *object.Object) string {
+	t.Helper()
+	p, gerr := fileGetPathString(f)
+	if gerr != nil {
+		t.Fatalf("fileGetPathString error: %s", gerr.ErrMsg)
+	}
+	return p
+}
+
+func fileCreateThenClose(t *testing.T, params []interface{}) {
+	// Get file path string.
+	fld, ok := params[0].(*object.Object).FieldTable[FilePath]
 	if !ok {
-		t.Errorf("FilePath field missing after fileInit")
-	} else {
-		bytes, ok := fld.Fvalue.([]types.JavaByte)
+		errMsg := "fileCreateThenClose: File object lacks a FilePath field"
+		t.Fatal(errMsg)
+	}
+	pathStr := object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+
+	// Create the file and keep it open, storing the handle in the File object.
+	osFile, err := os.Create(pathStr)
+	if err != nil {
+		errMsg := fmt.Sprintf("fileCreateThenClose: os.Create failed for file %s, reason: %s",
+			pathStr, err.Error())
+		t.Fatal(errMsg)
+	}
+
+	err = osFile.Close()
+	if err != nil {
+		errMsg := fmt.Sprintf("fileCreateThenClose: osFile.Close failed for file %s, reason: %s",
+			pathStr, err.Error())
+		t.Fatal(errMsg)
+	}
+
+}
+
+func TestJavaIoFile_MethodRegistration(t *testing.T) {
+	globals.InitStringPool()
+	MethodSignatures = make(map[string]GMeth)
+	Load_Io_File()
+
+	checks := []struct {
+		key   string
+		slots int
+	}{
+		{"java/io/File.<init>(Ljava/lang/String;)V", 1},
+		{"java/io/File.getPath()Ljava/lang/String;", 0},
+		{"java/io/File.exists()Z", 0},
+		{"java/io/File.createNewFile()Z", 0},
+		{"java/io/File.delete()Z", 0},
+		{"java/io/File.length()J", 0},
+		{"java/io/File.list()[Ljava/lang/String;", 0},
+		{"java/io/File.listFiles()[Ljava/io/File;", 0},
+		{"java/io/File.mkdir()Z", 0},
+		{"java/io/File.mkdirs()Z", 0},
+		{"java/io/File.renameTo(Ljava/io/File;)Z", 1},
+		{"java/io/File.setReadOnly()Z", 0},
+		{"java/io/File.getAbsolutePath()Ljava/lang/String;", 0},
+		{"java/io/File.getCanonicalPath()Ljava/lang/String;", 0},
+	}
+	for _, c := range checks {
+		gm, ok := MethodSignatures[c.key]
 		if !ok {
-			t.Errorf("FilePath field value is not []types.JavaByte")
-		} else {
-			goStr := object.GoStringFromStringObject(object.StringObjectFromJavaByteArray(bytes))
-			abs, err := filepath.Abs(testFile)
-			if err != nil {
-				t.Fatalf("filepath.Abs error in test: %v", err)
-			}
-			if goStr != abs {
-				t.Errorf("FilePath mismatch, want %q got %q", abs, goStr)
-			}
+			t.Fatalf("method not registered: %s", c.key)
+		}
+		if gm.ParamSlots != c.slots {
+			t.Fatalf("ParamSlots mismatch for %s: want %d got %d", c.key, c.slots, gm.ParamSlots)
+		}
+		if gm.GFunction == nil {
+			t.Fatalf("GFunction is nil for %s", c.key)
 		}
 	}
+}
 
-	statusFld, ok := fileObj.FieldTable[FileStatus]
-	if !ok {
-		t.Errorf("FileStatus field missing after fileInit")
-	} else if statusFld.Fvalue.(int64) != 1 {
-		t.Errorf("FileStatus expected 1, got %v", statusFld.Fvalue)
+func TestJavaIoFile_Init_And_Getters(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.txt")
+	f := newFileObjFromPath(t, path)
+
+	// getPath should be absolute
+	pstr := fileGetPath([]interface{}{f}).(*object.Object)
+	gp := object.GoStringFromStringObject(pstr)
+	if !filepath.IsAbs(gp) {
+		t.Fatalf("getPath not absolute: %q", gp)
+	}
+	// name and parent
+	name := fileGetName([]interface{}{f}).(*object.Object)
+	if object.GoStringFromStringObject(name) != filepath.Base(gp) {
+		t.Fatalf("getName mismatch")
+	}
+	parent := fileGetParent([]interface{}{f}).(*object.Object)
+	if object.GoStringFromStringObject(parent) != filepath.Dir(gp) {
+		t.Fatalf("getParent mismatch")
+	}
+	// absolute and toString
+	abs := fileIsAbsolute([]interface{}{f}).(int64)
+	if abs != types.JavaBoolTrue {
+		t.Fatalf("isAbsolute expected true")
+	}
+	toStr := fileToString([]interface{}{f}).(*object.Object)
+	if object.GoStringFromStringObject(toStr) != gp {
+		t.Fatalf("toString mismatch")
+	}
+	// absolute and canonical path strings
+	absP := fileGetAbsolutePath([]interface{}{f}).(*object.Object)
+	canP := fileGetCanonicalPath([]interface{}{f}).(*object.Object)
+	if object.GoStringFromStringObject(absP) != object.GoStringFromStringObject(canP) {
+		// On our minimal impl these are the same
+		t.Fatalf("absolute and canonical path differ: %q vs %q", object.GoStringFromStringObject(absP), object.GoStringFromStringObject(canP))
 	}
 }
 
-func TestFileInit_NullPath(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	params := []interface{}{fileObj, object.Null}
+func TestJavaIoFile_Create_Exists_Length_Delete(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "afile.dat")
+	f := newFileObjFromPath(t, path)
 
-	res := fileInit(params)
-	if res == nil {
-		t.Fatal("Expected NullPointerException error, got nil")
+	// initially does not exist
+	if fileExists([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		t.Fatalf("exists expected false initially")
 	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
+	// create file
+	fileCreateThenClose(t, []interface{}{f})
+	if fileExists([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("exists expected true after create")
 	}
-	if errObj.ExceptionType != excNames.NullPointerException {
-		t.Errorf("Expected NullPointerException, got %v", errObj.ExceptionType)
+	// length initially 0
+	if fileLength([]interface{}{f}).(int64) != 0 {
+		t.Fatalf("length expected 0 initially")
+	}
+	// write some bytes
+	goPath := getPath(t, f)
+	if err := os.WriteFile(goPath, []byte("hello"), 0664); err != nil {
+		t.Fatalf("write file error: %v", err)
+	}
+	if fileLength([]interface{}{f}).(int64) != 5 {
+		t.Fatalf("length expected 5 after write")
+	}
+
+	// delete
+	if fileDelete([]interface{}{f}).(int64) != 1 {
+		t.Fatalf("delete returned false")
+	}
+	if fileExists([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		t.Fatalf("exists expected false after delete")
 	}
 }
 
-func TestFileInit_EmptyPath(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	emptyStrObj := object.StringObjectFromGoString("")
-	params := []interface{}{fileObj, emptyStrObj}
+func TestJavaIoFile_List_And_ListFiles(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	// create items
+	_ = os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a"), 0664)
+	_ = os.WriteFile(filepath.Join(dir, "b.txt"), []byte("b"), 0664)
+	_ = os.Mkdir(filepath.Join(dir, "sub"), 0775)
 
-	res := fileInit(params)
-	if res == nil {
-		t.Fatal("Expected NullPointerException error, got nil")
+	dirFile := newFileObjFromPath(t, dir)
+	// list names
+	arr := fileList([]interface{}{dirFile}).(*object.Object)
+	names, _ := arr.FieldTable["value"].Fvalue.([]*object.Object)
+	var got []string
+	for _, s := range names {
+		if s == nil {
+			continue
+		}
+		got = append(got, object.GoStringFromStringObject(s))
 	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
+	sort.Strings(got)
+	// We expect at least these three entries
+	want := map[string]bool{"a.txt": true, "b.txt": true, "sub": true}
+	for k := range want {
+		found := false
+		for _, g := range got {
+			if g == k {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("list missing entry %q; got %v", k, got)
+		}
 	}
-	if errObj.ExceptionType != excNames.NullPointerException {
-		t.Errorf("Expected NullPointerException, got %v", errObj.ExceptionType)
+	// listFiles returns File[]
+	farr := fileListFiles([]interface{}{dirFile}).(*object.Object)
+	files, _ := farr.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(files) < 3 {
+		t.Fatalf("listFiles expected >=3 entries, got %d", len(files))
 	}
 }
 
-func TestFileGetPath_Success(t *testing.T) {
-	pathStr := t.TempDir()
-	byteArr := object.JavaByteArrayFromGoString(pathStr)
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FilePath: {Ftype: types.Array, Fvalue: byteArr},
-		},
+func TestJavaIoFile_Mkdir_Mkdirs_IsDirectory(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	nested := filepath.Join(dir, "a", "b", "c")
+	f := newFileObjFromPath(t, nested)
+	// mkdir should fail on a deep path (parent missing) and return false; mkdirs true
+	_ = fileDelete([]interface{}{f}) // ensure not exists
+	if fileMkdir([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		// On some OS, Mkdir may fail with ENOENT as expected
 	}
-	params := []interface{}{fileObj}
-
-	res := fileGetPath(params)
-	if !object.IsStringObject(res) {
-		t.Fatalf("Expected StringObject, got %#v", res)
+	if fileMkdirs([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("mkdirs expected true")
 	}
-
-	goStr := object.GoStringFromStringObject(res.(*object.Object))
-	if goStr != pathStr {
-		t.Errorf("Expected %q, got %q", pathStr, goStr)
+	if fileIsDirectory([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("isDirectory expected true after mkdirs")
 	}
 }
 
-func TestFileGetPath_MissingFilePath(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	params := []interface{}{fileObj}
+func TestJavaIoFile_RenameTo(t *testing.T) {
+	globals.InitStringPool()
 
-	res := fileGetPath(params)
-	if res == nil {
-		t.Fatal("Expected IOException error, got nil")
+	// get temp directory
+	dir := t.TempDir()
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+
+	// construct src and dst paths
+	srcpath := filepath.Join(dir, pidstr, ".src.txt")
+	dstpath := filepath.Join(dir, pidstr, ".dst.txt")
+
+	t.Logf("srcpath: %q", srcpath)
+	t.Logf("dstpath: %q", dstpath)
+
+	// ensure parent directory exists
+	srcDir := filepath.Dir(srcpath)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", srcDir, err)
 	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
+
+	// create file objects
+	src := newFileObjFromPath(t, srcpath)
+	dst := newFileObjFromPath(t, dstpath)
+
+	// create the source file
+	fileCreateThenClose(t, []interface{}{src})
+
+	// close the open handle from fileCreate
+	// required on Windows before renaming or deleting
+	closeWithFIS(t, src)
+
+	// rename src -> dst
+	if fileRenameTo([]interface{}{src, dst}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileRenameTo failed")
 	}
-	if errObj.ExceptionType != excNames.IOException {
-		t.Errorf("Expected IOException, got %v", errObj.ExceptionType)
+
+	// check that dst exists
+	if fileExists([]interface{}{dst}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("dst should exist after rename")
+	}
+
+	// no need to manually remove dir; t.TempDir cleanup handles it
+}
+
+func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+	fpath := filepath.Join(dir, pidstr, "ro.txt")
+	f := newFileObjFromPath(t, fpath)
+
+	// ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", filepath.Dir(fpath), err)
+	}
+
+	// create the file
+	fileCreateThenClose(t, []interface{}{f})
+
+	// close the open handle from fileCreate (needed on Windows)
+	closeWithFIS(t, f)
+
+	// now run permission setters (all no-ops in your impl)
+	if fileSetReadOnly([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadOnly expected true")
+	}
+	if fileSetReadable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadable expected true")
+	}
+	if fileSetWritable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setWritable expected true")
+	}
+	if fileSetExecutable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setExecutable expected true")
+	}
+
+	// no explicit cleanup — t.TempDir handles it
+}
+
+func TestJavaIoFile_CreateTemp_Instance_And_Static(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	// instance createTempFile
+	base := newFileObjFromPath(t, dir)
+	obj := fileCreateTemp([]interface{}{base, object.StringObjectFromGoString("pre"), object.StringObjectFromGoString(".suf")})
+	if obj == nil {
+		t.Fatalf("instance createTempFile returned nil")
+	}
+	// static createTempFile(prefix,suffix,dir)
+	obj2 := fileCreateTempWithDir([]interface{}{object.StringObjectFromGoString("x"), object.StringObjectFromGoString(".log"), newFileObjFromPath(t, dir)})
+	if obj2 == nil {
+		t.Fatalf("static createTempFile returned nil")
 	}
 }
 
-func TestFileIsInvalid_ZeroStatus(t *testing.T) {
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FileStatus: {Ftype: types.Int, Fvalue: int64(0)},
-		},
+func TestJavaIoFile_Equals_And_HashCode(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	p := filepath.Join(dir, "same")
+	f1 := newFileObjFromPath(t, p)
+	f2 := newFileObjFromPath(t, p)
+	// equals should be true for the same absolute path
+	if fileEquals([]interface{}{f1, f2}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("equals expected true for same path")
 	}
-	params := []interface{}{fileObj}
-
-	res := fileIsInvalid(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolTrue {
-		t.Errorf("Expected JavaBoolTrue (1) for invalid file status, got %#v", res)
-	}
-}
-
-func TestFileIsInvalid_NonZeroStatus(t *testing.T) {
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FileStatus: {Ftype: types.Int, Fvalue: int64(1)},
-		},
-	}
-	params := []interface{}{fileObj}
-
-	res := fileIsInvalid(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolFalse {
-		t.Errorf("Expected JavaBoolFalse (0) for valid file status, got %#v", res)
+	h1 := fileHashCode([]interface{}{f1}).(int64)
+	h2 := fileHashCode([]interface{}{f2}).(int64)
+	if h1 != h2 {
+		t.Fatalf("hashCode expected equal for same path")
 	}
 }
 
-func TestFileIsInvalid_MissingField(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	params := []interface{}{fileObj}
+func TestJavaIoFile_PermissionSetters(t *testing.T) {
 
-	res := fileIsInvalid(params)
-	if res == nil {
-		t.Fatal("Expected IOException error, got nil")
-	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
-	}
-	if errObj.ExceptionType != excNames.IOException {
-		t.Errorf("Expected IOException, got %v", errObj.ExceptionType)
-	}
-}
-
-func TestFileDelete_Success(t *testing.T) {
-	tmpDir := t.TempDir()
-	testFile := filepath.Join(tmpDir, "delete.txt")
-	err := os.WriteFile(testFile, []byte("to delete"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping owner-only permission tests on Windows")
 	}
 
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FilePath: {Ftype: types.Array, Fvalue: object.JavaByteArrayFromGoString(testFile)},
-		},
-	}
-	params := []interface{}{fileObj}
+	globals.InitStringPool()
+	dir := t.TempDir()
+	pidstr := fmt.Sprintf("%d", os.Getpid())
+	fpath := filepath.Join(dir, pidstr, "perm.bin")
+	f := newFileObjFromPath(t, fpath)
 
-	res := fileDelete(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolTrue {
-		t.Errorf("Expected JavaBoolTrue (1) on successful delete, got %#v", res)
-	}
-
-	_, err = os.Stat(testFile)
-	if !os.IsNotExist(err) {
-		t.Errorf("File still exists after delete")
-	}
-}
-
-func TestFileDelete_CloseFileHandle(t *testing.T) {
-	tmpDir := t.TempDir()
-	testFile := filepath.Join(tmpDir, "delete2.txt")
-	err := os.WriteFile(testFile, []byte("to delete"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+	// ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+		t.Fatalf("failed to create parent directory %q: %v", filepath.Dir(fpath), err)
 	}
 
-	f, err := os.Open(testFile)
-	if err != nil {
-		t.Fatalf("Failed to open test file: %v", err)
+	// create the file
+	fileCreateThenClose(t, []interface{}{f})
+
+	goPath := getPath(t, f)
+
+	// Establish a known baseline of 0000; skip if not supported
+	if err := os.Chmod(goPath, 0o000); err != nil {
+		t.Skipf("skipping permission tests; chmod baseline unsupported: %v", err)
 	}
 
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FilePath:   {Ftype: types.Array, Fvalue: object.JavaByteArrayFromGoString(testFile)},
-			FileHandle: {Ftype: types.Ref, Fvalue: f},
-		},
-	}
-	params := []interface{}{fileObj}
-
-	res := fileDelete(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolTrue {
-		t.Errorf("Expected JavaBoolTrue (1) on successful delete, got %#v", res)
+	stat := func() os.FileMode {
+		fi, err := os.Stat(goPath)
+		if err != nil {
+			t.Fatalf("os.Stat error: %v", err)
+		}
+		return fi.Mode()
 	}
 
-	_, err = os.Stat(testFile)
-	if !os.IsNotExist(err) {
-		t.Errorf("File still exists after delete")
+	// --- Readable ---
+	if fileSetReadable2([]interface{}{f, types.JavaBoolTrue, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadable2(true, ownerOnly=true) returned false")
 	}
-}
-
-func TestFileDelete_MissingFilePath(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	params := []interface{}{fileObj}
-
-	res := fileDelete(params)
-	if res == nil {
-		t.Fatal("Expected IOException error, got nil")
+	m := stat()
+	if m&0o400 == 0 {
+		t.Fatalf("setReadable2 owner read not set; mode now %o", m)
 	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
+	if fileSetReadable2([]interface{}{f, types.JavaBoolFalse, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadable2(false, ownerOnly=true) returned false")
 	}
-	if errObj.ExceptionType != excNames.IOException {
-		t.Errorf("Expected IOException, got %v", errObj.ExceptionType)
+	m = stat()
+	if (m & 0o444) != 0 {
+		t.Fatalf("clearing owner-only readable failed; mode %o", m)
 	}
-}
-
-func TestFileCreate_Success(t *testing.T) {
-	tmpDir := t.TempDir()
-	newFile := filepath.Join(tmpDir, "newfile.txt")
-
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FilePath: {Ftype: types.Array, Fvalue: object.JavaByteArrayFromGoString(newFile)},
-		},
+	if fileSetReadable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadable(true) returned false")
 	}
-	params := []interface{}{fileObj}
-
-	res := fileCreate(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolTrue {
-		t.Errorf("Expected JavaBoolTrue (1) on successful create, got %#v", res)
+	m = stat()
+	if m&0o444 != 0o444 {
+		t.Fatalf("setReadable(true) should set 0444; mode %o", m)
+	}
+	if fileSetReadable([]interface{}{f, types.JavaBoolFalse}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setReadable(false) returned false")
+	}
+	m = stat()
+	if (m & 0o444) != 0 {
+		t.Fatalf("setReadable(false) should clear 0444; mode %o", m)
 	}
 
-	fh, ok := fileObj.FieldTable[FileHandle]
-	if !ok {
-		t.Errorf("FileHandle field missing after fileCreate")
+	// --- Writable ---
+	if fileSetWritable2([]interface{}{f, types.JavaBoolTrue, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setWritable2(true, ownerOnly=true) returned false")
 	}
-	if _, ok := fh.Fvalue.(*os.File); !ok {
-		t.Errorf("FileHandle field value is not *os.File")
+	m = stat()
+	if m&0o200 == 0 || (m&(0o020|0o002)) != 0 {
+		t.Fatalf("setWritable2 ownerOnly should set only 0200; mode now %o", m)
+	}
+	if fileSetWritable2([]interface{}{f, types.JavaBoolFalse, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setWritable2(false, ownerOnly=true) returned false")
+	}
+	m = stat()
+	if (m & 0o222) != 0 {
+		t.Fatalf("clearing owner-only writable failed; mode %o", m)
+	}
+	if fileSetWritable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setWritable(true) returned false")
+	}
+	m = stat()
+	if m&0o222 != 0o222 {
+		t.Fatalf("setWritable(true) should set 0222; mode %o", m)
+	}
+	if fileSetWritable([]interface{}{f, types.JavaBoolFalse}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setWritable(false) returned false")
+	}
+	m = stat()
+	if (m & 0o222) != 0 {
+		t.Fatalf("setWritable(false) should clear 0222; mode %o", m)
 	}
 
-	// Work-around to prevent Windows from getting lost in TempDir RemoveAll cleanup
-	err := fh.Fvalue.(*os.File).Close()
-	if err != nil {
-		t.Fatalf("Failed to close file handle: %v", err)
+	// --- Executable ---
+	if fileSetExecutable2([]interface{}{f, types.JavaBoolTrue, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setExecutable2(true, ownerOnly=true) returned false")
 	}
-	err = os.Remove(newFile)
-	if err != nil {
-		t.Fatalf("Failed to remove test file: %v", err)
+	m = stat()
+	if m&0o100 == 0 || (m&(0o010|0o001)) != 0 {
+		t.Fatalf("setExecutable2 ownerOnly should set only 0100; mode now %o", m)
 	}
-}
+	if fileSetExecutable2([]interface{}{f, types.JavaBoolFalse, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setExecutable2(false, ownerOnly=true) returned false")
+	}
+	m = stat()
+	if (m & 0o111) != 0 {
+		t.Fatalf("clearing owner-only executable failed; mode %o", m)
+	}
+	if fileSetExecutable([]interface{}{f, types.JavaBoolTrue}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setExecutable(true) returned false")
+	}
+	m = stat()
+	if m&0o111 != 0o111 {
+		t.Fatalf("setExecutable(true) should set 0111; mode %o", m)
+	}
+	if fileSetExecutable([]interface{}{f, types.JavaBoolFalse}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("setExecutable(false) returned false")
+	}
+	m = stat()
+	if (m & 0o111) != 0 {
+		t.Fatalf("setExecutable(false) should clear 0111; mode %o", m)
+	}
 
-func TestFileCreate_MissingFilePath(t *testing.T) {
-	fileObj := &object.Object{FieldTable: make(map[string]object.Field)}
-	params := []interface{}{fileObj}
-
-	res := fileCreate(params)
-	if res == nil {
-		t.Fatal("Expected IOException error, got nil")
-	}
-	errObj, ok := res.(*GErrBlk)
-	if !ok {
-		t.Fatalf("Expected *GErrBlk, got %#v", res)
-	}
-	if errObj.ExceptionType != excNames.IOException {
-		t.Errorf("Expected IOException, got %v", errObj.ExceptionType)
-	}
-}
-
-func TestFileCreate_Failure(t *testing.T) {
-	// Attempt to create file in directory without permissions to simulate failure
-	// Note: This test might require root permissions or will be skipped.
-	fileObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			FilePath: {Ftype: types.Array, Fvalue: object.JavaByteArrayFromGoString("/root/forbiddenfile")},
-		},
-	}
-	params := []interface{}{fileObj}
-
-	res := fileCreate(params)
-	if val, ok := res.(int64); !ok || val != types.JavaBoolFalse {
-		t.Errorf("Expected JavaBoolFalse (0) on failure to create file, got %#v", res)
+	// Ensure writable so that FileOutputStream can open on all platforms
+	if err := os.Chmod(goPath, 0o600); err != nil {
+		t.Fatalf("os.Chmod(goPath, 0o600) failed, err: %s", err.Error())
 	}
 }

@@ -63,9 +63,12 @@ func TestStringFormatter_Hash_For_String(t *testing.T) {
 }
 
 func TestStringFormatter_Object_ToString_Like(t *testing.T) {
+	globals.InitStringPool()
 	fmtObj := object.StringObjectFromGoString("obj=%s")
-	o := object.MakeEmptyObject()
+ o := object.MakeEmptyObject()
 	o.KlassName = object.StringPoolIndexFromGoString("com/example/Dummy")
+	// ensure non-null per Jacobin's IsNull (requires at least one field)
+	o.FieldTable["_marker"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
 	argsArr := makeObjectRefArray(o)
 
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
