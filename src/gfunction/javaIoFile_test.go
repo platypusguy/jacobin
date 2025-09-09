@@ -250,9 +250,9 @@ func TestJavaIoFile_RenameTo(t *testing.T) {
 	}
 
 	// Delete the temp directory.
-	err := os.RemoveAll(dstpath)
+	err := os.RemoveAll(dir)
 	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dstpath, err)
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
 	}
 
 }
@@ -288,9 +288,9 @@ func TestJavaIoFile_SetReadOnly_And_Permissions_Noops(t *testing.T) {
 	}
 
 	// Delete the temp directory.
-	err := os.RemoveAll(fpath)
+	err := os.RemoveAll(dir)
 	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", fpath, err)
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
 	}
 }
 
@@ -455,8 +455,8 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	}
 
 	// Delete the temp directory.
-	err = os.RemoveAll(fpath)
+	err = os.RemoveAll(dir)
 	if err != nil {
-		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", fpath, err)
+		t.Fatalf("Ignoring os.RemoveAll(%s) error: %v", dir, err)
 	}
 }
