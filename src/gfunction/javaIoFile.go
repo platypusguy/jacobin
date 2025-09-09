@@ -483,8 +483,8 @@ func fileCompareTo(params []interface{}) interface{} {
 
 func fileCreateTemp(params []interface{}) interface{} {
 	// instance createTempFile(prefix,suffix) -> File in default temp dir
-	prefixObj := params[1].(*object.Object)
-	suffixObj := params[2].(*object.Object)
+	prefixObj := params[0].(*object.Object)
+	suffixObj := params[1].(*object.Object)
 	prefix := object.GoStringFromStringObject(prefixObj)
 	suffix := object.GoStringFromStringObject(suffixObj)
 	if suffix == "" {
