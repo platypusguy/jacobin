@@ -4,6 +4,7 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
+// 2025-09-10
 // According to Java semantics, several of these should be true (1) for Object and Object[]
 // But the current doInstanceof implementation only matches exact class equality.
 // These assertions therefore reflect CURRENT BEHAVIOR.
