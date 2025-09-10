@@ -3156,9 +3156,9 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 					classPtr = classloader.MethAreaFetch(className)
 				}
 				if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
-					push(fr, int64(1))
+					push(fr, types.JavaBoolTrue)
 				} else {
-					push(fr, int64(0))
+					push(fr, types.JavaBoolFalse)
 				}
 			}
 		}
