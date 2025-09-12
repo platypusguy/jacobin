@@ -4,12 +4,6 @@
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
-// 2025-09-10
-// According to Java semantics, several of these should be true (1) for Object and Object[]
-// But the current doInstanceof implementation only matches exact class equality.
-// These assertions therefore reflect CURRENT BEHAVIOR.
-// TODO: fix doInstanceof and these assertions to match Java semantics.
-
 package jvm
 
 import (
@@ -63,28 +57,28 @@ func TestInstanceofMisc(t *testing.T) {
 	if got := runInstanceof(t, strSimple, "java/lang/String"); got != types.JavaBoolTrue {
 		t.Fatalf("strSimple instanceof String: want 1 got %d", got)
 	}
-	if got := runInstanceof(t, strSimple, "java/lang/Object"); got != types.JavaBoolFalse {
+	if got := runInstanceof(t, strSimple, "java/lang/Object"); got != types.JavaBoolTrue {
 		t.Fatalf("strSimple instanceof Object: CURRENT want 0 got %d", got)
 	}
 
 	if got := runInstanceof(t, strArray, "[Ljava/lang/String"); got != types.JavaBoolTrue {
 		t.Fatalf("strArray instanceof String[]: want 1 got %d", got)
 	}
-	if got := runInstanceof(t, strArray, "[Ljava/lang/Object"); got != types.JavaBoolFalse {
+	if got := runInstanceof(t, strArray, "[Ljava/lang/Object"); got != types.JavaBoolTrue {
 		t.Fatalf("strArray instanceof Object[]: CURRENT want 0 got %d", got)
 	}
 
 	if got := runInstanceof(t, objSimple, strMyClass); got != types.JavaBoolTrue {
 		t.Fatalf("objSimple instanceof MyClass: want 1 got %d", got)
 	}
-	if got := runInstanceof(t, objSimple, "java/lang/Object"); got != types.JavaBoolFalse {
+	if got := runInstanceof(t, objSimple, "java/lang/Object"); got != types.JavaBoolTrue {
 		t.Fatalf("objSimple instanceof Object: CURRENT want 0 got %d", got)
 	}
 
 	if got := runInstanceof(t, objArray, "[L"+strMyClass); got != types.JavaBoolTrue {
 		t.Fatalf("objArray instanceof MyClass[]: want 1 got %d", got)
 	}
-	if got := runInstanceof(t, objArray, "[Ljava/lang/Object"); got != types.JavaBoolFalse {
+	if got := runInstanceof(t, objArray, "[Ljava/lang/Object"); got != types.JavaBoolTrue {
 		t.Fatalf("objArray instanceof Object[]: CURRENT want 0 got %d", got)
 	}
 }
