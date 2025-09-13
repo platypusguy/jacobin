@@ -68,7 +68,7 @@ func Load_Util_Objects() {
 	MethodSignatures["java/util/Objects.equals(Ljava/lang/Object;Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  trapFunction,
+			GFunction:  objectsEquals,
 		}
 
 	MethodSignatures["java/util/Objects.hash([Ljava/lang/Object;)I"] =
@@ -152,6 +152,36 @@ func objectsCheckIndex(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IndexOutOfBoundsException, errMsg)
 	}
 	return index
+}
+
+// java/util/Objects.equals(Object a, Object b) -> boolean
+// Minimal implementation:
+// - returns true if both are null
+// - returns false if exactly one is null
+// - returns true if both are the same reference
+// - otherwise returns false (does not invoke a.equals(b))
+func objectsEquals(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "objectsEquals: too few arguments")
+	}
+
+	if params[0] == nil && params[1] == nil {
+		return types.JavaBoolTrue
+	}
+	if params[0] == nil || params[1] == nil {
+		return types.JavaBoolFalse
+	}
+
+	a, okA := params[0].(*object.Object)
+	b, okB := params[1].(*object.Object)
+	if !okA || !okB {
+		return types.JavaBoolFalse
+	}
+
+	if a == b {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 func objectsIsNull(params []interface{}) interface{} {
