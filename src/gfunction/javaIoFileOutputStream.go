@@ -180,14 +180,14 @@ func initFileOutputStreamString(params []interface{}) interface{} {
 	return nil
 }
 
-// "java/io/FileOutputStream.<init>(Ljava/lang/String;])V"
+// "java/io/FileOutputStream.<init>(Ljava/lang/String;Z)V"
 func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 
 	// Using the argument path string, open the file for write-only.
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	// Get the boolean argument.
-	boolarg, ok := params[2].(int64)
+	boolAppend, ok := params[2].(int64)
 	if !ok {
 		errMsg := "initFileOutputStreamStringBoolean: Missing append-boolean argument"
 		return getGErrBlk(excNames.IOException, errMsg)
@@ -196,7 +196,7 @@ func initFileOutputStreamStringBoolean(params []interface{}) interface{} {
 	// Open the file for write-only, yielding a file handle.
 	var osFile *os.File
 	var err error
-	if boolarg != 0 { // append: true
+	if boolAppend == types.JavaBoolTrue { // append: true
 		osFile, err = os.OpenFile(pathStr, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	} else {
 		osFile, err = os.Create(pathStr)

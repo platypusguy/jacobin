@@ -387,14 +387,14 @@ func fileCreate(params []interface{}) interface{} {
 	if err != nil {
 		errMsg := fmt.Sprintf("fileCreate: Failed to create file %s, reason: %s", pathStr, err.Error())
 		trace.Error(errMsg)
-		return int64(0)
+		return types.JavaBoolFalse
 	}
 
 	// Copy the file handle into the File object; the test is responsible for closing it when finished.
 	fld = object.Field{Ftype: types.FileHandle, Fvalue: osFile}
 	params[0].(*object.Object).FieldTable[FileHandle] = fld
 
-	return int64(1)
+	return types.JavaBoolTrue
 }
 
 // --- Helpers ---

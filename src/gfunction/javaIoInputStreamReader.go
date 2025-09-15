@@ -248,8 +248,8 @@ func isrReady(params []interface{}) interface{} {
 	osFile := fldHandle.Fvalue.(*os.File)
 	_, err := osFile.Stat()
 	if err != nil {
-		return int64(0) // Ready: false
+		return types.JavaBoolFalse // Ready: false
 	}
 
-	return int64(1) // Ready: true
+	return types.JavaBoolTrue
 }
