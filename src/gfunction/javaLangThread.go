@@ -161,6 +161,7 @@ func threadCreateNoarg(params []interface{}) any {
 		Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
 	t.FieldTable["priority"] = priority
 
+	// task is the runnable that is executed if the run() method is called
 	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
 	return &t

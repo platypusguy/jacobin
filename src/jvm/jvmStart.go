@@ -142,25 +142,29 @@ func JVMrun() int {
 
 	// create the main thread
 
-	MainThread = thread.CreateThread()
-	MainThread.AddThreadToTable(globPtr)
+	if !globPtr.UseNewThread {
+		MainThread = thread.CreateThread()
+		MainThread.AddThreadToTable(globPtr)
 
-	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-	if globals.TraceInit {
-		trace.Trace("Starting execution with: " + *mainClass)
+		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
+		if globals.TraceInit {
+			trace.Trace("Starting execution with: " + *mainClass)
+		}
+
+		// StartExec() runs the main thread. It does not return an error because all errors
+		// will be handled one of three ways: 1) trapped in an exception, which shuts down the
+		// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
+		// down after processing the error; 3) a undeferred go panic, which should never occur.
+		// Consequently, if StartExec() finishes, no errors were encountered.
+		//
+		// To test for errors, trap stderr, as many of the unit tests do.
+		StartExec(*mainClass, &MainThread, globPtr)
+
+	} else { // for testing JACOBIN-732 use of new thread implementation
+		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
+		main := thread.CreateMainThread()
+		thread.Run(main, mainClass)
 	}
-
-	// main := thread.CreateMainThread() -- uncomment when ready to test JACOBIN-732
-	// thread.Run(main, mainClass) -- uncomment when ready to test JACOBIN-732
-
-	// StartExec() runs the main thread. It does not return an error because all errors
-	// will be handled one of three ways: 1) trapped in an exception, which shuts down the
-	// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
-	// down after processing the error; 3) a undeferred go panic, which should never occur.
-	// Consequently, if StartExec() finishes, no errors were encountered.
-	//
-	// To test for errors, trap stderr, as many of the unit tests do.
-	StartExec(*mainClass, &MainThread, globPtr)
 
 	return shutdown.Exit(shutdown.OK)
 }
