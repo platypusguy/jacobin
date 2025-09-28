@@ -164,7 +164,7 @@ func threadCreateNoarg(params []interface{}) any {
 	// task is the runnable that is executed if the run() method is called
 	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
-	return &t
+	return t
 }
 
 func threadCreateWithName(params []interface{}) any {
