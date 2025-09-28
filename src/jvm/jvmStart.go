@@ -163,7 +163,7 @@ func JVMrun() int {
 	} else { // for testing JACOBIN-732 use of new thread implementation
 		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 		main := thread.CreateMainThread()
-		thread.RegisterThread(main)
+		// the thread is registered in thread.Run()
 		thread.Run(main, mainClass)
 	}
 

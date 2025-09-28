@@ -206,8 +206,16 @@ func run(params []interface{}) interface{} {
 	}
 
 	t := params[0].(*object.Object)
-	runnObj := t.FieldTable["task"].Fvalue.(*object.Object)
-	runFields := runnObj.FieldTable
+	runObj := t.FieldTable["task"].Fvalue
+	// if the runnable is nil, then just return (per the JDK spec)
+	if runObj == nil {
+		return nil
+	}
+
+	// get the method to run (identified by Runnable's three fields)
+	runnable := *runObj.(*object.Object)
+	runFields := runnable.FieldTable
+
 	_, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
 		runFields["clName"].Fvalue.(string),
 		runFields["methName"].Fvalue.(string),
