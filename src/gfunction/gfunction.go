@@ -173,6 +173,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Util_Zip_Adler32()
 		Load_Util_Zip_Crc32_Crc32c()
 
+		// javax.*
+		Load_Javax_Net_Ssl_SSLContext()
+
 		// jdk/internal/misc/*
 		Load_Jdk_Internal_Misc_Unsafe()
 		Load_Jdk_Internal_Misc_ScopedMemoryAccess()
