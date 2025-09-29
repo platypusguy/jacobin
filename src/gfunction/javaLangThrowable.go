@@ -25,11 +25,59 @@ func Load_Lang_Throwable() {
 			GFunction:  throwableClinit,
 		}
 
+	MethodSignatures["java/lang/Throwable.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.<init>(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.<init>(Ljava/lang/Throwable;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.addSuppressed(Ljava/lang/Throwable;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/Throwable.fillInStackTrace()Ljava/lang/Throwable;"] =
 		GMeth{
 			ParamSlots:   0,
 			GFunction:    FillInStackTrace,
 			NeedsContext: true,
+		}
+
+	MethodSignatures["java/lang/Throwable.getCause()Ljava/lang/Throwable;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.getLocalizedMessage()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.getMessage()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Throwable.getOurStackTrace:()[Ljava/lang/StackTraceElement;"] =
@@ -39,6 +87,53 @@ func Load_Lang_Throwable() {
 			NeedsContext: true,
 		}
 
+	MethodSignatures["java/lang/Throwable.getStackTrace()[Ljava/lang/StackTraceElement;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.getSuppressed()[Ljava/lang/Throwable;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.initCause(Ljava/lang/Throwable;)Ljava/lang/Throwable;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.printStackTrace()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.printStackTrace(Ljava/io/PrintStream;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.printStackTrace(Ljava/io/PrintWriter;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.setStackTrace([Ljava/lang/StackTraceElement;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Throwable.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
 }
 
 // This method duplicates the following bytecode, with these exceptions:
