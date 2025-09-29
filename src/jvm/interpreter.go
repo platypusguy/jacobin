@@ -2180,7 +2180,18 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			return exceptions.RESUME_HERE // caught
 		}
 
-		objField.Fvalue = value
+		switch objField.Ftype {
+		case types.Byte:
+			objField.Fvalue = int64(int8(uint8(value.(int64))))
+		case types.Int:
+			objField.Fvalue = int64(int32(uint32(value.(int64))))
+		case types.Long:
+			objField.Fvalue = value.(int64)
+		case types.Short:
+			objField.Fvalue = int64(int16(uint16(value.(int64))))
+		default:
+			objField.Fvalue = value
+		}
 		obj.FieldTable[fieldName] = objField
 	}
 	return 3 // 2 for CPslot + 1 for next bytecode
