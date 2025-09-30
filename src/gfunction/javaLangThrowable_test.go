@@ -188,3 +188,171 @@ func InstantiateFillIn(name string, _ *list.List) (any, error) {
 	o.KlassName = stringPool.GetStringIndex(&name)
 	return o, nil
 }
+
+
+// Additional tests for Throwable constructors
+func TestThrowableInitNull_SetsFieldsAndStack(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+
+	// Build a minimal frame and stack
+	f := frames.CreateFrame(2)
+	f.Thread = 1
+	f.MethName = "main"
+	f.MethType = "([Ljava/lang/String;)V"
+	clData := classloader.ClData{
+		Name:            "",
+		SuperclassIndex: types.ObjectPoolStringIndex,
+		Module:          "test module",
+		Pkg:             "",
+		Interfaces:      nil,
+		Fields:          nil,
+		MethodTable:     nil,
+		Attributes:      nil,
+		SourceFile:      "testClass.java",
+		Bootstraps:      nil,
+		CP:              classloader.CPool{},
+		Access:          classloader.AccessFlags{},
+		ClInit:          0,
+	}
+	klass := classloader.Klass{Loader: "testLoader", Data: &clData}
+	classloader.MethAreaInsert("java/testClass", &klass)
+	f.ClName = "java/testClass"
+	f.MethName = "java/testClass.test"
+	jvmStack := frames.CreateFrameStack()
+	_ = frames.PushFrame(jvmStack, f)
+
+ // Throwable instance
+	cls := "java/lang/Throwable"
+	th := object.MakeEmptyObjectWithClassName(&cls)
+
+	// set up instantiate function required by StackTraceElement.of()
+	globPtr := globals.GetGlobalRef()
+	globPtr.FuncInstantiateClass = InstantiateFillIn
+
+	// Call constructor
+	ret := throwableInitNull([]interface{}{jvmStack, th})
+	if ret != nil {
+		t.Errorf("throwableInitNull returned non-nil: %v", ret)
+	}
+
+	// Validate fields
+	dm, ok := th.FieldTable["detailMessage"]
+	if !ok || dm.Fvalue != object.Null {
+		t.Errorf("detailMessage not null; got: %#v", dm)
+	}
+	cause, ok := th.FieldTable["cause"]
+	if !ok || cause.Fvalue != object.Null {
+		t.Errorf("cause not null; got: %#v", cause)
+	}
+
+	// Validate stack trace populated
+	steArrField, ok := th.FieldTable["stackTrace"]
+	if !ok {
+		t.Fatalf("stackTrace field missing")
+	}
+	steArrayObj := steArrField.Fvalue.(*object.Object)
+	entries := steArrayObj.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(entries) == 0 {
+		t.Fatalf("stackTrace array empty")
+	}
+	ste := entries[0].FieldTable
+	if ste["declaringClass"].Fvalue.(string) != "java/testClass" {
+		t.Errorf("declaringClass mismatch: %v", ste["declaringClass"].Fvalue)
+	}
+	if ste["methodName"].Fvalue.(string) != "java/testClass.test" {
+		t.Errorf("methodName mismatch: %v", ste["methodName"].Fvalue)
+	}
+	if ste["fileName"].Fvalue.(string) != "testClass.java" {
+		t.Errorf("fileName mismatch: %v", ste["fileName"].Fvalue)
+	}
+	if ste["classLoaderName"].Fvalue.(string) != "testLoader" {
+		t.Errorf("classLoaderName mismatch: %v", ste["classLoaderName"].Fvalue)
+	}
+}
+
+func TestThrowableInitString_SetsMessageAndStack(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	classloader.InitMethodArea()
+
+	// Build frame and stack
+	f := frames.CreateFrame(2)
+	f.Thread = 1
+	f.MethName = "main"
+	f.MethType = "([Ljava/lang/String;)V"
+	clData := classloader.ClData{
+		Name:            "",
+		SuperclassIndex: types.ObjectPoolStringIndex,
+		Module:          "test module",
+		Pkg:             "",
+		Interfaces:      nil,
+		Fields:          nil,
+		MethodTable:     nil,
+		Attributes:      nil,
+		SourceFile:      "testClass.java",
+		Bootstraps:      nil,
+		CP:              classloader.CPool{},
+		Access:          classloader.AccessFlags{},
+		ClInit:          0,
+	}
+	klass := classloader.Klass{Loader: "testLoader", Data: &clData}
+	classloader.MethAreaInsert("java/testClass", &klass)
+	f.ClName = "java/testClass"
+	f.MethName = "java/testClass.test"
+	jvmStack := frames.CreateFrameStack()
+	_ = frames.PushFrame(jvmStack, f)
+
+ // Throwable and message
+	cls := "java/lang/Throwable"
+	th := object.MakeEmptyObjectWithClassName(&cls)
+	msg := object.StringObjectFromGoString("hello")
+
+	// set up instantiate function required by StackTraceElement.of()
+	globPtr := globals.GetGlobalRef()
+	globPtr.FuncInstantiateClass = InstantiateFillIn
+
+	// Call constructor
+	ret := throwableInitString([]interface{}{jvmStack, th, msg})
+	if ret != nil {
+		t.Errorf("throwableInitString returned non-nil: %v", ret)
+	}
+
+	// Validate message stored
+	dm, ok := th.FieldTable["detailMessage"]
+	if !ok {
+		t.Fatalf("detailMessage field missing")
+	}
+	if object.GoStringFromStringObject(dm.Fvalue.(*object.Object)) != "hello" {
+		t.Errorf("detailMessage content mismatch")
+	}
+	cause, ok := th.FieldTable["cause"]
+	if !ok || cause.Fvalue != object.Null {
+		t.Errorf("cause not null; got: %#v", cause)
+	}
+
+	// Validate stack trace populated
+	steArrField, ok := th.FieldTable["stackTrace"]
+	if !ok {
+		t.Fatalf("stackTrace field missing")
+	}
+	steArrayObj := steArrField.Fvalue.(*object.Object)
+	entries := steArrayObj.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(entries) == 0 {
+		t.Fatalf("stackTrace array empty")
+	}
+	ste := entries[0].FieldTable
+	if ste["declaringClass"].Fvalue.(string) != "java/testClass" {
+		t.Errorf("declaringClass mismatch: %v", ste["declaringClass"].Fvalue)
+	}
+	if ste["methodName"].Fvalue.(string) != "java/testClass.test" {
+		t.Errorf("methodName mismatch: %v", ste["methodName"].Fvalue)
+	}
+	if ste["fileName"].Fvalue.(string) != "testClass.java" {
+		t.Errorf("fileName mismatch: %v", ste["fileName"].Fvalue)
+	}
+	if ste["classLoaderName"].Fvalue.(string) != "testLoader" {
+		t.Errorf("classLoaderName mismatch: %v", ste["classLoaderName"].Fvalue)
+	}
+}
