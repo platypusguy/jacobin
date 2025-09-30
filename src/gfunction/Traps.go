@@ -12,6 +12,12 @@ import (
 
 func Load_Traps() {
 
+	MethodSignatures["java/awt/image/BufferedImage.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
 	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
