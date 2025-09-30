@@ -2957,12 +2957,13 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 				switch value.(type) {
 				case []byte:
 					errMsg += fmt.Sprintf(": %s", string(obj.FieldTable["value"].Fvalue.([]byte)))
+				case []types.JavaByte:
+					errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte)))
 				case uint32:
 					str := stringPool.GetStringPointer(value.(uint32))
 					errMsg += fmt.Sprintf(": %s", *str)
 				default:
-					str := fmt.Sprintf(": %v", value)
-					errMsg += fmt.Sprintf(": %s", str)
+					errMsg += fmt.Sprintf(": <default value> %v", value)
 				}
 			default:
 				errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
