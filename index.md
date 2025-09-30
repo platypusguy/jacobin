@@ -7,7 +7,7 @@ The goal is to provide a more-than-minimal implementation of the JVM that can ru
 Eventually, we hope to enable developers to run their code and have a UI that shows the bytecodes executing, along with the contents of the various JVM stacks, heap, and counters. If you want to see how your Java code executes, this end product will show you in real time. (This is difficult to do with OpenJDK-based JVMs because of the size of the codebase, which is written in multiple languages.)
 
 
-Due to our desire for a strong, reliable product, Jacobin is heavily tested during development. As of September 2024, the test code is 233% the size of the production code and consists of more than 850 tests. We're committed to increasing these numbers. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
+Due to our desire for a strong, reliable product, Jacobin is heavily tested during development. As of August 2025, the test code is 208% the size of the production code and consists of more than 1,710 tests. We're committed to increasing these numbers. When Jacobin advances some more, we intend to run the OpenJDK test suites against it. 
 
 ### Current Status
 
