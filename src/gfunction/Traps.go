@@ -18,6 +18,30 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/awt/image/BufferedImage.<init>(III)Ljava/awt/image/BufferedImage;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/awt/image/BufferedImage.<init>(IIILjava/awt/image/IndexColorModel;)Ljava/awt/image/BufferedImage;"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/awt/image/BufferedImage.<init>(Ljava/awt/image/ColorModel;Ljava/awt/image/WritableRaster;ZLjava/util/Hashtable;)Ljava/awt/image/BufferedImage;"] =
+		GMeth{
+			ParamSlots: 4,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/awt/ImageCapabilities.<init>(Z)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/rmi/RMISecurityManager.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
