@@ -36,6 +36,18 @@ func Load_Traps() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/awt/Image.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/awt/Image.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/awt/ImageCapabilities.<init>(Z)V"] =
 		GMeth{
 			ParamSlots: 1,
