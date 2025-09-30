@@ -27,14 +27,16 @@ func Load_Lang_Throwable() {
 
 	MethodSignatures["java/lang/Throwable.<init>()V"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
+			ParamSlots:   0,
+			GFunction:    throwableInitNull,
+			NeedsContext: true,
 		}
 
 	MethodSignatures["java/lang/Throwable.<init>(Ljava/lang/String;)V"] =
 		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
+			ParamSlots:   1,
+			GFunction:    throwableInitString,
+			NeedsContext: true,
 		}
 
 	MethodSignatures["java/lang/Throwable.<init>(Ljava/lang/String;Ljava/lang/Throwable;)V"] =
@@ -177,6 +179,70 @@ func throwableClinit([]interface{}) interface{} {
 		Type:  "[Ljava/lang/Throwable;",
 		Value: emptyThrowableArray,
 	})
+	return nil
+}
+
+// java/lang/Throwable.<init>()V
+func throwableInitNull(params []interface{}) interface{} {
+	// params when NeedsContext=true: [frameStack, this]
+	// when not provided (tests), allow [this]
+	var frameStack *list.List
+	var thisObj *object.Object
+	if len(params) == 2 {
+		frameStack = params[0].(*list.List)
+		thisObj = params[1].(*object.Object)
+	} else if len(params) == 1 {
+		thisObj = params[0].(*object.Object)
+	} else {
+		errMsg := fmt.Sprintf("throwableInitNull: expected 1 or 2 params, got %d", len(params))
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg)
+	}
+
+	// detailMessage = null
+	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassRef, Fvalue: object.Null}
+	// cause = null (not strictly required elsewhere yet)
+	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
+	// suppressedExceptions left unset for now; can be initialized lazily if needed
+
+	// Populate stack trace similar to fillInStackTrace()
+	if frameStack != nil {
+		_ = FillInStackTrace([]interface{}{frameStack, thisObj})
+	}
+	return nil
+}
+
+// java/lang/Throwable.<init>(Ljava/lang/String;)V
+func throwableInitString(params []interface{}) interface{} {
+	// params when NeedsContext=true: [frameStack, this, message]
+	// allow [this, message] as a fallback
+	var frameStack *list.List
+	var thisObj *object.Object
+	var msgObj *object.Object
+	switch len(params) {
+	case 3:
+		frameStack = params[0].(*list.List)
+		thisObj = params[1].(*object.Object)
+		msgObj = params[2].(*object.Object)
+	case 2:
+		thisObj = params[0].(*object.Object)
+		msgObj = params[1].(*object.Object)
+	default:
+		errMsg := fmt.Sprintf("throwableInitString: expected 2 or 3 params, got %d", len(params))
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg)
+	}
+	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassRef, Fvalue: msgObj}
+
+	// cause = null by default
+	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
+
+	// Populate stack trace
+	if frameStack != nil {
+		_ = FillInStackTrace([]interface{}{frameStack, thisObj})
+	}
 	return nil
 }
 
