@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/thread"
 	"jacobin/src/types"
@@ -215,16 +217,43 @@ func run(params []interface{}) interface{} {
 	// get the method to run (identified by Runnable's three fields)
 	runnable := *runObj.(*object.Object)
 	runFields := runnable.FieldTable
+	clName := runFields["clName"].Fvalue.(string)
+	methName := runFields["methName"].Fvalue.(string)
+	methType := runFields["signature"].Fvalue.(string)
+	tID := runFields["ID"].Fvalue.(int64)
 
-	_, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
-		runFields["clName"].Fvalue.(string),
-		runFields["methName"].Fvalue.(string),
-		runFields["signature"].Fvalue.(string))
+	m, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
+		clName, methName, methType)
+
 	if err != nil {
 		errMsg := fmt.Sprintf("Run: Could not find run method: %v", err)
 		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
 	}
 
+	meth := m.Meth.(classloader.JmEntry)
+	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
+	f.Thread = int(tID)
+	f.ClName = clName
+	f.MethName = methName
+	f.MethType = methType
+
+	f.CP = meth.Cp                        // add its pointer to the class CP
+	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
+
+	// allocate the local variables
+	for k := 0; k < meth.MaxLocals; k++ {
+		f.Locals = append(f.Locals, 0)
+	}
+
+	if tID == 1 { // if thread is the main thread, then load the CLI args into the first local
+		var objArray []*object.Object
+		for _, str := range globals.GetGlobalRef().AppArgs {
+			sobj := object.StringObjectFromGoString(str)
+			objArray = append(objArray, sobj)
+		}
+		f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
+
+	}
 	// threads are registered only when they are started
 	thread.RegisterThread(t)
 	return nil

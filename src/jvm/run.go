@@ -57,7 +57,7 @@ func StartExec(className string, mainThread *thread.ExecThread, globalStruct *gl
 		f.Locals = append(f.Locals, 0)
 	}
 
-	// Create an array of string objects in locals[0].
+	// Create an array of string objects for any CLI args in locals[0].
 	var objArray []*object.Object
 	for _, str := range globalStruct.AppArgs {
 		// sobj := object.NewStringFromGoString(str) // deprecated by JACOBIN-480
