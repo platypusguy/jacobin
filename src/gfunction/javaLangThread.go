@@ -11,6 +11,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/frames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/thread"
 	"jacobin/src/types"
@@ -219,6 +220,7 @@ func run(params []interface{}) interface{} {
 	clName := runFields["clName"].Fvalue.(string)
 	methName := runFields["methName"].Fvalue.(string)
 	methType := runFields["signature"].Fvalue.(string)
+	tID := runFields["ID"].Fvalue.(int64)
 
 	m, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
 		clName, methName, methType)
@@ -230,7 +232,7 @@ func run(params []interface{}) interface{} {
 
 	meth := m.Meth.(classloader.JmEntry)
 	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
-	f.Thread = int(t.FieldTable["ID"].Fvalue.(int64))
+	f.Thread = int(tID)
 	f.ClName = clName
 	f.MethName = methName
 	f.MethType = methType
@@ -243,6 +245,15 @@ func run(params []interface{}) interface{} {
 		f.Locals = append(f.Locals, 0)
 	}
 
+	if tID == 1 { // if thread is the main thread, then load the CLI args into the first local
+		var objArray []*object.Object
+		for _, str := range globals.GetGlobalRef().AppArgs {
+			sobj := object.StringObjectFromGoString(str)
+			objArray = append(objArray, sobj)
+		}
+		f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
+
+	}
 	// threads are registered only when they are started
 	thread.RegisterThread(t)
 	return nil
