@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -163,6 +164,10 @@ func threadCreateNoarg(params []interface{}) any {
 		Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
 	t.FieldTable["priority"] = priority
 
+	frameStack := object.Field{
+		Ftype: types.LinkedList, Fvalue: nil}
+	t.FieldTable["framestack"] = frameStack
+
 	// task is the runnable that is executed if the run() method is called
 	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
@@ -252,8 +257,24 @@ func run(params []interface{}) interface{} {
 			objArray = append(objArray, sobj)
 		}
 		f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
-
 	}
+
+	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}
+	fs := frames.CreateFrameStack()
+	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
+
+	if frames.PushFrame(fs, f) != nil {
+		errMsg := fmt.Sprintf("Memory error allocating frame on thread: %d", tID)
+		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
+	}
+
+	// must first instantiate the class, so that any static initializers are run
+	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
+	if instantiateError != nil {
+		errMsg := "Error instantiating: " + clName + ".main()"
+		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
+	}
+
 	// threads are registered only when they are started
 	thread.RegisterThread(t)
 	return nil
