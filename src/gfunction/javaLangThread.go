@@ -131,6 +131,109 @@ func Load_Lang_Thread() {
 			ParamSlots: 0,
 			GFunction:  threadNumberingNext,
 		}
+
+	// Native methods that should trap with trapFunction
+	MethodSignatures["java/lang/Thread.clearInterruptEvent()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.interrupt0()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.start0()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.yield0()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.findScopedValueBindings()Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.getStackTrace0()Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.scopedValueCache()[Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.currentCarrierThread()Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.getThreads()[Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.setPriority0(I)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.sleepNanos0(J)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.ensureMaterializedForStackWalk(Ljava/lang/Object;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.holdsLock(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.setScopedValueCache([Ljava/lang/Object;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.setNativeName(Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
 }
 
 var classname = "java/lang/Thread"
