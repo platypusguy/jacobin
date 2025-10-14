@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/config"
@@ -119,6 +120,34 @@ func runThread(t *thread.ExecThread) error {
 	}
 
 	if t.Stack.Len() == 0 { // true when the last executed frame was main()
+		return nil
+	}
+	return nil
+}
+
+func runJavaThread(thObj *object.Object) error {
+	t := thObj.FieldTable
+
+	defer func() int {
+		// only an untrapped panic gets us here
+		if r := recover(); r != nil {
+			stack := string(debug.Stack())
+			glob := globals.GetGlobalRef()
+			glob.ErrorGoStack = stack
+			exceptions.ShowPanicCause(r)
+			exceptions.ShowFrameStack(t) // update for new thread model
+			exceptions.ShowGoStackTrace(nil)
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		return shutdown.OK
+	}()
+
+	fs := t["framestack"].Fvalue.(*list.List)
+	for fs.Len() > 0 {
+		interpret(fs)
+	}
+
+	if fs.Len() == 0 { // true when the last executed frame was main()
 		return nil
 	}
 	return nil

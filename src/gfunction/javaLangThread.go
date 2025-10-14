@@ -15,6 +15,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/thread"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"time"
 )
@@ -379,6 +380,14 @@ func run(params []interface{}) interface{} {
 
 	// threads are registered only when they are started
 	thread.RegisterThread(t)
+
+	if globals.TraceInst {
+		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
+		trace.Trace(traceInfo)
+	}
+
+	// runJavaThread(t)
 	return nil
 }
 
