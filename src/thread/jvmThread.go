@@ -68,11 +68,11 @@ func RegisterThread(t *object.Object) {
 }
 
 // Runs a thread. This is the function that is called by the JVM when a thread is started.
-// It calls the run method in the java/lang/Thread class.
+// It calls the run method in the java/lang/Thread class and executes the Runnable that should be there.
 func Run(t *object.Object, methName *string) {
 	glob := globals.GetGlobalRef()
 	params := []any{t, methName}
-	glob.FuncInvokeGFunction("java/lang/Thread.run(Ljava/lang/Object;Ljava/lang/String;)V", params)
+	glob.FuncInvokeGFunction("java/lang/Thread.run()V", params)
 }
 
 //

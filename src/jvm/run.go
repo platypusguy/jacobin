@@ -125,7 +125,8 @@ func runThread(t *thread.ExecThread) error {
 	return nil
 }
 
-func runJavaThread(thObj *object.Object) error {
+func RunJavaThread(param interface{}) error {
+	thObj := param.(*object.Object)
 	t := thObj.FieldTable
 
 	defer func() int {

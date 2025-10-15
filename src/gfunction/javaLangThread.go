@@ -387,7 +387,7 @@ func run(params []interface{}) interface{} {
 		trace.Trace(traceInfo)
 	}
 
-	// runJavaThread(t)
+	globals.GetGlobalRef().FuncRunThread(t)
 	return nil
 }
 

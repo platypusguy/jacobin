@@ -181,6 +181,7 @@ func InitGlobalFunctionPointers(globalPtr *globals.Globals) {
 	globalPtr.FuncInstantiateClass = InstantiateClass
 	globalPtr.FuncInvokeGFunction = gfunction.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort
+	globalPtr.FuncRunThread = RunJavaThread
 	globalPtr.FuncThrowException = exceptions.ThrowExNil
 	globalPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
 }
