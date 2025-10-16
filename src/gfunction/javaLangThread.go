@@ -84,6 +84,12 @@ func Load_Lang_Thread() {
 			GFunction:  threadCreateWithName,
 		}
 
+	MethodSignatures["java/lang/Thread.Thread(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  threadCreateWithRunnableAndName,
+		}
+
 	// remaining methods are in alpha order by Java FQN string
 
 	MethodSignatures["java/lang/Thread.clearInterruptEvent()V"] =
@@ -172,7 +178,7 @@ func Load_Lang_Thread() {
 
 	MethodSignatures["java/lang/Thread.run()V"] =
 		GMeth{
-			ParamSlots: 2,
+			ParamSlots: 1,
 			GFunction:  run,
 		}
 

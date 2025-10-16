@@ -14,7 +14,7 @@ import (
 // In our implementation, Runnable is a set of three strings: class name,
 // method name and signature--by which we can find the method.
 
-func newRunnable(clName string, methName string, signature string) *object.Object {
+func NewRunnable(clName string, methName string, signature string) *object.Object {
 	runnableClassName := "java/lang/Runnable"
 	o := object.MakeEmptyObjectWithClassName(&runnableClassName)
 	o.FieldTable["clName"] = object.Field{Ftype: types.GolangString, Fvalue: clName}

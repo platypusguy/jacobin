@@ -12,6 +12,7 @@ import (
 	"jacobin/src/exceptions"
 	"jacobin/src/gfunction"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
@@ -162,9 +163,12 @@ func JVMrun() int {
 
 	} else { // for testing JACOBIN-732 use of new thread implementation
 		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-		main := thread.CreateMainThread()
+		runnable := gfunction.NewRunnable(*mainClass, "main", "([Ljava/lang/String;)V")
+		params := []interface{}{runnable, "main"}
+		t := globals.GetGlobalRef().FuncInvokeGFunction(
+			"java/lang/Thread.Thread(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;", params)
 		// the thread is registered in thread.Run()
-		thread.Run(main, mainClass)
+		thread.Run(t.(*object.Object))
 	}
 
 	return shutdown.Exit(shutdown.OK)
