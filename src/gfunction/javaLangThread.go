@@ -334,7 +334,6 @@ func run(params []interface{}) interface{} {
 	clName := runFields["clName"].Fvalue.(string)
 	methName := runFields["methName"].Fvalue.(string)
 	methType := runFields["signature"].Fvalue.(string)
-	tID := runFields["ID"].Fvalue.(int64)
 
 	m, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
 		clName, methName, methType)
@@ -344,6 +343,7 @@ func run(params []interface{}) interface{} {
 		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
 	}
 
+	tID := t.FieldTable["ID"].Fvalue.(int64)
 	meth := m.Meth.(classloader.JmEntry)
 	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
 	f.Thread = int(tID)
