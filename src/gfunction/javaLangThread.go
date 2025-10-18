@@ -72,6 +72,7 @@ type PublicFields struct {
 }
 
 func Load_Lang_Thread() {
+
 	// constructors (followed by alpha list of public methods)
 	MethodSignatures["java/lang/Thread.Thread()Ljava/lang/Thread;"] =
 		GMeth{
@@ -93,7 +94,7 @@ func Load_Lang_Thread() {
 
 	// remaining methods are in alpha order by Java FQN string
 
-	MethodSignatures["java/lang/Thread.clearInterruptEvent()V"] =
+	MethodSignatures["java/lang/Thread.activeCount()I"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
@@ -118,13 +119,13 @@ func Load_Lang_Thread() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.getStackTrace0()Ljava/lang/Object;"] =
+	MethodSignatures["java/lang/Thread.getStackTrace()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.getThreads()[Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
@@ -136,16 +137,16 @@ func Load_Lang_Thread() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.interrupt0()V"] =
+	MethodSignatures["java/lang/Thread.interrupt()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.registerNatives()V"] =
+	MethodSignatures["java/lang/Thread.interrupted()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Thread.run()V"] =
@@ -154,19 +155,13 @@ func Load_Lang_Thread() {
 			GFunction:  run,
 		}
 
-	MethodSignatures["java/lang/Thread.scopedValueCache()[Ljava/lang/Object;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/Thread.setNativeName(Ljava/lang/String;)V"] =
+	MethodSignatures["java/lang/Thread.setName(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.setPriority0(I)V"] =
+	MethodSignatures["java/lang/Thread.setPriority(I)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
@@ -184,13 +179,13 @@ func Load_Lang_Thread() {
 			GFunction:  threadSleep,
 		}
 
-	MethodSignatures["java/lang/Thread.sleepNanos0(J)V"] =
+	MethodSignatures["java/lang/Thread.sleepNanos(J)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.start0()V"] =
+	MethodSignatures["java/lang/Thread.start()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
@@ -207,7 +202,7 @@ func Load_Lang_Thread() {
 			GFunction:  threadNumberingNext,
 		}
 
-	MethodSignatures["java/lang/Thread.yield0()V"] =
+	MethodSignatures["java/lang/Thread.yield()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
