@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
@@ -104,40 +105,11 @@ func Load_Lang_Thread() {
 			GFunction:  cloneNotSupportedException,
 		}
 
-	MethodSignatures["java/lang/Thread.currentCarrierThread()Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/Thread.currentThread(Ljava/lang/Runnable;)Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadCreateWithRunnable,
-		}
-
-	MethodSignatures["java/lang/Thread.currentThread(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadCreateWithRunnableAndName,
-		}
-
-	MethodSignatures["java/lang/Thread.ensureMaterializedForStackWalk(Ljava/lang/Object;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/lang/Thread.findScopedValueBindings()Ljava/lang/Object;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
+			ParamSlots:   0,
+			GFunction:    threadCurrentThread,
+			NeedsContext: true,
 		}
 
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
@@ -304,6 +276,25 @@ func threadCreateWithRunnableAndName(params []interface{}) any {
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.GolangString, Fvalue: params[1].(string)}
 	return t
+}
+
+// "java/lang/Thread.currentThread()Ljava/lang/Thread;"
+func threadCurrentThread(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("CurrentThread: Expected context data, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	fStack, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := "CurrentThread: Expected context data to be a frame"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	frame := fStack.Front().Value.(*frames.Frame)
+	thID := frame.Thread
+	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
+	return th
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
