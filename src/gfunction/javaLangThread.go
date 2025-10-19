@@ -109,8 +109,14 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
 		GMeth{
 			ParamSlots:   0,
-			GFunction:    threadCurrentThread,
+			GFunction:    currentThread,
 			NeedsContext: true,
+		}
+
+	MethodSignatures["java/lang/Thread.getName()Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  getName,
 		}
 
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
@@ -211,7 +217,7 @@ func Load_Lang_Thread() {
 
 var classname = "java/lang/Thread"
 
-func threadCreateNoarg(params []interface{}) any {
+func threadCreateNoarg(_ []interface{}) any {
 
 	t := object.MakeEmptyObjectWithClassName(&classname)
 
@@ -274,7 +280,7 @@ func threadCreateWithRunnableAndName(params []interface{}) any {
 }
 
 // "java/lang/Thread.currentThread()Ljava/lang/Thread;"
-func threadCurrentThread(params []interface{}) any {
+func currentThread(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("CurrentThread: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -290,6 +296,17 @@ func threadCurrentThread(params []interface{}) any {
 	thID := frame.Thread
 	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
 	return th
+}
+
+// "java/lang/Thread.getName()Ljava/lang/String;"
+func getName(params []interface{}) any {
+	if len(params) != 0 {
+		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t := params[0].(*object.Object)
+	return t.FieldTable["name"].Fvalue
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
@@ -379,8 +396,7 @@ func run(params []interface{}) interface{} {
 		trace.Trace(traceInfo)
 	}
 
-	globals.GetGlobalRef().FuncRunThread(t)
-	return nil
+	return globals.GetGlobalRef().FuncRunThread(t)
 }
 
 // "java/lang/Thread.sleep(J)V"
@@ -394,18 +410,18 @@ func threadSleep(params []interface{}) interface{} {
 	return nil
 }
 
-func cloneNotSupportedException(params []interface{}) interface{} {
+func cloneNotSupportedException(_ []interface{}) interface{} {
 	errMsg := "cloneNotSupportedException: Not supported for threads"
 	return getGErrBlk(excNames.CloneNotSupportedException, errMsg)
 }
 
 // ========= ThreadNumbering is a private static class in java/lang/Thread
-func threadNumbering(params []any) any { // initialize thread numbering
+func threadNumbering(_ []any) any { // initialize thread numbering
 	thread.ThreadNumber = int64(0)
 	return thread.ThreadNumber
 }
 
-func threadNumberingNext(params []any) any {
+func threadNumberingNext(_ []any) any {
 	thread.ThreadNumber += 1
 	return int64(thread.ThreadNumber)
 }
