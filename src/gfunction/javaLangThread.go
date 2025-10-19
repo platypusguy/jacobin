@@ -119,6 +119,12 @@ func Load_Lang_Thread() {
 			GFunction:  threadGetName,
 		}
 
+	MethodSignatures["java/lang/Thread.getPriority()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadGetPriority,
+		}
+
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
 		GMeth{
 			ParamSlots: 0,
@@ -307,6 +313,17 @@ func threadGetName(params []interface{}) any {
 
 	t := params[0].(*object.Object)
 	return t.FieldTable["name"].Fvalue
+}
+
+// "java/lang/Thread.getPriority()I"
+func threadGetPriority(params []interface{}) any {
+	if len(params) != 0 {
+		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t := params[0].(*object.Object)
+	return t.FieldTable["priority"].Fvalue
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
