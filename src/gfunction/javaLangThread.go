@@ -109,14 +109,14 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
 		GMeth{
 			ParamSlots:   0,
-			GFunction:    currentThread,
+			GFunction:    threadCurrentThread,
 			NeedsContext: true,
 		}
 
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getName,
+			GFunction:  threadGetName,
 		}
 
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
@@ -280,7 +280,7 @@ func threadCreateWithRunnableAndName(params []interface{}) any {
 }
 
 // "java/lang/Thread.currentThread()Ljava/lang/Thread;"
-func currentThread(params []interface{}) any {
+func threadCurrentThread(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("CurrentThread: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -299,7 +299,7 @@ func currentThread(params []interface{}) any {
 }
 
 // "java/lang/Thread.getName()Ljava/lang/String;"
-func getName(params []interface{}) any {
+func threadGetName(params []interface{}) any {
 	if len(params) != 0 {
 		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
