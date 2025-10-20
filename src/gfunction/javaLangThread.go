@@ -167,6 +167,12 @@ func Load_Lang_Thread() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/lang/Thread.registerNatives()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 	MethodSignatures["java/lang/Thread.run()V"] =
 		GMeth{
 			ParamSlots: 1,
