@@ -18,6 +18,7 @@ import (
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"sync"
 	"time"
 )
 
@@ -445,12 +446,24 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 }
 
 // ========= ThreadNumbering is a private static class in java/lang/Thread
-func threadNumbering(_ []any) any { // initialize thread numbering
+
+// this guarantees that the thread numbering is initialized only once
+var setInitialThreadNumberingValue = sync.OnceValue(func() any {
 	thread.ThreadNumber = int64(0)
-	return thread.ThreadNumber
+	return nil
+})
+
+func threadNumbering(_ []any) any { // initialize thread numbering
+	setInitialThreadNumberingValue()
+	return nil
 }
 
+// avoid contention when creating threads
+var threadNumberingMutex sync.Mutex
+
 func threadNumberingNext(_ []any) any {
+	threadNumberingMutex.Lock()
 	thread.ThreadNumber += 1
+	threadNumberingMutex.Unlock()
 	return int64(thread.ThreadNumber)
 }
