@@ -100,6 +100,12 @@ func Load_Lang_Thread() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/io/Thread.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
 	MethodSignatures["java/lang/Thread.clone()V"] =
 		GMeth{
 			ParamSlots: 0,
