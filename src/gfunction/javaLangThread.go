@@ -98,7 +98,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.activeCount()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  threadActiveCount,
 		}
 
 	MethodSignatures["java/io/Thread.<clinit>()V"] =
@@ -235,6 +235,10 @@ func Load_Lang_Thread() {
 }
 
 var classname = "java/lang/Thread"
+
+func threadActiveCount(_ []interface{}) any {
+	return int64(len(globals.GetGlobalRef().Threads))
+}
 
 func threadCreateNoarg(_ []interface{}) any {
 
