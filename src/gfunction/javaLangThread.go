@@ -101,7 +101,7 @@ func Load_Lang_Thread() {
 			GFunction:  threadActiveCount,
 		}
 
-	MethodSignatures["java/io/Thread.<clinit>()V"] =
+	MethodSignatures["java/lang/Thread.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  clinitGeneric,
@@ -118,6 +118,12 @@ func Load_Lang_Thread() {
 			ParamSlots:   0,
 			GFunction:    threadCurrentThread,
 			NeedsContext: true,
+		}
+
+	MethodSignatures["java/lang/Thread.dumpStack()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/Object;"] =
@@ -154,6 +160,12 @@ func Load_Lang_Thread() {
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.<init>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/lang/Thread.interrupt()V"] =
