@@ -18,6 +18,7 @@ import (
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"os"
 	"sync"
 	"time"
 )
@@ -122,8 +123,15 @@ func Load_Lang_Thread() {
 
 	MethodSignatures["java/lang/Thread.dumpStack()V"] =
 		GMeth{
+			ParamSlots:   0,
+			GFunction:    threadDumpStack,
+			NeedsContext: true,
+		}
+
+	MethodSignatures["java/lang/Thread.enumerate()[Ljava/lang/Thread;"] =
+		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  threadEnumerate,
 		}
 
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/Object;"] =
@@ -331,6 +339,53 @@ func threadCurrentThread(params []interface{}) any {
 	thID := frame.Thread
 	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
 	return th
+}
+
+// java/lang/Thread.dumpStack()V
+func threadDumpStack(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	jvmStack, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := "DumpStack: Expected context data to be a frame"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	globalRef := globals.GetGlobalRef()
+	if globalRef.StrictJDK { // if strictly following HotSpot, ...
+		fmt.Fprintln(os.Stderr, "java.lang.Exception: Stack trace")
+	} else { // TODO: add the source line numbers to both variants
+		// we print more data than HotSpot does, starting with the thread name
+		threadID := jvmStack.Front().Value.(*frames.Frame).Thread
+		thread := globalRef.Threads[threadID].(*object.Object)
+		threadName := thread.FieldTable["name"].Fvalue.(string)
+		fmt.Fprintf(os.Stderr, "Stack trace (thread %s)\n", threadName)
+	}
+
+	for e := jvmStack.Front(); e != nil; e = e.Next() {
+		fr := e.Value.(*frames.Frame)
+		if globalRef.StrictJDK {
+			fmt.Fprintf(os.Stderr, "\tat %s.%s\n", fr.ClName, fr.MethName)
+		} else {
+			fmt.Fprintf(os.Stderr, "\tat %s.%s(PC: %d)\n",
+				fr.ClName, fr.MethName, fr.PC)
+		}
+	}
+	return nil
+}
+
+// "java/lang/Thread.enumerate()[Ljava/lang/Thread;"
+func threadEnumerate(_ []interface{}) any {
+	globalRef := globals.GetGlobalRef()
+	// count := len(globalRef.Threads)
+	var threads []*object.Object
+	for _, value := range globalRef.Threads {
+		threads = append(threads, value.(*object.Object))
+	}
+	return threads
 }
 
 // "java/lang/Thread.getName()Ljava/lang/String;"
