@@ -152,10 +152,11 @@ func Load_Lang_Thread() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/Thread.getStackTrace()Ljava/lang/Object;"] =
+	MethodSignatures["java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;"] =
 		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
+			ParamSlots:   0,
+			GFunction:    threadGetStackTrace,
+			NeedsContext: true,
 		}
 
 	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
@@ -420,6 +421,25 @@ func threadGetPriority(params []interface{}) any {
 
 	t := params[0].(*object.Object)
 	return t.FieldTable["priority"].Fvalue
+}
+
+// java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;
+func threadGetStackTrace(params []interface{}) any {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	jvmFrameStack, ok := params[1].(*list.List)
+	if !ok {
+		errMsg := "getStackTrace: Expected context data to be a frame stack"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	stackTrace := object.MakeEmptyObject()
+	stackTrace.KlassName = object.StringPoolIndexFromGoString("[java/lang/StackTraceElement")
+	ret := FillInStackTrace([]interface{}{jvmFrameStack, stackTrace})
+	return ret
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
