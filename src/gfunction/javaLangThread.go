@@ -134,7 +134,7 @@ func Load_Lang_Thread() {
 			GFunction:  threadEnumerate,
 		}
 
-	MethodSignatures["java/lang/Thread.getName()Ljava/lang/Object;"] =
+	MethodSignatures["java/lang/Thread.getName()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadGetName,
@@ -401,18 +401,19 @@ func threadEnumerate(params []interface{}) any {
 
 // "java/lang/Thread.getName()Ljava/lang/String;"
 func threadGetName(params []interface{}) any {
-	if len(params) != 0 {
+	if len(params) != 1 {
 		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	t := params[0].(*object.Object)
-	return t.FieldTable["name"].Fvalue
+	name := t.FieldTable["name"].Fvalue
+	return object.StringObjectFromGoString(name.(string))
 }
 
 // "java/lang/Thread.getPriority()I"
 func threadGetPriority(params []interface{}) any {
-	if len(params) != 0 {
+	if len(params) != 1 {
 		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
