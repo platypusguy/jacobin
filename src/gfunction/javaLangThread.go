@@ -128,9 +128,9 @@ func Load_Lang_Thread() {
 			NeedsContext: true,
 		}
 
-	MethodSignatures["java/lang/Thread.enumerate()[Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.enumerate([Ljava/lang/Thread;)I"] =
 		GMeth{
-			ParamSlots: 0,
+			ParamSlots: 1,
 			GFunction:  threadEnumerate,
 		}
 
@@ -356,36 +356,47 @@ func threadDumpStack(params []interface{}) interface{} {
 
 	globalRef := globals.GetGlobalRef()
 	if globalRef.StrictJDK { // if strictly following HotSpot, ...
-		fmt.Fprintln(os.Stderr, "java.lang.Exception: Stack trace")
+		_, _ = fmt.Fprintln(os.Stderr, "java.lang.Exception: Stack trace")
 	} else { // TODO: add the source line numbers to both variants
 		// we print more data than HotSpot does, starting with the thread name
 		threadID := jvmStack.Front().Value.(*frames.Frame).Thread
-		thread := globalRef.Threads[threadID].(*object.Object)
-		threadName := thread.FieldTable["name"].Fvalue.(string)
-		fmt.Fprintf(os.Stderr, "Stack trace (thread %s)\n", threadName)
+		th := globalRef.Threads[threadID].(*object.Object)
+		threadName := th.FieldTable["name"].Fvalue.(string)
+		_, _ = fmt.Fprintf(os.Stderr, "Stack trace (thread %s)\n", threadName)
 	}
 
 	for e := jvmStack.Front(); e != nil; e = e.Next() {
 		fr := e.Value.(*frames.Frame)
 		if globalRef.StrictJDK {
-			fmt.Fprintf(os.Stderr, "\tat %s.%s\n", fr.ClName, fr.MethName)
+			_, _ = fmt.Fprintf(os.Stderr, "\tat %s.%s\n", fr.ClName, fr.MethName)
 		} else {
-			fmt.Fprintf(os.Stderr, "\tat %s.%s(PC: %d)\n",
+			_, _ = fmt.Fprintf(os.Stderr, "\tat %s.%s(PC: %d)\n",
 				fr.ClName, fr.MethName, fr.PC)
 		}
 	}
 	return nil
 }
 
-// "java/lang/Thread.enumerate()[Ljava/lang/Thread;"
-func threadEnumerate(_ []interface{}) any {
-	globalRef := globals.GetGlobalRef()
-	// count := len(globalRef.Threads)
-	var threads []*object.Object
-	for _, value := range globalRef.Threads {
-		threads = append(threads, value.(*object.Object))
+// java/lang/Thread.enumerate([Ljava/lang/Thread;)I
+func threadEnumerate(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	return threads
+
+	arrObj := params[0].(*object.Object)
+	arr := arrObj.FieldTable["value"].Fvalue.([]*object.Object)
+	count := len(arr)
+
+	globalRef := globals.GetGlobalRef()
+	threadCount := len(globalRef.Threads)
+	count = min(count, threadCount)
+	i := 0
+	for _, value := range globalRef.Threads {
+		arr[i] = value.(*object.Object)
+		i += 1
+	}
+	return count
 }
 
 // "java/lang/Thread.getName()Ljava/lang/String;"
