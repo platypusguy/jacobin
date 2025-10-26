@@ -1,0 +1,82 @@
+Classpath: an ordered list of location elements that the JVM and the Java compiler search to find the following:
+    * Compiled .class files
+    * Resources (like .properties or .xml files).
+These location elements can refer to:
+    * Directories (e.g., classes/)
+    * JAR files (e.g., lib/mylib.jar)
+    * ZIP files (e.g., lib/mylib.zip)
+    * Wildcard patterns (e.g., lib/*) - match jars and zip files but not subdirectories. The only permitted wildcard is the * and it can appear only at the end of the URL, 
+        indicating all JAR files and ZIP files in a given directory. 
+
+If no classpath is specified and no execution mode jar file is specified, the classpath consists of a single location element, 
+the current working directory. 
+
+When a classpath is specified, the current working directory is not a location element unless explicitly listed as such in the classpath ordered list.
+
+ZIP file general characteristics
+    * An archive subject to PKWARE-ZIP-defined compression.
+    * Contains files and directories.
+    * Uses compression methods (most commonly Deflate).
+    * Has a central directory at the end of the file describing its contents.
+    * Can store metadata like file timestamps, permissions, and comments.
+
+A JAR file (Java Archive): a ZIP-based container that bundles compiled .class files (and optionally resources like images, configuration files, and a manifest) into a single, portable unit. 
+A jar file can be used in one of two modes: 
+    1. library mode
+        * The jar file is one of the location elements for dependency searching.
+        * It is specified either as an element of the O/S environment variable CLASSPATH or it is specified as an element of a manifest Class-Path attribute. 
+        * Only the top-level directory of all specified jar files are searched for classes and functions.
+        * If there is a manifest file in a jar file used as a location for searching, it is ignored.
+    2. execution mode
+        * The jar file is referenced on the command line -jar parameter. 
+        * In this mode, the jar manifest must have a Main-Class attribute indicating the class file where the main function will be found.
+        * If a -classpath (or --class-path or -cp) parameter appears on the JVM or compiler command-line, it is ignored.
+        * If the Class-Path attribute appears in manifest: That is the classpath. No other classpath elements exist.
+        * If no Class-Path attribute appears in manifest: Then, the classpath has one element: the top level directory of the jar.
+
+ZIP file as a Java archive
+    * can be used just like a jar file in library mode
+    * cannot be used execution mode
+
+Example - library mode:
+
+    # Main class is in ./com/example
+    # The 2 locations to search for additional user classes are as follows:
+        ## (1) ./lib/mylib.jar - a jar file in subdirectory lib of the current directory
+        ## (2) /system/lib/other.jar - a jar file in a system-wide jar collection
+    # Non-Windows O/S:
+    java -cp "lib/mylib.jar:/system/lib/other.jar" com.example.Main
+    # Windows:
+    java -cp "lib\mylib.jar;C:\system\lib\other.jar" com.example.Main
+
+Example - execution mode
+
+    # Run the main function of class com.example.Main which will be found in file ./lib/starter.jar. 
+    # Class Main is actually found in the directory com/example/ inside the file ./lib/starter.jar.
+    # There is a manifest file inside ./lib/starter.jar indicating ClassPath: /system/lib/other.jar
+    # Thus, the two locations to search for additional user classes are as follows:
+        ## (1) ./lib/starter.jar - a jar file in subdirectory lib of the current directory
+        ## (2) /system/lib/other.jar - a jar file in a system-wide jar collection
+    # Non-Windows O/S:
+    java -jar lib/starter.jar com.example.Main
+    # Windows:
+    java -jar lib\starter.jar com.example.Main
+    
+
+JAR manifest Class-Path entry
+A JAR’s manifest file (META-INF/MANIFEST.MF) can include a Class-Path attribute listing other JARs or directories that this JAR depends on.
+Example: myapp.jar with the following MANIFEST.MF:
+    Manifest-Version: 1.0
+    Main-Class: com.example.Main
+    Class-Path: lib/helper.jar lib/utils.jar
+
+Then you can run:
+    java -jar myapp.jar
+
+The JVM will automatically append lib/helper.jar and lib/utils.jar to myapp.jar, giving a classpath of the following 3 elements: 
+    myapp.jar, 
+    lib/helper.jar
+    lib/utils.jar.
+
+Note that if lib/helper.jar and lib/utils.jar contain manifest files, they are ignored.
+
