@@ -22,7 +22,7 @@ ZIP file general characteristics
 
 A JAR file (Java Archive): a ZIP-based container that bundles compiled .class files (and optionally resources like images, configuration files, and a manifest) into a single, portable unit. 
 A jar file can be used in one of two modes: 
-    1. classpath mode
+    1. library mode
         * The jar file is one of the location elements for dependency searching.
         * It is specified either as an element of the O/S environment variable CLASSPATH or it is specified as an element of a manifest Class-Path attribute. 
         * Only the top-level directory of all specified jar files are searched for classes and functions.
@@ -35,10 +35,10 @@ A jar file can be used in one of two modes:
         * If no Class-Path attribute appears in manifest: Then, the classpath has one element: the top level directory of the jar.
 
 ZIP file as a Java archive
-    * can be used just like a jar file in classpath mode
+    * can be used just like a jar file in library mode
     * cannot be used execution mode
 
-Example - classpath mode:
+Example - library mode:
 
     # Main class is in ./com/example
     # The 2 locations to search for additional user classes are as follows:
