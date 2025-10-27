@@ -18,8 +18,9 @@ import (
 
 // HandleCli handles all args from the command line, including those from environment
 // variables that the JVM recognizes and prepends to the list of command-line options
-// func HandleCli(osArgs []string, globPtr *globals.Globals) (err error) {
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
+
+	// Get Java OPTIONS from the environment.
 	var javaEnvOptions = getEnvArgs()
 	if globals.TraceInit {
 		trace.Trace("HandleCli: Java environment variables: " + javaEnvOptions)
@@ -29,6 +30,7 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 	showJavaHomeArgs(Global)
 
 	// add command-line args to those extracted from the environment (if any)
+	// Store in Global.CommandLine as a scalar string.
 	cliArgs := javaEnvOptions + " "
 	for _, v := range osArgs[1:] {
 		cliArgs += v + " "
@@ -40,21 +42,35 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
 	// pull out all the arguments into an array of strings. Note that an arg with spaces but
 	// within quotes is treated as a single arg
+	// Store in Global.Args as a string array.
 	args := strings.Fields(javaEnvOptions)
 	for _, v := range osArgs[1:] {
 		args = append(args, v)
 	}
 	Global.Args = args
+
+	// Make the lawyers happy.
 	showCopyright(Global)
 
+	// Begin main loop.
+	// For each args element .....
 	for i := 0; i < len(args); i++ {
-		var option, arg string
-		// if it's a JVM option (so, it begins with a hyphen)
-		// break the option into the option and any embedded arg values, if any
+
+		// Options look like one of these:
+		//		-label			start of a classpath sequence or a flag
+		//		-label:value	where value can be a scalar or a list of subvalues
+		var optLabel, optValue string
+		var dashed bool
+		// if it's a JVM option (it begins with a hyphen),
+		// 		break the option into the optLabel and any embedded arg values, if any, into optValue
+		// else,
+		//		just capture the string value in optLabel.
 		if strings.HasPrefix(args[i], "-") {
-			option, arg, err = getOptionRootAndArgs(args[i])
+			optLabel, optValue, err = getOptionRootAndArgs(args[i])
+			dashed = true
 		} else {
-			option = args[i]
+			optLabel = args[i]
+			dashed = false
 		}
 
 		if err != nil {
@@ -63,36 +79,51 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 			return err
 		}
 
-		// if the option is the name of the class to execute, note that then get
-		// all successive arguments and store them as app args in globPtr
-		if strings.HasSuffix(option, ".class") {
-			Global.StartingClass = option
+		// if the option is the name of the class to execute,
+		// * get all successive arguments
+		// * store them in the Global.AppArgs array
+		// * break out of the outer for loop
+		if !dashed {
+			Global.StartingClass = optLabel
+			for i = i + 1; i < len(args); i++ {
+				Global.AppArgs = append(Global.AppArgs, args[i])
+			}
+			if !strings.HasSuffix(optLabel, ".class") {
+				optLabel += ".class"
+			}
+			break
+		}
+
+		// Get the option value for this label.
+		opt, ok := Global.Options[optLabel]
+		if !ok {
+			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
+			trace.Error(errMsg)
+			return err
+		}
+
+		// Process the option value with the action function.
+		newPos, err := opt.Action(i, optValue, Global)
+		if err != nil {
+			errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
+			trace.Error(errMsg)
+			return err
+		}
+
+		// if the option is a JAR file, then
+		// * get all successive arguments
+		// * store them in the Global.AppArgs array
+		// * break out of the outer for loop
+		if optLabel == "-jar" {
 			for i = i + 1; i < len(args); i++ {
 				Global.AppArgs = append(Global.AppArgs, args[i])
 			}
 			break
 		}
-
-		opt, ok := Global.Options[option]
-		if ok {
-			newPos, err := opt.Action(i, arg, Global)
-			if err != nil {
-				errMsg := fmt.Sprintf("HandleCli: Parameter %s has errors, err: %v\n", args[i], err)
-				trace.Error(errMsg)
-				return err
-			}
-			// if the option is a JAR file, then all remaining args have been captureed
-			// in the optAction function, so we can exit here
-			if option == "-jar" {
-				return nil
-			}
-			i = newPos // advance the index by the number of args consumed by this option
-		} else {
-			errMsg := fmt.Sprintf("HandleCli: Parameter %s is not a recognized option. Exiting.\n", args[i])
-			trace.Error(errMsg)
-			return err
-		}
+		i = newPos // advance the index by the number of args consumed by this option
 	}
+
+	// Finished with args array.
 	return nil
 }
 
