@@ -574,7 +574,7 @@ func TestGetProperty_PathSeparator(t *testing.T) {
 	propObj := object.StringObjectFromGoString("path.separator")
 	params := []interface{}{propObj}
 	result := systemGetProperty(params)
-	expected := object.StringObjectFromGoString(string(os.PathSeparator))
+	expected := object.StringObjectFromGoString(string(os.PathListSeparator))
 	if object.GoStringFromStringObject(result.(*object.Object)) != object.GoStringFromStringObject(expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
