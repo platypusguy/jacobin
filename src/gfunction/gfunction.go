@@ -139,6 +139,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Lang_StringBuilder()
 		Load_Lang_System()
 		Load_Lang_Thread()
+		Load_Lang_Thread_State()
 		Load_Lang_Throwable()
 		Load_Lang_UTF16()
 
