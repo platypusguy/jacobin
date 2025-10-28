@@ -104,20 +104,23 @@ func (archive *Archive) recordFile(file *zip.File) ResourceEntry {
 }
 
 func (archive *Archive) parseManifest(file *zip.File) error {
+
+	// Get all the string lines from the archive file.
 	rc, err := file.Open()
-
 	defer rc.Close()
-
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("archives.parseManifest file.Open[%s], err: %s", archive.Filename, err.Error()))
 	}
-
 	data, err := io.ReadAll(rc)
-
+	if err != nil {
+		if err != nil {
+			return errors.New(fmt.Sprintf("archives.parseManifest io.ReadAll[%s], err: %s", archive.Filename, err.Error()))
+		}
+	}
 	contents := string(data)
+	lines := strings.Split(contents, "\n") // supports all OSes
 
-	lines := strings.Split(contents, "\r\n") // TODO: handle both \r\n and \n line endings
-
+	// Process each string line
 	for _, line := range lines {
 		parts := strings.Split(line, ":")
 		if len(parts) > 1 {
@@ -130,46 +133,38 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 
 func (archive *Archive) hasResource(name string, resourceType ResourceType) bool {
 	item, ok := archive.entryCache[name]
-
 	if !ok {
 		return false
 	}
-
 	return item.Type == resourceType
 }
 
 func (archive *Archive) loadClass(className string) (*LoadResult, error) {
 	item, ok := archive.entryCache[className]
-
 	if !ok {
-		err := errors.New(fmt.Sprintf("Unable to load class %s in archive %s", className, archive.Filename))
+		err := errors.New(fmt.Sprintf("archives.loadClass archive.entryCache[%s] failed in archive %s", className, archive.Filename))
 		return nil, err
 	}
 
 	if item.Type != ClassFile {
-		return nil, errors.New(fmt.Sprintf("Class %s in archive %s is not a classfile", className, archive.Filename))
+		return nil, errors.New(fmt.Sprintf("archives.loadClass file %s in archive %s is not a classfile", className, archive.Filename))
 	}
 
 	reader, err := zip.OpenReader(archive.Filename)
-
 	defer reader.Close()
-
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("archives.loadClass zip.OpenReader(%s) failed, err: %s", archive.Filename, err.Error()))
 	}
 
 	file, err := reader.Open(item.Location)
-
 	defer file.Close()
-
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("archives.loadClass reader.Open(%s, Location %s) failed, err: %s", archive.Filename, item.Location, err.Error()))
 	}
 
 	bytes, err := io.ReadAll(file)
-
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("archives.loadClass io.ReadAll(%s, Location %s) failed, err: %s", archive.Filename, item.Location, err.Error()))
 	}
 
 	return &LoadResult{Data: &bytes, Success: true, ResourceEntry: item}, nil
@@ -183,4 +178,21 @@ func (archive *Archive) getMainClass() string {
 	} else {
 		return ""
 	}
+}
+
+func (archive *Archive) getClassPath() []string {
+
+	preSplit, ok := archive.manifest["Class-Path"]
+	classPath := []string{archive.Filename}
+	if !ok {
+		// Classpath is just the path of this jar.
+		return classPath
+	}
+
+	// Append the manifest classpath to the jar path, giving the full classpath.
+	postSplit := strings.Split(preSplit, " ")
+	for ndx := 0; ndx < len(postSplit); ndx++ {
+		classPath = append(classPath, postSplit[ndx])
+	}
+	return classPath
 }
