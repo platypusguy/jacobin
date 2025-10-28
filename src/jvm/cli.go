@@ -84,13 +84,13 @@ func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 		// * store them in the Global.AppArgs array
 		// * break out of the outer for loop
 		if !dashed {
-			Global.StartingClass = optLabel
 			for i = i + 1; i < len(args); i++ {
 				Global.AppArgs = append(Global.AppArgs, args[i])
 			}
 			if !strings.HasSuffix(optLabel, ".class") {
 				optLabel += ".class"
 			}
+			Global.StartingClass = optLabel
 			break
 		}
 
