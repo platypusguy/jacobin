@@ -337,30 +337,141 @@ func TestShowCopyrightWithStrictJDKswitch(t *testing.T) {
 	}
 }
 
+// Command line:  jacobin  a.class
 func TestFoundClassFileWithNoArgs(t *testing.T) {
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
 
-	// redirecting stdout to avoid clutter in the test results
-	normalStdout := os.Stdout
-	_, w, _ := os.Pipe()
-	os.Stdout = w
-
 	args := []string{"jacobin", "a.class"}
 	_ = HandleCli(args, &global)
 
-	_ = w.Close()
-	os.Stdout = normalStdout
-
 	if global.StartingClass != "a.class" {
-		t.Error(" class not identified as starting class. Got: " +
-			global.StartingClass)
+		t.Errorf("Expected global.StartingClass = \"a.class\", observed: \"%s\"", global.StartingClass)
 	}
 
 	if len(global.AppArgs) != 0 {
-		t.Error("app arg to  class should be empty, but got: " +
-			global.AppArgs[0])
+		t.Errorf("Expected global.AppArgs = 0, observed: %d", len(global.AppArgs))
 	}
+}
+
+// Command line:  jacobin  a.class  apple  banana  peach
+func TestFoundClassFileWithArgs(t *testing.T) {
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+
+	args := []string{"jacobin", "a.class", "apple", "banana", "peach"}
+	_ = HandleCli(args, &global)
+
+	if global.StartingClass != "a.class" {
+		t.Errorf("Expected global.StartingClass = \"a.class\", observed: \"%s\"", global.StartingClass)
+	}
+
+	if len(global.AppArgs) != 3 {
+		t.Errorf("Expected global.AppArgs = 3, observed: %d", len(global.AppArgs))
+	}
+
+	if global.AppArgs[0] != "apple" {
+		t.Errorf("Expected global.AppArgs[0] = \"apple\", observed: \"%s\"", global.AppArgs[0])
+	}
+
+	if global.AppArgs[1] != "banana" {
+		t.Errorf("Expected global.AppArgs[1] = \"banana\", observed: \"%s\"", global.AppArgs[1])
+	}
+
+	if global.AppArgs[2] != "peach" {
+		t.Errorf("Expected global.AppArgs[2] = \"peach\", observed: \"%s\"", global.AppArgs[2])
+	}
+}
+
+// Command line:  jacobin  Starter  --double-dash  apple  banana  peach
+func TestFoundClassFileWithArgsAlt(t *testing.T) {
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+
+	args := []string{"jacobin", "Starter", "--double-dash", "apple", "banana", "peach"} // no .class suffix
+	_ = HandleCli(args, &global)
+
+	if global.StartingClass != "Starter.class" {
+		t.Errorf("Expected global.StartingClass = \"Starter.class\", observed: \"%s\"", global.StartingClass)
+	}
+
+	if len(global.AppArgs) != 4 {
+		t.Errorf("Expected global.AppArgs = 4, observed: %d", len(global.AppArgs))
+	} else {
+		if global.AppArgs[0] != "--double-dash" {
+			t.Errorf("Expected global.AppArgs[0] = \"--double-dash\", observed: \"%s\"", global.AppArgs[0])
+		}
+		if global.AppArgs[1] != "apple" {
+			t.Errorf("Expected global.AppArgs[0] = \"apple\", observed: \"%s\"", global.AppArgs[1])
+		}
+		if global.AppArgs[2] != "banana" {
+			t.Errorf("Expected global.AppArgs[1] = \"banana\", observed: \"%s\"", global.AppArgs[2])
+		}
+		if global.AppArgs[3] != "peach" {
+			t.Errorf("Expected global.AppArgs[2] = \"peach\", observed: \"%s\"", global.AppArgs[3])
+		}
+	}
+}
+
+// Command line:  jacobin  -classpath Mercury:Venus:Earth:Mars  Starter  --double-dash  apple  banana  peach
+func _execWithClasspath(t *testing.T, optName string) {
+
+	t.Logf("_execWithClasspath: option name = \"%s\"", optName)
+	global := globals.InitGlobals("test")
+	LoadOptionsTable(global)
+
+	classpath := "Mercury" + string(os.PathListSeparator) + "Venus" + string(os.PathListSeparator) + "Earth" + string(os.PathListSeparator) + "Mars"
+
+	args := []string{"jacobin", optName, classpath, "Starter", "--double-dash", "apple", "banana", "peach"} // no .class suffix
+	_ = HandleCli(args, &global)
+
+	if global.StartingClass != "Starter.class" {
+		t.Errorf("Expected global.StartingClass = \"Starter.class\", observed: \"%s\"", global.StartingClass)
+	}
+
+	if global.ClasspathRaw != classpath {
+		t.Errorf("Expected global.ClasspathRaw = \"%s\", observed: \"%s\"", classpath, global.ClasspathRaw)
+	}
+
+	if len(global.Classpath) != 4 {
+		t.Errorf("Expected 4 elements in global.Classpath, observed: %d", len(global.Classpath))
+	} else {
+		if global.Classpath[0] != "Mercury"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[0] = \"Mercury%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[0])
+		}
+		if global.Classpath[1] != "Venus"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[1] = \"Venus%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[1])
+		}
+		if global.Classpath[2] != "Earth"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[2] = \"Earth%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[2])
+		}
+		if global.Classpath[3] != "Mars"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[3] = \"Mars%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[3])
+		}
+	}
+
+	if len(global.AppArgs) != 4 {
+		t.Errorf("Expected 4 elements in global.AppArgs, observed: %d", len(global.AppArgs))
+	} else {
+		if global.AppArgs[0] != "--double-dash" {
+			t.Errorf("Expected global.AppArgs[0] = \"--double-dash\", observed: \"%s\"", global.AppArgs[0])
+		}
+		if global.AppArgs[1] != "apple" {
+			t.Errorf("Expected global.AppArgs[0] = \"apple\", observed: \"%s\"", global.AppArgs[1])
+		}
+		if global.AppArgs[2] != "banana" {
+			t.Errorf("Expected global.AppArgs[1] = \"banana\", observed: \"%s\"", global.AppArgs[2])
+		}
+		if global.AppArgs[3] != "peach" {
+			t.Errorf("Expected global.AppArgs[2] = \"peach\", observed: \"%s\"", global.AppArgs[3])
+		}
+	}
+}
+
+func TestWithCp1(t *testing.T) {
+	_execWithClasspath(t, "-cp")
+	_execWithClasspath(t, "-classpath")
+	_execWithClasspath(t, "--class-path")
 }
 
 // make sure that if a file path to the executable has an embedded :
@@ -388,32 +499,6 @@ func TestClassFileColonIFilePath(t *testing.T) {
 
 	if len(global.AppArgs) != 0 {
 		t.Error("app arg to  class should be empty, but got: " +
-			global.AppArgs[0])
-	}
-}
-
-func TestFoundClassFileWithArgs(t *testing.T) {
-	global := globals.InitGlobals("test")
-	LoadOptionsTable(global)
-
-	// redirecting stdout to avoid clutter in the test results
-	normalStdout := os.Stdout
-	_, w, _ := os.Pipe()
-	os.Stdout = w
-
-	args := []string{"jacobin", "a.class", "appArg1"}
-	_ = HandleCli(args, &global)
-
-	_ = w.Close()
-	os.Stdout = normalStdout
-
-	if global.StartingClass != "a.class" {
-		t.Error("a.class not identified as starting class. Got: " +
-			global.StartingClass)
-	}
-
-	if global.AppArgs[0] != "appArg1" {
-		t.Error("app arg to  class not correct. Got: " +
 			global.AppArgs[0])
 	}
 }

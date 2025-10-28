@@ -99,7 +99,7 @@ func getOsProperty(arg string) string {
 	case "os.version":
 		value = getOSVersion()
 	case "path.separator":
-		value = string(os.PathSeparator)
+		value = string(os.PathListSeparator)
 	case "sun.jnu.encoding":
 		value = "UTF-8" // this is the default encoding for file names in Java
 	case "user.dir": // present working directory
