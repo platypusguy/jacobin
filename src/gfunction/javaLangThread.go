@@ -440,13 +440,11 @@ func threadGetStackTrace(params []interface{}) any {
 	stackTrace.KlassName = object.StringPoolIndexFromGoString("[java/lang/StackTraceElement")
 	ret := FillInStackTrace([]interface{}{jvmFrameStack, stackTrace})
 	if ret == nil {
-		errMsg := "getStackTrace: Failed to fill in stack trace"
+		errMsg := "threadGetStackTrace: Call to gfunction.FillInStackTrace() failed to fill in stack trace"
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	traceObj := stackTrace.FieldTable["stacktrace"].Fvalue.(*object.Object)
+	traceObj := stackTrace.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	return traceObj
-	// traceArray := traceObj.FieldTable["value"].Fvalue.([]object.Object)
-	// return &traceArray
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
