@@ -436,17 +436,17 @@ func _execWithClasspath(t *testing.T, optName string) {
 	if len(global.Classpath) != 4 {
 		t.Errorf("Expected 4 elements in global.Classpath, observed: %d", len(global.Classpath))
 	} else {
-		if global.Classpath[0] != "Mercury/" {
-			t.Errorf("Expected global.Classpath[0] = \"Mercury/\", observed: \"%s\"", global.Classpath[0])
+		if global.Classpath[0] != "Mercury"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[0] = \"Mercury%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[0])
 		}
-		if global.Classpath[1] != "Venus/" {
-			t.Errorf("Expected global.Classpath[1] = \"Venus/\", observed: \"%s\"", global.Classpath[1])
+		if global.Classpath[1] != "Venus"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[1] = \"Venus%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[1])
 		}
-		if global.Classpath[2] != "Earth/" {
-			t.Errorf("Expected global.Classpath[2] = \"Earth/\", observed: \"%s\"", global.Classpath[2])
+		if global.Classpath[2] != "Earth"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[2] = \"Earth%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[2])
 		}
-		if global.Classpath[3] != "Mars/" {
-			t.Errorf("Expected global.Classpath[3] = \"Mars/\", observed: \"%s\"", global.Classpath[3])
+		if global.Classpath[3] != "Mars"+string(os.PathSeparator) {
+			t.Errorf("Expected global.Classpath[3] = \"Mars%c\", observed: \"%s\"", os.PathSeparator, global.Classpath[3])
 		}
 	}
 
