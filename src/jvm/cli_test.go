@@ -420,19 +420,21 @@ func _execWithClasspath(t *testing.T, optName string) {
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
 
-	args := []string{"jacobin", optName, "Mercury:Venus:Earth:Mars", "Starter", "--double-dash", "apple", "banana", "peach"} // no .class suffix
+	classpath := "Mercury" + string(os.PathListSeparator) + "Venus" + string(os.PathListSeparator) + "Earth" + string(os.PathListSeparator) + "Mars"
+
+	args := []string{"jacobin", optName, classpath, "Starter", "--double-dash", "apple", "banana", "peach"} // no .class suffix
 	_ = HandleCli(args, &global)
 
 	if global.StartingClass != "Starter.class" {
 		t.Errorf("Expected global.StartingClass = \"Starter.class\", observed: \"%s\"", global.StartingClass)
 	}
 
-	if global.ClasspathRaw != "Mercury:Venus:Earth:Mars" {
-		t.Errorf("Expected global.ClasspathRaw = \"Mercury:Venus:Earth:Mars\", observed: \"%s\"", global.ClasspathRaw)
+	if global.ClasspathRaw != classpath {
+		t.Errorf("Expected global.ClasspathRaw = \"%s\", observed: \"%s\"", classpath, global.ClasspathRaw)
 	}
 
 	if len(global.Classpath) != 4 {
-		t.Errorf("Expected global.Classpath = 4, observed: %d", len(global.Classpath))
+		t.Errorf("Expected 4 elements in global.Classpath, observed: %d", len(global.Classpath))
 	} else {
 		if global.Classpath[0] != "Mercury/" {
 			t.Errorf("Expected global.Classpath[0] = \"Mercury/\", observed: \"%s\"", global.Classpath[0])
@@ -449,7 +451,7 @@ func _execWithClasspath(t *testing.T, optName string) {
 	}
 
 	if len(global.AppArgs) != 4 {
-		t.Errorf("Expected global.AppArgs = 4, observed: %d", len(global.AppArgs))
+		t.Errorf("Expected 4 elements in global.AppArgs, observed: %d", len(global.AppArgs))
 	} else {
 		if global.AppArgs[0] != "--double-dash" {
 			t.Errorf("Expected global.AppArgs[0] = \"--double-dash\", observed: \"%s\"", global.AppArgs[0])
