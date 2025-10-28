@@ -20,7 +20,7 @@ import (
 // variables that the JVM recognizes and prepends to the list of command-line options
 func HandleCli(osArgs []string, Global *globals.Globals) (err error) {
 
-	// Get Java OPTIONS from the environment.
+	// Get Java options from the environment.
 	var javaEnvOptions = getEnvArgs()
 	if globals.TraceInit {
 		trace.Trace("HandleCli: Java environment variables: " + javaEnvOptions)
