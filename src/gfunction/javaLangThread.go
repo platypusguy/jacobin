@@ -430,7 +430,7 @@ func threadGetStackTrace(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	jvmFrameStack, ok := params[1].(*list.List)
+	jvmFrameStack, ok := params[0].(*list.List)
 	if !ok {
 		errMsg := "getStackTrace: Expected context data to be a frame stack"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
@@ -439,7 +439,14 @@ func threadGetStackTrace(params []interface{}) any {
 	stackTrace := object.MakeEmptyObject()
 	stackTrace.KlassName = object.StringPoolIndexFromGoString("[java/lang/StackTraceElement")
 	ret := FillInStackTrace([]interface{}{jvmFrameStack, stackTrace})
-	return ret
+	if ret == nil {
+		errMsg := "getStackTrace: Failed to fill in stack trace"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	traceObj := stackTrace.FieldTable["stacktrace"].Fvalue.(*object.Object)
+	return traceObj
+	// traceArray := traceObj.FieldTable["value"].Fvalue.([]object.Object)
+	// return &traceArray
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:

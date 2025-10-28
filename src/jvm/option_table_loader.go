@@ -207,7 +207,6 @@ func expandClasspth(gl *globals.Globals) {
 	}
 
 	checkForPreJDK9(gl)
-
 }
 
 // checkForPreJDK9 checks if the JDK version is pre-JDK9 and adds the jar files in the JRE's
