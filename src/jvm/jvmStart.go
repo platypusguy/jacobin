@@ -110,6 +110,7 @@ func JVMrun() int {
 			trace.Error(errMsg)
 			return shutdown.Exit(shutdown.APP_EXCEPTION)
 		}
+		globPtr.StartingClass = manifestClass
 		mainClassNameIndex, _, err = classloader.LoadClassFromJar(classloader.BootstrapCL, manifestClass, globPtr.StartingJar)
 		if err != nil { // the exceptions message will already have been shown to user
 			return shutdown.Exit(shutdown.JVM_EXCEPTION)
