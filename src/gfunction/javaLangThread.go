@@ -159,6 +159,12 @@ func Load_Lang_Thread() {
 			NeedsContext: true,
 		}
 
+	MethodSignatures["java/lang/Thread.getState()Ljava/lang/Thread$State;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadGetState,
+		}
+
 	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -275,7 +281,7 @@ func threadCreateNoarg(_ []interface{}) any {
 	nameField := object.Field{Ftype: types.GolangString, Fvalue: defaultName}
 	t.FieldTable["name"] = nameField
 
-	stateField := object.Field{Ftype: types.GolangString, Fvalue: thread.NEW}
+	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}
 	t.FieldTable["state"] = stateField
 
 	daemonFiled := object.Field{
@@ -445,6 +451,17 @@ func threadGetStackTrace(params []interface{}) any {
 	}
 	traceObj := stackTrace.FieldTable["stackTrace"].Fvalue.(*object.Object)
 	return traceObj
+}
+
+func threadGetState(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("getName: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t := params[0].(*object.Object)
+	state := t.FieldTable["state"].Fvalue.(int)
+	return state
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
