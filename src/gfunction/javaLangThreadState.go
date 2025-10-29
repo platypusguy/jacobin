@@ -20,37 +20,6 @@ import (
 // The toString method returns a Java String via object.StringObjectFromGoString().
 
 // Declaration order matches Java's Thread.State
-var threadStateNames = []string{
-	"NEW",
-	"RUNNABLE",
-	"BLOCKED",
-	"WAITING",
-	"TIMED_WAITING",
-	"TERMINATED",
-}
-
-// synchronization and lazy init of enum singletons
-var threadStateOnce bool = false
-var threadStateMutex = sync.Mutex{}
-var threadStateClassName = "java/lang/Thread$State"
-var threadStateInstances []*object.Object // length 6, matches threadStateNames
-var threadStates map[string]*object.Object
-
-func ensureThreadStateInited() {
-	if threadStateOnce {
-		return
-	}
-	threadStateInstances = make([]*object.Object, len(threadStateNames))
-	for i, nm := range threadStateNames {
-		obj := object.MakeEmptyObjectWithClassName(&threadStateClassName)
-		// standard enum-like fields
-		obj.FieldTable["value"] = object.Field{Ftype: types.StringClassRef, Fvalue: object.StringObjectFromGoString(nm)}
-		threadStateInstances[i] = obj
-		// expose as static so getstatic works
-		_ = statics.AddStatic(threadStateClassName+"."+nm, statics.Static{Type: "Ljava/lang/Thread$State;", Value: obj})
-	}
-	threadStateOnce = true
-}
 
 func Load_Lang_Thread_State() {
 	MethodSignatures["java/lang/Thread$State.toString()Ljava/lang/String;"] =
@@ -70,74 +39,56 @@ func Load_Lang_Thread_State() {
 			ParamSlots: 0,
 			GFunction:  threadStateValues,
 		}
+
+	ThreadStateInit()
 }
+
+const (
+	NEW           = 0
+	RUNNABLE      = 1
+	BLOCKED       = 2
+	WAITING       = 3
+	TIMED_WAITING = 4
+	TERMINATED    = 5
+)
+
+var ThreadState = map[int]string{
+	NEW:           "NEW",
+	RUNNABLE:      "RUNNABLE",
+	BLOCKED:       "BLOCKED",
+	WAITING:       "WAITING",
+	TIMED_WAITING: "TIMED_WAITING",
+	TERMINATED:    "TERMINATED",
+}
+
+// synchronization and lazy init of enum singletons
+var threadStateOnce bool = false
+var threadStateMutex = sync.Mutex{}
+var threadStateClassName = "java/lang/Thread$State"
+var threadStateInstances []*object.Object // length 6, matches threadStateNames
+var threadStates map[string]*object.Object
 
 // threadStateToString implements Thread.State.toString(): String
-// Expected representations on the receiver object (in priority order):
-// 1) Field "State" as a Go string with the state name.
-// 2) Field "stateName" as a Go string with the state name.
-// 3) Field "name" as a Go string (fallback if used by creator).
-// 4) Field "name" as a Java String object.
-// 5) Field "ordinal" (int) mapping to declaration-order names above.
-// If none found, returns "UNKNOWN" to avoid throwing from toString().
+// It expects an int value for the state and returns the corresponding string object
 func threadStateToString(params []interface{}) interface{} {
 	if len(params) < 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing receiver")
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing object")
 	}
-	self, ok := params[0].(*object.Object)
-	if !ok || object.IsNull(self) {
-		return getGErrBlk(excNames.NullPointerException, "Thread$State.toString(): null receiver")
-	}
-
-	// 1) Go-string fields commonly used
-	if f, ok := self.FieldTable["State"]; ok {
-		if s, ok2 := f.Fvalue.(string); ok2 && s != "" {
-			return object.StringObjectFromGoString(s)
-		}
-	}
-	if f, ok := self.FieldTable["stateName"]; ok {
-		if s, ok2 := f.Fvalue.(string); ok2 && s != "" {
-			return object.StringObjectFromGoString(s)
-		}
-	}
-	if f, ok := self.FieldTable["name"]; ok {
-		// try Go string first
-		if s, ok2 := f.Fvalue.(string); ok2 && s != "" {
-			return object.StringObjectFromGoString(s)
-		}
-		// or a Java String object already
-		if so, ok2 := f.Fvalue.(*object.Object); ok2 && so != nil && object.IsStringObject(so) {
-			return so
-		}
+	state, ok := params[0].(int)
+	if !ok {
+		return getGErrBlk(excNames.NullPointerException, "Thread$State.toString(): null object")
 	}
 
-	// 5) fallback: ordinal mapping
-	if f, ok := self.FieldTable["ordinal"]; ok {
-		switch vv := f.Fvalue.(type) {
-		case int:
-			if vv >= 0 && vv < len(threadStateNames) {
-				return object.StringObjectFromGoString(threadStateNames[vv])
-			}
-		case int32:
-			idx := int(vv)
-			if idx >= 0 && idx < len(threadStateNames) {
-				return object.StringObjectFromGoString(threadStateNames[idx])
-			}
-		case int64:
-			idx := int(vv)
-			if idx >= 0 && idx < len(threadStateNames) {
-				return object.StringObjectFromGoString(threadStateNames[idx])
-			}
-		}
+	stateString, ok := ThreadState[state]
+	if ok {
+		return object.StringObjectFromGoString(stateString)
+	} else {
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): invalid state")
 	}
-
-	// Last resort: UNKNOWN
-	return object.StringObjectFromGoString("UNKNOWN")
 }
 
-// threadStateValueOfString implements Thread.State.valueOf(String): returns the enum constant
+// threadStateValueOfString implements Thread.State.valueOf(String): returns the int64 constant
 func threadStateValueOf(params []interface{}) interface{} {
-	ensureThreadStateInited()
 	if len(params) < 1 {
 		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.valueOf(String): missing argument")
 	}
