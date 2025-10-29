@@ -527,6 +527,7 @@ func run(params []interface{}) interface{} {
 
 	// threads are registered only when they are started
 	thread.RegisterThread(t)
+	t.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: thread.RUNNABLE}
 
 	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
