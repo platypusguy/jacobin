@@ -9,9 +9,8 @@ package gfunction
 import (
 	"jacobin/src/excNames"
 	"jacobin/src/object"
-	"jacobin/src/statics"
 	"jacobin/src/types"
-	"sync"
+	"sort"
 )
 
 // Java: java.lang.Thread.State
@@ -39,8 +38,6 @@ func Load_Lang_Thread_State() {
 			ParamSlots: 0,
 			GFunction:  threadStateValues,
 		}
-
-	ThreadStateInit()
 }
 
 const (
@@ -62,9 +59,7 @@ var ThreadState = map[int]string{
 }
 
 // synchronization and lazy init of enum singletons
-var threadStateOnce bool = false
-var threadStateMutex = sync.Mutex{}
-var threadStateClassName = "java/lang/Thread$State"
+
 var threadStateInstances []*object.Object // length 6, matches threadStateNames
 var threadStates map[string]*object.Object
 
@@ -103,26 +98,28 @@ func threadStateValueOf(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.valueOf(String): argument is not a String")
 	}
 	name := object.GoStringFromStringObject(strObj)
-	for i, nm := range threadStateNames {
-		if nm == name {
-			return threadStateInstances[i]
+	for key, value := range ThreadState {
+		if value == name {
+			return key // found it
 		}
 	}
-	return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.valueOf(String): no enum constant")
+	return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.valueOf(String): no value found for "+name)
 }
 
 // threadStateValues implements Thread.State.values(): returns an array of all constants in decl order
 func threadStateValues(params []interface{}) interface{} {
-	ensureThreadStateInited()
 	arr := object.Make1DimRefArray("Ljava/lang/Thread$State;", int64(len(threadStateInstances)))
-	slot := arr.FieldTable["value"].Fvalue.([]*object.Object)
-	copy(slot, threadStateInstances)
-	arr.FieldTable["value"] = object.Field{Ftype: types.RefArray + "Ljava/lang/Thread$State;", Fvalue: slot}
-	return arr
-}
 
-// threadStateClinit ensures constants are initialized when the class is initialized
-func threadStateClinit([]interface{}) interface{} {
-	ensureThreadStateInited()
-	return nil
+	// Extract keys into a slice
+	keys := make([]int, 0, len(ThreadState))
+	for key := range ThreadState {
+		keys = append(keys, key)
+	}
+
+	// Sort the slice
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	arr.FieldTable["value"] = object.Field{Ftype: types.RefArray + "Ljava/lang/Thread$State;", Fvalue: keys}
+	return arr
 }
