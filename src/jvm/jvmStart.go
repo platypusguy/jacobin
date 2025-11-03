@@ -52,9 +52,10 @@ func JVMrun() int {
 		return shutdown.OK
 	}()
 
+	// initialize the globals package.
 	// if globals.JacobinName == "test", then we're in test mode, which means
-	// globals and log have been set in the testing function, likely to specific values,
-	// so, don't reset them here.
+	// globals and log have been set in the testing function, likely to specific
+	// values, 	// so, don't reset them here.
 	if globals.GetGlobalRef().JacobinName != "test" {
 		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
@@ -69,7 +70,7 @@ func JVMrun() int {
 		trace.Trace("running program: " + globPtr.JacobinName)
 	}
 
-	// load static variables. Needs to be here b/c CLI might modify their values
+	// load select static variables. Needs to be here b/c CLI might modify their values
 	statics.PreloadStatics()
 
 	// check for environmental variables that set JVM options
@@ -83,7 +84,8 @@ func JVMrun() int {
 		return shutdown.Exit(shutdown.JVM_EXCEPTION)
 	}
 
-	// some CLI options, like -version, show data and immediately exit. This tests for that.
+	// some CLI options, like -version, show data and immediately exit.
+	// This tests for that.
 	if globPtr.ExitNow == true {
 		return shutdown.Exit(shutdown.OK)
 	}
@@ -139,6 +141,7 @@ func JVMrun() int {
 	// classloader.LoadReferencedClasses(mainClass)
 
 	// initialize the MTable (table caching methods) and load the gfunctions
+	// and in addition execute some initialization gfunctions (e.g., in javaLangThreadGroup.go)
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 

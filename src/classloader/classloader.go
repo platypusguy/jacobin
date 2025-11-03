@@ -217,7 +217,6 @@ func LoadBaseClasses() {
 		infoMsg := fmt.Sprintf("LoadBaseClasses: Bootstrap classes from %s have been loaded", jmodFilePath)
 		trace.Trace(infoMsg)
 	}
-
 }
 
 // walk the directory and load every file (which is known to be a class)
