@@ -39,10 +39,6 @@ import (
  could mean an empty slice).
 */
 
-type ThreadGroup struct {
-	Name string
-}
-
 type PrivateFields struct {
 	Target                   interface{}
 	ThreadLocals             map[string]interface{}
@@ -54,14 +50,14 @@ type PrivateFields struct {
 	NativeThreadID           int64
 	Alive                    bool
 	Interrupted              bool
-	Holder                   interface{}  // Added previously missing `holder` field
-	Daemon                   bool         // Reflects the `daemon` field
-	Priority                 int          // Reflects the `priority` field
-	ThreadGroup              *ThreadGroup // Reflects the `group` field
-	Name                     string       // Reflects the `name` field
-	Started                  bool         // Reflects the `started` field
-	Stillborn                bool         // Reflects the `stillborn` field
-	Interruptible            bool         // Reflects the `interruptible` field
+	Holder                   interface{}    // Added previously missing `holder` field
+	Daemon                   bool           // Reflects the `daemon` field
+	Priority                 int            // Reflects the `priority` field
+	ThreadGroup              *object.Object // Reflects the `group` field
+	Name                     string         // Reflects the `name` field
+	Started                  bool           // Reflects the `started` field
+	Stillborn                bool           // Reflects the `stillborn` field
+	Interruptible            bool           // Reflects the `interruptible` field
 }
 
 type PublicFields struct {
@@ -69,7 +65,7 @@ type PublicFields struct {
 	Name        string
 	Priority    int
 	IsDaemon    bool
-	ThreadGroup *ThreadGroup
+	ThreadGroup *object.Object
 	State       string // Enum-like representation of Thread.State
 }
 
