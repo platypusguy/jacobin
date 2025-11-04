@@ -24,7 +24,7 @@ func Load_Lang_Thread_Group() {
 	MethodSignatures["java/lang/ThreadGroup.ThreadGroup(Ljava/lang/String;)Ljava/lang/ThreadGroup;"] =
 		GMeth{ParamSlots: 1, GFunction: threadGroupCreateWithName}
 	MethodSignatures["java/lang/ThreadGroup.ThreadGroup(Ljava/lang/ThreadGroup;Ljava/lang/String;)Ljava/lang/ThreadGroup;"] =
-		GMeth{ParamSlots: 2, GFunction: trapFunction}
+		GMeth{ParamSlots: 2, GFunction: threadGroupCreateWithParentAndName}
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
@@ -82,7 +82,7 @@ func Load_Lang_Thread_Group() {
 }
 
 // java/lang/ThreadGroup.<clinit>()V
-func threadGroupClinit(params []interface{}) any {
+func threadGroupClinit(_ []interface{}) any {
 	return justReturn(nil)
 }
 
@@ -94,9 +94,9 @@ func threadGroupCreateWithName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	name, ok := params[0].(string)
+	name, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "threadGroupCreateWithName: Expected parameter to be a string"
+		errMsg := "threadGroupCreateWithName: Expected parameter to be a string object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -108,7 +108,7 @@ func threadGroupCreateWithName(params []interface{}) any {
 
 	nameField := object.Field{Ftype: types.Ref, Fvalue: name}
 	obj.FieldTable["name"] = nameField
-	
+
 	daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	obj.FieldTable["daemon"] = daemonField
 
@@ -126,6 +126,57 @@ func threadGroupCreateWithName(params []interface{}) any {
 	return obj
 }
 
+// java/lang/ThreadGroup.ThreadGroup(Ljava/lang/ThreadGroup;Ljava/lang/String;)Ljava/lang/ThreadGroup;
+// returns a new ThreadGroup object with the specified name and parent
+func threadGroupCreateWithParentAndName(params []interface{}) any {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf(
+			"threadGroupCreateWithParentAndName: Expected 2 parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// First param: parent ThreadGroup (object reference)
+	parentObj, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupCreateWithParentAndName: Expected first parameter to be a ThreadGroup object")
+	}
+
+	// Second param: name (Java String object)
+	nameObj, ok := params[1].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupCreateWithParentAndName: Expected second parameter to be a String object")
+	}
+	if object.IsNull(nameObj) {
+		return getGErrBlk(excNames.NullPointerException,
+			"threadGroupCreateWithParentAndName: name is null")
+	}
+	if !object.IsStringObject(nameObj) {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupCreateWithParentAndName: second parameter is not a String")
+	}
+
+	// Create group with name
+	created := threadGroupCreateWithName([]interface{}{nameObj})
+
+	// If creation returned an error block, pass it through
+	if gerr, isErr := created.(*GErrBlk); isErr {
+		return gerr
+	}
+
+	// Otherwise, set parent field and return the object
+	tg, ok := created.(*object.Object)
+	if !ok {
+		// Shouldn’t happen, but fail gracefully
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupCreateWithParentAndName: factory returned non-object")
+	}
+
+	tg.FieldTable["parent"] = object.Field{Ftype: types.Ref, Fvalue: parentObj}
+	return tg
+}
+
 // java/lang/ThreadGroup.getName()Ljava/lang/String;
 func threadGroupGetName(params []interface{}) interface{} {
 	if len(params) != 1 {
@@ -135,10 +186,19 @@ func threadGroupGetName(params []interface{}) interface{} {
 
 	tg, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "threadGroupGetName: Expected parameter to be an object reference"
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupGetName: Expected parameter to be an object reference")
 	}
 
-	name := tg.FieldTable["name"].Fvalue.(string)
-	return object.StringObjectFromGoString(name)
+	f := tg.FieldTable["name"]
+	// If stored as Java String object, just return it
+	if obj, ok := f.Fvalue.(*object.Object); ok && object.IsStringObject(obj) {
+		return obj
+	}
+	// Fallback in case legacy code stored Go string
+	if s, ok := f.Fvalue.(string); ok {
+		return object.StringObjectFromGoString(s)
+	}
+	return getGErrBlk(excNames.IllegalArgumentException,
+		"threadGroupGetName: name field is not a String")
 }
