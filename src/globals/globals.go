@@ -69,8 +69,10 @@ type Globals struct {
 	// ---- thread management ----
 	// Threads ThreadList // list of all app execution threads
 	ThreadLock sync.Mutex
-	Threads    map[int]interface{} // in reality the interface is an object pointer, but
-	// due to circularity has to be described this way here.
+	//    the interface{} values in these maps are object references, but
+	//    due to circularity, they need to be described this way here.
+	Threads      map[int]interface{}
+	ThreadGroups map[string]interface{}
 	ThreadNumber int
 
 	// ---- execution context ----
@@ -231,6 +233,7 @@ func InitGlobals(progName string) Globals {
 	buildGlobalProperties()
 
 	global.Threads = make(map[int]interface{})
+	global.ThreadGroups = make(map[string]interface{})
 
 	return global
 }

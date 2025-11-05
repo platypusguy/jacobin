@@ -10,12 +10,16 @@ import (
 	"container/list"
 	"fmt"
 	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/thread"
 	"jacobin/src/types"
 )
 
 func Load_Lang_Thread_Group() {
+	// Initialize the initial global thread groups
+	initializeGlobalThreadGroups()
+
 	// <clinit>
 	MethodSignatures["java/lang/ThreadGroup.<clinit>()V"] =
 		GMeth{ParamSlots: 0, GFunction: threadGroupClinit}
@@ -79,6 +83,18 @@ func Load_Lang_Thread_Group() {
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 	MethodSignatures["java/lang/ThreadGroup.uncaughtException(Ljava/lang/Thread;Ljava/lang/Throwable;)V"] =
 		GMeth{ParamSlots: 2, GFunction: trapFunction}
+}
+
+// Initialize global thread group with the "system" group
+func initializeGlobalThreadGroups() {
+	globals.GetGlobalRef().ThreadGroups["system"] =
+		threadGroupCreateWithName(
+			[]interface{}{object.StringObjectFromGoString("system")})
+	// Create "main" group as a child of "system"
+	globals.GetGlobalRef().ThreadGroups["main"] =
+		threadGroupCreateWithParentAndName(
+			[]interface{}{object.StringObjectFromGoString("system"),
+				object.StringObjectFromGoString("main")})
 }
 
 // java/lang/ThreadGroup.<clinit>()V
