@@ -140,6 +140,9 @@ func threadGroupCreateWithName(params []interface{}) any {
 	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
 	obj.FieldTable["subgroups"] = subgroups
 
+	// add the thread group to the global list of thread groups
+	globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(name)] = obj
+
 	return obj
 }
 
