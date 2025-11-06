@@ -90,6 +90,7 @@ func initializeGlobalThreadGroups() {
 	globals.GetGlobalRef().ThreadGroups["system"] =
 		threadGroupCreateWithName(
 			[]interface{}{object.StringObjectFromGoString("system")})
+
 	// Create "main" group as a child of "system"
 	globals.GetGlobalRef().ThreadGroups["main"] =
 		threadGroupCreateWithParentAndName(
@@ -136,7 +137,7 @@ func threadGroupCreateWithName(params []interface{}) any {
 	maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(thread.MAX_PRIORITY)}
 	obj.FieldTable["maxpriority"] = maxPriority
 
-	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.List{}}
+	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
 	obj.FieldTable["subgroups"] = subgroups
 
 	return obj
@@ -190,6 +191,12 @@ func threadGroupCreateWithParentAndName(params []interface{}) any {
 	}
 
 	tg.FieldTable["parent"] = object.Field{Ftype: types.Ref, Fvalue: parentObj}
+
+	// Now add this thread group to the parent's list of subgroups
+	parent := globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(parentObj)].(*object.Object)
+	parentSubgroups := parent.FieldTable["subgroups"].Fvalue.(*list.List)
+	parentSubgroups.PushBack(tg)
+
 	return tg
 }
 
