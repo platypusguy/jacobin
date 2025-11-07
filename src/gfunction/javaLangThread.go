@@ -136,16 +136,16 @@ func Load_Lang_Thread() {
 			GFunction:  threadGetName,
 		}
 
-	MethodSignatures["java/lang/Thread.getPriority()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetPriority,
-		}
-
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Thread.getPriority()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadGetPriority,
 		}
 
 	MethodSignatures["java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;"] =
@@ -164,13 +164,13 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  threadGetThreadGroup,
 		}
 
 	MethodSignatures["java/lang/Thread.holdsLock(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  returnFalse,
 		}
 
 	MethodSignatures["java/lang/Thread.<init>()V"] =
@@ -284,8 +284,9 @@ func threadCreateNoarg(_ []interface{}) any {
 		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["daemon"] = daemonFiled
 
-	threadGroup := object.Field{
-		Ftype: types.Ref, Fvalue: nil}
+	tg := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+	threadGroup := object.Field{ // default thread group is the main thread group
+		Ftype: types.Ref, Fvalue: tg}
 	t.FieldTable["threadgroup"] = threadGroup
 
 	priority := object.Field{
@@ -451,13 +452,28 @@ func threadGetStackTrace(params []interface{}) any {
 
 func threadGetState(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getName: Expected 1 parameter, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetName: Expected 1 parameter, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	t := params[0].(*object.Object)
 	state := t.FieldTable["state"].Fvalue.(int)
 	return state
+}
+
+// "java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"
+func threadGetThreadGroup(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadGetThreadGroup: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t := params[0].(*object.Object)
+	threadGroup, ok := t.FieldTable["threadgroup"].Fvalue.(*object.Object)
+	if !ok {
+		errMsg := "threadGetThreadGroup: Expected threadgroup to be an object"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	return threadGroup
 }
 
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:

@@ -221,10 +221,12 @@ func threadGroupGetName(params []interface{}) interface{} {
 	if obj, ok := f.Fvalue.(*object.Object); ok && object.IsStringObject(obj) {
 		return obj
 	}
+	
 	// Fallback in case legacy code stored Go string
 	if s, ok := f.Fvalue.(string); ok {
 		return object.StringObjectFromGoString(s)
 	}
+
 	return getGErrBlk(excNames.IllegalArgumentException,
 		"threadGroupGetName: name field is not a String")
 }
