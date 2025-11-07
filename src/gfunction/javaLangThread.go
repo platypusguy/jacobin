@@ -188,9 +188,32 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.interrupted()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  returnFalse,
 		}
 
+	MethodSignatures["java/lang/Thread.isAlive()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnTrue,
+		}
+
+	MethodSignatures["java/lang/Thread.isDaemon()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
+	MethodSignatures["java/lang/Thread.isInterrupted()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
+
+	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  returnFalse,
+		}
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
