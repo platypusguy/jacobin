@@ -206,7 +206,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.isInterrupted()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  returnFalse,
+			GFunction:  threadIsInterrupted,
 		}
 
 	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
@@ -223,7 +223,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.run()V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  run,
+			GFunction:  threadRun,
 		}
 
 	MethodSignatures["java/lang/Thread.setName(Ljava/lang/String;)V"] =
@@ -303,9 +303,13 @@ func threadCreateNoarg(_ []interface{}) any {
 	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}
 	t.FieldTable["state"] = stateField
 
-	daemonFiled := object.Field{
+	daemonField := object.Field{
 		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
-	t.FieldTable["daemon"] = daemonFiled
+	t.FieldTable["daemon"] = daemonField
+
+	interruptedField := object.Field{
+		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	t.FieldTable["interrupted"] = interruptedField
 
 	tg := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
 	threadGroup := object.Field{ // default thread group is the main thread group
@@ -499,6 +503,19 @@ func threadGetThreadGroup(params []interface{}) any {
 	return threadGroup
 }
 
+func threadIsInterrupted(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadIsInterrupted: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadIsInterrupted: Expected thread to be an object"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	return t.FieldTable["interrupted"].Fvalue
+}
+
 // "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
 // 1. Fetch the run method
 // 2. Create the frame stack
@@ -508,7 +525,7 @@ func threadGetThreadGroup(params []interface{}) any {
 // 6. Instantiate the class
 // 7. Run the thread
 
-func run(params []interface{}) interface{} {
+func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("Run: Expected thread parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
