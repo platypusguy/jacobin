@@ -3,7 +3,7 @@
 name: Jacotest with platypusguy Jacobin
 
 on:
-  workflow_dispatch:  # This ensures the workflow runs only on demand.
+  workflow_dispatch:  # Run on demand.
 
 jobs:
 
@@ -23,47 +23,47 @@ jobs:
           cache: true
           cache-dependency-path: "**/go.sum"
           
+    - name: Add Go to PATH
+      shell: bash
+      run: echo "$HOME/go/bin" >> $GITHUB_PATH
+      
     - name: Setup JDK
       uses: actions/setup-java@main
       with:
         distribution: 'oracle'
         java-version: '21'
 
-    - name: Setup GITHUB_PATH for Linux or MacOS
-      run: |
-        echo "$HOME/go/bin" >> $GITHUB_PATH
-      shell: bash
-      if: runner.os != 'Windows'
-
-    - name: Setup GITHUB_PATH for Windows
-      run: |
-        echo "%HOMEPATH%\go\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
-      shell: powershell
-      if: runner.os == 'Windows'
-        
-    - name: Setup Jacobin
+    - name: Build Jacobin
       shell: bash
       run: |
-        git clone https://github.com/platypusguy/jacobin
-        cd jacobin/src
-        go get
-        go build -o . -v ./...
-        mv src $HOME/go/bin/jacobin
-        jacobin --version
+        cd src
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+            go build -o "$HOME/go/bin/jacobin.exe" .
+        else
+            go build -o "$HOME/go/bin/jacobin" .
+        fi
+        jacobin -h
         
     - name: Setup Jacotest
+      shell: bash
       run: |
         git clone https://github.com/texadactyl/jacotest.go
         cd jacotest.go/src
-        go get
-        go install -v .
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+            go build -o "$HOME/go/bin/jacotest.exe" .
+        else
+            go build -o "$HOME/go/bin/jacotest" .
+        fi
+        jacotest -h
 
     - name: Run Test Cases
+      shell: bash
       run: |
         cd jacotest.go
         jacotest -c -x || true
 
     - name: Summary of Results
+      shell: bash
       run: |
         cd jacotest.go
         jacotest -r 3
