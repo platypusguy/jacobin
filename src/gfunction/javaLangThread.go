@@ -72,19 +72,19 @@ type PublicFields struct {
 func Load_Lang_Thread() {
 
 	// constructors (followed by alpha list of public methods)
-	MethodSignatures["java/lang/Thread.<init>()Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.<init>()V;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadCreateNoarg,
 		}
 
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  threadCreateWithName,
 		}
 
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;"] =
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  threadCreateWithRunnableAndName,
@@ -104,7 +104,7 @@ func Load_Lang_Thread() {
 			GFunction:  clinitGeneric,
 		}
 
-	MethodSignatures["java/lang/Thread.clone()V"] =
+	MethodSignatures["java/lang/Thread.clone()Ljava/lang/Object;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  cloneNotSupportedException,
