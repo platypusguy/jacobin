@@ -72,7 +72,7 @@ type PublicFields struct {
 func Load_Lang_Thread() {
 
 	// constructors (followed by alpha list of public methods)
-	MethodSignatures["java/lang/Thread.<init>()V;"] =
+	MethodSignatures["java/lang/Thread.<init>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadCreateNoarg,
