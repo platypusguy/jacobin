@@ -157,6 +157,9 @@ func StringifyAnythingGo(arg interface{}) string {
 		fld := arg.(Field)
 		switch fld.Ftype {
 		case types.StringClassRef:
+			if IsNull(fld.Fvalue) {
+				return types.NullString
+			}
 			return GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		case types.Byte:
 			var ba1 []byte
