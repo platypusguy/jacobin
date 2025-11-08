@@ -170,7 +170,7 @@ func JVMrun() int {
 		runnable := gfunction.NewRunnable(*mainClass, "main", "([Ljava/lang/String;)V")
 		params := []interface{}{runnable, "main"}
 		t := globals.GetGlobalRef().FuncInvokeGFunction(
-			"java/lang/Thread.Thread(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;", params)
+			"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)Ljava/lang/Thread;", params)
 		// the thread is registered in thread.Run()
 		thread.Run(t.(*object.Object))
 	}
