@@ -54,6 +54,7 @@ jobs:
         else
             go build -o "$HOME/go/bin/jacotest" .
         fi
+        cd ..
         jacotest -h
 
     - name: Run Test Cases
