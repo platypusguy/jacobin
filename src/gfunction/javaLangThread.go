@@ -131,6 +131,12 @@ func Load_Lang_Thread() {
 			GFunction:  threadEnumerate,
 		}
 
+	MethodSignatures["java/lang/Thread.getId()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadGetId,
+		}
+
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -230,7 +236,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.setPriority(I)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  threadSetPriority,
 		}
 
 	MethodSignatures["java/lang/Thread.setScopedValueCache([Ljava/lang/Object;)V"] =
@@ -268,10 +274,16 @@ func Load_Lang_Thread() {
 			GFunction:  threadNumberingNext,
 		}
 
+	MethodSignatures["java/lang/Thread.threadId()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  threadGetId,
+		}
+
 	MethodSignatures["java/lang/Thread.yield()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  justReturn,
 		}
 
 	threadClinit(nil)
@@ -283,6 +295,7 @@ func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
 }
 
+// our clinit method simply specifies static constants
 func threadClinit(_ []interface{}) any {
 	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
 		statics.Static{Type: types.Int, Value: int64(1)})
@@ -324,7 +337,8 @@ func threadCreateNoarg(_ []interface{}) any {
 	t.FieldTable["threadgroup"] = threadGroup
 
 	priority := object.Field{
-		Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+		Ftype:  types.Int,
+		Fvalue: statics.GetStaticValue("java/lang/Thread", "NORM_PRIORITY").(int64)}
 	t.FieldTable["priority"] = priority
 
 	frameStack := object.Field{
@@ -437,6 +451,36 @@ func threadEnumerate(params []interface{}) any {
 	return count
 }
 
+// "java/lang/Thread.getId()J"
+func threadGetId(params []interface{}) any {
+	// Expect exactly one parameter: the Thread object (this)
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadGetId: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Validate the parameter is a non-null Thread object
+	t, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(t) {
+		errMsg := "threadGetId: Expected first parameter to be a non-null Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Extract the ID field and ensure it is int64
+	idField, ok := t.FieldTable["ID"]
+	if !ok {
+		errMsg := "threadGetId: Thread object missing 'ID' field"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	ID, ok := idField.Fvalue.(int64)
+	if !ok {
+		errMsg := "threadGetId: 'ID' field has unexpected type"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+
+	return ID
+}
+
 // "java/lang/Thread.getName()Ljava/lang/String;"
 func threadGetName(params []interface{}) any {
 	if len(params) != 1 {
@@ -452,7 +496,7 @@ func threadGetName(params []interface{}) any {
 // "java/lang/Thread.getPriority()I"
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("getPriority: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -652,6 +696,42 @@ func threadSetName(params []interface{}) any {
 	// Update the thread's name field (stored as a Go string in Jacobin)
 	th.FieldTable["name"] = object.Field{Ftype: types.GolangString, Fvalue: newName}
 
+	return nil
+}
+
+// "java/lang/Thread.setPriority(I)V"
+func threadSetPriority(params []interface{}) any {
+	// Expect exactly two parameters: the Thread object and the priority (int64)
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("threadSetPriority: Expected 2 parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Validate the first parameter is the Thread object
+	th, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(th) {
+		errMsg := "threadSetPriority: Expected first parameter to be a non-null Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Extract and validate the second parameter (priority as int64)
+	priority, ok := params[1].(int64)
+	if !ok {
+		errMsg := "threadSetPriority: priority must be an int64 (long)"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Fetch bounds from statics (java/lang/Thread.MIN_PRIORITY and MAX_PRIORITY)
+	minP := statics.GetStaticValue("java/lang/Thread", "MIN_PRIORITY").(int64)
+	maxP := statics.GetStaticValue("java/lang/Thread", "MAX_PRIORITY").(int64)
+
+	if priority < minP || priority > maxP {
+		errMsg := fmt.Sprintf("threadSetPriority: priority %d out of range [%d..%d]", priority, minP, maxP)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Update the thread's priority field (Jacobin stores it as an int64 under type types.Int)
+	th.FieldTable["priority"] = object.Field{Ftype: types.Int, Fvalue: priority}
 	return nil
 }
 
