@@ -86,6 +86,8 @@ func PreloadStatics() {
 	LoadStaticsShort()
 	LoadStaticsStrictMath()
 	LoadStaticsString()
+
+	// statics for java/lang/Thread are in javaLangThread.go as part of threadClinit()
 }
 
 // LoadProgramStatics loads static fields that the JVM expects to have
@@ -118,7 +120,6 @@ func LoadStaticsString() {
 	// next entry points to a comparator. Might be useful to fill in later
 	_ = AddStatic("java/lang/String.CASE_INSENSITIVE_ORDER",
 		Static{Type: types.Ref, Value: nil})
-
 }
 
 // GetStaticValue: Given the class name and field name,

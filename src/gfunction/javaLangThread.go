@@ -15,6 +15,7 @@ import (
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/statics"
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
@@ -101,7 +102,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  threadClinit,
 		}
 
 	MethodSignatures["java/lang/Thread.clone()Ljava/lang/Object;"] =
@@ -272,12 +273,24 @@ func Load_Lang_Thread() {
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
+
+	threadClinit(nil)
 }
 
 var classname = "java/lang/Thread"
 
 func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
+}
+
+func threadClinit(_ []interface{}) any {
+	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
+		statics.Static{Type: types.Int, Value: int64(1)})
+	_ = statics.AddStatic("java/lang/Thread.NORM_PRIORITY",
+		statics.Static{Type: types.Int, Value: int64(5)})
+	_ = statics.AddStatic("java/lang/Thread.MAX_PRIORITY",
+		statics.Static{Type: types.Int, Value: int64(10)})
+	return nil
 }
 
 func threadCreateNoarg(_ []interface{}) any {
@@ -482,7 +495,7 @@ func threadGetState(params []interface{}) any {
 	return state
 }
 
-// "java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"
+// java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;
 func threadGetThreadGroup(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadGetThreadGroup: Expected 1 parameter, got %d parameters", len(params))

@@ -142,3 +142,5 @@ func LoadStaticsStrictMath() {
 	_ = AddStatic("java/lang/StrictMath.E", Static{Type: types.Double, Value: float64(2.718281828459045)})
 	_ = AddStatic("java/lang/StrictMath.PI", Static{Type: types.Double, Value: float64(3.141592653589793)})
 }
+
+// LoadStatics for java/lang/Thread are in javaLangThread.go as part of threadClinit()
