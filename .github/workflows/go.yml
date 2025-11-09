@@ -43,6 +43,7 @@ jobs:
     - name: Build Jacobin
       shell: bash
       run: |
+        pwd
         cd src
         if [[ "$RUNNER_OS" == "Windows" ]]; then
             go build -o "$HOME/go/bin/jacobin.exe" .
@@ -50,13 +51,21 @@ jobs:
             go build -o "$HOME/go/bin/jacobin" .
         fi
         jacobin -h
+        which jacobin
 
     - name: go test
       shell: bash
       run: |
+        pwd
+        ls -l $HOME/go/bin
         export JACOBIN_TOP=`pwd`
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
-        export JACOBIN_EXE=`pwd`/jacobin 
+        export JACOBIN_EXE=$HOME/go/bin/jacobin
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+            export JACOBIN_EXE=$HOME/go/bin/jacobin.exe
+        else
+            export JACOBIN_EXE=$HOME/go/bin/jacobin
+        fi
+        which jacobin
         go test -timeout 3m ./...
-
