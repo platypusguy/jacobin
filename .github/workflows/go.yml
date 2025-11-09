@@ -57,6 +57,7 @@ jobs:
       shell: bash
       run: |
         pwd
+        ls -l $HOME/go/bin
         export JACOBIN_TOP=`pwd`
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
