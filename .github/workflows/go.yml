@@ -57,5 +57,5 @@ jobs:
         export JACOBIN_TOP=`pwd`
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
-        export JACOBIN_EXE=`pwd`/jacobin 
+        export JACOBIN_EXE=$HOME/go/bin/jacobin
         go test -timeout 3m ./...
