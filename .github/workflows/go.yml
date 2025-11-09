@@ -62,5 +62,10 @@ jobs:
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
         export JACOBIN_EXE=$HOME/go/bin/jacobin
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+            export JACOBIN_EXE=$HOME/go/bin/jacobin.exe
+        else
+            export JACOBIN_EXE=$HOME/go/bin/jacobin
+        fi
         which jacobin
         go test -timeout 3m ./...
