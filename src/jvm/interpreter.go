@@ -249,18 +249,8 @@ var DispatchTable = [203]BytecodeFunc{
 
 // initializeDispatchTable initializes a few bytecodes that call interpret(). If they were
 // initialized to their respective functions directly in the table above, golang gives a
-// circularity error:
-// jvm\interpreter.go:46:5: DispatchTable refers to
-//
-//	jvm\interpreter.go:1621:6: doGetStatic refers to
-//	jvm\instantiate.go:36:6: InstantiateClass refers to
-//	jvm\initializerBlock.go:28:6: runInitializationBlock refers to
-//	jvm\initializerBlock.go:89:6: runJavaInitializer refers to
-//	jvm\interpreter.go:264:6: interpret refers to
-//	jvm\interpreter.go:46:5: DispatchTable
-//
-// By initializing those bytecodes with their methods here, the circularity
-// issue goes away. Golang can't tell that the circularity will never occur.
+// circularity error, By initializing those bytecodes with their methods here, the circularity
+// issue goes away. Golang can't tell in the original setup that circularity will never occur.
 func initializeDispatchTable() {
 	DispatchTable[opcodes.GETSTATIC] = doGetStatic
 	DispatchTable[opcodes.PUTSTATIC] = doPutStatic

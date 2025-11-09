@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2024-5 by the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-// StringifyAnythingGo: Stringify anything and return string to caller.
+// StringifyAnythingGo: Stringify anything and return a go string to caller.
 // arg: either an *Object or a Field.
 func StringifyAnythingGo(arg interface{}) string {
 
@@ -240,7 +240,7 @@ func StringifyAnythingGo(arg interface{}) string {
 	return errMsg
 }
 
-// StringifyAnythingJava: Stringify anything and return the Java String version of that string.
+// StringifyAnythingJava: Stringify anything and return the Java String object for that string.
 func StringifyAnythingJava(arg interface{}) *Object {
 	return StringObjectFromGoString(StringifyAnythingGo(arg))
 }
