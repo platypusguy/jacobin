@@ -223,7 +223,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.setName(Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  threadSetName,
 		}
 
 	MethodSignatures["java/lang/Thread.setPriority(I)V"] =
@@ -599,6 +599,47 @@ func threadRun(params []interface{}) interface{} {
 	}
 
 	return globals.GetGlobalRef().FuncRunThread(t)
+}
+
+// "java/lang/Thread.setName(Ljava/lang/String;)V"
+func threadSetName(params []interface{}) any {
+	// Expect exactly two parameters: the thread object and the Java String name
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("threadSetName: Expected 2 parameters, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Validate the first parameter is the Thread object
+	th, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(th) {
+		errMsg := "threadSetName: Expected first parameter to be a non-null Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// Validate the second parameter is the Java String object (non-null)
+	nameObj, ok := params[1].(*object.Object)
+	if !ok || object.IsNull(nameObj) {
+		errMsg := "threadSetName: name must not be null"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+
+	// Extract the underlying bytes from the Java String and convert to Go string
+	fld, ok := nameObj.FieldTable["value"]
+	if !ok {
+		errMsg := "threadSetName: corrupted String object (missing 'value' field)"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	jb, ok := fld.Fvalue.([]types.JavaByte)
+	if !ok {
+		errMsg := "threadSetName: String 'value' field has unexpected type"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	newName := object.GoStringFromJavaByteArray(jb)
+
+	// Update the thread's name field (stored as a Go string in Jacobin)
+	th.FieldTable["name"] = object.Field{Ftype: types.GolangString, Fvalue: newName}
+
+	return nil
 }
 
 // "java/lang/Thread.sleep(J)V"
