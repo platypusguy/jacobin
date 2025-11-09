@@ -50,6 +50,7 @@ jobs:
             go build -o "$HOME/go/bin/jacobin" .
         fi
         jacobin -h
+        which jacobin
 
     - name: go test
       shell: bash
@@ -58,4 +59,5 @@ jobs:
         export JACOBIN_TESTDATA=$JACOBIN_TOP/testdata
         cd src
         export JACOBIN_EXE=$HOME/go/bin/jacobin
+        which jacobin
         go test -timeout 3m ./...
