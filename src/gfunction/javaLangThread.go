@@ -273,9 +273,9 @@ func Load_Lang_Thread() {
 		}
 
 	MethodSignatures["java/lang/Thread.start()V"] =
-		GMeth{
+		GMeth{ // TODO: trap or implement
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  justReturn,
 		}
 	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
 		GMeth{
@@ -450,7 +450,7 @@ func threadCreateWithName(params []interface{}) any {
 
 	t := threadCreateNoarg(nil).(*object.Object)
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.GolangString, Fvalue: name.FieldTable["value"].Fvalue.(string)}
+		Ftype: types.ByteArray, Fvalue: name.FieldTable["value"].Fvalue}
 	return t
 }
 
@@ -517,7 +517,8 @@ func threadDumpStack(params []interface{}) interface{} {
 		// we print more data than HotSpot does, starting with the thread name
 		threadID := jvmStack.Front().Value.(*frames.Frame).Thread
 		th := globalRef.Threads[threadID].(*object.Object)
-		threadName := th.FieldTable["name"].Fvalue.(string)
+		raws := th.FieldTable["name"].Fvalue.([]types.JavaByte)
+		threadName := object.GoStringFromJavaByteArray(raws)
 		_, _ = fmt.Fprintf(os.Stderr, "Stack trace (thread %s)\n", threadName)
 	}
 
@@ -593,8 +594,9 @@ func threadGetName(params []interface{}) any {
 	}
 
 	t := params[0].(*object.Object)
-	name := t.FieldTable["name"].Fvalue
-	return object.StringObjectFromGoString(name.(string))
+	name := t.FieldTable["name"].Fvalue.([]types.JavaByte)
+
+	return object.StringObjectFromGoString(object.GoStringFromJavaByteArray(name))
 }
 
 // "java/lang/Thread.getPriority()I"
