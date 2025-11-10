@@ -108,7 +108,7 @@ func LoadOptionsTable(Global globals.Globals) {
 	strictJdk := globals.Option{true, false, 0, strictJDK}
 	Global.Options["-strictJDK"] = strictJdk
 
-	newThread := globals.Option{true, false, 0, useNewThread}
+	newThread := globals.Option{true, false, 0, useOldThread}
 	Global.Options["-732"] = newThread
 
 	traceInstruction := globals.Option{true, false, 10, enableTrace}
@@ -295,8 +295,8 @@ func strictJDK(pos int, name string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-func useNewThread(pos int, name string, gl *globals.Globals) (int, error) {
-	gl.UseNewThread = true
+func useOldThread(pos int, name string, gl *globals.Globals) (int, error) {
+	gl.UseOldThread = true
 	setOptionToSeen("-732", gl)
 	return pos, nil
 }

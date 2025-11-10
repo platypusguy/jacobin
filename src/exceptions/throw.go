@@ -86,7 +86,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	var fs *list.List
-	if !glob.UseNewThread {
+	if glob.UseOldThread {
 		th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
 		if !ok {
 			errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",

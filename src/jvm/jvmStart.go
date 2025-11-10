@@ -147,7 +147,7 @@ func JVMrun() int {
 
 	// create the main thread
 
-	if !globPtr.UseNewThread {
+	if globPtr.UseOldThread { //
 		MainThread = thread.CreateThread()
 		MainThread.AddThreadToTable(globPtr)
 
@@ -165,7 +165,7 @@ func JVMrun() int {
 		// To test for errors, trap stderr, as many of the unit tests do.
 		StartExec(*mainClass, &MainThread, globPtr)
 
-	} else { // for testing JACOBIN-732 use of new thread implementation
+	} else { // JACOBIN-732
 		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 		runnable := gfunction.NewRunnable(*mainClass, "main", "([Ljava/lang/String;)V")
 		params := []interface{}{runnable, "main"}
