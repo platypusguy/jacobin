@@ -135,9 +135,10 @@ func threadGroupCreateWithName(params []interface{}) any {
 
 	threadGroup := object.Field{Ftype: types.Ref, Fvalue: nil}
 	obj.FieldTable["threadgroup"] = threadGroup
-	priority := object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
 
+	priority := object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
 	obj.FieldTable["priority"] = priority
+
 	maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(thread.MAX_PRIORITY)}
 	obj.FieldTable["maxpriority"] = maxPriority
 
@@ -224,7 +225,7 @@ func threadGroupGetName(params []interface{}) interface{} {
 	if obj, ok := f.Fvalue.(*object.Object); ok && object.IsStringObject(obj) {
 		return obj
 	}
-	
+
 	// Fallback in case legacy code stored Go string
 	if s, ok := f.Fvalue.(string); ok {
 		return object.StringObjectFromGoString(s)

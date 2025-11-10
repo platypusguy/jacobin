@@ -298,11 +298,11 @@ func threadActiveCount(_ []interface{}) any {
 // our clinit method simply specifies static constants
 func threadClinit(_ []interface{}) any {
 	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(1)})
+		statics.Static{Type: types.Int, Value: int64(thread.MIN_PRIORITY)})
 	_ = statics.AddStatic("java/lang/Thread.NORM_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(5)})
+		statics.Static{Type: types.Int, Value: int64(thread.NORM_PRIORITY)})
 	_ = statics.AddStatic("java/lang/Thread.MAX_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(10)})
+		statics.Static{Type: types.Int, Value: int64(thread.MAX_PRIORITY)})
 	return nil
 }
 
