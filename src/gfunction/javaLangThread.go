@@ -91,6 +91,14 @@ func Load_Lang_Thread() {
 			GFunction:  threadCreateWithRunnableAndName,
 		}
 
+	args := "(Ljava/lang/Threadgroup;" + "Ljava/lang/String;" + "I" +
+		"Ljava/lang/Runnable;" + "J" + "java/Security/AccessControlContext;" + ")V"
+	MethodSignatures["java/lang/Thread.<init>"+args] =
+		GMeth{
+			ParamSlots: 6,
+			GFunction:  threadCreateFromPackageConstructor,
+		}
+
 	// remaining methods are in alpha order by Java FQN string
 
 	MethodSignatures["java/lang/Thread.activeCount()I"] =
@@ -215,6 +223,13 @@ func Load_Lang_Thread() {
 			ParamSlots: 0,
 			GFunction:  returnFalse,
 		}
+
+	MethodSignatures["java/lang/Thread.join()V"] =
+		GMeth{ // TODO: trap or implement
+			ParamSlots: 0,
+			GFunction:  justReturn,
+		}
+
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -306,6 +321,81 @@ func threadClinit(_ []interface{}) any {
 	return nil
 }
 
+// Handles package-private constructor with these parameters:
+// thread group:    Ljava/lang/Threadgroup;
+// name:            Ljava/lang/String;
+// characteristics: I
+// task:            Ljava/lang/Runnable;
+// stack size:      J (0 = ignore)
+// access control   java/Security/AccessControlContext;
+// Validates each parameter, then calls threadCreateWithRunnableAndName()
+// passing the 4th (Runnable) and 2nd (String name) parameters, in that order.
+func threadCreateFromPackageConstructor(params []interface{}) any {
+	const where = "threadCreateFromPackageConstructor"
+
+	// Expect exactly 6 parameters
+	if len(params) != 6 {
+		errMsg := fmt.Sprintf("%s: Expected 6 parameters, got %d parameters", where, len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// 0: Threadgroup (object, may be null)
+	if params[0] != nil {
+		if _, ok := params[0].(*object.Object); !ok {
+			errMsg := fmt.Sprintf("%s: Expected first parameter to be a ThreadGroup object (or null)", where)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	// 1: Name (String)
+	name, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("%s: Expected second parameter to be a String name", where)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// 2: Priority (int). Accept common integer types.
+	switch params[2].(type) {
+	case int, int32, int64:
+		// ok; we don't use it here but we validate presence/type
+	default:
+		errMsg := fmt.Sprintf("%s: Expected third parameter to be an int priority", where)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// 3: Runnable (object, may be null)
+	var runnable *object.Object
+	if params[3] != nil {
+		var ok bool
+		runnable, ok = params[3].(*object.Object)
+		if !ok {
+			errMsg := fmt.Sprintf("%s: Expected fourth parameter to be a Runnable object (or null)", where)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	// 4: Long (J)
+	if _, ok := params[4].(int64); !ok {
+		errMsg := fmt.Sprintf("%s: Expected fifth parameter to be a long (int64)", where)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	// 5: AccessControlContext (object, may be null)
+	if params[5] != nil {
+		if _, ok := params[5].(*object.Object); !ok {
+			errMsg := fmt.Sprintf("%s: Expected sixth parameter to be an AccessControlContext object (or null)", where)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	// Delegate: threadCreateWithRunnableAndName expects [runnable, name]
+	th := threadCreateWithRunnableAndName([]interface{}{runnable, name}).(*object.Object)
+	threadGroup := object.Field{ // default thread group is the main thread group
+		Ftype: types.Ref, Fvalue: params[0]}
+	th.FieldTable["threadgroup"] = threadGroup
+	return th
+}
+
 func threadCreateNoarg(_ []interface{}) any {
 
 	t := object.MakeEmptyObjectWithClassName(&classname)
@@ -352,9 +442,15 @@ func threadCreateNoarg(_ []interface{}) any {
 }
 
 func threadCreateWithName(params []interface{}) any {
+	name, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadCreateWithName: Expected  parameter to be a String name"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	t := threadCreateNoarg(nil).(*object.Object)
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.GolangString, Fvalue: params[0].(string)}
+		Ftype: types.GolangString, Fvalue: name.FieldTable["value"].Fvalue.(string)}
 	return t
 }
 
@@ -369,8 +465,16 @@ func threadCreateWithRunnableAndName(params []interface{}) any {
 	t := threadCreateNoarg(nil).(*object.Object)
 	t.FieldTable["task"] = object.Field{
 		Ftype: types.Ref, Fvalue: params[0].(*object.Object)}
+
+	name, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadCreateWithRunnableAndName: Expected  parameter to be a String name"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.GolangString, Fvalue: params[1].(string)}
+		Ftype:  types.GolangString,
+		Fvalue: name.FieldTable["value"].Fvalue}
 	return t
 }
 
