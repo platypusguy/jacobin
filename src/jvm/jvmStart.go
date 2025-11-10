@@ -171,6 +171,9 @@ func JVMrun() int {
 		params := []interface{}{runnable, "main"}
 		t := globals.GetGlobalRef().FuncInvokeGFunction(
 			"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
+		if globals.TraceInit {
+			trace.Trace("Starting execution with: " + *mainClass)
+		}
 		// the thread is registered in thread.Run()
 		thread.Run(t.(*object.Object))
 	}
