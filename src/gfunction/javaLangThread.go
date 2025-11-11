@@ -596,7 +596,7 @@ func threadGetName(params []interface{}) any {
 	t := params[0].(*object.Object)
 	name := t.FieldTable["name"].Fvalue.([]types.JavaByte)
 
-	return object.StringObjectFromGoString(object.GoStringFromJavaByteArray(name))
+	return object.StringObjectFromJavaByteArray(name)
 }
 
 // "java/lang/Thread.getPriority()I"
@@ -789,20 +789,19 @@ func threadSetName(params []interface{}) any {
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	// Extract the underlying bytes from the Java String and convert to Go string
+	// Extract the underlying bytes from the Java String
 	fld, ok := nameObj.FieldTable["value"]
 	if !ok {
 		errMsg := "threadSetName: corrupted String object (missing 'value' field)"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	jb, ok := fld.Fvalue.([]types.JavaByte)
+	newName, ok := fld.Fvalue.([]types.JavaByte)
 	if !ok {
 		errMsg := "threadSetName: String 'value' field has unexpected type"
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	newName := object.GoStringFromJavaByteArray(jb)
 
-	// Update the thread's name field (stored as a Go string in Jacobin)
+	// Update the thread's name field (stored as a Java byte string)
 	th.FieldTable["name"] = object.Field{Ftype: types.GolangString, Fvalue: newName}
 
 	return nil
