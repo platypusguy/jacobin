@@ -25,14 +25,10 @@ func Load_Lang_Thread_Group() {
 		GMeth{ParamSlots: 0, GFunction: threadGroupClinit}
 
 	// Constructors
-	MethodSignatures["java/lang/ThreadGroup.ThreadGroup(Ljava/lang/String;)Ljava/lang/ThreadGroup;"] =
-		GMeth{ParamSlots: 1, GFunction: threadGroupCreateWithName}
-	MethodSignatures["java/lang/ThreadGroup.ThreadGroup(Ljava/lang/ThreadGroup;Ljava/lang/String;)Ljava/lang/ThreadGroup;"] =
-		GMeth{ParamSlots: 2, GFunction: threadGroupCreateWithParentAndName}
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/String;)V"] =
-		GMeth{ParamSlots: 1, GFunction: trapFunction}
+		GMeth{ParamSlots: 1, GFunction: threadGroupCreateWithName}
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
-		GMeth{ParamSlots: 2, GFunction: trapFunction}
+		GMeth{ParamSlots: 2, GFunction: threadGroupCreateWithParentAndName}
 
 	// Public instance methods (alphabetical by JVM signature for consistency)
 	MethodSignatures["java/lang/ThreadGroup.activeCount()I"] =
@@ -229,6 +225,11 @@ func threadGroupGetName(params []interface{}) interface{} {
 	// Fallback in case legacy code stored Go string
 	if s, ok := f.Fvalue.(string); ok {
 		return object.StringObjectFromGoString(s)
+	}
+
+	// Fallback in case legacy code stored Go string
+	if s, ok := f.Fvalue.([]types.JavaByte); ok {
+		return object.StringObjectFromJavaByteArray(s)
 	}
 
 	return getGErrBlk(excNames.IllegalArgumentException,
