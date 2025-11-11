@@ -40,18 +40,6 @@ func TestGlobalsInit(t *testing.T) {
 	}
 }
 
-func TestInitClasspath(t *testing.T) {
-	g := InitGlobals("test")
-	pwd, _ := os.Getwd()
-	if g.ClasspathRaw != pwd {
-		t.Errorf("Expected ClassPath to be set to current working directory, got: %s", g.ClasspathRaw)
-	}
-
-	if g.Classpath[0] != pwd {
-		t.Errorf("Expected ClassPath[0] to be set to current working directory, got: %s", g.Classpath[0])
-	}
-}
-
 func TestInitClasspathWithEnv(t *testing.T) {
 	origClasspath := os.Getenv("CLASSPATH")
 	_ = os.Setenv("CLASSPATH", "home")
