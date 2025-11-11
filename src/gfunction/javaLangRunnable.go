@@ -14,11 +14,11 @@ import (
 // In our implementation, Runnable is a set of three strings: class name,
 // method name and signature--by which we can find the method.
 
-func NewRunnable(clName string, methName string, signature string) *object.Object {
+func NewRunnable(clName, methName, signature []types.JavaByte) *object.Object {
 	runnableClassName := "java/lang/Runnable"
 	o := object.MakeEmptyObjectWithClassName(&runnableClassName)
-	o.FieldTable["clName"] = object.Field{Ftype: types.GolangString, Fvalue: clName}
-	o.FieldTable["methName"] = object.Field{Ftype: types.GolangString, Fvalue: methName}
-	o.FieldTable["signature"] = object.Field{Ftype: types.GolangString, Fvalue: signature}
+	o.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: clName}
+	o.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: methName}
+	o.FieldTable["signature"] = object.Field{Ftype: types.ByteArray, Fvalue: signature}
 	return o
 }

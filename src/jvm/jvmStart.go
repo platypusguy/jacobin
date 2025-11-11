@@ -167,7 +167,10 @@ func JVMrun() int {
 
 	} else { // JACOBIN-732
 		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-		runnable := gfunction.NewRunnable(*mainClass, "main", "([Ljava/lang/String;)V")
+		runnable := gfunction.NewRunnable(
+			object.JavaByteArrayFromGoString(*mainClass),
+			object.JavaByteArrayFromGoString("main"),
+			object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
 		params := []interface{}{runnable, object.StringObjectFromGoString("main")}
 		t := globals.GetGlobalRef().FuncInvokeGFunction(
 			"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)

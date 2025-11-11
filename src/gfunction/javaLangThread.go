@@ -698,9 +698,12 @@ func threadRun(params []interface{}) interface{} {
 	// get the method to run (identified by Runnable's three fields)
 	runnable := *runObj.(*object.Object)
 	runFields := runnable.FieldTable
-	clName := runFields["clName"].Fvalue.(string)
-	methName := runFields["methName"].Fvalue.(string)
-	methType := runFields["signature"].Fvalue.(string)
+	clname := runFields["clName"].Fvalue.([]types.JavaByte)
+	clName := object.GoStringFromJavaByteArray(clname)
+	methname := runFields["methName"].Fvalue.([]types.JavaByte)
+	methName := object.GoStringFromJavaByteArray(methname)
+	methtype := runFields["signature"].Fvalue.([]types.JavaByte)
+	methType := object.GoStringFromJavaByteArray(methtype)
 
 	m, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
 		clName, methName, methType)
