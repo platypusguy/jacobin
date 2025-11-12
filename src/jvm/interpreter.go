@@ -2425,6 +2425,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 
 		ret := gfunction.RunGfunction(
 			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+
 		if ret != nil {
 			switch ret.(type) {
 			case error:
