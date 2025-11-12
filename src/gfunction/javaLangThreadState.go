@@ -21,6 +21,11 @@ import (
 // Declaration order matches Java's Thread.State
 
 func Load_Lang_Thread_State() {
+	MethodSignatures["java/lang/Thread$State.<init>(I)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  threadStateCreateWithValue,
+		}
 	MethodSignatures["java/lang/Thread$State.toString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -62,6 +67,26 @@ var ThreadState = map[int]string{
 
 var threadStateInstances []*object.Object // length 6, matches threadStateNames
 var threadStates map[string]*object.Object
+
+// creates a thread state, but is not actually part of the OpenJDK API. Used internally by Thread class
+func threadStateCreateWithValue(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.<init>(int): missing value")
+	}
+	state, ok := params[0].(int)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.<init>(int): invalid value")
+	}
+	if state < NEW || state > TERMINATED {
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.<init>(int): invalid value")
+	}
+
+	ts := object.MakeEmptyObject()
+	ts.KlassName = object.StringPoolIndexFromGoString("java/lang/Thread$State")
+	ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: state}
+
+	return ts
+}
 
 // threadStateToString implements Thread.State.toString(): String
 // It expects an int value for the state and returns the corresponding string object

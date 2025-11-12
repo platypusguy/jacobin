@@ -410,7 +410,8 @@ func threadCreateNoarg(_ []interface{}) any {
 	nameField := object.Field{Ftype: types.GolangString, Fvalue: defaultName}
 	t.FieldTable["name"] = nameField
 
-	stateField := object.Field{Ftype: types.Int, Fvalue: thread.NEW}
+	stateField := object.Field{Ftype: types.Ref,
+		Fvalue: threadStateCreateWithValue([]any{NEW})}
 	t.FieldTable["state"] = stateField
 
 	daemonField := object.Field{
@@ -641,7 +642,7 @@ func threadGetState(params []interface{}) any {
 	}
 
 	t := params[0].(*object.Object)
-	state := t.FieldTable["state"].Fvalue.(int)
+	state := t.FieldTable["state"].Fvalue.(*object.Object)
 	return state
 }
 
