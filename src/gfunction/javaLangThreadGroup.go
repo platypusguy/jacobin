@@ -26,7 +26,7 @@ func Load_Lang_Thread_Group() {
 
 	// Constructors
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/String;)V"] =
-		GMeth{ParamSlots: 1, GFunction: threadGroupCreateWithName}
+		GMeth{ParamSlots: 1, GFunction: threadGroupInitWithName}
 	MethodSignatures["java/lang/ThreadGroup.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadGroupCreateWithParentAndName}
 
@@ -89,12 +89,13 @@ func initializeGlobalThreadGroups() {
 	}
 
 	// Create "system" group
-	sys := threadGroupCreateWithName([]interface{}{object.StringObjectFromGoString("system")})
+	sys := threadGroupInitWithName([]interface{}{object.StringObjectFromGoString("system")})
 	gr.ThreadGroups["system"] = sys
 
 	// Create "main" group as a child of "system"
 	sysObj, _ := gr.ThreadGroups["system"].(*object.Object)
-	mainGrp := threadGroupCreateWithParentAndName([]interface{}{sysObj, object.StringObjectFromGoString("main")})
+	mainGrp := threadGroupCreateWithParentAndName([]interface{}{sysObj,
+		object.StringObjectFromGoString("main")})
 	gr.ThreadGroups["main"] = mainGrp
 }
 
@@ -103,22 +104,90 @@ func threadGroupClinit(_ []interface{}) any {
 	return justReturn(nil)
 }
 
+func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) any {
+	if len(initParams) != 5 { // the four named params + the ThreadGroup object itself
+		return getGErrBlk(excNames.IllegalArgumentException,
+			fmt.Sprintf("ThreadGroupInitWithParentNameMaxpriorityDaemon: Expected 5 parameters, got %d",
+				len(initParams)))
+	}
+
+	obj, ok := initParams[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"ThreadGroupInitWithParentNameMaxpriorityDaemon: Expected first parameter to be an object reference")
+	}
+
+	parentObj, ok := initParams[1].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"ThreadGroupInitWithParentNameMaxpriorityDaemon: Expected second parameter to be an object reference")
+	}
+
+	nameObj, ok := initParams[2].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"ThreadGroupInitWithParentNameMaxpriorityDaemon: Expected third parameter to be a String object")
+	}
+
+	maxPriority := initParams[3].(int64)
+	daemon := initParams[4].(int64)
+
+	if parentObj != object.Null {
+		obj.FieldTable["parent"] = object.Field{Ftype: types.Ref, Fvalue: parentObj}
+	}
+	if nameObj != object.Null {
+		obj.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: nameObj}
+	}
+
+	if maxPriority != 0 { // 0 = uninitialized
+		if maxPriority < thread.MIN_PRIORITY || maxPriority > thread.MAX_PRIORITY {
+			return getGErrBlk(excNames.IllegalArgumentException,
+				"ThreadGroupInitWithParentNameMaxpriorityDaemon: maxPriority out of range")
+		}
+		obj.FieldTable["maxpriority"] = object.Field{Ftype: types.Int, Fvalue: maxPriority}
+	}
+
+	if daemon == types.JavaBoolFalse || daemon == types.JavaBoolTrue {
+		obj.FieldTable["daemon"] = object.Field{Ftype: types.Bool, Fvalue: daemon}
+	}
+
+	obj.FieldTable["parent"] = object.Field{Ftype: types.Ref, Fvalue: parentObj}
+
+	// initialize the fields that are not passed as parameters
+	obj.FieldTable["priority"] =
+		object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+
+	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
+	obj.FieldTable["subgroups"] = subgroups
+
+	// add the thread group to the global list of thread groups
+	globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(nameObj)] = obj
+
+	return obj
+}
+
 // java/lang/ThreadGroup.ThreadGroup(Ljava/lang/String;)Ljava/lang/ThreadGroup;
-// returns a new ThreadGroup object with the specified name and a null parent
-func threadGroupCreateWithName(params []interface{}) any {
-	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGroupCreateWithName: Expected thread group, got %d parameters", len(params))
+// accepts a  ThreadGroup *object and adds the specified name and a null parent
+func threadGroupInitWithName(params []interface{}) any {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("threadGroupInitWithName: Expected 2 parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	name, ok := params[0].(*object.Object)
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadGroupInitWithName: Expected 1st parameter to be an object reference, was not"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	name, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := "threadGroupCreateWithName: Expected parameter to be a string object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	clName := "java/lang/ThreadGroup"
-	obj := object.MakeEmptyObjectWithClassName(&clName)
+	// clName := "java/lang/ThreadGroup"
+	// obj := object.MakeEmptyObjectWithClassName(&clName)
 
 	nullField := object.Field{Ftype: types.Ref, Fvalue: object.Null}
 	obj.FieldTable["parent"] = nullField
@@ -179,7 +248,7 @@ func threadGroupCreateWithParentAndName(params []interface{}) any {
 	}
 
 	// Create group with name
-	created := threadGroupCreateWithName([]interface{}{nameObj})
+	created := threadGroupInitWithName([]interface{}{nameObj})
 
 	// If creation returned an error block, pass it through
 	if gerr, isErr := created.(*GErrBlk); isErr {
