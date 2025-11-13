@@ -130,7 +130,7 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 	}
 
 	maxPriority := initParams[3].(int64)
-	daemon := initParams[4].(int64)
+	daemon := initParams[4].(types.JavaBool)
 
 	if parentObj != object.Null {
 		obj.FieldTable["parent"] = object.Field{Ftype: types.Ref, Fvalue: parentObj}

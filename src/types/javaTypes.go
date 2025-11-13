@@ -122,7 +122,7 @@ type JavaByte = int8
 const JavaBoolTrue int64 = 1
 const JavaBoolFalse int64 = 0
 
-var JavaBool int64
+type JavaBool = int64
 
 // ConvertGoBoolToJavaBool takes a go boolean which is not a numeric
 // value (and can't be cast to one) and converts into into an integral
