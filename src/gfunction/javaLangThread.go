@@ -422,6 +422,7 @@ func threadCreateNoarg(_ []interface{}) any {
 		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["interrupted"] = interruptedField
 
+	InitializeGlobalThreadGroups()
 	tg := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
 	threadGroup := object.Field{ // default thread group is the main thread group
 		Ftype: types.Ref, Fvalue: tg}
@@ -453,6 +454,10 @@ func threadCreateWithName(params []interface{}) any {
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.ByteArray, Fvalue: name.FieldTable["value"].Fvalue}
 	return t
+}
+
+func ThreadCreateWithName(params []interface{}) any {
+	return threadCreateWithName(params)
 }
 
 func threadCreateWithRunnable(params []interface{}) any {

@@ -87,6 +87,25 @@ func InitializeGlobalThreadGroups() {
 		gr.ThreadGroups = make(map[string]interface{})
 	}
 
+	// in test mode, we don't need to create the system and main
+	// thread groups manually
+	if gr.JacobinName == "test" {
+		fakeSystemTg := threadGroupFake("system")
+		gr.ThreadGroups["system"] = fakeSystemTg
+
+		fakeMainTg := threadGroupFake("main")
+		gr.ThreadGroups["main"] = fakeMainTg
+
+		fakeMainTg.FieldTable["parent"] =
+			object.Field{Ftype: types.Ref, Fvalue: fakeSystemTg}
+
+		// Now add this thread group to the parent's list of subgroups
+		parentSubgroups := fakeSystemTg.FieldTable["subgroups"].Fvalue.(*list.List)
+		parentSubgroups.PushBack(fakeMainTg)
+
+		return
+	}
+
 	// java/lang/ThreadGroup has no clinit to run, so we can turn it off
 	// likewise its parent is java/lang/Object, which does not need clinit
 	// This is necessary because we call instantiateClass directly with no
@@ -102,9 +121,9 @@ func InitializeGlobalThreadGroups() {
 		gr.FuncThrowException(excNames.InternalError, errMsg)
 	}
 
-	sys := threadGroupInitWithName(
+	systg := threadGroupInitWithName(
 		[]interface{}{tg, object.StringObjectFromGoString("system")})
-	gr.ThreadGroups["system"] = sys
+	gr.ThreadGroups["system"] = systg
 
 	// Create "main" group as a child of "system"
 	maintg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
@@ -212,35 +231,6 @@ func threadGroupInitWithName(params []interface{}) any {
 	updatedObj := ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
 	return updatedObj
 
-	// clName := "java/lang/ThreadGroup"
-	// obj := object.MakeEmptyObjectWithClassName(&clName)
-	/*
-		nullField := object.Field{Ftype: types.Ref, Fvalue: object.Null}
-		obj.FieldTable["parent"] = nullField
-
-		nameField := object.Field{Ftype: types.Ref, Fvalue: name}
-		obj.FieldTable["name"] = nameField
-
-		daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
-		obj.FieldTable["daemon"] = daemonField
-
-		threadGroup := object.Field{Ftype: types.Ref, Fvalue: nil}
-		obj.FieldTable["threadgroup"] = threadGroup
-
-		priority := object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
-		obj.FieldTable["priority"] = priority
-
-		maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(thread.MAX_PRIORITY)}
-		obj.FieldTable["maxpriority"] = maxPriority
-
-		subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
-		obj.FieldTable["subgroups"] = subgroups
-
-		// add the thread group to the global list of thread groups
-		globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(name)] = obj
-
-		return obj
-	*/
 }
 
 // java/lang/ThreadGroup.ThreadGroup(Ljava/lang/ThreadGroup;Ljava/lang/String;)Ljava/lang/ThreadGroup;
@@ -324,4 +314,38 @@ func threadGroupGetName(params []interface{}) interface{} {
 
 	return getGErrBlk(excNames.IllegalArgumentException,
 		"threadGroupGetName: name field is not a String")
+}
+
+// == fake thread group for testing purposes ==
+func threadGroupFake(name string) *object.Object {
+	clName := "java/lang/ThreadGroup"
+	obj := object.MakeEmptyObjectWithClassName(&clName)
+
+	nullField := object.Field{Ftype: types.Ref, Fvalue: object.Null}
+	obj.FieldTable["parent"] = nullField
+
+	nameField := object.Field{
+		Ftype:  types.Ref,
+		Fvalue: object.JavaByteArrayFromGoString(name)}
+	obj.FieldTable["name"] = nameField
+
+	daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	obj.FieldTable["daemon"] = daemonField
+
+	threadGroup := object.Field{Ftype: types.Ref, Fvalue: nil}
+	obj.FieldTable["threadgroup"] = threadGroup
+
+	priority := object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+	obj.FieldTable["priority"] = priority
+
+	maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(thread.MAX_PRIORITY)}
+	obj.FieldTable["maxpriority"] = maxPriority
+
+	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
+	obj.FieldTable["subgroups"] = subgroups
+
+	// add the thread group to the global list of thread groups
+	globals.GetGlobalRef().ThreadGroups[name] = obj
+
+	return obj
 }
