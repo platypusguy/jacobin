@@ -284,7 +284,7 @@ func interpret(fs *list.List) {
 			return
 		}
 	}
-	
+
 	defer func() int {
 		// only an untrapped panic gets us here
 		if r := recover(); r != nil {
