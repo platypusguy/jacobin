@@ -84,7 +84,6 @@ func makeEmptyThreadWithIDName(id int64, name string) *object.Object {
 func TestThreadActiveCount(t *testing.T) {
 	globals.InitGlobals("test")
 	gr := globals.GetGlobalRef()
-	gr.Threads = make(map[int]interface{})
 	if got := threadActiveCount(nil).(int64); got != 0 {
 		t.Fatalf("activeCount = %d; want 0", got)
 	}
