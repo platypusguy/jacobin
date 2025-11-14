@@ -46,9 +46,11 @@ func CreateThread() ExecThread {
 
 func CreateMainThread() *object.Object {
 	gl := globals.GetGlobalRef()
+	globals.InitGlobals("test")
 	main := object.StringObjectFromGoString("main")
 	params := []any{main}
-	t := gl.FuncInvokeGFunction("java/lang/Thread.<init>(Ljava/lang/String;)V", params)
+	t := gl.FuncInvokeGFunction("java/lang/Thread.<init>(Ljava/lang/String;)V",
+		params)
 	return t.(*object.Object)
 }
 
