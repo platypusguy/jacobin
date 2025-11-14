@@ -6,8 +6,17 @@
 
 package main
 
-import "jacobin/src/jvm"
+import (
+	"jacobin/src/jvm"
+	"jacobin/src/prof"
+	"os"
+)
 
 func main() {
+	path := os.Getenv("JACOBIN_CPUPROFILE")
+	if path != "" {
+		prof.StartProfiling(path)
+	}
 	jvm.JVMrun()
+	prof.StopProfiling()
 }

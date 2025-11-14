@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/src/config"
 	"jacobin/src/globals"
+	"jacobin/src/prof"
 	"jacobin/src/statics"
 	"jacobin/src/trace"
 	"os"
@@ -56,9 +57,9 @@ func Exit(errorCondition ExitStatus) int {
 		statics.DumpStatics("exit.Exit", statics.SelectUser, "")
 		config.DumpConfig(os.Stderr)
 	}
-	
+
 	os.Stderr.Sync() // ensure all output is written before exiting
-	os.Exit(errorCondition)
+	prof.ExitToOS(errorCondition)
 
 	return 0 // required by go
 }
