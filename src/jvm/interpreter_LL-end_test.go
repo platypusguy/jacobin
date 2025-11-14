@@ -654,7 +654,8 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
 
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
-		InitGlobalFunctionPointers(globals.GetGlobalRef())
+		InitGlobalFunctionPointers()
+		gfunction.InitializeGlobalThreadGroups()
 		thObj := thread.CreateMainThread() // returns *object.Object
 		thread.RegisterThread(thObj)       // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
@@ -731,6 +732,7 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 
 		// initialize the MTable (table caching methods)
 		classloader.MTable = make(map[string]classloader.MTentry)
+		gfunction.InitializeGlobalThreadGroups()
 		gfunction.MTableLoadGFunctions(&classloader.MTable)
 		classloader.LoadBaseClasses()
 		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
@@ -810,7 +812,8 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
 
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
-		InitGlobalFunctionPointers(globals.GetGlobalRef())
+		InitGlobalFunctionPointers()
+		gfunction.InitializeGlobalThreadGroups()
 		thObj := thread.CreateMainThread() // returns *object.Object
 		thread.RegisterThread(thObj)       // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
