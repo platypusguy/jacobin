@@ -284,6 +284,20 @@ func interpret(fs *list.List) {
 			return
 		}
 	}
+	
+	defer func() int {
+		// only an untrapped panic gets us here
+		if r := recover(); r != nil {
+			stack := string(debug.Stack())
+			glob := globals.GetGlobalRef()
+			glob.ErrorGoStack = stack
+			exceptions.ShowPanicCause(r)
+			exceptions.ShowFrameStack(fs)
+			exceptions.ShowGoStackTrace(nil)
+			return shutdown.Exit(shutdown.APP_EXCEPTION)
+		}
+		return shutdown.OK
+	}()
 
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
@@ -319,20 +333,6 @@ func interpret(fs *list.List) {
 				return
 			}
 		}
-
-		defer func() int {
-			// only an untrapped panic gets us here
-			if r := recover(); r != nil {
-				stack := string(debug.Stack())
-				glob := globals.GetGlobalRef()
-				glob.ErrorGoStack = stack
-				exceptions.ShowPanicCause(r)
-				exceptions.ShowFrameStack(fs)
-				exceptions.ShowGoStackTrace(nil)
-				return shutdown.Exit(shutdown.APP_EXCEPTION)
-			}
-			return shutdown.OK
-		}()
 	}
 }
 
