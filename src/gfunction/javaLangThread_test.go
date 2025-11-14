@@ -146,7 +146,9 @@ func TestThreadCreateFromPackageConstructor_TypeErrors(t *testing.T) {
 }
 
 func TestThreadCreateFromPackageConstructor_Success(t *testing.T) {
-	parent := threadGroupCreateWithName([]interface{}{makeJavaString("grp")}).(*object.Object)
+	InitializeGlobalThreadGroups()
+
+	parent := threadGroupInitWithName([]interface{}{makeJavaString("grp")}).(*object.Object)
 	name := makeJavaString("worker")
 	runnable := NewRunnable(object.JavaByteArrayFromGoString("c"), object.JavaByteArrayFromGoString("m"), object.JavaByteArrayFromGoString("()V"))
 	res := threadCreateFromPackageConstructor([]interface{}{parent, name, int64(5), runnable, int64(0), nil})
@@ -510,7 +512,7 @@ func TestThreadRun_NoSuchMethodError(t *testing.T) {
 		object.JavaByteArrayFromGoString("run"),
 		object.JavaByteArrayFromGoString("()V"))
 
-	initializeGlobalThreadGroups()
+	InitializeGlobalThreadGroups()
 	th := threadCreateNoarg(nil).(*object.Object)
 	th.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: runObj}
 

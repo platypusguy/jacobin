@@ -64,7 +64,7 @@ func JVMrun() int {
 	globPtr = globals.GetGlobalRef()
 
 	// Enable select functions via a global function variable. (This avoids circularity issues.)
-	InitGlobalFunctionPointers(globPtr)
+	InitGlobalFunctionPointers()
 
 	if globals.TraceInit {
 		trace.Trace("running program: " + globPtr.JacobinName)
@@ -145,8 +145,10 @@ func JVMrun() int {
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
+	// Initialize the initial global thread groups
+	gfunction.InitializeGlobalThreadGroups()
+	
 	// create the main thread
-
 	if globPtr.UseOldThread { //
 		MainThread = thread.CreateThread()
 		MainThread.AddThreadToTable(globPtr)
@@ -191,7 +193,8 @@ func JVMrun() int {
 // can throw exceptions. A typical golang solution is to stuff objects and exceptions into the
 // same package, but we prefer to keep them separate for ease of comprehension and navigability,
 // so we use global function pointers.
-func InitGlobalFunctionPointers(globalPtr *globals.Globals) {
+func InitGlobalFunctionPointers() {
+	globalPtr := globals.GetGlobalRef()
 	globalPtr.FuncInstantiateClass = InstantiateClass
 	globalPtr.FuncInvokeGFunction = gfunction.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort

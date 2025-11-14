@@ -77,7 +77,7 @@ func TestGfunctionExecValid(t *testing.T) {
 	f.Meth = append(f.Meth, 0x01) // Go to method referred to in 0x0001 of the CP
 
 	f.CP = &CP
-	classloader.ResolveCPmethRefs(&CP)
+	_ = classloader.ResolveCPmethRefs(&CP)
 	// create the opStack
 	for j := 0; j < 10; j++ {
 		f.OpStack = append(f.OpStack, 0)
@@ -134,9 +134,7 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 	// ---------------------------------
 
 	globals.InitGlobals("test")
-
 	trace.Init()
-	globals.InitGlobals("test")
 	normalStderr := os.Stderr
 	rerr, werr, _ := os.Pipe()
 	os.Stderr = werr
@@ -147,6 +145,7 @@ func TestGfuncINVOKEVIRTUALwith1stringArgtemplate(t *testing.T) {
 
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	InitGlobalFunctionPointers()
 
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10)

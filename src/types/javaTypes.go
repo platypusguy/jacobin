@@ -121,6 +121,7 @@ type JavaByte = int8
 
 const JavaBoolTrue int64 = 1
 const JavaBoolFalse int64 = 0
+const JavaBoolUninitialized int64 = -1
 
 type JavaBool = int64
 
