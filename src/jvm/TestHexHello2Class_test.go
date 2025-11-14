@@ -111,8 +111,10 @@ func TestHexHello2ValidClass(t *testing.T) {
 	t.Logf("classloader.Init ok\n")
 
 	// Load the base classes
-	classloader.LoadBaseClasses()
-	t.Logf("LoadBaseClasses ok\n")
+	classloader.LoadClassFromNameOnly("java/lang/ThreadGroup")
+	t.Logf("Loaded ThreadGroup ok\n")
+	InitGlobalFunctionPointers()
+	t.Logf("InitGlobalFunctionPointers ok\n")
 
 	// Show the map size and check it for java/lang/System
 	mapSize := classloader.JmodMapSize()
