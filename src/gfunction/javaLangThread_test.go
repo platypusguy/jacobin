@@ -49,9 +49,10 @@ func ensureInit() {
 		gr.FuncThrowException = exceptions.ThrowExNil
 		// Set a local fake instantiator to avoid importing the jvm package in tests
 		gr.FuncInstantiateClass = instantiateForThreadTest
-
+		InitializeGlobalThreadGroups()
 		Load_Lang_Thread_Group()
 		Load_Lang_Thread()
+
 	})
 }
 
@@ -66,6 +67,7 @@ func makeJavaString(s string) *object.Object {
 
 func makeEmptyThreadWithIDName(id int64, name string) *object.Object {
 	ensureInit()
+	InitializeGlobalThreadGroups()
 	if globals.GetGlobalRef().ThreadGroups["main"] == nil {
 		Load_Lang_Thread_Group()
 	}
@@ -146,9 +148,10 @@ func TestThreadCreateFromPackageConstructor_TypeErrors(t *testing.T) {
 }
 
 func TestThreadCreateFromPackageConstructor_Success(t *testing.T) {
+	globals.InitGlobals("test")
 	InitializeGlobalThreadGroups()
 
-	parent := threadGroupInitWithName([]interface{}{makeJavaString("grp")}).(*object.Object)
+	parent := threadGroupFake("grp")
 	name := makeJavaString("worker")
 	runnable := NewRunnable(object.JavaByteArrayFromGoString("c"), object.JavaByteArrayFromGoString("m"), object.JavaByteArrayFromGoString("()V"))
 	res := threadCreateFromPackageConstructor([]interface{}{parent, name, int64(5), runnable, int64(0), nil})

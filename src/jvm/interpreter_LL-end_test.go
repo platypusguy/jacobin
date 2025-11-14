@@ -656,8 +656,11 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 		InitGlobalFunctionPointers()
 		gfunction.InitializeGlobalThreadGroups()
-		thObj := thread.CreateMainThread() // returns *object.Object
-		thread.RegisterThread(thObj)       // put into globals.Threads map
+		// thObj := thread.CreateMainThread() // returns *object.Object
+		main := object.StringObjectFromGoString("main")
+		params := []any{main}
+		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 		f := frames.CreateFrame(1)
@@ -814,8 +817,11 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 		InitGlobalFunctionPointers()
 		gfunction.InitializeGlobalThreadGroups()
-		thObj := thread.CreateMainThread() // returns *object.Object
-		thread.RegisterThread(thObj)       // put into globals.Threads map
+		// thObj := thread.CreateMainThread() // returns *object.Object
+		main := object.StringObjectFromGoString("main")
+		params := []any{main}
+		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 		f := frames.CreateFrame(1)
@@ -970,8 +976,12 @@ func TestPopWithStackUnderflow(t *testing.T) {
 		fs.PushFront(f)
 		th.Stack = fs
 	} else {
-		thObj := thread.CreateMainThread() // returns *object.Object
-		thread.RegisterThread(thObj)       // put into globals.Threads map
+		globals.InitGlobals("test")
+		// thObj := thread.CreateMainThread() // returns *object.Objec
+		main := object.StringObjectFromGoString("main")
+		params := []any{main}
+		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 		f = frames.CreateFrame(1)
@@ -1180,8 +1190,11 @@ func TestPushWithStackOverflow(t *testing.T) {
 		fs.PushFront(f)
 		th.Stack = fs
 	} else {
-		thObj := thread.CreateMainThread() // returns *object.Object
-		thread.RegisterThread(thObj)       // put into globals.Threads map
+		// thObj := thread.CreateMainThread() // returns *object.Object
+		main := object.StringObjectFromGoString("main")
+		params := []any{main}
+		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 		f = frames.CreateFrame(1)
 		f.ClName = "java/lang/Object"
