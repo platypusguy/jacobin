@@ -1,8 +1,9 @@
 /*
+TestThreadActiveCount/*
  * Jacobin VM - A Java virtual machine
  * Copyright (c) 2025 by  the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
- */
+*/
 
 package gfunction
 
@@ -80,18 +81,18 @@ func makeEmptyThreadWithIDName(id int64, name string) *object.Object {
 }
 
 // ---- threadActiveCount ----
-// func TestThreadActiveCount(t *testing.T) {
-// 	gr := globals.GetGlobalRef()
-// 	gr.Threads = make(map[int]interface{})
-// 	if got := threadActiveCount(nil).(int64); got != 0 {
-// 		t.Fatalf("activeCount = %d; want 0", got)
-// 	}
-// 	gr.Threads[1] = makeEmptyThreadWithIDName(1, "Thread-1")
-// 	gr.Threads[2] = makeEmptyThreadWithIDName(2, "Thread-2")
-// 	if got := threadActiveCount(nil).(int64); got != 2 {
-// 		t.Fatalf("activeCount = %d; want 2", got)
-// 	}
-// }
+func TestThreadActiveCount(t *testing.T) {
+	globals.InitGlobals("test")
+	gr := globals.GetGlobalRef()
+	if got := threadActiveCount(nil).(int64); got != 0 {
+		t.Fatalf("activeCount = %d; want 0", got)
+	}
+	gr.Threads[1] = makeEmptyThreadWithIDName(1, "Thread-1")
+	gr.Threads[2] = makeEmptyThreadWithIDName(2, "Thread-2")
+	if got := threadActiveCount(nil).(int64); got != 2 {
+		t.Fatalf("activeCount = %d; want 2", got)
+	}
+}
 
 // ---- threadClinit ----
 func TestThreadClinit_SetsStatics(t *testing.T) {
