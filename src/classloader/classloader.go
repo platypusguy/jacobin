@@ -299,19 +299,23 @@ loadAclass:
 		return err
 	}
 
-	// Load class from a jar file?
-	if len(globals.GetGlobalRef().StartingJar) > 0 {
-		validName := util.ConvertToPlatformPathSeparators(className)
-		if globals.TraceClass {
-			trace.Trace("LoadClassFromNameOnly: LoadClassFromJar " + validName)
-		}
-		_, _, err = LoadClassFromJar(AppCL, validName, globals.GetGlobalRef().StartingJar)
-		if err != nil {
-			errMsg := "LoadClassFromNameOnly: LoadClassFromJar " + validName + " failed, err: " + err.Error()
-			trace.Error(errMsg)
-		}
-		return err
-	}
+ // Load class from the starting jar (-jar) if provided.
+ // If not found in the starting jar, fall back to classpath-based loading below.
+ if len(globals.GetGlobalRef().StartingJar) > 0 {
+     validName := util.ConvertToPlatformPathSeparators(className)
+     if globals.TraceClass {
+         trace.Trace("LoadClassFromNameOnly: LoadClassFromJar " + validName)
+     }
+     if _, _, jerr := LoadClassFromArchive(AppCL, validName, globals.GetGlobalRef().StartingJar); jerr == nil {
+         return nil
+     } else {
+         // Do not return yet; attempt classpath search which may include jars listed
+         // in the manifest Class-Path of the starting jar (already expanded in globals.Classpath).
+         if globals.TraceClass {
+             trace.Trace("LoadClassFromNameOnly: not found in starting jar, trying classpath: " + validName)
+         }
+     }
+ }
 
 	validName := util.ConvertToPlatformPathSeparators(className)
 	if globals.TraceClass {
@@ -356,11 +360,35 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 	var rawBytes []byte
 	var err error
 	var filename string
-	for i, path := range globals.GetGlobalRef().Classpath {
+	for ii, path := range globals.GetGlobalRef().Classpath {
+		// If the classpath entry is a JAR/ZIP, attempt to load the class from inside the archive
+		if strings.HasSuffix(strings.ToLower(path), ".jar") || strings.HasSuffix(strings.ToLower(path), ".zip") {
+			// Open the archive and try to read the class entry
+			archive, aerr := OpenArchive(path)
+			if aerr == nil {
+				// Build the key used in the archive: dotted class name without .class
+				classKey := strings.TrimSuffix(classFilename, ".class")
+				classKey = strings.ReplaceAll(classKey, "\\", "/")
+				classKey = strings.TrimPrefix(classKey, "/")
+				classKey = strings.ReplaceAll(classKey, "/", ".")
+				if res, lerr := archive.loadClass(classKey); lerr == nil && res != nil && res.Success {
+					rawBytes = *res.Data
+					filename = classKey
+					if globals.TraceClass {
+						trace.Trace("LoadClassFromFile: Loaded class " + classKey + " from jar " + path)
+					}
+					// Successfully read from jar
+					return loadClassFromBytes(cl, filename, rawBytes)
+				}
+			}
+			// If jar load failed, continue to next classpath entry
+		}
+
+		// Otherwise treat the classpath entry as a directory and try reading a file from it
 		filename = classFilename
 		// if the filepath is not absolute and does not start with the classpath entry, prepend the classpath entry
 		if !filepath.IsAbs(filename) && !strings.HasPrefix(filename, path) {
-			filename = filepath.Join(globals.GetGlobalRef().Classpath[i], filename)
+			filename = filepath.Join(globals.GetGlobalRef().Classpath[ii], filename)
 			if globals.TraceClass {
 				trace.Trace("LoadClassFromFile: File " + filename + " will be read")
 			}
@@ -369,79 +397,118 @@ func LoadClassFromFile(cl Classloader, fname string) (uint32, uint32, error) {
 		// now read the file
 		rawBytes, err = os.ReadFile(filename)
 		if err == nil {
-			break
+			if globals.TraceClass {
+				trace.Trace("LoadClassFromFile: File " + fname + " was read")
+			}
+			return loadClassFromBytes(cl, filename, rawBytes)
 		}
 		// if the file was not found, try the next entry in the classpath
 		// if we are at the last entry in the classpath, throw an exception
-		if i >= len(globals.GetGlobalRef().Classpath)-1 {
+		if ii >= len(globals.GetGlobalRef().Classpath)-1 {
 			errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", filename)
 			globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
 			return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg) // return for tests only
 		}
 	}
 
-	if globals.TraceClass {
-		trace.Trace("LoadClassFromFile: File " + fname + " was read")
-	}
-
-	return loadClassFromBytes(cl, filename, rawBytes)
+	// Should not reach here; the loop either returns on success or errors on last entry
+	errMsg := fmt.Sprintf("LoadClassFromFile for %s failed", fname)
+	globals.GetGlobalRef().FuncThrowException(excNames.ClassNotFoundException, errMsg)
+	return types.InvalidStringIndex, types.InvalidStringIndex, errors.New(errMsg)
 }
 
-func getJarFile(cl Classloader, jarFileName string) (*Archive, error) {
-	archive, exists := cl.Archives[jarFileName]
+func getArchiveFile(cl Classloader, archiveFilePath string) (*Archive, error) {
+	var err error
 
+	// If already loaded, return the archive.
+	archive, exists := cl.Archives[archiveFilePath]
 	if exists {
 		return archive, nil
 	}
 
-	jar, err := NewJarFile(jarFileName)
-
+	// Otherwise, open the archive.
+	archive, err = OpenArchive(archiveFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	cl.Archives[jarFileName] = jar
+	// Cache the archive to the specified classloader.
+	cl.Archives[archiveFilePath] = archive
 
-	return jar, nil
+	// Return the archive.
+	return archive, nil
 }
 
-func GetMainClassFromJar(cl Classloader, jarFileName string) (string, error) {
-	jar, err := getJarFile(cl, jarFileName)
+// In this case, we know that the archive file is a JAR file, hence the function name and variable references to "jar".
+func GetMainClassFromJar(cl Classloader, jarFilePath string) (string, *Archive, error) {
 
+	// Get the archive structure from the archive file.
+	jar, err := getArchiveFile(cl, jarFilePath)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return jar.getMainClass(), nil
+	// Return the main class name from the archive file and the archive structure.
+	return jar.getMainClass(), jar, nil
 }
 
-func LoadClassFromJar(cl Classloader, filename string, jarFileName string) (uint32, uint32, error) {
-	jar, err := getJarFile(cl, jarFileName)
+// Load a class from a JAR or ZIP file.
+// Returns:
+// * class name index
+// * superclass name index
+// * error struct if any, or nil if successful.
+func LoadClassFromArchive(cl Classloader, filename string, archiveFilePath string) (uint32, uint32, error) {
 
-	if err != nil {
-		return types.InvalidStringIndex, types.InvalidStringIndex, err
-	}
+    // Get the archive file.
+    archive, err := getArchiveFile(cl, archiveFilePath)
+    if err != nil {
+        return types.InvalidStringIndex, types.InvalidStringIndex, err
+    }
 
-	result, err := jar.loadClass(filename)
+    // Normalize the class name to the key format used by the archive EntryCache:
+    // dotted form without the trailing .class
+    normalized := filename
+    // drop trailing .class if present
+    if strings.HasSuffix(normalized, ".class") {
+        normalized = strings.TrimSuffix(normalized, ".class")
+    }
+    // unify separators to forward slash first
+    normalized = strings.ReplaceAll(normalized, "\\", "/")
+    normalized = strings.TrimPrefix(normalized, "/")
+    // convert slashes to dots as EntryCache keys are dotted names
+    normalized = strings.ReplaceAll(normalized, "/", ".")
 
-	if err != nil {
-		return types.InvalidStringIndex, types.InvalidStringIndex, err
-	}
+    // Load the class from the archive file.
+    loadResult, err := archive.loadClass(normalized)
+    if err != nil {
+        return types.InvalidStringIndex, types.InvalidStringIndex, err
+    }
 
-	if !result.Success {
-		return types.InvalidStringIndex, types.InvalidStringIndex,
-			fmt.Errorf("unable to find file %s in JAR file %s", filename, jarFileName)
-	}
+    // Check if the class was found in the archive file.
+    if !loadResult.Success {
+        return types.InvalidStringIndex, types.InvalidStringIndex,
+            fmt.Errorf("unable to find file %s in archive file %s", filename, archiveFilePath)
+    }
 
-	return ParseAndPostClass(&cl, filename, *result.Data)
+    // Return the class data.
+    return ParseAndPostClass(&cl, filename, *loadResult.Data)
 }
 
+// Load a class from a byte array, presumably read from a file.
+// Returns:
+// * class name index
+// * superclass name index
+// * error struct if any, or nil if successful.
 func loadClassFromBytes(cl Classloader, filename string, rawBytes []byte) (uint32, uint32, error) {
 	return ParseAndPostClass(&cl, filename, rawBytes)
 }
 
 // ParseAndPostClass parses a class, presented as a slice of bytes, and
 // if no errors occurred, posts/loads it to the method area.
+// Returns:
+// * class name index
+// * superclass name index
+// * error struct if any, or nil if successful.
 func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint32, uint32, error) {
 
 	if globals.TraceClass {
@@ -487,7 +554,10 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 // load the parsed class into a form suitable for posting to the method area (which is
 // classloader.MethArea). This mostly involves copying the data, converting most indexes
 // to uint16 and removing some fields we needed in parsing, but which are no longer required.
+// Returns: class data as it is posted to the method area.
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
+
+	// TODO: this function is getting quite long and badly needs commentary!
 
 	kd := ClData{}
 
