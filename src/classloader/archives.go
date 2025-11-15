@@ -6,12 +6,13 @@
 package classloader
 
 import (
-	"archive/zip"
-	"errors"
-	"fmt"
-	"io"
-	"jacobin/src/trace"
-	"strings"
+    "archive/zip"
+    "errors"
+    "fmt"
+    "io"
+    "jacobin/src/trace"
+    "path/filepath"
+    "strings"
 )
 
 // This file contains the code for loading and managing JAR files.
@@ -20,9 +21,9 @@ type ResourceType int16
 type ArchiveType int16
 
 const (
-	Resource ResourceType = iota
-	ClassFile
-	Manifest
+	TypeResource ResourceType = iota
+	TypeClassFile
+	TypeManifest
 )
 
 type ResourceEntry struct {
@@ -32,9 +33,11 @@ type ResourceEntry struct {
 }
 
 type Archive struct {
-	Filename   string
-	entryCache map[string]ResourceEntry
-	manifest   map[string]string
+	FilePath     string
+	EntryCache   map[string]ResourceEntry
+	Manifest     map[string]string
+	ClasspathRaw string
+	Classpath    []string
 }
 
 type LoadResult struct {
@@ -43,34 +46,37 @@ type LoadResult struct {
 	ResourceEntry ResourceEntry
 }
 
-func NewJarFile(filename string) (*Archive, error) {
-	jarFile := new(Archive)
-	jarFile.Filename = filename
-	jarFile.entryCache = make(map[string]ResourceEntry)
-	jarFile.manifest = make(map[string]string)
-	err := jarFile.scanArchive()
+/*
+Open an archive file (jar or zip) and return a handle to it.
+*/
+func OpenArchive(filePath string) (*Archive, error) {
+	archive := new(Archive)
+	archive.FilePath = filePath
+	archive.EntryCache = make(map[string]ResourceEntry)
+	archive.Manifest = make(map[string]string)
+	err := archive.scanArchive()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return jarFile, err
+	return archive, err
 }
 
+/*
+Scan the given archive file (jar or zip) and populate the EntryCache and TypeManifest maps.
+*/
 func (archive *Archive) scanArchive() error {
-	reader, err := zip.OpenReader(archive.Filename)
-	if reader != nil {
-		defer reader.Close()
-	}
-
-	if reader == nil || err != nil {
-		trace.Error("Invalid, corrupt, or inaccessible jarfile " + archive.Filename)
+	reader, err := zip.OpenReader(archive.FilePath)
+	if err != nil {
+		trace.Error(fmt.Sprintf("scanArchive: zip.OpenReader(%s) failed, err: %s", archive.FilePath, err.Error()))
 		return err
 	}
+	defer reader.Close()
 
 	for _, file := range reader.File {
 		entry := archive.recordFile(file)
-		if entry.Type == Manifest {
+		if entry.Type == TypeManifest {
 			if archive.parseManifest(file); err != nil {
 				return err
 			}
@@ -81,15 +87,15 @@ func (archive *Archive) scanArchive() error {
 }
 
 func (archive *Archive) recordFile(file *zip.File) ResourceEntry {
-	fileType := Resource
+	fileType := TypeResource
 	resourceName := file.Name
 
 	if strings.HasSuffix(file.Name, ".class") {
-		fileType = ClassFile
+		fileType = TypeClassFile
 		resourceName = strings.ReplaceAll(resourceName, "/", ".")
 		resourceName = strings.TrimSuffix(resourceName, ".class")
 	} else if file.Name == "META-INF/MANIFEST.MF" {
-		fileType = Manifest
+		fileType = TypeManifest
 	}
 
 	entry := ResourceEntry{
@@ -98,7 +104,7 @@ func (archive *Archive) recordFile(file *zip.File) ResourceEntry {
 		Type:     fileType,
 	}
 
-	archive.entryCache[resourceName] = entry
+	archive.EntryCache[resourceName] = entry
 
 	return entry
 }
@@ -109,12 +115,12 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 	rc, err := file.Open()
 	defer rc.Close()
 	if err != nil {
-		return errors.New(fmt.Sprintf("archives.parseManifest file.Open[%s], err: %s", archive.Filename, err.Error()))
+		return errors.New(fmt.Sprintf("archives.parseManifest file.Open[%s], err: %s", archive.FilePath, err.Error()))
 	}
 	data, err := io.ReadAll(rc)
 	if err != nil {
 		if err != nil {
-			return errors.New(fmt.Sprintf("archives.parseManifest io.ReadAll[%s], err: %s", archive.Filename, err.Error()))
+			return errors.New(fmt.Sprintf("archives.parseManifest io.ReadAll[%s], err: %s", archive.FilePath, err.Error()))
 		}
 	}
 	contents := string(data)
@@ -124,7 +130,7 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 	for _, line := range lines {
 		parts := strings.Split(line, ":")
 		if len(parts) > 1 {
-			archive.manifest[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+			archive.Manifest[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
 		}
 	}
 
@@ -132,7 +138,7 @@ func (archive *Archive) parseManifest(file *zip.File) error {
 }
 
 func (archive *Archive) hasResource(name string, resourceType ResourceType) bool {
-	item, ok := archive.entryCache[name]
+	item, ok := archive.EntryCache[name]
 	if !ok {
 		return false
 	}
@@ -140,38 +146,38 @@ func (archive *Archive) hasResource(name string, resourceType ResourceType) bool
 }
 
 func (archive *Archive) loadClass(className string) (*LoadResult, error) {
-	item, ok := archive.entryCache[className]
+	item, ok := archive.EntryCache[className]
 	if !ok {
-		err := errors.New(fmt.Sprintf("archives.loadClass archive.entryCache[%s] failed in archive %s", className, archive.Filename))
+		err := errors.New(fmt.Sprintf("archives.loadClass archive.EntryCache[%s] failed in archive %s", className, archive.FilePath))
 		return nil, err
 	}
 
-	if item.Type != ClassFile {
-		return nil, errors.New(fmt.Sprintf("archives.loadClass file %s in archive %s is not a classfile", className, archive.Filename))
+	if item.Type != TypeClassFile {
+		return nil, errors.New(fmt.Sprintf("archives.loadClass file %s in archive %s is not a classfile", className, archive.FilePath))
 	}
 
-	reader, err := zip.OpenReader(archive.Filename)
+	reader, err := zip.OpenReader(archive.FilePath)
 	defer reader.Close()
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("archives.loadClass zip.OpenReader(%s) failed, err: %s", archive.Filename, err.Error()))
+		return nil, errors.New(fmt.Sprintf("archives.loadClass zip.OpenReader(%s) failed, err: %s", archive.FilePath, err.Error()))
 	}
 
 	file, err := reader.Open(item.Location)
 	defer file.Close()
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("archives.loadClass reader.Open(%s, Location %s) failed, err: %s", archive.Filename, item.Location, err.Error()))
+		return nil, errors.New(fmt.Sprintf("archives.loadClass reader.Open(%s, Location %s) failed, err: %s", archive.FilePath, item.Location, err.Error()))
 	}
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("archives.loadClass io.ReadAll(%s, Location %s) failed, err: %s", archive.Filename, item.Location, err.Error()))
+		return nil, errors.New(fmt.Sprintf("archives.loadClass io.ReadAll(%s, Location %s) failed, err: %s", archive.FilePath, item.Location, err.Error()))
 	}
 
 	return &LoadResult{Data: &bytes, Success: true, ResourceEntry: item}, nil
 }
 
 func (archive *Archive) getMainClass() string {
-	mainClass, exists := archive.manifest["Main-Class"]
+	mainClass, exists := archive.Manifest["Main-Class"]
 
 	if exists {
 		return mainClass
@@ -180,19 +186,37 @@ func (archive *Archive) getMainClass() string {
 	}
 }
 
-func (archive *Archive) getClassPath() []string {
+func (archive *Archive) UpdateArchiveWithClassPath() {
 
-	preSplit, ok := archive.manifest["Class-Path"]
-	classPath := []string{archive.Filename}
-	if !ok {
-		// Classpath is just the path of this jar.
-		return classPath
+    preSplit, ok := archive.Manifest["Class-Path"]
+    classPathArray := []string{archive.FilePath}
+    if !ok {
+		// There is no Class-Path attribute in the manifest.
+		// Therefore, the classpath is just the singleton string = path of this jar.
+		archive.ClasspathRaw = preSplit
+		archive.Classpath = classPathArray
+		return
 	}
 
-	// Append the manifest classpath to the jar path, giving the full classpath.
-	postSplit := strings.Split(preSplit, " ")
-	for ndx := 0; ndx < len(postSplit); ndx++ {
-		classPath = append(classPath, postSplit[ndx])
-	}
-	return classPath
+    // There is a Class-Path attribute in the manifest.
+    // Per the JAR File Specification, each entry is space-separated and
+    // relative entries are resolved against the directory containing this JAR.
+    postSplit := strings.Fields(preSplit)
+    baseDir := filepath.Dir(archive.FilePath)
+    for _, entry := range postSplit {
+        e := strings.TrimSpace(entry)
+        if e == "" {
+            continue
+        }
+        // If the entry looks like an absolute path, keep as-is; otherwise join with baseDir.
+        // We do not attempt to resolve URLs here; they will be left as-is for higher-level handling if needed.
+        if filepath.IsAbs(e) {
+            classPathArray = append(classPathArray, e)
+        } else {
+            classPathArray = append(classPathArray, filepath.Join(baseDir, e))
+        }
+    }
+    archive.ClasspathRaw = preSplit
+    archive.Classpath = classPathArray
+    return
 }

@@ -167,7 +167,7 @@ func TestConvertToPostableClassStringRefs(t *testing.T) {
 	}
 }
 
-func TestGetInvalidJar(t *testing.T) {
+func TestGetInvalidJarName(t *testing.T) {
 	globals.InitGlobals("test")
 	trace.Init()
 
@@ -180,9 +180,9 @@ func TestGetInvalidJar(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := getJarFile(BootstrapCL, "")
+	_, err := getArchiveFile(BootstrapCL, "")
 	if err == nil {
-		t.Errorf("expected err msg for fetching an invalid JAR, but got none")
+		t.Errorf("expected err msg for fetching an invalid JAR, but got err=nil")
 	}
 
 	// restore stderr and stdout to what they were before
@@ -195,7 +195,7 @@ func TestGetInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "inaccessible jarfile") {
+	if !strings.Contains(msg, "ERROR") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
@@ -213,7 +213,7 @@ func TestGetClassFromInvalidJar(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, _, err := LoadClassFromJar(BootstrapCL, "pickle", "gherkin")
+	_, _, err := LoadClassFromArchive(BootstrapCL, "pickle", "gherkin")
 	if err == nil {
 		t.Errorf("expected err msg for loading invalid class from invalid JAR, but got none")
 	}
@@ -228,7 +228,7 @@ func TestGetClassFromInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "inaccessible jarfile") {
+	if !strings.Contains(msg, "ERROR") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
@@ -246,7 +246,7 @@ func TestMainClassFromInvalidJar(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	_, err := GetMainClassFromJar(BootstrapCL, "gherkin")
+	_, _, err := GetMainClassFromJar(BootstrapCL, "gherkin")
 	if err == nil {
 		t.Errorf("expected err msg for loading main class from invalid JAR, but got none")
 	}
@@ -261,7 +261,7 @@ func TestMainClassFromInvalidJar(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(msg, "inaccessible jarfile") {
+	if !strings.Contains(msg, "ERROR") {
 		t.Error("Got unexpected error msg: " + msg)
 	}
 }
@@ -634,6 +634,111 @@ func TestLoadClassFromNameOnly_SuperclassRecursion(t *testing.T) {
 	if objectClass == nil {
 		t.Fatalf("java/lang/Object should be available")
 	}
+}
+
+// Ensure getArchiveFile caches the opened archive within the classloader
+func TestGetArchiveFile_CachesArchive(t *testing.T) {
+    // Build a simple jar with a manifest and a single class entry
+    jarPath, cleanup := makeTempJar(t, map[string]string{"Main-Class": "com.example.Main"}, map[string][]byte{
+        "com/example/Main.class": {0xCA, 0xFE, 0xBA, 0xBE},
+    })
+    defer cleanup()
+
+    // Create a fresh classloader instance
+    cl := Classloader{Name: "test", Parent: "", Archives: make(map[string]*Archive)}
+
+    // First fetch should open and cache
+    a1, err := getArchiveFile(cl, jarPath)
+    if err != nil {
+        t.Fatalf("first getArchiveFile failed: %v", err)
+    }
+    if a1 == nil {
+        t.Fatalf("expected non-nil archive")
+    }
+
+    // Second fetch should retrieve the same pointer from cache
+    a2, err := getArchiveFile(cl, jarPath)
+    if err != nil {
+        t.Fatalf("second getArchiveFile failed: %v", err)
+    }
+    if a1 != a2 {
+        t.Fatalf("expected cached archive pointer to be reused")
+    }
+
+    // Cache should have exactly one entry
+    if len(cl.Archives) != 1 {
+        t.Fatalf("expected exactly 1 cached archive, got %d", len(cl.Archives))
+    }
+}
+
+// GetMainClassFromJar should not error when the manifest lacks Main-Class; it should return ""
+func TestGetMainClassFromJar_NoMainClass_NoError(t *testing.T) {
+    // Jar with a manifest but without Main-Class
+    jarPath, cleanup := makeTempJar(t, map[string]string{"Class-Path": "lib/a.jar lib/b.jar"}, map[string][]byte{})
+    defer cleanup()
+
+    cl := Classloader{Name: "test", Parent: "", Archives: make(map[string]*Archive)}
+    mainClass, archive, err := GetMainClassFromJar(cl, jarPath)
+    if err != nil {
+        t.Fatalf("GetMainClassFromJar returned error for jar without Main-Class: %v", err)
+    }
+    if archive == nil {
+        t.Fatalf("expected non-nil archive")
+    }
+    if mainClass != "" {
+        t.Fatalf("expected empty main class, got %q", mainClass)
+    }
+}
+
+// LoadClassFromArchive should successfully parse and post a class from a jar
+func TestLoadClassFromArchive_Success(t *testing.T) {
+    globals.InitGlobals("test")
+    trace.Init()
+    _ = Init()
+    LoadBaseClasses()
+
+    // Create a jar that contains Hello2.class at the root
+    jarPath, cleanup := makeTempJar(t, map[string]string{"Main-Class": "Hello2"}, map[string][]byte{
+        "Hello2.class": Hello2Bytes,
+    })
+    defer cleanup()
+
+    // Use a fresh classloader instance so archive cache starts empty
+    cl := Classloader{Name: "bootstrap", Archives: make(map[string]*Archive)}
+
+    nameIdx, superIdx, err := LoadClassFromArchive(cl, "Hello2", jarPath)
+    if err != nil {
+        t.Fatalf("LoadClassFromArchive failed: %v", err)
+    }
+    if nameIdx == types.InvalidStringIndex || superIdx == types.InvalidStringIndex {
+        t.Fatalf("unexpected invalid indices: name=%d super=%d", nameIdx, superIdx)
+    }
+
+    // Verify class is present in method area
+    if kc := MethAreaFetch("Hello2"); kc == nil {
+        t.Fatalf("expected Hello2 to be posted to method area")
+    }
+}
+
+// Additional normalization edge cases beyond existing tests
+func TestNormalizeClassReference_MultiDimensionalAndMalformed(t *testing.T) {
+    // Multi-dimensional reference array -> current behavior skips arrays (returns empty)
+    got := normalizeClassReference("[[[Ljava/util/List;")
+    if got != "" {
+        t.Fatalf("expected empty for multi-dimensional ref arrays, got %q", got)
+    }
+
+    // Multi-dimensional primitive array -> should be skipped (empty)
+    got = normalizeClassReference("[[I")
+    if got != "" {
+        t.Fatalf("expected empty for primitive arrays, got %q", got)
+    }
+
+    // Malformed reference array missing trailing ';' -> returns the remainder as-is
+    got = normalizeClassReference("[Lbad/Ref")
+    if got != "bad/Ref" {
+        t.Fatalf("expected 'bad/Ref' for malformed ref array, got %q", got)
+    }
 }
 
 // === end of tests generated by Jetbrains Junie ===

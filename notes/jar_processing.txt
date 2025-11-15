@@ -20,19 +20,19 @@ ZIP file general characteristics
     * Has a central directory at the end of the file describing its contents.
     * Can store metadata like file timestamps, permissions, and comments.
 
-A JAR file (Java Archive): a ZIP-based container that bundles compiled .class files (and optionally resources like images, configuration files, and a manifest) into a single, portable unit. 
+A JAR file (Java Archive): a ZIP-based container that bundles compiled .class files (and optionally resources like images, configuration files, and a TypeManifest) into a single, portable unit.
 A jar file can be used in one of two modes: 
     1. library mode
         * The jar file is one of the location elements for dependency searching.
-        * It is specified either as an element of the O/S environment variable CLASSPATH or it is specified as an element of a manifest Class-Path attribute. 
+        * It is specified either as an element of the O/S environment variable CLASSPATH or it is specified as an element of a TypeManifest Class-Path attribute.
         * Only the top-level directory of all specified jar files are searched for classes and functions.
-        * If there is a manifest file in a jar file used as a location for searching, it is ignored.
+        * If there is a TypeManifest file in a jar file used as a location for searching, it is ignored.
     2. execution mode
         * The jar file is referenced on the command line -jar parameter. 
-        * In this mode, the jar manifest must have a Main-Class attribute indicating the class file where the main function will be found.
+        * In this mode, the jar TypeManifest must have a Main-Class attribute indicating the class file where the main function will be found.
         * If a -classpath (or --class-path or -cp) parameter appears on the JVM or compiler command-line, it is ignored.
-        * If the Class-Path attribute appears in manifest: That is the classpath. No other classpath elements exist.
-        * If no Class-Path attribute appears in manifest: Then, the classpath has one element: the top level directory of the jar.
+        * If the Class-Path attribute appears in TypeManifest: That is the classpath. No other classpath elements exist.
+        * If no Class-Path attribute appears in TypeManifest: Then, the classpath has one element: the top level directory of the jar.
 
 ZIP file as a Java archive
     * can be used just like a jar file in library mode
@@ -53,7 +53,7 @@ Example - execution mode
 
     # Run the main function of class com.example.Main which will be found in file ./lib/starter.jar. 
     # Class Main is actually found in the directory com/example/ inside the file ./lib/starter.jar.
-    # There is a manifest file inside ./lib/starter.jar indicating ClassPath: /system/lib/other.jar
+    # There is a TypeManifest file inside ./lib/starter.jar indicating ClassPath: /system/lib/other.jar
     # Thus, the two locations to search for additional user classes are as follows:
         ## (1) ./lib/starter.jar - a jar file in subdirectory lib of the current directory
         ## (2) /system/lib/other.jar - a jar file in a system-wide jar collection
@@ -63,10 +63,10 @@ Example - execution mode
     java -jar lib\starter.jar com.example.Main
     
 
-JAR manifest Class-Path entry
-A JAR’s manifest file (META-INF/MANIFEST.MF) can include a Class-Path attribute listing other JARs or directories that this JAR depends on.
+JAR TypeManifest Class-Path entry
+A JAR’s TypeManifest file (META-INF/MANIFEST.MF) can include a Class-Path attribute listing other JARs or directories that this JAR depends on.
 Example: myapp.jar with the following MANIFEST.MF:
-    Manifest-Version: 1.0
+    TypeManifest-Version: 1.0
     Main-Class: com.example.Main
     Class-Path: lib/helper.jar lib/utils.jar
 
@@ -78,5 +78,5 @@ The JVM will automatically append lib/helper.jar and lib/utils.jar to myapp.jar,
     lib/helper.jar
     lib/utils.jar.
 
-Note that if lib/helper.jar and lib/utils.jar contain manifest files, they are ignored.
+Note that if lib/helper.jar and lib/utils.jar contain TypeManifest files, they are ignored.
 
