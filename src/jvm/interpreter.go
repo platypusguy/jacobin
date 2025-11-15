@@ -309,6 +309,7 @@ func interpret(fs *list.List) {
 		return shutdown.OK
 	}()
 
+	// the main bytecode interpreter loop
 	for fr.PC < len(fr.Meth) {
 		if globals.TraceInst {
 			traceInfo := EmitTraceData(fr)
@@ -326,10 +327,10 @@ func interpret(fs *list.List) {
 					// exiting will either end program or call this function
 					// again for the frame at the top of the frame stack
 					return
-				case exceptions.ERROR_OCCURRED: // occurs only in tests
+				case ERROR_OCCURED: // occurs only in tests
 					fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
 					return
-				case exceptions.RESUME_HERE: // continue processing from the present fr.PC
+				case RESUME_HERE: // continue processing from the present fr.PC
 					// This primarily occurs when an exception is caught. The catch resets
 					// the PC to the catch code to execute. So, we don't need any update to
 					// the PC. However, we have to refresh the current frame b/c the
@@ -342,7 +343,7 @@ func interpret(fs *list.List) {
 			// 	// exiting will either end program or call this function
 			// 	// again for the frame at the top of the frame stack
 			// 	return
-			// case exceptions.ERROR_OCCURRED: // occurs only in tests
+			// case exceptions.ERROR_OCCURED: // occurs only in tests
 			// 	fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
 			// 	return
 			// case exceptions.RESUME_HERE: // continue processing from the present fr.PC
@@ -439,9 +440,9 @@ func doLdc2w(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	return 3 // 2 for idx + 1 for next bytecode
 }
@@ -498,9 +499,9 @@ func doIaload(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		array = obj.FieldTable["value"].Fvalue.([]int64)
 	case []int64:
@@ -511,9 +512,9 @@ func doIaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	if index >= int64(len(array)) {
@@ -522,9 +523,9 @@ func doIaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	var value = array[index]
@@ -548,9 +549,9 @@ func doFaload(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
 	default:
@@ -559,9 +560,9 @@ func doFaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	if index >= int64(len(array)) {
@@ -570,9 +571,9 @@ func doFaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	var value = array[index]
@@ -589,9 +590,9 @@ func doAaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
@@ -604,7 +605,7 @@ func doAaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -623,9 +624,9 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	var bAref *object.Object
@@ -657,9 +658,9 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	if !pushValueReady { // if pushValue was already set up due to []int8 being handled, skip this
@@ -670,9 +671,9 @@ func doBaload(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
 			status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		var value = array[index]
 		pushValue = int64(value)
@@ -771,9 +772,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.IntArray && fld.Ftype != types.LongArray && fld.Ftype != types.CharArray && fld.Ftype != types.ShortArray {
@@ -782,9 +783,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
 			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		array = fld.Fvalue.([]int64)
 	case []int64:
@@ -795,9 +796,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	size := int64(len(array))
@@ -807,9 +808,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	array[index] = value
 	return 1
@@ -830,9 +831,9 @@ func doFastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.FloatArray && fld.Ftype != types.DoubleArray {
@@ -841,9 +842,9 @@ func doFastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
 			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		array = fld.Fvalue.([]float64)
 	case []float64:
@@ -854,9 +855,9 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, ref)
 		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	size := int64(len(array))
@@ -866,9 +867,9 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	array[index] = value
@@ -887,9 +888,9 @@ func doAastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	arrayObj := *arrayRef
@@ -902,9 +903,9 @@ func doAastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, rawArrayObj.Ftype)
 		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// get pointer to the actual array
@@ -916,9 +917,9 @@ func doAastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	rawArray[index] = value
@@ -940,9 +941,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		fld := obj.FieldTable["value"]
 		if fld.Ftype != types.ByteArray {
@@ -951,9 +952,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, types.ByteArray, fld.Ftype)
 			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		rawArray = fld.Fvalue.([]types.JavaByte)
 	// case []byte:
@@ -968,9 +969,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, arrayRef)
 		status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	size := int64(len(rawArray))
@@ -980,9 +981,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
 		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	rawArray[index] = value
 	return 1
@@ -998,9 +999,9 @@ func doPop(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	fr.TOS -= 1
 	return 1
@@ -1193,7 +1194,7 @@ func doIdiv(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		} else {
 			// Make the current frame the caught exception frame.
 			fs := fr.FrameStack
@@ -1238,7 +1239,7 @@ func doIrem(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
 		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		} else {
 			// Make the current frame the caught exception frame.
 			fs := fr.FrameStack
@@ -1300,7 +1301,7 @@ func doIshr(fr *frames.Frame, _ int64) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, shiftArg)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		} else {
 			// Make the current frame the caught exception frame.
 			fs := fr.FrameStack
@@ -1809,9 +1810,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
 		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// get the field entry
@@ -1835,9 +1836,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 			errMsg := fmt.Sprintf("GETSTATIC: could not load class %s", className)
 			status := exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 	}
 
@@ -1849,9 +1850,9 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 			"\n", fieldName, className)
 		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	switch prevLoaded.Value.(type) {
@@ -1887,7 +1888,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			"location %d in method %s of class %s\n",
 			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
 		trace.Error(errMsg)
-		return exceptions.ERROR_OCCURRED
+		return ERROR_OCCURED
 	}
 
 	// get the field entry
@@ -1919,7 +1920,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: could not load class %s", className)
 			trace.Error(errMsg)
-			return exceptions.ERROR_OCCURRED
+			return ERROR_OCCURED
 		}
 	} else {
 		if MainThread.Trace {
@@ -1934,7 +1935,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("PUTSTATIC: could not find static field %s.%s", className, fieldName)
 		trace.Error(errMsg)
-		return exceptions.ERROR_OCCURRED
+		return ERROR_OCCURED
 	}
 
 	var value interface{}
@@ -2011,7 +2012,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("PUTSTATIC: field %s.%s, type unrecognized: %T %v", className, fieldName, value, value)
 			trace.Error(errMsg)
-			return exceptions.ERROR_OCCURRED
+			return ERROR_OCCURED
 		}
 	}
 	return 3 // 2 for the CP slot + 1 for next bytecode
@@ -2041,9 +2042,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("GETFIELD: Invalid type of object ref: %T, fieldName: %s.%s", ref, fr.ClName, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// Check reference for a nil pointer.
@@ -2051,9 +2052,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("GETFIELD: Null object reference, fieldName: %s.%s", fr.ClName, fieldName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// Extract field.
@@ -2066,7 +2067,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2132,7 +2133,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			fieldEntry.Type, fr.PC, fr.MethName, fr.ClName)
 		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2149,7 +2150,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			ref, fr.PC, fr.MethName, fr.ClName, value, value)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2183,9 +2184,9 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 				fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
 			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		// PUTFIELD is not used to update statics. That's for PUTSTATIC to do.
@@ -2194,9 +2195,9 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 			errMsg := "PUTFIELD: invalid attempt to update a static variable"
 			status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		switch objField.Ftype {
@@ -2236,7 +2237,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				" for class: " + className
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
 		} else {
 			methListEntry = methFQN
@@ -2249,7 +2250,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		errMsg := "INVOKEVIRTUAL: Method not found in GMT: " + methodName + methodType + "for class: " + className
 		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2281,9 +2282,9 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
 				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 				if status != exceptions.Caught {
-					return exceptions.ERROR_OCCURRED // applies only if in test
+					return ERROR_OCCURED // applies only if in test
 				}
-				return exceptions.RESUME_HERE // caught
+				return RESUME_HERE // caught
 			}
 		}
 	}
@@ -2319,16 +2320,16 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			switch ret.(type) {
 			case error: // only occurs in testing
 				if globals.GetGlobalRef().JacobinName == "test" {
-					return exceptions.ERROR_OCCURRED
+					return ERROR_OCCURED
 				}
 				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 					// return 3 // 2 for CP slot + 1 for next bytecode
-					// per JACOBIN-59x, we return exceptions.RESUME_HERE telling
+					// per JACOBIN-59x, we return RESUME_HERE telling
 					// the interpreter that the fr.PC has been set to a new position
 					// from which processing should continue. This is used primarily
 					// when a frame has caught an exception and we're point the
 					// interpreter to the first bytecode in the exception handler.
-					return exceptions.RESUME_HERE // caught
+					return RESUME_HERE // caught
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
@@ -2346,9 +2347,9 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		if len(m.Code) == 0 {
@@ -2362,9 +2363,9 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
 					status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 					if status != exceptions.Caught {
-						return exceptions.ERROR_OCCURRED // applies only if in test
+						return ERROR_OCCURED // applies only if in test
 					}
-					return exceptions.RESUME_HERE // caught
+					return RESUME_HERE // caught
 				}
 				className = *(stringPool.GetStringPointer(clNameIdx))
 				m = mtEntry.Meth.(classloader.JmEntry)
@@ -2373,7 +2374,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + fqn
 				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 				if status != exceptions.Caught {
-					return exceptions.ERROR_OCCURRED // applies only if in test
+					return ERROR_OCCURED // applies only if in test
 				}
 			}
 		}
@@ -2385,16 +2386,16 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKEVIRTUAL: Error creating frame in: " + fqn
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // 2 for PC slot, move to next bytecode before exiting
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
-	return exceptions.ERROR_OCCURRED // in theory, unreachable
+	return ERROR_OCCURED // in theory, unreachable
 }
 
 // OxB7 INVOKESPECIAL
@@ -2427,9 +2428,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		errMsg := "INVOKESPECIAL: Class method not found: " + fqn
 		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	if mtEntry.MType == 'G' { // it's a golang method
@@ -2459,7 +2460,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			switch ret.(type) {
 			case error:
 				if globals.GetGlobalRef().JacobinName == "test" {
-					return exceptions.ERROR_OCCURRED
+					return ERROR_OCCURED
 				}
 				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
 					fr.PC += 1 // point to the next executable bytecode
@@ -2482,9 +2483,9 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKESPECIAL: Native method requested: " + fqn
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		fram, err := createAndInitNewFrame(className, methodName, methodType, &m, true, fr)
 		if err != nil {
@@ -2492,16 +2493,16 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKESPECIAL: Error creating frame in: " + fqn
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // point to the next bytecode for when we return from the invoked method.
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
-	return exceptions.ERROR_OCCURRED // in theory, unreachable
+	return ERROR_OCCURED // in theory, unreachable
 }
 
 // 0xB8 INVOKESTATIC
@@ -2526,9 +2527,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		errMsg := "INVOKESTATIC: Class method not found: " + fqn
 		status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// before we can run the method, we need to either instantiate the class and/or
@@ -2542,9 +2543,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
 			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 	}
 
@@ -2566,9 +2567,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			switch ret.(type) {
 			case error:
 				if globals.GetGlobalRef().JacobinName == "test" {
-					return exceptions.ERROR_OCCURRED
+					return ERROR_OCCURED
 				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					return exceptions.RESUME_HERE // resume at the present PC, which points to the exception code
+					return RESUME_HERE // resume at the present PC, which points to the exception code
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
@@ -2584,9 +2585,9 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
 			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		fram, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, false, fr)
@@ -2595,16 +2596,16 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			errMsg := "INVOKESTATIC: Error creating frame in: " + className + "." + methodName + methodType
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 
 		fr.PC += 3                    // 2 == initial PC advance in this bytecode + 1 for next bytecode
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0
 	}
-	return exceptions.ERROR_OCCURRED // in theory, unreachable code
+	return ERROR_OCCURED // in theory, unreachable code
 }
 
 // 0xB9 INVOKEINTERFACE
@@ -2621,9 +2622,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			CPentry.Type, classloader.Interface)
 		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, fr) // this is the error thrown by JDK
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	method := CP.InterfaceRefs[CPentry.Slot]
@@ -2657,9 +2658,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			interfaceName+interfaceMethodName+interfaceMethodType)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// get the name of the objectRef's class, and make sure it's loaded
@@ -2667,7 +2668,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 	if err := classloader.LoadClassFromNameOnly(objRefClassName); err != nil {
 		// in this case, LoadClassFromNameOnly() will have already thrown the exception
 		if globals.JacobinHome() == "test" {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2677,9 +2678,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s not found", objRefClassName)
 		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	var mtEntry classloader.MTentry
@@ -2687,7 +2688,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 	mtEntry, err = locateInterfaceMeth(class, fr, objRefClassName, interfaceName,
 		interfaceMethodName, interfaceMethodType)
 	if err != nil { // any error will already have been handled
-		return exceptions.ERROR_OCCURRED
+		return ERROR_OCCURED
 	}
 
 	clData := *class.Data
@@ -2701,7 +2702,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 				interfaceMethodName + interfaceMethodType
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
 		}
 		fr.PC += 5                    // 2 for CP slot, 1 for count, 1 for zero byte, 1 for next bytecode
@@ -2726,9 +2727,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			switch ret.(type) {
 			case error:
 				if globals.GetGlobalRef().JacobinName == "test" {
-					return exceptions.ERROR_OCCURRED
+					return ERROR_OCCURED
 				} else if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					return exceptions.ERROR_OCCURRED
+					return ERROR_OCCURED
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)
@@ -2750,9 +2751,9 @@ func doNew(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("NEW: Invalid type for new object")
 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// the classref points to a UTF8 record with the name of the class to instantiate
@@ -2768,9 +2769,9 @@ func doNew(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("NEW: could not load class %s", className)
 		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	push(fr, ref.(*object.Object))
 	return 3 // 2 for CPslot + 1 for next bytecode
@@ -2784,9 +2785,9 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 		errMsg := "NEWARRAY: Invalid size for array"
 		status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	arrayType := int(fr.Meth[fr.PC+1])
@@ -2797,9 +2798,9 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 		errMsg := "NEWARRAY: Invalid array type specified"
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	arrayPtr := object.Make1DimArray(uint8(actualType), size)
@@ -2817,9 +2818,9 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		errMsg := "ANEWARRAY: Invalid size for array"
 		status := exceptions.ThrowEx(excNames.NegativeArraySizeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	refTypeSlot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // 2 bytes point to CP entry
@@ -2830,9 +2831,9 @@ func doAnewarray(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("ANEWARRAY: Presently works only with classes and interfaces")
 		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	var refTypeName = ""
@@ -2856,7 +2857,7 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 		errMsg := "ARRAYLENGTH: Invalid (null) reference to an array"
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -2896,9 +2897,9 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 			errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 			if status != exceptions.Caught {
-				return exceptions.ERROR_OCCURRED // applies only if in test
+				return ERROR_OCCURED // applies only if in test
 			}
-			return exceptions.RESUME_HERE // caught
+			return RESUME_HERE // caught
 		}
 		size = object.ArrayLength(r)
 	default:
@@ -2906,9 +2907,9 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("ARRAYLENGTH: Invalid ref.(type): %T", ref)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	push(fr, size)
 	return 1
@@ -2922,7 +2923,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		errMsg := "ATHROW: Invalid (null) reference to an exception/error class to throw"
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
 	}
 
@@ -3083,9 +3084,9 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("CHECKCAST: Invalid class reference, type=%T", ref)
 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// at this point, we know we have a non-nil/non-null pointer to an object;
@@ -3129,9 +3130,9 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	if checkcastStatus == false {
@@ -3140,9 +3141,9 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 			*(stringPool.GetStringPointer(obj.KlassName)), targetClassName)
 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	return 3 // 2 for CPslot + 1 for next byte
@@ -3181,9 +3182,9 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 		errMsg := fmt.Sprintf("CHECKCAST: Invalid class reference, type=%T", ref)
 		status := exceptions.ThrowEx(excNames.ClassCastException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	// at this point, we know we have a non-nil/non-null pointer to an object;
@@ -3229,9 +3230,9 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 		errMsg := "INSTANCEOF: expected to verify class or interface, but got none"
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED
+			return ERROR_OCCURED
 		}
-		return exceptions.RESUME_HERE
+		return RESUME_HERE
 	}
 
 	// Push result onto operand stack
@@ -3305,9 +3306,9 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 		errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
 		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 
 	dimSizes := make([]int64, dimensionCount)
@@ -3400,7 +3401,7 @@ func notImplemented(fr *frames.Frame, _ int64) int {
 	opcodeName := opcodes.BytecodeNames[opcode]
 	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
 	_ = exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
-	return exceptions.ERROR_OCCURRED
+	return ERROR_OCCURED
 }
 
 func doWarninvalid(fr *frames.Frame, _ int64) int {
@@ -3438,9 +3439,9 @@ func ldc(fr *frames.Frame, width int) int {
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, CPe.EntryType)
 		status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
 		if status != exceptions.Caught {
-			return exceptions.ERROR_OCCURRED // applies only if in test
+			return ERROR_OCCURED // applies only if in test
 		}
-		return exceptions.RESUME_HERE // caught
+		return RESUME_HERE // caught
 	}
 	// if no error
 	switch CPe.RetType {
