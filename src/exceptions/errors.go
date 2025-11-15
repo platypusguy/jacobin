@@ -18,8 +18,8 @@ import (
 	"strings"
 )
 
-var ERROR_OCCURRED = math.MaxInt32
-var RESUME_HERE = math.MinInt32
+const ERROR_OCCURRED = math.MaxInt32
+const RESUME_HERE = math.MaxInt32 - 1
 
 // routines for formatting error data when an error occurs inside the JVM
 

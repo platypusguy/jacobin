@@ -258,6 +258,16 @@ func initializeDispatchTable() {
 	DispatchTable[opcodes.NEW] = doNew
 }
 
+const ( // result values from bytecode interpretation
+	ERROR_OCCURED = math.MaxInt32
+	RESUME_HERE   = math.MaxInt32 - 1
+	RETURN_NOW    = math.MaxInt32 - 2
+	// all special result values must be greater than SPECIAL_CASE,
+	// which is the value tested against in interpret()'s principal
+	// loop to identify special cases
+	SPECIAL_CASE = math.MaxInt32 - 10
+)
+
 // the main interpreter loop. This loop takes responsibility for
 // pushing a new frame for a called method onto the stack, and for
 // popping the current frame when a bytecode of the RETURN family
@@ -308,23 +318,42 @@ func interpret(fs *list.List) {
 		opcode := fr.Meth[fr.PC]
 		if opcode <= maxBytecode {
 			ret := DispatchTable[opcode](fr, 0)
-			switch ret {
-			case 0:
-				// exiting will either end program or call this function
-				// again for the frame at the top of the frame stack
-				return
-			case exceptions.ERROR_OCCURRED: // occurs only in tests
-				fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
-				return
-			case exceptions.RESUME_HERE: // continue processing from the present fr.PC
-				// This primarily occurs when an exception is caught. The catch resets
-				// the PC to the catch code to execute. So, we don't need any update to
-				// the PC. However, we have to refresh the current frame b/c the
-				// exception will refresh the topmost frame with any exception handling
-				fr = fs.Front().Value.(*frames.Frame)
-			default:
+			if ret < SPECIAL_CASE && ret != 0 {
 				fr.PC += ret
+			} else {
+				switch ret {
+				case 0:
+					// exiting will either end program or call this function
+					// again for the frame at the top of the frame stack
+					return
+				case exceptions.ERROR_OCCURRED: // occurs only in tests
+					fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
+					return
+				case exceptions.RESUME_HERE: // continue processing from the present fr.PC
+					// This primarily occurs when an exception is caught. The catch resets
+					// the PC to the catch code to execute. So, we don't need any update to
+					// the PC. However, we have to refresh the current frame b/c the
+					// exception will refresh the topmost frame with any exception handling
+					fr = fs.Front().Value.(*frames.Frame)
+				}
 			}
+			// switch ret {
+			// case 0:
+			// 	// exiting will either end program or call this function
+			// 	// again for the frame at the top of the frame stack
+			// 	return
+			// case exceptions.ERROR_OCCURRED: // occurs only in tests
+			// 	fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
+			// 	return
+			// case exceptions.RESUME_HERE: // continue processing from the present fr.PC
+			// 	// This primarily occurs when an exception is caught. The catch resets
+			// 	// the PC to the catch code to execute. So, we don't need any update to
+			// 	// the PC. However, we have to refresh the current frame b/c the
+			// 	// exception will refresh the topmost frame with any exception handling
+			// 	fr = fs.Front().Value.(*frames.Frame)
+			// default:
+			// 	fr.PC += ret
+			// }
 		} else {
 			errMsg := fmt.Sprintf("Invalid bytecode: %d", opcode)
 			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
