@@ -8,6 +8,9 @@ package gfunction
 
 import (
 	"container/list"
+	"jacobin/src/exceptions"
+	"jacobin/src/stringPool"
+	"sync"
 	"testing"
 
 	"jacobin/src/classloader"
@@ -16,9 +19,39 @@ import (
 	"jacobin/src/types"
 )
 
+var initOnce sync.Once
+
 // Ensure base init used by other gfunction tests
 func ensureTGInit() {
 	ensureInit()
+}
+
+func ensureInit() {
+	initOnce.Do(func() {
+		globals.InitGlobals("test")
+		globals.InitStringPool()
+		gr := globals.GetGlobalRef()
+		gr.Threads = make(map[int]interface{})
+		gr.ThreadGroups = make(map[string]interface{})
+
+		gr.FuncFillInStackTrace = FillInStackTrace
+		gr.FuncInvokeGFunction = Invoke
+		gr.FuncThrowException = exceptions.ThrowExNil
+		// Set a local fake instantiator to avoid importing the jvm package in tests
+		gr.FuncInstantiateClass = instantiateForThreadTest
+		InitializeGlobalThreadGroups()
+		Load_Lang_Thread_Group()
+		Load_Lang_Thread()
+
+	})
+}
+
+// instantiateForThreadTest is a minimal stand-in for jvm.Instantiate to avoid circular imports.
+// It satisfies the globals.FuncInstantiateClass signature used by gfunctions during tests.
+func instantiateForThreadTest(name string, _ *list.List) (any, error) {
+	o := object.MakeEmptyObject()
+	o.KlassName = stringPool.GetStringIndex(&name)
+	return o, nil
 }
 
 func TestInitializeGlobalThreadGroups_TestMode(t *testing.T) {

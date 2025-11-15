@@ -656,10 +656,11 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 		InitGlobalFunctionPointers()
 		gfunction.InitializeGlobalThreadGroups()
-		// thObj := thread.CreateMainThread() // returns *object.Object
+
+		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 		main := object.StringObjectFromGoString("main")
-		params := []any{main}
-		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		params := []any{thObj, main}
+		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
 		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
@@ -817,10 +818,10 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 		InitGlobalFunctionPointers()
 		gfunction.InitializeGlobalThreadGroups()
-		// thObj := thread.CreateMainThread() // returns *object.Object
+		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 		main := object.StringObjectFromGoString("main")
-		params := []any{main}
-		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		params := []any{thObj, main}
+		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
 		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
@@ -978,9 +979,10 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	} else {
 		globals.InitGlobals("test")
 		// thObj := thread.CreateMainThread() // returns *object.Objec
+		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 		main := object.StringObjectFromGoString("main")
-		params := []any{main}
-		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		params := []any{thObj, main}
+		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
 		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
@@ -1191,9 +1193,10 @@ func TestPushWithStackOverflow(t *testing.T) {
 		th.Stack = fs
 	} else {
 		// thObj := thread.CreateMainThread() // returns *object.Object
+		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 		main := object.StringObjectFromGoString("main")
-		params := []any{main}
-		thObj := gfunction.ThreadCreateWithName(params).(*object.Object)
+		params := []any{thObj, main}
+		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
 		thread.RegisterThread(thObj) // put into globals.Threads map
 		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 		f = frames.CreateFrame(1)
