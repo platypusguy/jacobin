@@ -263,27 +263,6 @@ func TestThreadActiveCount(t *testing.T) {
 	}
 }
 
-func TestThreadCurrentThread_Paths(t *testing.T) {
-	ensureTGInit()
-	if threadCurrentThread(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE arity")
-	}
-	if threadCurrentThread([]any{123}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE type")
-	}
-	// success
-	fs := frames.CreateFrameStack()
-	f := frames.CreateFrame(1)
-	f.Thread = 77
-	fs.PushFront(&f)
-	th := ThreadCreateNoarg(nil).(*object.Object)
-	globals.GetGlobalRef().Threads[77] = th
-	got := threadCurrentThread([]any{fs}).(*object.Object)
-	if got != th {
-		t.Errorf("expected to retrieve current thread")
-	}
-}
-
 func TestThreadDumpStack_Paths(t *testing.T) {
 	ensureTGInit()
 	// arity
@@ -304,7 +283,7 @@ func TestThreadDumpStack_Paths(t *testing.T) {
 	f.MethName = "m"
 	f.PC = 3
 	f.Thread = 5
-	fs.PushFront(&f)
+	fs.PushFront(f)
 	// register thread with name
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	th.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString("T")}

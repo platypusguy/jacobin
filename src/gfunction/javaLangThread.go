@@ -616,7 +616,7 @@ func threadCurrentThread(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	frame := *fStack.Front().Value.(**frames.Frame)
+	frame := *fStack.Front().Value.(*frames.Frame)
 	thID := frame.Thread
 	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
 	return th
@@ -640,7 +640,7 @@ func threadDumpStack(params []interface{}) interface{} {
 		_, _ = fmt.Fprintln(os.Stderr, "java.lang.Exception: Stack trace")
 	} else { // TODO: add the source line numbers to both variants
 		// we print more data than HotSpot does, starting with the thread name
-		o := *jvmStack.Front().Value.(**frames.Frame)
+		o := *jvmStack.Front().Value.(*frames.Frame)
 		threadID := o.Thread
 		th := globalRef.Threads[threadID].(*object.Object)
 		raws := th.FieldTable["name"].Fvalue.(*object.Object)
@@ -649,7 +649,7 @@ func threadDumpStack(params []interface{}) interface{} {
 	}
 
 	for e := jvmStack.Front(); e != nil; e = e.Next() {
-		fr := *e.Value.(**frames.Frame)
+		fr := *e.Value.(*frames.Frame)
 		if globalRef.StrictJDK {
 			_, _ = fmt.Fprintf(os.Stderr, "\tat %s.%s\n", fr.ClName, fr.MethName)
 		} else {
