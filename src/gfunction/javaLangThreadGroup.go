@@ -49,7 +49,7 @@ func Load_Lang_Thread_Group() {
 	MethodSignatures["java/lang/ThreadGroup.enumerate([Ljava/lang/ThreadGroup;Z)I"] =
 		GMeth{ParamSlots: 2, GFunction: trapFunction}
 	MethodSignatures["java/lang/ThreadGroup.getMaxPriority()I"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadGroupGetMaxPriority}
 	MethodSignatures["java/lang/ThreadGroup.getName()Ljava/lang/String;"] =
 		GMeth{ParamSlots: 0, GFunction: threadGroupGetName}
 	MethodSignatures["java/lang/ThreadGroup.getParent()Ljava/lang/ThreadGroup;"] =
@@ -281,6 +281,23 @@ func threadGroupInitWithParentAndName(params []interface{}) any {
 	parentSubgroups.PushBack(tg)
 
 	return tg
+}
+
+// java/lang/ThreadGroup.getMaxPriority()I
+func threadGroupGetMaxPriority(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadGroupGetMaxPriority: Expected thread group, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	tg, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupGetMaxPriority: Expected parameter to be an object reference")
+	}
+
+	maxP := tg.FieldTable["maxPriority"]
+	return maxP.Fvalue.(int64)
 }
 
 // java/lang/ThreadGroup.getName()Ljava/lang/String;
