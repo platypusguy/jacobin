@@ -425,7 +425,8 @@ func ThreadCreateNoarg(_ []interface{}) any {
 	// the JDK defaults to "Thread-N" where N is the thread number
 	// the sole exception is the main thread, which is called "main"
 	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
-	nameField := object.Field{Ftype: types.GolangString, Fvalue: defaultName}
+	nameField := object.Field{Ftype: types.Ref,
+		Fvalue: object.StringObjectFromGoString(defaultName)}
 	t.FieldTable["name"] = nameField
 
 	stateField := object.Field{Ftype: types.Ref,
@@ -609,8 +610,8 @@ func threadDumpStack(params []interface{}) interface{} {
 		// we print more data than HotSpot does, starting with the thread name
 		threadID := jvmStack.Front().Value.(*frames.Frame).Thread
 		th := globalRef.Threads[threadID].(*object.Object)
-		raws := th.FieldTable["name"].Fvalue.([]types.JavaByte)
-		threadName := object.GoStringFromJavaByteArray(raws)
+		raws := th.FieldTable["name"].Fvalue.(*object.Object)
+		threadName := object.GoStringFromStringObject(raws)
 		_, _ = fmt.Fprintf(os.Stderr, "Stack trace (thread %s)\n", threadName)
 	}
 
@@ -629,7 +630,7 @@ func threadDumpStack(params []interface{}) interface{} {
 // java/lang/Thread.enumerate([Ljava/lang/Thread;)I
 func threadEnumerate(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadEnumerate expected a thread object, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -685,10 +686,12 @@ func threadGetName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t := params[0].(*object.Object)
-	name := t.FieldTable["name"].Fvalue.([]types.JavaByte)
-
-	return object.StringObjectFromJavaByteArray(name)
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadGetName: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	return t.FieldTable["name"].Fvalue.(*object.Object)
 }
 
 // "java/lang/Thread.getPriority()I"
@@ -732,7 +735,11 @@ func threadGetState(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t := params[0].(*object.Object)
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadGetState: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	state := t.FieldTable["state"].Fvalue.(*object.Object)
 	return state
 }
@@ -780,7 +787,12 @@ func threadRun(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t := params[0].(*object.Object)
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadRun: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	runObj := t.FieldTable["task"].Fvalue
 	// if the runnable is nil, then just return (per the JDK spec)
 	if runObj == nil {
@@ -870,7 +882,7 @@ func threadSetName(params []interface{}) any {
 	// Validate the first parameter is the Thread object
 	th, ok := params[0].(*object.Object)
 	if !ok || object.IsNull(th) {
-		errMsg := "threadSetName: Expected first parameter to be a non-null Thread object"
+		errMsg := "threadSetName: Expected first parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -881,20 +893,8 @@ func threadSetName(params []interface{}) any {
 		return getGErrBlk(excNames.NullPointerException, errMsg)
 	}
 
-	// Extract the underlying bytes from the Java String
-	fld, ok := nameObj.FieldTable["value"]
-	if !ok {
-		errMsg := "threadSetName: corrupted String object (missing 'value' field)"
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	newName, ok := fld.Fvalue.([]types.JavaByte)
-	if !ok {
-		errMsg := "threadSetName: String 'value' field has unexpected type"
-		return getGErrBlk(excNames.InternalException, errMsg)
-	}
-
 	// Update the thread's name field (stored as a Java byte string)
-	th.FieldTable["name"] = object.Field{Ftype: types.GolangString, Fvalue: newName}
+	th.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: nameObj}
 
 	return nil
 }
