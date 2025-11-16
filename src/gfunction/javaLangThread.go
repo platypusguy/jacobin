@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-5 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -40,27 +40,6 @@ import (
  could mean an empty slice).
 */
 
-type PrivateFields struct {
-	Target                   interface{}
-	ThreadLocals             map[string]interface{}
-	InheritableLocals        map[string]interface{}
-	UncaughtExceptionHandler func(thread *PublicFields, err error)
-	ContextClassLoader       interface{}
-	StackTrace               []string
-	ParkBlocker              interface{}
-	NativeThreadID           int64
-	Alive                    bool
-	Interrupted              bool
-	Holder                   interface{}    // Added previously missing `holder` field
-	Daemon                   bool           // Reflects the `daemon` field
-	Priority                 int            // Reflects the `priority` field
-	ThreadGroup              *object.Object // Reflects the `group` field
-	Name                     string         // Reflects the `name` field
-	Started                  bool           // Reflects the `started` field
-	Stillborn                bool           // Reflects the `stillborn` field
-	Interruptible            bool           // Reflects the `interruptible` field
-}
-
 type PublicFields struct {
 	ID          int64
 	Name        string
@@ -97,12 +76,12 @@ func Load_Lang_Thread() {
 			GFunction:  threadInitWithThreadGroupRunnableAndName,
 		}
 
-	args := "(Ljava/lang/Threadgroup;" + "Ljava/lang/String;" + "I" +
-		"Ljava/lang/Runnable;" + "J" + "java/Security/AccessControlContext;" + ")V"
+	args := "(Ljava/lang/ThreadGroup;" + "Ljava/lang/String;" + "I" +
+		"Ljava/lang/Runnable;" + "J" + "Ljava/Security/AccessControlContext;" + ")V"
 	MethodSignatures["java/lang/Thread.<init>"+args] =
 		GMeth{
 			ParamSlots: 6,
-			GFunction:  threadCreateFromPackageConstructor,
+			GFunction:  threadInitFromPackageConstructor,
 		}
 
 	// remaining methods are in alpha order by Java FQN string
@@ -340,7 +319,7 @@ func threadClinit(_ []interface{}) any {
 }
 
 // Handles package-private constructor with these parameters:
-// thread group:    Ljava/lang/Threadgroup;
+// thread group:    Ljava/lang/ThreadGroup;
 // name:            Ljava/lang/String;
 // characteristics: I
 // task:            Ljava/lang/Runnable;
@@ -348,72 +327,84 @@ func threadClinit(_ []interface{}) any {
 // access control   java/Security/AccessControlContext;
 // Validates each parameter, then calls threadCreateWithRunnableAndName()
 // passing the 4th (Runnable) and 2nd (String name) parameters, in that order.
-func threadCreateFromPackageConstructor(params []interface{}) any {
+func threadInitFromPackageConstructor(params []interface{}) any {
 	const where = "threadCreateFromPackageConstructor"
 
-	// Expect exactly 6 parameters
-	if len(params) != 6 {
-		errMsg := fmt.Sprintf("%s: Expected 6 parameters, got %d parameters", where, len(params))
+	// Expect object + 6 parameters
+	if len(params) != 7 {
+		errMsg := fmt.Sprintf("%s: Expected thread object + 6 parameters, got %d parameters",
+			where, len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// 0: Threadgroup (object, may be null)
+	var ok bool
+	var th, threadGroup *object.Object
+	// 0: Threadg object
 	if params[0] != nil {
-		if _, ok := params[0].(*object.Object); !ok {
-			errMsg := fmt.Sprintf("%s: Expected first parameter to be a ThreadGroup object (or null)", where)
+		if th, ok = params[0].(*object.Object); !ok {
+			errMsg := fmt.Sprintf("%s: Expected first parameter to be a Thread object (or null)", where)
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	}
 
-	// 1: Name (String)
-	name, ok := params[1].(*object.Object)
+	// 1: Threadgroup (object, may be null)
+	if params[1] != nil {
+		if threadGroup, ok = params[1].(*object.Object); !ok {
+			errMsg := fmt.Sprintf("%s: Expected first argument to be a ThreadGroup object (or null)", where)
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+	}
+
+	// 2: Name (String)
+	name, ok := params[2].(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("%s: Expected second parameter to be a String name", where)
+		errMsg := fmt.Sprintf("%s: Expected second argument to be a String name", where)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// 2: Priority (int). Accept common integer types.
-	switch params[2].(type) {
+	// 3: Priority (int). Accept common integer types.
+	switch params[3].(type) {
 	case int, int32, int64:
 		// ok; we don't use it here but we validate presence/type
 	default:
-		errMsg := fmt.Sprintf("%s: Expected third parameter to be an int priority", where)
+		errMsg := fmt.Sprintf("%s: Expected third argument to be an int priority", where)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// 3: Runnable (object, may be null)
+	// 4: Runnable (object, may be null)
 	var runnable *object.Object
-	if params[3] != nil {
+	if params[4] != nil {
 		var ok bool
-		runnable, ok = params[3].(*object.Object)
+		runnable, ok = params[4].(*object.Object)
 		if !ok {
-			errMsg := fmt.Sprintf("%s: Expected fourth parameter to be a Runnable object (or null)", where)
+			errMsg := fmt.Sprintf("%s: Expected fourth argument to be a Runnable object (or null)", where)
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	}
 
-	// 4: Long (J)
-	if _, ok := params[4].(int64); !ok {
-		errMsg := fmt.Sprintf("%s: Expected fifth parameter to be a long (int64)", where)
+	// 5: Long (J)
+	if _, ok := params[5].(int64); !ok {
+		errMsg := fmt.Sprintf("%s: Expected fifth argument to be a long (int64)", where)
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// 5: AccessControlContext (object, may be null)
-	if params[5] != nil {
+	// 6: AccessControlContext (object, may be null)
+	if params[6] != nil {
 		if _, ok := params[5].(*object.Object); !ok {
-			errMsg := fmt.Sprintf("%s: Expected sixth parameter to be an AccessControlContext object (or null)", where)
+			errMsg := fmt.Sprintf("%s: Expected sixth argument to be an AccessControlContext object (or null)", where)
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 	}
 
 	// Delegate: threadCreateWithRunnableAndName expects [runnable, name]
-	th := threadInitWithRunnableAndName([]interface{}{runnable, name}).(*object.Object)
-	threadGroup := object.Field{ // default thread group is the main thread group
-		Ftype: types.Ref, Fvalue: params[0]}
-	th.FieldTable["threadgroup"] = threadGroup
+	th = threadInitWithRunnableAndName([]interface{}{th, runnable, name}).(*object.Object)
+	tg := object.Field{ // default thread group is the main thread group
+		Ftype: types.Ref, Fvalue: threadGroup}
+	th.FieldTable["threadgroup"] = tg
 	return th
 }
 
+// Should we need to create a thread, here is the instantiable implementation
 func ThreadCreateNoarg(_ []interface{}) any {
 
 	t := object.MakeEmptyObjectWithClassName(&classname)
@@ -465,7 +456,7 @@ func ThreadCreateNoarg(_ []interface{}) any {
 func threadInitWithName(params []interface{}) any {
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadInitWithName: Expected 2 parameters, "+
-			"(name and the thread object), got %d parameters", len(params))
+			"(the thread object and name), got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
