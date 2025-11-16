@@ -7,20 +7,20 @@
 package jvm
 
 import (
-    "fmt"
-    "jacobin/src/classloader"
-    "jacobin/src/exceptions"
-    "jacobin/src/gfunction"
-    "jacobin/src/globals"
-    "jacobin/src/object"
-    "jacobin/src/shutdown"
-    "jacobin/src/statics"
-    "jacobin/src/stringPool"
-    "jacobin/src/thread"
-    "jacobin/src/trace"
-    "jacobin/src/types"
-    "os"
-    "strings"
+	"fmt"
+	"jacobin/src/classloader"
+	"jacobin/src/exceptions"
+	"jacobin/src/gfunction"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/shutdown"
+	"jacobin/src/statics"
+	"jacobin/src/stringPool"
+	"jacobin/src/thread"
+	"jacobin/src/trace"
+	"jacobin/src/types"
+	"os"
+	"strings"
 )
 
 var globPtr *globals.Globals
@@ -131,40 +131,40 @@ func JVMrun() int {
 		globPtr.ClasspathRaw = archive.ClasspathRaw
 		globPtr.Classpath = archive.Classpath
 
- } else if globPtr.StartingClass != "" { // if a class file or class name was specified
-        // Determine whether StartingClass is a filesystem path to a .class file
-        // or a class name intended to be resolved via the classpath (including jars).
-        starting := globPtr.StartingClass
-        // Fast path: if the exact path exists on disk, load from file (preserves old behavior)
-        if _, statErr := os.Stat(starting); statErr == nil {
-            mainClassNameIndex, _, err = classloader.LoadClassFromFile(classloader.BootstrapCL, starting)
-            if err != nil { // the exceptions message will already have been shown to the user
-                return shutdown.Exit(shutdown.JVM_EXCEPTION)
-            }
-        } else {
-            // Treat it as a class name. Normalize:
-            // 1) strip trailing .class if present
-            // 2) convert dots/backslashes to forward slashes for internal name
-            // 3) trim any leading slashes
-            name := strings.TrimSuffix(starting, ".class")
-            nameSlash := strings.ReplaceAll(name, ".", "/")
-            nameSlash = strings.ReplaceAll(nameSlash, "\\", "/")
-            nameSlash = strings.TrimLeft(nameSlash, "/")
+	} else if globPtr.StartingClass != "" { // if a class file or class name was specified
+		// Determine whether StartingClass is a filesystem path to a .class file
+		// or a class name intended to be resolved via the classpath (including jars).
+		starting := globPtr.StartingClass
+		// Fast path: if the exact path exists on disk, load from file (preserves old behavior)
+		if _, statErr := os.Stat(starting); statErr == nil {
+			mainClassNameIndex, _, err = classloader.LoadClassFromFile(classloader.BootstrapCL, starting)
+			if err != nil { // the exceptions message will already have been shown to the user
+				return shutdown.Exit(shutdown.JVM_EXCEPTION)
+			}
+		} else {
+			// Treat it as a class name. Normalize:
+			// 1) strip trailing .class if present
+			// 2) convert dots/backslashes to forward slashes for internal name
+			// 3) trim any leading slashes
+			name := strings.TrimSuffix(starting, ".class")
+			nameSlash := strings.ReplaceAll(name, ".", "/")
+			nameSlash = strings.ReplaceAll(nameSlash, "\\", "/")
+			nameSlash = strings.TrimLeft(nameSlash, "/")
 
-            // Load by name using the classpath search (dirs and jars)
-            if err = classloader.LoadClassFromNameOnly(nameSlash); err != nil {
-                // LoadClassFromNameOnly already emitted diagnostics
-                return shutdown.Exit(shutdown.JVM_EXCEPTION)
-            }
-            // Record the main class string in the StringPool for later retrieval
-            nameDot := strings.ReplaceAll(nameSlash, "/", ".")
-            mainClassNameIndex = stringPool.GetStringIndex(&nameDot)
-        }
-    } else {
-        trace.Error("JVMrun: No starting class from a class file nor a jar")
-        ShowUsage(os.Stdout)
-        return shutdown.Exit(shutdown.APP_EXCEPTION)
-    }
+			// Load by name using the classpath search (dirs and jars)
+			if err = classloader.LoadClassFromNameOnly(nameSlash); err != nil {
+				// LoadClassFromNameOnly already emitted diagnostics
+				return shutdown.Exit(shutdown.JVM_EXCEPTION)
+			}
+			// Record the main class string in the StringPool for later retrieval
+			nameDot := strings.ReplaceAll(nameSlash, "/", ".")
+			mainClassNameIndex = stringPool.GetStringIndex(&nameDot)
+		}
+	} else {
+		trace.Error("JVMrun: No starting class from a class file nor a jar")
+		ShowUsage(os.Stdout)
+		return shutdown.Exit(shutdown.APP_EXCEPTION)
+	}
 
 	// if assertions were enabled on the command line for the program, then make sure
 	// that the assertion status is set in the Statics table w/ an entry corresponding
@@ -206,13 +206,14 @@ func JVMrun() int {
 		StartExec(*mainClass, &MainThread, globPtr)
 
 	} else { // JACOBIN-732
+		t := gfunction.ThreadCreateNoarg(nil)
 		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 		runnable := gfunction.NewRunnable(
 			object.JavaByteArrayFromGoString(*mainClass),
 			object.JavaByteArrayFromGoString("main"),
 			object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
-		params := []interface{}{runnable, object.StringObjectFromGoString("main")}
-		t := globals.GetGlobalRef().FuncInvokeGFunction(
+		params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
+		t = globals.GetGlobalRef().FuncInvokeGFunction(
 			"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
 		if globals.TraceInit {
 			trace.Trace("Starting execution with: " + *mainClass)
