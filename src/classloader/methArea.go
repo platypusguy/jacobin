@@ -70,10 +70,11 @@ func MethAreaPreload() {
 // MethAreaFetch retrieves a pointer to a loaded class from the method area.
 // In the event the class is not present there, the function returns nil.
 func MethAreaFetch(key string) *Klass {
+
 	MethAreaMutex.RLock()
-	v, _ := MethArea.Load(key)
+	v, ok := MethArea.Load(key)
 	MethAreaMutex.RUnlock()
-	if v == nil {
+	if !ok || v == nil {
 		return nil
 	}
 	return v.(*Klass)

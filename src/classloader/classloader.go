@@ -299,23 +299,23 @@ loadAclass:
 		return err
 	}
 
- // Load class from the starting jar (-jar) if provided.
- // If not found in the starting jar, fall back to classpath-based loading below.
- if len(globals.GetGlobalRef().StartingJar) > 0 {
-     validName := util.ConvertToPlatformPathSeparators(className)
-     if globals.TraceClass {
-         trace.Trace("LoadClassFromNameOnly: LoadClassFromJar " + validName)
-     }
-     if _, _, jerr := LoadClassFromArchive(AppCL, validName, globals.GetGlobalRef().StartingJar); jerr == nil {
-         return nil
-     } else {
-         // Do not return yet; attempt classpath search which may include jars listed
-         // in the manifest Class-Path of the starting jar (already expanded in globals.Classpath).
-         if globals.TraceClass {
-             trace.Trace("LoadClassFromNameOnly: not found in starting jar, trying classpath: " + validName)
-         }
-     }
- }
+	// Load class from the starting jar (-jar) if provided.
+	// If not found in the starting jar, fall back to classpath-based loading below.
+	if len(globals.GetGlobalRef().StartingJar) > 0 {
+		validName := util.ConvertToPlatformPathSeparators(className)
+		if globals.TraceClass {
+			trace.Trace("LoadClassFromNameOnly: LoadClassFromJar " + validName)
+		}
+		if _, _, jerr := LoadClassFromArchive(AppCL, validName, globals.GetGlobalRef().StartingJar); jerr == nil {
+			return nil
+		} else {
+			// Do not return yet; attempt classpath search which may include jars listed
+			// in the manifest Class-Path of the starting jar (already expanded in globals.Classpath).
+			if globals.TraceClass {
+				trace.Trace("LoadClassFromNameOnly: not found in starting jar, trying classpath: " + validName)
+			}
+		}
+	}
 
 	validName := util.ConvertToPlatformPathSeparators(className)
 	if globals.TraceClass {
@@ -459,39 +459,39 @@ func GetMainClassFromJar(cl Classloader, jarFilePath string) (string, *Archive, 
 // * error struct if any, or nil if successful.
 func LoadClassFromArchive(cl Classloader, filename string, archiveFilePath string) (uint32, uint32, error) {
 
-    // Get the archive file.
-    archive, err := getArchiveFile(cl, archiveFilePath)
-    if err != nil {
-        return types.InvalidStringIndex, types.InvalidStringIndex, err
-    }
+	// Get the archive file.
+	archive, err := getArchiveFile(cl, archiveFilePath)
+	if err != nil {
+		return types.InvalidStringIndex, types.InvalidStringIndex, err
+	}
 
-    // Normalize the class name to the key format used by the archive EntryCache:
-    // dotted form without the trailing .class
-    normalized := filename
-    // drop trailing .class if present
-    if strings.HasSuffix(normalized, ".class") {
-        normalized = strings.TrimSuffix(normalized, ".class")
-    }
-    // unify separators to forward slash first
-    normalized = strings.ReplaceAll(normalized, "\\", "/")
-    normalized = strings.TrimPrefix(normalized, "/")
-    // convert slashes to dots as EntryCache keys are dotted names
-    normalized = strings.ReplaceAll(normalized, "/", ".")
+	// Normalize the class name to the key format used by the archive EntryCache:
+	// dotted form without the trailing .class
+	normalized := filename
+	// drop trailing .class if present
+	if strings.HasSuffix(normalized, ".class") {
+		normalized = strings.TrimSuffix(normalized, ".class")
+	}
+	// unify separators to forward slash first
+	normalized = strings.ReplaceAll(normalized, "\\", "/")
+	normalized = strings.TrimPrefix(normalized, "/")
+	// convert slashes to dots as EntryCache keys are dotted names
+	normalized = strings.ReplaceAll(normalized, "/", ".")
 
-    // Load the class from the archive file.
-    loadResult, err := archive.loadClass(normalized)
-    if err != nil {
-        return types.InvalidStringIndex, types.InvalidStringIndex, err
-    }
+	// Load the class from the archive file.
+	loadResult, err := archive.loadClass(normalized)
+	if err != nil {
+		return types.InvalidStringIndex, types.InvalidStringIndex, err
+	}
 
-    // Check if the class was found in the archive file.
-    if !loadResult.Success {
-        return types.InvalidStringIndex, types.InvalidStringIndex,
-            fmt.Errorf("unable to find file %s in archive file %s", filename, archiveFilePath)
-    }
+	// Check if the class was found in the archive file.
+	if !loadResult.Success {
+		return types.InvalidStringIndex, types.InvalidStringIndex,
+			fmt.Errorf("unable to find file %s in archive file %s", filename, archiveFilePath)
+	}
 
-    // Return the class data.
-    return ParseAndPostClass(&cl, filename, *loadResult.Data)
+	// Return the class data.
+	return ParseAndPostClass(&cl, filename, *loadResult.Data)
 }
 
 // Load a class from a byte array, presumably read from a file.
