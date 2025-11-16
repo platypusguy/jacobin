@@ -70,6 +70,12 @@ func Load_Lang_Thread() {
 			GFunction:  threadInitWithRunnableAndName,
 		}
 
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  threadInitWithThreadGroupAndName,
+		}
+
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{
 			ParamSlots: 3,
@@ -523,6 +529,41 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		Fvalue: name}
 
 	return t
+}
+
+// java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
+func threadInitWithThreadGroupAndName(params []interface{}) any {
+	if len(params) != 3 {
+		errMsg := fmt.Sprintf("threadInitWithThreadGroupAndName: "+
+			"Expected 2 parameters plus thread object, got %d parameters",
+			len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	threadGroup, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a ThreadGroup object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	name, ok := params[2].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a String"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t.FieldTable["threadgroup"] = object.Field{
+		Ftype: types.Ref, Fvalue: threadGroup}
+	t.FieldTable["name"] = object.Field{
+		Ftype: types.Ref, Fvalue: name}
+	return t
+
 }
 
 func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
