@@ -1,0 +1,64 @@
+Java Invokedynamic Bootstrap Shape Reference
+
++-----------------------------------------------------------------------------------------------------------+
+| Scenario                            | Captured? | Bootstrap Shape            | Return Type / Target       |
++-----------------------------------------------------------------------------------------------------------+
+| String concatenation                | N/A       | (arg1,arg2,...)            | String                     |
+|   "a"+x+"b"                         |           | (String,int)               | String                     |
+|   "prefix"+obj+"suffix"             |           | (String,Object)            | String                     |
++-----------------------------------------------------------------------------------------------------------+
+| Static method reference             | No        | (arg1,arg2,...)            | Functional interface       |
+|   main::sumThree                    |           | (int,int,int)              | TriIntFunction             |
++-----------------------------------------------------------------------------------------------------------+
+| Instance method reference           | No        | (instance,arg1,arg2,...)   | Functional interface       |
+|   obj::doSomething                  |           | (MyClass,int,String)       | IntStrFunction             |
++-----------------------------------------------------------------------------------------------------------+
+| Constructor reference               | No        | (arg1,arg2,...)            | Functional interface       |
+|   Box<String>::new                  |           | (String)                   | Box<String>                |
+|   Pair<A,B>::new                    |           | (A,B)                      | Pair<A,B>                  |
++-----------------------------------------------------------------------------------------------------------+
+| Lambda (no captured variables)      | No        | (arg1,arg2,...)            | Functional interface       |
+|   x -> x*2                          |           | (int)                      | IntUnary                   |
++-----------------------------------------------------------------------------------------------------------+
+| Lambda (capturing primitive)        | Yes       | (CapturedContainer,arg1)   | Functional interface       |
+|   x -> x + base                     | base=int  | (main,int)                 | IntUnary                   |
++-----------------------------------------------------------------------------------------------------------+
+| Lambda (capturing object)           | Yes       | (CapturedContainer,arg1)   | Functional interface       |
+|   s -> prefix + s                   | prefix    | (main,String)              | StrFunction                |
+|                                     | =String   |                            |                            |
++-----------------------------------------------------------------------------------------------------------+
+| Nested lambda                       | Yes/No    | (outerCaptured...,         | Functional interface       |
+|                                     |           |   innerArgs)               |                            |
+|   () -> (() -> "InnerLambda")       |           | (main)                     | StrSupplier (outer)        |
+|                                     |           | ()                         | StrSupplier (inner)        |
++-----------------------------------------------------------------------------------------------------------+
+| High-arity lambda / method ref      | No/Yes    | (>3 args)                  | Functional interface       |
+|   (a,b,c,d) -> a+b*c-d              |           | (int,int,int,int)          | QuadIntFunction            |
+|   main::sumFive                     |           | (int,int,int,int,int)      | PentaIntFunction           |
++-----------------------------------------------------------------------------------------------------------+
+| Multi-dimensional array constructor | No        | (rows,cols)                | int[][] / Object[][]       |
+|   (r,c) -> new int[r][c]            |           | (int,int)                  | int[][]                    |
++-----------------------------------------------------------------------------------------------------------+
+
+Notes:
+
+1. Captured variables (any variable from the surrounding scope that a lambda uses) are inserted into a
+synthetic object (a captured variable holder or captured container that holds all captured variables as fields).
+The synthetic object is passed as the first argument to lambda’s call site (function returned by the lambda's bootstrap).
+
+2. Bootstrap method:
+
+   * Lambdas → LambdaMetafactory.metafactory (or altMetafactory)
+   * String concat → StringConcatFactory.makeConcatWithConstants
+
+3. Call site shape depends on:
+
+   * Number/type of lambda parameters (arity)
+   * Presence of captured variables
+   * Functional interface type
+
+4. Each distinct shape = new invokedynamic call site.
+
+5. Custom functional interfaces are required for arity >2 because java.util.function only provides up to BiFunction.
+
+
