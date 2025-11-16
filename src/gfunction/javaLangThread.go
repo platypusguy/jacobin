@@ -133,7 +133,7 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.enumerate([Ljava/lang/Thread;)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  threadEnumerate,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Thread.getId()J"] =
@@ -616,7 +616,7 @@ func threadCurrentThread(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	frame := fStack.Front().Value.(*frames.Frame)
+	frame := *fStack.Front().Value.(**frames.Frame)
 	thID := frame.Thread
 	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
 	return th
@@ -640,7 +640,8 @@ func threadDumpStack(params []interface{}) interface{} {
 		_, _ = fmt.Fprintln(os.Stderr, "java.lang.Exception: Stack trace")
 	} else { // TODO: add the source line numbers to both variants
 		// we print more data than HotSpot does, starting with the thread name
-		threadID := jvmStack.Front().Value.(*frames.Frame).Thread
+		o := *jvmStack.Front().Value.(**frames.Frame)
+		threadID := o.Thread
 		th := globalRef.Threads[threadID].(*object.Object)
 		raws := th.FieldTable["name"].Fvalue.(*object.Object)
 		threadName := object.GoStringFromStringObject(raws)
@@ -648,7 +649,7 @@ func threadDumpStack(params []interface{}) interface{} {
 	}
 
 	for e := jvmStack.Front(); e != nil; e = e.Next() {
-		fr := e.Value.(*frames.Frame)
+		fr := *e.Value.(**frames.Frame)
 		if globalRef.StrictJDK {
 			_, _ = fmt.Fprintf(os.Stderr, "\tat %s.%s\n", fr.ClName, fr.MethName)
 		} else {
@@ -660,6 +661,8 @@ func threadDumpStack(params []interface{}) interface{} {
 }
 
 // java/lang/Thread.enumerate([Ljava/lang/Thread;)I
+// per Javadoc: Copies into the specified array every live platform thread in this thread group and its subgroups.
+// Virtual threads are not enumerated by this method.
 func threadEnumerate(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadEnumerate expected a thread object, got %d parameters", len(params))
@@ -841,7 +844,7 @@ func threadRun(params []interface{}) interface{} {
 	methtype := runFields["signature"].Fvalue.([]types.JavaByte)
 	methType := object.GoStringFromJavaByteArray(methtype)
 
-	m, err := classloader.FetchMethodAndCP( // resume here, with _ replaced by meth
+	m, err := classloader.FetchMethodAndCP(
 		clName, methName, methType)
 
 	if err != nil {
