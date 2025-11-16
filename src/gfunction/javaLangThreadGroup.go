@@ -31,7 +31,7 @@ func Load_Lang_Thread_Group() {
 
 	// Public instance methods (alphabetical by JVM signature for consistency)
 	MethodSignatures["java/lang/ThreadGroup.activeCount()I"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadGroupActiveCount}
 	MethodSignatures["java/lang/ThreadGroup.activeGroupCount()I"] =
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 	MethodSignatures["java/lang/ThreadGroup.allowThreadSuspension(Z)Z"] =
@@ -53,7 +53,7 @@ func Load_Lang_Thread_Group() {
 	MethodSignatures["java/lang/ThreadGroup.getName()Ljava/lang/String;"] =
 		GMeth{ParamSlots: 0, GFunction: threadGroupGetName}
 	MethodSignatures["java/lang/ThreadGroup.getParent()Ljava/lang/ThreadGroup;"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadGroupGetParent}
 	MethodSignatures["java/lang/ThreadGroup.interrupt()V"] =
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 	MethodSignatures["java/lang/ThreadGroup.isDaemon()Z"] =
@@ -201,6 +201,14 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
 	obj.FieldTable["subgroups"] = subgroups
 
+	// if no parent was specified, set the parent to the main thread group
+	parent := obj.FieldTable["parent"].Fvalue
+	if parent == nil || object.IsNull(parent) {
+		obj.FieldTable["parent"] = object.Field{
+			Ftype:  types.Ref,
+			Fvalue: globals.GetGlobalRef().ThreadGroups["main"]}
+	}
+
 	// add the thread group to the global list of thread groups
 	globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(nameObj)] = obj
 
@@ -228,7 +236,8 @@ func threadGroupInitWithName(params []interface{}) any {
 	}
 
 	args := []interface{}{obj, object.Null, name, int64(0), types.JavaBoolUninitialized}
-	updatedObj := ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
+	updatedObj := ThreadGroupInitWithParentNameMaxpriorityDaemon(args).(*object.Object)
+
 	return updatedObj
 
 }
@@ -283,6 +292,17 @@ func threadGroupInitWithParentAndName(params []interface{}) any {
 	return tg
 }
 
+// == non-constructor methods in alpha order ==
+
+// java/lang/ThreadGroup.activeCount()I
+func threadGroupActiveCount(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadGroupActiveCount: Expected thread group, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	return int64(0) // TODO: eventually do actual implementation
+}
+
 // java/lang/ThreadGroup.getMaxPriority()I
 func threadGroupGetMaxPriority(params []interface{}) interface{} {
 	if len(params) != 1 {
@@ -333,17 +353,34 @@ func threadGroupGetName(params []interface{}) interface{} {
 		"threadGroupGetName: name field is not a String")
 }
 
+// java/lang/ThreadGroup.getParent()Ljava/lang/ThreadGroup;
+func threadGroupGetParent(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadGroupGetParent: Expected thread group, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	tg, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"threadGroupGetParent: Expected parameter to be an object reference")
+	}
+	return tg.FieldTable["parent"].Fvalue
+}
+
 // == fake thread group for testing purposes ==
 func threadGroupFake(name string) *object.Object {
+	gr := globals.GetGlobalRef()
 	clName := "java/lang/ThreadGroup"
 	obj := object.MakeEmptyObjectWithClassName(&clName)
 
-	nullField := object.Field{Ftype: types.Ref, Fvalue: object.Null}
-	obj.FieldTable["parent"] = nullField
+	parentField := object.Field{Ftype: types.Ref,
+		Fvalue: gr.ThreadGroups["main"]}
+	// TODO: replace with present thread's group
+	obj.FieldTable["parent"] = parentField
 
 	nameField := object.Field{
 		Ftype:  types.Ref,
-		Fvalue: object.JavaByteArrayFromGoString(name)}
+		Fvalue: object.StringObjectFromGoString(name)}
 	obj.FieldTable["name"] = nameField
 
 	daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}

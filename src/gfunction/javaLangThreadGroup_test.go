@@ -121,6 +121,7 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 	ensureTGInit()
 	gr := globals.GetGlobalRef()
 	gr.ThreadGroups = make(map[string]interface{})
+	InitializeGlobalThreadGroups()
 
 	// 1st param not object
 	{
@@ -147,15 +148,17 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 			t.Errorf("expected error for maxPriority out of range")
 		}
 	}
-	// Success: daemon uninitialized, parent null
+	// Success: daemon uninitialized, parent main
 	{
 		// tgName := "java/lang/ThreadGroup"
 		obj := threadGroupFake("grpA")
 		name := object.StringObjectFromGoString("grpA")
 		res := ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, object.Null, name, int64(0), types.JavaBoolUninitialized})
 		tg := res.(*object.Object)
-		if tg.FieldTable["parent"].Fvalue != object.Null {
-			t.Errorf("expected parent to remain null")
+		parentObj := tg.FieldTable["parent"].Fvalue.(*object.Object)
+		parent := threadGroupGetName([]any{parentObj}).(*object.Object)
+		if object.GoStringFromStringObject(parent) != "main" {
+			t.Errorf("expected parent to be 'main'")
 		}
 		if tg.FieldTable["priority"].Ftype != types.Int {
 			t.Errorf("priority not initialized")
