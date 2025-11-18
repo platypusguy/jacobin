@@ -148,14 +148,20 @@ func getOptionRootAndArgs(option string) (string, string, error) {
 		return "", "", errors.New("empty option error")
 	}
 
-	// if the option has an embedded arg value, it'll come after the first colon (:).
-	argMarker := strings.Index(option, ":")
+	// if the option has an embedded arg value, it might after the equal sign (=).
+	argMarker := strings.Index(option, "=")
 
-	// if there's no embedded colon (:), then the option doesn't contain an arg value
+	// If there's no embedded equal sign, try for an embedded colon (:)..
+	if argMarker == -1 {
+		argMarker = strings.Index(option, ":")
+	}
+
+	// If there's no embedded colon nor equal sign, then the option doesn't contain an arg value.
 	if argMarker == -1 {
 		return option, "", nil
 	}
 
+	// Return the option root and the embedded arg value (might have embedded colons or semicolons).
 	return option[:argMarker], option[argMarker+1:], nil
 
 }

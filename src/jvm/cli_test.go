@@ -414,16 +414,21 @@ func TestFoundClassFileWithArgsAlt(t *testing.T) {
 }
 
 // Command line:  jacobin  -classpath Mercury:Venus:Earth:Mars  Starter  --double-dash  apple  banana  peach
-func _execWithClasspath(t *testing.T, optName string) {
+func _execWithClasspath(t *testing.T, optName string, withEqSign bool) {
 
-	t.Logf("_execWithClasspath: option name = \"%s\"", optName)
+	t.Logf("_execWithClasspath: option name :: \"%s\", withEqSign :: %v", optName, withEqSign)
 	global := globals.InitGlobals("test")
 	LoadOptionsTable(global)
 
 	classpath := "Mercury" + string(os.PathListSeparator) + "Venus" + string(os.PathListSeparator) + "Earth" + string(os.PathListSeparator) + "Mars"
 
-	args := []string{"jacobin", optName, classpath, "Starter", "--double-dash", "apple", "banana", "peach"} // no .class suffix
-	_ = HandleCli(args, &global)
+	if withEqSign {
+		args := []string{"jacobin", "-trace=inst", "-JJ:galt", optName + "=" + classpath, "-strictJDK", "Starter", "--double-dash", "apple", "banana", "peach"}
+		_ = HandleCli(args, &global)
+	} else {
+		args := []string{"jacobin", "-trace=inst", "-JJ:galt", optName, classpath, "-strictJDK", "Starter", "--double-dash", "apple", "banana", "peach"}
+		_ = HandleCli(args, &global)
+	}
 
 	if global.StartingClass != "Starter.class" {
 		t.Errorf("Expected global.StartingClass = \"Starter.class\", observed: \"%s\"", global.StartingClass)
@@ -468,10 +473,11 @@ func _execWithClasspath(t *testing.T, optName string) {
 	}
 }
 
-func TestWithCp1(t *testing.T) {
-	_execWithClasspath(t, "-cp")
-	_execWithClasspath(t, "-classpath")
-	_execWithClasspath(t, "--class-path")
+func TestWithCpFlavors(t *testing.T) {
+	_execWithClasspath(t, "-cp", false)
+	_execWithClasspath(t, "-classpath", false)
+	_execWithClasspath(t, "--class-path", false)
+	_execWithClasspath(t, "--class-path", true)
 }
 
 // make sure that if a file path to the executable has an embedded :
