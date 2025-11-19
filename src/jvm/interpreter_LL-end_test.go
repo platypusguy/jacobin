@@ -990,56 +990,32 @@ func TestPushWithStackOverflow(t *testing.T) {
 	classloader.FetchMethodAndCP("java/lang/Object", "wait", "(JI)V")
 
 	var f *frames.Frame
-	if gl.UseOldThread {
-		th := thread.CreateThread()
-		th.AddThreadToTable(gl)
-
-		f = frames.CreateFrame(1)
-		f.ClName = "java/lang/Object"
-		f.MethName = "wait"
-		f.MethType = "(JI)V"
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = 4
-		f.Thread = th.ID
-
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
-
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		th.Stack = fs
-	} else {
-		// thObj := thread.CreateMainThread() // returns *object.Object
-		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
-		main := object.StringObjectFromGoString("main")
-		params := []any{thObj, main}
-		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-		thread.RegisterThread(thObj) // put into globals.Threads map
-		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
-		f = frames.CreateFrame(1)
-		f.ClName = "java/lang/Object"
-		f.MethName = "wait"
-		f.MethType = "(JI)V"
-		_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = 4
-		f.Thread = thID
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
-
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		// Attach the JVM frame stack to the Java thread object
-		thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
+	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	main := object.StringObjectFromGoString("main")
+	params := []any{thObj, main}
+	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
+	thread.RegisterThread(thObj) // put into globals.Threads map
+	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
+	f = frames.CreateFrame(1)
+	f.ClName = "java/lang/Object"
+	f.MethName = "wait"
+	f.MethType = "(JI)V"
+	_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
+	for i := 0; i < 4; i++ {
+		f.OpStack = append(f.OpStack, int64(0))
 	}
+	f.TOS = 4
+	f.Thread = thID
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(f)
+	// Attach the JVM frame stack to the Java thread object
+	thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
+
 	push(f, int64(34))
 
 	_ = w.Close()
