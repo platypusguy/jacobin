@@ -79,8 +79,7 @@ type Globals struct {
 	JacobinBuildData map[string]string
 
 	// ---- special switches ----
-	StrictJDK    bool // hew closely to actions and error messages of the JDK
-	UseOldThread bool
+	StrictJDK bool // hew closely to actions and error messages of the JDK
 
 	// ---- list of addresses of arrays, see jvm/arrays.go for info ----
 	ArrayAddressList *list.List
@@ -172,9 +171,9 @@ func InitGlobals(progName string) Globals {
 		StartingClass:        "",
 		StartingJar:          "",
 		StrictJDK:            false,
-		UseOldThread:         false,
-		Version:              config.GetJacobinVersion(), // gets version and build #
-		VmModel:              "server",
+		// UseOldThread:         false,
+		Version: config.GetJacobinVersion(), // gets version and build #
+		VmModel: "server",
 	}
 
 	// ----- G function alternative processing flag

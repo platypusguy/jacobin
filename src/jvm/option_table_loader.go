@@ -108,8 +108,9 @@ func LoadOptionsTable(Global globals.Globals) {
 	strictJdk := globals.Option{true, false, 0, strictJDK}
 	Global.Options["-strictJDK"] = strictJdk
 
-	newThread := globals.Option{true, false, 0, useOldThread}
-	Global.Options["-732"] = newThread
+	// use this as template for other switches to test new features
+	// newThread := globals.Option{true, false, 0, useOldThread}
+	// Global.Options["-732"] = newThread
 
 	traceInstruction := globals.Option{true, false, 10, enableTrace}
 	Global.Options["-trace"] = traceInstruction
@@ -265,13 +266,13 @@ func notSupported(pos int, arg string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-func showHelpStderrAndExit(pos int, name string, gl *globals.Globals) (int, error) {
+func showHelpStderrAndExit(pos int, _ string, gl *globals.Globals) (int, error) {
 	ShowUsage(os.Stderr)
 	gl.ExitNow = true
 	return pos, nil
 }
 
-func showHelpStdoutAndExit(pos int, name string, gl *globals.Globals) (int, error) {
+func showHelpStdoutAndExit(pos int, _ string, gl *globals.Globals) (int, error) {
 	ShowUsage(os.Stdout)
 	gl.ExitNow = true
 	return pos, nil
@@ -295,11 +296,12 @@ func strictJDK(pos int, name string, gl *globals.Globals) (int, error) {
 	return pos, nil
 }
 
-func useOldThread(pos int, name string, gl *globals.Globals) (int, error) {
-	gl.UseOldThread = true
-	setOptionToSeen("-732", gl)
-	return pos, nil
-}
+// use this as template for other switches to test new features
+// func useOldThread(pos int, name string, gl *globals.Globals) (int, error) {
+// 	gl.UseOldThread = true
+// 	setOptionToSeen("-732", gl)
+// 	return pos, nil
+// }
 
 // note that the -version option prints the version then exits the VM
 func versionStderrThenExit(pos int, name string, gl *globals.Globals) (int, error) {
