@@ -137,23 +137,43 @@ func clientVM(pos int, name string, gl *globals.Globals) (int, error) {
 
 // extracts the classpath from the command line, and break it into it components
 func getClasspath(pos int, param string, gl *globals.Globals) (int, error) {
-	setOptionToSeen("-cp", gl)
-	setOptionToSeen("-classpath", gl)
-	setOptionToSeen("--class-path", gl)
+    setOptionToSeen("-cp", gl)
+    setOptionToSeen("-classpath", gl)
+    setOptionToSeen("--class-path", gl)
 
 	// because the -cp and -classpath options override the default classpath as well
 	// as the one set in the environment variable CLASSPATH, we need to clear the
 	// classpath in the globals structure.
 	gl.ClasspathRaw = ""
-	gl.Classpath = make([]string, 0) // there will always be least one element
+	gl.Classpath = make([]string, 0) // reset the slice
 
-	if len(gl.Args) > pos+1 {
-		gl.ClasspathRaw = gl.Args[pos+1]
-		expandClasspth(gl)  // expand the classpath to its components
-		return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
-	} else {
-		return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
-	}
+    // Decide whether the parameter was embedded in the option token itself
+    // (e.g., "--class-path=..." or "-cp:...") or supplied as the next arg
+    // (e.g., "-cp ..."). We can detect embedded form by inspecting the
+    // original option token at args[pos] for '=' or ':'.
+    hasEmbedded := false
+    if pos >= 0 && pos < len(gl.Args) {
+        token := gl.Args[pos]
+        hasEmbedded = strings.Contains(token, "=") || strings.Contains(token, ":")
+    }
+
+    // If we have an embedded param and a non-empty param string, use it and do not
+    // consume the next argument element.
+    if hasEmbedded && strings.TrimSpace(param) != "" {
+        gl.ClasspathRaw = param
+        expandClasspth(gl)
+        return pos, nil
+    }
+
+    // Otherwise, expect the classpath in the following argument (space-separated form)
+    if len(gl.Args) > pos+1 {
+        gl.ClasspathRaw = gl.Args[pos+1]
+        expandClasspth(gl)  // expand the classpath to its components
+        return pos + 1, nil // return pos+1 to indicate that the next arg has been consumed
+    }
+
+    // Maintain legacy error text expected by tests
+    return pos, fmt.Errorf("missing classpath after -cp or -classpath option")
 }
 
 func expandClasspth(gl *globals.Globals) {
