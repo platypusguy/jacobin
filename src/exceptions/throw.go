@@ -14,7 +14,6 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/util"
 	"os"
@@ -86,24 +85,14 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	var fs *list.List
-	if glob.UseOldThread {
-		th, ok := glob.Threads[f.Thread].(*thread.ExecThread)
-		if !ok {
-			errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
-				f.Thread, frames.FormatFQN(f))
-			MinimalAbort(excNames.InternalException, errMsg)
-		}
-		fs = th.Stack
-	} else {
-		th, ok := glob.Threads[f.Thread].(*object.Object)
-		if !ok {
-			errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
-				f.Thread, frames.FormatFQN(f))
-			MinimalAbort(excNames.InternalException, errMsg)
-		}
-		fs = th.FieldTable["framestack"].Fvalue.(*list.List)
+	th, ok := glob.Threads[f.Thread].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
+			f.Thread, frames.FormatFQN(f))
+		MinimalAbort(excNames.InternalException, errMsg)
 	}
-
+	fs = th.FieldTable["framestack"].Fvalue.(*list.List)
+	
 	// find out if the exception is caught and if so point to the catch code
 	catchFrame, catchPC := FindCatchFrame(fs, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil {
