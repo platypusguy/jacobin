@@ -187,40 +187,23 @@ func JVMrun() int {
 	gfunction.InitializeGlobalThreadGroups()
 
 	// create the main thread
-	if globPtr.UseOldThread { //
-		MainThread = thread.CreateThread()
-		MainThread.AddThreadToTable(globPtr)
+	// TODO: invoke java/lang/Thread rather than recreate it
+	t := gfunction.ThreadCreateNoarg(nil)
 
-		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-		if globals.TraceInit {
-			trace.Trace("Starting execution with: " + *mainClass)
-		}
-
-		// StartExec() runs the main thread. It does not return an error because all errors
-		// will be handled one of three ways: 1) trapped in an exception, which shuts down the
-		// JVM after processing the error; 2) a deferred catch of a go panic, which also shuts
-		// down after processing the error; 3) an undeferred go panic, which should never occur.
-		// Consequently, if StartExec() finishes, no errors were encountered.
-		//
-		// To test for errors, trap stderr, as many of the unit tests do.
-		StartExec(*mainClass, &MainThread, globPtr)
-
-	} else { // JACOBIN-732
-		t := gfunction.ThreadCreateNoarg(nil)
-		mainClass := stringPool.GetStringPointer(mainClassNameIndex)
-		runnable := gfunction.NewRunnable(
-			object.JavaByteArrayFromGoString(*mainClass),
-			object.JavaByteArrayFromGoString("main"),
-			object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
-		params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
-		t = globals.GetGlobalRef().FuncInvokeGFunction(
-			"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
-		if globals.TraceInit {
-			trace.Trace("Starting execution with: " + *mainClass)
-		}
-		// the thread is registered in thread.Run()
-		thread.Run(t.(*object.Object))
+	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
+	runnable := gfunction.NewRunnable(
+		object.JavaByteArrayFromGoString(*mainClass),
+		object.JavaByteArrayFromGoString("main"),
+		object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
+	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
+	t = globals.GetGlobalRef().FuncInvokeGFunction(
+		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
+	if globals.TraceInit {
+		trace.Trace("Starting execution with: " + *mainClass)
 	}
+
+	// the thread is registered in thread.Run()
+	thread.Run(t.(*object.Object))
 
 	return shutdown.Exit(shutdown.OK)
 }
