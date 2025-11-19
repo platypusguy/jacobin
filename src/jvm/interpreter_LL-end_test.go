@@ -546,323 +546,170 @@ func TestNewWithError(t *testing.T) {
 
 // PEEK: test peek, stack underflow with Jacobin error message
 func TestPeekWithStackUnderflow(t *testing.T) {
-	if globals.GetGlobalRef().UseOldThread {
-		globals.InitGlobals("test")
-		normalStderr := os.Stderr
-		r, w, _ := os.Pipe()
-		os.Stderr = w
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
 
-		normalStdout := os.Stdout
-		_, wout, _ := os.Pipe()
-		os.Stdout = wout
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
 
-		globals.InitGlobals("testWithoutShutdown")
-		gl := globals.GetGlobalRef()
+	globals.InitGlobals("testWithoutShutdown")
+	gl := globals.GetGlobalRef()
 
-		gl.FuncInstantiateClass = InstantiateClass
-		gl.FuncThrowException = exceptions.ThrowExNil
-		gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-		gl.StrictJDK = false
+	gl.FuncInstantiateClass = InstantiateClass
+	gl.FuncThrowException = exceptions.ThrowExNil
+	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
+	gl.StrictJDK = false
 
-		stringPool.PreloadArrayClassesToStringPool()
-		trace.Init()
+	stringPool.PreloadArrayClassesToStringPool()
+	trace.Init()
 
-		err := classloader.Init()
-		if err != nil {
-			t.Fail()
-		}
-		classloader.LoadBaseClasses()
+	err := classloader.Init()
+	if err != nil {
+		t.Fail()
+	}
+	classloader.LoadBaseClasses()
 
-		// initialize the MTable (table caching methods)
-		classloader.MTable = make(map[string]classloader.MTentry)
-		gfunction.MTableLoadGFunctions(&classloader.MTable)
-		classloader.LoadBaseClasses()
-		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
+	// initialize the MTable (table caching methods)
+	classloader.MTable = make(map[string]classloader.MTentry)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	classloader.LoadBaseClasses()
+	_ = classloader.LoadClassFromNameOnly("java/lang/Object")
 
-		// th := thread.CreateThread()
-		th := thread.CreateThread()
-		// th.AddThreadToTable(gl)
+	// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
+	InitGlobalFunctionPointers()
+	gfunction.InitializeGlobalThreadGroups()
 
-		f := frames.CreateFrame(1)
-		f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
-		f.MethName = "hashCode"       // -------------------------------------------
-		f.MethType = "()I"            // -------------------------------------------
-		_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = -1
-		f.Thread = th.ID
+	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	main := object.StringObjectFromGoString("main")
+	params := []any{thObj, main}
+	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
+	thread.RegisterThread(thObj) // put into globals.Threads map
+	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
+	f := frames.CreateFrame(1)
+	f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
+	f.MethName = "hashCode"       // -------------------------------------------
+	f.MethType = "()I"            // -------------------------------------------
+	_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
+	for i := 0; i < 4; i++ {
+		f.OpStack = append(f.OpStack, int64(0))
+	}
+	f.TOS = -1
+	f.Thread = thID
 
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		th.Stack = fs
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	f.CP = &CP
 
-		_ = peek(f)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(f)
+	// Attach the JVM frame stack to the Java thread object
+	thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
 
-		_ = w.Close()
-		out, _ := io.ReadAll(r)
+	_ = peek(f)
 
-		_ = wout.Close()
-		// txt, _ := io.ReadAll(rout)
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
 
-		os.Stderr = normalStderr
-		os.Stdout = normalStdout
+	_ = wout.Close()
+	// txt, _ := io.ReadAll(rout)
 
-		msg := string(out[:])
+	os.Stderr = normalStderr
+	os.Stdout = normalStdout
 
-		if !strings.Contains(msg, "stack underflow") ||
-			!strings.Contains(msg, "org.jacobin.InternalException") { // use the Jacobin error message
-			t.Errorf("got unexpected error message: %s", msg)
-		}
-	} else {
-		globals.InitGlobals("test")
-		normalStderr := os.Stderr
-		r, w, _ := os.Pipe()
-		os.Stderr = w
+	msg := string(out[:])
 
-		normalStdout := os.Stdout
-		_, wout, _ := os.Pipe()
-		os.Stdout = wout
-
-		globals.InitGlobals("testWithoutShutdown")
-		gl := globals.GetGlobalRef()
-
-		gl.FuncInstantiateClass = InstantiateClass
-		gl.FuncThrowException = exceptions.ThrowExNil
-		gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-		gl.StrictJDK = false
-
-		stringPool.PreloadArrayClassesToStringPool()
-		trace.Init()
-
-		err := classloader.Init()
-		if err != nil {
-			t.Fail()
-		}
-		classloader.LoadBaseClasses()
-
-		// initialize the MTable (table caching methods)
-		classloader.MTable = make(map[string]classloader.MTentry)
-		gfunction.MTableLoadGFunctions(&classloader.MTable)
-		classloader.LoadBaseClasses()
-		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
-
-		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
-		InitGlobalFunctionPointers()
-		gfunction.InitializeGlobalThreadGroups()
-
-		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
-		main := object.StringObjectFromGoString("main")
-		params := []any{thObj, main}
-		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-		thread.RegisterThread(thObj) // put into globals.Threads map
-		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
-
-		f := frames.CreateFrame(1)
-		f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
-		f.MethName = "hashCode"       // -------------------------------------------
-		f.MethType = "()I"            // -------------------------------------------
-		_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = -1
-		f.Thread = thID
-
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
-
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		// Attach the JVM frame stack to the Java thread object
-		thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
-
-		_ = peek(f)
-
-		_ = w.Close()
-		out, _ := io.ReadAll(r)
-
-		_ = wout.Close()
-		// txt, _ := io.ReadAll(rout)
-
-		os.Stderr = normalStderr
-		os.Stdout = normalStdout
-
-		msg := string(out[:])
-
-		if !strings.Contains(msg, "stack underflow") ||
-			!strings.Contains(msg, "org.jacobin.InternalException") { // use the Jacobin error message
-			t.Errorf("got unexpected error message: %s", msg)
-		}
+	if !strings.Contains(msg, "stack underflow") ||
+		!strings.Contains(msg, "org.jacobin.InternalException") { // use the Jacobin error message
+		t.Errorf("got unexpected error message: %s", msg)
 	}
 }
 
 // PEEK: test peek, stack underflow with Jacobin error message
 func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
-	if globals.GetGlobalRef().UseOldThread {
-		globals.InitGlobals("test")
-		normalStderr := os.Stderr
-		r, w, _ := os.Pipe()
-		os.Stderr = w
+	globals.InitGlobals("test")
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
 
-		normalStdout := os.Stdout
-		_, wout, _ := os.Pipe()
-		os.Stdout = wout
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
 
-		globals.InitGlobals("testWithoutShutdown")
-		gl := globals.GetGlobalRef()
+	globals.InitGlobals("testWithoutShutdown")
+	gl := globals.GetGlobalRef()
 
-		gl.FuncInstantiateClass = InstantiateClass
-		gl.FuncThrowException = exceptions.ThrowExNil
-		gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-		gl.StrictJDK = true
+	gl.FuncInstantiateClass = InstantiateClass
+	gl.FuncThrowException = exceptions.ThrowExNil
+	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
+	gl.StrictJDK = true
 
-		stringPool.PreloadArrayClassesToStringPool()
-		trace.Init()
+	stringPool.PreloadArrayClassesToStringPool()
+	trace.Init()
 
-		err := classloader.Init()
-		if err != nil {
-			t.Fail()
-		}
-		classloader.LoadBaseClasses()
+	err := classloader.Init()
+	if err != nil {
+		t.Fail()
+	}
+	classloader.LoadBaseClasses()
 
-		// initialize the MTable (table caching methods)
-		classloader.MTable = make(map[string]classloader.MTentry)
-		gfunction.InitializeGlobalThreadGroups()
-		gfunction.MTableLoadGFunctions(&classloader.MTable)
-		classloader.LoadBaseClasses()
-		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
+	// initialize the MTable (table caching methods)
+	classloader.MTable = make(map[string]classloader.MTentry)
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	classloader.LoadBaseClasses()
+	_ = classloader.LoadClassFromNameOnly("java/lang/Object")
 
-		// th := thread.CreateThread()
-		th := thread.CreateThread()
-		// th.AddThreadToTable(gl)
+	// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
+	InitGlobalFunctionPointers()
+	gfunction.InitializeGlobalThreadGroups()
+	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	main := object.StringObjectFromGoString("main")
+	params := []any{thObj, main}
+	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
+	thread.RegisterThread(thObj) // put into globals.Threads map
+	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
-		f := frames.CreateFrame(1)
-		f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
-		f.MethName = "hashCode"       // -------------------------------------------
-		f.MethType = "()I"            // -------------------------------------------
-		_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = -1
-		f.Thread = th.ID
+	f := frames.CreateFrame(1)
+	f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
+	f.MethName = "hashCode"       // -------------------------------------------
+	f.MethType = "()I"            // -------------------------------------------
+	_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
+	for i := 0; i < 4; i++ {
+		f.OpStack = append(f.OpStack, int64(0))
+	}
+	f.TOS = -1
+	f.Thread = thID
 
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
+	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	f.CP = &CP
 
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		th.Stack = fs
+	fs := frames.CreateFrameStack()
+	fs.PushFront(f)
+	// Attach the JVM frame stack to the Java thread object
+	thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
 
-		_ = peek(f)
+	_ = peek(f)
 
-		_ = w.Close()
-		out, _ := io.ReadAll(r)
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
 
-		_ = wout.Close()
-		// txt, _ := io.ReadAll(rout)
+	_ = wout.Close()
+	// txt, _ := io.ReadAll(rout)
 
-		os.Stderr = normalStderr
-		os.Stdout = normalStdout
+	os.Stderr = normalStderr
+	os.Stdout = normalStdout
 
-		msg := string(out[:])
+	msg := string(out[:])
 
-		if !strings.Contains(msg, "stack underflow") ||
-			!strings.Contains(msg, "com.sun.jdi.InternalException") { // use the HotSpot error message
-			t.Errorf("got unexpected error message: %s", msg)
-		}
-	} else {
-		globals.InitGlobals("test")
-		normalStderr := os.Stderr
-		r, w, _ := os.Pipe()
-		os.Stderr = w
-
-		normalStdout := os.Stdout
-		_, wout, _ := os.Pipe()
-		os.Stdout = wout
-
-		globals.InitGlobals("testWithoutShutdown")
-		gl := globals.GetGlobalRef()
-
-		gl.FuncInstantiateClass = InstantiateClass
-		gl.FuncThrowException = exceptions.ThrowExNil
-		gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-		gl.StrictJDK = true
-
-		stringPool.PreloadArrayClassesToStringPool()
-		trace.Init()
-
-		err := classloader.Init()
-		if err != nil {
-			t.Fail()
-		}
-		classloader.LoadBaseClasses()
-
-		// initialize the MTable (table caching methods)
-		classloader.MTable = make(map[string]classloader.MTentry)
-		gfunction.MTableLoadGFunctions(&classloader.MTable)
-		classloader.LoadBaseClasses()
-		_ = classloader.LoadClassFromNameOnly("java/lang/Object")
-
-		// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
-		InitGlobalFunctionPointers()
-		gfunction.InitializeGlobalThreadGroups()
-		thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
-		main := object.StringObjectFromGoString("main")
-		params := []any{thObj, main}
-		thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-		thread.RegisterThread(thObj) // put into globals.Threads map
-		thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
-
-		f := frames.CreateFrame(1)
-		f.ClName = "java/lang/Double" // Not a G-function so catchFrame won't vomit.
-		f.MethName = "hashCode"       // -------------------------------------------
-		f.MethType = "()I"            // -------------------------------------------
-		_, err = classloader.FetchMethodAndCP(f.ClName, f.MethName, f.MethType)
-		for i := 0; i < 4; i++ {
-			f.OpStack = append(f.OpStack, int64(0))
-		}
-		f.TOS = -1
-		f.Thread = thID
-
-		CP := classloader.CPool{}
-		CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-		CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-		f.CP = &CP
-
-		fs := frames.CreateFrameStack()
-		fs.PushFront(f)
-		// Attach the JVM frame stack to the Java thread object
-		thObj.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
-
-		_ = peek(f)
-
-		_ = w.Close()
-		out, _ := io.ReadAll(r)
-
-		_ = wout.Close()
-		// txt, _ := io.ReadAll(rout)
-
-		os.Stderr = normalStderr
-		os.Stdout = normalStdout
-
-		msg := string(out[:])
-
-		if !strings.Contains(msg, "stack underflow") ||
-			!strings.Contains(msg, "com.sun.jdi.InternalException") { // use the HotSpot error message
-			t.Errorf("got unexpected error message: %s", msg)
-		}
+	if !strings.Contains(msg, "stack underflow") ||
+		!strings.Contains(msg, "com.sun.jdi.InternalException") { // use the HotSpot error message
+		t.Errorf("got unexpected error message: %s", msg)
 	}
 }
 
