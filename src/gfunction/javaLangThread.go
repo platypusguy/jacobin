@@ -894,7 +894,7 @@ func threadRun(params []interface{}) interface{} {
 	}
 
 	// threads are registered only when they are started
-	thread.RegisterThread(t)
+	RegisterThread(t)
 	t.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: thread.RUNNABLE}
 
 	if globals.TraceInst {
@@ -1007,4 +1007,13 @@ func threadNumberingNext(_ []any) any {
 	thread.ThreadNumber += 1
 	threadNumberingMutex.Unlock()
 	return int64(thread.ThreadNumber)
+}
+
+// =========== Support functions for the functions above ===========
+func RegisterThread(t *object.Object) {
+	glob := globals.GetGlobalRef()
+	ID := int(t.FieldTable["ID"].Fvalue.(int64))
+	glob.ThreadLock.Lock()
+	glob.Threads[ID] = t
+	glob.ThreadLock.Unlock()
 }

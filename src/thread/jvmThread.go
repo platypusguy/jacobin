@@ -9,7 +9,6 @@ package thread
 import (
 	"container/list"
 	"jacobin/src/globals"
-	"jacobin/src/object"
 	"math/rand"
 	"time"
 )
@@ -42,14 +41,6 @@ func CreateThread() ExecThread {
 	t.Stack = nil
 	t.Trace = false
 	return t
-}
-
-func RegisterThread(t *object.Object) {
-	glob := globals.GetGlobalRef()
-	ID := int(t.FieldTable["ID"].Fvalue.(int64))
-	glob.ThreadLock.Lock()
-	glob.Threads[ID] = t
-	glob.ThreadLock.Unlock()
 }
 
 //
@@ -112,5 +103,12 @@ func Run(t *object.Object) {
 	glob.FuncInvokeGFunction("java/lang/Thread.run()V", params)
 }
 
+func RegisterThread(t *object.Object) {
+	glob := globals.GetGlobalRef()
+	ID := int(t.FieldTable["ID"].Fvalue.(int64))
+	glob.ThreadLock.Lock()
+	glob.Threads[ID] = t
+	glob.ThreadLock.Unlock()
+}
 
 */

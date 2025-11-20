@@ -586,7 +586,7 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-	thread.RegisterThread(thObj) // put into globals.Threads map
+	gfunction.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f := frames.CreateFrame(1)
@@ -670,7 +670,7 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-	thread.RegisterThread(thObj) // put into globals.Threads map
+	gfunction.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f := frames.CreateFrame(1)
@@ -806,7 +806,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-	thread.RegisterThread(thObj) // put into globals.Threads map
+	gfunction.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f = frames.CreateFrame(1)
@@ -994,7 +994,7 @@ func TestPushWithStackOverflow(t *testing.T) {
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
 	thObj = gfunction.ThreadInitWithName(params).(*object.Object)
-	thread.RegisterThread(thObj) // put into globals.Threads map
+	gfunction.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 	f = frames.CreateFrame(1)
 	f.ClName = "java/lang/Object"
