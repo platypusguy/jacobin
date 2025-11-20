@@ -201,8 +201,7 @@ func JVMrun() int {
 		trace.Trace("Starting execution with: " + *mainClass)
 	}
 
-	// the thread is registered in thread.Run()
-	// thread.Run(t.(*object.Object))
+	// Run the main thread. Note: the thread is registered in java/lang/Thread.run()
 	args := []any{t.(*object.Object)}
 	globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.run()V", args)
 	return shutdown.Exit(shutdown.OK)

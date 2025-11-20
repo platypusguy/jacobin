@@ -44,28 +44,12 @@ func CreateThread() ExecThread {
 	return t
 }
 
-// Adds a thread to the global thread table using the ID as the key,
-// and a pointer to the thread itself as the value
-func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
-	glob.ThreadLock.Lock()
-	glob.Threads[t.ID] = t
-	glob.ThreadLock.Unlock()
-}
-
 func RegisterThread(t *object.Object) {
 	glob := globals.GetGlobalRef()
 	ID := int(t.FieldTable["ID"].Fvalue.(int64))
 	glob.ThreadLock.Lock()
 	glob.Threads[ID] = t
 	glob.ThreadLock.Unlock()
-}
-
-// Runs a thread. This is the function that is called by the JVM when a thread is started.
-// It calls the run method in the java/lang/Thread class and executes the Runnable that should be there.
-func Run(t *object.Object) {
-	glob := globals.GetGlobalRef()
-	params := []any{t}
-	glob.FuncInvokeGFunction("java/lang/Thread.run()V", params)
 }
 
 //
@@ -111,5 +95,22 @@ func CreateMainThread() *object.Object {
 		params)
 	return t.(*object.Object)
 }
+
+// Adds a thread to the global thread table using the ID as the key,
+// and a pointer to the thread itself as the value
+func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
+	glob.ThreadLock.Lock()
+	glob.Threads[t.ID] = t
+	glob.ThreadLock.Unlock()
+}
+
+// Runs a thread. This is the function that is called by the JVM when a thread is started.
+// It calls the run method in the java/lang/Thread class and executes the Runnable that should be there.
+func Run(t *object.Object) {
+	glob := globals.GetGlobalRef()
+	params := []any{t}
+	glob.FuncInvokeGFunction("java/lang/Thread.run()V", params)
+}
+
 
 */
