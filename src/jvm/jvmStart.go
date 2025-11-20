@@ -16,7 +16,6 @@ import (
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
@@ -203,8 +202,9 @@ func JVMrun() int {
 	}
 
 	// the thread is registered in thread.Run()
-	thread.Run(t.(*object.Object))
-
+	// thread.Run(t.(*object.Object))
+	args := []any{t.(*object.Object)}
+	globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.run()V", args)
 	return shutdown.Exit(shutdown.OK)
 }
 

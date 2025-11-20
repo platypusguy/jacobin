@@ -44,16 +44,6 @@ func CreateThread() ExecThread {
 	return t
 }
 
-func CreateMainThread() *object.Object {
-	gl := globals.GetGlobalRef()
-	globals.InitGlobals("test")
-	main := object.StringObjectFromGoString("main")
-	params := []any{main}
-	t := gl.FuncInvokeGFunction("java/lang/Thread.<init>(Ljava/lang/String;)V",
-		params)
-	return t.(*object.Object)
-}
-
 // Adds a thread to the global thread table using the ID as the key,
 // and a pointer to the thread itself as the value
 func (t *ExecThread) AddThreadToTable(glob *globals.Globals) {
@@ -109,3 +99,17 @@ const (
 	NORM_PRIORITY = 5
 	MAX_PRIORITY  = 10
 )
+
+/* functions that have been moved to javalang/thread.go
+
+func CreateMainThread() *object.Object {
+	gl := globals.GetGlobalRef()
+	globals.InitGlobals("test")
+	main := object.StringObjectFromGoString("main")
+	params := []any{main}
+	t := gl.FuncInvokeGFunction("java/lang/Thread.<init>(Ljava/lang/String;)V",
+		params)
+	return t.(*object.Object)
+}
+
+*/
