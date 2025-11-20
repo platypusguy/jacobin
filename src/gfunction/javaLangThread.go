@@ -895,7 +895,9 @@ func threadRun(params []interface{}) interface{} {
 
 	// threads are registered only when they are started
 	RegisterThread(t)
-	t.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: thread.RUNNABLE}
+	stateField := object.Field{Ftype: types.Ref,
+		Fvalue: threadStateCreateWithValue([]any{RUNNABLE})}
+	t.FieldTable["state"] = stateField
 
 	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",

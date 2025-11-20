@@ -92,11 +92,15 @@ func threadStateCreateWithValue(params []interface{}) interface{} {
 // It expects an int value for the state and returns the corresponding string object
 func threadStateToString(params []interface{}) interface{} {
 	if len(params) < 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing object")
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing argument")
 	}
-	state, ok := params[0].(int)
+	obj, ok := params[0].(*object.Object)
 	if !ok {
-		return getGErrBlk(excNames.NullPointerException, "Thread$State.toString(): null object")
+		return getGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): not an object")
+	}
+	state, ok := obj.FieldTable["value"].Fvalue.(int)
+	if !ok {
+		return getGErrBlk(excNames.NullPointerException, "Thread$State.toString(): invalid field value")
 	}
 
 	stateString, ok := ThreadState[state]
