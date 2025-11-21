@@ -19,6 +19,7 @@ import (
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -51,259 +52,215 @@ type PublicFields struct {
 
 func Load_Lang_Thread() {
 
-	// constructors (followed by alpha list of public methods)
-	MethodSignatures["java/lang/Thread.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  ThreadCreateNoarg,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadInitWithName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  threadInitWithRunnableAndName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  threadInitWithThreadGroupAndName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  threadInitWithThreadGroupRunnableAndName,
-		}
-
-	args := "(Ljava/lang/ThreadGroup;" + "Ljava/lang/String;" + "I" +
-		"Ljava/lang/Runnable;" + "J" + "Ljava/Security/AccessControlContext;" + ")V"
-	MethodSignatures["java/lang/Thread.<init>"+args] =
-		GMeth{
-			ParamSlots: 6,
-			GFunction:  threadInitFromPackageConstructor,
-		}
-
-	// remaining methods are in alpha order by Java FQN string
-
-	MethodSignatures["java/lang/Thread.activeCount()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadActiveCount,
-		}
-
-	MethodSignatures["java/lang/Thread.checkAccess()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
+	// -------------------------
+	// <clinit>
+	// -------------------------
 	MethodSignatures["java/lang/Thread.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadClinit,
 		}
 
+	// -------------------------
+	// Constructors in invocation order
+	// -------------------------
+	MethodSignatures["java/lang/Thread.<init>()V"] =
+		GMeth{ParamSlots: 0, GFunction: threadInitNull}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 1, GFunction: threadInitWithName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnableAndName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupAndName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
+
+	// Long constructor
+	args := "(Ljava/lang/ThreadGroup;" +
+		"Ljava/lang/String;" +
+		"I" +
+		"Ljava/lang/Runnable;" +
+		"J" +
+		"Ljava/Security/AccessControlContext;" +
+		")V"
+
+	MethodSignatures["java/lang/Thread.<init>"+args] =
+		GMeth{ParamSlots: 6, GFunction: threadInitFromPackageConstructor}
+
+	// -------------------------
+	// Methods in strict alphabetical order
+	// -------------------------
+
+	MethodSignatures["java/lang/Thread.activeCount()I"] =
+		GMeth{ParamSlots: 0, GFunction: threadActiveCount}
+
+	MethodSignatures["java/lang/Thread.blockedOn(Ljava/nio/channels/Interruptible;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.checkAccess()V"] =
+		GMeth{ParamSlots: 0, GFunction: justReturn}
+
+	MethodSignatures["java/lang/Thread.clearInterrupt()Z"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
 	MethodSignatures["java/lang/Thread.clone()Ljava/lang/Object;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  cloneNotSupportedException,
-		}
+		GMeth{ParamSlots: 0, GFunction: cloneNotSupportedException}
+
+	MethodSignatures["java/lang/Thread.countStackFrames()I"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadCurrentThread,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadCurrentThread, NeedsContext: true}
+
+	MethodSignatures["java/lang/Thread.destroy()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.dumpStack()V"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadDumpStack,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadDumpStack, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.enumerate([Ljava/lang/Thread;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.exit()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getContextClassLoader()Ljava/lang/ClassLoader;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getContinuation()Ljdk/internal/vm/Continuation;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getDefaultUncaughtExceptionHandler()Ljava/lang/Thread$UncaughtExceptionHandler;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.getId()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetId,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetId}
 
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetName,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetName}
 
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.getPriority()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetPriority,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetPriority}
 
 	MethodSignatures["java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadGetStackTrace,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetStackTrace, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.getState()Ljava/lang/Thread$State;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetState,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetState}
 
 	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetThreadGroup,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetThreadGroup}
+
+	MethodSignatures["java/lang/Thread.getUncaughtExceptionHandler()Ljava/lang/Thread$UncaughtExceptionHandler;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.holdsLock(Ljava/lang/Object;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.interrupt()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.interrupted()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isAlive()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnTrue,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isCCLOverridden(Ljava/lang/Class;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isDaemon()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isInterrupted()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadIsInterrupted,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadIsInterrupted}
 
 	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.join()V"] =
-		GMeth{ // TODO: trap or implement
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.join(J)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.join(JI)V"] =
+		GMeth{ParamSlots: 2, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.join(Ljava/time/Duration;)Z"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.onSpinWait()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
-		}
+		GMeth{ParamSlots: 0, GFunction: justReturn}
+
+	MethodSignatures["java/lang/Thread.resume()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.run()V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadRun,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadRun}
+
+	MethodSignatures["java/lang/Thread.setContextClassLoader(Ljava/lang/ClassLoader;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setDaemon(Z)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setDefaultUncaughtExceptionHandler(Ljava/lang/Thread$UncaughtExceptionHandler;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.setName(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSetName,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSetName}
 
 	MethodSignatures["java/lang/Thread.setPriority(I)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSetPriority,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSetPriority}
 
 	MethodSignatures["java/lang/Thread.setScopedValueCache([Ljava/lang/Object;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setUncaughtExceptionHandler(Ljava/lang/Thread$UncaughtExceptionHandler;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.sleep(J)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSleep,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSleep}
 
 	MethodSignatures["java/lang/Thread.sleepNanos(J)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.start()V"] =
-		GMeth{ // TODO: trap or implement
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.stop()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.stop(Ljava/lang/Throwable;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.suspend()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
 	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadNumbering,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadNumbering}
 
 	MethodSignatures["java/lang/Thread.ThreadNumberingNext()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadNumberingNext,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadNumberingNext}
 
 	MethodSignatures["java/lang/Thread.threadId()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetId,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetId}
 
 	MethodSignatures["java/lang/Thread.yield()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
+	// finalize <clinit>
 	threadClinit(nil)
 }
 
@@ -457,6 +414,26 @@ func ThreadCreateNoarg(_ []interface{}) any {
 	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
 	return t
+}
+
+func threadInitNull(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadInitNull: Expected 1 parameter, "+
+			"(the thread object), got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "initWithName: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	anInt64 := rand.Int63n(10_000_000)
+	name := object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", anInt64))
+
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	return nil
 }
 
 func threadInitWithName(params []interface{}) any {
