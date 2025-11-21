@@ -403,11 +403,11 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 	}
 
 	// Delegate: threadCreateWithRunnableAndName expects [runnable, name]
-	th = threadInitWithRunnableAndName([]interface{}{th, runnable, name}).(*object.Object)
+	threadInitWithRunnableAndName([]interface{}{th, runnable, name})
 	tg := object.Field{ // default thread group is the main thread group
 		Ftype: types.Ref, Fvalue: threadGroup}
 	th.FieldTable["threadgroup"] = tg
-	return th
+	return nil
 }
 
 // Should we need to create a thread, here is the instantiable implementation
@@ -474,13 +474,13 @@ func threadInitWithName(params []interface{}) any {
 
 	name, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := "threadCreateWithName: Expected parameter to be a String name"
+		errMsg := "threadCreateWithName: Expected name parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.ByteArray, Fvalue: name.FieldTable["value"].Fvalue}
-	return t
+		Ftype: types.ByteArray, Fvalue: name}
+	return nil
 }
 
 func ThreadInitWithName(params []interface{}) any { // exported version
@@ -488,10 +488,21 @@ func ThreadInitWithName(params []interface{}) any { // exported version
 }
 
 func threadInitWithRunnable(params []interface{}) any {
-	t := ThreadCreateNoarg(nil).(*object.Object)
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithRunnable: Expected thread object to be created"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	runnable, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithRunnableAndName: Expected parameter to be a Runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	t.FieldTable["task"] = object.Field{
-		Ftype: types.Ref, Fvalue: params[0].(*object.Object)}
-	return t
+		Ftype: types.Ref, Fvalue: runnable}
+	return nil
 }
 
 // java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V
@@ -528,7 +539,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		Ftype:  types.Ref,
 		Fvalue: name}
 
-	return t
+	return nil
 }
 
 // java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
@@ -562,8 +573,8 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.Ref, Fvalue: name}
-	return t
 
+	return nil
 }
 
 func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
@@ -600,7 +611,8 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.Ref, Fvalue: name}
-	return t
+
+	return nil
 }
 
 // "java/lang/Thread.currentThread()Ljava/lang/Thread;"

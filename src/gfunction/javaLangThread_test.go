@@ -108,9 +108,9 @@ func TestThreadInitWithName_Success(t *testing.T) {
 	ensureTGInit()
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("Alpha")
-	out := threadInitWithName([]any{th, nm}).(*object.Object)
-	got := out.FieldTable["name"].Fvalue.([]types.JavaByte)
-	if object.GoStringFromJavaByteArray(got) != object.GoStringFromStringObject(nm) {
+	_ = threadInitWithName([]any{th, nm})
+	got := th.FieldTable["name"].Fvalue.(*object.Object)
+	if object.GoStringFromStringObject(got) != object.GoStringFromStringObject(nm) {
 		t.Errorf("name not set correctly")
 	}
 }
@@ -136,11 +136,11 @@ func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 		t.Fatal("expected IAE for non-string name")
 	}
 	// success
-	out := threadInitWithRunnableAndName([]any{th, runnable, nm}).(*object.Object)
-	if out.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	threadInitWithRunnableAndName([]any{th, runnable, nm})
+	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("runnable not set")
 	}
-	if out.FieldTable["name"].Fvalue.(*object.Object) != nm {
+	if th.FieldTable["name"].Fvalue.(*object.Object) != nm {
 		t.Errorf("name not set")
 	}
 }
@@ -164,8 +164,8 @@ func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
 	if threadInitWithThreadGroupAndName([]any{th, mainTG, 789}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IAE for non-name")
 	}
-	out := threadInitWithThreadGroupAndName([]any{th, mainTG, nm}).(*object.Object)
-	if out.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
+	threadInitWithThreadGroupAndName([]any{th, mainTG, nm})
+	if th.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
 		t.Errorf("threadgroup not set")
 	}
 }
@@ -193,8 +193,8 @@ func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
 	if threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, 999}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IAE for non-name")
 	}
-	out := threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, nm}).(*object.Object)
-	if out.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, nm})
+	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("task not set")
 	}
 }
@@ -243,11 +243,11 @@ func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
 	}
 
 	// success path (with 6 = nil)
-	out := threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), runnable, int64(0), nil}).(*object.Object)
-	if out.FieldTable["name"].Fvalue.(*object.Object) != nm || out.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), runnable, int64(0), nil})
+	if th.FieldTable["name"].Fvalue.(*object.Object) != nm || th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("expected runnable+name wired through")
 	}
-	if out.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
+	if th.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
 		t.Errorf("threadgroup not set on thread")
 	}
 }
