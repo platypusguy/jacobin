@@ -369,8 +369,13 @@ func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {
 	if threadGetState([]any{123}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("type getState")
 	}
-	if threadGetState([]any{th}).(*object.Object) == nil {
-		t.Errorf("state missing")
+	thState, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok {
+		t.Errorf("state missing or is not an object")
+	}
+	stateValue := thState.FieldTable["value"].Fvalue.(int)
+	if stateValue != 0 {
+		t.Errorf("expected state value 0")
 	}
 
 	// getThreadGroup

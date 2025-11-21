@@ -23,7 +23,23 @@ func TestMain(m *testing.M) {
 // --- threadStateToString() tests ---
 
 func TestThreadStateToString_HappyPath(t *testing.T) {
-	res := threadStateToString([]interface{}{RUNNABLE})
+
+	ensureTGInit()
+
+	// Create thread.
+	th := ThreadCreateNoarg(nil).(*object.Object)
+	stateField := object.Field{Ftype: types.Ref,
+		Fvalue: threadStateCreateWithValue([]any{RUNNABLE})}
+	th.FieldTable["state"] = stateField
+
+	// Get thread state.
+	thState, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok {
+		t.Errorf("state missing or is not an object")
+	}
+
+	// Convert thread state to a string.
+	res := threadStateToString([]interface{}{thState})
 	if !object.IsStringObject(res) {
 		t.Fatalf("expected String object, got %T", res)
 	}
@@ -46,7 +62,8 @@ func TestThreadStateToString_MissingParam(t *testing.T) {
 
 func TestThreadStateToString_WrongTypeParam(t *testing.T) {
 	// Pass a non-int; code treats it as null type error
-	res := threadStateToString([]interface{}{"not-an-int"})
+	obj := object.MakePrimitiveObject("java/lang/Thread.State", types.GolangString, "not-an-int")
+	res := threadStateToString([]interface{}{obj})
 	gerr, ok := res.(*GErrBlk)
 	if !ok {
 		t.Fatalf("expected *GErrBlk, got %T", res)
@@ -57,7 +74,8 @@ func TestThreadStateToString_WrongTypeParam(t *testing.T) {
 }
 
 func TestThreadStateToString_InvalidState(t *testing.T) {
-	res := threadStateToString([]interface{}{42})
+	obj := object.MakePrimitiveObject("java/lang/Thread.State", types.Int, 42)
+	res := threadStateToString([]interface{}{obj})
 	gerr, ok := res.(*GErrBlk)
 	if !ok {
 		t.Fatalf("expected *GErrBlk, got %T", res)
