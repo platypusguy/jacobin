@@ -87,7 +87,7 @@ func TestThreadInitWithName_ErrWrongArity(t *testing.T) {
 	ret := threadInitWithName([]any{ThreadCreateNoarg(nil)})
 	g := ret.(*GErrBlk)
 	if g.ExceptionType != excNames.IllegalArgumentException {
-		t.Fatalf("expected IAE, got %d", g.ExceptionType)
+		t.Fatalf("expected IllegalArgumentException, got %d", g.ExceptionType)
 	}
 }
 
@@ -95,12 +95,12 @@ func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
 	ensureTGInit()
 	ret := threadInitWithName([]any{123, object.StringObjectFromGoString("n")})
 	if ret.(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatalf("expected IAE for non-thread first arg")
+		t.Fatalf("expected IllegalArgumentException for non-thread first arg")
 	}
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	ret2 := threadInitWithName([]any{th, 5})
 	if ret2.(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatalf("expected IAE for non-string name")
+		t.Fatalf("expected IllegalArgumentException for non-string name")
 	}
 }
 
@@ -119,7 +119,7 @@ func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 	ensureTGInit()
 	// wrong arity
 	if threadInitWithRunnableAndName([]any{ThreadCreateNoarg(nil)}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for arity")
+		t.Fatal("expected IllegalArgumentException for arity")
 	}
 	// wrong types each position
 	th := ThreadCreateNoarg(nil).(*object.Object)
@@ -127,13 +127,13 @@ func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 	runnable := makeRunnableDescriptor("C", "run", "()V")
 
 	if threadInitWithRunnableAndName([]any{123, runnable, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-thread")
+		t.Fatal("expected IllegalArgumentException for non-thread")
 	}
 	if threadInitWithRunnableAndName([]any{th, 456, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-runnable")
+		t.Fatal("expected IllegalArgumentException for non-runnable")
 	}
 	if threadInitWithRunnableAndName([]any{th, runnable, 789}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-string name")
+		t.Fatal("expected IllegalArgumentException for non-string name")
 	}
 	// success
 	threadInitWithRunnableAndName([]any{th, runnable, nm})
@@ -153,16 +153,16 @@ func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
 	nm := object.StringObjectFromGoString("D")
 
 	if threadInitWithThreadGroupAndName([]any{th, mainTG}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE arity")
+		t.Fatal("expected IllegalArgumentException arity")
 	}
 	if threadInitWithThreadGroupAndName([]any{123, mainTG, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-thread")
+		t.Fatal("expected IllegalArgumentException for non-thread")
 	}
 	if threadInitWithThreadGroupAndName([]any{th, 456, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-threadgroup")
+		t.Fatal("expected IllegalArgumentException for non-threadgroup")
 	}
 	if threadInitWithThreadGroupAndName([]any{th, mainTG, 789}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-name")
+		t.Fatal("expected IllegalArgumentException for non-name")
 	}
 	threadInitWithThreadGroupAndName([]any{th, mainTG, nm})
 	if th.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
@@ -179,19 +179,19 @@ func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
 	runnable := makeRunnableDescriptor("C2", "run", "()V")
 
 	if threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE arity")
+		t.Fatal("expected IllegalArgumentException arity")
 	}
 	if threadInitWithThreadGroupRunnableAndName([]any{123, mainTG, runnable, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-thread")
+		t.Fatal("expected IllegalArgumentException for non-thread")
 	}
 	if threadInitWithThreadGroupRunnableAndName([]any{th, 456, runnable, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-threadgroup")
+		t.Fatal("expected IllegalArgumentException for non-threadgroup")
 	}
 	if threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, 789, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-runnable")
+		t.Fatal("expected IllegalArgumentException for non-runnable")
 	}
 	if threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, 999}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for non-name")
+		t.Fatal("expected IllegalArgumentException for non-name")
 	}
 	threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, nm})
 	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
@@ -209,37 +209,37 @@ func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
 
 	// arity error
 	if threadInitFromPackageConstructor([]any{th}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE arity")
+		t.Fatal("expected IllegalArgumentException arity")
 	}
 
 	// wrong types by positions
 	// 0 can be nil or thread; use non-thread
 	if threadInitFromPackageConstructor([]any{123, mainTG, nm, int64(5), runnable, int64(0), nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for first thread param")
+		t.Fatal("expected IllegalArgumentException for first thread param")
 	}
 	// 1 must be threadgroup or nil
 	if threadInitFromPackageConstructor([]any{th, 456, nm, int64(5), runnable, int64(0), nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for threadgroup param")
+		t.Fatal("expected IllegalArgumentException for threadgroup param")
 	}
 	// 2 must be name string
 	if threadInitFromPackageConstructor([]any{th, mainTG, 789, int64(5), runnable, int64(0), nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for name param")
+		t.Fatal("expected IllegalArgumentException for name param")
 	}
 	// 3 must be int
 	if threadInitFromPackageConstructor([]any{th, mainTG, nm, "x", runnable, int64(0), nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for priority param")
+		t.Fatal("expected IllegalArgumentException for priority param")
 	}
 	// 4 must be runnable or nil
 	if threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), 111, int64(0), nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for runnable param")
+		t.Fatal("expected IllegalArgumentException for runnable param")
 	}
 	// 5 must be int64
 	if threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), runnable, 3, nil}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for long param")
+		t.Fatal("expected IllegalArgumentException for long param")
 	}
 	// 6 may be object or nil, BUT code checks index 5 when 6 is non-nil -> triggers error
 	if threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), runnable, int64(0), object.MakeEmptyObject()}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE for access control context param due to current implementation")
+		t.Fatal("expected IllegalArgumentException for access control context param due to current implementation")
 	}
 
 	// success path (with 6 = nil)
@@ -267,10 +267,10 @@ func TestThreadDumpStack_Paths(t *testing.T) {
 	ensureTGInit()
 	// arity
 	if threadDumpStack(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE arity")
+		t.Fatal("expected IllegalArgumentException arity")
 	}
 	if threadDumpStack([]any{123}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
-		t.Fatal("expected IAE type")
+		t.Fatal("expected IllegalArgumentException type")
 	}
 	// capture stderr for both StrictJDK branches
 	normal := os.Stderr
@@ -502,4 +502,22 @@ func makeRunnableDescriptor(className, methodName, sig string) *object.Object {
 	o.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(methodName)}
 	o.FieldTable["signature"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(sig)}
 	return o
+}
+
+func TestThreadInitWithRunnable_Paths(t *testing.T) {
+	ensureTGInit()
+	// wrong types by position
+	runnable := makeRunnableDescriptor("RC0", "run", "()V")
+	if threadInitWithRunnable([]any{123, runnable}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+		t.Fatal("expected IllegalArgumentException for non-thread first arg")
+	}
+	th := ThreadCreateNoarg(nil).(*object.Object)
+	if threadInitWithRunnable([]any{th, 456}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+		t.Fatal("expected IllegalArgumentException for non-runnable second arg")
+	}
+	// success path
+	threadInitWithRunnable([]any{th, runnable})
+	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+		t.Errorf("runnable task not set on thread")
+	}
 }
