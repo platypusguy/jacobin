@@ -105,7 +105,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.checkAccess()V"] =
-		GMeth{ParamSlots: 0, GFunction: justReturn}
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.clearInterrupt()Z"] =
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
@@ -114,7 +114,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: cloneNotSupportedException}
 
 	MethodSignatures["java/lang/Thread.countStackFrames()I"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
 		GMeth{ParamSlots: 0, GFunction: threadCurrentThread, NeedsContext: true}
@@ -207,7 +207,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: justReturn}
 
 	MethodSignatures["java/lang/Thread.resume()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.run()V"] =
 		GMeth{ParamSlots: 1, GFunction: threadRun}
@@ -243,13 +243,13 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.stop()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.stop(Ljava/lang/Throwable;)V"] =
-		GMeth{ParamSlots: 1, GFunction: trapFunction}
+		GMeth{ParamSlots: 1, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.suspend()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
 		GMeth{ParamSlots: 0, GFunction: threadNumbering}
