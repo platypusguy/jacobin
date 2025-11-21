@@ -76,6 +76,9 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupAndName}
 
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupRunnableWithoutName}
+
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
 
@@ -270,6 +273,11 @@ func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
 }
 
+func _threadNameGen() *object.Object {
+	num := rand.Int63n(10_000_000)
+	return object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", num))
+}
+
 // our clinit method simply specifies static constants
 func threadClinit(_ []interface{}) any {
 	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
@@ -429,10 +437,7 @@ func threadInitNull(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	anInt64 := rand.Int63n(10_000_000)
-	name := object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", anInt64))
-
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 	return nil
 }
 
@@ -477,8 +482,9 @@ func threadInitWithRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
-		Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
+
 	return nil
 }
 
@@ -550,6 +556,38 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
 		Ftype: types.Ref, Fvalue: name}
+
+	return nil
+}
+
+func threadInitWithThreadGroupRunnableWithoutName(params []interface{}) any {
+	if len(params) != 3 {
+		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableWithoutName: "+
+			"Expected 2 parameters plus thread object, got %d parameters",
+			len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	threadGroup, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a ThreadGroup object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	runnable, ok := params[2].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a Runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t.FieldTable["task"] = object.Field{
+		Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["threadgroup"] = object.Field{
+		Ftype: types.Ref, Fvalue: threadGroup}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 
 	return nil
 }
