@@ -187,7 +187,7 @@ func JVMrun() int {
 
 	// create the main thread
 	// TODO: invoke java/lang/Thread rather than recreate it
-	t := gfunction.ThreadCreateNoarg(nil)
+	t := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 	runnable := gfunction.NewRunnable(
@@ -195,14 +195,14 @@ func JVMrun() int {
 		object.JavaByteArrayFromGoString("main"),
 		object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
 	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
-	t = globals.GetGlobalRef().FuncInvokeGFunction(
+	globals.GetGlobalRef().FuncInvokeGFunction(
 		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
 	if globals.TraceInit {
 		trace.Trace("Starting execution with: " + *mainClass)
 	}
 
 	// Run the main thread. Note: the thread is registered in java/lang/Thread.run()
-	args := []any{t.(*object.Object)}
+	args := []any{t}
 	globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.run()V", args)
 	return shutdown.Exit(shutdown.OK)
 }
