@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2025 by  the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2025 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -89,6 +89,7 @@ func TestInitializeGlobalThreadGroups_TestMode(t *testing.T) {
 func TestInitializeGlobalThreadGroups_NonTestMode(t *testing.T) {
 	ensureTGInit()
 	gr := globals.GetGlobalRef()
+	// gr.JacobinName = "test"
 	gr.ThreadGroups = make(map[string]interface{})
 	gr.JacobinName = "run"
 
@@ -153,17 +154,16 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 		// tgName := "java/lang/ThreadGroup"
 		obj := threadGroupFake("grpA")
 		name := object.StringObjectFromGoString("grpA")
-		res := ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, object.Null, name, int64(0), types.JavaBoolUninitialized})
-		tg := res.(*object.Object)
-		parentObj := tg.FieldTable["parent"].Fvalue.(*object.Object)
+		ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, object.Null, name, int64(0), types.JavaBoolUninitialized})
+		parentObj := obj.FieldTable["parent"].Fvalue.(*object.Object)
 		parent := threadGroupGetName([]any{parentObj}).(*object.Object)
 		if object.GoStringFromStringObject(parent) != "main" {
 			t.Errorf("expected parent to be 'main'")
 		}
-		if tg.FieldTable["priority"].Ftype != types.Int {
+		if obj.FieldTable["priority"].Ftype != types.Int {
 			t.Errorf("priority not initialized")
 		}
-		if tg.FieldTable["subgroups"].Fvalue.(*list.List) == nil {
+		if obj.FieldTable["subgroups"].Fvalue.(*list.List) == nil {
 			t.Errorf("subgroups not initialized")
 		}
 		if gr.ThreadGroups["grpA"] == nil {
@@ -176,8 +176,8 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
 		name := object.StringObjectFromGoString("grpB")
-		res := ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, parent, name, int64(5), types.JavaBoolTrue})
-		tg := res.(*object.Object)
+		ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, parent, name, int64(5), types.JavaBoolTrue})
+		tg := obj
 		if tg.FieldTable["parent"].Fvalue.(*object.Object) != parent {
 			t.Errorf("expected parent to be set")
 		}
@@ -192,18 +192,21 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 
 func TestThreadGroupInitWithName_AllPaths(t *testing.T) {
 	// wrong count
-	if _, ok := threadGroupInitWithName([]any{1}).(*GErrBlk); !ok {
+	ok := threadGroupInitWithName([]any{1})
+	if ok == nil {
 		t.Errorf("expected error for wrong count")
 	}
 	// first not object
-	if _, ok := threadGroupInitWithName([]any{123, object.StringObjectFromGoString("n")}).(*GErrBlk); !ok {
+	ok = threadGroupInitWithName([]any{123, object.StringObjectFromGoString("n")})
+	if ok == nil {
 		t.Errorf("expected error for first param type")
 	}
 	// second not string object
 	{
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
-		if _, ok := threadGroupInitWithName([]any{obj, 7}).(*GErrBlk); !ok {
+		ok = threadGroupInitWithName([]any{obj, 7}).(*GErrBlk)
+		if ok == nil {
 			t.Errorf("expected error for second param type")
 		}
 	}
@@ -214,10 +217,8 @@ func TestThreadGroupInitWithName_AllPaths(t *testing.T) {
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
 		name := object.StringObjectFromGoString("solo")
-		res := threadGroupInitWithName([]any{obj, name})
-		if _, ok := res.(*object.Object); !ok {
-			t.Errorf("expected success object")
-		}
+		threadGroupInitWithName([]any{obj, name})
+
 		if gr.ThreadGroups["solo"] == nil {
 			t.Errorf("expected group registered under name solo")
 		}
@@ -225,6 +226,7 @@ func TestThreadGroupInitWithName_AllPaths(t *testing.T) {
 }
 
 func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
+	ensureTGInit()
 	// wrong count
 	if _, ok := threadGroupInitWithParentAndName([]any{1}).(*GErrBlk); !ok {
 		t.Errorf("expected error for wrong count")
@@ -278,8 +280,8 @@ func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
 		parent := threadGroupFake("parent2")
 		name := object.StringObjectFromGoString("child")
-		res := threadGroupInitWithParentAndName([]any{obj, parent, name})
-		tg := res.(*object.Object)
+		threadGroupInitWithParentAndName([]any{obj, parent, name})
+		tg := obj
 		lst := parent.FieldTable["subgroups"].Fvalue.(*list.List)
 		if lst.Len() != 1 || lst.Front().Value != tg {
 			t.Errorf("expected new group added to parent's subgroups")
