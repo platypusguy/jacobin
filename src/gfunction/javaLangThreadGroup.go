@@ -114,16 +114,16 @@ func InitializeGlobalThreadGroups() {
 	k.Data.ClInit = types.ClInitRun
 
 	// instantiate a new ThreadGroup object with the name "system"
-	tg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
+	systemtg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
 	if err != nil {
 		errMsg :=
 			"initializeGlobalThreadGroups: Failed to instantiate java/lang/ThreadGroup"
 		gr.FuncThrowException(excNames.InternalError, errMsg)
 	}
 
-	systg := threadGroupInitWithName(
-		[]interface{}{tg, object.StringObjectFromGoString("system")})
-	gr.ThreadGroups["system"] = systg
+	threadGroupInitWithName(
+		[]interface{}{systemtg, object.StringObjectFromGoString("system")})
+	gr.ThreadGroups["system"] = systemtg
 
 	// Create "main" group as a child of "system"
 	maintg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
@@ -133,8 +133,8 @@ func InitializeGlobalThreadGroups() {
 		gr.FuncThrowException(excNames.InternalError, errMsg)
 	}
 
-	maintg = threadGroupInitWithName(
-		[]interface{}{tg, object.StringObjectFromGoString("main")})
+	threadGroupInitWithName(
+		[]interface{}{maintg, object.StringObjectFromGoString("main")})
 
 	gr.ThreadGroups["main"] = maintg
 }
@@ -212,7 +212,7 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 	// add the thread group to the global list of thread groups
 	globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(nameObj)] = obj
 
-	return obj
+	return nil
 }
 
 // java/lang/ThreadGroup.ThreadGroup(Ljava/lang/String;)Ljava/lang/ThreadGroup;
@@ -236,9 +236,9 @@ func threadGroupInitWithName(params []interface{}) any {
 	}
 
 	args := []interface{}{obj, object.Null, name, int64(0), types.JavaBoolUninitialized}
-	updatedObj := ThreadGroupInitWithParentNameMaxpriorityDaemon(args).(*object.Object)
+	ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
 
-	return updatedObj
+	return nil
 
 }
 
@@ -289,7 +289,7 @@ func threadGroupInitWithParentAndName(params []interface{}) any {
 	parentSubgroups := parentObj.FieldTable["subgroups"].Fvalue.(*list.List)
 	parentSubgroups.PushBack(tg)
 
-	return tg
+	return nil
 }
 
 // == non-constructor methods in alpha order ==
