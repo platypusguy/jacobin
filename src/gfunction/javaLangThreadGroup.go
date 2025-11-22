@@ -283,11 +283,11 @@ func threadGroupInitWithParentAndName(params []interface{}) any {
 	}
 
 	args := []interface{}{obj, parentObj, nameObj, int64(0), types.JavaBoolUninitialized}
-	tg := ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
+	ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
 
 	// Now add this thread group to the parent's list of subgroups
 	parentSubgroups := parentObj.FieldTable["subgroups"].Fvalue.(*list.List)
-	parentSubgroups.PushBack(tg)
+	parentSubgroups.PushBack(obj)
 
 	return nil
 }
