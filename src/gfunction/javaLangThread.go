@@ -561,24 +561,24 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 
 func threadInitWithThreadGroupRunnable(params []interface{}) any {
 	if len(params) != 3 {
-		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableWithoutName: "+
+		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnable: "+
 			"Expected 2 parameters plus thread object, got %d parameters",
 			len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	t, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a Thread object"
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	threadGroup, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a ThreadGroup object"
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a ThreadGroup object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runnable, ok := params[2].(*object.Object)
 	if !ok {
-		errMsg := "threadInitWithThreadGroupRunnableWithoutName: Expected parameter to be a Runnable object"
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -632,13 +632,13 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 // "java/lang/Thread.currentThread()Ljava/lang/Thread;"
 func threadCurrentThread(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("CurrentThread: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadCurrentThread: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	fStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "CurrentThread: Expected context data to be a frame"
+		errMsg := "threadCurrentThread: Expected context data to be a frame"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -651,13 +651,13 @@ func threadCurrentThread(params []interface{}) any {
 // java/lang/Thread.dumpStack()V
 func threadDumpStack(params []interface{}) interface{} {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadDumpStack: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	jvmStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "DumpStack: Expected context data to be a frame"
+		errMsg := "threadDumpStack: Expected context data to be a frame"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -743,7 +743,7 @@ func threadGetId(params []interface{}) any {
 // "java/lang/Thread.getName()Ljava/lang/String;"
 func threadGetName(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetName: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -758,7 +758,7 @@ func threadGetName(params []interface{}) any {
 // "java/lang/Thread.getPriority()I"
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getPriority: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetPriority: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -769,13 +769,13 @@ func threadGetPriority(params []interface{}) any {
 // java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;
 func threadGetStackTrace(params []interface{}) any {
 	if len(params) != 2 {
-		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetStackTrace: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	jvmFrameStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "getStackTrace: Expected context data to be a frame stack"
+		errMsg := "threadGetStackTrace: Expected context data to be a frame stack"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -792,7 +792,7 @@ func threadGetStackTrace(params []interface{}) any {
 
 func threadGetState(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGetName: Expected 1 parameter, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetState: Expected 1 parameter, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -844,7 +844,7 @@ func threadIsInterrupted(params []interface{}) any {
 
 func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("Run: Expected thread parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadRun: Expected thread parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -874,7 +874,7 @@ func threadRun(params []interface{}) interface{} {
 		clName, methName, methType)
 
 	if err != nil {
-		errMsg := fmt.Sprintf("Run: Could not find run method: %v", err)
+		errMsg := fmt.Sprintf("threadRun: Could not find run method: %v", err)
 		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
 	}
 
@@ -908,14 +908,14 @@ func threadRun(params []interface{}) interface{} {
 	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
 
 	if frames.PushFrame(fs, f) != nil {
-		errMsg := fmt.Sprintf("Memory error allocating frame on thread: %d", tID)
+		errMsg := fmt.Sprintf("threadRun: Memory error allocating frame on thread: %d", tID)
 		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
 	if instantiateError != nil {
-		errMsg := "Error instantiating: " + clName + ".main()"
+		errMsg := "threadRun: Error instantiating: " + clName + ".main()"
 		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
@@ -926,11 +926,12 @@ func threadRun(params []interface{}) interface{} {
 	t.FieldTable["state"] = stateField
 
 	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		trace.Trace(traceInfo)
 	}
 
+	// Run jvm/run.go::RunJavaThread(t)
 	return globals.GetGlobalRef().FuncRunThread(t)
 }
 
