@@ -25,7 +25,7 @@ type ExecThread struct {
 
 // ThreadNumber is a monotonic counter to number threads at creation
 // is set only in the threadNumbering functions in javalang/thread.go
-var ThreadNumber int64
+var ThreadNumber int64 = 0
 
 // CreateThread creates an execution thread and initializes it with default values
 // All Jacobin execution threads *must* use this function to create a thread
@@ -75,7 +75,7 @@ const (
 	MAX_PRIORITY  = 10
 )
 
-/* functions that have been moved to javalang/thread.go
+/* functions that have been moved to gfunction/javaLangThread.go
 
 func CreateMainThread() *object.Object {
 	gl := globals.GetGlobalRef()

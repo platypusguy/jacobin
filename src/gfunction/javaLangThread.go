@@ -30,11 +30,11 @@ import (
  executing JVM. MethodSignatures is a map whose key is the fully qualified name and
  type of the method (that is, the method's full signature) and a value consisting of
  a struct of an int (the number of slots to pop off the caller's operand stack when
- creating the new frame and a function. All methods have the same signature, regardless
+ creating the new frame and a function). All methods have the same signature, regardless
  of the signature of their Java counterparts. That signature is that it accepts a slice
  of interface{} and returns an interface{}. The accepted slice can be empty and the
  return interface can be nil. This covers all Java functions. (Objects are returned
- as a 64-bit address in this scheme (as they are in the JVM).
+ as a 64-bit address in this scheme as they are in the JVM).
 
  The passed-in slice contains one entry for every parameter passed to the method (which
  could mean an empty slice).
@@ -51,259 +51,218 @@ type PublicFields struct {
 
 func Load_Lang_Thread() {
 
-	// constructors (followed by alpha list of public methods)
-	MethodSignatures["java/lang/Thread.<init>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  ThreadCreateNoarg,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadInitWithName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  threadInitWithRunnableAndName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  threadInitWithThreadGroupAndName,
-		}
-
-	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  threadInitWithThreadGroupRunnableAndName,
-		}
-
-	args := "(Ljava/lang/ThreadGroup;" + "Ljava/lang/String;" + "I" +
-		"Ljava/lang/Runnable;" + "J" + "Ljava/Security/AccessControlContext;" + ")V"
-	MethodSignatures["java/lang/Thread.<init>"+args] =
-		GMeth{
-			ParamSlots: 6,
-			GFunction:  threadInitFromPackageConstructor,
-		}
-
-	// remaining methods are in alpha order by Java FQN string
-
-	MethodSignatures["java/lang/Thread.activeCount()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadActiveCount,
-		}
-
-	MethodSignatures["java/lang/Thread.checkAccess()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
-
+	// -------------------------
+	// <clinit>
+	// -------------------------
 	MethodSignatures["java/lang/Thread.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  threadClinit,
 		}
 
+	// -------------------------
+	// Constructors in invocation order
+	// -------------------------
+	MethodSignatures["java/lang/Thread.<init>()V"] =
+		GMeth{ParamSlots: 0, GFunction: threadInitNull}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 1, GFunction: threadInitWithName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnableAndName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupAndName}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupRunnable}
+
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
+		GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
+
+	// Long constructor
+	args := "(Ljava/lang/ThreadGroup;" +
+		"Ljava/lang/String;" +
+		"I" +
+		"Ljava/lang/Runnable;" +
+		"J" +
+		"Ljava/Security/AccessControlContext;" +
+		")V"
+
+	MethodSignatures["java/lang/Thread.<init>"+args] =
+		GMeth{ParamSlots: 6, GFunction: threadInitFromPackageConstructor}
+
+	// -------------------------
+	// Methods in strict alphabetical order
+	// -------------------------
+
+	MethodSignatures["java/lang/Thread.activeCount()I"] =
+		GMeth{ParamSlots: 0, GFunction: threadActiveCount}
+
+	MethodSignatures["java/lang/Thread.blockedOn(Ljava/nio/channels/Interruptible;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.checkAccess()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
+
+	MethodSignatures["java/lang/Thread.clearInterrupt()Z"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
 	MethodSignatures["java/lang/Thread.clone()Ljava/lang/Object;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  cloneNotSupportedException,
-		}
+		GMeth{ParamSlots: 0, GFunction: cloneNotSupportedException}
+
+	MethodSignatures["java/lang/Thread.countStackFrames()I"] =
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.currentThread()Ljava/lang/Thread;"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadCurrentThread,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadCurrentThread, NeedsContext: true}
+
+	MethodSignatures["java/lang/Thread.destroy()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.dumpStack()V"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadDumpStack,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadDumpStack, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.enumerate([Ljava/lang/Thread;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadEnumerate}
+
+	MethodSignatures["java/lang/Thread.exit()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getContextClassLoader()Ljava/lang/ClassLoader;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getContinuation()Ljdk/internal/vm/Continuation;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.getDefaultUncaughtExceptionHandler()Ljava/lang/Thread$UncaughtExceptionHandler;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.getId()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetId,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetId}
 
 	MethodSignatures["java/lang/Thread.getName()Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetName,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetName}
 
 	MethodSignatures["java/lang/Thread.getNextThreadIdOffset()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.getPriority()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetPriority,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetPriority}
 
 	MethodSignatures["java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;"] =
-		GMeth{
-			ParamSlots:   0,
-			GFunction:    threadGetStackTrace,
-			NeedsContext: true,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetStackTrace, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.getState()Ljava/lang/Thread$State;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetState,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetState}
 
 	MethodSignatures["java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetThreadGroup,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetThreadGroup}
+
+	MethodSignatures["java/lang/Thread.getUncaughtExceptionHandler()Ljava/lang/Thread$UncaughtExceptionHandler;"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.holdsLock(Ljava/lang/Object;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.interrupt()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.interrupted()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isAlive()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnTrue,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isCCLOverridden(Ljava/lang/Class;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isDaemon()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isInterrupted()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadIsInterrupted,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadIsInterrupted}
 
 	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  returnFalse,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.join()V"] =
-		GMeth{ // TODO: trap or implement
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadJoin}
+
+	MethodSignatures["java/lang/Thread.join(J)V"] =
+		GMeth{ParamSlots: 1, GFunction: threadJoin}
+
+	MethodSignatures["java/lang/Thread.join(JI)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadJoin}
+
+	MethodSignatures["java/lang/Thread.join(Ljava/time/Duration;)Z"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.onSpinWait()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  clinitGeneric,
-		}
+		GMeth{ParamSlots: 0, GFunction: justReturn}
+
+	MethodSignatures["java/lang/Thread.resume()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
 
 	MethodSignatures["java/lang/Thread.run()V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadRun,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadRun}
+
+	MethodSignatures["java/lang/Thread.setContextClassLoader(Ljava/lang/ClassLoader;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setDaemon(Z)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setDefaultUncaughtExceptionHandler(Ljava/lang/Thread$UncaughtExceptionHandler;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.setName(Ljava/lang/String;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSetName,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSetName}
 
 	MethodSignatures["java/lang/Thread.setPriority(I)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSetPriority,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSetPriority}
 
 	MethodSignatures["java/lang/Thread.setScopedValueCache([Ljava/lang/Object;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
+
+	MethodSignatures["java/lang/Thread.setUncaughtExceptionHandler(Ljava/lang/Thread$UncaughtExceptionHandler;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.sleep(J)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  threadSleep,
-		}
+		GMeth{ParamSlots: 1, GFunction: threadSleep}
 
 	MethodSignatures["java/lang/Thread.sleepNanos(J)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
+		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.start()V"] =
-		GMeth{ // TODO: trap or implement
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadStart}
+
+	MethodSignatures["java/lang/Thread.stop()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
+
+	MethodSignatures["java/lang/Thread.stop(Ljava/lang/Throwable;)V"] =
+		GMeth{ParamSlots: 1, GFunction: trapDeprecated}
+
+	MethodSignatures["java/lang/Thread.suspend()V"] =
+		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
+
 	MethodSignatures["java/lang/Thread.ThreadNumbering()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadNumbering,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadNumbering}
 
 	MethodSignatures["java/lang/Thread.ThreadNumberingNext()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadNumberingNext,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadNumberingNext}
 
 	MethodSignatures["java/lang/Thread.threadId()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  threadGetId,
-		}
+		GMeth{ParamSlots: 0, GFunction: threadGetId}
 
 	MethodSignatures["java/lang/Thread.yield()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  justReturn,
-		}
+		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
+	// finalize <clinit>
 	threadClinit(nil)
 }
 
@@ -311,6 +270,11 @@ var classname = "java/lang/Thread"
 
 func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
+}
+
+func _threadNameGen() *object.Object {
+	num := threadNumberingNext(nil).(int64)
+	return object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", num))
 }
 
 // our clinit method simply specifies static constants
@@ -353,7 +317,7 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 		}
 	}
 
-	// 1: Threadgroup (object, may be null)
+	// 1: Threadgroup (object may be null)
 	if params[1] != nil {
 		if threadGroup, ok = params[1].(*object.Object); !ok {
 			errMsg := fmt.Sprintf("%s: Expected first argument to be a ThreadGroup object (or null)", where)
@@ -459,6 +423,23 @@ func ThreadCreateNoarg(_ []interface{}) any {
 	return t
 }
 
+func threadInitNull(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadInitNull: Expected 1 parameter, "+
+			"(the thread object), got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInitNull(: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
+	return nil
+}
+
 func threadInitWithName(params []interface{}) any {
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadInitWithName: Expected 2 parameters, "+
@@ -468,7 +449,7 @@ func threadInitWithName(params []interface{}) any {
 
 	t, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "initWithName: Expected parameter to be a Thread object"
+		errMsg := "threadInitWithName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -500,8 +481,9 @@ func threadInitWithRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
-		Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
+
 	return nil
 }
 
@@ -577,6 +559,38 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 	return nil
 }
 
+func threadInitWithThreadGroupRunnable(params []interface{}) any {
+	if len(params) != 3 {
+		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnable: "+
+			"Expected 2 parameters plus thread object, got %d parameters",
+			len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	threadGroup, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a ThreadGroup object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	runnable, ok := params[2].(*object.Object)
+	if !ok {
+		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t.FieldTable["task"] = object.Field{
+		Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["threadgroup"] = object.Field{
+		Ftype: types.Ref, Fvalue: threadGroup}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
+
+	return nil
+}
+
 func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 	if len(params) != 4 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableAndName: "+
@@ -618,13 +632,13 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 // "java/lang/Thread.currentThread()Ljava/lang/Thread;"
 func threadCurrentThread(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("CurrentThread: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadCurrentThread: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	fStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "CurrentThread: Expected context data to be a frame"
+		errMsg := "threadCurrentThread: Expected context data to be a frame"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -637,13 +651,13 @@ func threadCurrentThread(params []interface{}) any {
 // java/lang/Thread.dumpStack()V
 func threadDumpStack(params []interface{}) interface{} {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadDumpStack: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	jvmStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "DumpStack: Expected context data to be a frame"
+		errMsg := "threadDumpStack: Expected context data to be a frame"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -729,7 +743,7 @@ func threadGetId(params []interface{}) any {
 // "java/lang/Thread.getName()Ljava/lang/String;"
 func threadGetName(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getName: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetName: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -744,7 +758,7 @@ func threadGetName(params []interface{}) any {
 // "java/lang/Thread.getPriority()I"
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("getPriority: Expected no parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetPriority: Expected no parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -755,13 +769,13 @@ func threadGetPriority(params []interface{}) any {
 // java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;
 func threadGetStackTrace(params []interface{}) any {
 	if len(params) != 2 {
-		errMsg := fmt.Sprintf("DumpStack: Expected context data, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetStackTrace: Expected context data, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	jvmFrameStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "getStackTrace: Expected context data to be a frame stack"
+		errMsg := "threadGetStackTrace: Expected context data to be a frame stack"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -778,7 +792,7 @@ func threadGetStackTrace(params []interface{}) any {
 
 func threadGetState(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadGetName: Expected 1 parameter, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadGetState: Expected 1 parameter, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -819,7 +833,30 @@ func threadIsInterrupted(params []interface{}) any {
 	return t.FieldTable["interrupted"].Fvalue
 }
 
-// "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
+func threadStart(params []interface{}) any {
+	th := params[0].(*object.Object)
+	go threadRun([]any{th})
+	return nil
+}
+
+func threadJoin(params []interface{}) any {
+	th := params[0].(*object.Object)
+	millis := int64(0)
+	if len(params) > 1 {
+		millis = params[1].(int64)
+		nanos := int64(0)
+		if len(params) > 2 {
+			nanos = params[2].(int64)
+			if nanos > 0 {
+				millis += 1 // not precise
+			}
+		}
+	}
+	joinThread(th, millis)
+	return nil
+}
+
+// "java/lang/Thread.run()V" This is the default function for running a thread. In sequence:
 // 1. Fetch the run method
 // 2. Create the frame stack
 // 3. Create the frame
@@ -830,7 +867,7 @@ func threadIsInterrupted(params []interface{}) any {
 
 func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("Run: Expected thread parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadRun: Expected thread parameters, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -860,7 +897,7 @@ func threadRun(params []interface{}) interface{} {
 		clName, methName, methType)
 
 	if err != nil {
-		errMsg := fmt.Sprintf("Run: Could not find run method: %v", err)
+		errMsg := fmt.Sprintf("threadRun: Could not find run method: %v", err)
 		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
 	}
 
@@ -894,30 +931,34 @@ func threadRun(params []interface{}) interface{} {
 	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
 
 	if frames.PushFrame(fs, f) != nil {
-		errMsg := fmt.Sprintf("Memory error allocating frame on thread: %d", tID)
+		errMsg := fmt.Sprintf("threadRun: Memory error allocating frame on thread: %d", tID)
 		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
 	// must first instantiate the class, so that any static initializers are run
 	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
 	if instantiateError != nil {
-		errMsg := "Error instantiating: " + clName + ".main()"
+		errMsg := "threadRun: Error instantiating: " + clName + ".main()"
 		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
 	// threads are registered only when they are started
 	RegisterThread(t)
-	stateField := object.Field{Ftype: types.Ref,
-		Fvalue: threadStateCreateWithValue([]any{RUNNABLE})}
-	t.FieldTable["state"] = stateField
+	setThreadState(t, RUNNABLE)
 
 	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
 			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
 		trace.Trace(traceInfo)
 	}
 
-	return globals.GetGlobalRef().FuncRunThread(t)
+	// Run jvm/run.go::RunJavaThread(t).
+	_ = globals.GetGlobalRef().FuncRunThread(t)
+
+	// When completed, mark the thread as terminated.
+	setThreadState(t, TERMINATED)
+
+	return nil
 }
 
 // "java/lang/Thread.setName(Ljava/lang/String;)V"
@@ -1030,4 +1071,47 @@ func RegisterThread(t *object.Object) {
 	glob.ThreadLock.Lock()
 	glob.Threads[ID] = t
 	glob.ThreadLock.Unlock()
+}
+
+// Set the thread state to the supplied value unconditionally.
+func setThreadState(th *object.Object, newState int) {
+	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok {
+		stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{newState})}
+		th.FieldTable["state"] = stateField
+	}
+	thStateObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: newState}
+}
+
+// Wait for a thread to be TERMINATED up to maxTime milliseconds.
+// Returns:
+// * true if the thread terminated within maxTime milliseconds
+// * false if the thread terminated after maxTime milliseconds
+// * getGErrBlk(IllegalArgumentException) if:
+//   - the thread state is not an object
+//   - the thread state is missing the value field
+//   - max wait time <= 0
+func joinThread(th *object.Object, maxTime int64) interface{} {
+	if maxTime <= 0 {
+		return getGErrBlk(excNames.IllegalArgumentException, "joinThread: max wait time <= 0")
+	}
+	var t1, t2 int64
+	t1 = time.Now().UnixMilli()
+	for {
+		thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+		if !ok {
+			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: field state is not an object")
+		}
+		thStateInt, ok := thStateObj.FieldTable["value"].Fvalue.(int)
+		if !ok {
+			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: state object is missing a value field")
+		}
+		if thStateInt == TERMINATED {
+			return true
+		}
+		t2 = time.Now().UnixMilli()
+		if t2-t1 >= maxTime {
+			return false
+		}
+	}
 }
