@@ -19,7 +19,6 @@ import (
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
-	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -77,7 +76,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupAndName}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V"] =
-		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupRunnableWithoutName}
+		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupRunnable}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
@@ -274,7 +273,7 @@ func threadActiveCount(_ []interface{}) any {
 }
 
 func _threadNameGen() *object.Object {
-	num := rand.Int63n(10_000_000)
+	num := threadNumberingNext(nil).(int64)
 	return object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", num))
 }
 
@@ -433,7 +432,7 @@ func threadInitNull(params []interface{}) any {
 
 	t, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "initWithName: Expected parameter to be a Thread object"
+		errMsg := "threadInitNull(: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -450,7 +449,7 @@ func threadInitWithName(params []interface{}) any {
 
 	t, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "initWithName: Expected parameter to be a Thread object"
+		errMsg := "threadInitWithName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -560,7 +559,7 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 	return nil
 }
 
-func threadInitWithThreadGroupRunnableWithoutName(params []interface{}) any {
+func threadInitWithThreadGroupRunnable(params []interface{}) any {
 	if len(params) != 3 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableWithoutName: "+
 			"Expected 2 parameters plus thread object, got %d parameters",
