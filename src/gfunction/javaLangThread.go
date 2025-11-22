@@ -30,11 +30,11 @@ import (
  executing JVM. MethodSignatures is a map whose key is the fully qualified name and
  type of the method (that is, the method's full signature) and a value consisting of
  a struct of an int (the number of slots to pop off the caller's operand stack when
- creating the new frame and a function. All methods have the same signature, regardless
+ creating the new frame and a function). All methods have the same signature, regardless
  of the signature of their Java counterparts. That signature is that it accepts a slice
  of interface{} and returns an interface{}. The accepted slice can be empty and the
  return interface can be nil. This covers all Java functions. (Objects are returned
- as a 64-bit address in this scheme (as they are in the JVM).
+ as a 64-bit address in this scheme as they are in the JVM).
 
  The passed-in slice contains one entry for every parameter passed to the method (which
  could mean an empty slice).
@@ -188,13 +188,13 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.join()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadJoin}
 
 	MethodSignatures["java/lang/Thread.join(J)V"] =
-		GMeth{ParamSlots: 1, GFunction: trapFunction}
+		GMeth{ParamSlots: 1, GFunction: threadJoin}
 
 	MethodSignatures["java/lang/Thread.join(JI)V"] =
-		GMeth{ParamSlots: 2, GFunction: trapFunction}
+		GMeth{ParamSlots: 2, GFunction: threadJoin}
 
 	MethodSignatures["java/lang/Thread.join(Ljava/time/Duration;)Z"] =
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
@@ -239,7 +239,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.start()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadStart}
 
 	MethodSignatures["java/lang/Thread.stop()V"] =
 		GMeth{ParamSlots: 0, GFunction: trapDeprecated}
@@ -317,7 +317,7 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 		}
 	}
 
-	// 1: Threadgroup (object, may be null)
+	// 1: Threadgroup (object may be null)
 	if params[1] != nil {
 		if threadGroup, ok = params[1].(*object.Object); !ok {
 			errMsg := fmt.Sprintf("%s: Expected first argument to be a ThreadGroup object (or null)", where)
@@ -833,7 +833,30 @@ func threadIsInterrupted(params []interface{}) any {
 	return t.FieldTable["interrupted"].Fvalue
 }
 
-// "java/lang/Thread.run()V" This is the function for starting a thread. In sequence:
+func threadStart(params []interface{}) any {
+	th := params[0].(*object.Object)
+	go threadRun([]any{th})
+	return nil
+}
+
+func threadJoin(params []interface{}) any {
+	th := params[0].(*object.Object)
+	millis := int64(0)
+	if len(params) > 1 {
+		millis = params[1].(int64)
+		nanos := int64(0)
+		if len(params) > 2 {
+			nanos = params[2].(int64)
+			if nanos > 0 {
+				millis += 1 // not precise
+			}
+		}
+	}
+	joinThread(th, millis)
+	return nil
+}
+
+// "java/lang/Thread.run()V" This is the default function for running a thread. In sequence:
 // 1. Fetch the run method
 // 2. Create the frame stack
 // 3. Create the frame
@@ -921,9 +944,7 @@ func threadRun(params []interface{}) interface{} {
 
 	// threads are registered only when they are started
 	RegisterThread(t)
-	stateField := object.Field{Ftype: types.Ref,
-		Fvalue: threadStateCreateWithValue([]any{RUNNABLE})}
-	t.FieldTable["state"] = stateField
+	setThreadState(t, RUNNABLE)
 
 	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
@@ -931,8 +952,13 @@ func threadRun(params []interface{}) interface{} {
 		trace.Trace(traceInfo)
 	}
 
-	// Run jvm/run.go::RunJavaThread(t)
-	return globals.GetGlobalRef().FuncRunThread(t)
+	// Run jvm/run.go::RunJavaThread(t).
+	_ = globals.GetGlobalRef().FuncRunThread(t)
+
+	// When completed, mark the thread as terminated.
+	setThreadState(t, TERMINATED)
+
+	return nil
 }
 
 // "java/lang/Thread.setName(Ljava/lang/String;)V"
@@ -1045,4 +1071,47 @@ func RegisterThread(t *object.Object) {
 	glob.ThreadLock.Lock()
 	glob.Threads[ID] = t
 	glob.ThreadLock.Unlock()
+}
+
+// Set the thread state to the supplied value unconditionally.
+func setThreadState(th *object.Object, newState int) {
+	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok {
+		stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{newState})}
+		th.FieldTable["state"] = stateField
+	}
+	thStateObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: newState}
+}
+
+// Wait for a thread to be TERMINATED up to maxTime milliseconds.
+// Returns:
+// * true if the thread terminated within maxTime milliseconds
+// * false if the thread terminated after maxTime milliseconds
+// * getGErrBlk(IllegalArgumentException) if:
+//   - the thread state is not an object
+//   - the thread state is missing the value field
+//   - max wait time <= 0
+func joinThread(th *object.Object, maxTime int64) interface{} {
+	if maxTime <= 0 {
+		return getGErrBlk(excNames.IllegalArgumentException, "joinThread: max wait time <= 0")
+	}
+	var t1, t2 int64
+	t1 = time.Now().UnixMilli()
+	for {
+		thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+		if !ok {
+			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: field state is not an object")
+		}
+		thStateInt, ok := thStateObj.FieldTable["value"].Fvalue.(int)
+		if !ok {
+			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: state object is missing a value field")
+		}
+		if thStateInt == TERMINATED {
+			return true
+		}
+		t2 = time.Now().UnixMilli()
+		if t2-t1 >= maxTime {
+			return false
+		}
+	}
 }
