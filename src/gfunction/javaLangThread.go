@@ -125,7 +125,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: threadDumpStack, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.enumerate([Ljava/lang/Thread;)I"] =
-		GMeth{ParamSlots: 1, GFunction: trapFunction}
+		GMeth{ParamSlots: 1, GFunction: threadEnumerate}
 
 	MethodSignatures["java/lang/Thread.exit()V"] =
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
