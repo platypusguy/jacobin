@@ -25,10 +25,10 @@ func TestThreadClinitConstants(t *testing.T) {
 	ensureTGInit()
 	// Load_Lang_Thread invoked in ensureInit sets statics via threadClinit
 	// Verify constants exist
-	min := staticsGet("java/lang/Thread", "MIN_PRIORITY")
+	minPriority := staticsGet("java/lang/Thread", "MIN_PRIORITY")
 	norm := staticsGet("java/lang/Thread", "NORM_PRIORITY")
-	max := staticsGet("java/lang/Thread", "MAX_PRIORITY")
-	if min == nil || norm == nil || max == nil {
+	maxPriority := staticsGet("java/lang/Thread", "MAX_PRIORITY")
+	if minPriority == nil || norm == nil || maxPriority == nil {
 		t.Fatalf("expected Thread priority statics to be set")
 	}
 }
@@ -451,15 +451,15 @@ func TestThreadSetPriority_Paths(t *testing.T) {
 	if threadSetPriority([]any{th, "x"}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("priority type")
 	}
-	min := staticsGet("java/lang/Thread", "MIN_PRIORITY").(int64)
-	max := staticsGet("java/lang/Thread", "MAX_PRIORITY").(int64)
-	if threadSetPriority([]any{th, min - 1}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	minPriority := staticsGet("java/lang/Thread", "MIN_PRIORITY").(int64)
+	maxPriority := staticsGet("java/lang/Thread", "MAX_PRIORITY").(int64)
+	if threadSetPriority([]any{th, minPriority - 1}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("below min")
 	}
-	if threadSetPriority([]any{th, max + 1}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadSetPriority([]any{th, maxPriority + 1}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("above max")
 	}
-	if threadSetPriority([]any{th, (min + max) / 2}) != nil {
+	if threadSetPriority([]any{th, (minPriority + maxPriority) / 2}) != nil {
 		t.Fatal("expected success")
 	}
 }
