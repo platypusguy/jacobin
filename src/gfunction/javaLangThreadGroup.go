@@ -239,7 +239,6 @@ func threadGroupInitWithName(params []interface{}) any {
 	ThreadGroupInitWithParentNameMaxpriorityDaemon(args)
 
 	return nil
-
 }
 
 // java/lang/ThreadGroup.ThreadGroup(Ljava/lang/ThreadGroup;Ljava/lang/String;)Ljava/lang/ThreadGroup;

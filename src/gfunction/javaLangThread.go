@@ -40,15 +40,6 @@ import (
  could mean an empty slice).
 */
 
-type PublicFields struct {
-	ID          int64
-	Name        string
-	Priority    int
-	IsDaemon    bool
-	ThreadGroup *object.Object
-	State       string // Enum-like representation of Thread.State
-}
-
 func Load_Lang_Thread() {
 
 	// -------------------------
@@ -374,7 +365,7 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 	return nil
 }
 
-// Should we need to create a thread, here is the instantiable implementation
+// Should we need to create a thread (as in tests), here is the instantiable implementation
 func ThreadCreateNoarg(_ []interface{}) any {
 
 	t := object.MakeEmptyObjectWithClassName(&classname)
@@ -423,6 +414,7 @@ func ThreadCreateNoarg(_ []interface{}) any {
 	return t
 }
 
+// java/lang/Thread.<init>()V
 func threadInitNull(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadInitNull: Expected 1 parameter, "+
@@ -440,6 +432,7 @@ func threadInitNull(params []interface{}) any {
 	return nil
 }
 
+// java/lang/Thread.<init>(Ljava/lang/String;)V
 func threadInitWithName(params []interface{}) any {
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadInitWithName: Expected 2 parameters, "+
@@ -455,7 +448,7 @@ func threadInitWithName(params []interface{}) any {
 
 	name, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := "threadCreateWithName: Expected name parameter to be a String"
+		errMsg := "threadInitWithName: Expected name parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -468,6 +461,7 @@ func ThreadInitWithName(params []interface{}) any { // exported version
 	return threadInitWithName(params)
 }
 
+// java/lang/Thread.<init>(Ljava/lang/Runnable;)V
 func threadInitWithRunnable(params []interface{}) any {
 	t, ok := params[0].(*object.Object)
 	if !ok {
@@ -477,7 +471,7 @@ func threadInitWithRunnable(params []interface{}) any {
 
 	runnable, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := "threadInitWithRunnableAndName: Expected parameter to be a Runnable object"
+		errMsg := "threadInitWithRunnable: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -559,6 +553,7 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 	return nil
 }
 
+// java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V
 func threadInitWithThreadGroupRunnable(params []interface{}) any {
 	if len(params) != 3 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnable: "+
@@ -591,6 +586,7 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 	return nil
 }
 
+// java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V
 func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 	if len(params) != 4 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupRunnableAndName: "+
