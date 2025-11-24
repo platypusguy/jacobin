@@ -7,13 +7,13 @@
 package jvm
 
 import (
-	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/config"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
+	"jacobin/src/gfunction"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -125,9 +125,20 @@ func runThread(t *thread.ExecThread) error {
 	return nil
 }
 
-func RunJavaThread(param interface{}) error {
-	thObj := param.(*object.Object)
-	t := thObj.FieldTable
+// Run as an independent thread to completion (TERMINATED).
+// Launched with: go globals.GetGlobalRef().FuncRunThread(t, clName, methName, methType)
+func RunJavaThread(args []any) {
+
+	if len(args) != 4 {
+		errMsg := fmt.Sprintf("threadRun: Expected 4 arguments, observed %d: %v", len(args), args)
+		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+	}
+
+	// Set up arguments.
+	t := args[0].(*object.Object)
+	clName := args[1].(string)
+	methName := args[2].(string)
+	methType := args[3].(string)
 
 	defer func() int {
 		// only an untrapped panic gets us here
@@ -143,15 +154,92 @@ func RunJavaThread(param interface{}) error {
 		return shutdown.OK
 	}()
 
-	fs := t["framestack"].Fvalue.(*list.List)
+	// Set up the method and CPool for the method's class.
+	mte, err := classloader.FetchMethodAndCP(clName, methName, methType)
+	if err != nil {
+		errMsg := fmt.Sprintf("threadRun: Could not find run method (%s.%s(%s): %v", clName, methName, methType, err)
+		exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, nil)
+	}
+
+	// Get Mtable entry for the method.
+	meth := mte.Meth.(classloader.JmEntry)
+
+	// Create the frame stack for this thread.
+	fs := frames.CreateFrameStack()
+
+	// Create the initial frame for this thread.
+	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
+	tID := t.FieldTable["ID"].Fvalue.(int64)
+	f.Thread = int(tID)
+	f.ClName = clName
+	f.MethName = methName
+	f.MethType = methType
+
+	f.CP = meth.Cp                        // add its pointer to the class CP
+	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
+
+	// Allocate the method's local variables for this frame.
+	for k := 0; k < meth.MaxLocals; k++ {
+		f.Locals = append(f.Locals, 0)
+	}
+
+	// If this is the program entry point `main(String[] args)`, initialize local 0
+	// with a proper Java String[] built from the CLI application arguments.
+	// Without this, bytecodes like ARRAYLENGTH on `args` would see an uninitialized
+	// int (zero) and throw an IllegalArgumentException.
+	if methName == "main" && methType == "([Ljava/lang/String;)V" && len(f.Locals) > 0 {
+		appArgs := globals.GetGlobalRef().AppArgs
+		// Build a Java String object array from Go strings
+		strObjs := object.StringObjectArrayFromGoStringArray(appArgs)
+		// Wrap it into a Java reference array object of type java/lang/String
+		strArrayObj := object.Make1DimRefArray("java/lang/String", int64(len(strObjs)))
+		// Populate the array elements
+		if val, ok := strArrayObj.FieldTable["value"]; ok {
+			if arr, ok2 := val.Fvalue.([]*object.Object); ok2 && len(arr) == len(strObjs) {
+				copy(arr, strObjs)
+				// store back (not strictly necessary since slice is by reference)
+				strArrayObj.FieldTable["value"] = object.Field{Ftype: val.Ftype, Fvalue: arr}
+			}
+		}
+		// Assign to local variable 0
+		f.Locals[0] = strArrayObj
+	}
+
+	// Add the initial frame and the frame stack to the thread's field table.
+	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}
+	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
+
+	// Push the frame on the stack.
+	if frames.PushFrame(fs, f) != nil {
+		errMsg := fmt.Sprintf("threadRun: frames.PushFrame failed on thread: %d", tID)
+		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
+	}
+
+	// Instantiate the class so that any static initializers are run.
+	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
+	if instantiateError != nil {
+		errMsg := "threadRun: Error instantiating: " + clName + ".main()"
+		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
+	}
+
+	// Mark the thread RUNNABLE and register it.
+	gfunction.SetThreadState(t, gfunction.RUNNABLE)
+	gfunction.RegisterThread(t)
+
+	if globals.TraceInst {
+		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
+			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
+		trace.Trace(traceInfo)
+	}
+
+	// Execute the thread's frame set.
 	for fs.Len() > 0 {
 		interpret(fs)
 	}
 
-	if fs.Len() == 0 { // true when the last executed frame was main()
-		return nil
-	}
-	return nil
+	// The End.
+	gfunction.SetThreadState(t, gfunction.TERMINATED)
+
 }
 
 // multiply two numbers

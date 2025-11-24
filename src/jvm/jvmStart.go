@@ -190,20 +190,25 @@ func JVMrun() int {
 	t := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
+	clName := *mainClass
+	methName := "main"
+	methType := "([Ljava/lang/String;)V"
 	runnable := gfunction.NewRunnable(
-		object.JavaByteArrayFromGoString(*mainClass),
-		object.JavaByteArrayFromGoString("main"),
-		object.JavaByteArrayFromGoString("([Ljava/lang/String;)V"))
-	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
+		object.JavaByteArrayFromGoString(clName),
+		object.JavaByteArrayFromGoString(methName),
+		object.JavaByteArrayFromGoString(methType))
+	params := []interface{}{t, runnable, object.StringObjectFromGoString("TheMainThread")}
 	globals.GetGlobalRef().FuncInvokeGFunction(
 		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
 	if globals.TraceInit {
-		trace.Trace("Starting execution with: " + *mainClass)
+		trace.Trace(fmt.Sprintf("Starting execution with: %s.%s%s", clName, methName, methType))
 	}
 
-	// Run the main thread. Note: the thread is registered in java/lang/Thread.run()
-	args := []any{t}
-	globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.run()V", args)
+	// Run the main thread. Note: the thread is registered in java/lang/Thread.start()
+	//args := []any{t}
+	//globals.GetGlobalRef().FuncInvokeGFunction("java/lang/Thread.start()V", args)
+	args := []any{t, clName, methName, methType}
+	globals.GetGlobalRef().FuncRunThread(args)
 	return shutdown.Exit(shutdown.OK)
 }
 
