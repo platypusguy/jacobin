@@ -21,6 +21,17 @@ import (
 
 // Many tests rely on ensureTGInit() defined in javaLangThreadGroup_test.go.
 
+func makeAframeSet() *list.List {
+	fs := frames.CreateFrameStack()
+	f := frames.CreateFrame(42)
+	f.ClName = "F"
+	f.MethName = "m"
+	f.PC = 1
+	f.Thread = 123
+	fs.PushFront(f)
+	return fs
+}
+
 func TestThreadClinitConstants(t *testing.T) {
 	ensureTGInit()
 	// Load_Lang_Thread invoked in ensureInit sets statics via threadClinit
@@ -93,7 +104,8 @@ func TestThreadInitWithName_ErrWrongArity(t *testing.T) {
 
 func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
 	ensureTGInit()
-	ret := threadInitWithName([]any{123, object.StringObjectFromGoString("n")})
+	fs := makeAframeSet()
+	ret := threadInitWithName([]any{fs, 123, object.StringObjectFromGoString("n")})
 	if ret.(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatalf("expected IllegalArgumentException for non-thread first arg")
 	}
@@ -108,7 +120,8 @@ func TestThreadInitWithName_Success(t *testing.T) {
 	ensureTGInit()
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("Alpha")
-	_ = threadInitWithName([]any{th, nm})
+	fs := makeAframeSet()
+	_ = threadInitWithName([]any{fs, th, nm})
 	got := th.FieldTable["name"].Fvalue.(*object.Object)
 	if object.GoStringFromStringObject(got) != object.GoStringFromStringObject(nm) {
 		t.Errorf("name not set correctly")
@@ -151,20 +164,21 @@ func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("D")
+	fs := makeAframeSet()
 
-	if threadInitWithThreadGroupAndName([]any{th, mainTG}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadInitWithThreadGroupAndName([]any{fs, th, mainTG}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException arity")
 	}
-	if threadInitWithThreadGroupAndName([]any{123, mainTG, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadInitWithThreadGroupAndName([]any{fs, 123, mainTG, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for non-thread")
 	}
-	if threadInitWithThreadGroupAndName([]any{th, 456, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadInitWithThreadGroupAndName([]any{fs, th, 456, nm}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for non-threadgroup")
 	}
-	if threadInitWithThreadGroupAndName([]any{th, mainTG, 789}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
+	if threadInitWithThreadGroupAndName([]any{fs, th, mainTG, 789}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for non-name")
 	}
-	threadInitWithThreadGroupAndName([]any{th, mainTG, nm})
+	threadInitWithThreadGroupAndName([]any{fs, th, mainTG, nm})
 	if th.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
 		t.Errorf("threadgroup not set")
 	}

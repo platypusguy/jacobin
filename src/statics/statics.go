@@ -50,19 +50,20 @@ type Static struct {
 	Value any
 }
 
-var staticsMutex = sync.RWMutex{}
+var staticsMutex = sync.Mutex{}
 
 // AddStatic adds a static field to the Statics table using a mutex
 // name: className.fieldName
 func AddStatic(name string, s Static) error {
+	staticsMutex.Lock()
+	defer staticsMutex.Unlock()
+
 	if name == "" {
 		errMsg := fmt.Sprintf("AddStatic: Attempting to add static entry with a nil name, type=%s, value=%v", s.Type, s.Value)
 		globals.GetGlobalRef().FuncThrowException(excNames.InvalidTypeException, errMsg)
 		return errors.New(errMsg)
 	}
-	staticsMutex.RLock()
 	Statics[name] = s
-	staticsMutex.RUnlock()
 	if flagTraceStatics && !util.IsFilePartOfJDK(&name) {
 		if !testing.Testing() {
 			_, _ = fmt.Fprintf(os.Stderr, ">>>trace>>>AddStatic: Adding static entry with name=%s, value=%v\n", name, s.Value)
