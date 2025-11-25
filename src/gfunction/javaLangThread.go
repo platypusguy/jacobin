@@ -915,7 +915,6 @@ func threadRun(params []interface{}) interface{} {
 	id := t.FieldTable["ID"].Fvalue.(int64)
 	warnMsg := fmt.Sprintf("threadRun name:%s, ID: %d started", object.GoStringFromStringObject(name), id)
 	trace.Warning(warnMsg)
-	SetThreadState(t, TERMINATED)
 	return nil
 }
 
