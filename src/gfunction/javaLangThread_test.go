@@ -77,7 +77,7 @@ func TestThreadCreateNoarg_Defaults(t *testing.T) {
 		t.Errorf("expected framestack LinkedList type")
 	}
 	// Task is nil
-	if obj.FieldTable["task"].Fvalue != nil {
+	if obj.FieldTable["target"].Fvalue != nil {
 		t.Errorf("expected nil task")
 	}
 }
@@ -137,7 +137,7 @@ func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 	}
 	// success
 	threadInitWithRunnableAndName([]any{th, runnable, nm})
-	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	if th.FieldTable["target"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("runnable not set")
 	}
 	if th.FieldTable["name"].Fvalue.(*object.Object) != nm {
@@ -194,7 +194,7 @@ func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
 		t.Fatal("expected IllegalArgumentException for non-name")
 	}
 	threadInitWithThreadGroupRunnableAndName([]any{th, mainTG, runnable, nm})
-	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	if th.FieldTable["target"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("task not set")
 	}
 }
@@ -244,7 +244,7 @@ func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
 
 	// success path (with 6 = nil)
 	threadInitFromPackageConstructor([]any{th, mainTG, nm, int64(5), runnable, int64(0), nil})
-	if th.FieldTable["name"].Fvalue.(*object.Object) != nm || th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	if th.FieldTable["name"].Fvalue.(*object.Object) != nm || th.FieldTable["target"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("expected runnable+name wired through")
 	}
 	if th.FieldTable["threadgroup"].Fvalue.(*object.Object) != mainTG {
@@ -517,7 +517,7 @@ func TestThreadInitWithRunnable_Paths(t *testing.T) {
 	}
 	// success path
 	threadInitWithRunnable([]any{th, runnable})
-	if th.FieldTable["task"].Fvalue.(*object.Object) != runnable {
+	if th.FieldTable["target"].Fvalue.(*object.Object) != runnable {
 		t.Errorf("runnable task not set on thread")
 	}
 }

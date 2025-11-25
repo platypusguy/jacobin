@@ -15,6 +15,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/thread"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
 	"sync"
@@ -406,7 +407,7 @@ func ThreadCreateNoarg(_ []interface{}) any {
 	t.FieldTable["framestack"] = frameStack
 
 	// task is the runnable that is executed if the run() method is called
-	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
 	return t
 }
@@ -426,6 +427,7 @@ func threadInitNull(params []interface{}) any {
 	}
 
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	return nil
 }
 
@@ -449,8 +451,8 @@ func threadInitWithName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["name"] = object.Field{
-		Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 	return nil
 }
 
@@ -472,7 +474,7 @@ func threadInitWithRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 
 	return nil
@@ -505,7 +507,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 
 	t.FieldTable["name"] = object.Field{
@@ -542,10 +544,9 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["threadgroup"] = object.Field{
-		Ftype: types.Ref, Fvalue: threadGroup}
-	t.FieldTable["name"] = object.Field{
-		Ftype: types.Ref, Fvalue: name}
+	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
+	t.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: name}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: nil}
 
 	return nil
 }
@@ -574,7 +575,7 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
@@ -612,7 +613,7 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
@@ -838,7 +839,7 @@ func threadStart(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	runObj := t.FieldTable["task"].Fvalue
+	runObj := t.FieldTable["target"].Fvalue
 	// if the runnable is nil, then just return (per the JDK spec)
 	if runObj == nil {
 		return nil
@@ -890,6 +891,10 @@ func threadRun(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	name := t.FieldTable["name"].Fvalue.(*object.Object)
+	id := t.FieldTable["ID"].Fvalue.(int64)
+	warnMsg := fmt.Sprintf("Empty thread name:%s, ID: %d started", object.GoStringFromStringObject(name), id)
+	trace.Warning(warnMsg)
 	SetThreadState(t, TERMINATED)
 	return nil
 }
