@@ -67,19 +67,15 @@ func initVarsLookupswitch() error {
 }
 
 func TestLookupSwitchNoArgs(t *testing.T) {
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
+    if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
+        t.Skip()
+    }
 
-	initErr := initVarsLookupswitch()
-	if initErr != nil {
-		t.Fatalf("Test failure due to: %s", initErr.Error())
-	}
-	var cmd *exec.Cmd
-
-	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
-		t.Skip()
-	}
+    initErr := initVarsLookupswitch()
+    if initErr != nil {
+        t.Fatalf("Test failure due to: %s", initErr.Error())
+    }
+    var cmd *exec.Cmd
 
 	// run the various combinations of args. This is necessary b/c the empty string is viewed as
 	// an actual specified option on the command line.
@@ -97,26 +93,17 @@ func TestLookupSwitchNoArgs(t *testing.T) {
 		}
 	}
 
-	// get the stdout and stderr contents from the file execution
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+    // get the stdout and stderr contents from the file execution
+    outBytes, err := cmd.CombinedOutput()
+    // Now that runtime initializes main(String[] args) correctly, the subprocess
+    // should exit successfully. Require exit code 0 here.
+    if err != nil {
+        t.Fatalf("Jacobin returned non-zero exit: %v; output: %s", err, string(outBytes))
+    }
 
-	// run the command
-	if err = cmd.Start(); err != nil {
-		t.Errorf("Got error running Jacobin: %s", err.Error())
-	}
-
-	// Here begin the actual tests on the output to stderr and stdout
-	slurp, _ := io.ReadAll(stdout)
-	if len(slurp) == 0 {
-		t.Errorf("Did not get error output to stdout")
-	}
-
-	if !strings.Contains(string(slurp), "zero args") {
-		t.Errorf("Did not get expected output to stderr. Got: %s", string(slurp))
-	}
+    if !strings.Contains(string(outBytes), "zero args") {
+        t.Errorf("Did not get expected output. Got: %s", string(outBytes))
+    }
 }
 
 // same as previous test, but with one argument

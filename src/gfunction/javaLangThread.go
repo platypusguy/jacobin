@@ -9,15 +9,12 @@ package gfunction
 import (
 	"container/list"
 	"fmt"
-	"jacobin/src/classloader"
 	"jacobin/src/excNames"
-	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/thread"
-	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
 	"sync"
@@ -830,40 +827,8 @@ func threadIsInterrupted(params []interface{}) any {
 }
 
 func threadStart(params []interface{}) any {
-	th := params[0].(*object.Object)
-	go threadRun([]any{th})
-	return nil
-}
-
-func threadJoin(params []interface{}) any {
-	th := params[0].(*object.Object)
-	millis := int64(0)
-	if len(params) > 1 {
-		millis = params[1].(int64)
-		nanos := int64(0)
-		if len(params) > 2 {
-			nanos = params[2].(int64)
-			if nanos > 0 {
-				millis += 1 // not precise
-			}
-		}
-	}
-	joinThread(th, millis)
-	return nil
-}
-
-// "java/lang/Thread.run()V" This is the default function for running a thread. In sequence:
-// 1. Fetch the run method
-// 2. Create the frame stack
-// 3. Create the frame
-// 4. Push the frame onto the frame stack
-// 5. Register the thread
-// 6. Instantiate the class
-// 7. Run the thread
-
-func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadRun: Expected thread parameters, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadStart: Expected only the thread object parameter, got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -889,71 +854,43 @@ func threadRun(params []interface{}) interface{} {
 	methtype := runFields["signature"].Fvalue.([]types.JavaByte)
 	methType := object.GoStringFromJavaByteArray(methtype)
 
-	m, err := classloader.FetchMethodAndCP(
-		clName, methName, methType)
-
-	if err != nil {
-		errMsg := fmt.Sprintf("threadRun: Could not find run method: %v", err)
-		return getGErrBlk(excNames.NoSuchMethodError, errMsg)
-	}
-
-	tID := t.FieldTable["ID"].Fvalue.(int64)
-	meth := m.Meth.(classloader.JmEntry)
-	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
-	f.Thread = int(tID)
-	f.ClName = clName
-	f.MethName = methName
-	f.MethType = methType
-
-	f.CP = meth.Cp                        // add its pointer to the class CP
-	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
-
-	// allocate the local variables
-	for k := 0; k < meth.MaxLocals; k++ {
-		f.Locals = append(f.Locals, 0)
-	}
-
-	if tID == 1 { // if thread is the main thread, then load the CLI args into the first local
-		var objArray []*object.Object
-		for _, str := range globals.GetGlobalRef().AppArgs {
-			sobj := object.StringObjectFromGoString(str)
-			objArray = append(objArray, sobj)
-		}
-		f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
-	}
-
-	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}
-	fs := frames.CreateFrameStack()
-	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
-
-	if frames.PushFrame(fs, f) != nil {
-		errMsg := fmt.Sprintf("threadRun: Memory error allocating frame on thread: %d", tID)
-		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
-	}
-
-	// must first instantiate the class, so that any static initializers are run
-	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
-	if instantiateError != nil {
-		errMsg := "threadRun: Error instantiating: " + clName + ".main()"
-		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
-	}
-
-	// threads are registered only when they are started
-	RegisterThread(t)
-	setThreadState(t, RUNNABLE)
-
-	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
-			f.ClName, f.MethName, f.MethType, meth.MaxStack, meth.MaxLocals, len(meth.Code))
-		trace.Trace(traceInfo)
-	}
-
 	// Run jvm/run.go::RunJavaThread(t).
-	_ = globals.GetGlobalRef().FuncRunThread(t)
+	args := []interface{}{t, clName, methName, methType}
+	go globals.GetGlobalRef().FuncRunThread(args)
 
-	// When completed, mark the thread as terminated.
-	setThreadState(t, TERMINATED)
+	return nil
+}
 
+func threadJoin(params []interface{}) any {
+	th := params[0].(*object.Object)
+	millis := int64(0)
+	if len(params) > 1 {
+		millis = params[1].(int64)
+		nanos := int64(0)
+		if len(params) > 2 {
+			nanos = params[2].(int64)
+			if nanos > 0 {
+				millis += 1 // not precise
+			}
+		}
+	}
+	joinThread(th, millis)
+	return nil
+}
+
+func threadRun(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadRun: Expected only the thread object parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadRun: Expected parameter to be a Thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	SetThreadState(t, TERMINATED)
 	return nil
 }
 
@@ -1070,7 +1007,7 @@ func RegisterThread(t *object.Object) {
 }
 
 // Set the thread state to the supplied value unconditionally.
-func setThreadState(th *object.Object, newState int) {
+func SetThreadState(th *object.Object, newState int) {
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
 	if !ok {
 		stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{newState})}

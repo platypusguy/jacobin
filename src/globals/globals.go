@@ -110,7 +110,7 @@ type Globals struct {
 	FuncInstantiateClass func(string, *list.List) (any, error)
 	FuncInvokeGFunction  func(string, []any) any
 	FuncMinimalAbort     func(int, string)
-	FuncRunThread        func(interface{}) error
+	FuncRunThread        func([]any)
 	FuncThrowException   func(int, string) bool
 	FuncFillInStackTrace func([]any) any
 }
@@ -371,10 +371,9 @@ func fakeMinimalAbort(whichEx int, msg string) {
 }
 
 // Fake RunThread() in run.go
-func fakeRunThread(_ interface{}) error {
+func fakeRunThread(_ []interface{}) {
 	errMsg := fmt.Sprintf("\n*Attempt to access uninitialized RunThread pointer func\n")
 	fmt.Fprintf(os.Stderr, "%s", errMsg)
-	return errors.New(errMsg)
 }
 
 // Fake ThrowEx() in exceptions.go
