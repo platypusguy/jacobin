@@ -247,9 +247,6 @@ runInitializer:
 
 // creates a field for insertion into the object representation
 func createField(f classloader.Field, k *classloader.Klass, classname string) (*object.Field, error) {
-	instantiateMutex.Lock()
-	defer instantiateMutex.Unlock()
-
 	desc := k.Data.CP.Utf8Refs[f.Desc]
 
 	fieldToAdd := new(object.Field)
@@ -318,6 +315,10 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 			} // end of processing attributes
 		} // end of search through attributes
 	*/
+
+	instantiateMutex.Lock()
+	defer instantiateMutex.Unlock()
+	
 	if f.IsStatic {
 		s := statics.Static{
 			Type:  presentType, // we use the type without the 'X' prefix in the statics table.
