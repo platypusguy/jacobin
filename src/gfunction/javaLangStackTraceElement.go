@@ -166,10 +166,13 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 		for i := 0; i < len(method.Attribs); i++ {
 			index := method.Attribs[i].AttrName
 			if method.Cp.Utf8Refs[index] == "LineNumberTable" {
+				pcToUse := frame.PC
 				if frame.ExceptionPC == -1 { // if the exception occurred in a different frame, exceptionPC = -1
-					frame.ExceptionPC = frame.PC
+					// frame.ExceptionPC = frame.PC
+					pcToUse = frame.PC
 				}
-				line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
+				// line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
+				line := searchLineNumberTable(method.Attribs[i].AttrContent, pcToUse)
 				if line != -1 { // -1 means not found
 					addField("sourceLine", fmt.Sprintf("%d", line))
 				}
