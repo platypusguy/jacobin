@@ -23,6 +23,7 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"strconv"
 )
@@ -235,6 +236,7 @@ func RunJavaThread(args []any) {
 	// Execute the thread's frame set.
 	for fs.Len() > 0 {
 		interpret(fs)
+		runtime.Gosched()
 	}
 
 	// The End.

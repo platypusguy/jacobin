@@ -15,8 +15,10 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/statics"
 	"jacobin/src/thread"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -52,16 +54,16 @@ func Load_Lang_Thread() {
 	// Constructors in invocation order
 	// -------------------------
 	MethodSignatures["java/lang/Thread.<init>()V"] =
-		GMeth{ParamSlots: 0, GFunction: threadInitNull}
+		GMeth{ParamSlots: 0, NeedsContext: true, GFunction: threadInitNull}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
-		GMeth{ParamSlots: 1, GFunction: threadInitWithName}
+		GMeth{ParamSlots: 1, NeedsContext: true, GFunction: threadInitWithName}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnableAndName}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V"] =
-		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupAndName}
+		GMeth{ParamSlots: 2, NeedsContext: true, GFunction: threadInitWithThreadGroupAndName}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadInitWithThreadGroupRunnable}
@@ -280,7 +282,7 @@ func threadClinit(_ []interface{}) any {
 // thread group:    Ljava/lang/ThreadGroup;
 // name:            Ljava/lang/String;
 // characteristics: I
-// task:            Ljava/lang/Runnable;
+// target:          Ljava/lang/Runnable;
 // stack size:      J (0 = ignore)
 // access control   java/Security/AccessControlContext;
 // Validates each parameter, then calls threadCreateWithRunnableAndName()
@@ -362,68 +364,77 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 	return nil
 }
 
-// Should we need to create a thread (as in tests), here is the instantiable implementation
-func ThreadCreateNoarg(_ []interface{}) any {
+func populateThreadObject(t *object.Object) {
 
-	t := object.MakeEmptyObjectWithClassName(&classname)
-
-	idField := object.Field{Ftype: types.Int,
-		Fvalue: threadNumberingNext(nil).(int64)}
+	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
 	t.FieldTable["ID"] = idField
 
 	// the JDK defaults to "Thread-N" where N is the thread number
 	// the sole exception is the main thread, which is called "main"
 	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
-	nameField := object.Field{Ftype: types.Ref,
-		Fvalue: object.StringObjectFromGoString(defaultName)}
+	nameField := object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(defaultName)}
 	t.FieldTable["name"] = nameField
 
-	stateField := object.Field{Ftype: types.Ref,
-		Fvalue: threadStateCreateWithValue([]any{NEW})}
+	stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{NEW})}
 	t.FieldTable["state"] = stateField
 
-	daemonField := object.Field{
-		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	daemonField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["daemon"] = daemonField
 
-	interruptedField := object.Field{
-		Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	interruptedField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["interrupted"] = interruptedField
 
 	InitializeGlobalThreadGroups()
+
 	tg := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
-	threadGroup := object.Field{ // default thread group is the main thread group
-		Ftype: types.Ref, Fvalue: tg}
+	// The default thread group is the main thread group
+	threadGroup := object.Field{Ftype: types.Ref, Fvalue: tg}
 	t.FieldTable["threadgroup"] = threadGroup
 
-	priority := object.Field{
-		Ftype:  types.Int,
-		Fvalue: statics.GetStaticValue("java/lang/Thread", "NORM_PRIORITY").(int64)}
+	priority := object.Field{Ftype: types.Int, Fvalue: statics.GetStaticValue("java/lang/Thread", "NORM_PRIORITY").(int64)}
 	t.FieldTable["priority"] = priority
 
-	frameStack := object.Field{
-		Ftype: types.LinkedList, Fvalue: nil}
+	frameStack := object.Field{Ftype: types.LinkedList, Fvalue: nil}
 	t.FieldTable["framestack"] = frameStack
 
-	// task is the runnable that is executed if the run() method is called
-	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: nil}
+}
+
+// Should we need to create a thread (as in tests), here is the instantiable implementation
+func ThreadCreateNoarg(_ []interface{}) any {
+
+	t := object.MakeEmptyObjectWithClassName(&classname)
+
+	InitializeGlobalThreadGroups()
+
+	populateThreadObject(t)
 
 	return t
 }
 
+func storeThreadClassName(t *object.Object, fs *list.List) {
+	// Get class name "java/lang/Thread" or the user's own subclass of Thread.
+	frame := *fs.Front().Value.(*frames.Frame)
+	t.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(frame.ClName)}
+}
+
 // java/lang/Thread.<init>()V
 func threadInitNull(params []interface{}) any {
-	if len(params) != 1 {
+	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadInitNull: Expected 1 parameter, "+
 			"(the thread object), got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t, ok := params[0].(*object.Object)
+	t, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := "threadInitNull(: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
+
+	// Get the class name "java/lang/Thread" or the user's own subclass of Thread.
+	frameStack := params[0].(*list.List)
+	storeThreadClassName(t, frameStack)
 
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 	return nil
@@ -431,26 +442,30 @@ func threadInitNull(params []interface{}) any {
 
 // java/lang/Thread.<init>(Ljava/lang/String;)V
 func threadInitWithName(params []interface{}) any {
-	if len(params) != 2 {
+	if len(params) != 3 {
 		errMsg := fmt.Sprintf("threadInitWithName: Expected 2 parameters, "+
 			"(the thread object and name), got %d parameters", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t, ok := params[0].(*object.Object)
+	t, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
 
-	name, ok := params[1].(*object.Object)
+	// Get the class name "java/lang/Thread" or the user's own subclass of Thread.
+	frameStack := params[0].(*list.List)
+	storeThreadClassName(t, frameStack)
+
+	name, ok := params[2].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithName: Expected name parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["name"] = object.Field{
-		Ftype: types.ByteArray, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
 	return nil
 }
 
@@ -472,7 +487,7 @@ func threadInitWithRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 
 	return nil
@@ -505,7 +520,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 
 	t.FieldTable["name"] = object.Field{
@@ -517,35 +532,38 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 
 // java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
 func threadInitWithThreadGroupAndName(params []interface{}) any {
-	if len(params) != 3 {
+	if len(params) != 4 {
 		errMsg := fmt.Sprintf("threadInitWithThreadGroupAndName: "+
 			"Expected 2 parameters plus thread object, got %d parameters",
 			len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t, ok := params[0].(*object.Object)
+	t, ok := params[1].(*object.Object)
 	if !ok {
-		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a Thread object"
+		errMsg := "threadInitWithName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
 
-	threadGroup, ok := params[1].(*object.Object)
+	// Get the class name "java/lang/Thread" or the user's own subclass of Thread.
+	frameStack := params[0].(*list.List)
+	storeThreadClassName(t, frameStack)
+
+	threadGroup, ok := params[2].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a ThreadGroup object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	name, ok := params[2].(*object.Object)
+	name, ok := params[3].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithThreadGroupAndName: Expected parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["threadgroup"] = object.Field{
-		Ftype: types.Ref, Fvalue: threadGroup}
-	t.FieldTable["name"] = object.Field{
-		Ftype: types.Ref, Fvalue: name}
+	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
+	t.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: name}
 
 	return nil
 }
@@ -574,7 +592,7 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
@@ -612,7 +630,7 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a String"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	t.FieldTable["task"] = object.Field{
+	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
@@ -828,35 +846,38 @@ func threadIsInterrupted(params []interface{}) any {
 
 func threadStart(params []interface{}) any {
 	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadStart: Expected only the thread object parameter, got %d parameters", len(params))
+		errMsg := fmt.Sprintf("threadStart: Expected only the thread object parameter, got %d", len(params))
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	// Get thread object.
 	t, ok := params[0].(*object.Object)
 	if !ok {
-		errMsg := "threadRun: Expected parameter to be a Thread object"
+		errMsg := "threadStart: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	runObj := t.FieldTable["task"].Fvalue
-	// if the runnable is nil, then just return (per the JDK spec)
-	if runObj == nil {
-		return nil
+	// Determine receiver: target Runnable or thread itself
+	var runnable *object.Object
+	var clName string
+	f, ok := t.FieldTable["target"]
+	if ok && f.Fvalue != nil {
+		runnable, ok = f.Fvalue.(*object.Object)
+		if !ok {
+			errMsg := "threadStart: Expected Runnable target field to be an object"
+			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		clName = object.GoStringFromJavaByteArray(runnable.FieldTable["clName"].Fvalue.([]types.JavaByte))
+	} else {
+		clName = object.GoStringFromJavaByteArray(t.FieldTable["clName"].Fvalue.([]types.JavaByte))
 	}
 
-	// get the method to run (identified by Runnable's three fields)
-	runnable := *runObj.(*object.Object)
-	runFields := runnable.FieldTable
-	clname := runFields["clName"].Fvalue.([]types.JavaByte)
-	clName := object.GoStringFromJavaByteArray(clname)
-	methname := runFields["methName"].Fvalue.([]types.JavaByte)
-	methName := object.GoStringFromJavaByteArray(methname)
-	methtype := runFields["signature"].Fvalue.([]types.JavaByte)
-	methType := object.GoStringFromJavaByteArray(methtype)
-
-	// Run jvm/run.go::RunJavaThread(t).
+	// Spawn RunJavaThread to interpret bytecode of run()
+	methName := "run"
+	methType := "()V"
 	args := []interface{}{t, clName, methName, methType}
 	go globals.GetGlobalRef().FuncRunThread(args)
+	runtime.Gosched()
 
 	return nil
 }
@@ -890,7 +911,10 @@ func threadRun(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	SetThreadState(t, TERMINATED)
+	name := t.FieldTable["name"].Fvalue.(*object.Object)
+	id := t.FieldTable["ID"].Fvalue.(int64)
+	warnMsg := fmt.Sprintf("threadRun name:%s, ID: %d started", object.GoStringFromStringObject(name), id)
+	trace.Warning(warnMsg)
 	return nil
 }
 
@@ -1042,6 +1066,7 @@ func joinThread(th *object.Object, maxTime int64) interface{} {
 		if thStateInt == TERMINATED {
 			return true
 		}
+		runtime.Gosched()
 		t2 = time.Now().UnixMilli()
 		if t2-t1 >= maxTime {
 			return false
