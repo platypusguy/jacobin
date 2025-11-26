@@ -250,7 +250,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: threadGetId}
 
 	MethodSignatures["java/lang/Thread.yield()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadYield}
 
 	// finalize <clinit>
 	threadClinit(nil)
@@ -896,6 +896,15 @@ func threadJoin(params []interface{}) any {
 		}
 	}
 	joinThread(th, millis)
+	return nil
+}
+
+func threadYield(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadYield: Expected only the thread object parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	runtime.Gosched()
 	return nil
 }
 
