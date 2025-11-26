@@ -26,6 +26,7 @@ const flagTraceStatics = false
 // contains the index into the statics array where the entry is stored.
 // Statics are placed into this map only when they are first referenced and resolved.
 var Statics = make(map[string]Static)
+var staticsMutex = sync.Mutex{}
 
 // Static contains all the various items needed for a static variable or function.
 type Static struct {
@@ -49,8 +50,6 @@ type Static struct {
 
 	Value any
 }
-
-var staticsMutex = sync.Mutex{}
 
 // AddStatic adds a static field to the Statics table using a mutex
 // name: className.fieldName
@@ -128,6 +127,9 @@ func LoadStaticsString() {
 // If successful, return the field value and a nil error;
 // Else (error), return errors.New(errMsg).
 func GetStaticValue(className string, fieldName string) any {
+	staticsMutex.Lock()
+	defer staticsMutex.Unlock()
+
 	var retValue any
 
 	staticName := className + "." + fieldName
@@ -173,6 +175,8 @@ const SelectUser = int64(3)
 
 // DumpStatics dumps the contents of the statics table in sorted order to stderr
 func DumpStatics(from string, selection int64, className string) {
+	staticsMutex.Lock()
+	defer staticsMutex.Unlock()
 	_, _ = fmt.Fprintf(os.Stderr, "\n===== DumpStatics BEGIN, from=\"%s\", selection=%d, className=\"%s\"\n",
 		from, selection, className)
 

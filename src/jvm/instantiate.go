@@ -22,6 +22,7 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
+	"sync"
 	"unsafe"
 )
 
@@ -36,6 +37,9 @@ import (
 //     NOTE: The "any" type returned is always *object.Object.
 //     This is being done to avoid a golang circularity error when the caller
 //     is one of the native 'G' functions.
+
+var instantiateMutex = sync.Mutex{}
+
 func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	if !strings.HasPrefix(classname, "[") { // do this only for classes, not arrays
@@ -243,6 +247,9 @@ runInitializer:
 
 // creates a field for insertion into the object representation
 func createField(f classloader.Field, k *classloader.Klass, classname string) (*object.Field, error) {
+	instantiateMutex.Lock()
+	defer instantiateMutex.Unlock()
+
 	desc := k.Data.CP.Utf8Refs[f.Desc]
 
 	fieldToAdd := new(object.Field)
