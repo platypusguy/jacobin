@@ -91,6 +91,8 @@ type ParsedClass struct {
 	// ---- access flags items ----
 	accessFlags       int // the following booleans interpret the access flags
 	classIsPublic     bool
+	classIsPrivate    bool
+	classIsProtected  bool
 	classIsFinal      bool
 	classIsSuper      bool
 	classIsInterface  bool
