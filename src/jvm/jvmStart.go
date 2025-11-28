@@ -197,7 +197,7 @@ func JVMrun() int {
 		object.JavaByteArrayFromGoString(clName),
 		object.JavaByteArrayFromGoString(methName),
 		object.JavaByteArrayFromGoString(methType))
-	params := []interface{}{t, runnable, object.StringObjectFromGoString("TheMainThread")}
+	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
 	globals.GetGlobalRef().FuncInvokeGFunction(
 		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
 	if globals.TraceInit {

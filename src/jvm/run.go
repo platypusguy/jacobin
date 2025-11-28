@@ -204,6 +204,10 @@ func RunJavaThread(args []any) {
 		}
 		// Assign to local variable 0
 		f.Locals[0] = strArrayObj
+	} else {
+		// Not the main thread.
+		// Initialize local 0 with the thread object so that it can be accessed within the interpreter (E.g. LOAD_0).
+		f.Locals[0] = t
 	}
 
 	// Add the initial frame and the frame stack to the thread's field table.
