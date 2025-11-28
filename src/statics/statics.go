@@ -175,39 +175,18 @@ func GetStaticValue(className string, fieldName string) any {
 }
 
 // Query a static value.
-// Returns the value and a boolean indicating whether the value was found.
-func QueryStaticValue(className string, fieldName string) (any, bool) {
+// Returns the value (if present) and a boolean indicating whether the value was found.
+func QueryStatic(className string, fieldName string) (Static, bool) {
 
 	staticsMutex.RLock()
 	defer staticsMutex.RUnlock()
 
-	var retValue any
-
-	staticName := className + "." + fieldName
-
-	// was this static field previously loaded? Is so, get its location and move on.
-	prevLoaded, ok := Statics[staticName]
+	stentry, ok := Statics[className+"."+fieldName]
 	if !ok {
-		return nil, false // not present
+		return stentry, false // not present
 	}
+	return stentry, true
 
-	switch prevLoaded.Value.(type) {
-	case bool:
-		value := prevLoaded.Value.(bool)
-		retValue = types.ConvertGoBoolToJavaBool(value)
-	case byte:
-		retValue = int64(prevLoaded.Value.(byte))
-	case types.JavaByte:
-		retValue = int64(prevLoaded.Value.(types.JavaByte))
-	case int32:
-		retValue = int64(prevLoaded.Value.(int32))
-	case int:
-		retValue = int64(prevLoaded.Value.(int))
-	default:
-		retValue = prevLoaded.Value
-	}
-
-	return retValue, true
 }
 
 const SelectAll = int64(1)

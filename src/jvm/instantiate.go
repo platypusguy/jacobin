@@ -124,7 +124,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			// prepare the static fields, by inserting them w/ default values in Statics table
 			// See (https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2)
 			if fld.IsStatic {
-				_, ok := statics.QueryStaticValue(classname, fldName)
+				_, ok := statics.QueryStatic(classname, fldName)
 				if !ok { // not yet stored in the statics table
 					var fldValue any
 					fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
@@ -320,7 +320,7 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		// add the field to the Statics table
 		fieldName := k.Data.CP.Utf8Refs[f.Name]
 
-		_, alreadyPresent := statics.QueryStaticValue(classname, fieldName)
+		_, alreadyPresent := statics.QueryStatic(classname, fieldName)
 		if !alreadyPresent { // add only if the field has not been pre-loaded
 			_ = statics.AddStatic(classname+"."+fieldName, s)
 		}

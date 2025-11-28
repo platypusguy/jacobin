@@ -169,15 +169,19 @@ func jjGetStaticString(params []interface{}) interface{} {
 	fieldName := object.ObjectFieldToString(fieldObj, "value")
 
 	// Convert statics entry to a string object.
-	static := statics.Statics[className+"."+fieldName]
+	sme, ok := statics.QueryStatic(className, fieldName)
+	if !ok {
+		errMsg := fmt.Sprintf("jjGetStaticString: statics.QueryStatic(%s, %s) failed", className, fieldName)
+		return object.StringObjectFromGoString(errMsg)
+	}
 
 	// Handle vectors.
-	if strings.HasPrefix(static.Type, types.Array) {
-		return jjStringifyVector(static.Value.(*object.Object))
+	if strings.HasPrefix(sme.Type, types.Array) {
+		return jjStringifyVector(sme.Value.(*object.Object))
 	}
 
 	// Handle a scalar.
-	return jjStringifyScalar(static.Type, static.Value)
+	return jjStringifyScalar(sme.Type, sme.Value)
 }
 
 func jjGetFieldString(params []interface{}) interface{} {
