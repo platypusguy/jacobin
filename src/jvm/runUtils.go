@@ -453,8 +453,6 @@ func locateInterfaceMeth(
 	interfaceMethodName string,
 	interfaceMethodType string) (classloader.MTentry, error) {
 
-	/* glob := globals.GetGlobalRef() */
-
 	// Find the interface method. Section 5.4.3.4 of the JVM spec lists the order in which
 	// the steps are taken, where C is the interface:
 	//
@@ -479,6 +477,30 @@ func locateInterfaceMeth(
 	//
 	// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
 
+	// step 1: check whether the interface is truly an interface
+	interfaceKlass := classloader.MethAreaFetch(interfaceName)
+	if interfaceKlass == nil {
+		_ = classloader.LoadClassFromNameOnly(interfaceName)
+		interfaceKlass = classloader.MethAreaFetch(interfaceName)
+	}
+	if !interfaceKlass.Data.Access.ClassIsInterface {
+		errMsg := fmt.Sprintf("INVOKEINTERFACE: %s is not an interface", interfaceName)
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+		if status != exceptions.Caught {
+			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+		}
+	}
+
+	// step 2: Check if interface C directly declares the method
+	var mtEntry classloader.MTentry
+	var err error
+
+	mtEntry, err = classloader.FetchMethodAndCP(
+		interfaceName, interfaceMethodName, interfaceMethodType)
+	if err == nil && mtEntry.Meth != nil {
+		return mtEntry, nil
+	}
+
 	clData := *class.Data
 	if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
 		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
@@ -488,13 +510,6 @@ func locateInterfaceMeth(
 			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
 		}
 	}
-
-	var mtEntry classloader.MTentry
-	var err error
-	/*
-		var foundIntfaceName = ""
-		var ok bool
-	*/
 
 	// check whether the class or its superclasses directly implement the method
 	mtEntry, _ = classloader.FetchMethodAndCP(
