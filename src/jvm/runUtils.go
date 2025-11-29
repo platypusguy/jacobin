@@ -445,6 +445,8 @@ func checkcastInterface(obj *object.Object, className string) bool {
 }
 
 // the function that finds the interface method to execute (and returns it).
+// This is a two-part process: first, we verify the signature of the method,
+// then we locate the concrete implementation.
 func locateInterfaceMeth(
 	class *classloader.Klass, // the objRef class
 	f *frames.Frame,
@@ -477,6 +479,7 @@ func locateInterfaceMeth(
 	//
 	// For more info: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-5.html#jvms-5.4.3.4
 
+	// == Phase 1: Verify the signature of the method (might find an abastract method, that's OK)
 	// step 1: check whether the interface is truly an interface
 	interfaceKlass := classloader.MethAreaFetch(interfaceName)
 	if interfaceKlass == nil {
@@ -491,30 +494,82 @@ func locateInterfaceMeth(
 		}
 	}
 
+	signatureFound := false
+
 	// step 2: Check if interface C directly declares the method
+	// Per spec §5.4.3.4, this succeeds even if the method is abstract.
+	// Abstract methods will be caught during invocation.
 	var mtEntry classloader.MTentry
 	var err error
 
 	mtEntry, err = classloader.FetchMethodAndCP(
 		interfaceName, interfaceMethodName, interfaceMethodType)
 	if err == nil && mtEntry.Meth != nil {
-		return mtEntry, nil
+		signatureFound = true
 	}
 
-	clData := *class.Data
-	if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
-		errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
-			objRefClassName, interfaceName)
-		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
-		if status != exceptions.Caught {
+	// step 3: Check if java/lang/Object declares the method
+	// this is already done in FetchMethodAndCP as the methods are loaded into every class,
+	// so we don't need to do it again
+
+	// step 4: finc the maximally-specific method, which means: suppose we have:
+	// interface A { void m(); }
+	// interface B extends A { default void m() { } }
+	// interface C extends A { default void m() { } }
+	// interface D extends B, C { } // Which m() to use?
+	// A "maximally-specific" method is one that:
+	// * is NOT abstract (has implementation)
+	// * is NOT overridden by any other candidate method (is "most specific")
+	if !signatureFound {
+		_, found := findMaximallySpecificSuperinterfaceMethods(
+			interfaceName, interfaceMethodName, interfaceMethodType, f)
+		if found {
+			signatureFound = true // continue to part 2
+		}
+	}
+
+	// clData := *class.Data
+	// if len(clData.Interfaces) == 0 { // TODO: Determine whether this is correct behavior. See Jacotest results.
+	// 	errMsg := fmt.Sprintf("INVOKEINTERFACE: class %s does not implement interface %s",
+	// 		objRefClassName, interfaceName)
+	// 	status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
+	// 	if status != exceptions.Caught {
+	// 		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
+	// 	}
+	// }
+
+	// STEP 5: Any superinterface (with filtering)
+	if !signatureFound {
+		superInterfaces := getSuperInterfaces([]string{interfaceName})
+		for _, siface := range superInterfaces {
+			mtEntry, err = classloader.FetchMethodAndCP(siface, interfaceMethodName, interfaceMethodType)
+			if err == nil && mtEntry.Meth != nil {
+				m := mtEntry.Meth.(classloader.JmEntry) // filter out abstract and private methods
+				if m.AccessFlags&classloader.ACC_ABSTRACT > 0 ||
+					m.AccessFlags&classloader.ACC_PRIVATE > 0 {
+					continue
+				}
+				signatureFound = true
+				break
+			}
+		}
+	}
+
+	if !signatureFound {
+		errMsg := "INVOKEINTERFACE: Interface method not found: " +
+			interfaceName + "." + interfaceMethodName + interfaceMethodType
+		status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, f)
+		if status == exceptions.Caught {
 			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
 		}
 	}
 
+	// === Phase 2: Find the concrete implementation of the method
 	// check whether the class or its superclasses directly implement the method
 	mtEntry, _ = classloader.FetchMethodAndCP(
 		objRefClassName, interfaceMethodName, interfaceMethodType)
 	if err == nil && mtEntry.Meth != nil {
+		// found concrete implementation in the class
 		return mtEntry, nil
 	}
 
@@ -525,7 +580,13 @@ func locateInterfaceMeth(
 		mtEntry, err = classloader.FetchMethodAndCP(
 			iface, interfaceMethodName, interfaceMethodType)
 		if err == nil && mtEntry.Meth != nil {
-			return mtEntry, nil
+			// Check if it's NOT abstract (i.e., a default method)
+			if mtEntry.MType == 'J' {
+				jmEntry := mtEntry.Meth.(classloader.JmEntry)
+				if (jmEntry.AccessFlags & classloader.ACC_ABSTRACT) == 0 {
+					return mtEntry, nil // Found default method
+				}
+			}
 		}
 	}
 
@@ -536,7 +597,12 @@ func locateInterfaceMeth(
 		mtEntry, err = classloader.FetchMethodAndCP(
 			siface, interfaceMethodName, interfaceMethodType)
 		if err == nil && mtEntry.Meth != nil {
-			return mtEntry, nil
+			if mtEntry.MType == 'J' {
+				jmEntry := mtEntry.Meth.(classloader.JmEntry)
+				if (jmEntry.AccessFlags & classloader.ACC_ABSTRACT) == 0 {
+					return mtEntry, nil
+				}
+			}
 		}
 	}
 
@@ -548,7 +614,10 @@ func locateInterfaceMeth(
 	if status != exceptions.Caught {
 		return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
 	}
-	return classloader.MTentry{}, errors.New(errMsg) // unreachable due to exception thrown immediately above
+
+	// unreachable due to exception thrown immediately above
+	// but golang reports an error if we don't return here
+	return classloader.MTentry{}, errors.New(errMsg)
 }
 
 // goes through the set of interfaces that a class implements and returns them as an array of strings
@@ -604,6 +673,134 @@ func getSuperInterfaces(interfaces []string) []string {
 		superinterfaces = append(superinterfaces, superSuperInterfaces...)
 	}
 	return superinterfaces
+}
+
+// findMaximallySpecificSuperinterfaceMethods implements JVM spec §5.4.3.3
+// Returns a non-abstract method if exactly one maximally-specific method exists
+// in the superinterface hierarchy. Returns (mtEntry, true) if found, (empty, false) otherwise.
+//
+// Per spec: "if the maximally-specific superinterface methods of C for the name
+// and descriptor include exactly one method that does not have its ACC_ABSTRACT
+// flag set, then this method is chosen"
+func findMaximallySpecificSuperinterfaceMethods(
+	interfaceName string,
+	methodName string,
+	methodType string,
+	f *frames.Frame) (classloader.MTentry, bool) {
+
+	// Get the interface C
+	interfaceKlass := classloader.MethAreaFetch(interfaceName)
+	if interfaceKlass == nil {
+		_ = classloader.LoadClassFromNameOnly(interfaceName)
+		interfaceKlass = classloader.MethAreaFetch(interfaceName)
+	}
+	if interfaceKlass == nil {
+		return classloader.MTentry{}, false
+	}
+
+	// Get all direct superinterfaces of C (not transitive)
+	directSuperInterfaces := []string{}
+	for _, idx := range interfaceKlass.Data.Interfaces {
+		superIfaceName := *stringPool.GetStringPointer(uint32(idx))
+		directSuperInterfaces = append(directSuperInterfaces, superIfaceName)
+	}
+
+	if len(directSuperInterfaces) == 0 {
+		return classloader.MTentry{}, false
+	}
+
+	// Find all methods with matching signature in superinterfaces
+	// that are NOT abstract (i.e., default methods or static methods)
+	type MethodCandidate struct {
+		entry      classloader.MTentry
+		iface      string
+		isAbstract bool
+	}
+
+	candidates := []MethodCandidate{}
+
+	// Check each superinterface and its superinterfaces recursively
+	checkedInterfaces := make(map[string]bool)
+
+	var checkInterface func(ifaceName string)
+	checkInterface = func(ifaceName string) {
+		if checkedInterfaces[ifaceName] {
+			return
+		}
+		checkedInterfaces[ifaceName] = true
+
+		// Load interface if needed
+		iface := classloader.MethAreaFetch(ifaceName)
+		if iface == nil {
+			_ = classloader.LoadClassFromNameOnly(ifaceName)
+			iface = classloader.MethAreaFetch(ifaceName)
+		}
+		if iface == nil {
+			return
+		}
+
+		// Check if this interface has the method
+		mtEntry, err := classloader.FetchMethodAndCP(ifaceName, methodName, methodType)
+		if err == nil && mtEntry.Meth != nil {
+			candidate := MethodCandidate{
+				entry: mtEntry,
+				iface: ifaceName,
+			}
+
+			// Check if abstract
+			if mtEntry.MType == 'J' {
+				jmEntry := mtEntry.Meth.(classloader.JmEntry)
+				candidate.isAbstract = (jmEntry.AccessFlags & 0x0400) != 0 // ACC_ABSTRACT
+			} else {
+				candidate.isAbstract = false // G-functions are concrete
+			}
+
+			candidates = append(candidates, candidate)
+		}
+
+		// Recursively check superinterfaces
+		for _, idx := range iface.Data.Interfaces {
+			superIfaceName := *stringPool.GetStringPointer(uint32(idx))
+			checkInterface(superIfaceName)
+		}
+	}
+
+	// Check all superinterfaces of C
+	for _, si := range directSuperInterfaces {
+		checkInterface(si)
+	}
+
+	if len(candidates) == 0 {
+		return classloader.MTentry{}, false
+	}
+
+	// Filter to only non-abstract methods
+	nonAbstractCandidates := []MethodCandidate{}
+	for _, candidate := range candidates {
+		if !candidate.isAbstract {
+			nonAbstractCandidates = append(nonAbstractCandidates, candidate)
+		}
+	}
+
+	// Spec requires EXACTLY ONE non-abstract method
+	if len(nonAbstractCandidates) == 1 {
+		return nonAbstractCandidates[0].entry, true
+	}
+
+	// Multiple non-abstract methods found (ambiguous)
+	// or only abstract methods found
+	// In either case, this step fails
+	if len(nonAbstractCandidates) > 1 {
+		// This would be an IncompatibleClassChangeError at runtime
+		// but for now we just return false to try the next step
+		if globals.TraceVerbose {
+			errMsg := fmt.Sprintf("[Step 4] Multiple non-abstract methods found for %s.%s%s",
+				interfaceName, methodName, methodType)
+			trace.Trace(errMsg)
+		}
+	}
+
+	return classloader.MTentry{}, false
 }
 
 // the generation and formatting of trace data for each executed bytecode.
