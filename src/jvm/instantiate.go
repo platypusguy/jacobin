@@ -22,7 +22,6 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
-	"sync"
 	"unsafe"
 )
 
@@ -37,8 +36,6 @@ import (
 //     NOTE: The "any" type returned is always *object.Object.
 //     This is being done to avoid a golang circularity error when the caller
 //     is one of the native 'G' functions.
-
-var instantiateMutex = sync.Mutex{}
 
 func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
@@ -127,9 +124,8 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 			// prepare the static fields, by inserting them w/ default values in Statics table
 			// See (https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.2)
 			if fld.IsStatic {
-				staticName := classname + "." + fldName
-				_, ok := statics.Statics[staticName]
-				if !ok {
+				_, ok := statics.QueryStatic(classname, fldName)
+				if !ok { // not yet stored in the statics table
 					var fldValue any
 					fldType := []byte(k.Data.CP.Utf8Refs[fld.Desc])
 					switch fldType[0] {
@@ -140,7 +136,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 					case 'L', '[':
 						fldValue = object.Null
 					}
-					statics.AddStatic(staticName, statics.Static{Type: string(fldType[0]), Value: fldValue})
+					statics.AddStatic(classname+"."+fldName, statics.Static{Type: string(fldType[0]), Value: fldValue})
 				}
 			}
 		} // loop through the fields if any
@@ -316,9 +312,6 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		} // end of search through attributes
 	*/
 
-	instantiateMutex.Lock()
-	defer instantiateMutex.Unlock()
-	
 	if f.IsStatic {
 		s := statics.Static{
 			Type:  presentType, // we use the type without the 'X' prefix in the statics table.
@@ -326,11 +319,10 @@ func createField(f classloader.Field, k *classloader.Klass, classname string) (*
 		}
 		// add the field to the Statics table
 		fieldName := k.Data.CP.Utf8Refs[f.Name]
-		fullFieldName := classname + "." + fieldName
 
-		_, alreadyPresent := statics.Statics[fullFieldName]
-		if !alreadyPresent { // add only if field has not been pre-loaded
-			_ = statics.AddStatic(fullFieldName, s)
+		_, alreadyPresent := statics.QueryStatic(classname, fieldName)
+		if !alreadyPresent { // add only if the field has not been pre-loaded
+			_ = statics.AddStatic(classname+"."+fieldName, s)
 		}
 	}
 	return fieldToAdd, nil

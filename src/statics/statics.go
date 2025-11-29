@@ -25,8 +25,13 @@ const flagTraceStatics = false
 // Statics is a fast-lookup map of static variables and functions. The int64 value
 // contains the index into the statics array where the entry is stored.
 // Statics are placed into this map only when they are first referenced and resolved.
+//
+// Protocol:
+// ---------
+// Writers: Lock; defer Unlock immediately following Lock
+// Readers: RLock; defer RUnlock immediately following RLock
 var Statics = make(map[string]Static)
-var staticsMutex = sync.Mutex{}
+var staticsMutex = sync.RWMutex{}
 
 // Static contains all the various items needed for a static variable or function.
 type Static struct {
@@ -117,7 +122,7 @@ func LoadStaticsString() {
 		Static{Type: types.Ref, Value: nil})
 	_ = AddStatic("java/lang/String.serialPersistentFields",
 		Static{Type: types.Ref, Value: nil})
-	// next entry points to a comparator. Might be useful to fill in later
+	// The next entry points to a comparator. It might be useful to fill in later.
 	_ = AddStatic("java/lang/String.CASE_INSENSITIVE_ORDER",
 		Static{Type: types.Ref, Value: nil})
 }
@@ -127,8 +132,8 @@ func LoadStaticsString() {
 // If successful, return the field value and a nil error;
 // Else (error), return errors.New(errMsg).
 func GetStaticValue(className string, fieldName string) any {
-	staticsMutex.Lock()
-	defer staticsMutex.Unlock()
+	staticsMutex.RLock()
+	defer staticsMutex.RUnlock()
 
 	var retValue any
 
@@ -169,14 +174,29 @@ func GetStaticValue(className string, fieldName string) any {
 	return retValue
 }
 
+// Query a static value.
+// Returns the value (if present) and a boolean indicating whether the value was found.
+func QueryStatic(className string, fieldName string) (Static, bool) {
+
+	staticsMutex.RLock()
+	defer staticsMutex.RUnlock()
+
+	stentry, ok := Statics[className+"."+fieldName]
+	if !ok {
+		return stentry, false // not present
+	}
+	return stentry, true
+
+}
+
 const SelectAll = int64(1)
 const SelectClass = int64(2)
 const SelectUser = int64(3)
 
 // DumpStatics dumps the contents of the statics table in sorted order to stderr
 func DumpStatics(from string, selection int64, className string) {
-	staticsMutex.Lock()
-	defer staticsMutex.Unlock()
+	staticsMutex.RLock()
+	defer staticsMutex.RUnlock()
 	_, _ = fmt.Fprintf(os.Stderr, "\n===== DumpStatics BEGIN, from=\"%s\", selection=%d, className=\"%s\"\n",
 		from, selection, className)
 

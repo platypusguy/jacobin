@@ -210,8 +210,11 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// note that statics have been preloaded before this function
 	// can be called, and CLI processing has also occurred. So, we
 	// know we have the latest assertion-enabled status.
-	x := statics.Statics["main.$assertionsDisabled"].Value.(int64)
-	if x == 1 {
+	ste, ok := statics.QueryStatic("main", "$assertionsDisabled")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	if ste.Value.(int64) == int64(1) {
 		return types.JavaBoolFalse
 	} else {
 		return types.JavaBoolTrue
