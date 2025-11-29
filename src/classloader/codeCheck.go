@@ -330,7 +330,7 @@ var CheckTable = [203]BytecodeFunc{
 	CheckDup1,            // DUP_X1          0x5A
 	CheckDup1,            // DUP_X2          0x5B
 	CheckDup2,            // DUP2            0x5C
-	CheckDup2,            // DUP2_X1         0x5D
+	CheckDup2x1,          // DUP2_X1         0x5D
 	CheckDup2,            // DUP2_X2         0x5E
 	Return1,              // SWAP            0x5F
 	Arith,                // IADD            0x60
@@ -546,12 +546,28 @@ func CheckDup2() int {
 		goto dup2 // if so, we can safely use DUP2
 	}
 
+	// TODO: should we be testing the previous bytecode instead? That's what we do in Dup2x1
 	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
 		Code[PC] = 0x59 // change DUP2 to DUP
 		StackEntries += 1
 		return 1
 	}
 dup2:
+	StackEntries += 2
+	return 1
+}
+
+func CheckDup2x1() int {
+	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
+		goto dup2x1 // if so, we can safely use DUP2
+	}
+
+	if BytecodeIsForLongOrDouble(Code[PrevPC]) { // check if the preceding bytecode is for a long or double
+		Code[PC] = 0x5A // change DUP2X1 to DUPX1
+		StackEntries += 1
+		return 1
+	}
+dup2x1:
 	StackEntries += 2
 	return 1
 }
