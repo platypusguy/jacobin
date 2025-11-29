@@ -338,23 +338,6 @@ func interpret(fs *list.List) {
 					fr = fs.Front().Value.(*frames.Frame)
 				}
 			}
-			// switch ret {
-			// case 0:
-			// 	// exiting will either end program or call this function
-			// 	// again for the frame at the top of the frame stack
-			// 	return
-			// case exceptions.ERROR_OCCURED: // occurs only in tests
-			// 	fs.Remove(fs.Front()) // pop the frame off, else we loop endlessly
-			// 	return
-			// case exceptions.RESUME_HERE: // continue processing from the present fr.PC
-			// 	// This primarily occurs when an exception is caught. The catch resets
-			// 	// the PC to the catch code to execute. So, we don't need any update to
-			// 	// the PC. However, we have to refresh the current frame b/c the
-			// 	// exception will refresh the topmost frame with any exception handling
-			// 	fr = fs.Front().Value.(*frames.Frame)
-			// default:
-			// 	fr.PC += ret
-			// }
 		} else {
 			errMsg := fmt.Sprintf("Invalid bytecode: %d", opcode)
 			status := exceptions.ThrowEx(excNames.ClassFormatError, errMsg, fr)
@@ -2264,7 +2247,9 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}
 
-	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces
+	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
+		// When a class implements an interface and inherits default methods (or doesn't override them),
+		// the compiler generates INVOKEVIRTUAL
 		klass := classloader.MethAreaFetch(className)
 		if len(klass.Data.Interfaces) > 0 {
 			for i := 0; i < len(klass.Data.Interfaces); i++ {
