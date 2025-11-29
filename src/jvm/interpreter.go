@@ -2270,7 +2270,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			for i := 0; i < len(klass.Data.Interfaces); i++ {
 				index := uint32(klass.Data.Interfaces[i])
 				interfaceName := *stringPool.GetStringPointer(index)
-				mtEntry, err = locateInterfaceMeth(klass, fr, interfaceName, className, methodName, methodType)
+				mtEntry, err = locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
 				if mtEntry.Meth != nil {
 					break
 				}

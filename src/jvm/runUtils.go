@@ -483,15 +483,41 @@ func locateInterfaceMeth(
 	// step 1: check whether the interface is truly an interface
 	interfaceKlass := classloader.MethAreaFetch(interfaceName)
 	if interfaceKlass == nil {
-		_ = classloader.LoadClassFromNameOnly(interfaceName)
+		if globals.TraceVerbose {
+			trace.Trace(fmt.Sprintf("[INVOKEINTERFACE] Interface %s not in method area, loading...", interfaceName))
+		}
+		err := classloader.LoadClassFromNameOnly(interfaceName)
+		if err != nil {
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: Failed to load interface %s: %v", interfaceName, err)
+			status := exceptions.ThrowEx(excNames.NoClassDefFoundError, errMsg, f)
+			if status != exceptions.Caught {
+				return classloader.MTentry{}, errors.New(errMsg)
+			}
+			return classloader.MTentry{}, errors.New(errMsg) // for tests
+		}
 		interfaceKlass = classloader.MethAreaFetch(interfaceName)
+		if interfaceKlass == nil {
+			errMsg := fmt.Sprintf("INVOKEINTERFACE: Interface %s not found in method area after loading", interfaceName)
+			status := exceptions.ThrowEx(excNames.NoClassDefFoundError, errMsg, f)
+			if status != exceptions.Caught {
+				return classloader.MTentry{}, errors.New(errMsg)
+			}
+			return classloader.MTentry{}, errors.New(errMsg) // for tests
+		}
 	}
+
+	// Now interfaceKlass is guaranteed to be non-nil
 	if !interfaceKlass.Data.Access.ClassIsInterface {
 		errMsg := fmt.Sprintf("INVOKEINTERFACE: %s is not an interface", interfaceName)
 		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, f)
 		if status != exceptions.Caught {
 			return classloader.MTentry{}, errors.New(errMsg) // applies only if in test
 		}
+		return classloader.MTentry{}, errors.New(errMsg) // for tests
+	}
+
+	if globals.TraceVerbose {
+		trace.Trace(fmt.Sprintf("[INVOKEINTERFACE] Step 1: Verified %s is an interface", interfaceName))
 	}
 
 	signatureFound := false
