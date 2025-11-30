@@ -329,7 +329,7 @@ func threadGroupGetName(params []interface{}) interface{} {
 	tg, ok := params[0].(*object.Object)
 	if !ok {
 		return getGErrBlk(excNames.IllegalArgumentException,
-			"threadGroupGetName: Expected parameter to be an object reference")
+			fmt.Sprintf("threadGroupGetName: Expected parameter to be an object reference, but got %T", params[0]))
 	}
 
 	f := tg.FieldTable["name"]
