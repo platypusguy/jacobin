@@ -343,7 +343,7 @@ func threadGroupGetName(params []interface{}) interface{} {
 		return object.StringObjectFromGoString(s)
 	}
 
-	// Fallback in case legacy code stored Go string
+	// Fallback in case legacy code stored Java string
 	if s, ok := f.Fvalue.([]types.JavaByte); ok {
 		return object.StringObjectFromJavaByteArray(s)
 	}
