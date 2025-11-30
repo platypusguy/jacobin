@@ -163,7 +163,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.isAlive()Z"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadIsAlive}
 
 	MethodSignatures["java/lang/Thread.isCCLOverridden(Ljava/lang/Class;)Z"] =
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
@@ -173,6 +173,9 @@ func Load_Lang_Thread() {
 
 	MethodSignatures["java/lang/Thread.isInterrupted()Z"] =
 		GMeth{ParamSlots: 0, GFunction: threadIsInterrupted}
+
+	MethodSignatures["java/lang/Thread.isTerminated()Z"] =
+		GMeth{ParamSlots: 0, GFunction: threadIsTerminated}
 
 	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
 		GMeth{ParamSlots: 0, GFunction: trapFunction}
@@ -190,7 +193,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
 
 	MethodSignatures["java/lang/Thread.onSpinWait()V"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: threadYield}
 
 	MethodSignatures["java/lang/Thread.registerNatives()V"] =
 		GMeth{ParamSlots: 0, GFunction: justReturn}
@@ -831,6 +834,20 @@ func threadGetThreadGroup(params []interface{}) any {
 	return threadGroup
 }
 
+func threadIsAlive(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadIsAlive: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadIsAlive: Expected thread to be an object"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	state := GetThreadState(t)
+	return state > NEW && state < TERMINATED
+}
+
 func threadIsInterrupted(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadIsInterrupted: Expected 1 parameter, got %d parameters", len(params))
@@ -842,6 +859,20 @@ func threadIsInterrupted(params []interface{}) any {
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
 	return t.FieldTable["interrupted"].Fvalue
+}
+
+func threadIsTerminated(params []interface{}) any {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("threadIsTerminated: Expected 1 parameter, got %d parameters", len(params))
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	t, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadIsTerminated: Expected thread to be an object"
+		return getGErrBlk(excNames.InternalException, errMsg)
+	}
+	state := GetThreadState(t)
+	return state == TERMINATED
 }
 
 func threadStart(params []interface{}) any {
@@ -1037,6 +1068,15 @@ func RegisterThread(t *object.Object) {
 	glob.ThreadLock.Lock()
 	glob.Threads[ID] = t
 	glob.ThreadLock.Unlock()
+}
+
+// Get the thread state and return it to caller.
+func GetThreadState(th *object.Object) int {
+	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok {
+		return UNDEFINED
+	}
+	return thStateObj.FieldTable["value"].Fvalue.(int)
 }
 
 // Set the thread state to the supplied value unconditionally.

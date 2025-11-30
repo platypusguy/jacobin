@@ -52,6 +52,7 @@ const (
 	WAITING       = 3
 	TIMED_WAITING = 4
 	TERMINATED    = 5
+	UNDEFINED     = 6
 )
 
 var ThreadState = map[int]string{
@@ -61,6 +62,7 @@ var ThreadState = map[int]string{
 	WAITING:       "WAITING",
 	TIMED_WAITING: "TIMED_WAITING",
 	TERMINATED:    "TERMINATED",
+	UNDEFINED:     "UNDEFINED",
 }
 
 // synchronization and lazy init of enum singletons
