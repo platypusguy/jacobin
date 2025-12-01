@@ -370,6 +370,54 @@ func TestDup2_LongDoubleOperation(t *testing.T) {
 	}
 }
 
+// test when the preceding bytecode is for long or double
+func TestDup2_X1_Preceding(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create code where next bytecode is for long/double
+	Code = []byte{opcodes.LADD, opcodes.DUP2_X1, opcodes.NOP}
+	PC = 1
+	PrevPC = 0
+	StackEntries = 1
+
+	result := CheckDup2x1()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
+	}
+	// Check that DUP2_X1 was converted to DUP_X1
+	if Code[PC] != opcodes.DUP_X1 {
+		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", Code[PC])
+	}
+}
+
+// test when the following bytecode is for long or double
+func TestDup2_X1_Following(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create code where next bytecode is for long/double
+	Code = []byte{opcodes.NOP, opcodes.DUP2_X1, opcodes.LADD}
+	PC = 1
+	PrevPC = 0
+	StackEntries = 1
+
+	result := CheckDup2x1()
+
+	if result != 1 {
+		t.Errorf("Expected return value 1, got: %d", result)
+	}
+	if StackEntries != 2 {
+		t.Errorf("Expected StackEntries to increase by 1, got: %d", StackEntries)
+	}
+	// Check that DUP2_X1 was converted to DUP_X1
+	if Code[PC] != opcodes.DUP_X1 {
+		t.Errorf("Expected DUP2 to be converted to DUP, got: 0x%x", Code[PC])
+	}
+}
+
 func TestDup2_RegularOperation(t *testing.T) {
 	globals.InitGlobals("test")
 

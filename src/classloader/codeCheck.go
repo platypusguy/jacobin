@@ -557,12 +557,19 @@ dup2:
 	return 1
 }
 
+// CheckDup2x1 converts DUP2_X1 to DUP_X1 when it detects that the bytecode is handling a 64-bit value.
 func CheckDup2x1() int {
 	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x1 // if so, we can safely use DUP2
 	}
 
 	if BytecodeIsForLongOrDouble(Code[PrevPC]) { // check if the preceding bytecode is for a long or double
+		Code[PC] = 0x5A // change DUP2_X1 to DUP_X1
+		StackEntries += 1
+		return 1
+	}
+
+	if BytecodeIsForLongOrDouble(Code[PC+1]) { // check if the next bytecode is for a long or double
 		Code[PC] = 0x5A // change DUP2_X1 to DUP_X1
 		StackEntries += 1
 		return 1
