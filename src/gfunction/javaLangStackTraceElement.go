@@ -19,7 +19,6 @@ import (
 	"jacobin/src/trace"
 	"jacobin/src/util"
 	"sort"
-	"strings"
 )
 
 // StackTraceElement is a class that is primarily used by Throwable to gather data about the
@@ -150,35 +149,36 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	addField("moduleName", methClass.Data.Module)
 
 	// now get the source line number for any non-JDK classes and non-constructors
+	// Unsure why this limitation. It's commented out for the moment (JACOBIN-781)
 
 	addField("sourceLine", "") // the default if no source line data is available
-	if !util.IsFilePartOfJDK(&frame.MethName) && !strings.HasPrefix(frame.MethName, "<init>") {
-		rawMethod, _ := classloader.FetchMethodAndCP(frame.ClName, frame.MethName, frame.MethType)
-		if rawMethod.MType == 'G' { // nothing more to do if it's a native method
-			return
-		}
-		method, ok := rawMethod.Meth.(classloader.JmEntry)
-		if !ok {
-			errMsg := fmt.Sprintf("initStackTraceElement: %s.%s, Invalid operand type for rawMethod.Meth: %T",
-				util.ConvertInternalClassNameToUserFormat(frame.ClName), frame.MethName, rawMethod.Meth)
-			_ = exceptions.ThrowEx(excNames.InternalException, errMsg, &frame)
-		}
-		for i := 0; i < len(method.Attribs); i++ {
-			index := method.Attribs[i].AttrName
-			if method.Cp.Utf8Refs[index] == "LineNumberTable" {
-				pcToUse := frame.PC
-				if frame.ExceptionPC == -1 { // if the exception occurred in a different frame, exceptionPC = -1
-					// frame.ExceptionPC = frame.PC
-					pcToUse = frame.PC
-				}
-				// line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
-				line := searchLineNumberTable(method.Attribs[i].AttrContent, pcToUse)
-				if line != -1 { // -1 means not found
-					addField("sourceLine", fmt.Sprintf("%d", line))
-				}
+	// if !util.IsFilePartOfJDK(&frame.MethName) && !strings.HasPrefix(frame.MethName, "<init>") {
+	rawMethod, _ := classloader.FetchMethodAndCP(frame.ClName, frame.MethName, frame.MethType)
+	if rawMethod.MType == 'G' { // nothing more to do if it's a native method
+		return
+	}
+	method, ok := rawMethod.Meth.(classloader.JmEntry)
+	if !ok {
+		errMsg := fmt.Sprintf("initStackTraceElement: %s.%s, Invalid operand type for rawMethod.Meth: %T",
+			util.ConvertInternalClassNameToUserFormat(frame.ClName), frame.MethName, rawMethod.Meth)
+		_ = exceptions.ThrowEx(excNames.InternalException, errMsg, &frame)
+	}
+	for i := 0; i < len(method.Attribs); i++ {
+		index := method.Attribs[i].AttrName
+		if method.Cp.Utf8Refs[index] == "LineNumberTable" {
+			pcToUse := frame.PC
+			if frame.ExceptionPC == -1 { // if the exception occurred in a different frame, exceptionPC = -1
+				// frame.ExceptionPC = frame.PC
+				pcToUse = frame.PC
+			}
+			// line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
+			line := searchLineNumberTable(method.Attribs[i].AttrContent, pcToUse)
+			if line != -1 { // -1 means not found
+				addField("sourceLine", fmt.Sprintf("%d", line))
 			}
 		}
 	}
+	// }
 }
 
 // get the source line number from the location of the bytecode where exception occurred

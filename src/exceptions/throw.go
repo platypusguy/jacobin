@@ -92,7 +92,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		MinimalAbort(excNames.InternalException, errMsg)
 	}
 	fs = th.FieldTable["framestack"].Fvalue.(*list.List)
-	
+
 	// find out if the exception is caught and if so point to the catch code
 	catchFrame, catchPC := FindCatchFrame(fs, exceptionCPname, f.ExceptionPC)
 	if catchFrame != nil {
@@ -168,11 +168,21 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			declaringClass = traceEntry.FieldTable["declaringClass"].Fvalue.(string)
 		}
 
-		traceInfo := fmt.Sprintf("  at %s.%s(%s:%s)",
-			declaringClass,
-			traceEntry.FieldTable["methodName"].Fvalue.(string),
-			traceEntry.FieldTable["fileName"].Fvalue.(string),
-			traceEntry.FieldTable["sourceLine"].Fvalue.(string))
+		var traceInfo string
+		if traceEntry.FieldTable["sourceLine"].Fvalue.(string) == "" {
+			// if no source line number is available, just print the method name
+			traceInfo = fmt.Sprintf("  at %s.%s(%s)",
+				declaringClass,
+				traceEntry.FieldTable["methodName"].Fvalue.(string),
+				traceEntry.FieldTable["fileName"].Fvalue.(string))
+		} else {
+			traceInfo = fmt.Sprintf("  at %s.%s(%s:%s)",
+				// otherwise, print the method name and source file + line number
+				declaringClass,
+				traceEntry.FieldTable["methodName"].Fvalue.(string),
+				traceEntry.FieldTable["fileName"].Fvalue.(string),
+				traceEntry.FieldTable["sourceLine"].Fvalue.(string))
+		}
 		_, _ = fmt.Fprintln(os.Stderr, traceInfo)
 	}
 
