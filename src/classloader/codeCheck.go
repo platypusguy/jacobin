@@ -532,6 +532,7 @@ func CheckBipush() int {
 	}
 }
 
+// DUP  Push a duplicate of the top stack value onto the stack.
 func CheckDup1() int {
 	StackEntries += 1
 	return 1
