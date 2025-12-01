@@ -178,7 +178,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: threadIsTerminated}
 
 	MethodSignatures["java/lang/Thread.isVirtual()Z"] =
-		GMeth{ParamSlots: 0, GFunction: trapFunction}
+		GMeth{ParamSlots: 0, GFunction: returnTrue}
 
 	MethodSignatures["java/lang/Thread.join()V"] =
 		GMeth{ParamSlots: 0, GFunction: threadJoin}
