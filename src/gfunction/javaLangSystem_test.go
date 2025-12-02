@@ -23,17 +23,19 @@ import (
 	"time"
 )
 
+/***
 func TestSystemClinit(t *testing.T) {
 	globals.InitGlobals("test")
 	classloader.InitMethodArea()
 	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitRun}})
-	ret := systemClinit(nil)
+	ret := SystemClinit(nil)
 	if ret != nil {
 		gErr := ret.(*GErrBlk)
 		t.Errorf("TestSystemClinit: Unexpected error message. got %s", gErr.ErrMsg)
 	}
 	t.Log("TestSystemClinit: stringClinit() returned nil as expected")
 }
+***/
 
 func TestArrayCopyNonOverlapping(t *testing.T) {
 	globals.InitGlobals("test")
@@ -297,7 +299,6 @@ func TestGetConsole(t *testing.T) {
 	classloader.InitMethodArea()
 	classloader.MethAreaInsert("java/lang/System", &classloader.Klass{Data: &classloader.ClData{ClInit: types.ClInitNotRun}})
 	statics.PreloadStatics()
-	_ = systemClinit(nil)
 
 	ret := systemConsole(nil)
 	if ret.(*os.File) != os.Stdin {

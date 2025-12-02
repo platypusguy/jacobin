@@ -98,8 +98,13 @@ func PreloadStatics() {
 // LoadProgramStatics loads static fields that the JVM expects to have
 // loaded as execution begins.
 func LoadProgramStatics() {
-	_ = AddStatic("main.$assertionsDisabled",
-		Static{Type: types.Int, Value: types.JavaBoolTrue})
+	// No idea why assertions are disabled in Hotspot!!
+	_ = AddStatic("main.$assertionsDisabled", Static{Type: types.Int, Value: types.JavaBoolTrue})
+	// Add System in out err to statics.
+	_ = AddStatic("java/lang/System.in", Static{Type: "GS", Value: os.Stdin})
+	_ = AddStatic("java/lang/System.err", Static{Type: "GS", Value: os.Stderr})
+	_ = AddStatic("java/lang/System.out", Static{Type: "GS", Value: os.Stdout})
+
 }
 
 // LoadStaticsString loads the statics from java/lang/String directly

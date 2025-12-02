@@ -143,7 +143,7 @@ func Load_Lang_Throwable() {
 //  2. for the nonce, Throwable.SUPPRESSED_SENTINEL is set to nil. It's unlikely we'll
 //     ever need it, but if we do, we'll implement it then.
 //
-// So, essentially, we're just initializing several static fields (as expected in systemClinit())
+// So, essentially, we're just initializing several static fields (as expected in SystemClinit())
 //
 // 0:  ldc           #8                  // class java/lang/Throwable
 // 2:  invokevirtual #302                // Method java/lang/Class.desiredAssertionStatus:()Z
