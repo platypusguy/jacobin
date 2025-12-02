@@ -11,6 +11,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction"
 	"jacobin/src/globals"
+	"jacobin/src/statics"
 	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"os"
@@ -99,6 +100,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	// Initialise global, logging, classloader
 	globals.InitGlobals("test")
 	trace.Init()
+	statics.LoadProgramStatics()
 	t.Logf("globals.InitGlobals and trace.Init ok\n")
 	// globals.TraceCloadi = true
 

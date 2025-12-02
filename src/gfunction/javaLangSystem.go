@@ -8,14 +8,12 @@ package gfunction
 
 import (
 	"fmt"
-	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
-	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
 	"runtime"
@@ -44,7 +42,7 @@ func Load_Lang_System() {
 	MethodSignatures["java/lang/System.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  systemClinit,
+			GFunction:  clinitGeneric,
 		}
 
 	MethodSignatures["java/lang/System.allowSecurityManager()Z"] =
@@ -229,10 +227,14 @@ func Load_Lang_System() {
 
 }
 
-func systemClinit([]interface{}) interface{} {
+/***
+	Setting up statics has been moved to statics.LoadProgramStatics().
+	This eliminates a multithreading issue..
+
+func SystemClinit([]interface{}) interface{} {
 	klass := classloader.MethAreaFetch("java/lang/System")
 	if klass == nil || klass.Data == nil {
-		errMsg := "systemClinit: Expected java/lang/System to be in the MethodArea, but it was not"
+		errMsg := "SystemClinit: Expected java/lang/System to be in the MethodArea, but it was not"
 		trace.Error(errMsg)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
@@ -242,8 +244,10 @@ func systemClinit([]interface{}) interface{} {
 		_ = statics.AddStatic("java/lang/System.out", statics.Static{Type: "GS", Value: os.Stdout})
 		klass.Data.ClInit = types.ClInitRun
 	}
+
 	return nil
 }
+***/
 
 // systemArrayCopy copies an array or subarray from one array to another, both of which must exist.
 // It is a complex native function in the JDK. Javadoc here:
