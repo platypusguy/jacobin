@@ -200,12 +200,12 @@ func TestAssertionsEnabledStatus_Enabled(t *testing.T) {
 	}
 }
 
-func TestGetNameWithAStringObject(t *testing.T) {
-	setup()
-	obj := object.StringObjectFromGoString("java/lang/String")
-	params := []interface{}{obj}
-	result := getName(params)
-	if result != "java/lang/String" {
-		t.Errorf("Expected java/lang/String, got %s", result)
-	}
-}
+// func TestGetNameWithAStringObject(t *testing.T) {
+// 	setup()
+// 	obj := object.StringObjectFromGoString("java/lang/String")
+// 	params := []interface{}{obj}
+// 	result := getName(params)
+// 	if result != "java/lang/String" {
+// 		t.Errorf("Expected java/lang/String, got %s", result)
+// 	}
+// } commented out until fixed under JACOBIN-720

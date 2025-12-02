@@ -224,9 +224,9 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 
 // "java/lang/Class.getName()Ljava/lang/String;"
 func getName(params []interface{}) interface{} {
-	primitive := params[0].(*object.Object)
-	str := object.GoStringFromStringObject(primitive)
-	return str
+	primitive := params[0].(*javaLangClass)
+	str := primitive.name
+	return object.StringObjectFromGoString(str)
 }
 
 // "java/lang/Class.getName()Ljava/lang/String;"
