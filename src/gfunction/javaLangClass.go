@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2023 by  the Jacobin authors. Consult jacobin.org.
+ * Copyright (c) 2023-5 by  the Jacobin authors. Consult jacobin.org.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0) All rights reserved.
  */
 
@@ -229,7 +229,7 @@ func getName(params []interface{}) interface{} {
 	return object.StringObjectFromGoString(name)
 }
 
-// "java/lang/Class.getName()Ljava/lang/String;"
+// "java/lang/Class.isArray()Ljava/lang/String;"
 func classIsArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
 	fldType := obj.FieldTable["value"].Ftype
