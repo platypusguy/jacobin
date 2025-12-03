@@ -32,6 +32,7 @@ import (
 func NewStringObject() *Object {
 	s := new(Object)
 	s.Mark.Hash = 0
+	SetObjectUnlocked(s)
 	s.KlassName = types.StringPoolStringIndex // =  java/lang/String
 	s.FieldTable = make(map[string]Field)
 
