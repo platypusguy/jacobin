@@ -42,9 +42,6 @@ const MultiArray = "[["
 const Interface = "i"
 const NonArrayObject = "n"
 
-type DefHashMap map[any]any
-type DefProperties map[string]string
-
 const Static = "X"
 const StaticDouble = "XD"
 const StaticLong = "XJ"
@@ -52,7 +49,7 @@ const StaticLong = "XJ"
 const GoMeth = "G" // a go mehod
 
 const Error = "0"  // if an error occurred in getting a type
-const Struct = "9" // used primarily in returning items from the CP
+const Struct = "9" // used primarily in returning items from the CP or getting Cl.Data fields
 
 const StringIndex = "T" // The index into the string pool
 const GolangString = "G"
@@ -64,6 +61,9 @@ const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
 const HashMap = "*HM"    // The related Fvalue is a Golang map[interface{}]interface{}
 const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
 const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
+
+type DefHashMap map[any]any
+type DefProperties map[string]string
 
 func IsIntegral(t string) bool {
 	if t == Byte || t == Char || t == Int ||

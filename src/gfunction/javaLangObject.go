@@ -122,31 +122,68 @@ func objectGetClass(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	jlc := javaLangClass{}
-	jlc.name = object.GoStringFromStringPoolIndex(objPtr.KlassName)
+	jlc := object.MakeEmptyObject()
+	jlc.FieldTable = make(map[string]object.Field)
+	name := object.GoStringFromStringPoolIndex(objPtr.KlassName)
+	jlc.FieldTable["name"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: name,
+	}
 
 	// get a pointer to the class contents from the method area
-	o := classloader.MethAreaFetch(jlc.name)
-	if o == nil {
-		errMsg := fmt.Sprintf("objectGetClass: Class %s not loaded", jlc.name)
+	content := classloader.MethAreaFetch(name)
+	if content == nil {
+		errMsg := fmt.Sprintf("java/lang/Object.getClass: Class %s not loaded", name)
 		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
 	}
 
 	// syntactic sugar
-	obj := *o
+	obj := *content
 
 	// create the empty java.lang.Class structure
-	jlc.loader = obj.Loader
+	jlc.FieldTable["classLoader"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: obj.Loader,
+	}
 
 	// fill in the jlc
 	objData := *obj.Data
-	jlc.constantPool = objData.CP
-	jlc.superClass = object.GoStringFromStringPoolIndex(objData.SuperclassIndex)
-	jlc.fields = objData.Fields
-	jlc.interfaces = objData.Interfaces
-	jlc.methods = objData.MethodTable
-	jlc.accessFlags = objData.Access
-	return &jlc
+	jlc.FieldTable["constantPool"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.CP,
+	}
+
+	jlc.FieldTable["superClass"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: object.GoStringFromStringPoolIndex(objData.SuperclassIndex),
+	}
+
+	jlc.FieldTable["fields"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.Fields,
+	}
+
+	jlc.FieldTable["interfaces"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.Interfaces,
+	}
+
+	jlc.FieldTable["methods"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.MethodTable,
+	}
+
+	jlc.FieldTable["methods"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.MethodTable,
+	}
+
+	jlc.FieldTable["modifiers"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: objData.Access,
+	}
+
+	return jlc
 }
 
 // "java/lang/Object.toString()Ljava/lang/String;"
