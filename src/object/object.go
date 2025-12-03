@@ -233,6 +233,20 @@ const (
    4. Error Handling
        ◦ Returns error instead of panic for invalid operations
        ◦ Examples: unlocking unlocked object, unlocking a GC-marked object, or unlocking fat lock by non-owner
+
+TODO: Track the owner thread even in thin-locking (Hotspot). Then we can support the Thread.holdsLock() query.
+
+According to chatGPT on 12/3/2025:
+
+What is “owner tracking in thin locking”
+
+* The concept of Thin lock (also known as “lightweight lock”) for Java was described in the paper
+Thin Locks: Featherweight Synchronization for Java by Bacon, Konuru, Murthy & Serrano.
+They describe a header (“lockword”) that encodes the owner thread identifier and a nested lock count when the object is thin-locked.
+* Specifically: when a thread acquires the lock, its thread ID is stored in bits in the object’s header along with a “count” for nested reentrant locking.
+That is literally tracking the “owner (thread)” of the lock in the thin-lock.
+* If there is contention, the thin-lock can “inflate” to a fat (heavyweight) lock.
+* Hence “owner tracking” — storing which thread currently owns a lock in the object header — is a fundamental part of the thin-lock idea.
 */
 
 // Set the lock state bits on obj.Mark.Misc.
