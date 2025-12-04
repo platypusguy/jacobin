@@ -870,8 +870,8 @@ func EmitTraceData(f *frames.Frame) string {
 		}
 	}
 
-	traceInfo := fmt.Sprintf("class: %-22s meth:%-10s PC: % 3d, %-13s TOS: %s %s ",
-		f.ClName, f.MethName, f.PC, opcodes.BytecodeNames[int(f.Meth[f.PC])], tos, stackTop)
+	traceInfo := fmt.Sprintf("th: %d, class: %-22s meth:%-10s PC: % 3d, %-13s TOS: %s %s ",
+		f.Thread, f.ClName, f.MethName, f.PC, opcodes.BytecodeNames[int(f.Meth[f.PC])], tos, stackTop)
 	return traceInfo
 }
 

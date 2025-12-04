@@ -150,10 +150,9 @@ func fmtHelper(field Field, className string, fieldName string) string {
 }
 
 // FormatField creates a string that represents a single field of an Object.
-func (objPtr *Object) FormatField(fieldName string) string {
+func (obj *Object) FormatField(fieldName string) string {
 	var output string
 	var klassString string // string class name
-	obj := *objPtr         // whole object
 
 	if obj.KlassName != types.InvalidStringIndex {
 		klassString = *stringPool.GetStringPointer(obj.KlassName)
@@ -206,8 +205,7 @@ func (objPtr *Object) FormatField(fieldName string) string {
 // 3 sections:
 // * Class name
 // * Field table
-func (objPtr *Object) DumpObject(title string, indent int) {
-	obj := *objPtr
+func (obj *Object) DumpObject(title string, indent int) {
 	output := ""
 	var klassString string
 	var className string
