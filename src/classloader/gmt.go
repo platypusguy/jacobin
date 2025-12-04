@@ -55,7 +55,7 @@ type GmtEntry struct {
 
 // MTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
-var GMTmutex sync.Mutex
+var GMTmutex sync.RWMutex
 
 // GmtAddEntry adds an entry to the GMT, iff the entry is not already loaded. We don't override
 // existing entries because gFunctions were loaded at start-up.
@@ -68,8 +68,19 @@ func GmtAddEntry(key string, mte GmtEntry) {
 // does the actual addition of an entry to the GMT, using a mutex
 func gmtInsert(key string, mte GmtEntry) {
 	GMTmutex.Lock()
+	defer GMTmutex.Unlock()
 	GMT[key] = mte
-	GMTmutex.Unlock()
+}
+
+// GmtGet returns the entry for the given key, or nil if it doesn't exist.'
+func GmtGet(key string) any {
+	GMTmutex.RLock()
+	defer GMTmutex.RUnlock()
+	entry, exists := GMT[key]
+	if !exists {
+		return nil
+	}
+	return entry
 }
 
 // DumpGmt dumps the contents of GMT in sorted order to stderr
@@ -87,8 +98,12 @@ func DumpGmt() {
 
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		entry := MTable[key]
-		_, _ = fmt.Fprintf(os.Stderr, "%s   %s\n", string(entry.MType), key)
+		entry, ok := GmtGet(key).(GmtEntry)
+		if !ok {
+			_, _ = fmt.Fprintf(os.Stderr, "%s   %s\n", "<nil>", key)
+		} else {
+			_, _ = fmt.Fprintf(os.Stderr, "%s   %s\n", string(entry.MType), key)
+		}
 	}
 	_, _ = fmt.Fprintln(os.Stderr, "===== DumpGMT END")
 }
