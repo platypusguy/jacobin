@@ -12,6 +12,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"strings"
 	"unsafe"
 )
 
@@ -130,6 +131,11 @@ func objectGetClass(params []interface{}) interface{} {
 		Fvalue: name,
 	}
 
+	if strings.HasPrefix(name, types.Array) { // arrays are handled differently
+		arrClass := arrayGetClass(objPtr, name)
+		return arrClass
+	}
+
 	// get a pointer to the class contents from the method area
 	content := classloader.MethAreaFetch(name)
 	if content == nil {
@@ -235,4 +241,100 @@ func objectEquals(params []interface{}) interface{} {
 
 	// Not the same object.
 	return types.JavaBoolFalse
+}
+
+// arrayGetClass creates a Class object for array types
+// Arrays have special handling because they're not loaded from .class files
+// Per JVM spec, all arrays have Object as their superclass
+func arrayGetClass(objPtr *object.Object, arrayName string) *object.Object {
+	jlc := object.MakeEmptyObject()
+	jlc.FieldTable = make(map[string]object.Field)
+
+	// Set the name field to the array type descriptor (e.g., "[Ljava/lang/String;" or "[I")
+	jlc.FieldTable["name"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: arrayName,
+	}
+
+	// Determine the component type (the type of elements in the array)
+	// For example: "[Ljava/lang/String;" -> "java/lang/String"
+	//              "[I" -> "int"
+	//              "[[I" -> "[I"
+	componentType := ""
+	if len(arrayName) > 1 {
+		componentType = arrayName[1:] // Remove the leading '['
+
+		// Convert internal format to readable format for object arrays
+		// e.g., "Ljava/lang/String;" -> "java/lang/String"
+		if strings.HasPrefix(componentType, "L") && strings.HasSuffix(componentType, ";") {
+			componentType = componentType[1 : len(componentType)-1]
+		}
+
+		// Handle primitive types
+		switch componentType {
+		case "Z":
+			componentType = "boolean"
+		case "B":
+			componentType = "byte"
+		case "C":
+			componentType = "char"
+		case "D":
+			componentType = "double"
+		case "F":
+			componentType = "float"
+		case "I":
+			componentType = "int"
+		case "J":
+			componentType = "long"
+		case "S":
+			componentType = "short"
+		}
+	}
+
+	jlc.FieldTable["componentType"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: componentType,
+	}
+
+	// Arrays always have Object as their superclass
+	jlc.FieldTable["superClass"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: "java/lang/Object",
+	}
+
+	// Arrays don't have fields (other than length, which is implicit)
+	jlc.FieldTable["fields"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: []classloader.Field{},
+	}
+
+	// Arrays don't have methods
+	jlc.FieldTable["methods"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: map[string]*classloader.Method{},
+	}
+
+	// Arrays don't have interfaces
+	jlc.FieldTable["interfaces"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: []uint16{},
+	}
+
+	// Set modifiers - arrays are always public and final
+	accessFlags := classloader.AccessFlags{
+		ClassIsPublic: true,
+		ClassIsFinal:  true,
+	}
+	jlc.FieldTable["modifiers"] = object.Field{
+		Ftype:  types.Struct,
+		Fvalue: accessFlags,
+	}
+
+	// Arrays use the bootstrap classloader
+	jlc.FieldTable["classLoader"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: "bootstrap",
+	}
+
+	return jlc
 }
