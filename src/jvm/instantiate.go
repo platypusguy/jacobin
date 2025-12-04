@@ -96,6 +96,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	// address, which serves as the hash code for the object
 	uintp := uintptr(unsafe.Pointer(&obj))
 	obj.Mark.Hash = uint32(uintp)
+	object.SetObjectUnlocked(&obj)
 
 	// handle the fields. If the object has no superclass other than Object,
 	// the fields are in an array in the order they're declared in the CP.

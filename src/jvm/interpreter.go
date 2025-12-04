@@ -31,6 +31,7 @@ import (
 	"jacobin/src/util"
 	"math"
 	"reflect"
+	"runtime"
 	"runtime/debug"
 	"strings"
 )
@@ -236,8 +237,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doAthrow,          // ATHROW          0xBF
 	doCheckcast,       // CHECKCAST       0xC0
 	doInstanceof,      // INSTANCEOF      0xC1
-	doPop,             // MONITORENTER    0xC2 not implemented but won't throw exception
-	doPop,             // MONITOREXIT     0xC3  "       "       "    "     "      '
+	doMonitorEnter,    // MONITORENTER    0xC2
+	doMonitorExit,     // MONITOREXIT     0xC3
 	doWide,            // WIDE            0xC4
 	doMultinewarray,   // MULTIANEWARRAY  0xC5
 	doIfnull,          // IFNULL          0xC6
@@ -3234,6 +3235,135 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 	}
 
 	return 3 // 2 bytes for CP slot + 1 for next byte
+}
+
+// 0xC2 MONITORENTER: Lock an object.
+var mtrdebug = false
+
+func doMonitorEnter(fr *frames.Frame, _ int64) int {
+	// Check stack size.
+	if fr.TOS < 0 {
+		errMsg := fmt.Sprintf("MONITORENTRY: stack underflow in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// Get object reference from stack.
+	obj, ok := pop(fr).(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("MONITORENTRY: expected a non-object but encountered: %v", obj)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// Yield.
+	if mtrdebug {
+		var msg string
+		msg = fmt.Sprintf("DEBUG MONITOR-ENTRY YIELD threadID=%d", fr.Thread)
+		trace.Trace(msg)
+	}
+	runtime.Gosched()
+
+	// DEBUG if configured to do so.
+	if mtrdebug {
+		var msg string
+		if obj.Monitor != nil {
+			msg = fmt.Sprintf("DEBUG MONITOR-ENTRY try for ObjLock-fat threadID=%d, owner=%d count=%d", fr.Thread, obj.Monitor.Owner, obj.Monitor.Recursion)
+		} else {
+			msg = fmt.Sprintf("DEBUG MONITOR-ENTRY try for ObjLock-thin threadID=%d", fr.Thread)
+		}
+		trace.Trace(msg)
+	}
+
+	// Lock the object to this thread.
+	err := obj.ObjLock(int32(fr.Thread))
+	if err != nil {
+		errMsg := fmt.Sprintf("MONITORENTRY: %s in %s.%s%s", err.Error(),
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// DEBUG if configured to do so.
+	if mtrdebug {
+		var msg string
+		if obj.Monitor != nil {
+			msg = fmt.Sprintf("DEBUG MONITOR-ENTRY success ObjLock-fat threadID=%d, owner=%d count=%d", fr.Thread, obj.Monitor.Owner, obj.Monitor.Recursion)
+		} else {
+			msg = fmt.Sprintf("DEBUG MONITOR-ENTRY success ObjLock-thin threadID=%d", fr.Thread)
+		}
+		trace.Trace(msg)
+	}
+
+	return 1
+}
+
+// 0xC3 MONITOREXIT: Release an object.
+func doMonitorExit(fr *frames.Frame, _ int64) int {
+	// Check stack size.
+	if fr.TOS < 0 {
+		errMsg := fmt.Sprintf("MONITOREXIT: stack underflow in %s.%s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// Get object reference from stack.
+	obj, ok := pop(fr).(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("MONITOREXIT: expected a non-object but encountered: %v", obj)
+		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// DEBUG if configured to do so.
+	if mtrdebug {
+		var msg string
+		if obj.Monitor != nil {
+			msg = fmt.Sprintf("DEBUG MONITOR-EXIT ObjUnlock-fat threadID=%d, owner=%d count=%d", fr.Thread, obj.Monitor.Owner, obj.Monitor.Recursion)
+		} else {
+			msg = fmt.Sprintf("DEBUG MONITOR-EXIT ObjUnlock-thin threadID=%d", fr.Thread)
+		}
+		trace.Trace(msg)
+	}
+
+	// Release the object from this thread.
+	err := obj.ObjUnlock(int32(fr.Thread))
+	if err != nil {
+		errMsg := fmt.Sprintf("MONITOREXIT: %s in %s.%s%s", err.Error(),
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	// Yield.
+	if mtrdebug {
+		var msg string
+		msg = fmt.Sprintf("DEBUG MONITOR-EXIT YIELD threadID=%d", fr.Thread)
+		trace.Trace(msg)
+	}
+	runtime.Gosched()
+
+	return 1
 }
 
 // 0xC4 WIDE use wide versions of bytecode arguments

@@ -7,17 +7,32 @@
 package object
 
 import (
+	"errors"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"path"
+	"runtime"
 	"strings"
+	"sync/atomic"
 	"unsafe"
 )
 
 // This file contains basic functions of object creation. (Array objects
 // are created in object\arrays.go.)
+
+/*
+ObjectMonitor is a simple structure that holds the owner thread ID and recursion depth.
+* Thin locks (2-bit Misc) are fast for uncontended objects.
+* Recursive acquisition inflates the lock to a fat lock.
+* Fat lock tracks the owning thread and recursion count.
+* Unlocking decrements recursion and only releases when recursion hits zero.
+*/
+type ObjectMonitor struct {
+	Owner     int32 // thread ID of owning thread
+	Recursion int32 // recursion depth
+}
 
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
@@ -27,15 +42,16 @@ type Object struct {
 	Mark       MarkWord
 	KlassName  uint32           // the index of the class name in the string pool
 	FieldTable map[string]Field // map mapping field name to field
+	Monitor    *ObjectMonitor   // needed if fat locking the object
 }
 
 // These mark word contains values for different purposes. Here,
 // we use the first four bytes for a hash value, which is taken
-// from the address of the object. The 'misc' field will eventually
-// contain other values, such as locking and monitoring items.
+// from the address of the object. The 'misc' field is divided in a
+// Jacobin sense and does not match HotSpot.
 type MarkWord struct {
 	Hash uint32 // contains hash code which is the lower 32 bits of the address
-	Misc uint32 // at present unused
+	Misc uint32 //
 }
 
 // We need to know the type of the field only to tell whether
@@ -54,6 +70,7 @@ func MakeEmptyObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
+	setLockState(&o, lockStateUnlocked)
 	o.KlassName = types.InvalidStringIndex // s/be filled in later, when class is filled in.
 
 	// initialize the map of this object's fields
@@ -66,6 +83,7 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
+	setLockState(&o, lockStateUnlocked)
 	o.KlassName = stringPool.GetStringIndex(className)
 
 	// initialize the map of this object's fields
@@ -185,4 +203,160 @@ func GoBooleanFromJavaBoolean(arg int64) bool {
 		return true
 	}
 	return false
+}
+
+/*
+xxxx...xxxx  (upper 30 bits unused)
+
+	..11   (lowest 2 bits = lock state)
+*/
+const (
+	lockStateThinLocked = 0b00 // 0
+	lockStateUnlocked   = 0b01 // 1
+	lockStateFatLocked  = 0b10 // 2 (not implemented here)
+	lockStateGCMarked   = 0b11 // 3 (GC mark)
+	lockStateMask       = 0b11
+)
+
+/*
+   1. Thin Locks
+       ◦ Only 2 bits (lockStateThinLocked)
+       ◦ Cannot track owner --> simple spin until free
+       ◦ CAS used for acquisition to avoid races
+   2. Fat Locks
+       ◦ Only allocated if Monitor exists (i.e., recursive lock)
+       ◦ Tracks owner (Owner) and recursion (Recursion)
+       ◦ Unlock decrements recursion and frees monitor when recursion reaches 0
+   3. Spin & Yield
+       ◦ runtime.Gosched() ensures CPU time for other goroutines
+       ◦ No busy-waiting loop burns CPU
+   4. Error Handling
+       ◦ Returns error instead of panic for invalid operations
+       ◦ Examples: unlocking unlocked object, unlocking a GC-marked object, or unlocking fat lock by non-owner
+
+TODO: Track the owner thread even in thin-locking (Hotspot). Then we can support the Thread.holdsLock() query.
+
+According to chatGPT on 12/3/2025:
+
+What is “owner tracking in thin locking”
+
+* The concept of Thin lock (also known as “lightweight lock”) for Java was described in the paper
+Thin Locks: Featherweight Synchronization for Java by Bacon, Konuru, Murthy & Serrano.
+They describe a header (“lockword”) that encodes the owner thread identifier and a nested lock count when the object is thin-locked.
+* Specifically: when a thread acquires the lock, its thread ID is stored in bits in the object’s header along with a “count” for nested reentrant locking.
+That is literally tracking the “owner (thread)” of the lock in the thin-lock.
+* If there is contention, the thin-lock can “inflate” to a fat (heavyweight) lock.
+* Hence “owner tracking” — storing which thread currently owns a lock in the object header — is a fundamental part of the thin-lock idea.
+*/
+
+// Set the lock state bits on obj.Mark.Misc.
+func setLockState(obj *Object, state uint32) {
+	obj.Mark.Misc = (obj.Mark.Misc &^ lockStateMask) | state
+}
+func SetObjectUnlocked(obj *Object) {
+	setLockState(obj, lockStateUnlocked)
+}
+func IsObjectLocked(obj *Object) bool {
+	return (obj.Mark.Misc & lockStateMask) != lockStateUnlocked
+}
+
+// Lock the object to the specified thread.
+func (obj *Object) ObjLock(threadID int32) error {
+	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+
+	for {
+		miscVal := atomic.LoadUint32(miscPtr)
+		state := miscVal & lockStateMask
+
+		switch state {
+
+		case lockStateUnlocked:
+			// Fast path: object is unlocked --> try to acquire thin lock
+			newVal := (miscVal &^ lockStateMask) | lockStateThinLocked
+			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
+				// Lock acquired successfully
+				return nil
+			}
+
+			// CAS failed --> retry in next for-loop iteration
+
+		case lockStateThinLocked:
+			// Cannot determine owner --> spin until lock becomes free
+
+		case lockStateFatLocked:
+			monitor := obj.Monitor
+			if monitor == nil {
+				// Defensive check
+				return errors.New("ObjLock: fat lock exists but monitor is nil")
+			}
+
+			if monitor.Owner == threadID {
+				// Recursive acquisition --> increment recursion count
+				atomic.AddInt32(&monitor.Recursion, 1)
+				return nil
+			}
+
+			// Another thread owns the monitor --> spin and retry
+
+		case lockStateGCMarked:
+			// GC-marked object --> cannot lock
+			return errors.New("ObjLock: object in GC-marked state")
+		}
+
+		// Let another thread run.
+		runtime.Gosched()
+
+	}
+}
+
+// Release the object lock from the specified thread.
+func (obj *Object) ObjUnlock(threadID int32) error {
+	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+
+	for {
+		miscVal := atomic.LoadUint32(miscPtr)
+		state := miscVal & lockStateMask
+
+		switch state {
+
+		case lockStateThinLocked:
+			// Thin lock --> release by setting unlocked bits
+			newVal := (miscVal &^ lockStateMask) | lockStateUnlocked
+			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
+				return nil
+			}
+			// CAS failed --> retry
+
+		case lockStateFatLocked:
+			monitor := obj.Monitor
+			if monitor == nil {
+				return errors.New("ObjUnlock: fat lock exists but monitor is nil")
+			}
+
+			if monitor.Owner != threadID {
+				return errors.New("ObjUnlock: current thread does not own the monitor")
+			}
+
+			rec := atomic.LoadInt32(&monitor.Recursion)
+			if rec > 0 {
+				// Recursive lock --> decrement recursion count
+				atomic.AddInt32(&monitor.Recursion, -1)
+				return nil
+			}
+
+			// Last unlock --> release fat lock
+			obj.Monitor = nil
+			atomic.StoreUint32(miscPtr, (miscVal&^lockStateMask)|lockStateUnlocked)
+			return nil
+
+		case lockStateUnlocked:
+			return errors.New("ObjUnlock: object is already unlocked")
+
+		case lockStateGCMarked:
+			return errors.New("ObjUnlock: object in GC-marked state")
+		}
+
+		// Yield CPU and retry if CAS failed or lock not available
+		runtime.Gosched()
+	}
 }

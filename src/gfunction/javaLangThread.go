@@ -265,11 +265,6 @@ func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
 }
 
-func _threadNameGen() *object.Object {
-	num := threadNumberingNext(nil).(int64)
-	return object.StringObjectFromGoString(fmt.Sprintf("Thread-%d", num))
-}
-
 // our clinit method simply specifies static constants
 func threadClinit(_ []interface{}) any {
 	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
@@ -375,7 +370,7 @@ func populateThreadObject(t *object.Object) {
 	// the JDK defaults to "Thread-N" where N is the thread number
 	// the sole exception is the main thread, which is called "main"
 	defaultName := fmt.Sprintf("Thread-%d", idField.Fvalue)
-	nameField := object.Field{Ftype: types.Ref, Fvalue: object.StringObjectFromGoString(defaultName)}
+	nameField := object.Field{Ftype: types.ByteArray, Fvalue: object.StringObjectFromGoString(defaultName)}
 	t.FieldTable["name"] = nameField
 
 	stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{NEW})}
@@ -439,7 +434,6 @@ func threadInitNull(params []interface{}) any {
 	frameStack := params[0].(*list.List)
 	storeThreadClassName(t, frameStack)
 
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 	return nil
 }
 
@@ -483,6 +477,7 @@ func threadInitWithRunnable(params []interface{}) any {
 		errMsg := "threadInitWithRunnable: Expected thread object to be created"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
 
 	runnable, ok := params[1].(*object.Object)
 	if !ok {
@@ -491,7 +486,6 @@ func threadInitWithRunnable(params []interface{}) any {
 	}
 
 	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 
 	return nil
 }
@@ -510,6 +504,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithRunnableAndName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
 
 	runnable, ok := params[1].(*object.Object)
 	if !ok {
@@ -527,7 +522,7 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: runnable}
 
 	t.FieldTable["name"] = object.Field{
-		Ftype:  types.Ref,
+		Ftype:  types.ByteArray,
 		Fvalue: name}
 
 	return nil
@@ -566,7 +561,7 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 	}
 
 	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
-	t.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: name}
+	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
 
 	return nil
 }
@@ -584,6 +579,8 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
+
 	threadGroup, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a ThreadGroup object"
@@ -599,7 +596,6 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		Ftype: types.Ref, Fvalue: runnable}
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
-	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: _threadNameGen()}
 
 	return nil
 }
@@ -617,6 +613,8 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a Thread object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	populateThreadObject(t)
+
 	threadGroup, ok := params[1].(*object.Object)
 	if !ok {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a ThreadGroup object"
@@ -638,7 +636,7 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 	t.FieldTable["threadgroup"] = object.Field{
 		Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{
-		Ftype: types.Ref, Fvalue: name}
+		Ftype: types.ByteArray, Fvalue: name}
 
 	return nil
 }
@@ -845,7 +843,10 @@ func threadIsAlive(params []interface{}) any {
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
 	state := GetThreadState(t)
-	return state > NEW && state < TERMINATED
+	if state > NEW && state < TERMINATED {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 func threadIsInterrupted(params []interface{}) any {
@@ -926,8 +927,8 @@ func threadJoin(params []interface{}) any {
 			}
 		}
 	}
-	joinThread(th, millis)
-	return nil
+
+	return waitForTermination(th, millis)
 }
 
 func threadYield(params []interface{}) interface{} {
@@ -981,7 +982,7 @@ func threadSetName(params []interface{}) any {
 	}
 
 	// Update the thread's name field (stored as a Java byte string)
-	th.FieldTable["name"] = object.Field{Ftype: types.Ref, Fvalue: nameObj}
+	th.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: nameObj}
 
 	return nil
 }
@@ -1091,13 +1092,13 @@ func SetThreadState(th *object.Object, newState int) {
 
 // Wait for a thread to be TERMINATED up to maxTime milliseconds.
 // Returns:
-// * true if the thread terminated within maxTime milliseconds
-// * false if the thread terminated after maxTime milliseconds
+// * nil if the thread terminated within maxTime milliseconds
+// *     or the thread terminated after maxTime milliseconds
 // * getGErrBlk(IllegalArgumentException) if:
 //   - the thread state is not an object
 //   - the thread state is missing the value field
 //   - max wait time <= 0
-func joinThread(th *object.Object, maxTime int64) interface{} {
+func waitForTermination(th *object.Object, maxTime int64) interface{} {
 	if maxTime <= 0 {
 		return getGErrBlk(excNames.IllegalArgumentException, "joinThread: max wait time <= 0")
 	}
@@ -1113,12 +1114,12 @@ func joinThread(th *object.Object, maxTime int64) interface{} {
 			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: state object is missing a value field")
 		}
 		if thStateInt == TERMINATED {
-			return true
+			return nil
 		}
 		runtime.Gosched()
 		t2 = time.Now().UnixMilli()
 		if t2-t1 >= maxTime {
-			return false
+			return nil
 		}
 	}
 }
