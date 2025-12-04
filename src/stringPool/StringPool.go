@@ -79,16 +79,24 @@ func GetStringIndex(arg *string) uint32 {
 		arg = &nilString
 	}
 
-	index, ok := globals.StringPoolTable[*arg]
+	// Try to get the index from the map.
+	myMap := globals.StringPoolTable.Load().(map[string]uint32)
+	index, ok := myMap[*arg]
 	if ok {
 		return index
-	}
+	} // Found it.
+
+	// Not found. Add it to the map and the list.
 	globals.StringPoolLock.Lock()
+	defer globals.StringPoolLock.Unlock()
 	index = globals.StringPoolNext
-	globals.StringPoolTable[*arg] = index
+	myMap[*arg] = index
+	globals.StringPoolTable.Store(myMap)
 	globals.StringPoolList = append(globals.StringPoolList, *arg)
+
+	// Increment the next available index.
 	globals.StringPoolNext++
-	globals.StringPoolLock.Unlock()
+
 	return index
 }
 
@@ -114,14 +122,16 @@ func EmptyStringPool() {
 
 func DumpStringPool(context string) {
 	globals.StringPoolLock.Lock()
+	defer globals.StringPoolLock.Unlock()
 	if len(context) > 0 {
 		_, _ = fmt.Fprintf(os.Stdout, "\n===== DumpStringPool BEGIN context: %s\n", context)
 	} else {
 		_, _ = fmt.Fprintln(os.Stdout, "\n===== DumpStringPool BEGIN")
 	}
 	// Create an array of keys.
-	keys := make([]string, 0, len(globals.StringPoolTable))
-	for key := range globals.StringPoolTable {
+	myMap := globals.StringPoolTable.Load().(map[string]uint32)
+	keys := make([]string, 0, len(myMap))
+	for key := range myMap {
 		keys = append(keys, key)
 	}
 	// Sort the keys.
@@ -129,10 +139,9 @@ func DumpStringPool(context string) {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", globals.StringPoolTable[key], key)
+		_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", myMap[key], key)
 	}
 	_, _ = fmt.Fprintln(os.Stdout, "===== DumpStringPool END")
-	globals.StringPoolLock.Unlock()
 }
 
 func PreloadArrayClassesToStringPool() {

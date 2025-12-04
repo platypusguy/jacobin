@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 )
@@ -126,7 +127,7 @@ var TraceClass bool
 var TraceVerbose bool
 
 // ----- String Pool
-var StringPoolTable map[string]uint32
+var StringPoolTable atomic.Value // stores map[string]uint32
 var StringPoolList []string
 var StringPoolNext uint32
 var StringPoolLock sync.Mutex
@@ -393,31 +394,25 @@ func fakeInvokeGFunction(name string, args []any) any {
 func InitStringPool() {
 
 	StringPoolLock.Lock()
+	defer StringPoolLock.Unlock()
 
 	// create the string pool
-	StringPoolTable = make(map[string]uint32)
+	StringPoolTable.Store(make(map[string]uint32))
 	StringPoolList = nil
 
-	// Changed on 9-Apr-2024: 0 = nil, 1 = String, 2 = Object
-	// Preload two values. java/lang/Object is always 0
-	// and java/lang/String is always 1.
-
-	// Add empty string (for when an index field has not been use, and so = 0
-	StringPoolTable[""] = 0
+	// Prestored values: 0 = nil, 1 = String, 2 = Object
+	myMap := make(map[string]uint32)
+	myMap[""] = 0
+	myMap["java/lang/String"] = types.StringPoolStringIndex
+	myMap["java/lang/Object"] = types.ObjectPoolStringIndex
+	StringPoolTable.Store(myMap)
 	StringPoolList = append(StringPoolList, types.EmptyString)
-
-	// Add "java/lang/String"
-	StringPoolTable[types.StringClassName] = types.StringPoolStringIndex
 	StringPoolList = append(StringPoolList, types.StringClassName)
-
-	// Add "java/lang/Object"
-	StringPoolTable[types.ObjectClassName] = types.ObjectPoolStringIndex
 	StringPoolList = append(StringPoolList, types.ObjectClassName)
 
-	// Set up next available index
-	StringPoolNext = uint32(3)
+	// Set up the next available index.
+	StringPoolNext = uint32(len(StringPoolList))
 
-	StringPoolLock.Unlock()
 }
 
 // Get the character set name.

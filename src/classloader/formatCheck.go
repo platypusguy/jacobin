@@ -129,7 +129,8 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 		case ClassRef:
 			// the only field of a ClassRef is a uint32 index into the StringPoolTable
 			whichClassRef := entry.slot
-			if whichClassRef < 0 || whichClassRef >= len(globals.StringPoolTable) {
+			myMap := globals.StringPoolTable.Load().(map[string]uint32)
+			if whichClassRef < 0 || whichClassRef >= len(myMap) {
 				return cfe("ClassRef at CP entry #" + strconv.Itoa(j) +
 					" points to an invalid entry in CP the string pool")
 			}
@@ -181,8 +182,9 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			classIndex := methodRef.classIndex
 			class := klass.cpIndex[classIndex]
+			myMap := globals.StringPoolTable.Load().(map[string]uint32)
 			if class.entryType != ClassRef ||
-				class.slot < 0 || class.slot >= len(globals.StringPoolTable) {
+				class.slot < 0 || class.slot >= len(myMap) {
 				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
 					" holds an invalid class index: " +
 					strconv.Itoa(class.slot))
