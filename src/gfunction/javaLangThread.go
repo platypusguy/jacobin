@@ -181,13 +181,13 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 0, GFunction: returnTrue}
 
 	MethodSignatures["java/lang/Thread.join()V"] =
-		GMeth{ParamSlots: 0, GFunction: threadJoin}
+		GMeth{ParamSlots: 0, GFunction: threadJoin, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.join(J)V"] =
-		GMeth{ParamSlots: 1, GFunction: threadJoin}
+		GMeth{ParamSlots: 1, GFunction: threadJoin, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.join(JI)V"] =
-		GMeth{ParamSlots: 2, GFunction: threadJoin}
+		GMeth{ParamSlots: 2, GFunction: threadJoin, NeedsContext: true}
 
 	MethodSignatures["java/lang/Thread.join(Ljava/time/Duration;)Z"] =
 		GMeth{ParamSlots: 1, GFunction: trapFunction}
@@ -650,7 +650,7 @@ func threadCurrentThread(params []interface{}) any {
 
 	fStack, ok := params[0].(*list.List)
 	if !ok {
-		errMsg := "threadCurrentThread: Expected context data to be a frame"
+		errMsg := "threadCurrentThread: Expected context data to be a frame stack"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
@@ -915,20 +915,34 @@ func threadStart(params []interface{}) any {
 }
 
 func threadJoin(params []interface{}) any {
-	th := params[0].(*object.Object)
+	fStack, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := "threadJoin: Expected context data to be a frame stack"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	frame := *fStack.Front().Value.(*frames.Frame)
+	thID := frame.Thread
+	currentThread := globals.GetGlobalRef().Threads[thID].(*object.Object)
+
+	targetThread, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := "threadJoin: Missing/erroneous target thread object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
 	millis := int64(0)
-	if len(params) > 1 {
-		millis = params[1].(int64)
+	if len(params) > 2 {
+		millis = params[2].(int64)
 		nanos := int64(0)
-		if len(params) > 2 {
-			nanos = params[2].(int64)
+		if len(params) > 3 {
+			nanos = params[3].(int64)
 			if nanos > 0 {
 				millis += 1 // not precise
 			}
 		}
 	}
 
-	return waitForTermination(th, millis)
+	return waitForTermination(currentThread, targetThread, millis)
 }
 
 func threadYield(params []interface{}) interface{} {
@@ -1081,13 +1095,46 @@ func GetThreadState(th *object.Object) int {
 }
 
 // Set the thread state to the supplied value unconditionally.
-func SetThreadState(th *object.Object, newState int) {
-	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
-	if !ok {
-		stateField := object.Field{Ftype: types.Ref, Fvalue: threadStateCreateWithValue([]any{newState})}
-		th.FieldTable["state"] = stateField
+// Returns:
+// * Previous state or -1 if unknown
+// * Result
+//   - nil (success)
+//   - *GErrBlk (oops)
+func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) {
+	// Returns (previousState int, error interface{})
+	if err := th.ObjLock(0); err != nil {
+		return -1, getGErrBlk(excNames.VirtualMachineError,
+			"SetThreadState: cannot lock thread object")
 	}
-	thStateObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: newState}
+	defer th.ObjUnlock(0)
+
+	// Retrieve the 'state' field
+	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	if !ok || thStateObj == nil {
+		// Create the new state object if missing.
+		stateField := object.Field{
+			Ftype:  types.Ref,
+			Fvalue: threadStateCreateWithValue([]any{newState}),
+		}
+		th.FieldTable["state"] = stateField
+		return -1, nil // no previous state
+	}
+
+	// Get previous state
+	prevVal, ok := thStateObj.FieldTable["value"].Fvalue.(int)
+	if !ok {
+		prevVal = -1 // unknown previous state
+	}
+
+	// Only update if different
+	if prevVal != newState {
+		thStateObj.FieldTable["value"] = object.Field{
+			Ftype:  types.Int,
+			Fvalue: newState,
+		}
+	}
+
+	return prevVal, nil
 }
 
 // Wait for a thread to be TERMINATED up to maxTime milliseconds.
@@ -1095,31 +1142,82 @@ func SetThreadState(th *object.Object, newState int) {
 // * nil if the thread terminated within maxTime milliseconds
 // *     or the thread terminated after maxTime milliseconds
 // * getGErrBlk(IllegalArgumentException) if:
+//   - interrupted while waiting
+//   - cannot thin-lock the target thread object
 //   - the thread state is not an object
 //   - the thread state is missing the value field
 //   - max wait time <= 0
-func waitForTermination(th *object.Object, maxTime int64) interface{} {
-	if maxTime <= 0 {
-		return getGErrBlk(excNames.IllegalArgumentException, "joinThread: max wait time <= 0")
+//
+// Sentinel for continuing the loop
+var continueLoop = struct{}{}
+
+func isInterrupted(th *object.Object) bool {
+	interruptedObj, ok := th.FieldTable["interrupted"].Fvalue.(*object.Object)
+	if !ok {
+		return false
 	}
-	var t1, t2 int64
-	t1 = time.Now().UnixMilli()
+	interruptedVal, ok := interruptedObj.FieldTable["value"].Fvalue.(int)
+	return ok && interruptedVal != 0
+}
+
+func waitForTermination(waitingThread, targetThread *object.Object, maxTime int64) interface{} {
+	if maxTime <= 0 {
+		return getGErrBlk(excNames.IllegalArgumentException,
+			"joinThread: max wait time <= 0")
+	}
+
+	start := time.Now().UnixMilli()
+
 	for {
-		thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
-		if !ok {
-			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: field state is not an object")
+		// Lock the target thread to safely access its state
+		if err := targetThread.ObjLock(0); err != nil {
+			return getGErrBlk(excNames.IllegalMonitorStateException,
+				"waitForTermination: unable to lock target thread object: "+err.Error())
 		}
-		thStateInt, ok := thStateObj.FieldTable["value"].Fvalue.(int)
-		if !ok {
-			return getGErrBlk(excNames.IllegalArgumentException, "joinThread: state object is missing a value field")
+
+		// Locked the target thread object.
+		result := func() interface{} {
+
+			defer targetThread.ObjUnlock(0)
+
+			// .Get the target thread state value.
+			stateObj, ok := targetThread.FieldTable["state"].Fvalue.(*object.Object)
+			if !ok {
+				return getGErrBlk(excNames.IllegalArgumentException,
+					"waitForTermination: field state is not an object")
+			}
+			stateVal, ok := stateObj.FieldTable["value"].Fvalue.(int)
+			if !ok {
+				return getGErrBlk(excNames.IllegalArgumentException,
+					"waitForTermination: state object is missing a value field")
+			}
+
+			// Terminated --> normal return
+			if stateVal == TERMINATED {
+				return nil
+			}
+
+			// Did anyone interrupt me?
+			if isInterrupted(waitingThread) {
+				return getGErrBlk(excNames.InterruptedException,
+					"waitForTermination: waiting thread was interrupted")
+			}
+
+			return continueLoop
+
+		}()
+
+		if result != continueLoop {
+			return result
 		}
-		if thStateInt == TERMINATED {
-			return nil
-		}
+
+		// Continue waiting.
+		// Yield to allow the target thread to run.
 		runtime.Gosched()
-		t2 = time.Now().UnixMilli()
-		if t2-t1 >= maxTime {
-			return nil
+
+		// Timeout check.
+		if time.Now().UnixMilli()-start >= maxTime {
+			return nil // In Java, timeout is NORMAL!
 		}
 	}
 }
