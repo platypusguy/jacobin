@@ -53,7 +53,7 @@ type GmtEntry struct {
 // slice of empty interfaces and returns an empty interface
 // type Function func([]interface{}) interface{}
 
-// MTmutex is used for updates to the MTable because multiple threads could be
+// GMTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
 var GMTmutex sync.RWMutex
 

@@ -71,8 +71,8 @@ func locateExceptionFrame(f *frames.Frame, excName string, pc int) (*frames.Fram
 	// get the method and check for an exception catch table
 	// get the full method nameclassloader.MTable = {map[string]classloader.MTentry}
 	fullMethName := f.ClName + "." + f.MethName + f.MethType
-	methEntry, found := classloader.MTable[fullMethName]
-	if !found {
+	methEntry := classloader.GetMtableEntry(fullMethName)
+	if methEntry.Meth == nil {
 		errMsg := fmt.Sprintf("locateExceptionFrame: Method %s not found in MTable", fullMethName)
 		MinimalAbort(excNames.InternalException, errMsg)
 	}
