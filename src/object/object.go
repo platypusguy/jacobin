@@ -70,7 +70,7 @@ func MakeEmptyObject() *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
-	setLockState(&o, lockStateUnlocked)
+	SetLockState(&o, lockStateUnlocked)
 	o.KlassName = types.InvalidStringIndex // s/be filled in later, when class is filled in.
 
 	// initialize the map of this object's fields
@@ -83,7 +83,7 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 	o := Object{}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
-	setLockState(&o, lockStateUnlocked)
+	SetLockState(&o, lockStateUnlocked)
 	o.KlassName = stringPool.GetStringIndex(className)
 
 	// initialize the map of this object's fields
@@ -250,88 +250,118 @@ That is literally tracking the “owner (thread)” of the lock in the thin-lock
 */
 
 // Set the lock state bits on obj.Mark.Misc.
-func setLockState(obj *Object, state uint32) {
+func SetLockState(obj *Object, state uint32) {
 	obj.Mark.Misc = (obj.Mark.Misc &^ lockStateMask) | state
 }
+
+// Unlock the given object.
 func SetObjectUnlocked(obj *Object) {
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 }
+
+// Set the given object to a thin-locked state.
+func SetObjectThinLocked(obj *Object) {
+	SetLockState(obj, lockStateThinLocked)
+}
+
+// Set the given object to a fat-locked state.
+func SetObjectFatLocked(obj *Object) {
+	SetLockState(obj, lockStateFatLocked)
+}
+
 func IsObjectLocked(obj *Object) bool {
 	return (obj.Mark.Misc & lockStateMask) != lockStateUnlocked
 }
 
 // Lock the object to the specified thread.
 func (obj *Object) ObjLock(threadID int32) error {
-	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+    miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
 
-	for {
-		miscVal := atomic.LoadUint32(miscPtr)
-		state := miscVal & lockStateMask
+    for {
+        miscVal := atomic.LoadUint32(miscPtr)
+        state := miscVal & lockStateMask
 
-		switch state {
+        switch state {
 
-		case lockStateUnlocked:
-			// Fast path: object is unlocked --> try to acquire thin lock
-			newVal := (miscVal &^ lockStateMask) | lockStateThinLocked
-			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
-				// Lock acquired successfully
-				return nil
-			}
+        case lockStateUnlocked:
+            // Fast path: object is unlocked --> try to acquire thin lock
+            newVal := (miscVal &^ lockStateMask) | lockStateThinLocked
+            if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
+                // Lock acquired successfully as thin; record owner for potential reentry inflation
+                obj.Monitor = &ObjectMonitor{Owner: threadID, Recursion: 0}
+                return nil
+            }
 
-			// CAS failed --> retry in next for-loop iteration
+            // CAS failed --> retry in next for-loop iteration
 
-		case lockStateThinLocked:
-			// Cannot determine owner --> spin until lock becomes free
+        case lockStateThinLocked:
+            // If the same thread re-enters while thin-locked, inflate to fat and
+            // treat as recursive acquisition.
+            monitor := obj.Monitor
+            if monitor != nil && monitor.Owner == threadID {
+                // Attempt to atomically flip thin -> fat in the header first.
+                newVal := (miscVal &^ lockStateMask) | lockStateFatLocked
+                if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
+                    // Successful inflation. Increment recursion to account for reentry.
+                    atomic.AddInt32(&monitor.Recursion, 1)
+                    return nil
+                }
+                // If CAS failed, loop and retry as state may have changed.
+                break
+            }
+            // Different thread (or unknown owner) --> spin until lock becomes free
 
-		case lockStateFatLocked:
-			monitor := obj.Monitor
-			if monitor == nil {
-				// Defensive check
-				return errors.New("ObjLock: fat lock exists but monitor is nil")
-			}
+        case lockStateFatLocked:
+            monitor := obj.Monitor
+            if monitor == nil {
+                // Defensive check
+                return errors.New("ObjLock: fat lock exists but monitor is nil")
+            }
 
-			if monitor.Owner == threadID {
-				// Recursive acquisition --> increment recursion count
-				atomic.AddInt32(&monitor.Recursion, 1)
-				return nil
-			}
+            if monitor.Owner == threadID {
+                // Recursive acquisition --> increment recursion count
+                atomic.AddInt32(&monitor.Recursion, 1)
+                return nil
+            }
 
-			// Another thread owns the monitor --> spin and retry
+            // Another thread owns the monitor --> spin and retry
 
-		case lockStateGCMarked:
-			// GC-marked object --> cannot lock
-			return errors.New("ObjLock: object in GC-marked state")
-		}
+        case lockStateGCMarked:
+            // GC-marked object --> cannot lock
+            return errors.New("ObjLock: object in GC-marked state")
+        }
 
-		// Let another thread run.
-		runtime.Gosched()
+        // Let another thread run.
+        runtime.Gosched()
 
-	}
+    }
 }
 
 // Release the object lock from the specified thread.
 func (obj *Object) ObjUnlock(threadID int32) error {
-	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+    miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
 
-	for {
-		miscVal := atomic.LoadUint32(miscPtr)
-		state := miscVal & lockStateMask
+    for {
+        miscVal := atomic.LoadUint32(miscPtr)
+        state := miscVal & lockStateMask
 
-		switch state {
+        switch state {
 
-		case lockStateThinLocked:
-			// Thin lock --> release by setting unlocked bits
-			newVal := (miscVal &^ lockStateMask) | lockStateUnlocked
-			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
-				return nil
-			}
-			// CAS failed --> retry
+        case lockStateThinLocked:
+            // Thin lock --> release by setting unlocked bits
+            newVal := (miscVal &^ lockStateMask) | lockStateUnlocked
+            if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
+                // Clear any thin-owner tracking to avoid stale ownership
+                obj.Monitor = nil
+                return nil
+            }
+            // CAS failed --> retry
 
-		case lockStateFatLocked:
-			monitor := obj.Monitor
-			if monitor == nil {
-				return errors.New("ObjUnlock: fat lock exists but monitor is nil")
-			}
+        case lockStateFatLocked:
+            monitor := obj.Monitor
+            if monitor == nil {
+                return errors.New("ObjUnlock: fat lock exists but monitor is nil")
+            }
 
 			if monitor.Owner != threadID {
 				return errors.New("ObjUnlock: current thread does not own the monitor")

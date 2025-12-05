@@ -1167,10 +1167,11 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 	}
 
 	start := time.Now().UnixMilli()
+	targetThreadID := int32(targetThread.FieldTable["ID"].Fvalue.(int64))
 
 	for {
 		// Lock the target thread to safely access its state
-		if err := targetThread.ObjLock(0); err != nil {
+		if err := targetThread.ObjLock(targetThreadID); err != nil {
 			return getGErrBlk(excNames.IllegalMonitorStateException,
 				"waitForTermination: unable to lock target thread object: "+err.Error())
 		}
@@ -1178,7 +1179,7 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 		// Locked the target thread object.
 		result := func() interface{} {
 
-			defer targetThread.ObjUnlock(0)
+			defer targetThread.ObjUnlock(targetThreadID)
 
 			// .Get the target thread state value.
 			stateObj, ok := targetThread.FieldTable["state"].Fvalue.(*object.Object)
