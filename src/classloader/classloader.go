@@ -811,7 +811,14 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			clIndex := fullyParsedClass.fieldRefs[i].classIndex
 			clRefIndex := fullyParsedClass.cpIndex[clIndex]
 			clRef := fullyParsedClass.classRefs[clRefIndex.slot]
-			clName := *(stringPool.GetStringPointer(clRef))
+			strptr := stringPool.GetStringPointer(clRef)
+			if strptr == nil {
+				sz := stringPool.GetStringPoolSize()
+				errMsg := fmt.Sprintf("Class reference %d not found in string pool (size=%d)", clRef, sz)
+				stringPool.DumpStringPool(errMsg)
+				panic(errMsg)
+			}
+			clName := *(strptr)
 
 			nAndTindex := fullyParsedClass.fieldRefs[i].nameAndTypeIndex
 			nAndTRefIndex := fullyParsedClass.cpIndex[nAndTindex]

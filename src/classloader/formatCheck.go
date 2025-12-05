@@ -8,7 +8,6 @@ package classloader
 
 import (
 	"errors"
-	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"strconv"
 	"strings"
@@ -128,9 +127,8 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 			j += 1
 		case ClassRef:
 			// the only field of a ClassRef is a uint32 index into the StringPoolTable
-			whichClassRef := entry.slot
-			myMap := globals.StringPoolTable.Load().(map[string]uint32)
-			if whichClassRef < 0 || whichClassRef >= len(myMap) {
+			whichClassRef := uint32(entry.slot)
+			if whichClassRef < 0 || whichClassRef >= stringPool.GetStringPoolSize() {
 				return cfe("ClassRef at CP entry #" + strconv.Itoa(j) +
 					" points to an invalid entry in CP the string pool")
 			}
@@ -182,9 +180,8 @@ func formatCheckConstantPool(klass *ParsedClass) error {
 
 			classIndex := methodRef.classIndex
 			class := klass.cpIndex[classIndex]
-			myMap := globals.StringPoolTable.Load().(map[string]uint32)
 			if class.entryType != ClassRef ||
-				class.slot < 0 || class.slot >= len(myMap) {
+				class.slot < 0 || uint32(class.slot) >= stringPool.GetStringPoolSize() {
 				return cfe("Method Ref at CP entry #" + strconv.Itoa(j) +
 					" holds an invalid class index: " +
 					strconv.Itoa(class.slot))

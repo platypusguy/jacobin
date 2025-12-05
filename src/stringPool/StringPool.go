@@ -80,18 +80,20 @@ func GetStringIndex(arg *string) uint32 {
 	}
 
 	// Try to get the index from the map.
-	myMap := globals.StringPoolTable.Load().(map[string]uint32)
-	index, ok := myMap[*arg]
+	globals.StringPoolLock.RLock()
+	index, ok := globals.StringPoolTable[*arg]
+	globals.StringPoolLock.RUnlock()
 	if ok {
-		return index
-	} // Found it.
+		return index // Found it!
+	}
 
-	// Not found. Add it to the map and the list.
+	// Not found. Lock and defer unlock.
 	globals.StringPoolLock.Lock()
 	defer globals.StringPoolLock.Unlock()
+
+	// Add it to the map and the list.
 	index = globals.StringPoolNext
-	myMap[*arg] = index
-	globals.StringPoolTable.Store(myMap)
+	globals.StringPoolTable[*arg] = index
 	globals.StringPoolList = append(globals.StringPoolList, *arg)
 
 	// Increment the next available index.
@@ -103,7 +105,7 @@ func GetStringIndex(arg *string) uint32 {
 // GetStringPointer retrieves a pointer to the string at the index into the string pool slice
 // Returns nil on index out of range (which is the only possible error)
 func GetStringPointer(index uint32) *string {
-	if index < uint32(len(globals.StringPoolList)) {
+	if index < globals.StringPoolNext {
 		return &globals.StringPoolList[index]
 	} else {
 		return nil
@@ -121,17 +123,16 @@ func EmptyStringPool() {
 }
 
 func DumpStringPool(context string) {
-	globals.StringPoolLock.Lock()
-	defer globals.StringPoolLock.Unlock()
+	globals.StringPoolLock.RLock()
+	defer globals.StringPoolLock.RUnlock()
 	if len(context) > 0 {
 		_, _ = fmt.Fprintf(os.Stdout, "\n===== DumpStringPool BEGIN context: %s\n", context)
 	} else {
 		_, _ = fmt.Fprintln(os.Stdout, "\n===== DumpStringPool BEGIN")
 	}
 	// Create an array of keys.
-	myMap := globals.StringPoolTable.Load().(map[string]uint32)
-	keys := make([]string, 0, len(myMap))
-	for key := range myMap {
+	keys := make([]string, 0, len(globals.StringPoolTable))
+	for key := range globals.StringPoolTable {
 		keys = append(keys, key)
 	}
 	// Sort the keys.
@@ -139,7 +140,7 @@ func DumpStringPool(context string) {
 	sort.Strings(keys)
 	// In key sequence order, display the key and its value.
 	for _, key := range keys {
-		_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", myMap[key], key)
+		_, _ = fmt.Fprintf(os.Stdout, "%d\t%s\n", globals.StringPoolTable[key], key)
 	}
 	_, _ = fmt.Fprintln(os.Stdout, "===== DumpStringPool END")
 }
