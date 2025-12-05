@@ -16,13 +16,17 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Cached powers of ten to avoid recomputing 10^k repeatedly during BigDecimal ops
 var pow10Cache = map[int64]*big.Int{}
+var pow10lock = &sync.Mutex{}
 
 // pow10 returns a cached big.Int representing 10^exp. The returned *big.Int is immutable by callers.
 func pow10(exp int64) *big.Int {
+	pow10lock.Lock()
+	defer pow10lock.Unlock()
 	if exp <= 0 {
 		if exp == 0 {
 			return big.NewInt(1)

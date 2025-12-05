@@ -74,7 +74,7 @@ func AddEntry(tbl *MT, key string, mte MTentry) {
 	mt[key] = mte
 }
 
-// GetMtableEntry returns the entry for the given key, or nil if it doesn't exist.
+// GetMtableEntry returns the entry for the given key, or a nil entry if it doesn't exist.
 func GetMtableEntry(key string) MTentry {
 	MTmutex.RLock()
 	defer MTmutex.RUnlock()
