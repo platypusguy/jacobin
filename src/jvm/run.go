@@ -131,7 +131,7 @@ func runThread(t *thread.ExecThread) error {
 func RunJavaThread(args []any) {
 
 	if len(args) != 4 {
-		errMsg := fmt.Sprintf("threadRun: Expected 4 arguments, observed %d: %v", len(args), args)
+		errMsg := fmt.Sprintf("RunJavaThread: Expected 4 arguments, observed %d: %v", len(args), args)
 		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
 	}
 
@@ -158,7 +158,7 @@ func RunJavaThread(args []any) {
 	// Set up the method and CPool for the method's class.
 	mte, err := classloader.FetchMethodAndCP(clName, methName, methType)
 	if err != nil {
-		errMsg := fmt.Sprintf("threadRun: Could not find run method (%s.%s(%s): %v", clName, methName, methType, err)
+		errMsg := fmt.Sprintf("RunJavaThread: Could not find run method (%s.%s(%s): %v", clName, methName, methType, err)
 		exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, nil)
 	}
 
@@ -216,19 +216,23 @@ func RunJavaThread(args []any) {
 
 	// Push the frame on the stack.
 	if frames.PushFrame(fs, f) != nil {
-		errMsg := fmt.Sprintf("threadRun: frames.PushFrame failed on thread: %d", tID)
+		errMsg := fmt.Sprintf("RunJavaThread: frames.PushFrame failed on thread: %d", tID)
 		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
 	// Instantiate the class so that any static initializers are run.
 	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
 	if instantiateError != nil {
-		errMsg := "threadRun: Error instantiating: " + clName + ".main()"
+		errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
 		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
 	}
 
 	// Mark the thread RUNNABLE and register it.
-	gfunction.SetThreadState(t, gfunction.RUNNABLE)
+	_, ret := gfunction.SetThreadState(t, gfunction.RUNNABLE)
+	if ret != nil {
+		errMsg := "RunJavaThread: SetThreadState(RUNNABLE) failed"
+		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+	}
 	gfunction.RegisterThread(t)
 
 	if globals.TraceInst {
@@ -245,6 +249,10 @@ func RunJavaThread(args []any) {
 
 	// The End.
 	gfunction.SetThreadState(t, gfunction.TERMINATED)
+	if ret != nil {
+		errMsg := "threadRun: SetThreadState(TERMINATED) failed"
+		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
+	}
 
 }
 
