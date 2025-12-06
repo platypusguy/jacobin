@@ -11,7 +11,7 @@ func TestObjLockUnlock_ThinLockCycle(t *testing.T) {
 	obj := MakeEmptyObject()
 
 	// Ensure object starts unlocked
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 
 	// Acquire thin lock
 	if err := obj.ObjLock(1); err != nil {
@@ -32,7 +32,7 @@ func TestObjLockUnlock_ThinLockCycle(t *testing.T) {
 
 func TestObjUnlock_WhenAlreadyUnlocked_ReturnsError(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 
 	err := obj.ObjUnlock(1)
 	if err == nil {
@@ -45,7 +45,7 @@ func TestObjUnlock_WhenAlreadyUnlocked_ReturnsError(t *testing.T) {
 
 func TestObjLockUnlock_GCMarked_ReturnsError(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateGCMarked)
+	SetLockState(obj, lockStateGCMarked)
 
 	if err := obj.ObjLock(1); err == nil {
 		t.Fatalf("expected error on ObjLock for GC-marked object")
@@ -58,7 +58,7 @@ func TestObjLockUnlock_GCMarked_ReturnsError(t *testing.T) {
 
 func TestObjUnlock_FatLock_MonitorNil_ReturnsError(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateFatLocked)
+	SetLockState(obj, lockStateFatLocked)
 	obj.Monitor = nil
 
 	if err := obj.ObjUnlock(1); err == nil {
@@ -68,7 +68,7 @@ func TestObjUnlock_FatLock_MonitorNil_ReturnsError(t *testing.T) {
 
 func TestObjUnlock_FatLock_OwnerMismatch_ReturnsError(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateFatLocked)
+	SetLockState(obj, lockStateFatLocked)
 	obj.Monitor = &ObjectMonitor{Owner: 2, Recursion: 0}
 
 	if err := obj.ObjUnlock(1); err == nil {
@@ -78,7 +78,7 @@ func TestObjUnlock_FatLock_OwnerMismatch_ReturnsError(t *testing.T) {
 
 func TestObjLock_FatLock_OwnerRecursiveIncrementsRecursion(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateFatLocked)
+	SetLockState(obj, lockStateFatLocked)
 	obj.Monitor = &ObjectMonitor{Owner: 7, Recursion: 0}
 
 	if err := obj.ObjLock(7); err != nil {
@@ -95,7 +95,7 @@ func TestObjLock_FatLock_OwnerRecursiveIncrementsRecursion(t *testing.T) {
 
 func TestObjUnlock_FatLock_RecursiveDecrementAndFinalRelease(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateFatLocked)
+	SetLockState(obj, lockStateFatLocked)
 	obj.Monitor = &ObjectMonitor{Owner: 3, Recursion: 2}
 
 	// First unlock should decrement recursion only
@@ -133,7 +133,7 @@ func TestObjUnlock_FatLock_RecursiveDecrementAndFinalRelease(t *testing.T) {
 // Goroutine B must block until A releases, then acquire successfully.
 func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 
 	// Thread A acquires thin lock
 	if err := obj.ObjLock(1); err != nil {
@@ -190,7 +190,7 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 // Thread 2 must block until thread 1 fully releases the fat lock, then acquire.
 func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateFatLocked)
+	SetLockState(obj, lockStateFatLocked)
 	obj.Monitor = &ObjectMonitor{Owner: 1, Recursion: 0}
 
 	acquired := make(chan struct{})
@@ -248,7 +248,7 @@ func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
 // Thread 2 must block until thread 1 releases the thin lock, then acquire.
 func TestObjLock_TwoThreads_ThinLockContentionAndHandoff(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 
 	// Thread 1 acquires thin lock
 	if err := obj.ObjLock(1); err != nil {
@@ -310,7 +310,7 @@ func TestObjLock_TwoThreads_ThinLockContentionAndHandoff(t *testing.T) {
 // contenders eventually acquire and release successfully.
 func TestObjLock_EightThreads_ThinLockContentionAndHandoff(t *testing.T) {
 	obj := MakeEmptyObject()
-	setLockState(obj, lockStateUnlocked)
+	SetLockState(obj, lockStateUnlocked)
 
 	// Thread 1 acquires thin lock
 	if err := obj.ObjLock(1); err != nil {
@@ -376,4 +376,112 @@ func TestObjLock_EightThreads_ThinLockContentionAndHandoff(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatalf("timeout waiting for contenders to finish unlocks")
 	}
+}
+
+// Simulate nested synchronized(lock) { synchronized(lock) { ... } }
+// We model Java's reentrant locking by using a fat lock owned by the same thread
+// and then attempting to lock it again, which should increment the recursion count.
+func TestObjLock_NestedSynchronized_ReentrantFatLock(t *testing.T) {
+	obj := MakeEmptyObject()
+
+	// Pretend the object has already been inflated to a fat lock owned by thread 42
+	SetLockState(obj, lockStateFatLocked)
+	obj.Monitor = &ObjectMonitor{Owner: 42, Recursion: 0}
+
+	// First nested synchronized: lock again by the same owner
+	if err := obj.ObjLock(42); err != nil {
+		t.Fatalf("first nested ObjLock returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+		t.Fatalf("expected recursion to become 1, got monitor=%v rec=%d", obj.Monitor, obj.Monitor.Recursion)
+	}
+
+	// Second nested synchronized: lock yet again by the same owner
+	if err := obj.ObjLock(42); err != nil {
+		t.Fatalf("second nested ObjLock returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
+		t.Fatalf("expected recursion to become 2, got monitor=%v rec=%d", obj.Monitor, obj.Monitor.Recursion)
+	}
+
+	// Now unwind like exiting nested synchronized blocks: three unlocks total
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("first unwind ObjUnlock returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+		t.Fatalf("expected recursion to decrement to 1, got monitor=%v rec=%d", obj.Monitor, obj.Monitor.Recursion)
+	}
+
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("second unwind ObjUnlock returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
+		t.Fatalf("expected recursion to decrement to 0, got monitor=%v rec=%d", obj.Monitor, obj.Monitor.Recursion)
+	}
+
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("final unwind ObjUnlock returned error: %v", err)
+	}
+	if obj.Monitor != nil {
+		t.Fatalf("expected monitor to be cleared after final unlock")
+	}
+	if got := obj.Mark.Misc & lockStateMask; got != lockStateUnlocked {
+		t.Fatalf("expected object to be unlocked after final release, got %b", got)
+	}
+}
+
+// Same nested synchronized(lock) { synchronized(lock) { ... } } test but
+// start from a thin-locked state first. We then inflate to a fat lock owned by
+// the same thread and verify reentrant behavior (recursion increments) and
+// proper unwind via unlocks.
+func TestObjLock_NestedSynchronized_StartThinThenReentrantFatLock(t *testing.T) {
+    obj := MakeEmptyObject()
+
+    // Start explicitly from a thin-locked state
+    SetObjectThinLocked(obj)
+
+    // Inflate to a fat lock and assign ownership to thread 42
+    SetObjectFatLocked(obj)
+    obj.Monitor = &ObjectMonitor{Owner: 42, Recursion: 0}
+
+    // First nested synchronized: lock again by the same owner
+    if err := obj.ObjLock(42); err != nil {
+        t.Fatalf("first nested ObjLock (start thin) returned error: %v", err)
+    }
+    if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+        t.Fatalf("expected recursion to become 1, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
+    }
+
+    // Second nested synchronized: lock yet again by the same owner
+    if err := obj.ObjLock(42); err != nil {
+        t.Fatalf("second nested ObjLock (start thin) returned error: %v", err)
+    }
+    if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
+        t.Fatalf("expected recursion to become 2, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
+    }
+
+    // Now unwind like exiting nested synchronized blocks: three unlocks total
+    if err := obj.ObjUnlock(42); err != nil {
+        t.Fatalf("first unwind ObjUnlock (start thin) returned error: %v", err)
+    }
+    if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+        t.Fatalf("expected recursion to decrement to 1, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
+    }
+
+    if err := obj.ObjUnlock(42); err != nil {
+        t.Fatalf("second unwind ObjUnlock (start thin) returned error: %v", err)
+    }
+    if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
+        t.Fatalf("expected recursion to decrement to 0, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
+    }
+
+    if err := obj.ObjUnlock(42); err != nil {
+        t.Fatalf("final unwind ObjUnlock (start thin) returned error: %v", err)
+    }
+    if obj.Monitor != nil {
+        t.Fatalf("expected monitor to be cleared after final unlock")
+    }
+    if got := obj.Mark.Misc & lockStateMask; got != lockStateUnlocked {
+        t.Fatalf("expected object to be unlocked after final release, got %b", got)
+    }
 }

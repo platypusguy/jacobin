@@ -68,7 +68,6 @@ var ThreadState = map[int]string{
 // synchronization and lazy init of enum singletons
 
 var threadStateInstances []*object.Object // length 6, matches threadStateNames
-var threadStates map[string]*object.Object
 
 // creates a thread state, but is not actually part of the OpenJDK API. Used internally by Thread class
 func threadStateCreateWithValue(params []interface{}) interface{} {

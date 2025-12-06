@@ -2243,7 +2243,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	}
 	*/
 
-	mtEntry := classloader.MTable[className+"."+methodName+methodType]
+	mtEntry := classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}

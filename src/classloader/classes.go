@@ -259,7 +259,7 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 
 	// look for the method in the MTable
 	methFQN := className + "." + methName + methType // FQN = fully qualified name
-	methEntry := MTable[methFQN]
+	methEntry := GetMtableEntry(methFQN)
 
 	if methEntry.Meth != nil { // we found the entry in the MTable
 		if methEntry.MType == 'J' {

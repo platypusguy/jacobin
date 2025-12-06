@@ -21,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 	"unicode"
 )
@@ -127,10 +126,12 @@ var TraceClass bool
 var TraceVerbose bool
 
 // ----- String Pool
-var StringPoolTable atomic.Value // stores map[string]uint32
+type StringPoolTable_t map[string]uint32
+
+var StringPoolTable StringPoolTable_t
 var StringPoolList []string
 var StringPoolNext uint32
-var StringPoolLock sync.Mutex
+var StringPoolLock sync.RWMutex
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
@@ -395,17 +396,14 @@ func InitStringPool() {
 
 	StringPoolLock.Lock()
 	defer StringPoolLock.Unlock()
-
-	// create the string pool
-	StringPoolTable.Store(make(map[string]uint32))
-	StringPoolList = nil
-
+	StringPoolTable = make(StringPoolTable_t)
 	// Prestored values: 0 = nil, 1 = String, 2 = Object
-	myMap := make(map[string]uint32)
-	myMap[""] = 0
-	myMap["java/lang/String"] = types.StringPoolStringIndex
-	myMap["java/lang/Object"] = types.ObjectPoolStringIndex
-	StringPoolTable.Store(myMap)
+	StringPoolTable[""] = 0
+	StringPoolTable["java/lang/String"] = types.StringPoolStringIndex
+	StringPoolTable["java/lang/Object"] = types.ObjectPoolStringIndex
+
+	// Pre-stored string list.
+	StringPoolList = nil
 	StringPoolList = append(StringPoolList, types.EmptyString)
 	StringPoolList = append(StringPoolList, types.StringClassName)
 	StringPoolList = append(StringPoolList, types.ObjectClassName)

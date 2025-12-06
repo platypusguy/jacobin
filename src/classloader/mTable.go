@@ -63,20 +63,32 @@ type Function func([]interface{}) interface{}
 
 // MTmutex is used for updates to the MTable because multiple threads could be
 // updating it simultaneously.
-var MTmutex sync.Mutex
+var MTmutex sync.RWMutex
 
 // adds an entry to the MTable, using a mutex
 func AddEntry(tbl *MT, key string, mte MTentry) {
 	mt := *tbl
 
-	// fmt.Printf("DEBUG mTable.go AddEntry key=%s, MType=%s\n", key, string(mte.MType))
 	MTmutex.Lock()
+	defer MTmutex.Unlock()
 	mt[key] = mte
-	MTmutex.Unlock()
+}
+
+// GetMtableEntry returns the entry for the given key, or a nil entry if it doesn't exist.
+func GetMtableEntry(key string) MTentry {
+	MTmutex.RLock()
+	defer MTmutex.RUnlock()
+	entry, ok := MTable[key]
+	if ok {
+		return entry
+	}
+	return MTentry{}
 }
 
 // DumpMTable dumps the contents of MTable in sorted order to stderr
 func DumpMTable() {
+	MTmutex.RLock()
+	defer MTmutex.RUnlock()
 	_, _ = fmt.Fprintln(os.Stderr, "\n===== DumpMTable BEGIN")
 	// Create an array of keys.
 	keys := make([]string, 0, len(MTable))

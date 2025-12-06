@@ -100,7 +100,7 @@ func UTgfunc(t *testing.T, className, methodName, methodType string, obj *object
 	_ = frames.PushFrame(fs, fr)
 
 	// Create mtEntry.
-	mtEntry := classloader.MTable[fqn]
+	mtEntry := classloader.GetMtableEntry(fqn)
 	if mtEntry.Meth == nil {
 		t.Fatalf("UTgfunc: classloader.MTable[%s] not found", fqn)
 	}
