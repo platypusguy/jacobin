@@ -891,7 +891,7 @@ func threadStart(params []interface{}) any {
 
 	// Determine receiver: target Runnable or thread itself
 	var runnable *object.Object
-	var clName string
+	var clName, methName, methType string
 	f, ok := t.FieldTable["target"]
 	if ok && f.Fvalue != nil {
 		runnable, ok = f.Fvalue.(*object.Object)
@@ -899,14 +899,17 @@ func threadStart(params []interface{}) any {
 			errMsg := "threadStart: Expected Runnable target field to be an object"
 			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
-		clName = object.GoStringFromJavaByteArray(runnable.FieldTable["clName"].Fvalue.([]types.JavaByte))
+		ftbl := runnable.FieldTable
+		clName = object.GoStringFromJavaByteArray(ftbl["clName"].Fvalue.([]types.JavaByte))
+		methName = object.GoStringFromJavaByteArray(ftbl["methName"].Fvalue.([]types.JavaByte))
+		methType = object.GoStringFromJavaByteArray(ftbl["methType"].Fvalue.([]types.JavaByte))
 	} else {
 		clName = object.GoStringFromJavaByteArray(t.FieldTable["clName"].Fvalue.([]types.JavaByte))
+		methName = "run"
+		methType = "()V"
 	}
 
 	// Spawn RunJavaThread to interpret bytecode of run()
-	methName := "run"
-	methType := "()V"
 	args := []interface{}{t, clName, methName, methType}
 	go globals.GetGlobalRef().FuncRunThread(args)
 	runtime.Gosched()
