@@ -188,60 +188,60 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 
 // Two goroutines contend when the object is fat-locked by thread 1.
 // Thread 2 must block until thread 1 fully releases the fat lock, then acquire.
-// func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
-// 	obj := MakeEmptyObject()
-// 	SetLockState(obj, lockStateFatLocked)
-// 	obj.Monitor = &ObjectMonitor{Owner: 1, Recursion: 0}
-//
-// 	acquired := make(chan struct{})
-// 	done := make(chan struct{})
-//
-// 	// Thread B attempts to lock while fat-locked by owner=1
-// 	go func() {
-// 		if err := obj.ObjLock(2); err != nil {
-// 			t.Fatalf("thread B ObjLock (fat contention) returned error: %v", err)
-// 		}
-// 		// Signal acquired
-// 		t.Log("Thread 2 locked object successfully.")
-// 		close(acquired)
-// 		// Release and finish
-// 		if err := obj.ObjUnlock(2); err != nil {
-// 			t.Fatalf("thread B ObjUnlock after fat handoff returned error: %v", err)
-// 		}
-// 		t.Log("Thread 2 released object successfully.")
-// 		close(done)
-// 	}()
-//
-// 	// Ensure thread 2 hasn't acquired yet while thread 1 still owns the fat lock
-// 	select {
-// 	case <-acquired:
-// 		t.Fatalf("thread 2 acquired fat lock while A still owns it")
-// 	case <-time.After(20 * time.Millisecond):
-// 		// expected
-// 	}
-//
-// 	// Thread 1 releases the fat lock completely
-// 	time.Sleep(2000 * time.Millisecond)
-// 	if err := obj.ObjUnlock(1); err != nil {
-// 		t.Fatalf("thread 1 ObjUnlock (fat) returned error: %v", err)
-// 	}
-// 	t.Log("Thread 1 released object successfully.")
-//
-// 	// After release, thread 2 should be able to acquire fairly quickly
-// 	select {
-// 	case <-acquired:
-// 		// ok
-// 	case <-time.After(1 * time.Second):
-// 		t.Fatalf("timeout waiting for thread B to acquire after fat release")
-// 	}
-//
-// 	// And finish cleanly
-// 	select {
-// 	case <-done:
-// 	case <-time.After(1 * time.Second):
-// 		t.Fatalf("timeout waiting for thread B to finish after fat release")
-// 	}
-// }
+func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
+	obj := MakeEmptyObject()
+	SetLockState(obj, lockStateFatLocked)
+	obj.Monitor = &ObjectMonitor{Owner: 1, Recursion: 0}
+
+	acquired := make(chan struct{})
+	done := make(chan struct{})
+
+	// Thread B attempts to lock while fat-locked by owner=1
+	go func() {
+		if err := obj.ObjLock(2); err != nil {
+			t.Fatalf("thread B ObjLock (fat contention) returned error: %v", err)
+		}
+		// Signal acquired
+		t.Log("Thread 2 locked object successfully.")
+		close(acquired)
+		// Release and finish
+		if err := obj.ObjUnlock(2); err != nil {
+			t.Fatalf("thread B ObjUnlock after fat handoff returned error: %v", err)
+		}
+		t.Log("Thread 2 released object successfully.")
+		close(done)
+	}()
+
+	// Ensure thread 2 hasn't acquired yet while thread 1 still owns the fat lock
+	select {
+	case <-acquired:
+		t.Fatalf("thread 2 acquired fat lock while A still owns it")
+	case <-time.After(20 * time.Millisecond):
+		// expected
+	}
+
+	// Thread 1 releases the fat lock completely
+	time.Sleep(2000 * time.Millisecond)
+	if err := obj.ObjUnlock(1); err != nil {
+		t.Fatalf("thread 1 ObjUnlock (fat) returned error: %v", err)
+	}
+	t.Log("Thread 1 released object successfully.")
+
+	// After release, thread 2 should be able to acquire fairly quickly
+	select {
+	case <-acquired:
+		// ok
+	case <-time.After(1 * time.Second):
+		t.Fatalf("timeout waiting for thread B to acquire after fat release")
+	}
+
+	// And finish cleanly
+	select {
+	case <-done:
+	case <-time.After(1 * time.Second):
+		t.Fatalf("timeout waiting for thread B to finish after fat release")
+	}
+}
 
 // Clone of the fat-lock contention test, but using thin locking throughout.
 // Two goroutines contend when the object is thin-locked by thread 1.
