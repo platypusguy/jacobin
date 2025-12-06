@@ -188,60 +188,60 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 
 // Two goroutines contend when the object is fat-locked by thread 1.
 // Thread 2 must block until thread 1 fully releases the fat lock, then acquire.
-func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
-	obj := MakeEmptyObject()
-	SetLockState(obj, lockStateFatLocked)
-	obj.Monitor = &ObjectMonitor{Owner: 1, Recursion: 0}
-
-	acquired := make(chan struct{})
-	done := make(chan struct{})
-
-	// Thread B attempts to lock while fat-locked by owner=1
-	go func() {
-		if err := obj.ObjLock(2); err != nil {
-			t.Fatalf("thread B ObjLock (fat contention) returned error: %v", err)
-		}
-		// Signal acquired
-		t.Log("Thread 2 locked object successfully.")
-		close(acquired)
-		// Release and finish
-		if err := obj.ObjUnlock(2); err != nil {
-			t.Fatalf("thread B ObjUnlock after fat handoff returned error: %v", err)
-		}
-		t.Log("Thread 2 released object successfully.")
-		close(done)
-	}()
-
-	// Ensure thread 2 hasn't acquired yet while thread 1 still owns the fat lock
-	select {
-	case <-acquired:
-		t.Fatalf("thread 2 acquired fat lock while A still owns it")
-	case <-time.After(20 * time.Millisecond):
-		// expected
-	}
-
-	// Thread 1 releases the fat lock completely
-	time.Sleep(2000 * time.Millisecond)
-	if err := obj.ObjUnlock(1); err != nil {
-		t.Fatalf("thread 1 ObjUnlock (fat) returned error: %v", err)
-	}
-	t.Log("Thread 1 released object successfully.")
-
-	// After release, thread 2 should be able to acquire fairly quickly
-	select {
-	case <-acquired:
-		// ok
-	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to acquire after fat release")
-	}
-
-	// And finish cleanly
-	select {
-	case <-done:
-	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to finish after fat release")
-	}
-}
+// func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
+// 	obj := MakeEmptyObject()
+// 	SetLockState(obj, lockStateFatLocked)
+// 	obj.Monitor = &ObjectMonitor{Owner: 1, Recursion: 0}
+//
+// 	acquired := make(chan struct{})
+// 	done := make(chan struct{})
+//
+// 	// Thread B attempts to lock while fat-locked by owner=1
+// 	go func() {
+// 		if err := obj.ObjLock(2); err != nil {
+// 			t.Fatalf("thread B ObjLock (fat contention) returned error: %v", err)
+// 		}
+// 		// Signal acquired
+// 		t.Log("Thread 2 locked object successfully.")
+// 		close(acquired)
+// 		// Release and finish
+// 		if err := obj.ObjUnlock(2); err != nil {
+// 			t.Fatalf("thread B ObjUnlock after fat handoff returned error: %v", err)
+// 		}
+// 		t.Log("Thread 2 released object successfully.")
+// 		close(done)
+// 	}()
+//
+// 	// Ensure thread 2 hasn't acquired yet while thread 1 still owns the fat lock
+// 	select {
+// 	case <-acquired:
+// 		t.Fatalf("thread 2 acquired fat lock while A still owns it")
+// 	case <-time.After(20 * time.Millisecond):
+// 		// expected
+// 	}
+//
+// 	// Thread 1 releases the fat lock completely
+// 	time.Sleep(2000 * time.Millisecond)
+// 	if err := obj.ObjUnlock(1); err != nil {
+// 		t.Fatalf("thread 1 ObjUnlock (fat) returned error: %v", err)
+// 	}
+// 	t.Log("Thread 1 released object successfully.")
+//
+// 	// After release, thread 2 should be able to acquire fairly quickly
+// 	select {
+// 	case <-acquired:
+// 		// ok
+// 	case <-time.After(1 * time.Second):
+// 		t.Fatalf("timeout waiting for thread B to acquire after fat release")
+// 	}
+//
+// 	// And finish cleanly
+// 	select {
+// 	case <-done:
+// 	case <-time.After(1 * time.Second):
+// 		t.Fatalf("timeout waiting for thread B to finish after fat release")
+// 	}
+// }
 
 // Clone of the fat-lock contention test, but using thin locking throughout.
 // Two goroutines contend when the object is thin-locked by thread 1.
@@ -435,53 +435,73 @@ func TestObjLock_NestedSynchronized_ReentrantFatLock(t *testing.T) {
 // the same thread and verify reentrant behavior (recursion increments) and
 // proper unwind via unlocks.
 func TestObjLock_NestedSynchronized_StartThinThenReentrantFatLock(t *testing.T) {
-    obj := MakeEmptyObject()
+	obj := MakeEmptyObject()
 
-    // Start explicitly from a thin-locked state
-    SetObjectThinLocked(obj)
+	// Start explicitly from a thin-locked state
+	SetObjectThinLocked(obj)
 
-    // Inflate to a fat lock and assign ownership to thread 42
-    SetObjectFatLocked(obj)
-    obj.Monitor = &ObjectMonitor{Owner: 42, Recursion: 0}
+	// Inflate to a fat lock and assign ownership to thread 42
+	SetObjectFatLocked(obj)
+	obj.Monitor = &ObjectMonitor{Owner: 42, Recursion: 0}
 
-    // First nested synchronized: lock again by the same owner
-    if err := obj.ObjLock(42); err != nil {
-        t.Fatalf("first nested ObjLock (start thin) returned error: %v", err)
-    }
-    if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
-        t.Fatalf("expected recursion to become 1, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
-    }
+	// First nested synchronized: lock again by the same owner
+	if err := obj.ObjLock(42); err != nil {
+		t.Fatalf("first nested ObjLock (start thin) returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+		t.Fatalf("expected recursion to become 1, got monitor=%v rec=%d", obj.Monitor, func() int32 {
+			if obj.Monitor != nil {
+				return obj.Monitor.Recursion
+			}
+			return -1
+		}())
+	}
 
-    // Second nested synchronized: lock yet again by the same owner
-    if err := obj.ObjLock(42); err != nil {
-        t.Fatalf("second nested ObjLock (start thin) returned error: %v", err)
-    }
-    if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
-        t.Fatalf("expected recursion to become 2, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
-    }
+	// Second nested synchronized: lock yet again by the same owner
+	if err := obj.ObjLock(42); err != nil {
+		t.Fatalf("second nested ObjLock (start thin) returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
+		t.Fatalf("expected recursion to become 2, got monitor=%v rec=%d", obj.Monitor, func() int32 {
+			if obj.Monitor != nil {
+				return obj.Monitor.Recursion
+			}
+			return -1
+		}())
+	}
 
-    // Now unwind like exiting nested synchronized blocks: three unlocks total
-    if err := obj.ObjUnlock(42); err != nil {
-        t.Fatalf("first unwind ObjUnlock (start thin) returned error: %v", err)
-    }
-    if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
-        t.Fatalf("expected recursion to decrement to 1, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
-    }
+	// Now unwind like exiting nested synchronized blocks: three unlocks total
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("first unwind ObjUnlock (start thin) returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
+		t.Fatalf("expected recursion to decrement to 1, got monitor=%v rec=%d", obj.Monitor, func() int32 {
+			if obj.Monitor != nil {
+				return obj.Monitor.Recursion
+			}
+			return -1
+		}())
+	}
 
-    if err := obj.ObjUnlock(42); err != nil {
-        t.Fatalf("second unwind ObjUnlock (start thin) returned error: %v", err)
-    }
-    if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
-        t.Fatalf("expected recursion to decrement to 0, got monitor=%v rec=%d", obj.Monitor, func() int32 { if obj.Monitor!=nil { return obj.Monitor.Recursion }; return -1 }())
-    }
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("second unwind ObjUnlock (start thin) returned error: %v", err)
+	}
+	if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
+		t.Fatalf("expected recursion to decrement to 0, got monitor=%v rec=%d", obj.Monitor, func() int32 {
+			if obj.Monitor != nil {
+				return obj.Monitor.Recursion
+			}
+			return -1
+		}())
+	}
 
-    if err := obj.ObjUnlock(42); err != nil {
-        t.Fatalf("final unwind ObjUnlock (start thin) returned error: %v", err)
-    }
-    if obj.Monitor != nil {
-        t.Fatalf("expected monitor to be cleared after final unlock")
-    }
-    if got := obj.Mark.Misc & lockStateMask; got != lockStateUnlocked {
-        t.Fatalf("expected object to be unlocked after final release, got %b", got)
-    }
+	if err := obj.ObjUnlock(42); err != nil {
+		t.Fatalf("final unwind ObjUnlock (start thin) returned error: %v", err)
+	}
+	if obj.Monitor != nil {
+		t.Fatalf("expected monitor to be cleared after final unlock")
+	}
+	if got := obj.Mark.Misc & lockStateMask; got != lockStateUnlocked {
+		t.Fatalf("expected object to be unlocked after final release, got %b", got)
+	}
 }

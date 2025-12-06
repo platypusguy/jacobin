@@ -220,12 +220,12 @@ func RunJavaThread(args []any) {
 		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
 
-	// Instantiate the class so that any static initializers are run.
-	_, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
-	if instantiateError != nil {
-		errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
-		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
-	}
+	// // Instantiate the class so that any static initializers are run.
+	// _, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
+	// if instantiateError != nil {
+	// 	errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
+	// 	exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
+	// }
 
 	// Mark the thread RUNNABLE and register it.
 	_, ret := gfunction.SetThreadState(t, gfunction.RUNNABLE)
