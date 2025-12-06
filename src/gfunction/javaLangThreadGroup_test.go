@@ -133,7 +133,7 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 	}
 	// 3rd param not String object
 	{
-		obj := threadGroupFake("x")
+		obj := makeThreadGroup("x")
 		res := ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, object.Null, 99, int64(0), types.JavaBoolUninitialized})
 		if _, ok := res.(*GErrBlk); !ok {
 			t.Errorf("expected type error for 3rd param")
@@ -152,7 +152,7 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 	// Success: daemon uninitialized, parent main
 	{
 		// tgName := "java/lang/ThreadGroup"
-		obj := threadGroupFake("grpA")
+		obj := makeThreadGroup("grpA")
 		name := object.StringObjectFromGoString("grpA")
 		ThreadGroupInitWithParentNameMaxpriorityDaemon([]any{obj, object.Null, name, int64(0), types.JavaBoolUninitialized})
 		parentObj := obj.FieldTable["parent"].Fvalue.(*object.Object)
@@ -172,7 +172,7 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *
 	}
 	// Success: parent set, maxPriority in range, daemon true
 	{
-		parent := threadGroupFake("parent")
+		parent := makeThreadGroup("parent")
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
 		name := object.StringObjectFromGoString("grpB")
@@ -247,7 +247,7 @@ func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
 	{
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
-		parent := threadGroupFake("parent")
+		parent := makeThreadGroup("parent")
 		if _, ok := threadGroupInitWithParentAndName([]any{obj, parent, 77}).(*GErrBlk); !ok {
 			t.Errorf("expected error for 3rd param type")
 		}
@@ -256,7 +256,7 @@ func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
 	{
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
-		parent := threadGroupFake("parent")
+		parent := makeThreadGroup("parent")
 		if _, ok := threadGroupInitWithParentAndName([]any{obj, parent, object.Null}).(*GErrBlk); !ok {
 			t.Errorf("expected NPE for null name")
 		}
@@ -265,7 +265,7 @@ func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
 	{
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
-		parent := threadGroupFake("parent")
+		parent := makeThreadGroup("parent")
 		thName := "java/lang/Thread"
 		notString := object.MakeEmptyObjectWithClassName(&thName)
 		if _, ok := threadGroupInitWithParentAndName([]any{obj, parent, notString}).(*GErrBlk); !ok {
@@ -278,7 +278,7 @@ func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
 		gr.ThreadGroups = make(map[string]interface{})
 		tgName := "java/lang/ThreadGroup"
 		obj := object.MakeEmptyObjectWithClassName(&tgName)
-		parent := threadGroupFake("parent2")
+		parent := makeThreadGroup("parent2")
 		name := object.StringObjectFromGoString("child")
 		threadGroupInitWithParentAndName([]any{obj, parent, name})
 		tg := obj

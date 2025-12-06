@@ -19,6 +19,6 @@ func NewRunnable(clName, methName, signature []types.JavaByte) *object.Object {
 	o := object.MakeEmptyObjectWithClassName(&runnableClassName)
 	o.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: clName}
 	o.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: methName}
-	o.FieldTable["signature"] = object.Field{Ftype: types.ByteArray, Fvalue: signature}
+	o.FieldTable["methType"] = object.Field{Ftype: types.ByteArray, Fvalue: signature}
 	return o
 }

@@ -18,9 +18,9 @@ import (
 func TestNewRunnable_PopulatesClassAndFields(t *testing.T) {
 	cl := object.JavaByteArrayFromGoString("java/lang/Thread")
 	mn := object.JavaByteArrayFromGoString("run")
-	sg := object.JavaByteArrayFromGoString("()V")
+	mt := object.JavaByteArrayFromGoString("()V")
 
-	obj := gfunction.NewRunnable(cl, mn, sg)
+	obj := gfunction.NewRunnable(cl, mn, mt)
 	if obj == nil {
 		t.Fatalf("TestNewRunnable returned nil")
 	}
@@ -52,7 +52,7 @@ func TestNewRunnable_PopulatesClassAndFields(t *testing.T) {
 
 	checkField("clName", cl)
 	checkField("methName", mn)
-	checkField("signature", sg)
+	checkField("methType", mt)
 }
 
 func TestNewRunnable_AllowsEmptyAndNil(t *testing.T) {
@@ -71,8 +71,8 @@ func TestNewRunnable_AllowsEmptyAndNil(t *testing.T) {
 	if got := obj1.FieldTable["methName"].Fvalue.([]types.JavaByte); !reflect.DeepEqual(got, empty) {
 		t.Fatalf("empty methName not preserved; got %v", got)
 	}
-	if got := obj1.FieldTable["signature"].Fvalue.([]types.JavaByte); !reflect.DeepEqual(got, empty) {
-		t.Fatalf("empty signature not preserved; got %v", got)
+	if got := obj1.FieldTable["methType"].Fvalue.([]types.JavaByte); !reflect.DeepEqual(got, empty) {
+		t.Fatalf("empty methType not preserved; got %v", got)
 	}
 
 	obj2 := gfunction.NewRunnable(nilSlice, nilSlice, nilSlice)
@@ -82,7 +82,7 @@ func TestNewRunnable_AllowsEmptyAndNil(t *testing.T) {
 
 	// nil slices are allowed; values may be stored as a nil slice or an empty slice
 	// Verify type is []types.JavaByte and length is zero
-	for _, name := range []string{"clName", "methName", "signature"} {
+	for _, name := range []string{"clName", "methName", "methType"} {
 		fld := obj2.FieldTable[name]
 		if fld.Ftype != types.ByteArray {
 			t.Fatalf("field %q type = %q; want %q", name, fld.Ftype, types.ByteArray)

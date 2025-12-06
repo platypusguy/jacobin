@@ -9,7 +9,6 @@ package gfunction
 import (
 	"container/list"
 	"fmt"
-	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -87,56 +86,21 @@ func InitializeGlobalThreadGroups() {
 		gr.ThreadGroups = make(map[string]interface{})
 	}
 
-	// in test mode, we don't need to create the system and main
+	// We don't need to create the system and main
 	// thread groups manually
-	if gr.JacobinName == "test" {
-		fakeSystemTg := threadGroupFake("system")
-		gr.ThreadGroups["system"] = fakeSystemTg
+	baseSystemTg := makeThreadGroup("system")
+	gr.ThreadGroups["system"] = baseSystemTg
 
-		fakeMainTg := threadGroupFake("main")
-		gr.ThreadGroups["main"] = fakeMainTg
+	baseMainTg := makeThreadGroup("main")
+	gr.ThreadGroups["main"] = baseMainTg
 
-		fakeMainTg.FieldTable["parent"] =
-			object.Field{Ftype: types.Ref, Fvalue: fakeSystemTg}
+	baseMainTg.FieldTable["parent"] =
+		object.Field{Ftype: types.Ref, Fvalue: baseSystemTg}
 
-		// Now add this thread group to the parent's list of subgroups
-		parentSubgroups := fakeSystemTg.FieldTable["subgroups"].Fvalue.(*list.List)
-		parentSubgroups.PushBack(fakeMainTg)
+	// Now add this thread group to the parent's list of subgroups
+	parentSubgroups := baseSystemTg.FieldTable["subgroups"].Fvalue.(*list.List)
+	parentSubgroups.PushBack(baseMainTg)
 
-		return
-	}
-
-	// java/lang/ThreadGroup has no clinit to run, so we can turn it off
-	// likewise its parent is java/lang/Object, which does not need clinit
-	// This is necessary because we call instantiateClass directly with no
-	// JVM framestack
-	k := classloader.MethAreaFetch("java/lang/ThreadGroup")
-	k.Data.ClInit = types.ClInitRun
-
-	// instantiate a new ThreadGroup object with the name "system"
-	systemtg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
-	if err != nil {
-		errMsg :=
-			"initializeGlobalThreadGroups: Failed to instantiate java/lang/ThreadGroup"
-		gr.FuncThrowException(excNames.InternalError, errMsg)
-	}
-
-	threadGroupInitWithName(
-		[]interface{}{systemtg, object.StringObjectFromGoString("system")})
-	gr.ThreadGroups["system"] = systemtg
-
-	// Create "main" group as a child of "system"
-	maintg, err := gr.FuncInstantiateClass("java/lang/ThreadGroup", nil)
-	if err != nil {
-		errMsg :=
-			"initializeGlobalThreadGroups: Failed to instantiate java/lang/ThreadGroup"
-		gr.FuncThrowException(excNames.InternalError, errMsg)
-	}
-
-	threadGroupInitWithName(
-		[]interface{}{maintg, object.StringObjectFromGoString("main")})
-
-	gr.ThreadGroups["main"] = maintg
 }
 
 // java/lang/ThreadGroup.<clinit>()V
@@ -366,8 +330,8 @@ func threadGroupGetParent(params []interface{}) interface{} {
 	return tg.FieldTable["parent"].Fvalue
 }
 
-// == fake thread group for testing purposes ==
-func threadGroupFake(name string) *object.Object {
+// == make a thread group with the given name ==
+func makeThreadGroup(name string) *object.Object {
 	gr := globals.GetGlobalRef()
 	clName := "java/lang/ThreadGroup"
 	obj := object.MakeEmptyObjectWithClassName(&clName)
