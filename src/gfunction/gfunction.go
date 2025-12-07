@@ -240,10 +240,6 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		}
 
 		classloader.AddEntry(tbl, key, tableEntry)
-		classloader.GmtAddEntry(key, classloader.GmtEntry{ // JACOBIN-575 adding to GMT in parallel
-			MethData: &gme,
-			MType:    'G',
-		})
 	}
 	if !ok {
 		exceptions.ThrowExNil(excNames.InternalException, "loadlib: at least one key was invalid")

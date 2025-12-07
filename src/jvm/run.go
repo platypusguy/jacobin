@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2022-4 by the Jacobin authors. All rights reserved.
+ * Copyright (c) 2022-5 by the Jacobin authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)
  */
 
@@ -219,13 +219,6 @@ func RunJavaThread(args []any) {
 		errMsg := fmt.Sprintf("RunJavaThread: frames.PushFrame failed on thread: %d", tID)
 		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
 	}
-
-	// // Instantiate the class so that any static initializers are run.
-	// _, instantiateError := globals.GetGlobalRef().FuncInstantiateClass(clName, fs)
-	// if instantiateError != nil {
-	// 	errMsg := "RunJavaThread: Error instantiating: " + clName + ".main()"
-	// 	exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
-	// }
 
 	// Mark the thread RUNNABLE and register it.
 	_, ret := gfunction.SetThreadState(t, gfunction.RUNNABLE)
