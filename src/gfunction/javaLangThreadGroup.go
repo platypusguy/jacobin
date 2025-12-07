@@ -13,6 +13,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"time"
 )
 
 func Load_Lang_Thread_Group() {
@@ -364,4 +365,10 @@ func makeThreadGroup(name string) *object.Object {
 	globals.GetGlobalRef().ThreadGroups[name] = obj
 
 	return obj
+}
+
+// MakeThreadGroup()Ljava/lang/ThreadGroup; creates a generic thread group with an invented name
+func MakeThreadGroup() *object.Object {
+	name := fmt.Sprintf("ThreadGroup-%d", time.Now().UnixNano())
+	return makeThreadGroup(name)
 }

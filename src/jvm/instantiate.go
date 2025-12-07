@@ -47,19 +47,19 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		}
 	}
 
-	// Some objects are handled separately
-	if classname == types.StringClassName {
+	// Objects that are created by Jacobin itself are instantiated separately
+	// e.g. String, Thread, ThreadGroup
+	switch classname {
+	case types.StringClassName:
 		return object.NewStringObject(), nil
-	}
-	if classname == types.ClassNameThread || classname == types.ClassNameThreadGroup {
+	case types.ClassNameThread:
 		return gfunction.ThreadCreateNoarg(nil), nil
+	case types.ClassNameThreadGroup:
+		return gfunction.MakeThreadGroup(), nil
 	}
 
-	// At this point, classname is ready for use in the method area.
+	// Look up the class in the method area.
 	k := classloader.MethAreaFetch(classname)
-	obj := object.Object{
-		KlassName: stringPool.GetStringIndex(&classname),
-	}
 
 	if k == nil {
 		errMsg := "InstantiateClass: Class is nil after loading, class: " + classname
@@ -71,6 +71,11 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		errMsg := "InstantiateClass: class.Data is nil, class: " + classname
 		trace.Error(errMsg)
 		return nil, errors.New(errMsg)
+	}
+
+	// create the object whose instantiation we're doing
+	obj := object.Object{
+		KlassName: stringPool.GetStringIndex(&classname),
 	}
 
 	// go up the chain of superclasses until we hit java/lang/Object
