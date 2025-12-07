@@ -32,10 +32,11 @@ func ShowFrameStack(source interface{}) {
 			t := source.(*thread.ExecThread)
 			entries = GrabFrameStack(t.Stack)
 		case *list.List:
+
 			entries = GrabFrameStack(source.(*list.List))
 		}
 
-		if len(*entries) == 0 {
+		if entries == nil || len(*entries) == 0 {
 			trace.Trace("ShowFrameStack: no further data available")
 			return
 		}
