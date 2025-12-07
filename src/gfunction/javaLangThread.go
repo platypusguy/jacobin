@@ -359,6 +359,9 @@ func threadInitFromPackageConstructor(params []interface{}) any {
 
 	// Delegate: threadCreateWithRunnableAndName expects [runnable, name]
 	threadInitWithRunnableAndName([]interface{}{th, runnable, name})
+	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
+	th.FieldTable["ID"] = idField
+
 	tg := object.Field{ // default thread group is the main thread group
 		Ftype: types.Ref, Fvalue: threadGroup}
 	th.FieldTable["threadgroup"] = tg
@@ -390,7 +393,7 @@ func populateThreadObject(t *object.Object) {
 		InitializeGlobalThreadGroups()
 		tg = globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
 	}
-	
+
 	// The default thread group is the main thread group
 	threadGroup := object.Field{Ftype: types.Ref, Fvalue: tg}
 	t.FieldTable["threadgroup"] = threadGroup
