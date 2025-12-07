@@ -11,7 +11,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction"
 	"jacobin/src/globals"
-	"jacobin/src/thread"
+	"jacobin/src/object"
 	"jacobin/src/trace"
 	"os"
 	"strings"
@@ -54,6 +54,11 @@ var ThrowIDIVexceptionBytes = []byte{
 }
 
 func TestHexIDIVException(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+	InitGlobalFunctionPointers()
+	classloader.MTable = make(map[string]classloader.MTentry)
+
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)
 		t.Skip()
 	}
@@ -79,8 +84,6 @@ func TestHexIDIVException(t *testing.T) {
 
 	// Initialize global, logging, classloader
 	// globals.InitGlobals("testWithoutShutdown") // let test run to completion, but don't shutdown
-	globals.InitGlobals("test")
-	trace.Init()
 	globPtr = globals.GetGlobalRef()
 	globPtr.FuncInstantiateClass = InstantiateClass
 
@@ -119,9 +122,11 @@ func TestHexIDIVException(t *testing.T) {
 	// Run class ThrowIDIVexception
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
-	mainThread := thread.CreateThread()
-	// mainThread.AddThreadToTable(globPtr)
-	StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
+	//mainThread := thread.CreateThread()
+	th := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	//StartExec("ThrowIDIVexception", &mainThread, globals.GetGlobalRef())
+	args := []interface{}{th, "ThrowIDIVexception", "main", "([Ljava/lang/String;)V"}
+	RunJavaThread(args)
 
 	_ = werr.Close()
 	_ = wout.Close()

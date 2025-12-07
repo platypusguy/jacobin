@@ -13,6 +13,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
+	"jacobin/src/gfunction"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -46,12 +47,15 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		}
 	}
 
-	// strings are handled separately
+	// Some objects are handled separately
 	if classname == types.StringClassName {
 		return object.NewStringObject(), nil
 	}
+	if classname == types.ClassNameThread || classname == types.ClassNameThreadGroup {
+		return gfunction.ThreadCreateNoarg(nil), nil
+	}
 
-	// At this point, classname is ready
+	// At this point, classname is ready for use in the method area.
 	k := classloader.MethAreaFetch(classname)
 	obj := object.Object{
 		KlassName: stringPool.GetStringIndex(&classname),
@@ -172,7 +176,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	} // end of handling fields for classes with superclasses other than Object
 
 runInitializer:
-	
+
 	// check the code for validity before running initialization blocks
 	if !k.CodeChecked && !util.IsFilePartOfJDK(&classname) { // we don't code check JDK classes
 		for _, m := range k.Data.MethodTable {

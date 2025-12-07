@@ -30,5 +30,9 @@ var StringPoolStringIndex = uint32(1) // points to the string pool slice for "ja
 var EmptyString = ""
 var NullString = "null"
 
+// Other class names
+var ClassNameThread = "java/lang/Thread"
+var ClassNameThreadGroup = "java/lang/ThreadGroup"
+
 // ---- experimental values ----
 var StackInflator = 2 // for toying with whether to increase # of stack entries
