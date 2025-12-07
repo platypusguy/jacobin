@@ -12,7 +12,6 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
-	"jacobin/src/thread"
 	"jacobin/src/types"
 )
 
@@ -145,7 +144,7 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 	}
 
 	if maxPriority != 0 { // 0 = uninitialized
-		if maxPriority < thread.MIN_PRIORITY || maxPriority > thread.MAX_PRIORITY {
+		if maxPriority < MIN_PRIORITY || maxPriority > MAX_PRIORITY {
 			return getGErrBlk(excNames.IllegalArgumentException,
 				"ThreadGroupInitWithParentNameMaxpriorityDaemon: maxPriority out of range")
 		}
@@ -160,7 +159,7 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 
 	// initialize the fields that are not passed as parameters
 	obj.FieldTable["priority"] =
-		object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+		object.Field{Ftype: types.Int, Fvalue: int64(NORM_PRIORITY)}
 
 	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}
 	obj.FieldTable["subgroups"] = subgroups
@@ -352,10 +351,10 @@ func makeThreadGroup(name string) *object.Object {
 	threadGroup := object.Field{Ftype: types.Ref, Fvalue: nil}
 	obj.FieldTable["threadgroup"] = threadGroup
 
-	priority := object.Field{Ftype: types.Int, Fvalue: int64(thread.NORM_PRIORITY)}
+	priority := object.Field{Ftype: types.Int, Fvalue: int64(NORM_PRIORITY)}
 	obj.FieldTable["priority"] = priority
 
-	maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(thread.MAX_PRIORITY)}
+	maxPriority := object.Field{Ftype: types.Int, Fvalue: int64(MAX_PRIORITY)}
 	obj.FieldTable["maxpriority"] = maxPriority
 
 	subgroups := object.Field{Ftype: types.LinkedList, Fvalue: list.New()}

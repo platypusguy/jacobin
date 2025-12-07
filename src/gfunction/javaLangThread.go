@@ -14,7 +14,6 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
@@ -38,6 +37,12 @@ import (
  The passed-in slice contains one entry for every parameter passed to the method (which
  could mean an empty slice).
 */
+
+const (
+	MIN_PRIORITY  = 1
+	NORM_PRIORITY = 5
+	MAX_PRIORITY  = 10
+)
 
 func Load_Lang_Thread() {
 
@@ -271,11 +276,11 @@ func threadActiveCount(_ []interface{}) any {
 // our clinit method simply specifies static constants
 func threadClinit(_ []interface{}) any {
 	_ = statics.AddStatic("java/lang/Thread.MIN_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(thread.MIN_PRIORITY)})
+		statics.Static{Type: types.Int, Value: int64(MIN_PRIORITY)})
 	_ = statics.AddStatic("java/lang/Thread.NORM_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(thread.NORM_PRIORITY)})
+		statics.Static{Type: types.Int, Value: int64(NORM_PRIORITY)})
 	_ = statics.AddStatic("java/lang/Thread.MAX_PRIORITY",
-		statics.Static{Type: types.Int, Value: int64(thread.MAX_PRIORITY)})
+		statics.Static{Type: types.Int, Value: int64(MAX_PRIORITY)})
 	return nil
 }
 

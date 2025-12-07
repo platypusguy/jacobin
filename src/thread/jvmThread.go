@@ -69,11 +69,11 @@ const (
 	TERMINATED          = 5
 )
 
-const (
-	MIN_PRIORITY  = 1
-	NORM_PRIORITY = 5
-	MAX_PRIORITY  = 10
-)
+//const (
+//	MIN_PRIORITY  = 1
+//	NORM_PRIORITY = 5
+//	MAX_PRIORITY  = 10
+//)
 
 /* functions that have been moved to gfunction/javaLangThread.go
 
