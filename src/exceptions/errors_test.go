@@ -7,9 +7,9 @@
 package exceptions
 
 import (
-	"container/list"
 	"errors"
 	"io"
+	"jacobin/src/classloader"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/thread"
@@ -60,6 +60,8 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 // no additional data is available
 func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	g := globals.InitGlobals("test")
+	trace.Init()
+	classloader.MTable = make(map[string]classloader.MTentry)
 	g.StrictJDK = false
 
 	trace.Init()
@@ -73,10 +75,11 @@ func TestShowFrameStackWithEmptyStack(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	th := thread.CreateThread()
-	th.Stack = list.New()
+	fs := frames.CreateFrameStack()
+	fr := frames.CreateFrame(1)
+	frames.PushFrame(fs, fr)
 	globals.GetGlobalRef().JvmFrameStackShown = false
-	ShowFrameStack(&th)
+	ShowFrameStack(&fs)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
@@ -114,12 +117,11 @@ func TestShowFrameStackWithOneEntry(t *testing.T) {
 	f.ClName = "testClass"
 	f.PC = 42
 
-	th := thread.CreateThread()
-	th.Stack = frames.CreateFrameStack()
-	_ = frames.PushFrame(th.Stack, f)
+	fs := frames.CreateFrameStack()
+	_ = frames.PushFrame(fs, f)
 
 	globals.GetGlobalRef().JvmFrameStackShown = false
-	ShowFrameStack(&th)
+	ShowFrameStack(fs)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()
