@@ -13,6 +13,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
+	"jacobin/src/gfunction"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -51,7 +52,7 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		return object.NewStringObject(), nil
 	}
 	if classname == types.ClassNameThread || classname == types.ClassNameThreadGroup {
-		return object.MakeEmptyObjectWithClassName(&classname), nil
+		return gfunction.ThreadCreateNoarg(nil), nil
 	}
 
 	// At this point, classname is ready for use in the method area.
