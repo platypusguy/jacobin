@@ -259,7 +259,10 @@ func Load_Lang_Thread() {
 	threadClinit(nil)
 }
 
-var classname = "java/lang/Thread"
+// Thread numbering is a static counter that increments for each thread created.
+// Amendment is under the control of a mutex.
+var threadNumber int64 = 0
+var threadNumberingMutex sync.Mutex
 
 func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
@@ -382,9 +385,12 @@ func populateThreadObject(t *object.Object) {
 	interruptedField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["interrupted"] = interruptedField
 
-	InitializeGlobalThreadGroups()
-
-	tg := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+	tg, ok := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+	if !ok {
+		InitializeGlobalThreadGroups()
+		tg = globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+	}
+	
 	// The default thread group is the main thread group
 	threadGroup := object.Field{Ftype: types.Ref, Fvalue: tg}
 	t.FieldTable["threadgroup"] = threadGroup
@@ -400,9 +406,7 @@ func populateThreadObject(t *object.Object) {
 // Should we need to create a thread (as in tests), here is the instantiable implementation
 func ThreadCreateNoarg(_ []interface{}) any {
 
-	t := object.MakeEmptyObjectWithClassName(&classname)
-
-	InitializeGlobalThreadGroups()
+	t := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
 
 	populateThreadObject(t)
 
@@ -1060,7 +1064,7 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 
 // this guarantees that the thread numbering is initialized only once
 var setInitialThreadNumberingValue = sync.OnceValue(func() any {
-	thread.ThreadNumber = int64(0)
+	threadNumber = int64(1)
 	return nil
 })
 
@@ -1069,14 +1073,11 @@ func threadNumbering(_ []any) any { // initialize thread numbering
 	return nil
 }
 
-// avoid contention when creating threads
-var threadNumberingMutex sync.Mutex
-
 func threadNumberingNext(_ []any) any {
 	threadNumberingMutex.Lock()
-	thread.ThreadNumber += 1
+	threadNumber += 1
 	threadNumberingMutex.Unlock()
-	return int64(thread.ThreadNumber)
+	return threadNumber
 }
 
 // =========== Support functions for the functions above ===========
