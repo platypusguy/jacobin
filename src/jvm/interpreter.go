@@ -863,12 +863,23 @@ func doFastore(fr *frames.Frame, _ int64) int {
 
 // 0x53 AASTORE store a ref in a ref array
 func doAastore(fr *frames.Frame, _ int64) int {
-	value, ok := pop(fr).(*object.Object) // reference we're inserting
+	popped := pop(fr) // reference we're inserting
+	if popped == nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Invalid (null) interface[any] on stack",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+	value, ok := popped.(*object.Object) // reference we're inserting
 	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference for insertion into an array",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
-		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Illegal argument type (%T) for inserting into a reference array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, popped)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURED // applies only if in test
 		}
@@ -880,8 +891,8 @@ func doAastore(fr *frames.Frame, _ int64) int {
 	arrayRef, ok := pop(fr).(*object.Object) // ptr to the array object
 	if !ok || arrayRef == nil {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference array",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Invalid (null) reference array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURED // applies only if in test
