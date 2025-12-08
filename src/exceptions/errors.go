@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"math"
 	"runtime/debug"
@@ -28,9 +27,6 @@ func ShowFrameStack(source interface{}) {
 	if globals.GetGlobalRef().JvmFrameStackShown == false {
 		var entries *[]string
 		switch source.(type) {
-		case *thread.ExecThread:
-			t := source.(*thread.ExecThread)
-			entries = GrabFrameStack(t.Stack)
 		case *list.List:
 
 			entries = GrabFrameStack(source.(*list.List))

@@ -40,6 +40,7 @@ import (
 // each slot being a pointer to a function that accepts a pointer to the
 // current frame and an int parameter. It returns an int that indicates
 // how much to increase that frame's PC (program counter) by.
+
 type BytecodeFunc func(*frames.Frame, int64) int
 
 var DispatchTable = [203]BytecodeFunc{
@@ -273,7 +274,7 @@ const ( // result values from bytecode interpretation
 // pushing a new frame for a called method onto the stack, and for
 // popping the current frame when a bytecode of the RETURN family
 // is encountered. In both cases, interpret() returns and the
-// runThread() loop goes to the top of the frame stack and calls
+// RunJavaThread() loop goes to the top of the frame stack and calls
 // interpret() on the frame found there, if any.
 func interpret(fs *list.List) {
 	const maxBytecode = byte(len(DispatchTable) - 1)
@@ -1815,7 +1816,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 	className := field.ClName
 	fieldName := field.FldName
 	fieldName = className + "." + fieldName
-	if MainThread.Trace {
+	if globals.TraceInst {
 		EmitTraceFieldID("GETSTATIC", fieldName)
 	}
 
@@ -1891,14 +1892,14 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 	className := field.ClName
 	fieldName := field.FldName
 	fieldName = className + "." + fieldName
-	if MainThread.Trace {
+	if globals.TraceInst {
 		EmitTraceFieldID("PUTSTATIC", fieldName)
 	}
 
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.QueryStatic(className, field.FldName)
 	if !ok { // if field is not already loaded, then
-		if MainThread.Trace {
+		if globals.TraceInst {
 			msg := fmt.Sprintf("doPutStatic: Field was NOT previously loaded: %s", fieldName)
 			trace.Trace(msg)
 		}
@@ -1906,7 +1907,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 		// instantiate the class
 		_, err := InstantiateClass(className, fr.FrameStack)
 		if err == nil {
-			if MainThread.Trace {
+			if globals.TraceInst {
 				msg := fmt.Sprintf("doPutStatic: Loaded class %s", className)
 				trace.Trace(msg)
 			}
@@ -1918,7 +1919,7 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURED
 		}
 	} else {
-		if MainThread.Trace {
+		if globals.TraceInst {
 			msg := fmt.Sprintf("doPutStatic: Field was INDEED previously loaded: %s", fieldName)
 			trace.Trace(msg)
 		}
@@ -2312,7 +2313,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		}
 
 		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
 		if ret != nil {
 			switch ret.(type) {
 			case error: // only occurs in testing
@@ -2451,7 +2452,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 		}
 
 		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, MainThread.Trace)
+			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
 
 		if ret != nil {
 			switch ret.(type) {
@@ -2559,7 +2560,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			trace.Trace(infoMsg)
 		}
 
-		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, MainThread.Trace)
+		ret := gfunction.RunGfunction(mtEntry, fr.FrameStack, className, methodName, methodType, &params, false, globals.TraceInst)
 		if ret != nil {
 			switch ret.(type) {
 			case error:

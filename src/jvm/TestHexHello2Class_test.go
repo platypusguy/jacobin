@@ -11,8 +11,8 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/statics"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"os"
 	"strconv"
@@ -146,8 +146,12 @@ func TestHexHello2ValidClass(t *testing.T) {
 	// Run class Hello2
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
-	mainThread := thread.CreateThread()
-	StartExec("Hello2", &mainThread, globals.GetGlobalRef())
+	th := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	className := "Hello2"
+	methName := "main"
+	methType := "([Ljava/lang/String;)V"
+	args := []any{th, className, methName, methType}
+	RunJavaThread(args)
 
 	if redirecting {
 		_ = werr.Close()
