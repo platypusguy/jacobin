@@ -55,7 +55,7 @@ func Load_Lang_Class() {
 	MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getName,
+			GFunction:  classGetName,
 		}
 
 	MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
@@ -76,6 +76,11 @@ func Load_Lang_Class() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["java/lang/Class.toString()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  classToString,
+		}
 }
 
 // getComponentType() returns a pointer to class of the type of an array.
@@ -222,8 +227,8 @@ func getAssertionsEnabledStatus([]interface{}) interface{} {
 	// return 1 - x // return the 0 if disabled, 1 if not.
 }
 
-// "java/lang/Class.getName()Ljava/lang/String;"
-func getName(params []interface{}) interface{} {
+// "java/lang/Class.classGetName()Ljava/lang/String;"
+func classGetName(params []interface{}) interface{} {
 	class := params[0].(*object.Object)
 	name := class.FieldTable["name"].Fvalue.(string)
 	return object.StringObjectFromGoString(name)
@@ -248,26 +253,6 @@ func classGetModule(params []interface{}) interface{} {
 	return unnamedModule
 }
 
-// Create a java/lang/Class instance -- that is a class ready for reflection from an existing object
-func classCreateClassInstance(className string) (*object.Object, error) {
-	cl, err := simpleClassLoadByName(className)
-	if err != nil {
-		return nil, err
-	}
-	if cl == nil {
-		errMsg := fmt.Sprintf("classCreateClassInstance: failed to load class %s", className)
-		return nil, errors.New(errMsg)
-	}
-
-	kl := object.MakeEmptyObject()
-	if kl == nil {
-		errMsg := fmt.Sprintf("classCreateClassInstance: failed to create new object of class %s", className)
-		return nil, errors.New(errMsg)
-	}
-
-	return kl, nil
-}
-
 func classGetField(params []interface{}) interface{} {
 	cl := params[0].(*object.Object)
 	if object.IsNull(params[1]) {
@@ -283,4 +268,27 @@ func classGetField(params []interface{}) interface{} {
 	}
 
 	return NewField(cl, fieldName)
+}
+
+/* JDK Javadoc:
+ * Converts the object to a string. The string representation is the
+ * string "class" or "interface", followed by a space, and then by the
+ * name of the class in the format returned by classGetName.
+ * If this Class object represents a primitive type,  this method
+ * returns the name of the primitive type. If this Class object
+ * represents void this method returns "void". If this Class object
+ * represents an array type, this method returns "class " followed
+ * by classGetName.
+ *
+ * TODO: handle interfaces
+ */
+func classToString(params []any) any {
+	obj, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(obj) {
+		return object.StringObjectFromGoString("null")
+	}
+
+	name := obj.FieldTable["name"].Fvalue.(string)
+	str := fmt.Sprintf("class %s", name)
+	return object.StringObjectFromGoString(str)
 }
