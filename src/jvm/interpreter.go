@@ -863,7 +863,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 // 0x53 AASTORE store a ref in a ref array
 func doAastore(fr *frames.Frame, _ int64) int {
 	value, ok := pop(fr).(*object.Object) // reference we're inserting
-	if !ok || value == nil {
+	if !ok {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference for insertion into an array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
