@@ -135,24 +135,24 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 	obj := MakeEmptyObject()
 	SetLockState(obj, lockStateUnlocked)
 
-	// Thread A acquires thin lock
+	// Thread 1 acquires thin lock
 	if err := obj.ObjLock(1); err != nil {
-		t.Fatalf("thread A ObjLock returned error: %v", err)
+		t.Fatalf("thread 1 ObjLock returned error: %v", err)
 	}
 
 	acquired := make(chan struct{})
 	done := make(chan struct{})
 
-	// Thread B tries to acquire while A holds it
+	// Thread 2 tries to acquire while A holds it
 	go func() {
 		if err := obj.ObjLock(2); err != nil {
-			t.Fatalf("thread B ObjLock returned error: %v", err)
+			t.Fatalf("thread 2 ObjLock returned error: %v", err)
 		}
 		// signal B acquired
 		close(acquired)
 		// immediately release
 		if err := obj.ObjUnlock(2); err != nil {
-			t.Fatalf("thread B ObjUnlock returned error: %v", err)
+			t.Fatalf("thread 2 ObjUnlock returned error: %v", err)
 		}
 		close(done)
 	}()
@@ -160,14 +160,14 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 	// Ensure B does not acquire within a short window while A still holds the lock
 	select {
 	case <-acquired:
-		t.Fatalf("thread B acquired lock while A still holds it")
+		t.Fatalf("thread 2 acquired lock while A still holds it")
 	case <-time.After(20 * time.Millisecond):
 		// expected: no acquire yet
 	}
 
 	// A releases the lock, allowing B to acquire
 	if err := obj.ObjUnlock(1); err != nil {
-		t.Fatalf("thread A ObjUnlock returned error: %v", err)
+		t.Fatalf("thread 1 ObjUnlock returned error: %v", err)
 	}
 
 	// Now B should acquire shortly
@@ -175,14 +175,14 @@ func TestObjLock_TwoThreads_ThinLockContention(t *testing.T) {
 	case <-acquired:
 		// good
 	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to acquire after release")
+		t.Fatalf("timeout waiting for thread 2 to acquire after release")
 	}
 
 	// And finish cleanly
 	select {
 	case <-done:
 	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to finish unlock")
+		t.Fatalf("timeout waiting for thread 2 to finish unlock")
 	}
 }
 
@@ -196,17 +196,17 @@ func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
 	acquired := make(chan struct{})
 	done := make(chan struct{})
 
-	// Thread B attempts to lock while fat-locked by owner=1
+	// Thread 2 attempts to lock while fat-locked by owner=1
 	go func() {
 		if err := obj.ObjLock(2); err != nil {
-			t.Fatalf("thread B ObjLock (fat contention) returned error: %v", err)
+			t.Fatalf("thread 2 ObjLock (fat contention) returned error: %v", err)
 		}
 		// Signal acquired
 		t.Log("Thread 2 locked object successfully.")
 		close(acquired)
 		// Release and finish
 		if err := obj.ObjUnlock(2); err != nil {
-			t.Fatalf("thread B ObjUnlock after fat handoff returned error: %v", err)
+			t.Fatalf("thread 2 ObjUnlock after fat handoff returned error: %v", err)
 		}
 		t.Log("Thread 2 released object successfully.")
 		close(done)
@@ -232,14 +232,14 @@ func TestObjLock_TwoThreads_FatLockContentionAndHandoff(t *testing.T) {
 	case <-acquired:
 		// ok
 	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to acquire after fat release")
+		t.Fatalf("timeout waiting for thread 2 to acquire after fat release")
 	}
 
 	// And finish cleanly
 	select {
 	case <-done:
 	case <-time.After(1 * time.Second):
-		t.Fatalf("timeout waiting for thread B to finish after fat release")
+		t.Fatalf("timeout waiting for thread 2 to finish after fat release")
 	}
 }
 
