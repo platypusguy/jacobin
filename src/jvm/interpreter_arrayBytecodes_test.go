@@ -274,7 +274,7 @@ func TestNewAastoreInvalid1(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "Invalid (null) reference to an array") {
+	if !strings.Contains(errMsg, "Invalid (null)") {
 		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }

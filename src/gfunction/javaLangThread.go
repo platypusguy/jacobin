@@ -64,6 +64,9 @@ func Load_Lang_Thread() {
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 1, NeedsContext: true, GFunction: threadInitWithName}
 
+	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;)V"] =
+		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnable}
+
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnableAndName}
 
@@ -960,11 +963,7 @@ func threadJoin(params []interface{}) any {
 	return waitForTermination(currentThread, targetThread, millis)
 }
 
-func threadYield(params []interface{}) interface{} {
-	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadYield: Expected only the thread object parameter, got %d parameters", len(params))
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
+func threadYield([]interface{}) interface{} {
 	runtime.Gosched()
 	return nil
 }

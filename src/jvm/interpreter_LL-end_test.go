@@ -17,7 +17,6 @@ import (
 	"jacobin/src/opcodes"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
@@ -742,12 +741,10 @@ func TestPopWithTracing(t *testing.T) {
 	push(&f, int64(21))
 	push(&f, int64(0))
 
-	MainThread = thread.CreateThread()
-	MainThread.Stack = frames.CreateFrameStack()
-	// fs := frames.CreateFrameStack()
-	MainThread.Stack.PushFront(&f) // push the new frame
-	MainThread.Trace = true        // turn on tracing
-	interpret(MainThread.Stack)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)         // push the new frame
+	globals.TraceInst = true // turn on tracing
+	interpret(fs)
 
 	if f.TOS != 1 {
 		t.Errorf("POP: Expected stack with 2 items, but got a tos of: %d", f.TOS)
@@ -759,8 +756,8 @@ func TestPopWithTracing(t *testing.T) {
 		t.Errorf("POP: expected top's value to be 21, but got: %d", top)
 	}
 
-	if MainThread.Trace != true {
-		t.Errorf("POP: MainThread.Trace was not re-enabled after the POP execution")
+	if globals.TraceInst != true {
+		t.Errorf("POP: globals.TraceInst was not re-enabled after the POP execution")
 	}
 }
 
@@ -907,11 +904,10 @@ func TestPop2WithTrace(t *testing.T) {
 	push(&f, int64(21)) // iload : Load int from local variable
 	push(&f, int64(10)) // lconst_1 : Push long constant
 
-	MainThread = thread.CreateThread()
-	MainThread.Stack = frames.CreateFrameStack()
-	MainThread.Stack.PushFront(&f) // push the new frame
-	MainThread.Trace = true        // turn on tracing
-	interpret(MainThread.Stack)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)         // push the new frame
+	globals.TraceInst = true // turn on tracing
+	interpret(fs)
 
 	if f.TOS != 1 {
 		t.Errorf("POP2: Expected stack with 1 item, but got a tos of: %d", f.TOS)
@@ -923,8 +919,8 @@ func TestPop2WithTrace(t *testing.T) {
 		t.Errorf("POP2: expected top's value to be 21, but got: %d", top)
 	}
 
-	if MainThread.Trace != true {
-		t.Errorf("POP2: MainThread.Trace was not re-enabled after the POP2 execution")
+	if globals.TraceInst != true {
+		t.Errorf("POP2: globals.TraceInst was not re-enabled after the POP2 execution")
 	}
 }
 
@@ -1252,7 +1248,7 @@ func TestPutFieldErrorUpdatingStatic(t *testing.T) {
 // PUTSTATIC: Update a static field, an int, successfully
 func TestPutStaticInt(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1308,7 +1304,7 @@ func TestPutStaticInt(t *testing.T) {
 // PUTSTATIC: Update a static field, an int, successfully (same as previous test, with tracing on)
 func TestPutStaticIntWithTrace(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = true
+	globals.TraceInst = true
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1364,7 +1360,7 @@ func TestPutStaticIntWithTrace(t *testing.T) {
 // PUTSTATIC: Update a static field, a boolean, successfully
 func TestPutStaticBool(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1420,7 +1416,7 @@ func TestPutStaticBool(t *testing.T) {
 // PUTSTATIC: Update a static field, a byte, successfully
 func TestPutStaticByte(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1476,7 +1472,7 @@ func TestPutStaticByte(t *testing.T) {
 // PUTSTATIC: Update a static field, a byte, successfully
 func TestPutStaticJavaByte(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1532,7 +1528,7 @@ func TestPutStaticJavaByte(t *testing.T) {
 // PUTSTATIC: Update a static field, a byte, successfully. This byte value is passed in as int64
 func TestPutStaticByteAsInt64(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1588,7 +1584,7 @@ func TestPutStaticByteAsInt64(t *testing.T) {
 // PUTSTATIC: Update a static field, an float/double, successfully
 func TestPutStaticFloat(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = false
+	globals.TraceInst = false
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -1644,7 +1640,7 @@ func TestPutStaticFloat(t *testing.T) {
 // PUTSTATIC: this should bonk because the class of the static cannot be found/loaded
 func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 	globals.InitGlobals("test")
-	MainThread.Trace = true
+	globals.TraceInst = true
 
 	classloader.InitMethodArea()
 	statics.Statics = make(map[string]statics.Static)
@@ -2018,11 +2014,10 @@ func TestInvalidInstruction(t *testing.T) {
 
 	f := newFrame(252) // an invalid bytecode
 
-	MainThread = thread.CreateThread()
-	MainThread.Stack = frames.CreateFrameStack()
-	MainThread.Stack.PushFront(&f) // push the new frame
-	MainThread.Trace = false       // turn off tracing
-	interpret(MainThread.Stack)
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)          // push the new frame
+	globals.TraceInst = false // turn off tracing
+	interpret(fs)
 
 	// restore stderr to what it was before
 	_ = w.Close()

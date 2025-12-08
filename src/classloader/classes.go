@@ -335,8 +335,24 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 		return MTentry{}, errors.New("main() not found")
 	} else {
 		// go up the list of superclasses
+
 	superclassLoop:
+
+		// Get the superclass name.
 		className = *stringPool.GetStringPointer(k.Data.SuperclassIndex)
+
+		// Matching a special Jacobin class?
+		if className == types.ClassNameThread || className == types.ClassNameThreadGroup {
+			methFQN = className + "." + methName + methType
+			methEntry = GetMtableEntry(methFQN)
+			if methEntry.Meth != nil { // we found the entry in the MTable
+				if methEntry.MType == 'G' {
+					return methEntry, nil
+				}
+			}
+		}
+
+		// Get the method area of the class.
 		k = MethAreaFetch(className)
 		if k == nil {
 			errMsg := fmt.Sprintf("FetchMethodAndCP: MethAreaFetch could not find superclass %s", className)
@@ -344,6 +360,8 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			shutdown.Exit(shutdown.JVM_EXCEPTION)
 			return MTentry{}, errors.New(errMsg) // dummy return needed for tests
 		}
+
+		// Search for the method in the class method table.
 		methRef, ok = k.Data.MethodTable[searchName]
 		if ok {
 			m = *methRef
@@ -368,8 +386,11 @@ func FetchMethodAndCP(className, methName, methType string) (MTentry, error) {
 			methodEntry := MTentry{Meth: jme, MType: 'J'}
 			AddEntry(&MTable, methFQN, methodEntry)
 			return methodEntry, nil
+
 		} else {
-			if className != types.ObjectClassName { // if we've ascended to Object and don't have the method, it ain't here
+
+			// if we've ascended to Object and don't have the method, it ain't here (error).
+			if className != types.ObjectClassName {
 				goto superclassLoop
 			} else {
 				errMsg := fmt.Sprintf("FetchMethodAndCP: Neither %s nor its superclasses contain method %s",

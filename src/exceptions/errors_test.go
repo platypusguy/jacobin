@@ -12,7 +12,6 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"os"
 	"runtime/debug"
@@ -39,9 +38,9 @@ func TestShowFrameStackWhenPreviouslyShown(t *testing.T) {
 	_, wout, _ := os.Pipe()
 	os.Stdout = wout
 
-	th := thread.ExecThread{}
+	fs := frames.CreateFrameStack()
 	globals.GetGlobalRef().JvmFrameStackShown = true // should prevent any output
-	ShowFrameStack(&th)
+	ShowFrameStack(&fs)
 
 	// restore stderr and stdout to what they were before
 	_ = w.Close()

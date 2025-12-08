@@ -9,7 +9,6 @@ package jvm
 import (
 	"fmt"
 	"jacobin/src/classloader"
-	"jacobin/src/config"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
@@ -17,114 +16,12 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
-	"jacobin/src/statics"
-	"jacobin/src/thread"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"jacobin/src/util"
-	"os"
 	"runtime"
 	"runtime/debug"
-	"strconv"
 )
-
-var MainThread thread.ExecThread
-
-// StartExec is where execution begins. It initializes various structures, such as
-// the MTable, then using the passed-in name of the starting class, finds its main() method
-// in the method area (it's guaranteed to already be loaded), grabs the executable
-// bytes, creates a thread of execution, pushes the main() frame onto the JVM stack
-// and begins execution.
-func StartExec(className string, mainThread *thread.ExecThread, globalStruct *globals.Globals) {
-
-	MainThread = *mainThread
-
-	me, err := classloader.FetchMethodAndCP(className, "main", "([Ljava/lang/String;)V")
-	if err != nil {
-		errMsg := "Class not found: " + className + ".main()"
-		exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, nil)
-	}
-
-	m := me.Meth.(classloader.JmEntry)
-	f := frames.CreateFrame(m.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
-	f.Thread = MainThread.ID
-	f.MethName = "main"
-	f.MethType = "([Ljava/lang/String;)V"
-	f.ClName = className
-	f.CP = m.Cp                        // add its pointer to the class CP
-	f.Meth = append(f.Meth, m.Code...) // copy the bytecodes over
-
-	// allocate the local variables
-	for k := 0; k < m.MaxLocals; k++ {
-		f.Locals = append(f.Locals, 0)
-	}
-
-	// Create an array of string objects for any CLI args in locals[0].
-	var objArray []*object.Object
-	for _, str := range globalStruct.AppArgs {
-		// sobj := object.NewStringFromGoString(str) // deprecated by JACOBIN-480
-		sobj := object.StringObjectFromGoString(str)
-		objArray = append(objArray, sobj)
-	}
-	f.Locals[0] = object.MakePrimitiveObject("[Ljava/lang/String", types.RefArray, objArray)
-
-	// create the first thread and place its first frame on it
-	MainThread.Stack = frames.CreateFrameStack()
-	mainThread.Stack = MainThread.Stack
-
-	// moved here as part of JACOBIN-554. Was previously after the InstantiateClass() call next
-	if frames.PushFrame(MainThread.Stack, f) != nil {
-		errMsg := "Memory error allocating frame on thread: " + strconv.Itoa(MainThread.ID)
-		exceptions.ThrowEx(excNames.OutOfMemoryError, errMsg, nil)
-	}
-
-	// must first instantiate the class, so that any static initializers are run
-	_, instantiateError := InstantiateClass(className, MainThread.Stack)
-	if instantiateError != nil {
-		errMsg := "Error instantiating: " + className + ".main()"
-		exceptions.ThrowEx(excNames.InstantiationException, errMsg, nil)
-	}
-
-	if globals.TraceInst {
-		traceInfo := fmt.Sprintf("StartExec: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
-			f.ClName, f.MethName, f.MethType, m.MaxStack, m.MaxLocals, len(m.Code))
-		trace.Trace(traceInfo)
-	}
-
-	err = runThread(&MainThread)
-
-	if globals.TraceVerbose {
-		statics.DumpStatics("StartExec end", statics.SelectUser, "")
-		_ = config.DumpConfig(os.Stderr)
-	}
-}
-
-// Point the thread to the top of the frame stack and tell it to run from there.
-func runThread(t *thread.ExecThread) error {
-
-	defer func() int {
-		// only an untrapped panic gets us here
-		if r := recover(); r != nil {
-			stack := string(debug.Stack())
-			glob := globals.GetGlobalRef()
-			glob.ErrorGoStack = stack
-			exceptions.ShowPanicCause(r)
-			exceptions.ShowFrameStack(t)
-			exceptions.ShowGoStackTrace(nil)
-			return shutdown.Exit(shutdown.APP_EXCEPTION)
-		}
-		return shutdown.OK
-	}()
-
-	for t.Stack.Len() > 0 {
-		interpret(t.Stack)
-	}
-
-	if t.Stack.Len() == 0 { // true when the last executed frame was main()
-		return nil
-	}
-	return nil
-}
 
 // Run as an independent thread to completion (TERMINATED).
 // Launched with: go globals.GetGlobalRef().FuncRunThread(t, clName, methName, methType)
