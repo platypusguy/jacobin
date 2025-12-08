@@ -314,8 +314,10 @@ func (obj *Object) ObjLock(threadID int32) error {
         case lockStateFatLocked:
             monitor := obj.Monitor
             if monitor == nil {
-                // Defensive check
-                return errors.New("ObjLock: fat lock exists but monitor is nil")
+                // Another thread may be in the middle of releasing the fat lock.
+                // Yield and retry until state or monitor becomes consistent.
+                runtime.Gosched()
+                break
             }
 
             if monitor.Owner == threadID {
@@ -374,9 +376,14 @@ func (obj *Object) ObjUnlock(threadID int32) error {
 				return nil
 			}
 
-			// Last unlock --> release fat lock
-			obj.Monitor = nil
+			// Last unlock --> release fat lock.
+			// First flip state to unlocked so contenders won't observe fat+nil.
 			atomic.StoreUint32(miscPtr, (miscVal&^lockStateMask)|lockStateUnlocked)
+			// Then clear the monitor, but only if it hasn't been replaced by a contender
+			// that acquired the lock immediately after we marked it unlocked.
+			if obj.Monitor == monitor {
+				obj.Monitor = nil
+			}
 			return nil
 
 		case lockStateUnlocked:
