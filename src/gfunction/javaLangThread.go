@@ -960,11 +960,7 @@ func threadJoin(params []interface{}) any {
 	return waitForTermination(currentThread, targetThread, millis)
 }
 
-func threadYield(params []interface{}) interface{} {
-	if len(params) != 1 {
-		errMsg := fmt.Sprintf("threadYield: Expected only the thread object parameter, got %d parameters", len(params))
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
+func threadYield([]interface{}) interface{} {
 	runtime.Gosched()
 	return nil
 }
