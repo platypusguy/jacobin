@@ -862,13 +862,24 @@ func doFastore(fr *frames.Frame, _ int64) int {
 
 // 0x53 AASTORE store a ref in a ref array
 func doAastore(fr *frames.Frame, _ int64) int {
-	value := pop(fr).(*object.Object)    // reference we're inserting
-	index := pop(fr).(int64)             // index into the array
-	arrayRef := pop(fr).(*object.Object) // ptr to the array object
-
-	if arrayRef == nil {
+	value, ok := pop(fr).(*object.Object) // reference we're inserting
+	if !ok || value == nil {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference to an array",
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference for insertion into an array",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
+		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+
+	index := pop(fr).(int64) // index into the array
+
+	arrayRef, ok := pop(fr).(*object.Object) // ptr to the array object
+	if !ok || arrayRef == nil {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, AASTORE: Invalid (null) reference array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
 		status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
 		if status != exceptions.Caught {
