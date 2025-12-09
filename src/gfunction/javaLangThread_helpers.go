@@ -28,6 +28,7 @@ func GetThreadState(th *object.Object) int {
 	return thStateObj.FieldTable["value"].Fvalue.(int)
 }
 
+// Has the given thread been interrupted?
 func isInterrupted(th *object.Object) bool {
 	interruptedObj, ok := th.FieldTable["interrupted"].Fvalue.(*object.Object)
 	if !ok {
@@ -37,6 +38,8 @@ func isInterrupted(th *object.Object) bool {
 	return ok && interruptedVal != 0
 }
 
+// Populate the thread object with default values.
+// Note that the thread number is incremented in the call to threadNumberingNext().
 func populateThreadObject(t *object.Object) {
 
 	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
@@ -76,6 +79,7 @@ func populateThreadObject(t *object.Object) {
 
 }
 
+// Add the specified thread to the global registry of threads.
 func RegisterThread(t *object.Object) {
 	glob := globals.GetGlobalRef()
 	ID := int(t.FieldTable["ID"].Fvalue.(int64))
@@ -84,20 +88,15 @@ func RegisterThread(t *object.Object) {
 	glob.ThreadLock.Unlock()
 }
 
-func storeThreadClassName(t *object.Object, fs *list.List) {
-	// Get class name "java/lang/Thread" or the user's own subclass of Thread.
-	frame := *fs.Front().Value.(*frames.Frame)
-	t.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(frame.ClName)}
-}
-
+// Create a new Runnable object.
+// Store it in the target field of the thread object.
+// The class name comes from the top-most frame on the frame stack.
+// The method name and type are fixed: run()V
 func storeThreadRunnable(t *object.Object, fs *list.List) {
-	// Get class name "java/lang/Thread" or the user's own subclass of Thread.
 	frame := *fs.Front().Value.(*frames.Frame)
 	runnable := NewRunnable(
 		object.JavaByteArrayFromGoString(frame.ClName),
-		//object.JavaByteArrayFromGoString(frame.MethName),
 		object.JavaByteArrayFromGoString("run"),
-		//object.JavaByteArrayFromGoString(frame.MethType))
 		object.JavaByteArrayFromGoString("()V"))
 	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 }

@@ -52,9 +52,12 @@ func Load_Lang_Thread() {
 	// -------------------------
 	// Constructors in invocation order
 	// -------------------------
-	// Note that all the <init> functions having a Runnable parameter do not carry NeedsContext.
+	// Note that all constructors having a Runnable parameter do not specify NeedsContext.
 	// This is because the FQN info is already available in the Runnable object.
 	// The other constructors specify NeedsContext to get the FQN from the current frame from the frame stack.
+	// Consistently, Thread construction, regardless of parameters,
+	// includes inserting a Runnable object in the field table of the Thread object.
+	// Thus, Thread.start() will always fetch the Runnable object for FQN info.
 	MethodSignatures["java/lang/Thread.<init>()V"] =
 		GMeth{ParamSlots: 0, NeedsContext: true, GFunction: threadInitNull}
 
