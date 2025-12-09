@@ -188,8 +188,7 @@ func JVMrun() int {
 	gfunction.InitializeGlobalThreadGroups()
 
 	// create the main thread
-	// TODO: invoke java/lang/Thread rather than recreate it
-	t := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	t := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
 
 	mainClass := stringPool.GetStringPointer(mainClassNameIndex)
 	clName := *mainClass

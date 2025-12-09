@@ -234,7 +234,7 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 // Note that ThreadNumbering is a private static class in java/lang/Thread (hotpot).
 // setInitialThreadNumberingValue guarantees that the thread numbering is initialized only once.
 var setInitialThreadNumberingValue = sync.OnceValue(func() any {
-	threadNumber = int64(1)
+	threadNumber = int64(0)
 	return nil
 })
 
@@ -246,6 +246,7 @@ func threadNumbering(_ []any) any { // initialize thread numbering
 func threadNumberingNext(_ []any) any {
 	threadNumberingMutex.Lock()
 	threadNumber += 1
+	//trace.Trace(fmt.Sprintf("threadNumberingNext: thread numbering incremented to %d", threadNumber))
 	threadNumberingMutex.Unlock()
 	return threadNumber
 }
