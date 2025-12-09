@@ -772,6 +772,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("testWithoutShutdown")
+	gfunction.InitializeGlobalThreadGroups()
 	gl := globals.GetGlobalRef()
 
 	gl.FuncInstantiateClass = InstantiateClass
@@ -799,6 +800,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 
 	var f *frames.Frame
 	globals.InitGlobals("test")
+	gfunction.InitializeGlobalThreadGroups()
 	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
@@ -960,6 +962,8 @@ func TestPushWithStackOverflow(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("testWithoutShutdown")
+	gfunction.InitializeGlobalThreadGroups()
+
 	gl := globals.GetGlobalRef()
 
 	gl.FuncInstantiateClass = InstantiateClass
@@ -2004,6 +2008,7 @@ func TestWideRET(t *testing.T) {
 		t.Errorf("WIDE,RET: expected frame PC value to be 123457, got: %d", f.PC)
 	}
 }
+
 func TestInvalidInstruction(t *testing.T) {
 	globals.InitGlobals("test")
 

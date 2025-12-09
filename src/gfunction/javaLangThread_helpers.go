@@ -57,10 +57,11 @@ func populateThreadObject(t *object.Object) {
 	interruptedField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
 	t.FieldTable["interrupted"] = interruptedField
 
+	globals.GetGlobalRef().TGLock.RLock()
 	tg, ok := globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+	globals.GetGlobalRef().TGLock.RUnlock()
 	if !ok {
-		InitializeGlobalThreadGroups()
-		tg = globals.GetGlobalRef().ThreadGroups["main"].(*object.Object)
+		panic("populateThreadObject: globals.GetGlobalRef().ThreadGroups[\"main\"] does not exist")
 	}
 
 	// The default thread group is the main thread group
@@ -87,6 +88,18 @@ func storeThreadClassName(t *object.Object, fs *list.List) {
 	// Get class name "java/lang/Thread" or the user's own subclass of Thread.
 	frame := *fs.Front().Value.(*frames.Frame)
 	t.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(frame.ClName)}
+}
+
+func storeThreadRunnable(t *object.Object, fs *list.List) {
+	// Get class name "java/lang/Thread" or the user's own subclass of Thread.
+	frame := *fs.Front().Value.(*frames.Frame)
+	runnable := NewRunnable(
+		object.JavaByteArrayFromGoString(frame.ClName),
+		//object.JavaByteArrayFromGoString(frame.MethName),
+		object.JavaByteArrayFromGoString("run"),
+		//object.JavaByteArrayFromGoString(frame.MethType))
+		object.JavaByteArrayFromGoString("()V"))
+	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 }
 
 // Set the thread state to the supplied value unconditionally.

@@ -211,7 +211,7 @@ func JVMrun() int {
 	params := []interface{}{t, runnable, object.StringObjectFromGoString("main")}
 	globals.GetGlobalRef().FuncInvokeGFunction(
 		"java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V", params)
-	if globals.TraceInit {
+	if globals.TraceInst {
 		trace.Trace(fmt.Sprintf("Starting execution with: %s.%s%s", clName, methName, methType))
 	}
 

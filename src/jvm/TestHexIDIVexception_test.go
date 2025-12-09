@@ -57,6 +57,7 @@ func TestHexIDIVException(t *testing.T) {
 	globals.InitGlobals("test")
 	trace.Init()
 	InitGlobalFunctionPointers()
+	gfunction.InitializeGlobalThreadGroups()
 	classloader.MTable = make(map[string]classloader.MTentry)
 
 	if testing.Short() { // don't run if running quick tests only. (Used primarily so GitHub doesn't run and bork)

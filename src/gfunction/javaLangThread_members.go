@@ -393,25 +393,18 @@ func threadStart(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Determine receiver: target Runnable or thread itself
-	var runnable *object.Object
-	var clName, methName, methType string
-	f, ok := t.FieldTable["target"]
-	if ok && f.Fvalue != nil {
-		runnable, ok = f.Fvalue.(*object.Object)
-		if !ok {
-			errMsg := "threadStart: Expected Runnable target field to be an object"
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-		}
-		ftbl := runnable.FieldTable
-		clName = object.GoStringFromJavaByteArray(ftbl["clName"].Fvalue.([]types.JavaByte))
-		methName = object.GoStringFromJavaByteArray(ftbl["methName"].Fvalue.([]types.JavaByte))
-		methType = object.GoStringFromJavaByteArray(ftbl["methType"].Fvalue.([]types.JavaByte))
-	} else {
-		clName = object.GoStringFromJavaByteArray(t.FieldTable["clName"].Fvalue.([]types.JavaByte))
-		methName = "run"
-		methType = "()V"
+	runnable, ok := t.FieldTable["target"].Fvalue.(*object.Object)
+	if !ok {
+		errMsg := "threadStart: Expected Runnable target field to be an object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+
+	// Extract class name, method name, and method type from the runnable object.
+	var clName, methName, methType string
+	ftbl := runnable.FieldTable
+	clName = object.GoStringFromJavaByteArray(ftbl["clName"].Fvalue.([]types.JavaByte))
+	methName = object.GoStringFromJavaByteArray(ftbl["methName"].Fvalue.([]types.JavaByte))
+	methType = object.GoStringFromJavaByteArray(ftbl["methType"].Fvalue.([]types.JavaByte))
 
 	// Spawn RunJavaThread to interpret bytecode of run()
 	args := []interface{}{t, clName, methName, methType}

@@ -79,30 +79,6 @@ func Load_Lang_Thread_Group() {
 		GMeth{ParamSlots: 2, GFunction: trapFunction}
 }
 
-// Initialize global thread groups: create "system" group and its child "main"
-func InitializeGlobalThreadGroups() {
-	gr := globals.GetGlobalRef()
-	if gr.ThreadGroups == nil {
-		gr.ThreadGroups = make(map[string]interface{})
-	}
-
-	// We don't need to create the system and main
-	// thread groups manually
-	baseSystemTg := makeThreadGroup("system")
-	gr.ThreadGroups["system"] = baseSystemTg
-
-	baseMainTg := makeThreadGroup("main")
-	gr.ThreadGroups["main"] = baseMainTg
-
-	baseMainTg.FieldTable["parent"] =
-		object.Field{Ftype: types.Ref, Fvalue: baseSystemTg}
-
-	// Now add this thread group to the parent's list of subgroups
-	parentSubgroups := baseSystemTg.FieldTable["subgroups"].Fvalue.(*list.List)
-	parentSubgroups.PushBack(baseMainTg)
-
-}
-
 // java/lang/ThreadGroup.<clinit>()V
 func threadGroupClinit(_ []interface{}) any {
 	return justReturn(nil)
@@ -170,11 +146,11 @@ func ThreadGroupInitWithParentNameMaxpriorityDaemon(initParams []interface{}) an
 	if parent == nil || object.IsNull(parent) {
 		obj.FieldTable["parent"] = object.Field{
 			Ftype:  types.Ref,
-			Fvalue: globals.GetGlobalRef().ThreadGroups["main"]}
+			Fvalue: getThreadGroup("main")}
 	}
 
 	// add the thread group to the global list of thread groups
-	globals.GetGlobalRef().ThreadGroups[object.GoStringFromStringObject(nameObj)] = obj
+	setThreadGroup(object.GoStringFromStringObject(nameObj), obj)
 
 	return nil
 }
@@ -330,14 +306,38 @@ func threadGroupGetParent(params []interface{}) interface{} {
 	return tg.FieldTable["parent"].Fvalue
 }
 
+// Initialize global thread groups: create "system" group and its child "main"
+func InitializeGlobalThreadGroups() {
+
+	gr := globals.GetGlobalRef()
+
+	gr.TGLock.Lock()
+	if gr.ThreadGroups == nil {
+		gr.ThreadGroups = make(map[string]interface{})
+	}
+	gr.TGLock.Unlock()
+
+	// We don't need to create the system and main
+	// thread groups manually
+	baseSystemTg := makeThreadGroup("system")
+	baseMainTg := makeThreadGroup("main")
+
+	baseMainTg.FieldTable["parent"] =
+		object.Field{Ftype: types.Ref, Fvalue: baseSystemTg}
+
+	// Now add this thread group to the parent's list of subgroups
+	parentSubgroups := baseSystemTg.FieldTable["subgroups"].Fvalue.(*list.List)
+	parentSubgroups.PushBack(baseMainTg)
+
+}
+
 // == make a thread group with the given name ==
 func makeThreadGroup(name string) *object.Object {
-	gr := globals.GetGlobalRef()
+
 	clName := "java/lang/ThreadGroup"
 	obj := object.MakeEmptyObjectWithClassName(&clName)
 
-	parentField := object.Field{Ftype: types.Ref,
-		Fvalue: gr.ThreadGroups["main"]}
+	parentField := object.Field{Ftype: types.Ref, Fvalue: getThreadGroup("main")}
 	// TODO: replace with present thread's group
 	obj.FieldTable["parent"] = parentField
 
@@ -362,7 +362,7 @@ func makeThreadGroup(name string) *object.Object {
 	obj.FieldTable["subgroups"] = subgroups
 
 	// add the thread group to the global list of thread groups
-	globals.GetGlobalRef().ThreadGroups[name] = obj
+	setThreadGroup(name, obj)
 
 	return obj
 }
@@ -371,4 +371,20 @@ func makeThreadGroup(name string) *object.Object {
 func MakeThreadGroup() *object.Object {
 	name := fmt.Sprintf("ThreadGroup-%d", time.Now().UnixNano())
 	return makeThreadGroup(name)
+}
+
+func getThreadGroup(name string) *object.Object {
+	globals.GetGlobalRef().TGLock.RLock()
+	defer globals.GetGlobalRef().TGLock.RUnlock()
+	obj, ok := globals.GetGlobalRef().ThreadGroups[name]
+	if !ok {
+		return object.Null
+	}
+	return obj.(*object.Object)
+}
+
+func setThreadGroup(name string, tg *object.Object) {
+	globals.GetGlobalRef().TGLock.Lock()
+	defer globals.GetGlobalRef().TGLock.Unlock()
+	globals.GetGlobalRef().ThreadGroups[name] = tg
 }
