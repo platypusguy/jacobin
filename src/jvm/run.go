@@ -78,7 +78,7 @@ func RunJavaThread(args []any) {
 
 	// Allocate the method's local variables for this frame.
 	for k := 0; k < meth.MaxLocals; k++ {
-		f.Locals = append(f.Locals, 0)
+		f.Locals = append(f.Locals, int64(0))
 	}
 
 	// If this is the program entry point `main(String[] args)`, initialize local 0
