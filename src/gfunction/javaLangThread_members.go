@@ -20,7 +20,8 @@ func threadActiveCount(_ []interface{}) any {
 	return int64(len(globals.GetGlobalRef().Threads))
 }
 
-// "java/lang/Thread.currentThread()Ljava/lang/Thread;"
+// threadCurrentThread retrieves the current Thread Object from the frame stack provided in the parameters.
+// Returns an error block if the input is invalid or if the required context data is not a valid frame stack.
 func threadCurrentThread(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadCurrentThread: Expected context data, got %d parameters", len(params))
@@ -39,7 +40,7 @@ func threadCurrentThread(params []interface{}) any {
 	return th
 }
 
-// java/lang/Thread.dumpStack()V
+// threadDumpStack dumps the JVM stack trace to stderr. Returns an error block if invalid parameters are provided.
 func threadDumpStack(params []interface{}) interface{} {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadDumpStack: Expected context data, got %d parameters", len(params))
@@ -101,7 +102,8 @@ func threadEnumerate(params []interface{}) any {
 	return count
 }
 
-// "java/lang/Thread.getId()J"
+// threadGetId extracts and returns the ID field from a given non-null Thread object.
+// Returns an error block if input validation fails or the ID field is missing/invalid.
 func threadGetId(params []interface{}) any {
 	// Expect exactly one parameter: the Thread object (this)
 	if len(params) != 1 {
@@ -131,7 +133,8 @@ func threadGetId(params []interface{}) any {
 	return ID
 }
 
-// "java/lang/Thread.getName()Ljava/lang/String;"
+// threadGetName retrieves the "name" field value of the given Thread object.
+// Returns an error block if the input is invalid or not a Thread object.
 func threadGetName(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadGetName: Expected no parameters, got %d parameters", len(params))
@@ -146,7 +149,8 @@ func threadGetName(params []interface{}) any {
 	return t.FieldTable["name"].Fvalue.(*object.Object)
 }
 
-// "java/lang/Thread.getPriority()I"
+// threadGetPriority retrieves the "priority" field value from the provided object.
+// Returns an error block if the input parameter count is invalid.
 func threadGetPriority(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadGetPriority: Expected no parameters, got %d parameters", len(params))
@@ -157,7 +161,10 @@ func threadGetPriority(params []interface{}) any {
 	return t.FieldTable["priority"].Fvalue
 }
 
-// java/lang/Thread.getStackTrace()[Ljava/lang/StackTraceElement;
+// threadGetStackTrace retrieves the stack trace of a thread from the provided context parameters.
+// It requires the JVM frame stack as context data.
+// If the arguments are invalid or an error occurs during stack trace population, an appropriate exception is returned.
+// The function returns the populated stack trace object.
 func threadGetStackTrace(params []interface{}) any {
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadGetStackTrace: Expected context data, got %d parameters", len(params))
@@ -181,6 +188,8 @@ func threadGetStackTrace(params []interface{}) any {
 	return traceObj
 }
 
+// threadGetState retrieves the "state" field of a given thread object.
+// Returns an IllegalArgumentException error block if input is invalid.
 func threadGetState(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadGetState: Expected 1 parameter, got %d parameters", len(params))
@@ -196,7 +205,8 @@ func threadGetState(params []interface{}) any {
 	return state
 }
 
-// java/lang/Thread.getThreadGroup()Ljava/lang/ThreadGroup;
+// threadGetThreadGroup retrieves the thread group associated with the given thread object.
+// Returns the thread group object if found, or an error block for invalid input or missing thread group information.
 func threadGetThreadGroup(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadGetThreadGroup: Expected 1 parameter, got %d parameters", len(params))
@@ -211,6 +221,7 @@ func threadGetThreadGroup(params []interface{}) any {
 	return threadGroup
 }
 
+// Is the specified thread alive?
 func threadIsAlive(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadIsAlive: Expected 1 parameter, got %d parameters", len(params))
@@ -228,6 +239,7 @@ func threadIsAlive(params []interface{}) any {
 	return types.JavaBoolFalse
 }
 
+// Has the specified thread been interrupted?
 func threadIsInterrupted(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadIsInterrupted: Expected 1 parameter, got %d parameters", len(params))
@@ -241,6 +253,7 @@ func threadIsInterrupted(params []interface{}) any {
 	return t.FieldTable["interrupted"].Fvalue
 }
 
+// Has the specified thread terminated?
 func threadIsTerminated(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadIsTerminated: Expected 1 parameter, got %d parameters", len(params))
@@ -255,6 +268,9 @@ func threadIsTerminated(params []interface{}) any {
 	return state == TERMINATED
 }
 
+// threadJoin synchronizes the current thread with a target thread, optionally waiting for a specified time duration.
+// Accepts parameters including the current thread's frame stack, the target thread, and optional wait time in millis/nanos.
+// Returns an error block for invalid inputs or a termination synchronization result.
 func threadJoin(params []interface{}) any {
 	fStack, ok := params[0].(*list.List)
 	if !ok {
@@ -286,6 +302,9 @@ func threadJoin(params []interface{}) any {
 	return waitForTermination(currentThread, targetThread, millis)
 }
 
+// threadRun validates and processes a thread object passed as a single parameter and logs its start information.
+// Returns a custom error block if the parameter is missing, incorrect, or invalid.
+// Note: This function should never be called since the user should provide their own Thread.run() function.
 func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadRun: Expected only the thread object parameter, got %d parameters", len(params))
@@ -305,7 +324,9 @@ func threadRun(params []interface{}) interface{} {
 	return nil
 }
 
-// "java/lang/Thread.setName(Ljava/lang/String;)V"
+// threadSetName sets the name of a thread to a specified Java String.
+// The function expects exactly two parameters: a thread object and a non-null Java String object for the name.
+// Returns an error block if any parameter is invalid or updates the thread's name field otherwise.
 func threadSetName(params []interface{}) any {
 	// Expect exactly two parameters: the thread object and the Java String name
 	if len(params) != 2 {
@@ -333,7 +354,9 @@ func threadSetName(params []interface{}) any {
 	return nil
 }
 
-// "java/lang/Thread.setPriority(I)V"
+// threadSetPriority sets the priority of a specified thread.
+// Accepts a slice of two parameters: a Thread object and an int64 priority value.
+// Raises IllegalArgumentException if parameters are invalid or priority is out of the valid range for threads.
 func threadSetPriority(params []interface{}) any {
 	// Expect exactly two parameters: the Thread object and the priority (int64)
 	if len(params) != 2 {
@@ -369,7 +392,8 @@ func threadSetPriority(params []interface{}) any {
 	return nil
 }
 
-// "java/lang/Thread.sleep(J)V"
+// threadSleep pauses the current thread for the duration specified in milliseconds by the first parameter.
+// If the parameter is not an int64, it returns an IOException error block.
 func threadSleep(params []interface{}) interface{} {
 	sleepTime, ok := params[0].(int64)
 	if !ok {
@@ -380,6 +404,9 @@ func threadSleep(params []interface{}) interface{} {
 	return nil
 }
 
+// threadStart starts a new thread based on the given Thread object provided as a parameter.
+// Expects a single parameter of type *object.Object, representing the Thread instance to be started.
+// Returns nil on success or an error block when the input is invalid (e.g., missing Runnable object).
 func threadStart(params []interface{}) any {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadStart: Expected only the thread object parameter, got %d", len(params))
@@ -393,6 +420,7 @@ func threadStart(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	// Get runnable object.
 	runnable, ok := t.FieldTable["target"].Fvalue.(*object.Object)
 	if !ok {
 		errMsg := "threadStart: Expected Runnable target field to be an object"
@@ -414,6 +442,8 @@ func threadStart(params []interface{}) any {
 	return nil
 }
 
+// threadYield allows the current goroutine to relinquish the processor, enabling other goroutines to run.
+// It uses runtime.Gosched() to yield execution and returns nil.
 func threadYield([]interface{}) interface{} {
 	runtime.Gosched()
 	return nil
