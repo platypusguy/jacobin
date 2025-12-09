@@ -184,7 +184,7 @@ func TestSimpleClassLoadByName_Error(t *testing.T) {
 func TestAssertionsEnabledStatus_Disabled(t *testing.T) {
 	setup()
 	statics.LoadProgramStatics()
-	result := getAssertionsEnabledStatus(nil)
+	result := classGetAssertionsEnabledStatus(nil)
 	if result != types.JavaBoolFalse {
 		t.Errorf("Expected false, got %v", result)
 	}
@@ -194,7 +194,7 @@ func TestAssertionsEnabledStatus_Enabled(t *testing.T) {
 	setup()
 	_ = statics.AddStatic("main.$assertionsDisabled",
 		statics.Static{Type: types.Int, Value: types.JavaBoolFalse})
-	result := getAssertionsEnabledStatus(nil)
+	result := classGetAssertionsEnabledStatus(nil)
 	if result != types.JavaBoolTrue {
 		t.Errorf("Expected true, got %v", result)
 	}

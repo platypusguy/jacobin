@@ -31,13 +31,13 @@ func Load_Lang_Class() {
 	MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getAssertionsEnabledStatus,
+			GFunction:  classGetAssertionsEnabledStatus,
 		}
 
 	MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  getAssertionsEnabledStatus,
+			GFunction:  classGetAssertionsEnabledStatus,
 		}
 
 	MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
@@ -70,6 +70,12 @@ func Load_Lang_Class() {
 			GFunction:  classIsArray,
 		}
 
+	MethodSignatures["java/lang/Class.isPrimitive()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  classIsPrimitive,
+		}
+
 	MethodSignatures["java/lang/Class.registerNatives()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -81,6 +87,24 @@ func Load_Lang_Class() {
 			ParamSlots: 0,
 			GFunction:  classToString,
 		}
+}
+
+// returns boolean indicating whether assertions are enabled or not.
+// "java/lang/Class.desiredAssertionStatus()Z"
+// "java/lang/Class.desiredAssertionStatus0()Z"
+func classGetAssertionsEnabledStatus([]interface{}) interface{} {
+	// note that statics have been preloaded before this function
+	// can be called, and CLI processing has also occurred. So, we
+	// know we have the latest assertion status.
+	ste, ok := statics.QueryStatic("main", "$assertionsDisabled")
+	if !ok {
+		return types.JavaBoolFalse
+	}
+	if ste.Value.(int64) == int64(1) {
+		return types.JavaBoolFalse
+	} else {
+		return types.JavaBoolTrue
+	}
 }
 
 // getComponentType() returns a pointer to class of the type of an array.
@@ -137,12 +161,44 @@ func getComponentType(params []interface{}) interface{} {
 		errMsg := fmt.Sprintf("getComponentType: failed to load class %s: %s", componentType, err.Error())
 		return getGErrBlk(excNames.ClassNotFoundException, errMsg)
 	}
-
 	return cl
 }
 
+func classGetField(params []interface{}) interface{} {
+	cl := params[0].(*object.Object)
+	if object.IsNull(params[1]) {
+		errMsg := "classGetField: null field name"
+		return getGErrBlk(excNames.NullPointerException, errMsg)
+	}
+	fieldName := params[1].(string)
+	_, ok := cl.FieldTable[fieldName]
+	if !ok {
+		errMsg := fmt.Sprintf("classGetField: field %s not found in %s",
+			fieldName, *stringPool.GetStringPointer(cl.KlassName))
+		return getGErrBlk(excNames.NoSuchFieldException, errMsg)
+	}
+
+	return NewField(cl, fieldName)
+}
+
+// classgetModule returns the unnamed module for any Class object
+func classGetModule(params []interface{}) interface{} {
+	if unnamedModule == nil {
+		errMsg := "classGetModule: unnamed module not initialized"
+		return getGErrBlk(excNames.IllegalStateException, errMsg)
+	}
+	return unnamedModule
+}
+
+// "java/lang/Class.classGetName()Ljava/lang/String;"
+func classGetName(params []interface{}) interface{} {
+	class := params[0].(*object.Object)
+	name := class.FieldTable["name"].Fvalue.(string)
+	return object.StringObjectFromGoString(name)
+}
+
 // getPrimitiveClass() takes a one-word descriptor of a primitive and
-// returns  apointer to the native primitive class that corresponds to it.
+// returns a pointer to the native primitive class that corresponds to it.
 // This duplicates the behavior of OpenJDK JVMs.
 // "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"
 func getPrimitiveClass(params []interface{}) interface{} {
@@ -183,57 +239,6 @@ func getPrimitiveClass(params []interface{}) interface{} {
 	}
 }
 
-// simpleClassLoadByName() just checks the MethodArea cache for the loaded
-// class, and if it's not there, it loads it and returns a pointer to it.
-// Logic basically duplicates similar functionality in instantiate.go
-func simpleClassLoadByName(className string) (*classloader.Klass, error) {
-	alreadyLoaded := classloader.MethAreaFetch(className)
-	if alreadyLoaded != nil { // if the class is already loaded, skip the rest of this
-		return alreadyLoaded, nil
-	}
-
-	// If not, try to load class by name
-	err := classloader.LoadClassFromNameOnly(className)
-	if err != nil {
-		var errClassName = className
-		if className == "" {
-			errClassName = "<empty string>"
-		}
-		errMsg := fmt.Sprintf("simpleClassLoadByName: Failed to load class %s by name, reason: %s", errClassName, err.Error())
-		trace.Error(errMsg)
-		shutdown.Exit(shutdown.APP_EXCEPTION)
-		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
-	} else {
-		return classloader.MethAreaFetch(className), nil
-	}
-}
-
-// returns boolean indicating whether assertions are enabled or not.
-// "java/lang/Class.desiredAssertionStatus()Z"
-// "java/lang/Class.desiredAssertionStatus0()Z"
-func getAssertionsEnabledStatus([]interface{}) interface{} {
-	// note that statics have been preloaded before this function
-	// can be called, and CLI processing has also occurred. So, we
-	// know we have the latest assertion-enabled status.
-	ste, ok := statics.QueryStatic("main", "$assertionsDisabled")
-	if !ok {
-		return types.JavaBoolFalse
-	}
-	if ste.Value.(int64) == int64(1) {
-		return types.JavaBoolFalse
-	} else {
-		return types.JavaBoolTrue
-	}
-	// return 1 - x // return the 0 if disabled, 1 if not.
-}
-
-// "java/lang/Class.classGetName()Ljava/lang/String;"
-func classGetName(params []interface{}) interface{} {
-	class := params[0].(*object.Object)
-	name := class.FieldTable["name"].Fvalue.(string)
-	return object.StringObjectFromGoString(name)
-}
-
 // "java/lang/Class.isArray()Ljava/lang/String;"
 func classIsArray(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
@@ -244,30 +249,13 @@ func classIsArray(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-// classgetModule returns the unnamed module for any Class object
-func classGetModule(params []interface{}) interface{} {
-	if unnamedModule == nil {
-		errMsg := "classGetModule: unnamed module not initialized"
-		return getGErrBlk(excNames.IllegalStateException, errMsg)
+func classIsPrimitive(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	fldType := obj.FieldTable["value"].Ftype
+	if types.IsPrimitive(fldType) {
+		return types.JavaBoolTrue
 	}
-	return unnamedModule
-}
-
-func classGetField(params []interface{}) interface{} {
-	cl := params[0].(*object.Object)
-	if object.IsNull(params[1]) {
-		errMsg := "classGetField: null field name"
-		return getGErrBlk(excNames.NullPointerException, errMsg)
-	}
-	fieldName := params[1].(string)
-	_, ok := cl.FieldTable[fieldName]
-	if !ok {
-		errMsg := fmt.Sprintf("classGetField: field %s not found in %s",
-			fieldName, *stringPool.GetStringPointer(cl.KlassName))
-		return getGErrBlk(excNames.NoSuchFieldException, errMsg)
-	}
-
-	return NewField(cl, fieldName)
+	return types.JavaBoolFalse
 }
 
 /* JDK Javadoc:
@@ -291,4 +279,31 @@ func classToString(params []any) any {
 	name := obj.FieldTable["name"].Fvalue.(string)
 	str := fmt.Sprintf("class %s", name)
 	return object.StringObjectFromGoString(str)
+}
+
+// === helper functions (not part of the javaLangClass class API) ===
+
+// simpleClassLoadByName() just checks the MethodArea cache for the loaded
+// class, and if it's not there, it loads it and returns a pointer to it.
+// Logic basically duplicates similar functionality in instantiate.go
+func simpleClassLoadByName(className string) (*classloader.Klass, error) {
+	alreadyLoaded := classloader.MethAreaFetch(className)
+	if alreadyLoaded != nil { // if the class is already loaded, skip the rest of this
+		return alreadyLoaded, nil
+	}
+
+	// If not, try to load class by name
+	err := classloader.LoadClassFromNameOnly(className)
+	if err != nil {
+		var errClassName = className
+		if className == "" {
+			errClassName = "<empty string>"
+		}
+		errMsg := fmt.Sprintf("simpleClassLoadByName: Failed to load class %s by name, reason: %s", errClassName, err.Error())
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.APP_EXCEPTION)
+		return nil, errors.New(errMsg) // needed for testing, which does not cause an O/S exit on failure
+	} else {
+		return classloader.MethAreaFetch(className), nil
+	}
 }
