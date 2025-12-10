@@ -19,7 +19,7 @@ import (
 	"testing"
 )
 
-// Many tests rely on ensureTGInit() defined in javaLangThreadGroup_test.go.
+// Many tests rely on EnsureTGInit() defined in javaLangThreadGroup_test.go.
 
 func makeAframeSet() *list.List {
 	fs := frames.CreateFrameStack()
@@ -33,7 +33,7 @@ func makeAframeSet() *list.List {
 }
 
 func TestThreadClinitConstants(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// Load_Lang_Thread invoked in ensureInit sets statics via threadClinit
 	// Verify constants exist
 	minPriority := staticsGet("java/lang/Thread", "MIN_PRIORITY")
@@ -48,7 +48,7 @@ func TestThreadClinitConstants(t *testing.T) {
 func staticsGet(cls, name string) any { return statics.GetStaticValue(cls, name) }
 
 func TestThreadCreateNoarg_Defaults(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	obj := ThreadCreateNoarg(nil).(*object.Object)
 	if obj.FieldTable["ID"].Fvalue.(int64) == 0 {
 		t.Errorf("expected non-zero thread ID")
@@ -94,7 +94,7 @@ func TestThreadCreateNoarg_Defaults(t *testing.T) {
 }
 
 func TestThreadInitWithName_ErrWrongArity(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	ret := threadInitWithName([]any{ThreadCreateNoarg(nil)})
 	g := ret.(*GErrBlk)
 	if g.ExceptionType != excNames.IllegalArgumentException {
@@ -103,7 +103,7 @@ func TestThreadInitWithName_ErrWrongArity(t *testing.T) {
 }
 
 func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	fs := makeAframeSet()
 	ret := threadInitWithName([]any{fs, 123, object.StringObjectFromGoString("n")})
 	if ret.(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
@@ -117,7 +117,7 @@ func TestThreadInitWithName_ErrWrongTypes(t *testing.T) {
 }
 
 func TestThreadInitWithName_Success(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	nm := object.StringObjectFromGoString("Alpha")
 	fs := makeAframeSet()
@@ -129,7 +129,7 @@ func TestThreadInitWithName_Success(t *testing.T) {
 }
 
 func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// wrong arity
 	if threadInitWithRunnableAndName([]any{ThreadCreateNoarg(nil)}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException for arity")
@@ -159,7 +159,7 @@ func TestThreadInitWithRunnableAndName_Paths(t *testing.T) {
 }
 
 func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
 	th := ThreadCreateNoarg(nil).(*object.Object)
@@ -185,7 +185,7 @@ func TestThreadInitWithThreadGroupAndName_Paths(t *testing.T) {
 }
 
 func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
 	th := ThreadCreateNoarg(nil).(*object.Object)
@@ -214,7 +214,7 @@ func TestThreadInitWithThreadGroupRunnableAndName_Paths(t *testing.T) {
 }
 
 func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	mainTG := gr.ThreadGroups["main"].(*object.Object)
 	th := ThreadCreateNoarg(nil).(*object.Object)
@@ -267,7 +267,7 @@ func TestThreadInitFromPackageConstructor_Paths(t *testing.T) {
 }
 
 func TestThreadActiveCount(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	gr.Threads = map[int]interface{}{}
 	gr.Threads[1] = ThreadCreateNoarg(nil)
@@ -278,7 +278,7 @@ func TestThreadActiveCount(t *testing.T) {
 }
 
 func TestThreadDumpStack_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// arity
 	if threadDumpStack(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("expected IllegalArgumentException arity")
@@ -325,7 +325,7 @@ func TestThreadDumpStack_Paths(t *testing.T) {
 }
 
 func TestThreadGetId_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	if threadGetId(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("arity")
 	}
@@ -353,7 +353,7 @@ func TestThreadGetId_Paths(t *testing.T) {
 }
 
 func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	th := ThreadCreateNoarg(nil).(*object.Object)
 	// getName
 	if threadGetName(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
@@ -414,7 +414,7 @@ func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {
 }
 
 func TestThreadGetStackTrace_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// arity/type
 	if threadGetStackTrace([]any{list.New()}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("arity")
@@ -432,7 +432,7 @@ func TestThreadGetStackTrace_Paths(t *testing.T) {
 }
 
 func TestThreadSetName_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	if threadSetName(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("arity")
 	}
@@ -454,7 +454,7 @@ func TestThreadSetName_Paths(t *testing.T) {
 }
 
 func TestThreadSetPriority_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	if threadSetPriority(nil).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("arity")
 	}
@@ -479,7 +479,7 @@ func TestThreadSetPriority_Paths(t *testing.T) {
 }
 
 func TestThreadSleep_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	if threadSleep([]any{"x"}).(*GErrBlk).ExceptionType != excNames.IOException {
 		t.Fatal("type err")
 	}
@@ -489,7 +489,7 @@ func TestThreadSleep_Paths(t *testing.T) {
 }
 
 func TestCloneNotSupportedException(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	ret := cloneNotSupportedException(nil).(*GErrBlk)
 	if ret.ExceptionType != excNames.CloneNotSupportedException {
 		t.Fatalf("wrong exception type")
@@ -497,7 +497,7 @@ func TestCloneNotSupportedException(t *testing.T) {
 }
 
 func TestThreadNumbering_InitAndNext(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// init
 	_ = threadNumbering(nil)
 	// next increments
@@ -519,7 +519,7 @@ func makeRunnableDescriptor(className, methodName, sig string) *object.Object {
 }
 
 func TestThreadInitWithRunnable_Paths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// wrong types by position
 	runnable := makeRunnableDescriptor("RC0", "run", "()V")
 	if threadInitWithRunnable([]any{123, runnable}).(*GErrBlk).ExceptionType != excNames.IllegalArgumentException {

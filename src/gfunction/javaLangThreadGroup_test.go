@@ -22,28 +22,28 @@ import (
 var initOnce sync.Once
 
 // Ensure base init used by other gfunction tests
-func ensureTGInit() {
+func EnsureTGInit() {
 	ensureInit()
 }
 
 func ensureInit() {
-	initOnce.Do(func() {
-		globals.InitGlobals("test")
-		globals.InitStringPool()
-		gr := globals.GetGlobalRef()
-		gr.Threads = make(map[int]interface{})
-		gr.ThreadGroups = make(map[string]interface{})
 
-		gr.FuncFillInStackTrace = FillInStackTrace
-		gr.FuncInvokeGFunction = Invoke
-		gr.FuncThrowException = exceptions.ThrowExNil
-		// Set a local fake instantiator to avoid importing the jvm package in tests
-		gr.FuncInstantiateClass = instantiateForThreadTest
-		InitializeGlobalThreadGroups()
-		Load_Lang_Thread_Group()
-		Load_Lang_Thread()
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	gr := globals.GetGlobalRef()
+	gr.Threads = make(map[int]interface{})
+	gr.ThreadGroups = make(map[string]interface{})
 
-	})
+	gr.FuncFillInStackTrace = FillInStackTrace
+	gr.FuncInvokeGFunction = Invoke
+	gr.FuncThrowException = exceptions.ThrowExNil
+	// Set a local fake instantiator to avoid importing the jvm package in tests
+	gr.FuncInstantiateClass = instantiateForThreadTest
+	InitializeGlobalThreadGroups()
+	Load_Lang_Thread_Group()
+	Load_Lang_Thread_State()
+	Load_Lang_Thread()
+
 }
 
 // instantiateForThreadTest is a minimal stand-in for jvm.Instantiate to avoid circular imports.
@@ -55,7 +55,7 @@ func instantiateForThreadTest(name string, _ *list.List) (any, error) {
 }
 
 func TestInitializeGlobalThreadGroups_TestMode(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	// Force map to be nil to test map initialization
 	gr.ThreadGroups = nil
@@ -87,7 +87,7 @@ func TestInitializeGlobalThreadGroups_TestMode(t *testing.T) {
 }
 
 func TestInitializeGlobalThreadGroups_NonTestMode(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	// gr.JacobinName = "test"
 	gr.ThreadGroups = make(map[string]interface{})
@@ -119,7 +119,7 @@ func TestThreadGroupInitWithParentNameMaxpriorityDaemon_ParamCount(t *testing.T)
 }
 
 func TestThreadGroupInitWithParentNameMaxpriorityDaemon_TypeErrorsAndSuccess(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	gr := globals.GetGlobalRef()
 	gr.ThreadGroups = make(map[string]interface{})
 	InitializeGlobalThreadGroups()
@@ -226,7 +226,7 @@ func TestThreadGroupInitWithName_AllPaths(t *testing.T) {
 }
 
 func TestThreadGroupInitWithParentAndName_AllPaths(t *testing.T) {
-	ensureTGInit()
+	EnsureTGInit()
 	// wrong count
 	if _, ok := threadGroupInitWithParentAndName([]any{1}).(*GErrBlk); !ok {
 		t.Errorf("expected error for wrong count")

@@ -73,7 +73,8 @@ type Globals struct {
 	//    due to circularity, they need to be described this way here.
 	Threads      map[int]interface{}
 	ThreadGroups map[string]interface{}
-	
+	TGLock       sync.RWMutex
+
 	// ---- execution context ----
 	JacobinBuildData map[string]string
 

@@ -116,6 +116,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	classloader.LoadClassFromNameOnly("java/lang/ThreadGroup")
 	t.Logf("Loaded ThreadGroup ok\n")
 	InitGlobalFunctionPointers()
+	gfunction.InitializeGlobalThreadGroups()
 	t.Logf("InitGlobalFunctionPointers ok\n")
 
 	// Show the map size and check it for java/lang/System
