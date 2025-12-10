@@ -438,9 +438,24 @@ func threadStart(params []interface{}) any {
 	// Extract class name, method name, and method type from the runnable object.
 	var clName, methName, methType string
 	ftbl := runnable.FieldTable
-	clName = object.GoStringFromJavaByteArray(ftbl["clName"].Fvalue.([]types.JavaByte))
-	methName = object.GoStringFromJavaByteArray(ftbl["methName"].Fvalue.([]types.JavaByte))
-	methType = object.GoStringFromJavaByteArray(ftbl["methType"].Fvalue.([]types.JavaByte))
+	fld, ok := ftbl["clName"]
+	if !ok {
+		errMsg := "threadStart: Missing the clName field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	fld, ok = ftbl["methName"]
+	if !ok {
+		errMsg := "threadStart: Missing the methName field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	methName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	fld, ok = ftbl["methType"]
+	if !ok {
+		errMsg := "threadStart: Missing the methType field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	methType = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Spawn RunJavaThread to interpret bytecode of run()
 	args := []interface{}{t, clName, methName, methType}
