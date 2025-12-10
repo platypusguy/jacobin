@@ -14,7 +14,7 @@ import (
 	"jacobin/src/trace"
 )
 
-// ResolveCPmethRefs resolves the method references in the constant pool of a class
+// ResolveCPinterfaceRefs resolves the interface references in the constant pool of a class
 func ResolveCPinterfaceRefs(cpp *CPool) error {
 	cp := *cpp
 	if cp.CpIndex == nil || cp.MethodRefs == nil {
@@ -50,7 +50,7 @@ func ResolveCPinterfaceRefs(cpp *CPool) error {
 
 		cpp.ResolvedInterfaceRefs = append(cpp.ResolvedInterfaceRefs, resEntry)
 		if globals.TraceClass {
-			msg := fmt.Sprintf("ResolveCPinterfaceRefs: Resolved interface ref: %s\n", fqn)
+			msg := fmt.Sprintf("ResolveCPinterfaceRefs: Resolved interface ref: %s", fqn)
 			trace.Trace(msg)
 		}
 	}
@@ -93,33 +93,9 @@ func ResolveCPmethRefs(cpp *CPool) error {
 
 		cpp.ResolvedMethodRefs = append(cpp.ResolvedMethodRefs, resEntry)
 		if globals.TraceClass {
-			msg := fmt.Sprintf("ResolveCPmethRefs: Resolved method ref: %s\n", fqn)
+			msg := fmt.Sprintf("ResolveCPmethRefs: Resolved method ref: %s", fqn)
 			trace.Trace(msg)
 		}
 	}
 	return nil
 }
-
-/*
-methodRef := CP.CpIndex[cpIndex].Slot
-	classIndex := CP.MethodRefs[methodRef].ClassIndex
-
-	classRefIdx := CP.CpIndex[classIndex].Slot
-	classIdx := CP.ClassRefs[classRefIdx]
-	classNamePtr := stringPool.GetStringPointer(uint32(classIdx))
-	className := *classNamePtr
-
-	// now get the method signature
-	nameAndTypeCPindex := CP.MethodRefs[methodRef].NameAndType
-	nameAndTypeIndex := CP.CpIndex[nameAndTypeCPindex].Slot
-	nameAndType := CP.NameAndTypes[nameAndTypeIndex]
-	methNameCPindex := nameAndType.NameIndex
-	methNameUTF8index := CP.CpIndex[methNameCPindex].Slot
-	methName := CP.Utf8Refs[methNameUTF8index]
-
-	// and get the method signature/description
-	methSigCPindex := nameAndType.DescIndex
-	methSigUTF8index := CP.CpIndex[methSigCPindex].Slot
-	methSig := CP.Utf8Refs[methSigUTF8index]
-
-*/

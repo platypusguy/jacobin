@@ -338,9 +338,9 @@ func returnRandomLong([]interface{}) interface{} {
 // Class is handled special because the natural <clinit> function is never called.
 /*
 JVM spec:
-"The java.lang.Class class is automatically initialized when the JVM is started. However, because it is
-so tightly integrated with the JVM itself, its static initializer is not necessarily
-run in the same way as other classes."
+"The java.lang.Class class is automatically initialized when the JVM is started.
+However, because it is so tightly integrated with the JVM itself, its static initializer
+s not necessarily run in the same way as other classes."
 */
 
 var unnamedModule = object.Null
