@@ -163,7 +163,7 @@ func threadGetPriority(params []interface{}) any {
 	}
 
 	t := params[0].(*object.Object)
-	return t.FieldTable["priority"].Fvalue
+	return t.FieldTable["priority"].Fvalue.(int64)
 }
 
 // threadGetStackTrace retrieves the stack trace of a thread from the provided context parameters.
@@ -255,7 +255,7 @@ func threadIsInterrupted(params []interface{}) any {
 		errMsg := "threadIsInterrupted: Expected thread to be an object"
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	return t.FieldTable["interrupted"].Fvalue
+	return t.FieldTable["interrupted"].Fvalue.(types.JavaBool)
 }
 
 // Has the specified thread terminated?
@@ -327,7 +327,7 @@ func threadRun(params []interface{}) interface{} {
 
 	name := t.FieldTable["name"].Fvalue.(*object.Object)
 	id := t.FieldTable["ID"].Fvalue.(int64)
-	warnMsg := fmt.Sprintf("threadRun name:%s, ID: %d started", object.GoStringFromStringObject(name), id)
+	warnMsg := fmt.Sprintf("threadRun nil-function name: %s, ID: %d started", object.GoStringFromStringObject(name), id)
 	trace.Warning(warnMsg)
 	return nil
 }
