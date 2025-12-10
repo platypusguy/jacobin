@@ -476,6 +476,8 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithRunnableAndName: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
+	setUpRunnable(runnable, runClassName)
 
 	name, ok := params[2].(*object.Object)
 	if !ok {
@@ -560,6 +562,8 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnable: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
+	setUpRunnable(runnable, runClassName)
 
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
@@ -594,6 +598,8 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		errMsg := "threadInitWithThreadGroupRunnableAndName: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
+	setUpRunnable(runnable, runClassName)
 
 	name, ok := params[3].(*object.Object)
 	if !ok {
