@@ -65,7 +65,7 @@ func Load_Lang_Thread() {
 		GMeth{ParamSlots: 1, NeedsContext: true, GFunction: threadInitWithName}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;)V"] =
-		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnable}
+		GMeth{ParamSlots: 1, GFunction: threadInitWithRunnable}
 
 	MethodSignatures["java/lang/Thread.<init>(Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		GMeth{ParamSlots: 2, GFunction: threadInitWithRunnableAndName}
