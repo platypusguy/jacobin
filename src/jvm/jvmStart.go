@@ -68,6 +68,14 @@ func JVMrun() int {
 	// Enable select functions via a global function variable. (This avoids circularity issues.)
 	InitGlobalFunctionPointers()
 
+	// Force the object.TVO method retention for the Goland debugger
+	// (never executes in practice)
+	// Use runtime check that compiler cannot optimize away
+	if os.Getenv("Revenge_is_best_served_cold!") == "Well, maybe?" {
+		dummyObj := object.MakeEmptyObject()
+		_ = dummyObj.TVO()
+	}
+
 	if globals.TraceInit {
 		trace.Trace("running program: " + globPtr.JacobinName)
 	}

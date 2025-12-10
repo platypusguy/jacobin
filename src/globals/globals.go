@@ -68,7 +68,7 @@ type Globals struct {
 
 	// ---- thread management ----
 	// Threads ThreadList // list of all app execution threads
-	ThreadLock sync.Mutex
+	ThreadLock sync.RWMutex
 	//    the interface{} values in these maps are object references, but
 	//    due to circularity, they need to be described this way here.
 	Threads      map[int]interface{}

@@ -36,7 +36,10 @@ func threadCurrentThread(params []interface{}) any {
 
 	frame := *fStack.Front().Value.(*frames.Frame)
 	thID := frame.Thread
-	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	defer gr.ThreadLock.RUnlock()
+	th := gr.Threads[thID].(*object.Object)
 	return th
 }
 
@@ -60,6 +63,8 @@ func threadDumpStack(params []interface{}) interface{} {
 		// we print more data than HotSpot does, starting with the thread name
 		o := *jvmStack.Front().Value.(*frames.Frame)
 		threadID := o.Thread
+		globalRef.ThreadLock.RLock()
+		defer globalRef.ThreadLock.RUnlock()
 		th := globalRef.Threads[threadID].(*object.Object)
 		raws := th.FieldTable["name"].Fvalue.(*object.Object)
 		threadName := object.GoStringFromStringObject(raws)
@@ -158,7 +163,7 @@ func threadGetPriority(params []interface{}) any {
 	}
 
 	t := params[0].(*object.Object)
-	return t.FieldTable["priority"].Fvalue
+	return t.FieldTable["priority"].Fvalue.(int64)
 }
 
 // threadGetStackTrace retrieves the stack trace of a thread from the provided context parameters.
@@ -250,7 +255,7 @@ func threadIsInterrupted(params []interface{}) any {
 		errMsg := "threadIsInterrupted: Expected thread to be an object"
 		return getGErrBlk(excNames.InternalException, errMsg)
 	}
-	return t.FieldTable["interrupted"].Fvalue
+	return t.FieldTable["interrupted"].Fvalue.(types.JavaBool)
 }
 
 // Has the specified thread terminated?
@@ -279,7 +284,10 @@ func threadJoin(params []interface{}) any {
 	}
 	frame := *fStack.Front().Value.(*frames.Frame)
 	thID := frame.Thread
-	currentThread := globals.GetGlobalRef().Threads[thID].(*object.Object)
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	currentThread := gr.Threads[thID].(*object.Object)
+	gr.ThreadLock.RUnlock()
 
 	targetThread, ok := params[1].(*object.Object)
 	if !ok {
@@ -319,7 +327,7 @@ func threadRun(params []interface{}) interface{} {
 
 	name := t.FieldTable["name"].Fvalue.(*object.Object)
 	id := t.FieldTable["ID"].Fvalue.(int64)
-	warnMsg := fmt.Sprintf("threadRun name:%s, ID: %d started", object.GoStringFromStringObject(name), id)
+	warnMsg := fmt.Sprintf("threadRun nil-function name: %s, ID: %d started", object.GoStringFromStringObject(name), id)
 	trace.Warning(warnMsg)
 	return nil
 }
@@ -430,9 +438,24 @@ func threadStart(params []interface{}) any {
 	// Extract class name, method name, and method type from the runnable object.
 	var clName, methName, methType string
 	ftbl := runnable.FieldTable
-	clName = object.GoStringFromJavaByteArray(ftbl["clName"].Fvalue.([]types.JavaByte))
-	methName = object.GoStringFromJavaByteArray(ftbl["methName"].Fvalue.([]types.JavaByte))
-	methType = object.GoStringFromJavaByteArray(ftbl["methType"].Fvalue.([]types.JavaByte))
+	fld, ok := ftbl["clName"]
+	if !ok {
+		errMsg := "threadStart: Missing the clName field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	fld, ok = ftbl["methName"]
+	if !ok {
+		errMsg := "threadStart: Missing the methName field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	methName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	fld, ok = ftbl["methType"]
+	if !ok {
+		errMsg := "threadStart: Missing the methType field in the runnable object"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	methType = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Spawn RunJavaThread to interpret bytecode of run()
 	args := []interface{}{t, clName, methName, methType}

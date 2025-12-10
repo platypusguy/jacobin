@@ -85,7 +85,9 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	var fs *list.List
+	glob.ThreadLock.RLock()
 	th, ok := glob.Threads[f.Thread].(*object.Object)
+	glob.ThreadLock.RUnlock()
 	if !ok {
 		errMsg := fmt.Sprintf("[ThrowEx] glob.Threads index not found or entry corrupted, thread index: %d, FQN: %s",
 			f.Thread, frames.FormatFQN(f))
@@ -110,9 +112,8 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			trace.Trace(infoMsg)
 		}
 
-		// th = glob.Threads[f.Thread].(*thread.ExecThread)
-		// fs = th.Stack
-		for fs.Len() > 0 { // remove the frames we examined that did not have the catch logic
+		// remove the frames we examined that did not have the catch logic
+		for fs.Len() > 0 {
 			fr := fs.Front().Value
 			if fr == catchFrame {
 				break
@@ -121,6 +122,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			}
 		}
 
+		// Set up the catch frame.
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
