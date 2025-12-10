@@ -36,7 +36,10 @@ func threadCurrentThread(params []interface{}) any {
 
 	frame := *fStack.Front().Value.(*frames.Frame)
 	thID := frame.Thread
-	th := globals.GetGlobalRef().Threads[thID].(*object.Object)
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	defer gr.ThreadLock.RUnlock()
+	th := gr.Threads[thID].(*object.Object)
 	return th
 }
 
@@ -60,6 +63,8 @@ func threadDumpStack(params []interface{}) interface{} {
 		// we print more data than HotSpot does, starting with the thread name
 		o := *jvmStack.Front().Value.(*frames.Frame)
 		threadID := o.Thread
+		globalRef.ThreadLock.RLock()
+		defer globalRef.ThreadLock.RUnlock()
 		th := globalRef.Threads[threadID].(*object.Object)
 		raws := th.FieldTable["name"].Fvalue.(*object.Object)
 		threadName := object.GoStringFromStringObject(raws)
@@ -279,7 +284,10 @@ func threadJoin(params []interface{}) any {
 	}
 	frame := *fStack.Front().Value.(*frames.Frame)
 	thID := frame.Thread
-	currentThread := globals.GetGlobalRef().Threads[thID].(*object.Object)
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	currentThread := gr.Threads[thID].(*object.Object)
+	gr.ThreadLock.RUnlock()
 
 	targetThread, ok := params[1].(*object.Object)
 	if !ok {
