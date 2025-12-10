@@ -447,6 +447,8 @@ func threadInitWithRunnable(params []interface{}) any {
 		errMsg := "threadInitWithRunnable: Expected parameter to be a Runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
+	setUpRunnable(runnable, runClassName)
 
 	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 
