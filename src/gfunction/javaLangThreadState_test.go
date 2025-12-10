@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 func TestThreadStateToString_HappyPath(t *testing.T) {
 
-	ensureTGInit()
+	EnsureTGInit()
 
 	// Create thread.
 	th := ThreadCreateNoarg(nil).(*object.Object)
