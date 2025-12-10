@@ -414,53 +414,72 @@ func (obj *Object) TVO() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("=== Object Debug View ===\n")
+	sb.WriteString("=== Tree View Object ===\n")
 
 	// Display Mark.Misc value
 	sb.WriteString(fmt.Sprintf("Mark.Misc: %d (0x%08X)\n", obj.Mark.Misc, obj.Mark.Misc))
 
-	// Display class name from string pool
+	// Display the class name from the string pool.
 	className := GoStringFromStringPoolIndex(obj.KlassName)
 	sb.WriteString(fmt.Sprintf("Class: %s\n", className))
 
 	// Display fields
-	if len(obj.FieldTable) == 0 {
-		sb.WriteString("Fields: (none)\n")
-	} else {
-		sb.WriteString("Fields:\n")
-		for fieldName, field := range obj.FieldTable {
-			// Check for []int8 (JavaByte array) - display as string
-			if jbarr, ok := field.Fvalue.([]types.JavaByte); ok {
-				if field.Ftype == types.ByteArray || field.Ftype == types.StringClassRef || field.Ftype == "[B" {
-					str := GoStringFromJavaByteArray(jbarr)
-					sb.WriteString(fmt.Sprintf("  %s [%s]: %q\n", fieldName, field.Ftype, str))
-					continue
-				}
-			}
+	if len(obj.FieldTable) > 0 {
 
+		// Create a slice of keys.
+		keys := make([]string, 0, len(obj.FieldTable))
+		for key := range obj.FieldTable {
+			keys = append(keys, key)
+		}
+
+		// Sort the keys, case-insensitive.
+		globals.SortCaseInsensitive(&keys)
+
+		sb.WriteString("Fields:\n")
+
+		// For each field .....
+		for _, fieldName := range keys {
+
+			field := obj.FieldTable[fieldName]
+			value := field.Fvalue
 			// Check for integer types
-			switch v := field.Fvalue.(type) {
-			case int8:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case int16:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case int32:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
+			switch value.(type) {
+
 			case int64:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case uint8:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case uint16:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case uint32:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
-			case uint64:
-				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, v))
+				if field.Ftype == types.Bool {
+					var str string
+					if field.Fvalue == types.JavaBoolTrue {
+						str = "true"
+					} else {
+						str = "false"
+					}
+					sb.WriteString(fmt.Sprintf("  %s [%s]: %s\n", fieldName, field.Ftype, str))
+				} else {
+					sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, value))
+				}
+
+			case []types.JavaByte:
+				if field.Ftype == types.ByteArray || field.Ftype == types.StringClassName || field.Ftype == types.StringClassRef {
+					str := GoStringFromJavaByteArray(value.([]types.JavaByte))
+					sb.WriteString(fmt.Sprintf("  %s [%s]: %q\n", fieldName, field.Ftype, str))
+				} else {
+					sb.WriteString(fmt.Sprintf("  %s [%s]: %v\n", fieldName, field.Ftype, field.Fvalue))
+				}
+
+			case *Object:
+				clname := GoStringFromStringPoolIndex(value.(*Object).KlassName)
+				sb.WriteString(fmt.Sprintf("  %s [%s]: class %s\n", fieldName, field.Ftype, clname))
+
+			case int8, int16, int32, uint8, uint16, uint32, uint64:
+				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, value))
+
 			default:
 				// For other types, show type and value
 				sb.WriteString(fmt.Sprintf("  %s [%s]: %v\n", fieldName, field.Ftype, field.Fvalue))
 			}
 		}
+	} else {
+		sb.WriteString("Fields: (none)\n")
 	}
 
 	return sb.String()
