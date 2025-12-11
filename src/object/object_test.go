@@ -651,7 +651,7 @@ func TestTVO(t *testing.T) {
 	obj2 := MakeEmptyObjectWithClassName(&clName2)
 	obj1.FieldTable["field6b"] = Field{Ftype: types.Bool, Fvalue: types.JavaBoolFalse}
 	obj1.FieldTable["field7"] = Field{Ftype: types.ByteArray, Fvalue: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}}
-	obj1.FieldTable["field8"] = Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}}
+	obj1.FieldTable["field8"] = Field{Ftype: types.ByteArray, Fvalue: []types.JavaByte{61, 62, 63, 64, 65, 66, 67, 68, 69, 70}}
 	obj1.FieldTable["field9"] = Field{Ftype: types.Int, Fvalue: uint32(math.Pow(2, 27) - 1)}
 	obj1.FieldTable["field10"] = Field{Ftype: types.Int, Fvalue: uint16(32767)}
 	obj1.FieldTable["field1"] = Field{Ftype: types.ByteArray, Fvalue: JavaByteArrayFromGoString("value1")}
@@ -660,6 +660,8 @@ func TestTVO(t *testing.T) {
 	obj1.FieldTable["field4"] = Field{Ftype: types.StringClassName, Fvalue: JavaByteArrayFromGoString("value4")}
 	obj1.FieldTable["field5"] = Field{Ftype: types.Ref, Fvalue: obj2}
 	obj1.FieldTable["field6a"] = Field{Ftype: types.Bool, Fvalue: types.JavaBoolTrue}
+	obj3 := StringObjectFromGoString("Hey diddle diddle .....")
+	obj1.FieldTable["field11"] = Field{Ftype: types.StringClassName, Fvalue: obj3}
 
 	t.Log(obj1.TVO())
 

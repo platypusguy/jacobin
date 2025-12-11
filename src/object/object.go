@@ -461,14 +461,19 @@ func (obj *Object) TVO() string {
 			case []types.JavaByte:
 				if field.Ftype == types.ByteArray || field.Ftype == types.StringClassName || field.Ftype == types.StringClassRef {
 					str := GoStringFromJavaByteArray(value.([]types.JavaByte))
-					sb.WriteString(fmt.Sprintf("  %s [%s]: %q\n", fieldName, field.Ftype, str))
+					sb.WriteString(fmt.Sprintf("  %s [%s]: %s\n", fieldName, field.Ftype, str))
 				} else {
 					sb.WriteString(fmt.Sprintf("  %s [%s]: %v\n", fieldName, field.Ftype, field.Fvalue))
 				}
 
 			case *Object:
 				clname := GoStringFromStringPoolIndex(value.(*Object).KlassName)
-				sb.WriteString(fmt.Sprintf("  %s [%s]: class %s\n", fieldName, field.Ftype, clname))
+				if clname == types.StringClassName {
+					str := GoStringFromStringObject(value.(*Object))
+					sb.WriteString(fmt.Sprintf("  %s [object %s]: %s\n", fieldName, field.Ftype, str))
+				} else {
+					sb.WriteString(fmt.Sprintf("  %s [%s]: class %s\n", fieldName, field.Ftype, clname))
+				}
 
 			case int8, int16, int32, uint8, uint16, uint32, uint64:
 				sb.WriteString(fmt.Sprintf("  %s [%s]: %d\n", fieldName, field.Ftype, value))
