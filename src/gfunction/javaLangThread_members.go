@@ -295,7 +295,7 @@ func threadJoin(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	millis := int64(0)
+	millis := int64(MaxIntValue) // Hotspot waits forever
 	if len(params) > 2 {
 		millis = params[2].(int64)
 		nanos := int64(0)
