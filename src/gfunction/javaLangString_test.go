@@ -42,6 +42,8 @@ func TestStringClinit(t *testing.T) {
 
 func TestStringToUpperCase(t *testing.T) {
 	globals.InitGlobals("test")
+	dummyObj := object.MakeEmptyObject()
+	_ = dummyObj.TVO()
 	originalString := "He did the Monster Mash!"
 	originalObj := object.StringObjectFromGoString(originalString)
 	params := []interface{}{originalObj}
@@ -1180,7 +1182,6 @@ func TestStringHashCode(t *testing.T) {
 func createStringObject(s string) *object.Object {
 	return object.StringObjectFromGoString(s)
 }
-
 
 // Additional tests added for String: isLatin1 and getBytes
 func TestString_IsLatin1(t *testing.T) {
