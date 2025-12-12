@@ -401,12 +401,14 @@ func InitStringPool() {
 	StringPoolTable[""] = 0
 	StringPoolTable["java/lang/String"] = types.StringPoolStringIndex
 	StringPoolTable["java/lang/Object"] = types.ObjectPoolStringIndex
+	StringPoolTable["java/lang/Thread"] = types.ThreadPoolStringIndex
 
 	// Pre-stored string list.
 	StringPoolList = nil
 	StringPoolList = append(StringPoolList, types.EmptyString)
 	StringPoolList = append(StringPoolList, types.StringClassName)
 	StringPoolList = append(StringPoolList, types.ObjectClassName)
+	StringPoolList = append(StringPoolList, types.ClassNameThread)
 
 	// Set up the next available index.
 	StringPoolNext = uint32(len(StringPoolList))

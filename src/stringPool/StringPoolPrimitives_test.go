@@ -40,15 +40,15 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 
 	DumpStringPool("TestStringIndexPrimitives_1: should be empty")
 	sz := GetStringPoolSize()
-	if sz != 3 {
-		t.Errorf("Expected string repo size 3 but observed: %d", sz)
+	if sz != 4 {
+		t.Errorf("Expected string repo size 4 but observed: %d", sz)
 	}
 
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
-	if index != 3 {
-		t.Errorf("Expected string str1 index=3 but observed: %d", index)
+	if index != 4 {
+		t.Errorf("Expected string str1 index=4 but observed: %d", index)
 	}
 	if str != str1 {
 		t.Errorf("Expected string str1 value=%s but observed: %s", str1, str)
@@ -57,8 +57,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
-	if index != 4 {
-		t.Errorf("Expected string str2 index=4 but observed: %d", index)
+	if index != 5 {
+		t.Errorf("Expected string str2 index=5 but observed: %d", index)
 	}
 	if str != str2 {
 		t.Errorf("Expected string str2 value=%s but observed: %s", str2, str)
@@ -67,8 +67,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str1)
 	str = *GetStringPointer(index)
 	t.Logf("str1 index %d: %s\n", index, str)
-	if index != 3 {
-		t.Errorf("Expected string str1 index=3 but observed: %d", index)
+	if index != 4 {
+		t.Errorf("Expected string str1 index=4 but observed: %d", index)
 	}
 	if str != str1 {
 		t.Errorf("Expected string str1 value=%s but observed: %s", str1, str)
@@ -77,14 +77,14 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 	index = GetStringIndex(&str2)
 	str = *GetStringPointer(index)
 	t.Logf("str2 index %d: %s\n", index, str)
-	if index != 4 {
-		t.Errorf("Expected string str2 index=4 but observed: %d", index)
+	if index != 5 {
+		t.Errorf("Expected string str2 index=5 but observed: %d", index)
 	}
 	if str != str2 {
 		t.Errorf("Expected string str2 value=%s but observed: %s", str2, str)
 	}
 
-	// Add 16 random strings to pool giving a total of 20.
+	// Add 16 random strings to pool giving a total of 21.
 	for ix := 0; ix < 16; ix++ {
 		str = randomString(stringLength)
 		index = GetStringIndex(&str)
@@ -92,8 +92,8 @@ func TestStringIndexPrimitives_1(t *testing.T) {
 
 	// Check resultant pool sizer.
 	sz = GetStringPoolSize()
-	if sz != 21 {
-		t.Errorf("Expected string repo size 21 but observed: %d", sz)
+	if sz != 22 {
+		t.Errorf("Expected string repo size 22 but observed: %d", sz)
 	}
 
 	// Dump the pool--if needed in case of test failure
@@ -104,8 +104,8 @@ func TestStringIndexPrimitives_2(t *testing.T) {
 	// NOTE that TestStringIndexPrimitives_2 is dependent on globals.InitStringPool!
 	globals.InitGlobals("test")
 	postInitSize := GetStringPoolSize()
-	if postInitSize != 3 {
-		t.Errorf("Expected string repo size=3 but observed: %d", postInitSize)
+	if postInitSize != 4 {
+		t.Errorf("Expected string repo size=4 but observed: %d", postInitSize)
 	}
 
 	var LIMIT uint32 = 1_000

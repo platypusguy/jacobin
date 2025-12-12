@@ -32,6 +32,7 @@ var NullString = "null"
 
 // Other class names
 var ClassNameThread = "java/lang/Thread"
+var ThreadPoolStringIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 
 // ---- experimental values ----
