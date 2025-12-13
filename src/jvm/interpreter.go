@@ -2071,7 +2071,12 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	var objField object.Field
 	var ok bool
 
-	objField, ok = obj.FieldTable[fieldName]
+	if obj.KlassName == types.ThreadPoolStringIndex {
+		runnable := obj.FieldTable["target"].Fvalue.(*object.Object)
+		objField, ok = runnable.FieldTable[fieldName]
+	} else {
+		objField, ok = obj.FieldTable[fieldName]
+	}
 	if !ok {
 		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
