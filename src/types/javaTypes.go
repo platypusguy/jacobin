@@ -61,6 +61,7 @@ const FileHandle = "*FH" // The related Fvalue is a Golang *os.File
 const HashMap = "*HM"    // The related Fvalue is a Golang map[interface{}]interface{}
 const LinkedList = "*LL" // The related Fvalue is a Golang *list.List
 const Properties = "*PT" // The related Fvalue is a Golang map[interface{}]interface{}
+const Map = "MAP"        // Golang map (E.g. security services in java/Security/Provider.Service)
 
 type DefHashMap map[any]any
 type DefProperties map[string]string

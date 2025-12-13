@@ -24,6 +24,7 @@ var ObjectPoolStringIndex = uint32(2) // points to the string pool slice for "ja
 
 // Constants related to "java/lang/String":
 var StringClassName = "java/lang/String"
+var StringClassNameArray = "[java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
 var ModuleClassRef = "Ljava/lang/Module;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
@@ -34,6 +35,10 @@ var NullString = "null"
 var ClassNameThread = "java/lang/Thread"
 var ThreadPoolStringIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
+
+// Security-related
+const SecurityProviderName = "GoSecurityProvider"
+const SecurityProviderInfo = "Security + Cryptography"
 
 // ---- experimental values ----
 var StackInflator = 2 // for toying with whether to increase # of stack entries

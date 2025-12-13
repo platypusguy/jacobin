@@ -19,6 +19,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"sync"
 )
 
 // Map repository of method signatures for all G functions:
@@ -35,6 +36,19 @@ var FileAtEOF string = "FileAtEOF"   // file at EOF
 
 // File I/O constants:
 var CreateFilePermissions os.FileMode = 0664 // When creating, read and write for user and group, others read-only
+
+// DefaultSecurityProvider is the single security provider for Jacobin.
+// No other security providers are entertained.
+var DefaultSecurityProvider *object.Object
+var defaultSecurityProviderOnce sync.Once
+
+// GetDefaultSecurityProvider returns the default security provider, initializing it if needed.
+func GetDefaultSecurityProvider() *object.Object {
+	defaultSecurityProviderOnce.Do(func() {
+		DefaultSecurityProvider = NewGoRuntimeProvider()
+	})
+	return DefaultSecurityProvider
+}
 
 // Radix boundaries:
 var MinRadix int64 = 2
@@ -154,6 +168,9 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Math_SimpleDateFormat()
 
 		// java/security/*
+		Load_Security()
+		Load_Security_Provider()
+		Load_Security_Provider_Service()
 		Load_Security_SecureRandom()
 
 		// java/util/*
@@ -346,6 +363,7 @@ s not necessarily run in the same way as other classes."
 var unnamedModule = object.Null
 var classNameModule = "java/lang/Module"
 
+// TODO: What is this?
 // Called from <clinit> of java/lang/Class
 func classClinitIsh() {
 	// Initialize the unnamedModule singleton.
