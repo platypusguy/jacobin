@@ -92,10 +92,11 @@ func TestSecurityGetProviders(t *testing.T) {
 	result := securityGetProviders([]any{})
 	expected := GetDefaultSecurityProvider()
 
-	providers, ok := result.([]*object.Object)
+	obj, ok := result.(*object.Object)
 	if !ok {
-		t.Fatalf("securityGetProviders should return []*object.Object, got %T", result)
+		t.Fatalf("securityGetProviders should return *object.Object, got %T", result)
 	}
+	providers := obj.FieldTable["value"].Fvalue.([]*object.Object)
 
 	if len(providers) != 1 {
 		t.Errorf("expected 1 provider, got %d", len(providers))
@@ -114,13 +115,13 @@ func TestSecurityGetProvidersWithValidProvider(t *testing.T) {
 	if provider == nil {
 		t.Skip("DefaultSecurityProvider is nil, skipping test")
 	}
-
 	result := securityGetProviders([]any{})
 
-	providers, ok := result.([]*object.Object)
+	obj, ok := result.(*object.Object)
 	if !ok {
-		t.Fatalf("securityGetProviders should return []*object.Object, got %T", result)
+		t.Fatalf("securityGetProviders should return *object.Object, got %T", result)
 	}
+	providers := obj.FieldTable["value"].Fvalue.([]*object.Object)
 
 	if len(providers) == 0 {
 		t.Fatal("expected at least one provider when DefaultSecurityProvider is not nil")
@@ -138,13 +139,13 @@ func TestSecurityGetProvidersEmptyParams(t *testing.T) {
 
 	// Test with nil params
 	result := securityGetProviders(nil)
-	if _, ok := result.([]*object.Object); !ok {
-		t.Errorf("securityGetProviders with nil params should still return []*object.Object, got %T", result)
+	if _, ok := result.(*object.Object); !ok {
+		t.Errorf("securityGetProviders with nil params should still return *object.Object, got %T", result)
 	}
 
 	// Test with empty slice
 	result = securityGetProviders([]any{})
-	if _, ok := result.([]*object.Object); !ok {
-		t.Errorf("securityGetProviders with empty params should return []*object.Object, got %T", result)
+	if _, ok := result.(*object.Object); !ok {
+		t.Errorf("securityGetProviders with empty params should return *object.Object, got %T", result)
 	}
 }

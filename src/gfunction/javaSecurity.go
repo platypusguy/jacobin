@@ -2,6 +2,7 @@ package gfunction
 
 import (
 	"jacobin/src/object"
+	"jacobin/src/types"
 )
 
 // Load_Security initializes java/security/Security methods
@@ -63,5 +64,5 @@ func securityGetProviders(params []any) any {
 	if provider == nil {
 		return []*object.Object{}
 	}
-	return []*object.Object{provider}
+	return object.MakeOneFieldObject(types.ObjectClassName, "value", types.RefArray, []*object.Object{provider})
 }
