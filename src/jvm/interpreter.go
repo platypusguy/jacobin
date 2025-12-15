@@ -2068,6 +2068,20 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	obj := *ref.(*object.Object)
 	var fieldType string
 	var fieldValue interface{}
+
+	objField, ok := obj.FieldTable[fieldName]
+	if !ok {
+		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
+		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		}
+	}
+
+	/* JACOBIN-824: Temporarily commenting out the following lines
+	obj := *ref.(*object.Object)
+	var fieldType string
+	var fieldValue interface{}
 	var objField object.Field
 	var ok bool
 
@@ -2084,6 +2098,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURED // applies only if in test
 		}
 	}
+	*/
 
 	fieldType = objField.Ftype
 	if fieldType == types.StringIndex {
@@ -2343,7 +2358,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					// per JACOBIN-59x, we return RESUME_HERE telling
 					// the interpreter that the fr.PC has been set to a new position
 					// from which processing should continue. This is used primarily
-					// when a frame has caught an exception and we're point the
+					// when a frame has caught an exception and we're pointing the
 					// interpreter to the first bytecode in the exception handler.
 					return RESUME_HERE // caught
 				}

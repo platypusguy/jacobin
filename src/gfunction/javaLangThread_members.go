@@ -443,6 +443,7 @@ func threadStart(params []interface{}) any {
 		errMsg := "threadStart: Missing the clName field in the runnable object"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+
 	clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 	fld, ok = ftbl["methName"]
 	if !ok {
@@ -459,10 +460,19 @@ func threadStart(params []interface{}) any {
 
 	// Spawn RunJavaThread to interpret bytecode of run()
 	args := []interface{}{t, clName, methName, methType}
-	go globals.GetGlobalRef().FuncRunThread(args)
-	runtime.Gosched()
-
-	return nil
+	if clName == "main$CounterTask" && methName == "run" { // JACOBIN-824 experimentation
+		globals.GetGlobalRef().FuncRunThread(args)
+		return nil
+	} else {
+		go globals.GetGlobalRef().FuncRunThread(args)
+		runtime.Gosched()
+		return nil
+	}
+	//
+	// go globals.GetGlobalRef().FuncRunThread(args)
+	// runtime.Gosched()
+	//
+	// return nil
 }
 
 // threadYield allows the current goroutine to relinquish the processor, enabling other goroutines to run.
