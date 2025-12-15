@@ -22,7 +22,6 @@ import (
 
 // Implementation of some of the functions in Java/lang/Class. Note that a class
 // implemented for reflection is referred to here a a Clazz. It is an object.
-
 func Load_Lang_Class() {
 
 	// There is no <clinit> for java/lang/Class.

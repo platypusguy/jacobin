@@ -410,9 +410,9 @@ func threadInitWithName(params []interface{}) any {
 	}
 	populateThreadObject(t)
 
-	//xx Get the class name "java/lang/Thread" or the user's own subclass of Thread.
-	//frameStack := params[0].(*list.List)
-	//storeThreadClassName(t, frameStack)
+	// xx Get the class name "java/lang/Thread" or the user's own subclass of Thread.
+	// frameStack := params[0].(*list.List)
+	// storeThreadClassName(t, frameStack)
 
 	name, ok := params[2].(*object.Object)
 	if !ok {
@@ -511,9 +511,9 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 	}
 	populateThreadObject(t)
 
-	//x Get the class name "java/lang/Thread" or the user's own subclass of Thread.
-	//frameStack := params[0].(*list.List)
-	//storeThreadClassName(t, frameStack)
+	// Get the class name "java/lang/Thread" or the user's own subclass of Thread.
+	// frameStack := params[0].(*list.List)
+	// storeThreadClassName(t, frameStack)
 
 	threadGroup, ok := params[2].(*object.Object)
 	if !ok {
