@@ -3027,12 +3027,14 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
 		for i := 0; i < len(rawSteArray); i++ {
 			ste := rawSteArray[i]
-			methodName := ste.FieldTable["methodName"].Fvalue.(string)
-			if methodName == "<init>" { // don't show constructors
+			rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
+			if rawClassName == "java/lang/Throwable" || // don't show Throwable methods
+				rawClassName == "java/lang/Error" || // don't show Error methods
+				rawClassName == "java/lang/AssertionError" { // don't show AssertionError methods
 				continue
 			}
-			rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
-			if rawClassName == "java/lang/Throwable" { // don't show Throwable methods
+			methodName := ste.FieldTable["methodName"].Fvalue.(string)
+			if methodName == "<init>" { // don't show constructors
 				continue
 			}
 			className := strings.Replace(rawClassName, "/", ".", -1)

@@ -346,10 +346,22 @@ func printStackTraceToWriter(throwable *object.Object, writer interface{}) {
 							}
 						}
 
+						// Filter out internal exception classes
+						if elemClassName == "java/lang/Throwable" || // don't show Throwable methods
+							elemClassName == "java/lang/Error" || // don't show Error methods
+							elemClassName == "java/lang/AssertionError" { // don't show AssertionError methods
+							continue
+						}
+
 						if field, ok := element.FieldTable["methodName"]; ok && field.Fvalue != object.Null {
 							if str, ok := field.Fvalue.(string); ok {
 								methodName = str
 							}
+						}
+
+						// Filter out constructors
+						if methodName == "<init>" { // don't show constructors
+							continue
 						}
 
 						if field, ok := element.FieldTable["fileName"]; ok && field.Fvalue != object.Null {
