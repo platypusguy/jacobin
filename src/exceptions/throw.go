@@ -15,6 +15,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/trace"
+	"jacobin/src/types"
 	"jacobin/src/util"
 	"os"
 	"runtime/debug"
@@ -117,6 +118,13 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 		// Fill in the stack trace for the exception object BEFORE removing frames
 		throwObj := objRef.(*object.Object)
+
+		// Set the detailMessage field if msg is not empty
+		if msg != "" {
+			msgObj := object.StringObjectFromGoString(msg)
+			throwObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
+		}
+
 		params := []any{fs, throwObj}
 		glob.FuncFillInStackTrace(params)
 
@@ -154,6 +162,13 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 	}
 
 	throwObj := throwObject.(*object.Object)
+
+	// Set the detailMessage field if msg is not empty
+	if msg != "" {
+		msgObj := object.StringObjectFromGoString(msg)
+		throwObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
+	}
+
 	params := []any{fs, throwObj}
 	glob.FuncFillInStackTrace(params)
 

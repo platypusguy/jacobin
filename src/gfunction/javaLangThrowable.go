@@ -202,7 +202,7 @@ func throwableInitNull(params []interface{}) interface{} {
 	}
 
 	// detailMessage = null
-	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassRef, Fvalue: object.Null}
+	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: object.Null}
 	// cause = null (not strictly required elsewhere yet)
 	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
 	// suppressedExceptions left unset for now; can be initialized lazily if needed
@@ -235,7 +235,7 @@ func throwableInitString(params []interface{}) interface{} {
 		shutdown.Exit(shutdown.JVM_EXCEPTION)
 		return errors.New(errMsg)
 	}
-	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassRef, Fvalue: msgObj}
+	thisObj.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
 
 	// cause = null by default
 	thisObj.FieldTable["cause"] = object.Field{Ftype: "Ljava/lang/Throwable;", Fvalue: object.Null}
@@ -315,8 +315,11 @@ func printStackTraceToWriter(throwable *object.Object, writer interface{}) {
 			if msgObj, ok := detailMsgField.Fvalue.(*object.Object); ok {
 				if msgObj.FieldTable != nil {
 					if valueField, ok := msgObj.FieldTable["value"]; ok {
-						if byteArray, ok := valueField.Fvalue.([]byte); ok {
-							message = string(byteArray)
+						switch v := valueField.Fvalue.(type) {
+						case []byte:
+							message = string(v)
+						case []types.JavaByte:
+							message = object.GoStringFromJavaByteArray(v)
 						}
 					}
 				}
