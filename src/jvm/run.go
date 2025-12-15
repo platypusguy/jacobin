@@ -55,9 +55,11 @@ func RunJavaThread(args []any) {
 	// Set up the method and CPool for the method's class.
 	mte, err := classloader.FetchMethodAndCP(clName, methName, methType)
 	if err != nil {
-		errMsg := fmt.Sprintf("RunJavaThread: Could not find run method (%s.%s(%s): %v", clName, methName, methType, err)
+		errMsg := fmt.Sprintf("RunJavaThread: Could not find run method (%s.%s%s): %v", clName, methName, methType, err)
 		exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, nil)
 	}
+
+	//trace.Trace(fmt.Sprintf("DEBUG RunJavaThread: Found run method: %s.%s%s", clName, methName, methType))
 
 	// Get Mtable entry for the method.
 	meth := mte.Meth.(classloader.JmEntry)
