@@ -124,6 +124,12 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 		// Set up the catch frame.
 		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
+
+		// Fill in the stack trace for the exception object
+		throwObj := objRef.(*object.Object)
+		params := []any{fs, throwObj}
+		glob.FuncFillInStackTrace(params)
+
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
 		catchFrame.PC = catchPC
@@ -185,7 +191,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 				traceEntry.FieldTable["fileName"].Fvalue.(string),
 				traceEntry.FieldTable["sourceLine"].Fvalue.(string))
 		}
-		_, _ = fmt.Fprintln(os.Stderr, traceInfo)
+		trace.AsIs(traceInfo)
 	}
 
 	if !glob.StrictJDK {

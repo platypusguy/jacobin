@@ -80,6 +80,22 @@ func Error(argMsg string) {
 	}
 }
 
+// Trace as-is.
+// Useful for tracing stack traceback lines.
+func AsIs(argMsg string) {
+	if disabled {
+		return
+	}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	_, err := fmt.Fprintf(os.Stderr, "%s\n", argMsg)
+	if err != nil {
+		errMsg := fmt.Sprintf("Error: *** stderr failed, err: %v", err)
+		rawAbort(excNames.IOError, errMsg)
+	}
+}
+
 // Similar to Error, except it's a warning, not an error.
 func Warning(argMsg string) {
 	if disabled {

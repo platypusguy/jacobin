@@ -112,11 +112,21 @@ func initStackTraceElements(params []interface{}) interface{} {
 	jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
 
 	var i = 0
+	isFirstFrame := true
 	for e := jvmStack.Front(); e != nil; e = e.Next() {
 		frame := e.Value.(*frames.Frame)
+
+		// Skip printStackTrace and related printing methods
+		if frame.MethName == "printStackTrace" ||
+			frame.MethName == "printStackTraceToPrintStream" ||
+			frame.MethName == "printStackTraceToPrintWriter" {
+			continue
+		}
+
 		ste := rawSteArray[i]
 		i += 1
-		initStackTraceElement(ste, frame)
+		initStackTraceElement(ste, frame, isFirstFrame)
+		isFirstFrame = false
 	}
 
 	return nil
@@ -127,7 +137,7 @@ func initStackTraceElements(params []interface{}) interface{} {
 // called only from initStackTraceElements(), so we don't need it to strictly
 // follow the HotSpot way of implementing it. Official definition:
 // initStackTraceElement(Ljava/lang/StackTraceElement;Ljava/lang/StackFrameInfo;)V
-func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
+func initStackTraceElement(ste *object.Object, frm *frames.Frame, isFirstFrame bool) {
 	frame := *frm
 	stackTrace := *ste
 
@@ -166,12 +176,21 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame) {
 	for i := 0; i < len(method.Attribs); i++ {
 		index := method.Attribs[i].AttrName
 		if method.Cp.Utf8Refs[index] == "LineNumberTable" {
+			// Use ExceptionPC if it's set (not -1), otherwise fall back to PC
 			pcToUse := frame.PC
-			if frame.ExceptionPC == -1 { // if the exception occurred in a different frame, exceptionPC = -1
-				// frame.ExceptionPC = frame.PC
-				pcToUse = frame.PC
+			if frame.ExceptionPC != -1 {
+				pcToUse = frame.ExceptionPC
 			}
-			// line := searchLineNumberTable(method.Attribs[i].AttrContent, frame.ExceptionPC)
+
+			// For non-first frames (caller frames), the PC points to the instruction
+			// after the method call. We need to look back to find the actual call instruction.
+			// Most invoke instructions are 3 bytes (opcode + 2-byte CP index).
+			if !isFirstFrame && pcToUse > 0 {
+				// Adjust PC backward to point to the call instruction
+				// We subtract 1 to get into the range of the previous instruction
+				pcToUse = pcToUse - 1
+			}
+
 			line := searchLineNumberTable(method.Attribs[i].AttrContent, pcToUse)
 			if line != -1 { // -1 means not found
 				addField("sourceLine", fmt.Sprintf("%d", line))

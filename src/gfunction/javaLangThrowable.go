@@ -13,6 +13,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 )
@@ -110,19 +111,19 @@ func Load_Lang_Throwable() {
 	MethodSignatures["java/lang/Throwable.printStackTrace()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  printStackTrace,
 		}
 
 	MethodSignatures["java/lang/Throwable.printStackTrace(Ljava/io/PrintStream;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  printStackTraceToPrintStream,
 		}
 
 	MethodSignatures["java/lang/Throwable.printStackTrace(Ljava/io/PrintWriter;)V"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  printStackTraceToPrintWriter,
 		}
 
 	MethodSignatures["java/lang/Throwable.setStackTrace([Ljava/lang/StackTraceElement;)V"] =
@@ -244,6 +245,141 @@ func throwableInitString(params []interface{}) interface{} {
 		_ = FillInStackTrace([]interface{}{frameStack, thisObj})
 	}
 	return nil
+}
+
+// printStackTrace prints the stack trace to System.err
+func printStackTrace(params []interface{}) interface{} {
+	if len(params) != 1 {
+		errMsg := fmt.Sprintf("printStackTrace: expected 1 parameter, got: %d", len(params))
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg)
+	}
+
+	throwable := params[0].(*object.Object)
+	printStackTraceToWriter(throwable, statics.GetStaticValue("java/lang/System", "err"))
+	return nil
+}
+
+// printStackTraceToPrintStream prints the stack trace to the specified PrintStream
+func printStackTraceToPrintStream(params []interface{}) interface{} {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("printStackTraceToPrintStream: expected 2 parameters, got: %d", len(params))
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg)
+	}
+
+	throwable := params[0].(*object.Object)
+	printStream := params[1]
+	printStackTraceToWriter(throwable, printStream)
+	return nil
+}
+
+// printStackTraceToPrintWriter prints the stack trace to the specified PrintWriter
+func printStackTraceToPrintWriter(params []interface{}) interface{} {
+	if len(params) != 2 {
+		errMsg := fmt.Sprintf("printStackTraceToPrintWriter: expected 2 parameters, got: %d", len(params))
+		trace.Error(errMsg)
+		shutdown.Exit(shutdown.JVM_EXCEPTION)
+		return errors.New(errMsg)
+	}
+
+	throwable := params[0].(*object.Object)
+	printWriter := params[1]
+	printStackTraceToWriter(throwable, printWriter)
+	return nil
+}
+
+// printStackTraceToWriter is the common implementation for printing stack traces
+func printStackTraceToWriter(throwable *object.Object, writer interface{}) {
+	// Get the stack trace from the throwable's stackTrace field
+	var stackTraceObj *object.Object
+	if stackTraceField, ok := throwable.FieldTable["stackTrace"]; ok {
+		if stackTraceField.Fvalue != object.Null {
+			stackTraceObj = stackTraceField.Fvalue.(*object.Object)
+		}
+	}
+
+	// Get the exception class name
+	classNamePtr := stringPool.GetStringPointer(throwable.KlassName)
+	className := ""
+	if classNamePtr != nil {
+		className = *classNamePtr
+	}
+
+	// Get the detail message if present
+	var message string
+	if detailMsgField, ok := throwable.FieldTable["detailMessage"]; ok {
+		if detailMsgField.Fvalue != object.Null {
+			if msgObj, ok := detailMsgField.Fvalue.(*object.Object); ok {
+				if msgObj.FieldTable != nil {
+					if valueField, ok := msgObj.FieldTable["value"]; ok {
+						if byteArray, ok := valueField.Fvalue.([]byte); ok {
+							message = string(byteArray)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Print the exception header
+	if message != "" {
+		fmt.Fprintf(writer.(interface{ Write([]byte) (int, error) }), "%s: %s\n", className, message)
+	} else {
+		fmt.Fprintf(writer.(interface{ Write([]byte) (int, error) }), "%s\n", className)
+	}
+
+	// Print each stack trace element
+	if stackTraceObj != nil && stackTraceObj.FieldTable != nil {
+		if arrayField, ok := stackTraceObj.FieldTable["value"]; ok {
+			if elements, ok := arrayField.Fvalue.([]*object.Object); ok {
+				for _, element := range elements {
+					if element != nil && element.FieldTable != nil {
+						// Extract className, methodName, fileName, sourceLine from StackTraceElement
+						var elemClassName, methodName, fileName, sourceLine string
+
+						if field, ok := element.FieldTable["declaringClass"]; ok && field.Fvalue != object.Null {
+							if str, ok := field.Fvalue.(string); ok {
+								elemClassName = str
+							}
+						}
+
+						if field, ok := element.FieldTable["methodName"]; ok && field.Fvalue != object.Null {
+							if str, ok := field.Fvalue.(string); ok {
+								methodName = str
+							}
+						}
+
+						if field, ok := element.FieldTable["fileName"]; ok && field.Fvalue != object.Null {
+							if str, ok := field.Fvalue.(string); ok {
+								fileName = str
+							}
+						}
+
+						if field, ok := element.FieldTable["sourceLine"]; ok && field.Fvalue != object.Null {
+							if str, ok := field.Fvalue.(string); ok {
+								sourceLine = str
+							}
+						}
+
+						// Format and print the stack trace element
+						if fileName != "" && sourceLine != "" {
+							fmt.Fprintf(writer.(interface{ Write([]byte) (int, error) }), "\tat %s.%s(%s:%s)\n",
+								elemClassName, methodName, fileName, sourceLine)
+						} else if fileName != "" {
+							fmt.Fprintf(writer.(interface{ Write([]byte) (int, error) }), "\tat %s.%s(%s)\n",
+								elemClassName, methodName, fileName)
+						} else {
+							fmt.Fprintf(writer.(interface{ Write([]byte) (int, error) }), "\tat %s.%s(Unknown Source)\n",
+								elemClassName, methodName)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // This function is called by Throwable.<init>().

@@ -3021,7 +3021,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 				errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
 			}
 		}
-		trace.Error(errMsg)
+		trace.AsIs(errMsg)
 
 		steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
 		rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
@@ -3047,7 +3047,7 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 				errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
 					methodName, ste.FieldTable["fileName"].Fvalue)
 			}
-			trace.Error(errMsg)
+			trace.AsIs(errMsg)
 		}
 
 		// show Jacobin's JVM stack info if -strictJDK is not set
