@@ -112,6 +112,14 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 			trace.Trace(infoMsg)
 		}
 
+		// Set up the catch frame.
+		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
+
+		// Fill in the stack trace for the exception object BEFORE removing frames
+		throwObj := objRef.(*object.Object)
+		params := []any{fs, throwObj}
+		glob.FuncFillInStackTrace(params)
+
 		// remove the frames we examined that did not have the catch logic
 		for fs.Len() > 0 {
 			fr := fs.Front().Value
@@ -121,14 +129,6 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 				fs.Remove(fs.Front())
 			}
 		}
-
-		// Set up the catch frame.
-		objRef, _ := glob.FuncInstantiateClass(exceptionCPname, fs)
-
-		// Fill in the stack trace for the exception object
-		throwObj := objRef.(*object.Object)
-		params := []any{fs, throwObj}
-		glob.FuncFillInStackTrace(params)
 
 		catchFrame.TOS = 0
 		catchFrame.OpStack[0] = objRef // push the objRef
