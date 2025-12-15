@@ -632,19 +632,19 @@ func TestGetSuperclasses(t *testing.T) {
 	}
 
 	// Try the java.lang.Object index.
-	aryUint32 = getSuperclasses(types.ObjectPoolStringIndex)
+	aryUint32 = getSuperclasses(types.StringPoolObjectIndex)
 	if len(aryUint32) != 0 {
-		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected return length 0, got: %d", len(aryUint32))
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.StringPoolObjectIndex). Expected return length 0, got: %d", len(aryUint32))
 	}
 
 	// Try the java.lang.String index.
 	aryUint32 = getSuperclasses(types.StringPoolStringIndex)
 	if len(aryUint32) != 1 {
-		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected return length 1, got: %d", len(aryUint32))
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.StringPoolObjectIndex). Expected return length 1, got: %d", len(aryUint32))
 	}
 	str := object.GoStringFromStringPoolIndex(aryUint32[0])
 	if str != "java/lang/Object" {
-		t.Errorf("TestGetSuperclasses: getSuperclasses(types.ObjectPoolStringIndex). Expected java/lang/Object, got: %s", str)
+		t.Errorf("TestGetSuperclasses: getSuperclasses(types.StringPoolObjectIndex). Expected java/lang/Object, got: %s", str)
 	}
 
 	// Try the java.lang.String index.

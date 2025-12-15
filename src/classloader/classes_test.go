@@ -75,7 +75,7 @@ func TestInvalidMainMethod(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
+	k.Data.SuperclassIndex = types.StringPoolObjectIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)
@@ -361,7 +361,7 @@ func TestFetchMethodAndCP_SuperclassesExhausted_NoMethod(t *testing.T) {
 
 	midName := "com/example/Mid"
 	subName := "com/example/Sub2"
-	objIdx := types.ObjectPoolStringIndex
+	objIdx := types.StringPoolObjectIndex
 	midIdx := stringPool.GetStringIndex(&midName)
 
 	midData := &ClData{Name: midName, SuperclassIndex: objIdx, MethodTable: make(map[string]*Method)}

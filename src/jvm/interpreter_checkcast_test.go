@@ -48,7 +48,7 @@ func ensureClassWithSuper(name string, super string) {
 	if super == "" {
 		superIdx = types.InvalidStringIndex
 	} else if super == "java/lang/Object" {
-		superIdx = types.ObjectPoolStringIndex
+		superIdx = types.StringPoolObjectIndex
 	} else {
 		superIdx = stringPool.GetStringIndex(&super)
 	}

@@ -78,7 +78,7 @@ func securityProvSvcInit(params []any) any {
 	this.FieldTable["type"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(typeStr)}
 	this.FieldTable["algorithm"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(algorithmStr)}
 	this.FieldTable["className"] = object.Field{Ftype: types.StringClassName, Fvalue: object.StringObjectFromGoString(classNameStr)}
-	this.FieldTable["aliases"] = object.Field{Ftype: types.StringClassNameArray, Fvalue: aliasArray}
+	this.FieldTable["aliases"] = object.Field{Ftype: types.StringArrayClassName, Fvalue: aliasArray}
 	this.FieldTable["attributes"] = object.Field{Ftype: types.Map, Fvalue: map[string]string{}}
 
 	return nil

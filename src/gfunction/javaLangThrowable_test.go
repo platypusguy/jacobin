@@ -79,7 +79,7 @@ func TestJavaLangThrowableFillInStackTraceValid(t *testing.T) {
 
 	clData := classloader.ClData{
 		Name:            "",
-		SuperclassIndex: types.ObjectPoolStringIndex,
+		SuperclassIndex: types.StringPoolObjectIndex,
 		Module:          "test module",
 		Pkg:             "",
 		Interfaces:      nil,
@@ -189,7 +189,6 @@ func InstantiateFillIn(name string, _ *list.List) (any, error) {
 	return o, nil
 }
 
-
 // Additional tests for Throwable constructors
 func TestThrowableInitNull_SetsFieldsAndStack(t *testing.T) {
 	globals.InitGlobals("test")
@@ -203,7 +202,7 @@ func TestThrowableInitNull_SetsFieldsAndStack(t *testing.T) {
 	f.MethType = "([Ljava/lang/String;)V"
 	clData := classloader.ClData{
 		Name:            "",
-		SuperclassIndex: types.ObjectPoolStringIndex,
+		SuperclassIndex: types.StringPoolObjectIndex,
 		Module:          "test module",
 		Pkg:             "",
 		Interfaces:      nil,
@@ -223,7 +222,7 @@ func TestThrowableInitNull_SetsFieldsAndStack(t *testing.T) {
 	jvmStack := frames.CreateFrameStack()
 	_ = frames.PushFrame(jvmStack, f)
 
- // Throwable instance
+	// Throwable instance
 	cls := "java/lang/Throwable"
 	th := object.MakeEmptyObjectWithClassName(&cls)
 
@@ -284,7 +283,7 @@ func TestThrowableInitString_SetsMessageAndStack(t *testing.T) {
 	f.MethType = "([Ljava/lang/String;)V"
 	clData := classloader.ClData{
 		Name:            "",
-		SuperclassIndex: types.ObjectPoolStringIndex,
+		SuperclassIndex: types.StringPoolObjectIndex,
 		Module:          "test module",
 		Pkg:             "",
 		Interfaces:      nil,
@@ -304,7 +303,7 @@ func TestThrowableInitString_SetsMessageAndStack(t *testing.T) {
 	jvmStack := frames.CreateFrameStack()
 	_ = frames.PushFrame(jvmStack, f)
 
- // Throwable and message
+	// Throwable and message
 	cls := "java/lang/Throwable"
 	th := object.MakeEmptyObjectWithClassName(&cls)
 	msg := object.StringObjectFromGoString("hello")

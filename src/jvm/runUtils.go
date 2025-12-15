@@ -313,7 +313,7 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 		return retval
 	}
 
-	if classNameIndex == types.ObjectPoolStringIndex { // if the object is java/lang/Object, it has no superclasses
+	if classNameIndex == types.StringPoolObjectIndex { // if the object is java/lang/Object, it has no superclasses
 		return retval
 	}
 
@@ -326,7 +326,7 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 
 	retval = append(retval, thisClassSuper)
 
-	if thisClassSuper == types.ObjectPoolStringIndex { // is the immediate superclass java/lang/Object? most cases = yes
+	if thisClassSuper == types.StringPoolObjectIndex { // is the immediate superclass java/lang/Object? most cases = yes
 		return retval
 	}
 
@@ -342,7 +342,7 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 		thisClassSuper = thisClass.Data.SuperclassIndex
 		retval = append(retval, thisClassSuper)
 
-		if thisClassSuper == types.ObjectPoolStringIndex { // is the superclass java/lang/Object? If so, this is the
+		if thisClassSuper == types.StringPoolObjectIndex { // is the superclass java/lang/Object? If so, this is the
 			break // loop's exit condition as all objects have java/lang/Object at the top of their superclass hierarchy
 		} else {
 			idx = thisClassSuper

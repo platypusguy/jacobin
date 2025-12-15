@@ -400,8 +400,8 @@ func InitStringPool() {
 	// Prestored values: 0 = nil, 1 = String, 2 = Object
 	StringPoolTable[""] = 0
 	StringPoolTable["java/lang/String"] = types.StringPoolStringIndex
-	StringPoolTable["java/lang/Object"] = types.ObjectPoolStringIndex
-	StringPoolTable["java/lang/Thread"] = types.ThreadPoolStringIndex
+	StringPoolTable["java/lang/Object"] = types.StringPoolObjectIndex
+	StringPoolTable["java/lang/Thread"] = types.StringPoolThreadIndex
 
 	// Pre-stored string list.
 	StringPoolList = nil

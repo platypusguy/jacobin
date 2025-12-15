@@ -150,7 +150,7 @@ func TestNewInvokeSpecialJavaLangObject(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	CP.ClassRefs[0] = types.ObjectPoolStringIndex
+	CP.ClassRefs[0] = types.StringPoolObjectIndex
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
 	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
@@ -458,7 +458,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 		Name:      "jacobin/src/test/Object",
 		NameIndex: CP.ClassRefs[0],
 		// Superclass:      "java/lang/Object",
-		SuperclassIndex: types.ObjectPoolStringIndex,
+		SuperclassIndex: types.StringPoolObjectIndex,
 		Module:          "",
 		Pkg:             "",
 		Interfaces:      nil,
@@ -548,7 +548,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 
 	f.CP = &CP
 	classloader.ResolveCPmethRefs(&CP)
-	
+
 	push(&f, int64(999)) // push the one param
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
@@ -556,7 +556,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 		Name:      "jacobin/src/test/Object",
 		NameIndex: CP.ClassRefs[0],
 		// Superclass:      "java/lang/Object",
-		SuperclassIndex: types.ObjectPoolStringIndex,
+		SuperclassIndex: types.StringPoolObjectIndex,
 		Module:          "",
 		Pkg:             "",
 		Interfaces:      nil,

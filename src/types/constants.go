@@ -20,11 +20,11 @@ const InvalidStringIndex uint32 = 0xffffffff
 // ---- default superclass ----
 var ObjectClassName = "java/lang/Object"
 var PtrToJavaLangObject = &ObjectClassName
-var ObjectPoolStringIndex = uint32(2) // points to the string pool slice for "java/lang/Object"
+var StringPoolObjectIndex = uint32(2) // points to the string pool slice for "java/lang/Object"
 
 // Constants related to "java/lang/String":
 var StringClassName = "java/lang/String"
-var StringClassNameArray = "[java/lang/String"
+var StringArrayClassName = "[java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
 var ModuleClassRef = "Ljava/lang/Module;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
@@ -33,7 +33,7 @@ var NullString = "null"
 
 // Other class names
 var ClassNameThread = "java/lang/Thread"
-var ThreadPoolStringIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
+var StringPoolThreadIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 
 // Security-related

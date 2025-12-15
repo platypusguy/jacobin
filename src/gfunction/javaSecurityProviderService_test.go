@@ -152,8 +152,8 @@ func TestSecurityProvSvcInitHappyPath(t *testing.T) {
 	if !exists {
 		t.Fatalf("aliases field not set")
 	}
-	if aliasesField.Ftype != types.StringClassNameArray {
-		t.Errorf("Expected aliases Ftype %s, got %s", types.StringClassNameArray, aliasesField.Ftype)
+	if aliasesField.Ftype != types.StringArrayClassName {
+		t.Errorf("Expected aliases Ftype %s, got %s", types.StringArrayClassName, aliasesField.Ftype)
 	}
 
 	// Verify attributes field is initialized
@@ -407,7 +407,7 @@ func TestSecurityProvSvcGetAliases(t *testing.T) {
 	service := object.MakeEmptyObjectWithClassName(&serviceClassName)
 
 	aliases := object.StringObjectArrayFromGoStringArray([]string{"SHA256", "2.16.840.1.101.3.4.2.1"})
-	service.FieldTable["aliases"] = object.Field{Ftype: types.StringClassNameArray, Fvalue: aliases}
+	service.FieldTable["aliases"] = object.Field{Ftype: types.StringArrayClassName, Fvalue: aliases}
 
 	result := securityProvSvcGetAliases([]any{service})
 

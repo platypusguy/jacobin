@@ -2085,7 +2085,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	var objField object.Field
 	var ok bool
 
-	if obj.KlassName == types.ThreadPoolStringIndex {
+	if obj.KlassName == types.StringPoolThreadIndex {
 		runnable := obj.FieldTable["target"].Fvalue.(*object.Object)
 		objField, ok = runnable.FieldTable[fieldName]
 	} else {

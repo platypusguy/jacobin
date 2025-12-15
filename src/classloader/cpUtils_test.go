@@ -38,7 +38,7 @@ func TestMeInfoFromMethRefValid(t *testing.T) {
 
 	CP.CpIndex[2] = CpEntry{Type: ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	CP.ClassRefs[0] = types.ObjectPoolStringIndex
+	CP.ClassRefs[0] = types.StringPoolObjectIndex
 
 	CP.CpIndex[3] = CpEntry{Type: NameAndType, Slot: 0}
 	CP.NameAndTypes = make([]NameAndTypeEntry, 4)
@@ -84,7 +84,7 @@ func TestGetClassNameFromCPclassref(t *testing.T) {
 	CP.CpIndex[2] = CpEntry{Type: ClassRef, Slot: 1}
 
 	CP.ClassRefs = make([]uint32, 4)
-	CP.ClassRefs[0] = types.ObjectPoolStringIndex
+	CP.ClassRefs[0] = types.StringPoolObjectIndex
 	CP.ClassRefs[1] = types.InvalidStringIndex
 
 	f.CP = &CP

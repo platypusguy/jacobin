@@ -34,7 +34,7 @@ func TestMethAreadDelete(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
+	k.Data.SuperclassIndex = types.StringPoolObjectIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry1", &k)
@@ -66,7 +66,7 @@ func TestMethAreadDeleteNonExistentEntry(t *testing.T) {
 		Data:   &ClData{},
 	}
 	k.Data.Name = "testClass1"
-	k.Data.SuperclassIndex = types.ObjectPoolStringIndex
+	k.Data.SuperclassIndex = types.StringPoolObjectIndex
 	k.Loader = "testloader"
 	k.Status = 'F'
 	MethAreaInsert("TestEntry", &k)

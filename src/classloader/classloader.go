@@ -333,7 +333,7 @@ loadAclass:
 	}
 
 	// load any superclass in a recursive fashion
-	if superclassIndex != types.ObjectPoolStringIndex { // don't load if it's java/lang/Object
+	if superclassIndex != types.StringPoolObjectIndex { // don't load if it's java/lang/Object
 		className = *stringPool.GetStringPointer(superclassIndex)
 		goto loadAclass
 	}
