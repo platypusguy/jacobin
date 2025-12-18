@@ -2747,6 +2747,10 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			params = append(params, pop(fr))
 		}
 
+		// now get the objectRef (the object whose method we're invoking)
+		objRef := pop(fr).(*object.Object)
+		params = append(params, objRef)
+
 		if globals.TraceInst {
 			infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
 			trace.Trace(infoMsg)
