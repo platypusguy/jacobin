@@ -169,6 +169,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 		// java/security/*
 		Load_Security()
+		Load_Security_MessageDigest()
 		Load_Security_Provider()
 		Load_Security_Provider_Service()
 		Load_Security_SecureRandom()
