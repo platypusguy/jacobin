@@ -40,5 +40,9 @@ var ClassNameThreadGroup = "java/lang/ThreadGroup"
 const SecurityProviderName = "GoSecurityProvider"
 const SecurityProviderInfo = "Security + Cryptography"
 
+// File system
+var FileSystemProviderValue = &struct{}{}
+var FileSystemProviderType = "Ljava/nio/file/spi/FileSystemProvider;"
+
 // ---- experimental values ----
 var StackInflator = 2 // for toying with whether to increase # of stack entries

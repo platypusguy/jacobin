@@ -14,6 +14,258 @@ func Load_Traps_Java_Nio() {
 			GFunction:  trapClass,
 		}
 
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.close()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.force(Z)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.isOpen()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.read(Ljava/nio/ByteBuffer;J)Ljava/util/concurrent/Future;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.read(Ljava/nio/ByteBuffer;JLcompletion/CompletionHandler;)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.size()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.truncate(J)Ljava/nio/channels/AsynchronousFileChannel;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.write(Ljava/nio/ByteBuffer;J)Ljava/util/concurrent/Future;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.write(Ljava/nio/ByteBuffer;JLcompletion/CompletionHandler;)V"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/AsynchronousFileChannel;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/AsynchronousFileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;Ljava/util/concurrent/ExecutorService;)Ljava/nio/channels/AsynchronousFileChannel;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.close()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.force(Z)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.isOpen()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.lock()Ljava/nio/channels/FileLock;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.lock(JJZ)Ljava/nio/channels/FileLock;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.map(Ljava/nio/channels/FileChannel$MapMode;JJ)Ljava/nio/MappedByteBuffer;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.position()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.position(J)Ljava/nio/channels/FileChannel;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.read(Ljava/nio/ByteBuffer;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.read(Ljava/nio/ByteBuffer;J)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.read([Ljava/nio/ByteBuffer;)J"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.read([Ljava/nio/ByteBuffer;II)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.size()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.truncate(J)Ljava/nio/channels/FileChannel;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.transferFrom(Ljava/nio/channels/ReadableByteChannel;JJ)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.transferTo(JJLjava/nio/channels/WritableByteChannel;)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.write(Ljava/nio/ByteBuffer;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.write(Ljava/nio/ByteBuffer;J)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.write([Ljava/nio/ByteBuffer;)J"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.write([Ljava/nio/ByteBuffer;II)J"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/FileChannel;"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/channels/FileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;Ljava/util/concurrent/ExecutorService;)Ljava/nio/channels/FileChannel;"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapClass,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.ISO_8859_1()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.US_ASCII()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16BE()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16LE()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/nio/charset/StandardCharsets.UTF_8()Ljava/nio/charset/Charset;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/nio/file/AccessMode.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
@@ -374,429 +626,4 @@ func Load_Traps_Java_Nio() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/nio/file/Path.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/file/Path.compareTo(Ljava/nio/file/Path;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.endsWith(Ljava/lang/String;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.endsWith(Ljava/nio/file/Path;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.getFileName()Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.getName(I)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.getNameCount()I"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.getParent()Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.getRoot()Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.isAbsolute()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.iterator()Ljava/util/Iterator;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.normalize()Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.relativize(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.resolve(Ljava/lang/String;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.resolve(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.resolveSibling(Ljava/lang/String;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.resolveSibling(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.startsWith(Ljava/lang/String;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.startsWith(Ljava/nio/file/Path;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.subpath(II)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.toAbsolutePath()Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.toFile()Ljava/io/File;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.toString()Ljava/lang/String;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Path.toUri()Ljava/net/URI;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/PathMatcher.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/file/PathMatcher.matches(Ljava/nio/file/Path;)Z"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Paths.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/file/Paths.get(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/file/Paths.get(Ljava/net/URI;)Ljava/nio/file/Path;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.ISO_8859_1()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.US_ASCII()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16BE()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.UTF_16LE()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/charset/StandardCharsets.UTF_8()Ljava/nio/charset/Charset;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.close()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.force(Z)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.isOpen()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.read(Ljava/nio/ByteBuffer;J)Ljava/util/concurrent/Future;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.read(Ljava/nio/ByteBuffer;JLcompletion/CompletionHandler;)V"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.size()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.truncate(J)Ljava/nio/channels/AsynchronousFileChannel;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.write(Ljava/nio/ByteBuffer;J)Ljava/util/concurrent/Future;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.write(Ljava/nio/ByteBuffer;JLcompletion/CompletionHandler;)V"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/AsynchronousFileChannel;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/AsynchronousFileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;Ljava/util/concurrent/ExecutorService;)Ljava/nio/channels/AsynchronousFileChannel;"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.close()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.force(Z)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.isOpen()Z"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.lock()Ljava/nio/channels/FileLock;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.lock(JJZ)Ljava/nio/channels/FileLock;"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.map(Ljava/nio/channels/FileChannel$MapMode;JJ)Ljava/nio/MappedByteBuffer;"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.position()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.position(J)Ljava/nio/channels/FileChannel;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.read(Ljava/nio/ByteBuffer;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.read(Ljava/nio/ByteBuffer;J)I"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.read([Ljava/nio/ByteBuffer;)J"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.read([Ljava/nio/ByteBuffer;II)J"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.size()J"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.truncate(J)Ljava/nio/channels/FileChannel;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.transferFrom(Ljava/nio/channels/ReadableByteChannel;JJ)J"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.transferTo(JJLjava/nio/channels/WritableByteChannel;)J"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.write(Ljava/nio/ByteBuffer;)I"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.write(Ljava/nio/ByteBuffer;J)I"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.write([Ljava/nio/ByteBuffer;)J"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.write([Ljava/nio/ByteBuffer;II)J"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/nio/channels/FileChannel;"] =
-		GMeth{
-			ParamSlots: 2,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["java/nio/channels/FileChannel.open(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;Ljava/util/concurrent/ExecutorService;)Ljava/nio/channels/FileChannel;"] =
-		GMeth{
-			ParamSlots: 3,
-			GFunction:  trapFunction,
-		}
 }

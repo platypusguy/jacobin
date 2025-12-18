@@ -129,6 +129,10 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Io_PrintStream()
 		Load_Io_RandomAccessFile()
 
+		// java/nio/*
+		Load_Nio_File_Path()
+		Load_Nio_File_Paths()
+
 		// java/lang/*
 		Load_Lang_Boolean()
 		Load_Lang_Byte()
