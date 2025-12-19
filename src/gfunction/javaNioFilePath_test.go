@@ -272,7 +272,7 @@ func TestFilePathSubpath(t *testing.T) {
 
 func TestFilePathToAbsolutePath(t *testing.T) {
 	globals.InitGlobals("test")
-	globals.SetSystemProperty("user.dir", "/")
+	globals.SetSystemProperty("user.dir", testSep)
 	p := newPath(fmt.Sprintf("a%sb", testSep))
 	res := filePathToAbsolutePath([]interface{}{p}).(*object.Object)
 	val := res.FieldTable["value"].Fvalue.(*object.Object)
