@@ -235,8 +235,15 @@ func filePathGetParent(params []interface{}) interface{} {
 func filePathGetRoot(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if len(thisStr) == 0 {
+		return object.Null
+	}
+	if strings.HasPrefix(thisStr, sep) {
 		return newPath(sep)
+	}
+	// Windows root: C:\
+	if len(thisStr) >= 3 && sep == "\\" && thisStr[1] == ':' && thisStr[2] == '\\' {
+		return newPath(thisStr[:3])
 	}
 	return object.Null
 }
@@ -251,10 +258,24 @@ func filePathHashCode(params []interface{}) interface{} {
 	return hash
 }
 
+func isAbsolute(path string) bool {
+	if len(path) == 0 {
+		return false
+	}
+	if strings.HasPrefix(path, sep) {
+		return true
+	}
+	// Windows absolute path: C:\...
+	if len(path) >= 3 && sep == "\\" && path[1] == ':' && path[2] == '\\' {
+		return true
+	}
+	return false
+}
+
 func filePathIsAbsolute(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if isAbsolute(thisStr) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -386,7 +407,7 @@ func getPathParts(path string) []string {
 func filePathToAbsolutePath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if isAbsolute(thisStr) {
 		return thisObj
 	}
 	// for simplicity, prepend sep as root
