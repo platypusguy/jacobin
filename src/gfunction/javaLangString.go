@@ -801,14 +801,20 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromBytes: null parameter")
+	}
 	obj := params[0].(*object.Object)
-	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromBytes: missing value field")
+	}
+	switch fld.Fvalue.(type) {
 	case []byte:
-		bytes := object.JavaByteArrayFromGoByteArray(
-			params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		bytes := object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
 		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	case []types.JavaByte:
-		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		bytes := fld.Fvalue.([]types.JavaByte)
 		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	}
 	return nil
@@ -820,31 +826,37 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
 	// params[2] = start offset
-	// params[3] = end offset
+	// params[3] = length
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromBytesSubset: null parameter")
+	}
 	obj := params[0].(*object.Object)
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromBytesSubset: missing value field")
+	}
 	var bytes []types.JavaByte
-	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	switch fld.Fvalue.(type) {
 	case []byte:
-		bytes = object.JavaByteArrayFromGoByteArray(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		bytes = object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
 	case []types.JavaByte:
-		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		bytes = fld.Fvalue.([]types.JavaByte)
 	}
 
-	// Get substring start and end offset
+	// Get substring start and length
 	ssStart := params[2].(int64)
-	ssEnd := params[3].(int64)
+	ssLen := params[3].(int64)
 
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "newStringFromBytesSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n",
-			object.GoStringFromJavaByteArray(bytes), totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssLen < 0 || (ssStart+ssLen) > totalLength {
+		errMsg1 := "newStringFromBytesSubset: Invalid offset or length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, length=%d\n\n", totalLength, ssStart, ssLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
-	bytes = bytes[ssStart : ssStart+ssEnd]
+	bytes = bytes[ssStart : ssStart+ssLen]
 	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
 }
@@ -853,9 +865,19 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 // "java/lang/String.<init>([C)V"
 func newStringFromChars(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
-	// params[1] = byte array object
+	// params[1] = char array object
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromChars: null parameter")
+	}
 	obj := params[0].(*object.Object)
-	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromChars: missing value field")
+	}
+	ints, ok := fld.Fvalue.([]int64)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromChars: value field is not []int64")
+	}
 
 	var bytes []types.JavaByte
 	for _, ii := range ints {
@@ -870,8 +892,11 @@ func newStringFromChars(params []interface{}) interface{} {
 func newStringFromCharsSubset(params []interface{}) interface{} {
 	// params[0] = character array object
 	// params[1] = start offset
-	// params[2] = end offset
+	// params[2] = length
 	// Return the string.
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromCharsSubset: null parameter")
+	}
 	fld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
 		errMsg := fmt.Sprintf("newStringFromCharsSubset: Missing value field in character array object")
@@ -883,20 +908,20 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Get substring start and end offset
+	// Get substring start and length
 	ssStart := params[1].(int64)
-	ssEnd := params[2].(int64)
+	ssLen := params[2].(int64)
 
 	// Validate boundaries.
 	totalLength := int64(len(iarray))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "newStringFromCharsSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssLen < 0 || (ssStart+ssLen) > totalLength {
+		errMsg1 := "newStringFromCharsSubset: Invalid offset or length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, length=%d\n\n", totalLength, ssStart, ssLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
-	// Compute subarray and update params[0].
-	iarray = iarray[ssStart : ssStart+ssEnd]
+	// Compute subarray.
+	iarray = iarray[ssStart : ssStart+ssLen]
 	var bytes []types.JavaByte
 	for _, ii := range iarray {
 		bytes = append(bytes, types.JavaByte(ii&0xFF))
@@ -938,6 +963,11 @@ func stringCharAt(params []interface{}) interface{} {
 
 	// Get index.
 	index := params[1].(int64)
+
+	if index < 0 || int(index) >= len(runeArray) {
+		errMsg := fmt.Sprintf("stringCharAt: Index out of bounds: %d, length: %d", index, len(runeArray))
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
 
 	// Return indexed character.
 	runeValue := runeArray[index]
@@ -1303,9 +1333,9 @@ func substringToTheEnd(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	totalLength := int64(len(str))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringToTheEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssStart > totalLength {
+		errMsg1 := "substringToTheEnd: Invalid substring offset"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d\n\n", str, totalLength, ssStart)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
@@ -1340,9 +1370,9 @@ func substringStartEnd(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	totalLength := int64(len(str))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringStartEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssEnd > totalLength || ssStart > ssEnd {
+		errMsg1 := "substringStartEnd: Invalid substring range"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, start=%d, end=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
@@ -1356,12 +1386,15 @@ func substringStartEnd(params []interface{}) interface{} {
 
 // "java/lang/String.toCharArray()[C"
 func toCharArray(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "toCharArray: null parameter")
+	}
 	// params[0]: input string
-	obj := params[0].(*object.Object)
-	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
+	runes := []rune(str)
 	var iArray []int64
-	for _, bb := range bytes {
-		iArray = append(iArray, int64(bb))
+	for _, r := range runes {
+		iArray = append(iArray, int64(r))
 	}
 	return Populator("[C", types.CharArray, iArray)
 }
@@ -1394,8 +1427,12 @@ func trimString(params []interface{}) interface{} {
 		return getGErrBlk(excNames.NullPointerException, "trimString: null parameter")
 	}
 	// params[0]: input string
-	str := strings.Trim(object.GoStringFromStringObject(params[0].(*object.Object)), " ")
-	obj := object.StringObjectFromGoString(str)
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
+	// Java String.trim() removes leading and trailing characters <= \u0020
+	trimmed := strings.TrimFunc(str, func(r rune) bool {
+		return r <= '\u0020'
+	})
+	obj := object.StringObjectFromGoString(trimmed)
 	return obj
 }
 
@@ -1709,10 +1746,13 @@ func stringGetChars(params []interface{}) interface{} {
 	dstLength := int64(len(dstChars))
 
 	// Validate boundaries.
-	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength || dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
-		errMsg1 := "stringGetChars: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", srcLength, srcBegin, srcEnd)
-		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength {
+		errMsg := fmt.Sprintf("stringGetChars: Source index out of bounds: srcBegin=%d, srcEnd=%d, length=%d", srcBegin, srcEnd, srcLength)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
+		errMsg := fmt.Sprintf("stringGetChars: Destination index out of bounds: dstBegin=%d, count=%d, length=%d", dstBegin, srcEnd-srcBegin, dstLength)
+		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	// Update destination character array.

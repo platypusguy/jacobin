@@ -1082,14 +1082,16 @@ func TestSubstringToTheEnd(t *testing.T) {
 		t.Errorf("Expected StringIndexOutOfBoundsException, got %v", res)
 	}
 
-	// Test case: Empty string
+	// Test case: Empty string - should be valid to take substring(0) of ""
 	params = []interface{}{
 		object.StringObjectFromGoString(""),
 		int64(0),
 	}
-	res = substringToTheEnd(params).(*GErrBlk)
-	if !ok || errBlk.ExceptionType != excNames.StringIndexOutOfBoundsException {
-		t.Errorf("Expected StringIndexOutOfBoundsException, got %v", res)
+	res = substringToTheEnd(params)
+	if _, ok := res.(*object.Object); !ok {
+		t.Errorf("Expected string object, got %T, %v", res, res)
+	} else if object.GoStringFromStringObject(res.(*object.Object)) != "" {
+		t.Errorf("Expected empty string, got %s", object.GoStringFromStringObject(res.(*object.Object)))
 	}
 }
 
