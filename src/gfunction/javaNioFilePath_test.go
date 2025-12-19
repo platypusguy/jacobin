@@ -3,6 +3,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"os"
@@ -270,6 +271,8 @@ func TestFilePathSubpath(t *testing.T) {
 }
 
 func TestFilePathToAbsolutePath(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.SetSystemProperty("user.dir", "/")
 	p := newPath(fmt.Sprintf("a%sb", testSep))
 	res := filePathToAbsolutePath([]interface{}{p}).(*object.Object)
 	val := res.FieldTable["value"].Fvalue.(*object.Object)
