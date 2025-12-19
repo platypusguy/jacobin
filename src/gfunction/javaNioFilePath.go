@@ -194,7 +194,10 @@ func filePathGetFileName(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
+	if len(parts) == 0 {
+		return object.Null
+	}
 	fileName := parts[len(parts)-1]
 	return object.StringObjectFromGoString(fileName)
 }
@@ -204,7 +207,7 @@ func filePathGetName(params []interface{}) interface{} {
 	i := params[1].(int64)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	if i < 0 || int(i) >= len(parts) {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.getName: index out of bounds")
 	}
@@ -214,7 +217,7 @@ func filePathGetName(params []interface{}) interface{} {
 func filePathGetNameCount(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	return int64(len(parts))
 }
 
@@ -223,7 +226,7 @@ func filePathGetParent(params []interface{}) interface{} {
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	idx := strings.LastIndex(thisStr, sep)
 	if idx <= 0 {
-		return nil
+		return object.Null
 	}
 	parent := thisStr[:idx]
 	return newPath(parent)
@@ -235,7 +238,7 @@ func filePathGetRoot(params []interface{}) interface{} {
 	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
 		return newPath(sep)
 	}
-	return nil
+	return object.Null
 }
 
 func filePathHashCode(params []interface{}) interface{} {
@@ -362,12 +365,22 @@ func filePathSubpath(params []interface{}) interface{} {
 	start := int(params[1].(int64))
 	end := int(params[2].(int64))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	if start < 0 || end > len(parts) || start >= end {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.subpath: invalid range")
 	}
 	sub := strings.Join(parts[start:end], sep)
 	return newPath(sub)
+}
+
+func getPathParts(path string) []string {
+	var parts []string
+	for _, p := range strings.Split(path, sep) {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return parts
 }
 
 func filePathToAbsolutePath(params []interface{}) interface{} {
