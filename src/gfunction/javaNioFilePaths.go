@@ -8,7 +8,7 @@ package gfunction
 
 import (
 	"jacobin/src/object"
-	"path/filepath"
+	"strings"
 )
 
 // Load_Nio_File_Paths loads MethodSignatures entries for java.nio.file.Paths
@@ -30,20 +30,36 @@ func Load_Nio_File_Paths() {
 func pathsGet(params []interface{}) interface{} {
 	pathStr := object.GoStringFromStringObject(params[0].(*object.Object))
 	var more []string
-	if len(params) > 1 && params[1] != nil {
+	if len(params) > 1 && !object.IsNull(params[1]) {
 		arrObj := params[1].(*object.Object)
-		if arrObj != nil {
-			rawArr, ok := arrObj.FieldTable["value"].Fvalue.([]*object.Object)
-			if ok {
-				more = make([]string, len(rawArr))
-				for i, sObj := range rawArr {
-					more[i] = object.GoStringFromStringObject(sObj)
+		rawArr, ok := arrObj.FieldTable["value"].Fvalue.([]*object.Object)
+		if ok {
+			for _, sObj := range rawArr {
+				if !object.IsNull(sObj) {
+					more = append(more, object.GoStringFromStringObject(sObj))
 				}
 			}
 		}
 	}
 
-	allParts := append([]string{pathStr}, more...)
-	joined := filepath.Join(allParts...)
-	return newPath(joined)
+	res := pathStr
+	for _, m := range more {
+		if m != "" {
+			if res == "" {
+				res = m
+			} else {
+				// Join with separator, but avoid double separators if one is already present
+				resHasSep := strings.HasSuffix(res, sep)
+				mHasSep := strings.HasPrefix(m, sep)
+				if resHasSep && mHasSep {
+					res += m[1:]
+				} else if !resHasSep && !mHasSep {
+					res += sep + m
+				} else {
+					res += m
+				}
+			}
+		}
+	}
+	return newPath(res)
 }

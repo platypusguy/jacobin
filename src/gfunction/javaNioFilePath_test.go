@@ -3,6 +3,7 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"os"
@@ -104,15 +105,15 @@ func TestFilePathGetFileName(t *testing.T) {
 	}
 
 	p2 := newPath(testSep)
-	res2 := filePathGetFileName([]interface{}{p2}).(*object.Object)
-	if object.GoStringFromStringObject(res2) != "" {
-		t.Errorf("expected empty for root, got %s", object.GoStringFromStringObject(res2))
+	res2 := filePathGetFileName([]interface{}{p2})
+	if !object.IsNull(res2) {
+		t.Errorf("expected null for root, got %v", res2)
 	}
 }
 
 func TestFilePathGetName(t *testing.T) {
 	p := newPath(fmt.Sprintf("%sa%sb%sc", testSep, testSep, testSep))
-	res := filePathGetName([]interface{}{p, int64(1)}).(*object.Object)
+	res := filePathGetName([]interface{}{p, int64(0)}).(*object.Object)
 	if object.GoStringFromStringObject(res) != "a" {
 		t.Errorf("expected 'a', got %s", object.GoStringFromStringObject(res))
 	}
@@ -121,9 +122,9 @@ func TestFilePathGetName(t *testing.T) {
 func TestFilePathGetNameCount(t *testing.T) {
 	p := newPath(fmt.Sprintf("%sa%sb%sc", testSep, testSep, testSep))
 	res := filePathGetNameCount([]interface{}{p})
-	// strings.Split("/a/b/c", "/") -> ["", "a", "b", "c"] -> length 4
-	if res.(int64) != 4 {
-		t.Errorf("expected 4, got %d", res)
+	// getPathParts("/a/b/c") -> ["a", "b", "c"] -> length 3
+	if res.(int64) != 3 {
+		t.Errorf("expected 3, got %d", res)
 	}
 }
 
@@ -260,9 +261,9 @@ func TestFilePathStartsWithPath(t *testing.T) {
 
 func TestFilePathSubpath(t *testing.T) {
 	p := newPath(fmt.Sprintf("%sa%sb%sc%sd", testSep, testSep, testSep, testSep))
-	// parts: ["", "a", "b", "c", "d"]
-	res := filePathSubpath([]interface{}{p, int64(1), int64(3)}).(*object.Object)
-	// parts[1:3] -> ["a", "b"] -> "a/b"
+	// getPathParts("/a/b/c/d") -> ["a", "b", "c", "d"]
+	res := filePathSubpath([]interface{}{p, int64(0), int64(2)}).(*object.Object)
+	// parts[0:2] -> ["a", "b"] -> "a/b"
 	val := res.FieldTable["value"].Fvalue.(*object.Object)
 	if object.GoStringFromStringObject(val) != fmt.Sprintf("a%sb", testSep) {
 		t.Errorf("expected 'a%sb', got %s", testSep, object.GoStringFromStringObject(val))
@@ -270,6 +271,8 @@ func TestFilePathSubpath(t *testing.T) {
 }
 
 func TestFilePathToAbsolutePath(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.SetSystemProperty("user.dir", testSep)
 	p := newPath(fmt.Sprintf("a%sb", testSep))
 	res := filePathToAbsolutePath([]interface{}{p}).(*object.Object)
 	val := res.FieldTable["value"].Fvalue.(*object.Object)

@@ -543,7 +543,7 @@ func Load_Lang_String() {
 	MethodSignatures["java/lang/String.replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 2,
-			GFunction:  stringReplaceAllRegex,
+			GFunction:  stringReplaceLiteral,
 		}
 
 	// Replaces each substring of this string that matches the given regular expression with the given replacement.
@@ -801,14 +801,20 @@ func newEmptyString(params []interface{}) interface{} {
 func newStringFromBytes(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromBytes: null parameter")
+	}
 	obj := params[0].(*object.Object)
-	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromBytes: missing value field")
+	}
+	switch fld.Fvalue.(type) {
 	case []byte:
-		bytes := object.JavaByteArrayFromGoByteArray(
-			params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		bytes := object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
 		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	case []types.JavaByte:
-		bytes := params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		bytes := fld.Fvalue.([]types.JavaByte)
 		object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	}
 	return nil
@@ -820,31 +826,37 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
 	// params[1] = byte array object
 	// params[2] = start offset
-	// params[3] = end offset
+	// params[3] = length
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromBytesSubset: null parameter")
+	}
 	obj := params[0].(*object.Object)
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromBytesSubset: missing value field")
+	}
 	var bytes []types.JavaByte
-	switch params[1].(*object.Object).FieldTable["value"].Fvalue.(type) {
+	switch fld.Fvalue.(type) {
 	case []byte:
-		bytes = object.JavaByteArrayFromGoByteArray(params[1].(*object.Object).FieldTable["value"].Fvalue.([]byte))
+		bytes = object.JavaByteArrayFromGoByteArray(fld.Fvalue.([]byte))
 	case []types.JavaByte:
-		bytes = params[1].(*object.Object).FieldTable["value"].Fvalue.([]types.JavaByte)
+		bytes = fld.Fvalue.([]types.JavaByte)
 	}
 
-	// Get substring start and end offset
+	// Get substring start and length
 	ssStart := params[2].(int64)
-	ssEnd := params[3].(int64)
+	ssLen := params[3].(int64)
 
 	// Validate boundaries.
 	totalLength := int64(len(bytes))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "newStringFromBytesSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n",
-			object.GoStringFromJavaByteArray(bytes), totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssLen < 0 || (ssStart+ssLen) > totalLength {
+		errMsg1 := "newStringFromBytesSubset: Invalid offset or length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, length=%d\n\n", totalLength, ssStart, ssLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
 	// Compute subarray and update params[0].
-	bytes = bytes[ssStart : ssStart+ssEnd]
+	bytes = bytes[ssStart : ssStart+ssLen]
 	object.UpdateValueFieldFromJavaBytes(obj, bytes)
 	return nil
 }
@@ -853,9 +865,19 @@ func newStringFromBytesSubset(params []interface{}) interface{} {
 // "java/lang/String.<init>([C)V"
 func newStringFromChars(params []interface{}) interface{} {
 	// params[0] = reference string (to be updated with byte array)
-	// params[1] = byte array object
+	// params[1] = char array object
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromChars: null parameter")
+	}
 	obj := params[0].(*object.Object)
-	ints := params[1].(*object.Object).FieldTable["value"].Fvalue.([]int64)
+	fld, ok := params[1].(*object.Object).FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromChars: missing value field")
+	}
+	ints, ok := fld.Fvalue.([]int64)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "newStringFromChars: value field is not []int64")
+	}
 
 	var bytes []types.JavaByte
 	for _, ii := range ints {
@@ -870,8 +892,11 @@ func newStringFromChars(params []interface{}) interface{} {
 func newStringFromCharsSubset(params []interface{}) interface{} {
 	// params[0] = character array object
 	// params[1] = start offset
-	// params[2] = end offset
+	// params[2] = length
 	// Return the string.
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "newStringFromCharsSubset: null parameter")
+	}
 	fld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
 		errMsg := fmt.Sprintf("newStringFromCharsSubset: Missing value field in character array object")
@@ -883,20 +908,20 @@ func newStringFromCharsSubset(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Get substring start and end offset
+	// Get substring start and length
 	ssStart := params[1].(int64)
-	ssEnd := params[2].(int64)
+	ssLen := params[2].(int64)
 
 	// Validate boundaries.
 	totalLength := int64(len(iarray))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || (ssStart+ssEnd) > totalLength {
-		errMsg1 := "newStringFromCharsSubset: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssLen < 0 || (ssStart+ssLen) > totalLength {
+		errMsg1 := "newStringFromCharsSubset: Invalid offset or length"
+		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, length=%d\n\n", totalLength, ssStart, ssLen)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
-	// Compute subarray and update params[0].
-	iarray = iarray[ssStart : ssStart+ssEnd]
+	// Compute subarray.
+	iarray = iarray[ssStart : ssStart+ssLen]
 	var bytes []types.JavaByte
 	for _, ii := range iarray {
 		bytes = append(bytes, types.JavaByte(ii&0xFF))
@@ -928,6 +953,9 @@ func newStringFromString(params []interface{}) interface{} {
 // Get character at the given index.
 // "java/lang/String.charAt(I)C"
 func stringCharAt(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringCharAt: null parameter")
+	}
 	// Unpack the reference string and convert it to a rune array.
 	ptrObj := params[0].(*object.Object)
 	str := object.GoStringFromStringObject(ptrObj)
@@ -936,6 +964,11 @@ func stringCharAt(params []interface{}) interface{} {
 	// Get index.
 	index := params[1].(int64)
 
+	if index < 0 || int(index) >= len(runeArray) {
+		errMsg := fmt.Sprintf("stringCharAt: Index out of bounds: %d, length: %d", index, len(runeArray))
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+
 	// Return indexed character.
 	runeValue := runeArray[index]
 	return int64(runeValue)
@@ -943,53 +976,44 @@ func stringCharAt(params []interface{}) interface{} {
 
 // "java/lang/String.compareTo(Ljava/lang/String;)I"
 func stringCompareToCaseSensitive(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
-	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
-	if str2 == str1 {
-		return types.JavaBoolFalse
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringCompareToCaseSensitive: null parameter")
 	}
-	if str1 < str2 {
-		return int64(-1)
-	}
-	return types.JavaBoolTrue
-}
-
-// "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
-func stringCompareToIgnoreCase(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	str1 := strings.ToLower(object.GoStringFromStringObject(obj))
-	obj = params[1].(*object.Object)
-	str2 := strings.ToLower(object.GoStringFromStringObject(obj))
+	str1 := object.GoStringFromStringObject(params[0].(*object.Object))
+	str2 := object.GoStringFromStringObject(params[1].(*object.Object))
 	if str2 == str1 {
 		return int64(0)
 	}
 	if str1 < str2 {
 		return int64(-1)
 	}
-	return types.JavaBoolTrue
+	return int64(1)
+}
+
+// "java/lang/String.compareToIgnoreCase(Ljava/lang/String;)I"
+func stringCompareToIgnoreCase(params []interface{}) interface{} {
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringCompareToIgnoreCase: null parameter")
+	}
+	str1 := strings.ToLower(object.GoStringFromStringObject(params[0].(*object.Object)))
+	str2 := strings.ToLower(object.GoStringFromStringObject(params[1].(*object.Object)))
+	if str2 == str1 {
+		return int64(0)
+	}
+	if str1 < str2 {
+		return int64(-1)
+	}
+	return int64(1)
 }
 
 // "java/lang/String.concat(Ljava/lang/String;)Ljava/lang/String;"
 func stringConcat(params []interface{}) interface{} {
-	var str1, str2 string
-
-	fld := params[0].(*object.Object).FieldTable["value"]
-	switch fld.Fvalue.(type) {
-	case []byte:
-		str1 = string(fld.Fvalue.([]byte))
-	case []types.JavaByte:
-		str1 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringConcat: null parameter")
 	}
 
-	fld = params[1].(*object.Object).FieldTable["value"]
-	switch fld.Fvalue.(type) {
-	case []byte:
-		str2 = string(fld.Fvalue.([]byte))
-	case []types.JavaByte:
-		str2 = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-	}
+	str1 := object.GoStringFromStringObject(params[0].(*object.Object))
+	str2 := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	str := str1 + str2
 	obj := object.StringObjectFromGoString(str)
@@ -1000,31 +1024,12 @@ func stringConcat(params []interface{}) interface{} {
 // charSequence is an interface, generally implemented via String or array of chars
 // Here, we assume one of those two options.
 func stringContains(params []interface{}) interface{} {
-	// get the search string (the string we're searching for, i.e., "foo" in "seafood")
-	searchFor := params[1].(*object.Object)
-	var searchString string
-	switch searchFor.FieldTable["value"].Fvalue.(type) {
-	case []types.JavaByte:
-		searchString =
-			object.GoStringFromJavaByteArray(searchFor.FieldTable["value"].Fvalue.([]types.JavaByte))
-	case []uint8:
-		searchString = string(searchFor.FieldTable["value"].Fvalue.([]byte))
-	case string:
-		searchString = searchFor.FieldTable["value"].Fvalue.(string)
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringContains: null parameter")
 	}
-	searchIn := params[0].(*object.Object)
 
-	// now get the target string (the string being searched)
-	var targetString string
-	switch searchIn.FieldTable["value"].Fvalue.(type) {
-	case []types.JavaByte:
-		targetString =
-			object.GoStringFromJavaByteArray(searchIn.FieldTable["value"].Fvalue.([]types.JavaByte))
-	case []uint8:
-		targetString = string(searchIn.FieldTable["value"].Fvalue.([]byte))
-	case string:
-		targetString = searchIn.FieldTable["value"].Fvalue.(string)
-	}
+	targetString := object.GoStringFromStringObject(params[0].(*object.Object))
+	searchString := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	if strings.Contains(targetString, searchString) {
 		return types.JavaBoolTrue
@@ -1033,22 +1038,12 @@ func stringContains(params []interface{}) interface{} {
 }
 
 func javaLangStringContentEquals(params []interface{}) interface{} {
-	var str1, str2 string
-	obj := params[0].(*object.Object)
-	switch obj.FieldTable["value"].Fvalue.(type) {
-	case []byte:
-		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "javaLangStringContentEquals: null parameter")
 	}
 
-	obj = params[1].(*object.Object)
-	switch obj.FieldTable["value"].Fvalue.(type) {
-	case []byte:
-		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
-	}
+	str1 := object.GoStringFromStringObject(params[0].(*object.Object))
+	str2 := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -1062,10 +1057,23 @@ func javaLangStringContentEquals(params []interface{}) interface{} {
 func stringEquals(params []interface{}) interface{} {
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
-	obj := params[0].(*object.Object)
-	str1 := object.GoStringFromStringObject(obj)
-	obj = params[1].(*object.Object)
-	str2 := object.GoStringFromStringObject(obj)
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringEquals: null parameter")
+	}
+
+	str1 := object.GoStringFromStringObject(params[0].(*object.Object))
+
+	if params[1] == nil {
+		return types.JavaBoolFalse
+	}
+	// In Java, equals(Object) should check if it's a String.
+	// Jacobin's object.GoStringFromStringObject handles non-string objects by returning "",
+	// but we should ideally check if it's actually a String object.
+	if !object.IsStringObject(params[1]) {
+		return types.JavaBoolFalse
+	}
+
+	str2 := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	// Are they equal in value?
 	if str1 == str2 {
@@ -1077,29 +1085,20 @@ func stringEquals(params []interface{}) interface{} {
 // Are 2 strings equal, ignoring case?
 // "java/lang/String.equalsIgnoreCase(Ljava/lang/String;)Z"
 func stringEqualsIgnoreCase(params []interface{}) interface{} {
-	var str1, str2 string
 	// params[0]: reference string object
 	// params[1]: compare-to string Object
-	obj := params[0].(*object.Object)
-	switch obj.FieldTable["value"].Fvalue.(type) {
-	case []byte:
-		str1 = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		str1 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringEqualsIgnoreCase: null parameter")
+	}
+	if params[1] == nil {
+		return types.JavaBoolFalse
 	}
 
-	obj = params[1].(*object.Object)
-	switch obj.FieldTable["value"].Fvalue.(type) {
-	case []byte:
-		str2 = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		str2 = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
-	}
+	str1 := object.GoStringFromStringObject(params[0].(*object.Object))
+	str2 := object.GoStringFromStringObject(params[1].(*object.Object))
 
 	// Are they equal in value?
-	upstr1 := strings.ToUpper(str1)
-	upstr2 := strings.ToUpper(str2)
-	if upstr1 == upstr2 {
+	if strings.EqualFold(str1, str2) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -1191,6 +1190,9 @@ func stringIsLatin1(params []interface{}) interface{} {
 // "java/lang/String.length()I"
 func stringLength(params []interface{}) interface{} {
 	// params[0] = string object whose string length is to be measured
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringLength: null parameter")
+	}
 	obj := params[0].(*object.Object)
 	bytes := object.JavaByteArrayFromStringObject(obj)
 	return int64(len(bytes))
@@ -1202,6 +1204,9 @@ func stringMatches(params []any) any {
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("stringMatches: Expected a string and a regular expression")
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringMatches: null parameter")
 	}
 	baseStringObject := params[0].(*object.Object)
 	baseString := object.GoStringFromStringObject(baseStringObject)
@@ -1228,6 +1233,9 @@ func stringRegionMatches(params []any) any {
 	// param[2] pointer to second string
 	// param[3] offset in second string
 	// param[4] length of region to compare
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringRegionMatches: null parameter")
+	}
 	baseStringObject := params[0].(*object.Object)
 	baseByteArray := object.JavaByteArrayFromStringObject(baseStringObject)
 
@@ -1241,6 +1249,9 @@ func stringRegionMatches(params []any) any {
 
 	baseOffset := params[pix].(int64)
 
+	if params[pix+1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringRegionMatches: null parameter")
+	}
 	compareStringObject := params[pix+1].(*object.Object)
 	compareByteArray := object.JavaByteArrayFromStringObject(compareStringObject)
 	compareOffset := params[pix+2].(int64)
@@ -1273,6 +1284,9 @@ func stringRegionMatches(params []any) any {
 func stringRepeat(params []interface{}) interface{} {
 	// params[0] = base string
 	// params[1] = int64 repetition factor
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringRepeat: null parameter")
+	}
 	oldStr := object.GoStringFromStringObject(params[0].(*object.Object))
 	var newStr string
 	count := params[1].(int64)
@@ -1291,6 +1305,9 @@ func stringReplaceCC(params []interface{}) interface{} {
 	// params[0] = base string
 	// params[1] = character to be replaced
 	// params[2] = replacement character
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringReplaceCC: null parameter")
+	}
 	str := object.GoStringFromStringObject(params[0].(*object.Object))
 	oldChar := byte((params[1].(int64)) & 0xFF)
 	newChar := byte((params[2].(int64)) & 0xFF)
@@ -1305,6 +1322,9 @@ func stringReplaceCC(params []interface{}) interface{} {
 func substringToTheEnd(params []interface{}) interface{} {
 	// params[0] = base string
 	// params[1] = start offset
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "substringToTheEnd: null parameter")
+	}
 	str := object.GoStringFromStringObject(params[0].(*object.Object))
 
 	// Get substring start offset and compute end offset
@@ -1313,9 +1333,9 @@ func substringToTheEnd(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	totalLength := int64(len(str))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringToTheEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssStart > totalLength {
+		errMsg1 := "substringToTheEnd: Invalid substring offset"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d\n\n", str, totalLength, ssStart)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
@@ -1350,9 +1370,9 @@ func substringStartEnd(params []interface{}) interface{} {
 
 	// Validate boundaries.
 	totalLength := int64(len(str))
-	if totalLength < 1 || ssStart < 0 || ssEnd < 1 || ssStart > (totalLength-1) || ssEnd > totalLength {
-		errMsg1 := "substringStartEnd: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, offset=%d, sslen=%d\n\n", str, totalLength, ssStart, ssEnd)
+	if ssStart < 0 || ssEnd > totalLength || ssStart > ssEnd {
+		errMsg1 := "substringStartEnd: Invalid substring range"
+		errMsg2 := fmt.Sprintf("\n\twhole='%s' wholelen=%d, start=%d, end=%d\n\n", str, totalLength, ssStart, ssEnd)
 		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
 	}
 
@@ -1366,18 +1386,24 @@ func substringStartEnd(params []interface{}) interface{} {
 
 // "java/lang/String.toCharArray()[C"
 func toCharArray(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "toCharArray: null parameter")
+	}
 	// params[0]: input string
-	obj := params[0].(*object.Object)
-	bytes := obj.FieldTable["value"].Fvalue.([]types.JavaByte)
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
+	runes := []rune(str)
 	var iArray []int64
-	for _, bb := range bytes {
-		iArray = append(iArray, int64(bb))
+	for _, r := range runes {
+		iArray = append(iArray, int64(r))
 	}
 	return Populator("[C", types.CharArray, iArray)
 }
 
 // "java/lang/String.toLowerCase()Ljava/lang/String;"
 func toLowerCase(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "toLowerCase: null parameter")
+	}
 	// params[0]: input string
 	str := strings.ToLower(object.GoStringFromStringObject(params[0].(*object.Object)))
 	obj := object.StringObjectFromGoString(str)
@@ -1386,6 +1412,9 @@ func toLowerCase(params []interface{}) interface{} {
 
 // "java/lang/String.toUpperCase()Ljava/lang/String;"
 func toUpperCase(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "toUpperCase: null parameter")
+	}
 	// params[0]: input string
 	str := strings.ToUpper(object.GoStringFromStringObject(params[0].(*object.Object)))
 	obj := object.StringObjectFromGoString(str)
@@ -1394,9 +1423,16 @@ func toUpperCase(params []interface{}) interface{} {
 
 // "java/lang/String.trim()Ljava/lang/String;"
 func trimString(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "trimString: null parameter")
+	}
 	// params[0]: input string
-	str := strings.Trim(object.GoStringFromStringObject(params[0].(*object.Object)), " ")
-	obj := object.StringObjectFromGoString(str)
+	str := object.GoStringFromStringObject(params[0].(*object.Object))
+	// Java String.trim() removes leading and trailing characters <= \u0020
+	trimmed := strings.TrimFunc(str, func(r rune) bool {
+		return r <= '\u0020'
+	})
+	obj := object.StringObjectFromGoString(trimmed)
 	return obj
 }
 
@@ -1591,6 +1627,9 @@ func stringCheckBoundsOffCount(params []interface{}) interface{} {
 
 // "java/lang/String.hashCode()I"
 func stringHashCode(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringHashCode: null parameter")
+	}
 	obj := params[0].(*object.Object)
 	str := object.GoStringFromStringObject(obj)
 	hash := int32(0)
@@ -1603,6 +1642,9 @@ func stringHashCode(params []interface{}) interface{} {
 // "java/lang/String.startsWith(Ljava/lang/String;)Z"
 // "java/lang/String.startsWith(Ljava/lang/String;I)Z"
 func stringStartsWith(params []interface{}) interface{} {
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringStartsWith: null parameter")
+	}
 	baseObj := params[0].(*object.Object)
 	baseStr := object.GoStringFromStringObject(baseObj)
 	argObj := params[1].(*object.Object)
@@ -1626,6 +1668,9 @@ func stringStartsWith(params []interface{}) interface{} {
 
 // "java/lang/String.endsWith(Ljava/lang/String;)Z"
 func stringEndsWith(params []interface{}) interface{} {
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringEndsWith: null parameter")
+	}
 	baseObj := params[0].(*object.Object)
 	baseStr := object.GoStringFromStringObject(baseObj)
 	argObj := params[1].(*object.Object)
@@ -1701,10 +1746,13 @@ func stringGetChars(params []interface{}) interface{} {
 	dstLength := int64(len(dstChars))
 
 	// Validate boundaries.
-	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength || dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
-		errMsg1 := "stringGetChars: Either nil input byte array, invalid substring offset, or invalid substring length"
-		errMsg2 := fmt.Sprintf("\n\twholelen=%d, offset=%d, sslen=%d\n\n", srcLength, srcBegin, srcEnd)
-		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg1+errMsg2)
+	if srcBegin < 0 || srcEnd < srcBegin || srcEnd > srcLength {
+		errMsg := fmt.Sprintf("stringGetChars: Source index out of bounds: srcBegin=%d, srcEnd=%d, length=%d", srcBegin, srcEnd, srcLength)
+		return getGErrBlk(excNames.StringIndexOutOfBoundsException, errMsg)
+	}
+	if dstBegin < 0 || dstBegin+(srcEnd-srcBegin) > dstLength {
+		errMsg := fmt.Sprintf("stringGetChars: Destination index out of bounds: dstBegin=%d, count=%d, length=%d", dstBegin, srcEnd-srcBegin, dstLength)
+		return getGErrBlk(excNames.ArrayIndexOutOfBoundsException, errMsg)
 	}
 
 	// Update destination character array.
@@ -1726,6 +1774,9 @@ starting the search at beginIndex if specified else 0,
 and stopping before endIndex if specified else the length of the base string.
 */
 func stringIndexOfCh(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringIndexOfCh: null parameter")
+	}
 	// Get field of base object.
 	srcFld, ok := params[0].(*object.Object).FieldTable["value"]
 	if !ok {
@@ -1788,6 +1839,9 @@ func stringIndexOfCh(params []interface{}) interface{} {
 }
 
 func stringIndexOfString(params []interface{}) interface{} {
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringIndexOfString: null parameter")
+	}
 	// Get field of base object.
 	baseString := object.GoStringFromStringObject(params[0].(*object.Object))
 
@@ -1835,6 +1889,9 @@ func stringIndexOfString(params []interface{}) interface{} {
 }
 
 func stringIsBlank(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringIsBlank: null parameter")
+	}
 	baseString := object.GoStringFromStringObject(params[0].(*object.Object))
 	if len(strings.TrimSpace(baseString)) == 0 {
 		return types.JavaBoolTrue
@@ -1844,6 +1901,9 @@ func stringIsBlank(params []interface{}) interface{} {
 }
 
 func stringIsEmpty(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringIsEmpty: null parameter")
+	}
 	baseString := object.GoStringFromStringObject(params[0].(*object.Object))
 	if len(baseString) == 0 {
 		return types.JavaBoolTrue
@@ -1856,7 +1916,30 @@ func stringToString(params []interface{}) interface{} {
 	return params[0]
 }
 
+func stringReplaceLiteral(params []interface{}) interface{} {
+	// If any parameters are missing or nil, throw a NullPointerException.
+	if params[0] == nil || params[1] == nil || params[2] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringReplaceLiteral: null parameter")
+	}
+
+	// Get 3 arguments. These are objects that implement CharSequence.
+	// In Jacobin, they should all be string objects or similar.
+	input := object.GoStringFromStringObject(params[0].(*object.Object))
+	target := object.GoStringFromStringObject(params[1].(*object.Object))
+	replacement := object.GoStringFromStringObject(params[2].(*object.Object))
+
+	// Replace all literal occurrences of target with replacement.
+	result := strings.ReplaceAll(input, target, replacement)
+
+	return object.StringObjectFromGoString(result)
+}
+
 func stringReplaceAllRegex(params []interface{}) interface{} {
+	// If any parameters are missing or nil, throw a NullPointerException.
+	if params[0] == nil || params[1] == nil || params[2] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringReplaceAllRegex: null parameter")
+	}
+
 	// Get 3 string arguments.
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	pattern := object.GoStringFromStringObject(params[1].(*object.Object))
@@ -1877,6 +1960,11 @@ func stringReplaceAllRegex(params []interface{}) interface{} {
 }
 
 func stringReplaceFirstRegex(params []interface{}) interface{} {
+	// If any parameters are missing or nil, throw a NullPointerException.
+	if params[0] == nil || params[1] == nil || params[2] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringReplaceFirstRegex: null parameter")
+	}
+
 	// Get 3 string arguments.
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	pattern := object.GoStringFromStringObject(params[1].(*object.Object))
@@ -1901,6 +1989,11 @@ func stringReplaceFirstRegex(params []interface{}) interface{} {
 }
 
 func stringSplit(params []interface{}) interface{} {
+	// If any parameters are missing or nil, throw a NullPointerException.
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringSplit: null parameter")
+	}
+
 	// params[0] = base string
 	// params[1] = regular expression in a string
 
@@ -1927,6 +2020,11 @@ func stringSplit(params []interface{}) interface{} {
 }
 
 func stringSplitLimit(params []interface{}) interface{} {
+	// If any parameters are missing or nil, throw a NullPointerException.
+	if params[0] == nil || params[1] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringSplitLimit: null parameter")
+	}
+
 	// params[0] = base string
 	// params[1] = regular expression in a string
 	// params[2] = split limit
@@ -1957,18 +2055,27 @@ func stringSplitLimit(params []interface{}) interface{} {
 }
 
 func stringStrip(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringStrip: null parameter")
+	}
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimSpace(input)
 	return object.StringObjectFromGoString(result)
 }
 
 func stringStripLeading(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringStripLeading: null parameter")
+	}
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimLeftFunc(input, unicode.IsSpace)
 	return object.StringObjectFromGoString(result)
 }
 
 func stringStripTrailing(params []interface{}) interface{} {
+	if params[0] == nil {
+		return getGErrBlk(excNames.NullPointerException, "stringStripTrailing: null parameter")
+	}
 	input := object.GoStringFromStringObject(params[0].(*object.Object))
 	result := strings.TrimRightFunc(input, unicode.IsSpace)
 	return object.StringObjectFromGoString(result)

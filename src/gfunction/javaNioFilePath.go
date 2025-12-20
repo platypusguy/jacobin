@@ -2,9 +2,11 @@ package gfunction
 
 import (
 	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -194,7 +196,10 @@ func filePathGetFileName(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
+	if len(parts) == 0 {
+		return object.Null
+	}
 	fileName := parts[len(parts)-1]
 	return object.StringObjectFromGoString(fileName)
 }
@@ -204,7 +209,7 @@ func filePathGetName(params []interface{}) interface{} {
 	i := params[1].(int64)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	if i < 0 || int(i) >= len(parts) {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.getName: index out of bounds")
 	}
@@ -214,7 +219,7 @@ func filePathGetName(params []interface{}) interface{} {
 func filePathGetNameCount(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	return int64(len(parts))
 }
 
@@ -222,8 +227,14 @@ func filePathGetParent(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	idx := strings.LastIndex(thisStr, sep)
-	if idx <= 0 {
-		return nil
+	if idx < 0 {
+		return object.Null
+	}
+	if idx == 0 {
+		if len(thisStr) > 1 {
+			return newPath(sep)
+		}
+		return object.Null
 	}
 	parent := thisStr[:idx]
 	return newPath(parent)
@@ -232,10 +243,17 @@ func filePathGetParent(params []interface{}) interface{} {
 func filePathGetRoot(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if len(thisStr) == 0 {
+		return object.Null
+	}
+	if strings.HasPrefix(thisStr, sep) {
 		return newPath(sep)
 	}
-	return nil
+	// Windows root: C:\
+	if len(thisStr) >= 3 && sep == "\\" && thisStr[1] == ':' && thisStr[2] == '\\' {
+		return newPath(thisStr[:3])
+	}
+	return object.Null
 }
 
 func filePathHashCode(params []interface{}) interface{} {
@@ -248,10 +266,24 @@ func filePathHashCode(params []interface{}) interface{} {
 	return hash
 }
 
+func isAbsolute(path string) bool {
+	if len(path) == 0 {
+		return false
+	}
+	if strings.HasPrefix(path, sep) {
+		return true
+	}
+	// Windows absolute path: C:\...
+	if len(path) >= 3 && sep == "\\" && path[1] == ':' && path[2] == '\\' {
+		return true
+	}
+	return false
+}
+
 func filePathIsAbsolute(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if isAbsolute(thisStr) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -267,8 +299,7 @@ func filePathIterator(params []interface{}) interface{} {
 func filePathNormalize(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	doubleSep := sep + sep
-	normalized := strings.ReplaceAll(thisStr, doubleSep, sep) // simple normalization
+	normalized := filepath.Clean(thisStr)
 	return newPath(normalized)
 }
 
@@ -277,25 +308,34 @@ func filePathRelativize(params []interface{}) interface{} {
 	otherObj := params[1].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
-	if strings.HasPrefix(otherStr, thisStr) {
-		rel := strings.TrimPrefix(otherStr, thisStr)
-		if len(rel) > 0 && strings.HasPrefix(rel, sep) {
-			rel = rel[1:]
-		}
-		return newPath(rel)
+
+	if isAbsolute(thisStr) != isAbsolute(otherStr) {
+		return getGErrBlk(excNames.IllegalArgumentException, "Path.relativize: both paths must be either absolute or relative")
 	}
-	return getGErrBlk(excNames.IllegalArgumentException, "Path.relativize: not a subpath")
+
+	rel, err := filepath.Rel(thisStr, otherStr)
+	if err != nil {
+		return getGErrBlk(excNames.IllegalArgumentException, "Path.relativize: "+err.Error())
+	}
+	return newPath(rel)
 }
 
 func filePathResolve(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
-	otherObj := params[1].(*object.Object)
+	otherStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	otherStr := object.GoStringFromStringObject(otherObj)
-	if strings.HasPrefix(otherStr, sep) {
+
+	if isAbsolute(otherStr) {
 		return newPath(otherStr)
 	}
-	return newPath(thisStr + sep + otherStr)
+	if otherStr == "" {
+		return thisObj
+	}
+	res := thisStr
+	if !strings.HasSuffix(res, sep) {
+		res += sep
+	}
+	return newPath(res + otherStr)
 }
 
 func filePathResolvePath(params []interface{}) interface{} {
@@ -303,36 +343,43 @@ func filePathResolvePath(params []interface{}) interface{} {
 	otherObj := params[1].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
-	if strings.HasPrefix(otherStr, sep) {
-		return newPath(otherStr)
+
+	if isAbsolute(otherStr) {
+		return otherObj
 	}
-	return newPath(thisStr + sep + otherStr)
+	if otherStr == "" {
+		return thisObj
+	}
+	res := thisStr
+	if !strings.HasSuffix(res, sep) {
+		res += sep
+	}
+	return newPath(res + otherStr)
 }
 
 func filePathResolveSibling(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
-	otherObj := params[1].(*object.Object)
-	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	otherStr := object.GoStringFromStringObject(otherObj)
-	idx := strings.LastIndex(thisStr, sep)
-	parent := ""
-	if idx >= 0 {
-		parent = thisStr[:idx]
+	otherStr := object.GoStringFromStringObject(params[1].(*object.Object))
+
+	parent := filePathGetParent([]interface{}{thisObj})
+	if object.IsNull(parent) || isAbsolute(otherStr) {
+		return newPath(otherStr)
 	}
-	return newPath(parent + sep + otherStr)
+	parentPath := parent.(*object.Object)
+	return filePathResolve([]interface{}{parentPath, params[1]})
 }
 
 func filePathResolveSiblingPath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	otherObj := params[1].(*object.Object)
-	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
-	idx := strings.LastIndex(thisStr, sep)
-	parent := ""
-	if idx >= 0 {
-		parent = thisStr[:idx]
+
+	parent := filePathGetParent([]interface{}{thisObj})
+	if object.IsNull(parent) || isAbsolute(otherStr) {
+		return otherObj
 	}
-	return newPath(parent + sep + otherStr)
+	parentPath := parent.(*object.Object)
+	return filePathResolvePath([]interface{}{parentPath, otherObj})
 }
 
 func filePathStartsWith(params []interface{}) interface{} {
@@ -362,7 +409,7 @@ func filePathSubpath(params []interface{}) interface{} {
 	start := int(params[1].(int64))
 	end := int(params[2].(int64))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	parts := strings.Split(thisStr, sep)
+	parts := getPathParts(thisStr)
 	if start < 0 || end > len(parts) || start >= end {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.subpath: invalid range")
 	}
@@ -370,14 +417,30 @@ func filePathSubpath(params []interface{}) interface{} {
 	return newPath(sub)
 }
 
+func getPathParts(path string) []string {
+	var parts []string
+	for _, p := range strings.Split(path, sep) {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return parts
+}
+
 func filePathToAbsolutePath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if len(thisStr) > 0 && strings.HasPrefix(thisStr, sep) {
+	if isAbsolute(thisStr) {
 		return thisObj
 	}
-	// for simplicity, prepend sep as root
-	return newPath(sep + thisStr)
+	cwd := globals.GetSystemProperty("user.dir")
+	if cwd == "" {
+		cwd, _ = os.Getwd()
+	}
+	if !strings.HasSuffix(cwd, sep) {
+		cwd += sep
+	}
+	return newPath(cwd + thisStr)
 }
 
 func filePathToRealPath(params []interface{}) interface{} {
