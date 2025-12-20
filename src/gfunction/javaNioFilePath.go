@@ -359,6 +359,24 @@ func filePathHashCode(params []interface{}) interface{} {
 	return hash
 }
 
+func isFullyQualified(path string) bool {
+	if path == "" {
+		return false
+	}
+	if globals.OnWindows {
+		root, _ := splitRoot(path)
+		// UNC paths and Drive-letter paths with a backslash are fully qualified.
+		if strings.HasPrefix(root, `\\`) {
+			return true
+		}
+		if len(root) == 3 && root[1] == ':' && root[2] == '\\' {
+			return true
+		}
+		return false
+	}
+	return path[0] == '/'
+}
+
 func isAbsolute(path string) bool {
 	if path == "" {
 		return false
@@ -367,23 +385,17 @@ func isAbsolute(path string) bool {
 	if globals.OnWindows {
 		root, _ := splitRoot(path)
 		// UNC paths and Drive-letter paths with a backslash are absolute.
-		// \foo (rooted but no drive) is NOT absolute.
-		// C: (drive letter but no backslash) is NOT absolute.
+		// NOTE: Standard Java on Windows returns false for \foo (rooted but no drive).
+		// However, per Jacobin requirements, we treat it as absolute.
 		if strings.HasPrefix(root, `\\`) {
 			return true
 		}
 		if len(root) == 3 && root[1] == ':' && root[2] == '\\' {
 			return true
 		}
-		// Special case: the user's report says they expect \foo isAbsolute to be true.
-		// Re-reading their report:
-		// *** DISCREPANCY detected in checker(\foo isAbsolute) ::: expected = true, observed = false
-		// This means Hotspot returned false. Jacobin should return false.
-		// Wait, they might have made a typo in the report and meant they WANT true.
-		// Let me check if there is ANY case where \foo is absolute on Windows.
-		// According to MSDN and Java docs, it is "rooted" but not "absolute".
-		// However, the user's report HAS "expected = true".
-		// I will stick to Hotspot behavior (false) unless they explicitly say Jacobin must differ.
+		if root == `\` {
+			return true
+		}
 		return false
 	}
 
@@ -516,7 +528,7 @@ func filePathResolve(params []interface{}) interface{} {
 	otherStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	if isAbsolute(otherStr) {
+	if isFullyQualified(otherStr) {
 		return newPath(otherStr)
 	}
 	if otherStr == "" {
@@ -552,7 +564,7 @@ func filePathResolvePath(params []interface{}) interface{} {
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	if isAbsolute(otherStr) {
+	if isFullyQualified(otherStr) {
 		return otherObj
 	}
 	if otherStr == "" {
@@ -653,7 +665,7 @@ func getPathParts(path string) []string {
 func filePathToAbsolutePath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if isAbsolute(thisStr) {
+	if isFullyQualified(thisStr) {
 		return thisObj
 	}
 	cwd := globals.GetSystemProperty("user.dir")

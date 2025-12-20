@@ -29,7 +29,7 @@ func TestWindowsPaths(t *testing.T) {
 		{`C:\foo\bar`, true, `C:\`, `C:\foo`, `C:\foo\bar`, 2, "foo"},
 		{`C:\`, true, `C:\`, "", `C:\`, 0, ""},
 		{`\\server\share\file`, true, `\\server\share\`, `\\server\share`, `\\server\share\file`, 1, "file"},
-		{`\foo\bar`, false, `\`, `\foo`, `C:\foo\bar`, 2, "foo"}, // Rooted but not absolute on Windows
+		{`\foo\bar`, true, `\`, `\foo`, `C:\foo\bar`, 2, "foo"}, // Rooted - treated as absolute in Jacobin
 		{`foo\bar`, false, "", `foo`, `C:\foo\bar`, 2, "foo"},
 		{`C:`, false, `C:`, "", `C:\`, 0, ""},
 		{`C:foo`, false, `C:`, "", `C:\foo`, 1, "foo"},
