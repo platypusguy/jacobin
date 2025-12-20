@@ -18,17 +18,21 @@ func TestWindowsPaths(t *testing.T) {
 	}()
 
 	tests := []struct {
-		path     string
-		isAbs    bool
-		root     string
-		parent   string
-		absMatch string
+		path      string
+		isAbs     bool
+		root      string
+		parent    string
+		absMatch  string
+		nameCount int
+		name0     string
 	}{
-		{`C:\foo\bar`, true, `C:\`, `C:\foo`, `C:\foo\bar`},
-		{`C:\`, true, `C:\`, "", `C:\`},
-		{`\\server\share\file`, true, `\\server\share\`, `\\server\share`, `\\server\share\file`},
-		{`\foo\bar`, false, `\`, `\foo`, `C:\foo\bar`}, // Rooted but not absolute on Windows
-		{`foo\bar`, false, "", `foo`, `C:\foo\bar`},
+		{`C:\foo\bar`, true, `C:\`, `C:\foo`, `C:\foo\bar`, 2, "foo"},
+		{`C:\`, true, `C:\`, "", `C:\`, 0, ""},
+		{`\\server\share\file`, true, `\\server\share\`, `\\server\share`, `\\server\share\file`, 1, "file"},
+		{`\foo\bar`, false, `\`, `\foo`, `C:\foo\bar`, 2, "foo"}, // Rooted but not absolute on Windows
+		{`foo\bar`, false, "", `foo`, `C:\foo\bar`, 2, "foo"},
+		{`C:`, false, `C:`, "", `C:\`, 0, ""},
+		{`C:foo`, false, `C:`, "", `C:\foo`, 1, "foo"},
 	}
 
 	globals.InitGlobals("test")
@@ -67,6 +71,21 @@ func TestWindowsPaths(t *testing.T) {
 			parentStr := object.GoStringFromStringObject(parentObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
 			if parentStr != tt.parent {
 				t.Errorf("getParent(%q) = %q; want %q", tt.path, parentStr, tt.parent)
+			}
+		}
+
+		// Test getNameCount
+		nc := filePathGetNameCount([]interface{}{p}).(int64)
+		if int(nc) != tt.nameCount {
+			t.Errorf("getNameCount(%q) = %d; want %d", tt.path, nc, tt.nameCount)
+		}
+
+		// Test getName(0)
+		if tt.nameCount > 0 {
+			n0Obj := filePathGetName([]interface{}{p, int64(0)}).(*object.Object)
+			n0Str := object.GoStringFromStringObject(n0Obj)
+			if n0Str != tt.name0 {
+				t.Errorf("getName(0) for %q = %q; want %q", tt.path, n0Str, tt.name0)
 			}
 		}
 
