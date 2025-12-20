@@ -295,10 +295,12 @@ func filePathGetRoot(params []interface{}) interface{} {
 				return object.Null
 			}
 			j := strings.Index(thisStr[2+i+1:], `\`)
+			root := ""
 			if j < 0 {
-				return object.Null
+				root = thisStr + `\`
+			} else {
+				root = thisStr[:2+i+1+j+1]
 			}
-			root := thisStr[:2+i+1+j+1]
 			return newPath(root)
 		}
 
