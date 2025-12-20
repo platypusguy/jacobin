@@ -1,63 +1,63 @@
-# Windows Path Cheat Sheet (Java NIO / Jacobin)
+# Windows Path Cheat Sheet (Java NIO / HotSpot & Jacobin)
 
-This cheat sheet summarizes **Windows path semantics** for Java NIO (`Path`) — both **Jacobin** (HotSpot-emulated behavior) and HotSpot-compliant rules.
-
----
-
-## Path Categories
-
-| Category | Example | isAbsolute() | getRoot() | Notes |
-|----------|---------|--------------|-----------|-------|
-| Absolute drive path | `C:\foo\bar` | true | `C:\` | Fully-qualified absolute path with drive letter. |
-| Drive-only path | `C:` | false | `C:` | Refers to current directory on drive `C:`. Not absolute. |
-| Drive-relative path | `C:foo` | false | `C:` | Relative to current directory on drive `C:`. |
-| Drive-rooted but drive-unspecified | `\foo` | false | `<null>` (Jacobin) / `\` (HotSpot) | Rooted on current drive. HotSpot returns `\` for getRoot(). |
-| UNC path | `\\server\share\dir\file.txt` | true | `\\server\share\` | Network path. Root includes server and share. |
-| Relative path | `foo\bar` | false | `<null>` | Relative to current working directory. |
-| Mixed separators | `C:/a/b\c` | true | `C:\` | Java NIO normalizes mixed `/` and `\` to `\`. |
+This cheat sheet summarizes **Windows path semantics** for Java NIO (`Path`) on Windows.  
+Jacobin emulates HotSpot faithfully, which internally behaves in a **Unix-like manner**, even on Windows.  
 
 ---
 
-## Rules
+## Path Hierarchy vs Root
+
+* **Hierarchy**: Paths are treated as sequences of name elements, separated by `/` internally.  
+* **Root**: Windows-specific concept — drive letter, UNC prefix, or `\` for drive-rooted paths.  
+
+| Path | Hierarchy (name elements) | Root | Notes |
+|------|--------------------------|------|-------|
+| `C:\foo\bar` | `[foo, bar]` | `C:\` | Absolute path on drive C. |
+| `C:` | `[]` | `C:` | Refers to current directory on C. Not absolute. |
+| `C:foo` | `[foo]` | `C:` | Drive-relative path, not absolute. |
+| `\foo\bar` | `[foo, bar]` | `\` | Drive-rooted, current drive. `isAbsolute() = false`. |
+| `\\server\share\dir\file.txt` | `[dir, file.txt]` | `\\server\share\` | UNC path, absolute. |
+| `foo\bar` | `[foo, bar]` | `<null>` | Pure relative path. |
+| `C:/a/b\c` | `[a, b, c]` | `C:\` | Mixed separators are normalized to `\`. |
+
+---
+
+## Key Rules
 
 1. **Absolute paths**
-   * Must include a **drive letter** or **UNC prefix** to be absolute.  
+   * Must include **drive letter** or **UNC prefix**.  
    * Example: `C:\path` or `\\server\share\path`.
 
 2. **Drive-relative paths**
    * Format: `C:` or `C:foo`.  
-   * **Not absolute**, root is the drive letter.
+   * **Not absolute**, root is drive letter.  
 
 3. **Drive-rooted but drive-unspecified**
    * Format: `\foo`.  
-   * Refers to the current drive’s root.  
-   * **Jacobin:** `getRoot() = null`  
-   * **HotSpot:** `getRoot() = "\"`
+   * Rooted on the current drive.  
+   * `isAbsolute() = false`, `getRoot() = "\"`.  
 
 4. **UNC paths**
-   * Start with `\\server\share`.  
-   * Always absolute.  
-   * Root includes server and share: `\\server\share\`.
+   * Always absolute; root includes server and share: `\\server\share\`.  
 
 5. **Relative paths**
    * Do not start with a drive or `\`.  
    * Root is `<null>`.  
-   * Resolved relative to current working directory.
 
 6. **Mixed separators**
-   * Windows accepts both `/` and `\`.  
-   * Java NIO **normalizes** all to `\`.
+   * Both `/` and `\` are accepted on Windows.  
+   * `Path.normalize()` converts all separators to `\`.
 
 ---
 
-## Examples
+## Quick Examples
 
 | Path | Normalized | isAbsolute() | getRoot() | NameCount | Name(0) |
 |------|------------|--------------|-----------|-----------|---------|
 | `C:\foo\bar` | `C:\foo\bar` | true | `C:\` | 2 | `foo` |
 | `C:` | `C:` | false | `C:` | 0 | N/A |
 | `C:foo` | `C:foo` | false | `C:` | 1 | `foo` |
-| `\foo` | `\foo` | false | `<null>` / `\` | 1 | `foo` |
+| `\foo` | `\foo` | false | `\` | 1 | `foo` |
 | `\\server\share\dir\file.txt` | `\\server\share\dir\file.txt` | true | `\\server\share\` | 2 | `dir` |
 | `foo\bar` | `foo\bar` | false | `<null>` | 2 | `foo` |
 | `C:/a/b\c` | `C:\a\b\c` | true | `C:\` | 3 | `a` |
@@ -66,12 +66,11 @@ This cheat sheet summarizes **Windows path semantics** for Java NIO (`Path`) —
 
 ## Notes
 
-* `\foo` is a **critical edge case**: HotSpot and Jacobin differ slightly in `getRoot()`.  
-* Use `Path.resolve()` and `Path.relativize()` carefully with drive-relative paths.  
-* `Path.normalize()` removes `.` and resolves `..` segments.  
-* UNC paths are always absolute; mixing UNC with relative segments follows standard normalization rules.  
+* **HotSpot and Jacobin**: Both treat the **path hierarchy as Unix-like**, but root handling is Windows-aware.  
+* `Path.resolve()` and `Path.relativize()` work using the **internal hierarchy**, independent of OS separators.  
+* Edge case `\foo` is **drive-rooted, not absolute**, but `getRoot()` is `\`.  
+* UNC paths always include the server and share as root.  
+* Mixed separators normalize to `\` on Windows.
 
----
-
-> This cheat sheet reflects **Java NIO spec** semantics and is useful for building **HotSpot-faithful path emulators** like Jacobin.
+> This cheat sheet is HotSpot-faithful and suitable for developers implementing or testing Windows path handling in Java or Jacobin.
 
