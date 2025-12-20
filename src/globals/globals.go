@@ -142,6 +142,9 @@ var SleepMsecs time.Duration = 5
 // the Globals struct.
 var global Globals
 
+// Running on Windows?
+var OnWindows = runtime.GOOS == "windows"
+
 // InitGlobals initializes the global values that are known at start-up
 func InitGlobals(progName string) Globals {
 
@@ -210,7 +213,7 @@ func InitGlobals(progName string) Globals {
 	}
 	InitArrayAddressList()
 
-	if runtime.GOOS == "windows" {
+	if OnWindows {
 		global.FileEncoding = "windows-1252"
 	} else {
 		global.FileEncoding = "UTF-8"
