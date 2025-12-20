@@ -313,7 +313,11 @@ func filePathGetRoot(params []interface{}) interface{} {
 			return newPath(thisStr[:3])
 		}
 
-		// Rooted but not absolute (\foo) → no root
+		// Rooted but not absolute (\foo)
+		if strings.HasPrefix(thisStr, `\`) || strings.HasPrefix(thisStr, `/`) {
+			return newPath(`\`)
+		}
+
 		return object.Null
 	}
 

@@ -139,7 +139,11 @@ func TestFilePathGetParent(t *testing.T) {
 
 func TestFilePathGetRoot(t *testing.T) {
 	p := newPath(fmt.Sprintf("%sa%sb%sc", testSep, testSep, testSep))
-	res := filePathGetRoot([]interface{}{p}).(*object.Object)
+	rootObj := filePathGetRoot([]interface{}{p})
+	if object.IsNull(rootObj) {
+		t.Fatalf("expected non-null root for %s", fmt.Sprintf("%sa%sb%sc", testSep, testSep, testSep))
+	}
+	res := rootObj.(*object.Object)
 	val := res.FieldTable["value"].Fvalue.(*object.Object)
 	if object.GoStringFromStringObject(val) != testSep {
 		t.Errorf("expected '%s', got %s", testSep, object.GoStringFromStringObject(val))

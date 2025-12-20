@@ -27,7 +27,7 @@ func TestWindowsPaths(t *testing.T) {
 		{`C:\foo\bar`, true, `C:\`, `C:\foo`, `C:\foo\bar`},
 		{`C:\`, true, `C:\`, "", `C:\`},
 		{`\\server\share\file`, true, `\\server\share\`, `\\server\share`, `\\server\share\file`},
-		{`\foo\bar`, false, "", `\foo`, `C:\foo\bar`}, // Rooted but not absolute on Windows usually refers to current drive
+		{`\foo\bar`, false, `\`, `\foo`, `C:\foo\bar`}, // Rooted but not absolute on Windows
 		{`foo\bar`, false, "", `foo`, `C:\foo\bar`},
 	}
 
