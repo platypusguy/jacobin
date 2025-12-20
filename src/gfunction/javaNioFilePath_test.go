@@ -159,10 +159,16 @@ func TestFilePathHashCode(t *testing.T) {
 }
 
 func TestFilePathIsAbsolute(t *testing.T) {
-	p1 := newPath(fmt.Sprintf("%sa%sb%sc", testSep, testSep, testSep))
+	var absPath string
+	if globals.OnWindows {
+		absPath = `C:\a\b\c`
+	} else {
+		absPath = "/a/b/c"
+	}
+	p1 := newPath(absPath)
 	p2 := newPath(fmt.Sprintf("a%sb%sc", testSep, testSep))
 	if filePathIsAbsolute([]interface{}{p1}) != types.JavaBoolTrue {
-		t.Errorf("expected true for absolute path")
+		t.Errorf("expected true for absolute path %s", absPath)
 	}
 	if filePathIsAbsolute([]interface{}{p2}) != types.JavaBoolFalse {
 		t.Errorf("expected false for relative path")
