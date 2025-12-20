@@ -427,20 +427,9 @@ func filePathNormalize(params []interface{}) interface{} {
 	if globals.OnWindows {
 		// Basic normalization for Windows paths when running on any OS
 		// 1. Replace all / with \
-		res := strings.ReplaceAll(thisStr, "/", `\`)
+		thisStr = strings.ReplaceAll(thisStr, "/", `\`)
 
-		rootObj := filePathGetRoot([]interface{}{thisObj})
-		var rootStr string
-		pathWithoutRoot := res
-		if !object.IsNull(rootObj) {
-			rootStr = object.GoStringFromStringObject(rootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
-			if strings.HasPrefix(res, rootStr) {
-				pathWithoutRoot = res[len(rootStr):]
-			}
-		} else if strings.HasPrefix(res, `\`) {
-			rootStr = `\`
-			pathWithoutRoot = res[1:]
-		}
+		rootStr, pathWithoutRoot := splitRoot(thisStr)
 
 		parts := getPathParts(pathWithoutRoot)
 
@@ -721,6 +710,9 @@ func filePathToString(params []interface{}) interface{} {
 
 // --- Helper to create Path objects ---
 func newPath(goPath string) *object.Object {
+	if globals.OnWindows {
+		goPath = strings.ReplaceAll(goPath, "/", `\`)
+	}
 	className := "java/nio/file/Path"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	obj.FieldTable["value"] = object.Field{

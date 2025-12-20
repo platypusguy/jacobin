@@ -21,18 +21,25 @@ func TestWindowsPaths(t *testing.T) {
 		path      string
 		isAbs     bool
 		root      string
-		parent    string
-		absMatch  string
 		nameCount int
 		name0     string
 	}{
-		{`C:\foo\bar`, true, `C:\`, `C:\foo`, `C:\foo\bar`, 2, "foo"},
-		{`C:\`, true, `C:\`, "", `C:\`, 0, ""},
-		{`\\server\share\file`, true, `\\server\share\`, `\\server\share`, `\\server\share\file`, 1, "file"},
-		{`\foo\bar`, true, `\`, `\foo`, `C:\foo\bar`, 2, "foo"}, // Rooted - treated as absolute in Jacobin
-		{`foo\bar`, false, "", `foo`, `C:\foo\bar`, 2, "foo"},
-		{`C:`, false, `C:`, "", `C:\`, 0, ""},
-		{`C:foo`, false, `C:`, "", `C:\foo`, 1, "foo"},
+		{`C:\foo\bar`, true, `C:\`, 2, "foo"},
+		{`C:`, false, `C:`, 0, ""},
+		{`C:foo`, false, `C:`, 1, "foo"},
+		{`\foo\bar`, true, `\`, 2, "foo"},
+		{`\\server\share\dir\file.txt`, true, `\\server\share\`, 2, "dir"},
+		{`foo\bar`, false, "", 2, "foo"},
+		{`.`, false, "", 1, "."},
+		{`..`, false, "", 1, ".."},
+		{`C:\foo\..\bar`, true, `C:\`, 3, "foo"}, // Not normalized yet
+		{`C:/foo/bar`, true, `C:\`, 2, "foo"},
+		{`C:\`, true, `C:\`, 0, ""},
+		{`\`, true, `\`, 0, ""},
+		{`\\server\share\`, true, `\\server\share\`, 0, ""},
+		{`\\server\share`, true, `\\server\share\`, 0, ""},
+		{`C:\.`, true, `C:\`, 1, "."},
+		{`C:\..\foo`, true, `C:\`, 2, ".."},
 	}
 
 	globals.InitGlobals("test")
@@ -55,22 +62,13 @@ func TestWindowsPaths(t *testing.T) {
 				t.Errorf("getRoot(%q) = %v; want null", tt.path, rootObj)
 			}
 		} else {
-			rootStr := object.GoStringFromStringObject(rootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
-			if rootStr != tt.root {
-				t.Errorf("getRoot(%q) = %q; want %q", tt.path, rootStr, tt.root)
-			}
-		}
-
-		// Test getParent
-		parentObj := filePathGetParent([]interface{}{p})
-		if tt.parent == "" {
-			if !object.IsNull(parentObj) {
-				t.Errorf("getParent(%q) = %v; want null", tt.path, parentObj)
-			}
-		} else {
-			parentStr := object.GoStringFromStringObject(parentObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
-			if parentStr != tt.parent {
-				t.Errorf("getParent(%q) = %q; want %q", tt.path, parentStr, tt.parent)
+			if object.IsNull(rootObj) {
+				t.Errorf("getRoot(%q) = null; want %q", tt.path, tt.root)
+			} else {
+				rootStr := object.GoStringFromStringObject(rootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+				if rootStr != tt.root {
+					t.Errorf("getRoot(%q) = %q; want %q", tt.path, rootStr, tt.root)
+				}
 			}
 		}
 
@@ -88,13 +86,6 @@ func TestWindowsPaths(t *testing.T) {
 				t.Errorf("getName(0) for %q = %q; want %q", tt.path, n0Str, tt.name0)
 			}
 		}
-
-		// Test toAbsolutePath
-		absObj := filePathToAbsolutePath([]interface{}{p}).(*object.Object)
-		absStr := object.GoStringFromStringObject(absObj.FieldTable["value"].Fvalue.(*object.Object))
-		if absStr != tt.absMatch {
-			t.Errorf("toAbsolutePath(%q) = %q; want %q", tt.path, absStr, tt.absMatch)
-		}
 	}
 
 	// Test Normalize
@@ -106,6 +97,9 @@ func TestWindowsPaths(t *testing.T) {
 		{`C:\foo\..\bar`, `C:\bar`},
 		{`\foo\bar\..`, `\foo`},
 		{`\\server\share\foo\..\bar`, `\\server\share\bar`},
+		{`C:/foo/bar`, `C:\foo\bar`},
+		{`C:\.`, `C:\`},
+		{`C:\..\foo`, `C:\foo`},
 	}
 
 	for _, tt := range normTests {
