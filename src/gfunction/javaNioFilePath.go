@@ -386,13 +386,20 @@ func isAbsolute(path string) bool {
 		// Absolute paths on Windows (per HotSpot JVM):
 		// - UNC paths: \\server\share, \\server, \\
 		// - Drive-letter paths: C:\, C:\foo
-		// - Rooted paths: \foo, \
-		// Relative paths: foo, foo\bar, C: (drive letter without backslash)
+		// Relative paths (per HotSpot JVM):
+		// - Rooted without drive: \foo, \
+		// - Drive letter only: C:
+		// - No root: foo, foo\bar
 
 		root, _ := splitRoot(path)
 
 		// Drive letter without backslash (C:) is relative
 		if len(root) == 2 && root[1] == ':' {
+			return false
+		}
+
+		// Rooted path without drive (\foo, \) is relative
+		if root == `\` {
 			return false
 		}
 
@@ -402,6 +409,7 @@ func isAbsolute(path string) bool {
 	// Unix-like systems: only paths starting with / are absolute
 	return path[0] == '/'
 }
+
 func filePathIsAbsolute(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
