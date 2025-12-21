@@ -10,7 +10,12 @@ import (
 	"strings"
 )
 
-var sep = string(os.PathSeparator)
+func getSep() string {
+	if globals.OnWindows {
+		return `\`
+	}
+	return `/`
+}
 
 // Load_Nio_File_Path loads MethodSignatures entries for java.nio.file.Path
 func Load_Nio_File_Path() {
@@ -140,6 +145,11 @@ func filePathCompareTo(params []interface{}) interface{} {
 	thisVal := object.GoStringFromStringObject(thisStrObj)
 	otherVal := object.GoStringFromStringObject(otherStrObj)
 
+	if globals.OnWindows {
+		thisVal = strings.ToLower(thisVal)
+		otherVal = strings.ToLower(otherVal)
+	}
+
 	if thisVal < otherVal {
 		return int64(-1)
 	}
@@ -186,8 +196,14 @@ func filePathEquals(params []interface{}) interface{} {
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	if thisStr == otherStr {
-		return types.JavaBoolTrue
+	if globals.OnWindows {
+		if strings.EqualFold(thisStr, otherStr) {
+			return types.JavaBoolTrue
+		}
+	} else {
+		if thisStr == otherStr {
+			return types.JavaBoolTrue
+		}
 	}
 	return types.JavaBoolFalse
 }
@@ -226,34 +242,111 @@ func filePathGetNameCount(params []interface{}) interface{} {
 func filePathGetParent(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	idx := strings.LastIndex(thisStr, sep)
+
+	// If it's a root, return null
+	root := filePathGetRoot([]interface{}{thisObj})
+	if !object.IsNull(root) {
+		rootStr := object.GoStringFromStringObject(root.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+		if thisStr == rootStr {
+			return object.Null
+		}
+	}
+
+	idx := strings.LastIndex(thisStr, getSep())
 	if idx < 0 {
 		return object.Null
 	}
 	if idx == 0 {
 		if len(thisStr) > 1 {
-			return newPath(sep)
+			return newPath(getSep())
 		}
 		return object.Null
 	}
+
+	// Windows-specific: C:\foo -> idx is 2. parent is C:\
+	if globals.OnWindows && idx == 2 && len(thisStr) >= 3 && thisStr[1] == ':' {
+		return newPath(thisStr[:3])
+	}
+
 	parent := thisStr[:idx]
+	if parent == "" {
+		return object.Null
+	}
 	return newPath(parent)
 }
 
 func filePathGetRoot(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
-	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
+	thisStr := object.GoStringFromStringObject(
+		thisObj.FieldTable["value"].Fvalue.(*object.Object),
+	)
+
 	if len(thisStr) == 0 {
 		return object.Null
 	}
-	if strings.HasPrefix(thisStr, sep) {
-		return newPath(sep)
+
+	// Windows
+	if globals.OnWindows {
+		root, _ := splitRoot(thisStr)
+		if root == "" {
+			return object.Null
+		}
+		return newPath(root)
 	}
-	// Windows root: C:\
-	if len(thisStr) >= 3 && sep == "\\" && thisStr[1] == ':' && thisStr[2] == '\\' {
-		return newPath(thisStr[:3])
+
+	// Unix
+	if strings.HasPrefix(thisStr, "/") {
+		return newPath("/")
 	}
+
 	return object.Null
+}
+
+func splitRoot(path string) (string, string) {
+	if !globals.OnWindows {
+		if strings.HasPrefix(path, "/") {
+			return "/", path[1:]
+		}
+		return "", path
+	}
+
+	// Windows logic
+	if len(path) == 0 {
+		return "", ""
+	}
+
+	// UNC
+	if len(path) >= 2 && (path[0] == '\\' || path[0] == '/') && (path[1] == '\\' || path[1] == '/') {
+		// Find \\server\share\
+		p := path[2:]
+		idx1 := strings.IndexAny(p, `\/`)
+		if idx1 < 0 {
+			return path + `\`, ""
+		}
+		p2 := p[idx1+1:]
+		idx2 := strings.IndexAny(p2, `\/`)
+		if idx2 < 0 {
+			return path + `\`, ""
+		}
+		rootLen := 2 + idx1 + 1 + idx2 + 1
+		return path[:rootLen], path[rootLen:]
+	}
+
+	// Drive letter
+	if len(path) >= 2 && path[1] == ':' &&
+		((path[0] >= 'a' && path[0] <= 'z') || (path[0] >= 'A' && path[0] <= 'Z')) {
+		if len(path) >= 3 && (path[2] == '\\' || path[2] == '/') {
+			return path[:3], path[3:]
+		}
+		return path[:2], path[2:]
+	}
+
+	// Rooted but no drive
+	if path[0] == '\\' || path[0] == '/' {
+		return `\`, path[1:]
+	}
+
+	return "", path
 }
 
 func filePathHashCode(params []interface{}) interface{} {
@@ -266,18 +359,48 @@ func filePathHashCode(params []interface{}) interface{} {
 	return hash
 }
 
-func isAbsolute(path string) bool {
-	if len(path) == 0 {
+func isFullyQualified(path string) bool {
+	if path == "" {
 		return false
 	}
-	if strings.HasPrefix(path, sep) {
-		return true
+	if globals.OnWindows {
+		root, _ := splitRoot(path)
+		// UNC paths and Drive-letter paths with a backslash are fully qualified.
+		if strings.HasPrefix(root, `\\`) {
+			return true
+		}
+		if len(root) == 3 && root[1] == ':' && root[2] == '\\' {
+			return true
+		}
+		return false
 	}
-	// Windows absolute path: C:\...
-	if len(path) >= 3 && sep == "\\" && path[1] == ':' && path[2] == '\\' {
-		return true
+	return path[0] == '/'
+}
+
+func isAbsolute(path string) bool {
+	if path == "" {
+		return false
 	}
-	return false
+
+	if globals.OnWindows {
+		root, _ := splitRoot(path)
+		// UNC paths and Drive-letter paths with a backslash are absolute.
+		// NOTE: Standard Java on Windows returns false for \foo (rooted but no drive).
+		// However, per Jacobin requirements, we treat it as absolute.
+		if strings.HasPrefix(root, `\\`) {
+			return true
+		}
+		if len(root) == 3 && root[1] == ':' && root[2] == '\\' {
+			return true
+		}
+		if root == `\` {
+			return true
+		}
+		return false
+	}
+
+	// Unix-like systems
+	return path[0] == '/'
 }
 
 func filePathIsAbsolute(params []interface{}) interface{} {
@@ -292,14 +415,42 @@ func filePathIsAbsolute(params []interface{}) interface{} {
 func filePathIterator(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	parts := strings.Split(thisStr, sep)
+	parts := strings.Split(thisStr, getSep())
 	return newStringIterator(parts)
 }
 
 func filePathNormalize(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	normalized := filepath.Clean(thisStr)
+
+	var normalized string
+	if globals.OnWindows {
+		// Basic normalization for Windows paths when running on any OS
+		// 1. Replace all / with \
+		thisStr = strings.ReplaceAll(thisStr, "/", `\`)
+
+		rootStr, pathWithoutRoot := splitRoot(thisStr)
+
+		parts := getPathParts(pathWithoutRoot)
+
+		// Handle .. and .
+		var stack []string
+		for _, p := range parts {
+			if p == "." {
+				continue
+			}
+			if p == ".." {
+				if len(stack) > 0 {
+					stack = stack[:len(stack)-1]
+				}
+				continue
+			}
+			stack = append(stack, p)
+		}
+		normalized = rootStr + strings.Join(stack, `\`)
+	} else {
+		normalized = filepath.Clean(thisStr)
+	}
 	return newPath(normalized)
 }
 
@@ -311,6 +462,47 @@ func filePathRelativize(params []interface{}) interface{} {
 
 	if isAbsolute(thisStr) != isAbsolute(otherStr) {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.relativize: both paths must be either absolute or relative")
+	}
+
+	if globals.OnWindows {
+		// Basic relativize for Windows paths
+		// 1. Must have same root
+		thisRootObj := filePathGetRoot([]interface{}{thisObj})
+		otherRootObj := filePathGetRoot([]interface{}{otherObj})
+
+		var thisRoot, otherRoot string
+		if !object.IsNull(thisRootObj) {
+			thisRoot = object.GoStringFromStringObject(thisRootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+		}
+		if !object.IsNull(otherRootObj) {
+			otherRoot = object.GoStringFromStringObject(otherRootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+		}
+
+		if !strings.EqualFold(thisRoot, otherRoot) {
+			return getGErrBlk(excNames.IllegalArgumentException, "Path.relativize: both paths must have the same root")
+		}
+
+		thisWithoutRoot := thisStr[len(thisRoot):]
+		otherWithoutRoot := otherStr[len(otherRoot):]
+
+		thisParts := getPathParts(thisWithoutRoot)
+		otherParts := getPathParts(otherWithoutRoot)
+
+		i := 0
+		for i < len(thisParts) && i < len(otherParts) && strings.EqualFold(thisParts[i], otherParts[i]) {
+			i++
+		}
+
+		var relParts []string
+		for j := i; j < len(thisParts); j++ {
+			relParts = append(relParts, "..")
+		}
+		relParts = append(relParts, otherParts[i:]...)
+
+		if len(relParts) == 0 {
+			return newPath("")
+		}
+		return newPath(strings.Join(relParts, `\`))
 	}
 
 	rel, err := filepath.Rel(thisStr, otherStr)
@@ -325,15 +517,32 @@ func filePathResolve(params []interface{}) interface{} {
 	otherStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	if isAbsolute(otherStr) {
+	if isFullyQualified(otherStr) {
 		return newPath(otherStr)
 	}
 	if otherStr == "" {
 		return thisObj
 	}
+
+	if globals.OnWindows {
+		// If otherStr starts with \ or /, it's rooted.
+		// Resolve it against the root of thisStr if thisStr has one.
+		if strings.HasPrefix(otherStr, `\`) || strings.HasPrefix(otherStr, `/`) {
+			rootObj := filePathGetRoot([]interface{}{thisObj})
+			if !object.IsNull(rootObj) {
+				rootStr := object.GoStringFromStringObject(rootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+				// If root is drive letter like C:\, we want C: + otherStr
+				if len(rootStr) >= 2 && rootStr[1] == ':' {
+					return newPath(rootStr[:2] + otherStr)
+				}
+			}
+			return newPath(otherStr)
+		}
+	}
+
 	res := thisStr
-	if !strings.HasSuffix(res, sep) {
-		res += sep
+	if !strings.HasSuffix(res, getSep()) {
+		res += getSep()
 	}
 	return newPath(res + otherStr)
 }
@@ -341,18 +550,32 @@ func filePathResolve(params []interface{}) interface{} {
 func filePathResolvePath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	otherObj := params[1].(*object.Object)
-	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 	otherStr := object.GoStringFromStringObject(otherObj.FieldTable["value"].Fvalue.(*object.Object))
+	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
 
-	if isAbsolute(otherStr) {
+	if isFullyQualified(otherStr) {
 		return otherObj
 	}
 	if otherStr == "" {
 		return thisObj
 	}
+
+	if globals.OnWindows {
+		if strings.HasPrefix(otherStr, `\`) || strings.HasPrefix(otherStr, `/`) {
+			rootObj := filePathGetRoot([]interface{}{thisObj})
+			if !object.IsNull(rootObj) {
+				rootStr := object.GoStringFromStringObject(rootObj.(*object.Object).FieldTable["value"].Fvalue.(*object.Object))
+				if len(rootStr) >= 2 && rootStr[1] == ':' {
+					return newPath(rootStr[:2] + otherStr)
+				}
+			}
+			return otherObj
+		}
+	}
+
 	res := thisStr
-	if !strings.HasSuffix(res, sep) {
-		res += sep
+	if !strings.HasSuffix(res, getSep()) {
+		res += getSep()
 	}
 	return newPath(res + otherStr)
 }
@@ -413,13 +636,14 @@ func filePathSubpath(params []interface{}) interface{} {
 	if start < 0 || end > len(parts) || start >= end {
 		return getGErrBlk(excNames.IllegalArgumentException, "Path.subpath: invalid range")
 	}
-	sub := strings.Join(parts[start:end], sep)
+	sub := strings.Join(parts[start:end], getSep())
 	return newPath(sub)
 }
 
 func getPathParts(path string) []string {
+	_, pathWithoutRoot := splitRoot(path)
 	var parts []string
-	for _, p := range strings.Split(path, sep) {
+	for _, p := range strings.Split(pathWithoutRoot, getSep()) {
 		if p != "" {
 			parts = append(parts, p)
 		}
@@ -430,15 +654,41 @@ func getPathParts(path string) []string {
 func filePathToAbsolutePath(params []interface{}) interface{} {
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	if isAbsolute(thisStr) {
+	if isFullyQualified(thisStr) {
 		return thisObj
 	}
 	cwd := globals.GetSystemProperty("user.dir")
 	if cwd == "" {
 		cwd, _ = os.Getwd()
 	}
-	if !strings.HasSuffix(cwd, sep) {
-		cwd += sep
+
+	if globals.OnWindows {
+		root, tail := splitRoot(thisStr)
+		// If it starts with \, it's rooted on current drive
+		if root == `\` {
+			if len(cwd) >= 2 && cwd[1] == ':' {
+				return newPath(cwd[:2] + thisStr)
+			}
+			return newPath(thisStr)
+		}
+		// If it's drive-relative (C:foo or C:)
+		if len(root) == 2 && root[1] == ':' {
+			// If it's the same drive as cwd, resolve against cwd
+			if len(cwd) >= 2 && strings.EqualFold(root[:2], cwd[:2]) {
+				res := cwd
+				if !strings.HasSuffix(res, `\`) {
+					res += `\`
+				}
+				return newPath(res + tail)
+			}
+			// Otherwise we don't know the current dir of that drive,
+			// just return it as absolute at the root of that drive for now (best effort)
+			return newPath(root + `\` + tail)
+		}
+	}
+
+	if !strings.HasSuffix(cwd, getSep()) {
+		cwd += getSep()
 	}
 	return newPath(cwd + thisStr)
 }
@@ -447,8 +697,8 @@ func filePathToRealPath(params []interface{}) interface{} {
 	// For simplicity, just normalize
 	thisObj := params[0].(*object.Object)
 	thisStr := object.GoStringFromStringObject(thisObj.FieldTable["value"].Fvalue.(*object.Object))
-	doubleSep := sep + sep
-	normalized := strings.ReplaceAll(thisStr, doubleSep, sep)
+	doubleSep := getSep() + getSep()
+	normalized := strings.ReplaceAll(thisStr, doubleSep, getSep())
 	return newPath(normalized)
 }
 
@@ -460,6 +710,9 @@ func filePathToString(params []interface{}) interface{} {
 
 // --- Helper to create Path objects ---
 func newPath(goPath string) *object.Object {
+	if globals.OnWindows {
+		goPath = strings.ReplaceAll(goPath, "/", `\`)
+	}
 	className := "java/nio/file/Path"
 	obj := object.MakeEmptyObjectWithClassName(&className)
 	obj.FieldTable["value"] = object.Field{

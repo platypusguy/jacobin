@@ -49,12 +49,12 @@ func pathsGet(params []interface{}) interface{} {
 				res = m
 			} else {
 				// Join with separator, but avoid double separators if one is already present
-				resHasSep := strings.HasSuffix(res, sep)
-				mHasSep := strings.HasPrefix(m, sep)
+				resHasSep := strings.HasSuffix(res, getSep())
+				mHasSep := strings.HasPrefix(m, getSep())
 				if resHasSep && mHasSep {
 					res += m[1:]
 				} else if !resHasSep && !mHasSep {
-					res += sep + m
+					res += getSep() + m
 				} else {
 					res += m
 				}
