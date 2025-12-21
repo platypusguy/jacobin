@@ -28,6 +28,7 @@ func TestWindowsPaths(t *testing.T) {
 		{`C:`, false, `C:`, 0, ""},
 		{`C:foo`, false, `C:`, 1, "foo"},
 		{`\foo\bar`, true, `\`, 2, "foo"},
+		{`\foo`, true, `\`, 1, "foo"},
 		{`\\server\share\dir\file.txt`, true, `\\server\share\`, 2, "dir"},
 		{`foo\bar`, false, "", 2, "foo"},
 		{`.`, false, "", 1, "."},
