@@ -7,6 +7,7 @@
 package gfunction
 
 import (
+	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/types"
 )
@@ -23,8 +24,14 @@ func NewRunnable(clName, methName, signature []types.JavaByte) *object.Object {
 	return o
 }
 
-func setUpRunnable(runnable *object.Object, runClassName string) {
+func setUpRunnable(runnable *object.Object, runClassName string) *GErrBlk {
+	if runnable == nil || runnable.FieldTable == nil {
+		errMsg := "setUpRunnable: Either the runnable object is nil or its field table is nil"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
 	runnable.FieldTable["clName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString(runClassName)}
 	runnable.FieldTable["methName"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString("run")}
 	runnable.FieldTable["methType"] = object.Field{Ftype: types.ByteArray, Fvalue: object.JavaByteArrayFromGoString("()V")}
+
+	return nil
 }
