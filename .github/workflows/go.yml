@@ -5,10 +5,17 @@ on:
 
   push:
     paths-ignore:
-      - '*.md'
+      - '**.md'
+      - '**.py'
+      - '**.txt'
+      - '**.yml'
     branches: [ main ]
     
   pull_request:
+      - '**.md'
+      - '**.py'
+      - '**.txt'
+      - '**.yml'
     branches: [ main ]
     
   workflow_dispatch:  # Run on demand.

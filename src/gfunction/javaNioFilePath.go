@@ -383,23 +383,30 @@ func isAbsolute(path string) bool {
 	}
 
 	if globals.OnWindows {
+		// Absolute paths on Windows (per HotSpot JVM):
+		// - UNC paths: \\server\share, \\server, \\
+		// - Drive-letter paths: C:\, C:\foo
+		// Relative paths (per HotSpot JVM):
+		// - Rooted without drive: \foo, \
+		// - Drive letter only: C:
+		// - No root: foo, foo\bar
+
 		root, _ := splitRoot(path)
-		// UNC paths and Drive-letter paths with a backslash are absolute.
-		// NOTE: Standard Java on Windows returns false for \foo (rooted but no drive).
-		// However, per Jacobin requirements, we treat it as absolute.
-		if strings.HasPrefix(root, `\\`) {
-			return true
+
+		// Drive letter without backslash (C:) is relative
+		if len(root) == 2 && root[1] == ':' {
+			return false
 		}
-		if len(root) == 3 && root[1] == ':' && root[2] == '\\' {
-			return true
-		}
+
+		// Rooted path without drive (\foo, \) is relative
 		if root == `\` {
-			return true
+			return false
 		}
-		return false
+
+		return root != ""
 	}
 
-	// Unix-like systems
+	// Unix-like systems: only paths starting with / are absolute
 	return path[0] == '/'
 }
 
