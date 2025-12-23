@@ -2,23 +2,21 @@ name: Go build and test
 env:
   GO111MODULE: "on"
 on:
-
+  workflow_dispatch:
   push:
     paths-ignore:
       - '**.md'
       - '**.py'
       - '**.txt'
       - '**.yml'
-    branches: [ main ]
-    
+    branches: [ "main" ]
   pull_request:
+    paths-ignore:
       - '**.md'
       - '**.py'
       - '**.txt'
       - '**.yml'
-    branches: [ main ]
-    
-  workflow_dispatch:  # Run on demand.
+    branches: [ "main" ]
 
 jobs:
 
