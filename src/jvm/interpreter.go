@@ -2771,7 +2771,17 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 				return 5 // 2 for CP slot + 1 for count, 1 for zero byte, and 1 for next bytecode
 			}
 		}
-		// any exception will already have been handled.
+		// Normal nil return.
+		return 5 // 2 for CP slot + 1 for count, 1 for zero byte, and 1 for next bytecode
+	}
+
+	// Impossible return point unless there is a preceding software error.
+	globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+	errMsg := "INVOKEINTERFACE: Logic error creating frame in: " + clData.Name + "." +
+		interfaceMethodName + interfaceMethodType
+	status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+	if status != exceptions.Caught {
+		return ERROR_OCCURED // applies only if in test
 	}
 	return notImplemented(fr, 0) // in theory, unreachable code
 }
