@@ -11,6 +11,8 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"os"
+	"runtime"
+	"syscall"
 )
 
 func Load_Lang_Process() {
@@ -204,4 +206,21 @@ func processToHandle(params []interface{}) interface{} {
 		return gerr
 	}
 	return object.MakeOneFieldObject(classNameProcessHandle, pidFieldName, types.Int, int64(pid))
+}
+
+func isProcessAlive(pid int) bool {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+
+	if runtime.GOOS == "windows" {
+		// On Windows, FindProcess fails if the process does not exist.
+		// If it succeeded, the process exists.
+		return true
+	}
+
+	// On Unix, FindProcess always succeeds, so we use Signal(0) to check if the process exists.
+	err = proc.Signal(syscall.Signal(0))
+	return err == nil
 }
