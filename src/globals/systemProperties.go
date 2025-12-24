@@ -86,9 +86,9 @@ func getOsProperty(arg string) string {
 		value = ver
 	case "line.separator":
 		if operSys == "windows" {
-			value = "\\r\\n"
+			value = "\r\n"
 		} else {
-			value = "\\n"
+			value = "\n"
 		}
 	case "native.encoding", "stdout.encoding", "stderr.encoding":
 		value = GetCharsetName()
