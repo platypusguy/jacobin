@@ -221,14 +221,10 @@ func processHandleImplIsAlive(params []interface{}) interface{} {
 	}
 
 	processId := obj.FieldTable[pidFieldName].Fvalue.(int64)
-	_, err := os.FindProcess(int(processId))
-	if err != nil {
-		return types.JavaBoolFalse
+	if isProcessAlive(int(processId)) {
+		return types.JavaBoolTrue
 	}
-	// Note: process.Signal is not implemented on Windows
-	// err = process.Signal(syscall.Signal(0))
-	// return err == nil
-	return types.JavaBoolTrue
+	return types.JavaBoolFalse
 }
 
 // processHandleImplIsAlive0 is a low-level function that checks if a process is alive and

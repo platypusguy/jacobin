@@ -11,7 +11,6 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"os"
-	"syscall"
 )
 
 func Load_Lang_Process() {
@@ -157,13 +156,7 @@ func processIsAlive(params []interface{}) interface{} {
 	if gerr != nil {
 		return gerr
 	}
-	proc, err := os.FindProcess(pid)
-	if err != nil {
-		return types.JavaBoolFalse
-	}
-	// Signal(0) checks if process exists.
-	err = proc.Signal(syscall.Signal(0))
-	if err == nil {
+	if isProcessAlive(pid) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
