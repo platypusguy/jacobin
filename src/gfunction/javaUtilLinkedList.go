@@ -133,7 +133,7 @@ func Load_Util_LinkedList() {
 	MethodSignatures["java/util/LinkedList.iterator()Ljava/util/Iterator;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  linkedlistIterator,
 		}
 
 	MethodSignatures["java/util/LinkedList.lastIndexOf(Ljava/lang/Object;)I"] =
@@ -309,6 +309,14 @@ func Load_Util_LinkedList() {
 var classNameLinkedList = "java/util/LinkedList"
 
 // linkedlistInit (<init>) initializes a new LinkedList object.
+func linkedlistIterator(params []interface{}) interface{} {
+	self, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "linkedlistIterator: Invalid self argument")
+	}
+	return NewIterator(self)
+}
+
 func linkedlistInit(params []interface{}) interface{} {
 	self, ok := params[0].(*object.Object)
 	if !ok {

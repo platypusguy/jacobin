@@ -85,13 +85,13 @@ func Load_Lang_Runtime() {
 	MethodSignatures["java/lang/Runtime.freeMemory()J"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  freeMemory,
 		}
 
 	MethodSignatures["java/lang/Runtime.gc()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn, // TODO: implement
+			GFunction:  runtimeGC,
 		}
 
 	MethodSignatures["java/lang/Runtime.getRuntime()Ljava/lang/Runtime;"] =
@@ -154,10 +154,10 @@ func Load_Lang_Runtime() {
 			GFunction:  totalMemory,
 		}
 
-	MethodSignatures["java/lang/Runtime.version()Ljava/lang/Runtime/Version;"] =
+	MethodSignatures["java/lang/Runtime.version()Ljava/lang/Runtime$Version;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  runtimeVersion,
 		}
 
 }
@@ -184,6 +184,23 @@ func runtimeAvailableProcessors([]interface{}) interface{} {
 	return int64(runtime.NumCPU())
 }
 
+// freeMemory: Returns the amount of free memory in the Java Virtual Machine.
+func freeMemory([]interface{}) interface{} {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	// HeapIdle is memory that is idle and could be used for heap,
+	// but it is still allocated from the OS.
+	// HeapInuse is memory that is currently being used for heap.
+	// This is a rough approximation of Java's freeMemory().
+	return int64(m.HeapIdle)
+}
+
+// runtimeGC: Runs the garbage collector.
+func runtimeGC([]interface{}) interface{} {
+	runtime.GC()
+	return nil
+}
+
 // maxMemory: Get the maximum amount of memory that the max Jacobin will attempt to use. If there is no limit,
 // Java return Long.MAX_VALUE, which is what we do here
 func maxMemory([]interface{}) interface{} {
@@ -195,4 +212,11 @@ func totalMemory([]interface{}) interface{} {
 	memStats := new(runtime.MemStats)
 	runtime.ReadMemStats(memStats)
 	return int64(memStats.Sys)
+}
+
+// runtimeVersion returns the version of the runtime.
+func runtimeVersion([]interface{}) interface{} {
+	// For now, we return a version object that represents Java 17.
+	// In a real implementation, this would be more complex.
+	return Populator("java/lang/Runtime$Version", types.Ref, nil)
 }

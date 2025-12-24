@@ -305,118 +305,148 @@ func TestIntegerValueOfString(t *testing.T) {
 	checkIntegerErrType(t, res, excNames.NumberFormatException)
 }
 
-
 func TestInteger_NumberOfLeadingAndTrailingZeros(t *testing.T) {
-    // 0x0000F000 -> leading zeros = 16, trailing zeros = 12 (32-bit semantics)
-    val := int64(0x0000F000)
-    if lz := integerNumberOfLeadingZeros([]interface{}{val}).(int64); lz != 16 {
-        t.Fatalf("numberOfLeadingZeros(0x0000F000)=%d", lz)
-    }
-    if tz := integerNumberOfTrailingZeros([]interface{}{val}).(int64); tz != 12 {
-        t.Fatalf("numberOfTrailingZeros(0x0000F000)=%d", tz)
-    }
+	// 0x0000F000 -> leading zeros = 16, trailing zeros = 12 (32-bit semantics)
+	val := int64(0x0000F000)
+	if lz := integerNumberOfLeadingZeros([]interface{}{val}).(int64); lz != 16 {
+		t.Fatalf("numberOfLeadingZeros(0x0000F000)=%d", lz)
+	}
+	if tz := integerNumberOfTrailingZeros([]interface{}{val}).(int64); tz != 12 {
+		t.Fatalf("numberOfTrailingZeros(0x0000F000)=%d", tz)
+	}
 }
 
 func TestInteger_RotateLeftRight(t *testing.T) {
-    val := int64(0x12345678)
-    rl := integerRotateLeft([]interface{}{val, int64(8)}).(int64)
-    rr := integerRotateRight([]interface{}{val, int64(8)}).(int64)
-    if uint32(rl) != 0x34567812 {
-        t.Fatalf("rotateLeft(0x12345678,8)=0x%08x", uint32(rl))
-    }
-    if uint32(rr) != 0x78123456 {
-        t.Fatalf("rotateRight(0x12345678,8)=0x%08x", uint32(rr))
-    }
+	val := int64(0x12345678)
+	rl := integerRotateLeft([]interface{}{val, int64(8)}).(int64)
+	rr := integerRotateRight([]interface{}{val, int64(8)}).(int64)
+	if uint32(rl) != 0x34567812 {
+		t.Fatalf("rotateLeft(0x12345678,8)=0x%08x", uint32(rl))
+	}
+	if uint32(rr) != 0x78123456 {
+		t.Fatalf("rotateRight(0x12345678,8)=0x%08x", uint32(rr))
+	}
 }
 
 func TestInteger_Reverse_And_ReverseBytes(t *testing.T) {
-    // reverse bits of 1 -> 0x80000000
-    if got := uint32(integerReverse([]interface{}{int64(1)}).(int64)); got != 0x80000000 {
-        t.Fatalf("reverse(1)=0x%08x", got)
-    }
-    // reverse bytes of 0x12345678 -> 0x78563412
-    if got := uint32(integerReverseBytes([]interface{}{int64(0x12345678)}).(int64)); got != 0x78563412 {
-        t.Fatalf("reverseBytes(0x12345678)=0x%08x", got)
-    }
+	// reverse bits of 1 -> 0x80000000
+	if got := uint32(integerReverse([]interface{}{int64(1)}).(int64)); got != 0x80000000 {
+		t.Fatalf("reverse(1)=0x%08x", got)
+	}
+	// reverse bytes of 0x12345678 -> 0x78563412
+	if got := uint32(integerReverseBytes([]interface{}{int64(0x12345678)}).(int64)); got != 0x78563412 {
+		t.Fatalf("reverseBytes(0x12345678)=0x%08x", got)
+	}
 }
 
 func TestInteger_ToHexOctalBinaryString(t *testing.T) {
-    // hex
-    if s := object.GoStringFromStringObject(integerToHexString([]interface{}{int64(26)}).(*object.Object)); s != "1a" {
-        t.Fatalf("toHexString(26)=%q", s)
-    }
-    // octal
-    if s := object.GoStringFromStringObject(integerToOctalString([]interface{}{int64(26)}).(*object.Object)); s != "32" {
-        t.Fatalf("toOctalString(26)=%q", s)
-    }
-    // binary unsigned: -1 -> 32 ones
-    s := object.GoStringFromStringObject(integerToBinaryString([]interface{}{int64(-1)}).(*object.Object))
-    if len(s) != 32 {
-        t.Fatalf("binary length for -1 expected 32, got %d", len(s))
-    }
-    for i := 0; i < len(s); i++ {
-        if s[i] != '1' {
-            t.Fatalf("expected all ones, got %q at %d", s[i], i)
-        }
-    }
+	// hex
+	if s := object.GoStringFromStringObject(integerToHexString([]interface{}{int64(26)}).(*object.Object)); s != "1a" {
+		t.Fatalf("toHexString(26)=%q", s)
+	}
+	// octal
+	if s := object.GoStringFromStringObject(integerToOctalString([]interface{}{int64(26)}).(*object.Object)); s != "32" {
+		t.Fatalf("toOctalString(26)=%q", s)
+	}
+	// binary unsigned: -1 -> 32 ones
+	s := object.GoStringFromStringObject(integerToBinaryString([]interface{}{int64(-1)}).(*object.Object))
+	if len(s) != 32 {
+		t.Fatalf("binary length for -1 expected 32, got %d", len(s))
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] != '1' {
+			t.Fatalf("expected all ones, got %q at %d", s[i], i)
+		}
+	}
 }
 
 func TestInteger_CompareUnsigned_And_UnsignedDivRem(t *testing.T) {
-    // compareUnsigned: (-1) > 0 as unsigned
-    if c := integerCompareUnsigned([]interface{}{int64(-1), int64(0)}).(int64); c != 1 {
-        t.Fatalf("compareUnsigned(-1,0)=%d", c)
-    }
-    if c := integerCompareUnsigned([]interface{}{int64(1), int64(-1)}).(int64); c != -1 {
-        t.Fatalf("compareUnsigned(1,-1)=%d", c)
-    }
-    // divideUnsigned and remainderUnsigned
-    if q := integerDivideUnsigned([]interface{}{int64(-2), int64(3)}).(int64); q != int64(uint32(0xFFFFFFFE)/3) {
-        t.Fatalf("divideUnsigned(-2,3)=%d", q)
-    }
-    if r := integerRemainderUnsigned([]interface{}{int64(-2), int64(3)}).(int64); r != int64(uint32(0xFFFFFFFE)%3) {
-        t.Fatalf("remainderUnsigned(-2,3)=%d", r)
-    }
-    // divide by zero -> ArithmeticException
-    if res := integerDivideUnsigned([]interface{}{int64(1), int64(0)}); res == nil {
-        t.Fatalf("expected error for divide by zero")
-    } else if geb, ok := res.(*GErrBlk); !ok || geb.ExceptionType != excNames.ArithmeticException {
-        t.Fatalf("expected ArithmeticException, got %T", res)
-    }
+	// compareUnsigned: (-1) > 0 as unsigned
+	if c := integerCompareUnsigned([]interface{}{int64(-1), int64(0)}).(int64); c != 1 {
+		t.Fatalf("compareUnsigned(-1,0)=%d", c)
+	}
+	if c := integerCompareUnsigned([]interface{}{int64(1), int64(-1)}).(int64); c != -1 {
+		t.Fatalf("compareUnsigned(1,-1)=%d", c)
+	}
+	// divideUnsigned and remainderUnsigned
+	if q := integerDivideUnsigned([]interface{}{int64(-2), int64(3)}).(int64); q != int64(uint32(0xFFFFFFFE)/3) {
+		t.Fatalf("divideUnsigned(-2,3)=%d", q)
+	}
+	if r := integerRemainderUnsigned([]interface{}{int64(-2), int64(3)}).(int64); r != int64(uint32(0xFFFFFFFE)%3) {
+		t.Fatalf("remainderUnsigned(-2,3)=%d", r)
+	}
+	// divide by zero -> ArithmeticException
+	if res := integerDivideUnsigned([]interface{}{int64(1), int64(0)}); res == nil {
+		t.Fatalf("expected error for divide by zero")
+	} else if geb, ok := res.(*GErrBlk); !ok || geb.ExceptionType != excNames.ArithmeticException {
+		t.Fatalf("expected ArithmeticException, got %T", res)
+	}
 }
 
 func TestInteger_HighestLowestOneBit_MaxMinSum(t *testing.T) {
-    if h := uint32(integerHighestOneBit([]interface{}{int64(0xF234)}).(int64)); h != 0x8000 {
-        t.Fatalf("highestOneBit(0xF234)=0x%08x", h)
-    }
-    if l := uint32(integerLowestOneBit([]interface{}{int64(0xF234)}).(int64)); l != 0x0004 {
-        t.Fatalf("lowestOneBit(0xF234)=0x%08x", l)
-    }
-    if m := integerMax([]interface{}{int64(-5), int64(3)}).(int64); m != 3 {
-        t.Fatalf("max(-5,3)=%d", m)
-    }
-    if n := integerMin([]interface{}{int64(-5), int64(3)}).(int64); n != -5 {
-        t.Fatalf("min(-5,3)=%d", n)
-    }
-    if s := integerSum([]interface{}{int64(7), int64(8)}).(int64); s != 15 {
-        t.Fatalf("sum(7,8)=%d", s)
-    }
+	if h := uint32(integerHighestOneBit([]interface{}{int64(0xF234)}).(int64)); h != 0x8000 {
+		t.Fatalf("highestOneBit(0xF234)=0x%08x", h)
+	}
+	if l := uint32(integerLowestOneBit([]interface{}{int64(0xF234)}).(int64)); l != 0x0004 {
+		t.Fatalf("lowestOneBit(0xF234)=0x%08x", l)
+	}
+	if m := integerMax([]interface{}{int64(-5), int64(3)}).(int64); m != 3 {
+		t.Fatalf("max(-5,3)=%d", m)
+	}
+	if n := integerMin([]interface{}{int64(-5), int64(3)}).(int64); n != -5 {
+		t.Fatalf("min(-5,3)=%d", n)
+	}
+	if s := integerSum([]interface{}{int64(7), int64(8)}).(int64); s != 15 {
+		t.Fatalf("sum(7,8)=%d", s)
+	}
 }
 
 func TestInteger_ToUnsignedString_Variants(t *testing.T) {
-    // toUnsignedString with negative -> decimal of uint32
-    s := object.GoStringFromStringObject(integerToUnsignedString([]interface{}{int64(-1)}).(*object.Object))
-    if s != "4294967295" {
-        t.Fatalf("toUnsignedString(-1)=%q", s)
-    }
-    // toUnsignedStringRadix hex
-    s2 := object.GoStringFromStringObject(integerToUnsignedStringRadix([]interface{}{int64(-1), int64(16)}).(*object.Object))
-    if s2 != "ffffffff" {
-        t.Fatalf("toUnsignedString(-1,16)=%q", s2)
-    }
+	// toUnsignedString with negative -> decimal of uint32
+	s := object.GoStringFromStringObject(integerToUnsignedString([]interface{}{int64(-1)}).(*object.Object))
+	if s != "4294967295" {
+		t.Fatalf("toUnsignedString(-1)=%q", s)
+	}
+	// toUnsignedStringRadix hex
+	s2 := object.GoStringFromStringObject(integerToUnsignedStringRadix([]interface{}{int64(-1), int64(16)}).(*object.Object))
+	if s2 != "ffffffff" {
+		t.Fatalf("toUnsignedString(-1,16)=%q", s2)
+	}
 }
 
-func TestInteger_ToUnsignedLong(t *testing.T) {
-    if v := integerToUnsignedLong([]interface{}{int64(-1)}).(int64); v != 4294967295 {
-        t.Fatalf("toUnsignedLong(-1)=%d", v)
-    }
+func TestInteger_ParseIntCharSequence(t *testing.T) {
+	globals.InitStringPool()
+
+	cs := object.StringObjectFromGoString("123456")
+	// parseInt(cs, 1, 4, 10) -> "234" -> 234
+	res := integerParseIntCharSequence([]interface{}{cs, int64(1), int64(4), int64(10)})
+	if res.(int64) != 234 {
+		t.Errorf("expected 234, got %v", res)
+	}
+
+	// parseUnsignedInt(cs, 1, 4, 16) -> "234" hex -> 564
+	res = integerParseUnsignedIntCharSequence([]interface{}{cs, int64(1), int64(4), int64(16)})
+	if res.(int64) != 564 {
+		t.Errorf("expected 564, got %v", res)
+	}
+}
+
+func TestInteger_CompressExpand_Negative(t *testing.T) {
+	globals.InitStringPool()
+
+	// Test compress with negative mask
+	// In Java, compress(0xFFFFFFFF, 0x80000000) should be 1 if mask is treated as unsigned
+	// Wait, if mask is 0x80000000, only the 31st bit is kept and moved to position 0.
+	// So compress(-1, 0x80000000) should be 1.
+	res := integerCompress([]interface{}{int64(-1), int64(int32(-2147483648))})
+	if res.(int64) != 1 {
+		t.Errorf("compress(-1, 0x80000000): expected 1, got %v", res)
+	}
+
+	// Test expand with negative mask
+	// expand(1, 0x80000000) should be 0x80000000
+	res = integerExpand([]interface{}{int64(1), int64(int32(-2147483648))})
+	if uint32(res.(int64)) != 0x80000000 {
+		t.Errorf("expand(1, 0x80000000): expected 0x80000000, got 0x%x", res)
+	}
 }

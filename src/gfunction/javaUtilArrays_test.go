@@ -62,3 +62,43 @@ func TestCopyOfObjectPointers_CopyArray(t *testing.T) {
 		t.Errorf("Array elements not copied correctly")
 	}
 }
+
+func TestArraysAsList(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	// 1. Create a mock array object [Ljava/lang/Object;
+	arrayObj := object.Make1DimRefArray("Ljava/lang/Object;", 3)
+	rawArray := arrayObj.FieldTable["value"].Fvalue.([]*object.Object)
+	s1 := object.StringObjectFromGoString("one")
+	s2 := object.StringObjectFromGoString("two")
+	rawArray[0] = s1
+	rawArray[1] = s2
+	rawArray[2] = nil // Arrays.asList allows nulls
+
+	// 2. Call utilArraysAsList
+	res := utilArraysAsList([]interface{}{arrayObj})
+	listObj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object, got %T", res)
+	}
+
+	// 3. Verify it's an ArrayList
+	if className := object.GoStringFromStringPoolIndex(listObj.KlassName); className != "java/util/ArrayList" {
+		t.Errorf("expected className java/util/ArrayList, got %s", className)
+	}
+
+	// 4. Verify elements
+	al, err := getArrayListFromObject(listObj)
+	if err != nil {
+		t.Fatalf("getArrayListFromObject failed: %v", err)
+	}
+
+	if len(al) != 3 {
+		t.Errorf("expected size 3, got %d", len(al))
+	}
+
+	if al[0] != s1 || al[1] != s2 || al[2] != object.Null {
+		t.Errorf("elements mismatch")
+	}
+}

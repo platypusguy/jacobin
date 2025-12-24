@@ -8,121 +8,115 @@ package gfunction
 
 func Load_Lang_Process_Builder() {
 
-	MethodSignatures["javaLangProcessBuilder.<clinit>()V"] =
+	MethodSignatures["java/lang/ProcessBuilder.<clinit>()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  clinitGeneric,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.<init>(Ljava/util/List;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.command(Ljava/util/List;)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.command([Ljava/lang/String;)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.directory()Ljava/io/File;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.<init>()V"] =
+	MethodSignatures["java/lang/ProcessBuilder.directory(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.environment()Ljava/util/Map;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.<init>(Ljava/util/List;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.command(Ljava/util/List;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.command([Ljava/lang/String;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.directory()Ljava/io/File;"] =
+	MethodSignatures["java/lang/ProcessBuilder.inheritIO()Ljava/lang/ProcessBuilder;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.directory(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.environment()Ljava/util/Map;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectError()Ljava/lang/ProcessBuilder$Redirect;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.inheritIO()Ljava/lang/ProcessBuilder;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectError(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.redirectErrorStream()Z"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectError()Ljava/lang/ProcessBuilder$Redirect;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectErrorStream(Z)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.redirectInput()Ljava/lang/ProcessBuilder$Redirect;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectError(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectInput(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectErrorStream()Z"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectInput(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/ProcessBuilder.redirectOutput()Ljava/lang/ProcessBuilder$Redirect;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectErrorStream(Z)Ljava/lang/ProcessBuilder;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectOutput(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectInput()Ljava/lang/ProcessBuilder$Redirect;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.redirectInput(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
+	MethodSignatures["java/lang/ProcessBuilder.redirectOutput(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["javaLangProcessBuilder.redirectInput(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.redirectOutput()Ljava/lang/ProcessBuilder$Redirect;"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.redirectOutput(Ljava/io/File;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.redirectOutput(Ljava/lang/ProcessBuilder$Redirect;)Ljava/lang/ProcessBuilder;"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
-		}
-
-	MethodSignatures["javaLangProcessBuilder.start()Ljava/lang/Process;"] =
+	MethodSignatures["java/lang/ProcessBuilder.start()Ljava/lang/Process;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,

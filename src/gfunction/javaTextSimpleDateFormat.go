@@ -7,8 +7,12 @@
 package gfunction
 
 import (
+	"fmt"
+	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"strings"
+	"time"
 )
 
 func Load_Math_SimpleDateFormat() {
@@ -58,7 +62,7 @@ func Load_Math_SimpleDateFormat() {
 	MethodSignatures["java/text/SimpleDateFormat.format(Ljava/util/Date;)Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  sdfFormat,
 		}
 
 	MethodSignatures["java/text/SimpleDateFormat.format(Ljava/util/Date;Ljava/lang/StringBuffer;Ljava/text/FieldPosition;)Ljava/lang/StringBuffer;"] =
@@ -70,7 +74,7 @@ func Load_Math_SimpleDateFormat() {
 	MethodSignatures["java/text/SimpleDateFormat.parse(Ljava/lang/String;)Ljava/util/Date;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  sdfParse,
 		}
 
 	MethodSignatures["java/text/SimpleDateFormat.parse(Ljava/lang/String;Ljava/text/ParsePosition;)Ljava/util/Date;"] =
@@ -182,4 +186,100 @@ func sdfApplyPattern(params []interface{}) interface{} {
 	s, _ := params[1].(*object.Object)
 	obj.FieldTable["pattern"] = object.Field{Ftype: types.StringClassRef, Fvalue: s}
 	return nil
+}
+
+// sdfFormat formats a Date into a date/time string.
+func sdfFormat(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "sdfFormat: missing parameters")
+	}
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return getGErrBlk(excNames.IllegalArgumentException, "sdfFormat: self is not an object")
+	}
+	dateObj, ok := params[1].(*object.Object)
+	if !ok || dateObj == nil {
+		return getGErrBlk(excNames.NullPointerException, "sdfFormat: date parameter is null")
+	}
+
+	// Get pattern
+	javaPattern := ""
+	if fld, exists := obj.FieldTable["pattern"]; exists {
+		if so, ok := fld.Fvalue.(*object.Object); ok && so != nil {
+			javaPattern = object.GoStringFromStringObject(so)
+		}
+	}
+	goLayout := javaToGoDateFormat(javaPattern)
+
+	// Get milliseconds from Date
+	millis, err := dateGetMillis(dateObj)
+	if err != nil {
+		return err
+	}
+
+	t := time.UnixMilli(millis).UTC()
+	formatted := t.Format(goLayout)
+	return object.StringObjectFromGoString(formatted)
+}
+
+// sdfParse parses text from the beginning of the given string to produce a date.
+func sdfParse(params []interface{}) interface{} {
+	if len(params) < 2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "sdfParse: missing parameters")
+	}
+	obj, ok := params[0].(*object.Object)
+	if !ok || obj == nil {
+		return getGErrBlk(excNames.IllegalArgumentException, "sdfParse: self is not an object")
+	}
+	strObj, ok := params[1].(*object.Object)
+	if !ok || strObj == nil {
+		return getGErrBlk(excNames.NullPointerException, "sdfParse: string parameter is null")
+	}
+
+	// Get pattern
+	javaPattern := ""
+	if fld, exists := obj.FieldTable["pattern"]; exists {
+		if so, ok := fld.Fvalue.(*object.Object); ok && so != nil {
+			javaPattern = object.GoStringFromStringObject(so)
+		}
+	}
+	goLayout := javaToGoDateFormat(javaPattern)
+
+	inputStr := object.GoStringFromStringObject(strObj)
+	t, err := time.Parse(goLayout, inputStr)
+	if err != nil {
+		return getGErrBlk(excNames.ParseException, fmt.Sprintf("sdfParse: failed to parse %q with layout %q: %v", inputStr, goLayout, err))
+	}
+
+	// Create new Date object
+	return Populator("java/util/Date", types.Long, t.UnixMilli())
+}
+
+func javaToGoDateFormat(javaPattern string) string {
+	if javaPattern == "" {
+		return time.RFC3339 // Default layout if no pattern provided
+	}
+
+	// Minimal mapper for common SimpleDateFormat patterns.
+	// Longest patterns must come first in strings.Replacer.
+	replacer := strings.NewReplacer(
+		"yyyy", "2006",
+		"yy", "06",
+		"MMMM", "January",
+		"MMM", "Jan",
+		"MM", "01",
+		"M", "1",
+		"dd", "02",
+		"d", "2",
+		"HH", "15",
+		"mm", "04",
+		"m", "4",
+		"ss", "05",
+		"s", "5",
+		"a", "PM",
+		"SSS", "000",
+		"z", "MST",
+		"Z", "-0700",
+	)
+	return replacer.Replace(javaPattern)
 }
