@@ -75,7 +75,8 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 
 	// create the object whose instantiation we're doing
 	obj := object.Object{
-		KlassName: stringPool.GetStringIndex(&classname),
+		KlassName:  stringPool.GetStringIndex(&classname),
+		FieldTable: make(map[string]object.Field),
 	}
 
 	// go up the chain of superclasses until we hit java/lang/Object

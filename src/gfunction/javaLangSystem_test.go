@@ -516,9 +516,9 @@ func TestGetProperty_LineSeparator(t *testing.T) {
 	result := systemGetProperty(params)
 	var expected string
 	if runtime.GOOS == "windows" {
-		expected = "\\r\\n"
+		expected = "\r\n"
 	} else {
-		expected = "\\n"
+		expected = "\n"
 	}
 	if object.GoStringFromStringObject(result.(*object.Object)) != expected {
 		t.Errorf("Expected %v, got %v", expected, result)

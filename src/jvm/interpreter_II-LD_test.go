@@ -630,7 +630,7 @@ func TestNewIsub(t *testing.T) {
 
 func TestIsubUnderflow(t *testing.T) {
 	f := newFrame(opcodes.ISUB)
-	push(&f, int64(math.MinInt))
+	push(&f, int64(math.MinInt32))
 	push(&f, int64(1))
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -640,8 +640,8 @@ func TestIsubUnderflow(t *testing.T) {
 	}
 
 	value := int32(f.OpStack[0].(int64))
-	if value != 2147483646 {
-		t.Errorf("ISUB: Expected popped value to be 2147483646, got: %d", value)
+	if value != 2147483647 {
+		t.Errorf("ISUB: Expected popped value to be 2147483647, got: %d", value)
 	}
 }
 

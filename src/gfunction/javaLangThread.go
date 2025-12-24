@@ -448,7 +448,10 @@ func threadInitWithRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
-	setUpRunnable(runnable, runClassName)
+	ret := setUpRunnable(runnable, runClassName)
+	if ret != nil {
+		return ret
+	}
 
 	t.FieldTable["target"] = object.Field{Ftype: types.Ref, Fvalue: runnable}
 
@@ -477,7 +480,10 @@ func threadInitWithRunnableAndName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
-	setUpRunnable(runnable, runClassName)
+	ret := setUpRunnable(runnable, runClassName)
+	if ret != nil {
+		return ret
+	}
 
 	name, ok := params[2].(*object.Object)
 	if !ok {
@@ -563,7 +569,10 @@ func threadInitWithThreadGroupRunnable(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
-	setUpRunnable(runnable, runClassName)
+	ret := setUpRunnable(runnable, runClassName)
+	if ret != nil {
+		return ret
+	}
 
 	t.FieldTable["target"] = object.Field{
 		Ftype: types.Ref, Fvalue: runnable}
@@ -599,7 +608,10 @@ func threadInitWithThreadGroupRunnableAndName(params []interface{}) any {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	runClassName := object.GoStringFromStringPoolIndex(runnable.KlassName)
-	setUpRunnable(runnable, runClassName)
+	ret := setUpRunnable(runnable, runClassName)
+	if ret != nil {
+		return ret
+	}
 
 	name, ok := params[3].(*object.Object)
 	if !ok {
