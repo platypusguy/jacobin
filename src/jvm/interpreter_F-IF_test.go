@@ -870,8 +870,8 @@ func TestNewI2Bneg(t *testing.T) { // TODO: check that this matches Java result
 	fs.PushFront(&f) // push the new frame
 	interpret(fs)
 	value := pop(&f).(int64)
-	if value != -204 { // looks like 256-52
-		t.Errorf("I2B: expected a result of -204, but got: %d", value)
+	if value != -52 {
+		t.Errorf("I2B: expected a result of -52, but got: %d", value)
 	}
 	if f.TOS != -1 {
 		t.Errorf("I2B: Expected stack with 1 entry, but got a TOS of: %d", f.TOS)

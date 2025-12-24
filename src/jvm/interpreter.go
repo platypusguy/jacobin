@@ -153,11 +153,11 @@ var DispatchTable = [203]BytecodeFunc{
 	doFmul,            // FMUL            0x6A
 	doFmul,            // DMUL            0x6B
 	doIdiv,            // IDIV            0x6C
-	doIdiv,            // LDIV            0x6D
+	doLdiv,            // LDIV            0x6D
 	doFdiv,            // FDIV            0x6E
 	doFdiv,            // DDIV            0x6F
 	doIrem,            // IREM            0x70
-	doIrem,            // LREM            0x71
+	doLrem,            // LREM            0x71
 	doFrem,            // FREM            0x72
 	doFrem,            // DREM            0x73
 	doIneg,            // INEG            0x74
@@ -165,17 +165,17 @@ var DispatchTable = [203]BytecodeFunc{
 	doFneg,            // FNEG            0x76
 	doFneg,            // DNEG            0x77
 	doIshl,            // ISHL            0x78
-	doIshl,            // LSHL            0x79
+	doLshl,            // LSHL            0x79
 	doIshr,            // ISHR            0x7A
-	doIshr,            // LSHR            0x7B
+	doLshr,            // LSHR            0x7B
 	doIushr,           // IUSHR           0x7C
 	doLushr,           // LUSHR           0x7D
 	doIand,            // IAND            0x7E
-	doIand,            // LAND            0x7F
+	doLand,            // LAND            0x7F
 	doIor,             // IOR             0x80
-	doIor,             // LOR             0x81
+	doLor,             // LOR             0x81
 	doIxor,            // IXOR            0x82
-	doIxor,            // LXOR            0x83
+	doLxor,            // LXOR            0x83
 	doIinc,            // IINC            0x84
 	doNothing,         // I2L             0x85
 	doI2f,             // I2F             0x86
@@ -502,7 +502,7 @@ func doIaload(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	if index >= int64(len(array)) {
+	if index < 0 || index >= int64(len(array)) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LALOAD: Invalid array subscript",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -514,6 +514,17 @@ func doIaload(fr *frames.Frame, _ int64) int {
 	}
 
 	var value = array[index]
+	opcode := fr.Meth[fr.PC]
+	switch opcode {
+	case opcodes.IALOAD:
+		value = int64(int32(value))
+	case opcodes.LALOAD:
+		// value is already int64
+	case opcodes.CALOAD:
+		value = int64(uint16(value))
+	case opcodes.SALOAD:
+		value = int64(int16(value))
+	}
 	push(fr, value)
 	return 1
 }
@@ -787,7 +798,7 @@ func doIastore(fr *frames.Frame, _ int64) int {
 	}
 
 	size := int64(len(array))
-	if index >= size {
+	if index < 0 || index >= size {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, I/C/S/LASTORE: array size is %d but array index is %d",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
@@ -796,6 +807,18 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURED // applies only if in test
 		}
 		return RESUME_HERE // caught
+	}
+
+	opcode := fr.Meth[fr.PC]
+	switch opcode {
+	case opcodes.IASTORE:
+		value = int64(int32(value))
+	case opcodes.LASTORE:
+		// already int64
+	case opcodes.CASTORE:
+		value = int64(uint16(value))
+	case opcodes.SASTORE:
+		value = int64(int16(value))
 	}
 	array[index] = value
 	return 1
@@ -1094,17 +1117,8 @@ func doSwap(fr *frames.Frame, _ int64) int {
 func doIadd(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
-	sum := i1 + i2
-
-	if sum > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
-		sum = math.MinInt32 + (i2 - 1)
-	} else {
-		if sum < math.MinInt32 {
-			sum = math.MaxInt32 + (i2 + 1)
-		}
-	}
-
-	push(fr, sum)
+	sum := int32(i1) + int32(i2)
+	push(fr, int64(sum))
 	return 1
 }
 
@@ -1128,17 +1142,8 @@ func doFadd(fr *frames.Frame, _ int64) int {
 func doIsub(fr *frames.Frame, _ int64) int {
 	i2 := pop(fr).(int64)
 	i1 := pop(fr).(int64)
-	diff := i1 - i2
-
-	if diff > math.MaxInt32 { // shoehorn the result into Java's 32-bit int
-		diff = math.MinInt32 - (i2 + 1)
-	} else {
-		if diff < math.MinInt32 {
-			diff = math.MaxInt32 - (i2 - 1)
-		}
-	}
-
-	push(fr, diff)
+	diff := int32(i1) - int32(i2)
+	push(fr, int64(diff))
 	return 1
 }
 
@@ -1209,6 +1214,33 @@ func doIdiv(fr *frames.Frame, _ int64) int {
 			return 0 // PC is already set up so indicate that to caller.
 		}
 	} else {
+		res := int32(val2) / int32(val1)
+		push(fr, int64(res))
+	}
+	return 1
+}
+
+func doLdiv(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64) // divisor
+	val2 := pop(fr).(int64) // dividend
+	if val1 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IDIV or LDIV: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		} else {
+			// Make the current frame the caught exception frame.
+			fs := fr.FrameStack
+			fr = fs.Front().Value.(*frames.Frame)
+			return 0 // PC is already set up so indicate that to caller.
+		}
+	} else {
 		push(fr, val2/val1)
 	}
 	return 1
@@ -1254,6 +1286,33 @@ func doIrem(fr *frames.Frame, _ int64) int {
 			return 0 // PC is already set up so indicate that to caller.
 		}
 	} else {
+		res := int32(val1) % int32(val2)
+		push(fr, int64(res))
+	}
+	return 1
+}
+
+func doLrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	if val2 == 0 {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errInfo := fmt.Sprintf("IREM or LREM: division by zero -- %d/0", val2)
+		if globals.GetGlobalRef().StrictJDK { // use the HotSpot JDK's error message instead of ours
+			errInfo = "/ by zero"
+		}
+		errMsg := fmt.Sprintf("in %s.%s %s",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, errInfo)
+		status := exceptions.ThrowEx(excNames.ArithmeticException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURED // applies only if in test
+		} else {
+			// Make the current frame the caught exception frame.
+			fs := fr.FrameStack
+			fr = fs.Front().Value.(*frames.Frame)
+			return 0 // PC is already set up so indicate that to caller.
+		}
+	} else {
 		res := val1 % val2
 		push(fr, res)
 	}
@@ -1271,7 +1330,7 @@ func doFrem(fr *frames.Frame, _ int64) int {
 // 0x74, 0x75 INEG, LNEG negate integer at TOS
 func doIneg(fr *frames.Frame, _ int64) int {
 	val := pop(fr).(int64)
-	push(fr, -val)
+	push(fr, int64(-int32(val)))
 	return 1
 }
 
@@ -1285,7 +1344,16 @@ func doFneg(fr *frames.Frame, _ int64) int {
 // 0x78, 0x79 ISHL, LSHL shift int/long to the left
 func doIshl(fr *frames.Frame, _ int64) int {
 	shiftBy := pop(fr).(int64)
-	ushiftBy := uint64(shiftBy) & 0x3f // must be unsigned in golang; 0-63 bits per JVM
+	ushiftBy := uint32(shiftBy) & 0x1F // 0-31 bits for int per JVM
+	val1 := pop(fr).(int64)
+	val2 := int32(val1) << ushiftBy
+	push(fr, int64(val2))
+	return 1
+}
+
+func doLshl(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	ushiftBy := uint64(shiftBy) & 0x3F // 0-63 bits for long per JVM
 	val1 := pop(fr).(int64)
 	val2 := val1 << ushiftBy
 	push(fr, val2)
@@ -1294,31 +1362,18 @@ func doIshl(fr *frames.Frame, _ int64) int {
 
 // 0x7A, 0x7B ISHR, LSHR shift int/long to the right
 func doIshr(fr *frames.Frame, _ int64) int {
-	var shiftBy int64
-	shiftArg := pop(fr)
-	switch shiftArg.(type) {
-	case int64:
-		shiftBy = shiftArg.(int64)
-	case byte:
-		shiftBy = int64(shiftArg.(byte))
-	case types.JavaByte:
-		shiftBy = int64(shiftArg.(types.JavaByte))
-	default:
-		errMsg := fmt.Sprintf("in %s.%s%s illegal ISHR amount type: %T",
-			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType, shiftArg)
-		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURED // applies only if in test
-		} else {
-			// Make the current frame the caught exception frame.
-			fs := fr.FrameStack
-			fr = fs.Front().Value.(*frames.Frame)
-			return 0 // PC is already set up so indicate that to caller.
-		}
-	}
-	value := pop(fr).(int64)
-	shiftedVal := value >> (shiftBy & 0x1F)
-	push(fr, shiftedVal)
+	shiftBy := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	val2 := int32(val1) >> (shiftBy & 0x1F)
+	push(fr, int64(val2))
+	return 1
+}
+
+func doLshr(fr *frames.Frame, _ int64) int {
+	shiftBy := pop(fr).(int64)
+	val1 := pop(fr).(int64)
+	val2 := val1 >> (shiftBy & 0x3F)
+	push(fr, val2)
 	return 1
 }
 
@@ -1344,6 +1399,13 @@ func doLushr(fr *frames.Frame, _ int64) int {
 func doIand(fr *frames.Frame, _ int64) int {
 	val1 := pop(fr).(int64)
 	val2 := pop(fr).(int64)
+	push(fr, int64(int32(val1)&int32(val2)))
+	return 1
+}
+
+func doLand(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
 	push(fr, val1&val2)
 	return 1
 }
@@ -1352,12 +1414,26 @@ func doIand(fr *frames.Frame, _ int64) int {
 func doIor(fr *frames.Frame, _ int64) int {
 	val1 := pop(fr).(int64)
 	val2 := pop(fr).(int64)
+	push(fr, int64(int32(val1)|int32(val2)))
+	return 1
+}
+
+func doLor(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
 	push(fr, val1|val2)
 	return 1
 }
 
 // 0x82, 0x83 IXOR, LXOR logical XOR of two ints/longs, push result
 func doIxor(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(int64)
+	val2 := pop(fr).(int64)
+	push(fr, int64(int32(val1)^int32(val2)))
+	return 1
+}
+
+func doLxor(fr *frames.Frame, _ int64) int {
 	val1 := pop(fr).(int64)
 	val2 := pop(fr).(int64)
 	push(fr, val1^val2)
@@ -1382,15 +1458,7 @@ func doIinc(fr *frames.Frame, _ int64) int {
 
 	// shoehorn the result into Java's 32-bit int
 	orig := fr.Locals[index].(int64)
-	chkInt32 := orig + increment
-	if chkInt32 > math.MaxInt32 {
-		chkInt32 = math.MinInt32 + (increment - 1)
-	} else {
-		if chkInt32 < math.MinInt32 {
-			chkInt32 = math.MaxInt32 + (increment + 1)
-		}
-	}
-	fr.Locals[index] = chkInt32
+	fr.Locals[index] = int64(int32(orig) + int32(increment))
 	return PCtoSkip + 1
 }
 
@@ -1425,12 +1493,8 @@ func doD2i(fr *frames.Frame, _ int64) int {
 // 0x91 I2B convert int to byte, preserving sign
 func doI2b(fr *frames.Frame, _ int64) int {
 	intVal := pop(fr).(int64)
-	byteVal := intVal & 0xFF
-	if !(intVal > 0 && byteVal > 0) &&
-		!(intVal < 0 && byteVal < 0) {
-		byteVal = -byteVal
-	}
-	push(fr, byteVal)
+	byteVal := int8(intVal)
+	push(fr, int64(byteVal))
 	return 1
 }
 
