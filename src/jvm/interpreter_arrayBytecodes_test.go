@@ -355,6 +355,82 @@ func TestNewAastoreInvalid3(t *testing.T) {
 	}
 }
 
+// AASTORE: Test error condition: null value being inserted
+func TestNewAastoreInvalidNullValue(t *testing.T) {
+	globals.InitGlobals("test")
+	objType := types.ObjectClassName
+	o := object.Make1DimRefArray(objType, 10)
+	f := newFrame(opcodes.AASTORE)
+	push(&f, o)        // valid array
+	push(&f, int64(5)) // valid index
+	push(&f, nil)      // null value to insert - this triggers the error
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Invalid (null) interface[any] on stack") {
+		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
+// AASTORE: Test error condition: illegal argument type (not an *object.Object)
+func TestNewAastoreInvalidArgumentType(t *testing.T) {
+	globals.InitGlobals("test")
+	objType := types.ObjectClassName
+	o := object.Make1DimRefArray(objType, 10)
+	f := newFrame(opcodes.AASTORE)
+	push(&f, o)                      // valid array
+	push(&f, int64(5))               // valid index
+	push(&f, "not an object.Object") // invalid type - this triggers the error
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Illegal argument type") {
+		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // ANEWARRAY: creation of array for references to strings
 func TestNewAnewrray(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
