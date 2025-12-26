@@ -2257,6 +2257,75 @@ func TestNewIastoreInvalid3(t *testing.T) {
 	}
 }
 
+// IASTORE: Test storing into a direct []int64 array (not wrapped in object.Object)
+func TestNewIastoreInt64Array(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a direct []int64 array
+	int64Array := make([]int64, 30)
+
+	f := newFrame(opcodes.IASTORE)
+	push(&f, int64Array) // push the direct int64 array reference
+	push(&f, int64(20))  // in array[20]
+	push(&f, int64(100)) // the value we're storing
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
+
+	// Verify the value was stored correctly
+	var sum int64
+	for i := 0; i < 30; i++ {
+		sum += int64Array[i]
+	}
+	if sum != 100 {
+		t.Errorf("IASTORE: Expected sum of array entries to be 100, got: %d", sum)
+	}
+
+	// Verify the value at index 20 is specifically 100
+	if int64Array[20] != 100 {
+		t.Errorf("IASTORE: Expected int64Array[20] to be 100, got: %d", int64Array[20])
+	}
+}
+
+// IASTORE: Test error conditions: unexpected reference type (triggers default case)
+func TestNewIastoreInvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.IASTORE)
+
+	// Push an unexpected type (e.g., a string instead of an array)
+	push(&f, "not an array") // this will trigger the default case
+	push(&f, int64(20))      // the index into the array
+	push(&f, int64(100))     // the value to insert
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "unexpected reference type") {
+		t.Errorf("IASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // LALOAD: Test fetching and pushing the value of an element into a long array
 func TestNewLaload(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
