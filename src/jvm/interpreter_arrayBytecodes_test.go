@@ -1073,6 +1073,75 @@ func TestNewBastoreInvalid3(t *testing.T) {
 	}
 }
 
+// BASTORE: Test storing into a direct []types.JavaByte array (not wrapped in object.Object)
+func TestNewBastoreJavaByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a direct []types.JavaByte array
+	javaByteArray := make([]types.JavaByte, 30)
+
+	f := newFrame(opcodes.BASTORE)
+	push(&f, javaByteArray) // push the direct JavaByte array reference
+	push(&f, int64(20))     // in array[20]
+	push(&f, int64(100))    // the value we're storing
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
+
+	// Verify the value was stored correctly
+	var sum int64
+	for i := 0; i < 30; i++ {
+		sum += int64(javaByteArray[i])
+	}
+	if sum != 100 {
+		t.Errorf("BASTORE: Expected sum of array entries to be 100, got: %d", sum)
+	}
+
+	// Verify the value at index 20 is specifically 100
+	if javaByteArray[20] != 100 {
+		t.Errorf("BASTORE: Expected javaByteArray[20] to be 100, got: %d", javaByteArray[20])
+	}
+}
+
+// BASTORE: Test error conditions: unexpected reference type (triggers default case)
+func TestNewBastoreInvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.BASTORE)
+
+	// Push an unexpected type (e.g., a string instead of an array)
+	push(&f, "not an array") // this will trigger the default case
+	push(&f, int64(20))      // the index into the array
+	push(&f, int64(100))     // the value to insert
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "unexpected reference type") {
+		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // CALOAD: Test fetching and pushing the value of an element in an char array
 // Chars in Java are two bytes; we accord each one an int64 element. As a result,
 // the logic here is effectively identical to IALOAD. This code also tests CASTORE.

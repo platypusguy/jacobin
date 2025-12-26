@@ -2789,6 +2789,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 	clData := *class.Data
 	if mtEntry.MType == 'J' {
 		entry := mtEntry.Meth.(classloader.JmEntry)
+		// the args and the objRef are popped off the stack by following call
 		fram, err := createAndInitNewFrame(
 			clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, fr)
 		if err != nil {
@@ -2811,9 +2812,9 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 			params = append(params, pop(fr))
 		}
 
-		// now get the objectRef (the object whose method we're invoking)
-		objRef := pop(fr).(*object.Object)
+		// now push the objectRef (the object whose method we're invoking)
 		params = append(params, objRef)
+		_ = pop(fr) // the objRef is still on the stack, so pop it off now
 
 		if globals.TraceInst {
 			infoMsg := fmt.Sprintf("G-function: interface=%s, meth=%s%s", interfaceName, interfaceName, interfaceMethodType)
