@@ -355,6 +355,82 @@ func TestNewAastoreInvalid3(t *testing.T) {
 	}
 }
 
+// AASTORE: Test error condition: null value being inserted
+func TestNewAastoreInvalidNullValue(t *testing.T) {
+	globals.InitGlobals("test")
+	objType := types.ObjectClassName
+	o := object.Make1DimRefArray(objType, 10)
+	f := newFrame(opcodes.AASTORE)
+	push(&f, o)        // valid array
+	push(&f, int64(5)) // valid index
+	push(&f, nil)      // null value to insert - this triggers the error
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Invalid (null) interface[any] on stack") {
+		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
+// AASTORE: Test error condition: illegal argument type (not an *object.Object)
+func TestNewAastoreInvalidArgumentType(t *testing.T) {
+	globals.InitGlobals("test")
+	objType := types.ObjectClassName
+	o := object.Make1DimRefArray(objType, 10)
+	f := newFrame(opcodes.AASTORE)
+	push(&f, o)                      // valid array
+	push(&f, int64(5))               // valid index
+	push(&f, "not an object.Object") // invalid type - this triggers the error
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Illegal argument type") {
+		t.Errorf("AASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
 // ANEWARRAY: creation of array for references to strings
 func TestNewAnewrray(t *testing.T) {
 	f := newFrame(opcodes.ANEWARRAY)
@@ -872,6 +948,68 @@ func TestNewBaloadInvalidSubscript(t *testing.T) {
 	}
 }
 
+// BALOAD: Test loading from a direct []int8 array (not wrapped in object.Object)
+func TestNewBaloadInt8Array(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a direct []int8 array
+	int8Array := make([]int8, 30)
+	int8Array[20] = 100
+
+	f := newFrame(opcodes.BALOAD)
+	push(&f, int8Array) // push the direct int8 array reference
+	push(&f, int64(20)) // index to array[20]
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
+
+	res := pop(&f).(int64)
+	if res != 100 {
+		t.Errorf("BALOAD: Expected loaded array value of 100, got: %d", res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("BALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
+
+// BALOAD: Test error condition: invalid type of object reference
+func TestNewBaloadInvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	f := newFrame(opcodes.BALOAD)
+	push(&f, "not a valid array") // push an invalid type (string instead of array)
+	push(&f, int64(20))           // index
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode -- should generate exception
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Invalid  type of object ref") {
+		t.Errorf("BALOAD: Did not get expected error msg for invalid type, got: %s", errMsg)
+	}
+}
+
 // BASTORE: store value in array of bytes
 // Create an array of 30 elements, store value 100 in array[20], then
 // sum all the elements in the array, and test for a sum of 100.
@@ -1069,6 +1207,75 @@ func TestNewBastoreInvalid3(t *testing.T) {
 	os.Stdout = normalStdout
 
 	if !strings.Contains(errMsg, "but array index is") {
+		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
+// BASTORE: Test storing into a direct []types.JavaByte array (not wrapped in object.Object)
+func TestNewBastoreJavaByteArray(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a direct []types.JavaByte array
+	javaByteArray := make([]types.JavaByte, 30)
+
+	f := newFrame(opcodes.BASTORE)
+	push(&f, javaByteArray) // push the direct JavaByte array reference
+	push(&f, int64(20))     // in array[20]
+	push(&f, int64(100))    // the value we're storing
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
+
+	// Verify the value was stored correctly
+	var sum int64
+	for i := 0; i < 30; i++ {
+		sum += int64(javaByteArray[i])
+	}
+	if sum != 100 {
+		t.Errorf("BASTORE: Expected sum of array entries to be 100, got: %d", sum)
+	}
+
+	// Verify the value at index 20 is specifically 100
+	if javaByteArray[20] != 100 {
+		t.Errorf("BASTORE: Expected javaByteArray[20] to be 100, got: %d", javaByteArray[20])
+	}
+}
+
+// BASTORE: Test error conditions: unexpected reference type (triggers default case)
+func TestNewBastoreInvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.BASTORE)
+
+	// Push an unexpected type (e.g., a string instead of an array)
+	push(&f, "not an array") // this will trigger the default case
+	push(&f, int64(20))      // the index into the array
+	push(&f, int64(100))     // the value to insert
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "unexpected reference type") {
 		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
