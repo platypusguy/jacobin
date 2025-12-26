@@ -948,6 +948,68 @@ func TestNewBaloadInvalidSubscript(t *testing.T) {
 	}
 }
 
+// BALOAD: Test loading from a direct []int8 array (not wrapped in object.Object)
+func TestNewBaloadInt8Array(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Create a direct []int8 array
+	int8Array := make([]int8, 30)
+	int8Array[20] = 100
+
+	f := newFrame(opcodes.BALOAD)
+	push(&f, int8Array) // push the direct int8 array reference
+	push(&f, int64(20)) // index to array[20]
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode
+
+	res := pop(&f).(int64)
+	if res != 100 {
+		t.Errorf("BALOAD: Expected loaded array value of 100, got: %d", res)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("BALOAD: Top of stack, expected -1, got: %d", f.TOS)
+	}
+}
+
+// BALOAD: Test error condition: invalid type of object reference
+func TestNewBaloadInvalidType(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	normalStdout := os.Stdout
+	_, wout, _ := os.Pipe()
+	os.Stdout = wout
+
+	f := newFrame(opcodes.BALOAD)
+	push(&f, "not a valid array") // push an invalid type (string instead of array)
+	push(&f, int64(20))           // index
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f) // push the new frame
+	interpret(fs)    // execute the bytecode -- should generate exception
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	_ = wout.Close()
+	os.Stdout = normalStdout
+
+	if !strings.Contains(errMsg, "Invalid  type of object ref") {
+		t.Errorf("BALOAD: Did not get expected error msg for invalid type, got: %s", errMsg)
+	}
+}
+
 // BASTORE: store value in array of bytes
 // Create an array of 30 elements, store value 100 in array[20], then
 // sum all the elements in the array, and test for a sum of 100.
