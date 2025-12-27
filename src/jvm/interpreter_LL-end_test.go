@@ -1846,6 +1846,226 @@ func TestSwap(t *testing.T) {
 	}
 }
 
+// TABLESWITCH: Test with index matching high value
+func TestTableswitchMatchHigh(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(7)) // matches high value
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // default: 100
+
+	// Low value: 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// High value: 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x07)
+
+	// Jump offsets for values 5, 6, 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // case 5: jump 20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x28) // case 6: jump 40
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x3C) // case 7: jump 60
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 60 {
+		t.Errorf("TABLESWITCH: Expected jump offset 60 for index 7, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
+// TABLESWITCH: Test with index matching middle value
+func TestTableswitchMatchMiddle(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(6)) // matches middle value
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // default: 100
+
+	// Low value: 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// High value: 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x07)
+
+	// Jump offsets for values 5, 6, 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // case 5: jump 20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x28) // case 6: jump 40
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x3C) // case 7: jump 60
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 40 {
+		t.Errorf("TABLESWITCH: Expected jump offset 40 for index 6, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
+// TABLESWITCH: Test with index below low value (default case)
+func TestTableswitchDefaultBelowLow(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(3)) // below low value, should use default
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // default: 100
+
+	// Low value: 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// High value: 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x07)
+
+	// Jump offsets for values 5, 6, 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // case 5: jump 20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x28) // case 6: jump 40
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x3C) // case 7: jump 60
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 100 {
+		t.Errorf("TABLESWITCH: Expected default jump offset 100 for index 3, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
+// TABLESWITCH: Test with index above high value (default case)
+func TestTableswitchDefaultAboveHigh(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(10)) // above high value, should use default
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // default: 100
+
+	// Low value: 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// High value: 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x07)
+
+	// Jump offsets for values 5, 6, 7
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // case 5: jump 20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x28) // case 6: jump 40
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x3C) // case 7: jump 60
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 100 {
+		t.Errorf("TABLESWITCH: Expected default jump offset 100 for index 10, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
+// TABLESWITCH: Test with single case (low == high)
+func TestTableswitchSingleCase(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(5)) // only case
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // default: 100
+
+	// Low value: 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// High value: 5 (same as low)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+
+	// Jump offset for value 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x2A) // case 5: jump 42
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 42 {
+		t.Errorf("TABLESWITCH: Expected jump offset 42 for single case, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
+// TABLESWITCH: Test with negative jump offset (backward jump)
+func TestTableswitchNegativeJump(t *testing.T) {
+	globals.InitGlobals("test")
+	f := newFrame(opcodes.TABLESWITCH)
+
+	push(&f, int64(1)) // match case 1
+
+	// Padding bytes
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// Default jump offset
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0A) // default: 10
+
+	// Low value: 1
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x01)
+
+	// High value: 2
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02)
+
+	// Jump offsets - negative value for backward jump
+	// -5 in two's complement 32-bit: 0xFFFFFFFB
+	f.Meth = append(f.Meth, 0xFF, 0xFF, 0xFF, 0xFB) // case 1: jump -5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0F) // case 2: jump 15
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != -5 {
+		t.Errorf("TABLESWITCH: Expected jump offset -5 for negative jump, got: %d", f.PC)
+	}
+
+	if f.TOS != -1 {
+		t.Errorf("TABLESWITCH: Expected empty stack, got TOS: %d", f.TOS)
+	}
+}
+
 // WIDE version of DLOAD
 func TestWideDLOAD(t *testing.T) {
 	globals.InitGlobals("test")
