@@ -99,6 +99,12 @@ func Load_Util_Hash_Map() {
 			GFunction:  hashmapGet,
 		}
 
+	MethodSignatures["java/util/HashMap.isEmpty()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  hashmapIsEmpty,
+		}
+
 	MethodSignatures["java/util/HashMap.keySet()Ljava/util/Set;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -350,6 +356,20 @@ func hashmapSize(params []interface{}) interface{} {
 
 	// Return the current size.
 	return int64(len(hm))
+}
+
+func hashmapIsEmpty(params []interface{}) interface{} {
+
+	result := hashmapSize(params)
+	switch result.(type) {
+	case *GErrBlk:
+		return result
+	}
+
+	if result.(int64) == 0 {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
 }
 
 func hashmapPutAll(params []interface{}) interface{} {

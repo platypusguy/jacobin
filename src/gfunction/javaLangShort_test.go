@@ -12,16 +12,28 @@ func classNameOf(obj *object.Object) string {
 	return object.GoStringFromStringPoolIndex(obj.KlassName)
 }
 
-func TestShortDoubleValue(t *testing.T) {
+func TestShortFloatDoubleValue(t *testing.T) {
 	globals.InitStringPool()
 
 	cases := []int64{0, 1, -1, 42, 127, -128, 32767, -32768}
 	for _, v := range cases {
 		shortObj := Populator("java/lang/Short", types.Short, v)
-		res := shortFloatDoubleValue([]interface{}{shortObj})
-		d, ok := res.(float64)
-		if !ok {
-			t.Fatalf("expected float64 from shortDoubleValue, got %T", res)
+
+		// Test floatValue
+		resF := shortFloatValue([]interface{}{shortObj})
+		f, okF := resF.(float64)
+		if !okF {
+			t.Fatalf("expected float64 from shortFloatValue, got %T", resF)
+		}
+		if f != float64(v) {
+			t.Fatalf("floatValue mismatch: expected %v, got %v", float64(v), f)
+		}
+
+		// Test doubleValue
+		resD := shortDoubleValue([]interface{}{shortObj})
+		d, okD := resD.(float64)
+		if !okD {
+			t.Fatalf("expected float64 from shortDoubleValue, got %T", resD)
 		}
 		if d != float64(v) {
 			t.Fatalf("doubleValue mismatch: expected %v, got %v", float64(v), d)
@@ -59,7 +71,7 @@ func TestShortRoundTrip_ValueOfThenDoubleValue(t *testing.T) {
 	cases := []int64{7, -7, 30000, -30000}
 	for _, v := range cases {
 		obj := shortValueOf([]interface{}{v}).(*object.Object)
-		res := shortFloatDoubleValue([]interface{}{obj})
+		res := shortDoubleValue([]interface{}{obj})
 		d := res.(float64)
 		if d != float64(v) {
 			t.Fatalf("round-trip mismatch: expected %v, got %v", float64(v), d)
@@ -71,6 +83,12 @@ func TestShort_AdditionalMethods(t *testing.T) {
 	globals.InitStringPool()
 
 	// compare
+	if res := shortCompare([]interface{}{int64(123), int64(-123)}).(int64); res != 246 {
+		t.Errorf("compare(123, -123) expected 246, got %d", res)
+	}
+	if res := shortCompare([]interface{}{int64(-123), int64(123)}).(int64); res != -246 {
+		t.Errorf("compare(-123, 123) expected -246, got %d", res)
+	}
 	if res := shortCompare([]interface{}{int64(10), int64(20)}).(int64); res >= 0 {
 		t.Errorf("compare(10, 20) expected < 0, got %d", res)
 	}
@@ -79,8 +97,11 @@ func TestShort_AdditionalMethods(t *testing.T) {
 	}
 
 	// compareUnsigned
-	if res := shortCompareUnsigned([]interface{}{int64(-1), int64(1)}).(int64); res != 1 {
-		t.Errorf("compareUnsigned(-1, 1) expected 1, got %d", res)
+	if res := shortCompareUnsigned([]interface{}{int64(-1), int64(1)}).(int64); res != 65534 {
+		t.Errorf("compareUnsigned(-1, 1) expected 65534, got %d", res)
+	}
+	if res := shortCompareUnsigned([]interface{}{int64(123), int64(-256)}).(int64); res != -65157 {
+		t.Errorf("compareUnsigned(123, -256) expected -65157, got %d", res)
 	}
 
 	// parseShort
@@ -98,6 +119,12 @@ func TestShort_AdditionalMethods(t *testing.T) {
 	// reverseBytes
 	if res := shortReverseBytes([]interface{}{int64(0x1234)}).(int64); uint16(res) != 0x3412 {
 		t.Errorf("reverseBytes(0x1234) expected 0x3412, got 0x%x", uint16(res))
+	}
+
+	// byteValue
+	shortObj := Populator("java/lang/Short", types.Short, int64(12345))
+	if res := shortByteValue([]interface{}{shortObj}).(int64); res != 57 {
+		t.Errorf("byteValue(12345) expected 57, got %d", res)
 	}
 
 	// toStringS
