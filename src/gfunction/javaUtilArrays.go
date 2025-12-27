@@ -25,7 +25,7 @@ func Load_Util_Arrays() {
 	MethodSignatures["java/util/Arrays.asList([Ljava/lang/Object;)Ljava/util/List;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  utilArraysAsList,
 		}
 
 	// binarySearch
@@ -334,6 +334,46 @@ func utilArraysCopyOf(params []interface{}) interface{} {
 	}
 
 	return newArrayObj
+}
+
+// Arrays.asList([Ljava/lang/Object;)Ljava/util/List;
+func utilArraysAsList(params []interface{}) interface{} {
+	if len(params) < 1 {
+		return getGErrBlk(excNames.IllegalArgumentException, "utilArraysAsList: too few arguments")
+	}
+
+	if params[0] == nil || params[0] == object.Null {
+		return getGErrBlk(excNames.NullPointerException, "utilArraysAsList: array is null")
+	}
+
+	arrayObj, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "utilArraysAsList: first arg not an object")
+	}
+
+	field, ok := arrayObj.FieldTable["value"]
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "utilArraysAsList: missing array value field")
+	}
+
+	// Reference arrays store elements as []*object.Object
+	var ifaceElements []interface{}
+	switch elements := field.Fvalue.(type) {
+	case []*object.Object:
+		ifaceElements = make([]interface{}, len(elements))
+		for i, e := range elements {
+			ifaceElements[i] = e
+		}
+	case []interface{}:
+		ifaceElements = make([]interface{}, len(elements))
+		copy(ifaceElements, elements)
+	default:
+		return getGErrBlk(excNames.IllegalArgumentException, "utilArraysAsList: unsupported array type")
+	}
+
+	// Return an ArrayList object
+	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.ArrayList, ifaceElements)
+	return listObj
 }
 
 // Arrays.fill(byte[] a, byte val) -> void (also used for boolean[])

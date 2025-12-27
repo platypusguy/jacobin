@@ -144,37 +144,37 @@ func Load_Lang_Process_Handle_Impl() {
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.arguments()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.arguments()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  processHandleInfoArguments,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.command()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.command()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  processHandleInfoCommand,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.commandLine()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.commandLine()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  processHandleInfoCommandLine,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.startInstant()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.startInstant()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.totalCpuDuration()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.totalCpuDuration()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  trapFunction,
 		}
 
-	MethodSignatures["java/lang/ProcessHandle$Info.user()LjavaUtilOptional;"] =
+	MethodSignatures["java/lang/ProcessHandle$Info.user()Ljava/util/Optional;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  processHandleInfoUser,
@@ -221,14 +221,10 @@ func processHandleImplIsAlive(params []interface{}) interface{} {
 	}
 
 	processId := obj.FieldTable[pidFieldName].Fvalue.(int64)
-	_, err := os.FindProcess(int(processId))
-	if err != nil {
-		return types.JavaBoolFalse
+	if isProcessAlive(int(processId)) {
+		return types.JavaBoolTrue
 	}
-	// Note: process.Signal is not implemented on Windows
-	// err = process.Signal(syscall.Signal(0))
-	// return err == nil
-	return types.JavaBoolTrue
+	return types.JavaBoolFalse
 }
 
 // processHandleImplIsAlive0 is a low-level function that checks if a process is alive and

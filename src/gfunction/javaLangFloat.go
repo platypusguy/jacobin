@@ -56,7 +56,7 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.floatToRawIntBits(F)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  floatFloatToIntBits,
+			GFunction:  floatFloatToRawIntBits,
 		}
 
 	MethodSignatures["java/lang/Float.float16ToFloat(S)F"] =
@@ -92,13 +92,13 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.hashCode()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  floatHashCode,
 		}
 
 	MethodSignatures["java/lang/Float.hashCode(F)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapFunction,
+			GFunction:  floatHashCodeStatic,
 		}
 
 	MethodSignatures["java/lang/Float.intValue()I"] =
@@ -110,7 +110,7 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.isFinite(F)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  floatIsFinite,
+			GFunction:  floatIsFiniteStatic,
 		}
 
 	MethodSignatures["java/lang/Float.isInfinite()Z"] =
@@ -122,7 +122,7 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.isInfinite(F)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  floatIsInfinite,
+			GFunction:  floatIsInfiniteStatic,
 		}
 
 	MethodSignatures["java/lang/Float.isNaN()Z"] =
@@ -134,7 +134,7 @@ func Load_Lang_Float() {
 	MethodSignatures["java/lang/Float.isNaN(F)Z"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  floatIsNaN,
+			GFunction:  floatIsNaNStatic,
 		}
 
 	MethodSignatures["java/lang/Float.intBitsToFloat(I)F"] =
@@ -226,7 +226,7 @@ func floatByteValue(params []interface{}) interface{} {
 	var ff float64
 	self := params[0].(*object.Object)
 	ff = self.FieldTable["value"].Fvalue.(float64)
-	return int64(byte(ff))
+	return int64(int8(ff))
 }
 
 // Method: compare (FF)I
@@ -234,59 +234,48 @@ func floatCompare(params []interface{}) interface{} {
 	if len(params) != 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Incorrect number of arguments")
 	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Invalid self object, expected Double object")
+
+	f1, ok1 := params[0].(float64)
+	f2, ok2 := params[1].(float64)
+	if !ok1 || !ok2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Invalid argument types")
 	}
 
-	// The second parameter is the other object to compare
-	other, ok := params[1].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Invalid other object, expected Double object")
+	if f1 < f2 {
+		return int64(-1) // Properly handles NaN, as NaN < f is false
 	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Failed to retrieve value from self Double object")
-	}
-
-	// Retrieve the value of the other Double object
-	otherValue, ok := getFloat64ValueFromObject(other)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatCompare: Failed to retrieve value from other Double object")
-	}
-
-	// Java's compareTo method for Double (return 0 if equal, 1 if greater, -1 if smaller)
-	if selfValue < otherValue {
-		return int64(-1)
-	} else if selfValue > otherValue {
+	if f1 > f2 {
 		return int64(1)
 	}
-	return int64(0)
+
+	// Handle NaN and zeros
+	f1bits := math.Float32bits(float32(f1))
+	f2bits := math.Float32bits(float32(f2))
+	if f1bits == f2bits {
+		return int64(0)
+	}
+	if f1bits < f2bits {
+		return int64(-1)
+	}
+	return int64(1)
 }
 
 // Method: compareTo (Ljava/lang/Float;)I
 func floatCompareTo(params []interface{}) interface{} {
-	var ff1, ff2 float64
-
-	// Get the Double object reference
-	parmObj := params[0].(*object.Object)
-	ff1 = parmObj.FieldTable["value"].Fvalue.(float64)
-
-	// Get the actual Java Double parameter
-	parmObj = params[1].(*object.Object)
-	ff2 = parmObj.FieldTable["value"].Fvalue.(float64)
-
-	// Now, its just like doubleCompare.
-	if ff1 == ff2 {
-		return int64(0)
+	if len(params) != 2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "floatCompareTo: Incorrect number of arguments")
 	}
-	if ff1 < ff2 {
-		return int64(-1)
+
+	self, ok1 := params[0].(*object.Object)
+	other, ok2 := params[1].(*object.Object)
+	if !ok1 || !ok2 {
+		return getGErrBlk(excNames.IllegalArgumentException, "floatCompareTo: Invalid argument types")
 	}
-	return int64(1)
+
+	f1 := self.FieldTable["value"].Fvalue.(float64)
+	f2 := other.FieldTable["value"].Fvalue.(float64)
+
+	return floatCompare([]interface{}{f1, f2})
 }
 
 // Method: floatToIntBits (F)I
@@ -296,15 +285,34 @@ func floatFloatToIntBits(args []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	ff, ok := args[0].(float64) // Java float maps to Go float64 in your setup
+	ff, ok := args[0].(float64)
 	if !ok {
 		errMsg := "floatFloatToIntBits: argument is not a float64"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Convert float64 to float32 before using Float32bits
 	bits := math.Float32bits(float32(ff))
-	return int64(bits)
+	if (bits&0x7F800000) == 0x7F800000 && (bits&0x007FFFFF) != 0 {
+		return int64(int32(0x7fc00000))
+	}
+	return int64(int32(bits))
+}
+
+// Method: floatToRawIntBits (F)I
+func floatFloatToRawIntBits(args []interface{}) interface{} {
+	if len(args) != 1 {
+		errMsg := "floatFloatToRawIntBits: expected 1 float argument"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	ff, ok := args[0].(float64)
+	if !ok {
+		errMsg := "floatFloatToRawIntBits: argument is not a float64"
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	bits := math.Float32bits(float32(ff))
+	return int64(int32(bits))
 }
 
 // Method: equals (Ljava/lang/Object;)Z
@@ -312,32 +320,24 @@ func floatEquals(params []interface{}) interface{} {
 	if len(params) != 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Incorrect number of arguments")
 	}
-	// The first parameter is the self object (this)
 	self, ok := params[0].(*object.Object)
 	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Invalid self object, expected Double object")
+		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Invalid self object")
 	}
 
-	// The second parameter is the other object to compare
 	other, ok := params[1].(*object.Object)
 	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Invalid other object, expected Double object")
+		return types.JavaBoolFalse
 	}
 
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Failed to retrieve value from self Double object")
+	if object.GoStringFromStringPoolIndex(other.KlassName) != classNameFloat {
+		return types.JavaBoolFalse
 	}
 
-	// Retrieve the value of the other Double object
-	otherValue, ok := getFloat64ValueFromObject(other)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatEquals: Failed to retrieve value from other Double object")
-	}
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
+	otherValue := other.FieldTable["value"].Fvalue.(float64)
 
-	// Check if the values are equal (Java's == for primitive doubles)
-	if selfValue == otherValue {
+	if math.Float32bits(float32(selfValue)) == math.Float32bits(float32(otherValue)) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
@@ -345,109 +345,76 @@ func floatEquals(params []interface{}) interface{} {
 
 // Method: floatValue ()F
 func floatFloatValue(params []interface{}) interface{} {
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatFloatValue: Invalid self object, expected Double object")
-	}
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatFloatValue: Failed to retrieve value from self Double object")
-	}
-	return selfValue
+	self := params[0].(*object.Object)
+	return self.FieldTable["value"].Fvalue.(float64)
 }
 
 // Method: intValue ()I
 func floatIntValue(params []interface{}) interface{} {
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIntValue: Invalid self object, expected Double object")
-	}
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIntValue: Failed to retrieve value from self Double object")
-	}
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
 	return int64(int32(selfValue))
 }
 
-// Method: isFinite (F)Z
-func floatIsFinite(params []interface{}) interface{} {
-	if len(params) != 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsFinite: Incorrect number of arguments")
-	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsFinite: Invalid self object, expected Double object")
-	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsFinite: Failed to retrieve value from self Double object")
-	}
-
-	// Check if the value is finite (i.e., not NaN or Infinity)
-	isFinite := !math.IsNaN(selfValue) && !math.IsInf(selfValue, 0)
-
-	// Return the result as Java boolean (JavaBoolTrue or JavaBoolFalse)
-	if isFinite {
+// floatIsFiniteStatic (F)Z
+func floatIsFiniteStatic(params []interface{}) interface{} {
+	f := params[0].(float64)
+	if !math.IsNaN(f) && !math.IsInf(f, 0) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
 }
 
-// Method: isInfinite (F)Z
+// Method: isInfinite ()Z
 func floatIsInfinite(params []interface{}) interface{} {
-	if len(params) != 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Incorrect number of arguments")
-	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Invalid self object, expected Double object")
-	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Failed to retrieve value from self Double object")
-	}
-
-	// Check if the value is infinite (positive or negative infinity)
-	isInfinite := math.IsInf(selfValue, 0)
-
-	// Return the result as Java boolean (JavaBoolTrue or JavaBoolFalse)
-	if isInfinite {
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
+	if math.IsInf(selfValue, 0) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
 }
 
-// Method: isNaN ()
-func floatIsNaN(params []interface{}) interface{} {
-	if len(params) != 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Incorrect number of arguments")
-	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Invalid self object, expected Double object")
-	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatIsInfinite: Failed to retrieve value from self Double object")
-	}
-
-	// Check if the value is infinite (positive or negative infinity)
-	isNaN := selfValue == math.NaN()
-
-	// Return the result as Java boolean (JavaBoolTrue or JavaBoolFalse)
-	if isNaN {
+// floatIsInfiniteStatic (F)Z
+func floatIsInfiniteStatic(params []interface{}) interface{} {
+	f := params[0].(float64)
+	if math.IsInf(f, 0) {
 		return types.JavaBoolTrue
 	}
 	return types.JavaBoolFalse
+}
+
+// Method: isNaN ()Z
+func floatIsNaN(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
+	if math.IsNaN(selfValue) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// floatIsNaNStatic (F)Z
+func floatIsNaNStatic(params []interface{}) interface{} {
+	f := params[0].(float64)
+	if math.IsNaN(f) {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// floatHashCode ()I
+func floatHashCode(params []interface{}) interface{} {
+	self := params[0].(*object.Object)
+	f := self.FieldTable["value"].Fvalue.(float64)
+	return floatHashCodeStatic([]interface{}{f})
+}
+
+// floatHashCodeStatic (F)I
+func floatHashCodeStatic(params []interface{}) interface{} {
+	f := params[0].(float64)
+	bits := math.Float32bits(float32(f))
+	return int64(int32(bits))
 }
 
 // Method: intBitsToFloat (I)F
@@ -469,14 +436,8 @@ func floatIntBitsToFloat(args []interface{}) interface{} {
 
 // Method: longValue ()J
 func floatLongValue(params []interface{}) interface{} {
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatLongValue: Invalid self object, expected Double object")
-	}
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatLongValue: Failed to retrieve value from self Double object")
-	}
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
 	return int64(selfValue)
 }
 
@@ -535,15 +496,9 @@ func floatParseFloat(params []interface{}) interface{} {
 
 // Method: shortValue ()S
 func floatShortValue(params []interface{}) interface{} {
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatShortValue: Invalid self object, expected Double object")
-	}
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatShortValue: Failed to retrieve value from self Double object")
-	}
-	return int16(selfValue)
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
+	return int64(int16(selfValue))
 }
 
 // Method: sum (FF)F
@@ -564,49 +519,23 @@ func floatToHexString(params []interface{}) interface{} {
 	if len(params) != 1 {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatToHexString: Incorrect number of arguments")
 	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
+
+	f, ok := params[0].(float64)
 	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatToHexString: Invalid self object, expected Double object")
+		return getGErrBlk(excNames.IllegalArgumentException, "floatToHexString: Invalid argument type")
 	}
 
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatToHexString: Failed to retrieve value from self Double object")
-	}
-
-	// Get the raw bits of the float value.
-	rawBits := math.Float64bits(selfValue)
-
-	// Format the raw bits as a hexadecimal string
-	hexString := fmt.Sprintf("0x%016X", rawBits)
-
-	// Return the result as a Java String
-	return object.StringObjectFromGoString(hexString)
-
+	// Use strconv.FormatFloat with 'x' to get Java-compatible hex string.
+	// Java Float.toHexString(float) returns a string like "0x1.0p0"
+	str := strconv.FormatFloat(f, 'x', -1, 32)
+	return object.StringObjectFromGoString(str)
 }
 
 // Method: toString (F)Ljava/lang/String;
 func floatToString(params []interface{}) interface{} {
-	if len(params) != 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatToString: Incorrect number of arguments")
-	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatToString: Invalid self object, expected Double object")
-	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatToString: Failed to retrieve value from self Double object")
-	}
-
-	// Convert the float value to string
-	strValue := fmt.Sprintf("%g", selfValue) // %g is the format for general floating-point notation
-	return object.StringObjectFromGoString(strValue)
+	self := params[0].(*object.Object)
+	selfValue := self.FieldTable["value"].Fvalue.(float64)
+	return floatToStringStatic([]interface{}{selfValue})
 }
 
 // Method: toString (F)Ljava/lang/String;
@@ -618,8 +547,12 @@ func floatToStringStatic(params []interface{}) interface{} {
 	if !ok {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatToStringStatic: Invalid argument type")
 	}
-	// Return string representation of the double.
-	return object.StringObjectFromGoString(fmt.Sprintf("%f", ff))
+
+	// Java's Float.toString(float) behavior:
+	// Use 'g' for very large or very small, but usually decimal.
+	// strconv.FormatFloat(f, 'g', -1, 32) is closer than fmt.Sprintf("%f", ff)
+	str := strconv.FormatFloat(ff, 'g', -1, 32)
+	return object.StringObjectFromGoString(str)
 }
 
 // Method: valueOf (F)Ljava/lang/Float;
@@ -661,23 +594,8 @@ func floatValueOfString(params []interface{}) interface{} {
 
 // Method: doubleValue ()D
 func floatDoubleValue(params []interface{}) interface{} {
-	if len(params) != 1 {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatDoubleValue: Incorrect number of arguments")
-	}
-	// The first parameter is the self object (this)
-	self, ok := params[0].(*object.Object)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatDoubleValue: Invalid self object, expected Double object")
-	}
-
-	// Retrieve the value of the current Double (this object)
-	selfValue, ok := getFloat64ValueFromObject(self)
-	if !ok {
-		return getGErrBlk(excNames.IllegalArgumentException, "floatDoubleValue: Failed to retrieve value from self Double object")
-	}
-
-	// Return the float value.
-	return selfValue
+	self := params[0].(*object.Object)
+	return self.FieldTable["value"].Fvalue.(float64)
 }
 
 /*

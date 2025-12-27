@@ -184,7 +184,7 @@ func Load_Lang_Integer() {
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/CharSequence;III)I"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  trapFunction,
+			GFunction:  integerParseIntCharSequence,
 		}
 
 	MethodSignatures["java/lang/Integer.parseInt(Ljava/lang/String;)I"] =
@@ -202,7 +202,7 @@ func Load_Lang_Integer() {
 	MethodSignatures["java/lang/Integer.parseUnsignedInt(Ljava/lang/CharSequence;III)I"] =
 		GMeth{
 			ParamSlots: 4,
-			GFunction:  trapFunction,
+			GFunction:  integerParseUnsignedIntCharSequence,
 		}
 
 	MethodSignatures["java/lang/Integer.parseUnsignedInt(Ljava/lang/String;)I"] =
@@ -524,10 +524,8 @@ func integerToStringIorII(params []interface{}) interface{} {
 // "java/lang/Integer.toUnsignedString(I)Ljava/lang/String;"
 func integerToUnsignedString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
-	if argInt64 < 0 {
-		argInt64 &= 0x00000000FFFFFFFF
-	}
-	str := fmt.Sprintf("%d", argInt64)
+	val := uint32(argInt64)
+	str := fmt.Sprintf("%d", val)
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
@@ -535,9 +533,7 @@ func integerToUnsignedString(params []interface{}) interface{} {
 // "java/lang/Integer.toUnsignedString(II)Ljava/lang/String;"
 func integerToUnsignedStringRadix(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
-	if argInt64 < 0 {
-		argInt64 &= 0x00000000FFFFFFFF
-	}
+	val := uint32(argInt64)
 	// fmt.Printf("DEBUG integerToUnsignedStringRadix %d - %08x\n", argInt64, argInt64)
 
 	// Extract and validate the radix.
@@ -553,7 +549,7 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	str := strconv.FormatInt(argInt64, int(rdx))
+	str := strconv.FormatUint(uint64(val), int(rdx))
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
@@ -561,7 +557,7 @@ func integerToUnsignedStringRadix(params []interface{}) interface{} {
 // "java/lang/Integer.toOctalString(I)Ljava/lang/String;"
 func integerToOctalString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
-	str := strconv.FormatInt(argInt64, 8)
+	str := strconv.FormatUint(uint64(uint32(argInt64)), 8)
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
@@ -569,7 +565,7 @@ func integerToOctalString(params []interface{}) interface{} {
 // "java/lang/Integer.toHexString(I)Ljava/lang/String;"
 func integerToHexString(params []interface{}) interface{} {
 	argInt64 := params[0].(int64)
-	str := strconv.FormatInt(argInt64, 16)
+	str := strconv.FormatUint(uint64(uint32(argInt64)), 16)
 	obj := object.StringObjectFromGoString(str)
 	return obj
 }
@@ -595,7 +591,10 @@ func integerRotateLeft(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerRotateLeft: Invalid argument types")
 	}
 
-	return int64(int32(input)<<distance | int32(input)>>(32-distance))
+	uInput := uint32(input)
+	uDistance := uint(distance & 0x1F)
+	result := (uInput << uDistance) | (uInput >> (32 - uDistance))
+	return int64(int32(result))
 }
 
 // RotateRight performs a right bitwise rotation on an integer.
@@ -607,7 +606,10 @@ func integerRotateRight(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerRotateRight: Invalid argument types")
 	}
 
-	return int64(int32(input)>>distance | int32(input)<<(32-distance))
+	uInput := uint32(input)
+	uDistance := uint(distance & 0x1F)
+	result := (uInput >> uDistance) | (uInput << (32 - uDistance))
+	return int64(int32(result))
 }
 
 // BitCount returns the number of one-bits in the two’s complement binary representation of an integer.
@@ -658,20 +660,22 @@ func integerCompareUnsigned(params []interface{}) interface{} {
 	return int64(0)
 }
 
-// integerCompress extracts bits from i\the input using the provided mask.
+// integerCompress extracts bits from the input using the provided mask.
 func integerCompress(params []interface{}) interface{} {
 	if len(params) != 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerCompress requires exactly 2 arguments")
 	}
 
-	input, ok1 := params[0].(int64)
-	mask, ok2 := params[1].(int64)
+	inputRaw, ok1 := params[0].(int64)
+	maskRaw, ok2 := params[1].(int64)
 	if !ok1 || !ok2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerCompress: Invalid argument types for Compress")
 	}
 
-	result := int64(0)
-	pos := int64(0)
+	input := uint32(inputRaw)
+	mask := uint32(maskRaw)
+	result := uint32(0)
+	pos := uint32(0)
 	for mask != 0 {
 		if mask&1 != 0 {
 			result |= (input & 1) << pos
@@ -681,7 +685,7 @@ func integerCompress(params []interface{}) interface{} {
 		input >>= 1
 	}
 
-	return result
+	return int64(int32(result))
 }
 
 // integerDivideUnsigned performs unsigned integer division.
@@ -736,14 +740,16 @@ func integerExpand(params []interface{}) interface{} {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerExpand requires exactly 2 arguments")
 	}
 
-	input, ok1 := params[0].(int64)
-	mask, ok2 := params[1].(int64)
+	inputRaw, ok1 := params[0].(int64)
+	maskRaw, ok2 := params[1].(int64)
 	if !ok1 || !ok2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerExpand: Invalid argument types for integerExpand")
 	}
 
-	result := int64(0)
-	pos := int64(0)
+	input := uint32(inputRaw)
+	mask := uint32(maskRaw)
+	result := uint32(0)
+	pos := uint32(0)
 	for mask != 0 {
 		if mask&1 != 0 {
 			if input&1 != 0 {
@@ -755,7 +761,7 @@ func integerExpand(params []interface{}) interface{} {
 		pos++
 	}
 
-	return result
+	return int64(int32(result))
 }
 
 // integerGetInteger retrieves the Integer object based on different types of input.
@@ -915,6 +921,70 @@ func integerParseUnsignedInt(params []interface{}) interface{} {
 }
 
 // integerRemainderUnsigned returns the remainder of dividing two unsigned integers.
+// integerParseIntCharSequence parses a CharSequence as an integer.
+func integerParseIntCharSequence(params []interface{}) interface{} {
+	if len(params) != 4 {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseIntCharSequence requires exactly 4 arguments")
+	}
+
+	csObj, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseIntCharSequence: First parameter must be an object")
+	}
+
+	begin, ok1 := params[1].(int64)
+	end, ok2 := params[2].(int64)
+	radix, ok3 := params[3].(int64)
+	if !ok1 || !ok2 || !ok3 {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseIntCharSequence: Invalid numeric parameters")
+	}
+
+	str := object.GoStringFromStringObject(csObj)
+	if begin < 0 || end > int64(len(str)) || begin > end {
+		return getGErrBlk(excNames.IndexOutOfBoundsException, "integerParseIntCharSequence: bounds out of range")
+	}
+
+	subStr := str[begin:end]
+	output, err := strconv.ParseInt(subStr, int(radix), 64)
+	if err != nil {
+		return getGErrBlk(excNames.NumberFormatException, fmt.Sprintf("integerParseIntCharSequence: Invalid integer: %v", err))
+	}
+
+	return output
+}
+
+// integerParseUnsignedIntCharSequence parses a CharSequence as an unsigned integer.
+func integerParseUnsignedIntCharSequence(params []interface{}) interface{} {
+	if len(params) != 4 {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseUnsignedIntCharSequence requires exactly 4 arguments")
+	}
+
+	csObj, ok := params[0].(*object.Object)
+	if !ok {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseUnsignedIntCharSequence: First parameter must be an object")
+	}
+
+	begin, ok1 := params[1].(int64)
+	end, ok2 := params[2].(int64)
+	radix, ok3 := params[3].(int64)
+	if !ok1 || !ok2 || !ok3 {
+		return getGErrBlk(excNames.IllegalArgumentException, "integerParseUnsignedIntCharSequence: Invalid numeric parameters")
+	}
+
+	str := object.GoStringFromStringObject(csObj)
+	if begin < 0 || end > int64(len(str)) || begin > end {
+		return getGErrBlk(excNames.IndexOutOfBoundsException, "integerParseUnsignedIntCharSequence: bounds out of range")
+	}
+
+	subStr := str[begin:end]
+	output, err := strconv.ParseUint(subStr, int(radix), 32)
+	if err != nil {
+		return getGErrBlk(excNames.NumberFormatException, fmt.Sprintf("integerParseUnsignedIntCharSequence: Invalid unsigned integer: %v", err))
+	}
+
+	return int64(output)
+}
+
 func integerRemainderUnsigned(params []interface{}) interface{} {
 	if len(params) != 2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "integerRemainderUnsigned requires exactly 2 arguments")

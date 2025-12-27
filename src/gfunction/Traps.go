@@ -96,12 +96,6 @@ func Load_Traps() {
 			GFunction:  trapClass,
 		}
 
-	MethodSignatures["java/util/Iterator.<clinit>()V"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  trapClass,
-		}
-
 }
 
 // Generic trap for classes

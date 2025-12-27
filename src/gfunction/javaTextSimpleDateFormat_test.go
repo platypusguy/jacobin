@@ -5,6 +5,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"testing"
+	"time"
 )
 
 // Helpers
@@ -73,7 +74,7 @@ func TestSimpleDateFormat_Init_WithPattern(t *testing.T) {
 	globals.InitStringPool()
 
 	obj := newSDFObj()
- pat := sdfStr("yyyy-MM-dd")
+	pat := sdfStr("yyyy-MM-dd")
 
 	ret := sdfInitString([]interface{}{obj, pat})
 	if ret != nil {
@@ -109,7 +110,7 @@ func TestSimpleDateFormat_Init_WithNullPattern(t *testing.T) {
 	if fld.Ftype != types.StringClassRef {
 		t.Fatalf("pattern field Ftype mismatch with null: want %s, got %s", types.StringClassRef, fld.Ftype)
 	}
- if !object.IsNull(fld.Fvalue) {
+	if !object.IsNull(fld.Fvalue) {
 		t.Fatalf("pattern field Fvalue should be Java null for null pattern; got %T", fld.Fvalue)
 	}
 }
@@ -123,7 +124,7 @@ func TestSimpleDateFormat_Clone_Minimal(t *testing.T) {
 	cl := sdfClone([]interface{}{obj})
 	clObj, ok := cl.(*object.Object)
 	if !ok || clObj == nil {
-						t.Fatalf("sdfClone should return a non-nil *object.Object, got %T", cl)
+		t.Fatalf("sdfClone should return a non-nil *object.Object, got %T", cl)
 	}
 	if clObj != obj {
 		t.Fatalf("sdfClone minimal behavior should return same object reference")
@@ -171,7 +172,6 @@ func TestSimpleDateFormat_ToPattern_Behavior(t *testing.T) {
 	}
 }
 
-
 func TestSimpleDateFormat_ApplyPattern_Behavior(t *testing.T) {
 	globals.InitStringPool()
 
@@ -205,5 +205,55 @@ func TestSimpleDateFormat_ApplyPattern_Behavior(t *testing.T) {
 	}
 	if gs := object.GoStringFromStringObject(so3); gs != "yyyy-MM" {
 		t.Fatalf("applyLocalizedPattern behavior mismatch: got %q want %q", gs, "yyyy-MM")
+	}
+}
+
+func TestSimpleDateFormat_Format(t *testing.T) {
+	globals.InitStringPool()
+
+	// Pattern: yyyy-MM-dd HH:mm:ss
+	obj := newSDFObj()
+	_ = sdfInitString([]interface{}{obj, sdfStr("yyyy-MM-dd HH:mm:ss")})
+
+	// Date: 2023-10-27 10:20:30 UTC
+	// unix milli for 2023-10-27 10:20:30 UTC
+	tm := time.Date(2023, 10, 27, 10, 20, 30, 0, time.UTC)
+	millis := tm.UnixMilli()
+	dateObj := Populator("java/util/Date", types.Long, millis)
+
+	ret := sdfFormat([]interface{}{obj, dateObj})
+	so, ok := ret.(*object.Object)
+	if !ok || so == nil {
+		t.Fatalf("sdfFormat did not return a String object: %T", ret)
+	}
+	gs := object.GoStringFromStringObject(so)
+	expected := "2023-10-27 10:20:30"
+	if gs != expected {
+		t.Fatalf("sdfFormat mismatch: got %q want %q", gs, expected)
+	}
+}
+
+func TestSimpleDateFormat_Parse(t *testing.T) {
+	globals.InitStringPool()
+
+	// Pattern: yyyy-MM-dd
+	obj := newSDFObj()
+	_ = sdfInitString([]interface{}{obj, sdfStr("yyyy-MM-dd")})
+
+	inputStr := sdfStr("2023-10-27")
+	ret := sdfParse([]interface{}{obj, inputStr})
+	dateObj, ok := ret.(*object.Object)
+	if !ok || dateObj == nil {
+		t.Fatalf("sdfParse did not return a Date object: %T", ret)
+	}
+
+	millis, err := dateGetMillis(dateObj)
+	if err != nil {
+		t.Fatalf("failed to get millis from parsed Date: %v", err)
+	}
+
+	expectedTime := time.Date(2023, 10, 27, 0, 0, 0, 0, time.UTC)
+	if millis != expectedTime.UnixMilli() {
+		t.Fatalf("sdfParse mismatch: got %d want %d", millis, expectedTime.UnixMilli())
 	}
 }

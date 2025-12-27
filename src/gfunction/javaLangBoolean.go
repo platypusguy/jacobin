@@ -9,8 +9,10 @@ package gfunction
 import (
 	"fmt"
 	"jacobin/src/excNames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"strings"
 )
 
 func Load_Lang_Boolean() {
@@ -39,7 +41,17 @@ func Load_Lang_Boolean() {
 			GFunction:  booleanBooleanValue,
 		}
 
-	// The JVM library Boolean.compare and Boolean.compareTo functions work.
+	MethodSignatures["java/lang/Boolean.compare(ZZ)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  booleanCompare,
+		}
+
+	MethodSignatures["java/lang/Boolean.compareTo(Ljava/lang/Boolean;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  booleanCompareTo,
+		}
 
 	MethodSignatures["java/lang/Boolean.describeConstable()Ljava.util.Optional;"] =
 		GMeth{
@@ -47,7 +59,11 @@ func Load_Lang_Boolean() {
 			GFunction:  trapFunction,
 		}
 
-	// The JVM library Boolean.equals function works.
+	MethodSignatures["java/lang/Boolean.equals(Ljava/lang/Object;)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  booleanEquals,
+		}
 
 	MethodSignatures["java/lang/Boolean.getBoolean(Ljava/lang/String;)Z"] =
 		GMeth{
@@ -64,12 +80,26 @@ func Load_Lang_Boolean() {
 	MethodSignatures["java/lang/Boolean.hashCode(Z)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  booleanHashCode,
+			GFunction:  booleanHashCodeStatic,
 		}
 
-	// The JVM library Boolean.logicalAnd function works.
-	// The JVM library Boolean.logicalOr function works.
-	// The JVM library Boolean.logicalXor function works.
+	MethodSignatures["java/lang/Boolean.logicalAnd(ZZ)Z"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  booleanLogicalAnd,
+		}
+
+	MethodSignatures["java/lang/Boolean.logicalOr(ZZ)Z"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  booleanLogicalOr,
+		}
+
+	MethodSignatures["java/lang/Boolean.logicalXor(ZZ)Z"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  booleanLogicalXor,
+		}
 
 	MethodSignatures["java/lang/Boolean.parseBoolean(Ljava/lang/String;)Z"] =
 		GMeth{
@@ -77,13 +107,17 @@ func Load_Lang_Boolean() {
 			GFunction:  booleanParseBoolean,
 		}
 
-	MethodSignatures["java/lang/Boolean.parseBoolean(Ljava/lang/String;)Z"] =
+	MethodSignatures["java/lang/Boolean.toString()Ljava/lang/String;"] =
 		GMeth{
-			ParamSlots: 1,
-			GFunction:  booleanParseBoolean,
+			ParamSlots: 0,
+			GFunction:  booleanToString,
 		}
 
-	// The JVM library Boolean.toString function works.
+	MethodSignatures["java/lang/Boolean.toString(Z)Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  booleanToStringStatic,
+		}
 
 	MethodSignatures["java/lang/Boolean.valueOf(Z)Ljava/lang/Boolean;"] =
 		GMeth{
@@ -94,7 +128,7 @@ func Load_Lang_Boolean() {
 	MethodSignatures["java/lang/Boolean.valueOf(Ljava/lang/String;)Ljava/lang/Boolean;"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  booleanValueOf,
+			GFunction:  booleanValueOfString,
 		}
 
 }
@@ -139,136 +173,174 @@ func booleanBooleanValue(params []interface{}) interface{} {
 // Returns true if and only if the system property named by the argument exists
 // and is equal to, ignoring case, the string "true".
 // Else, return false.
-// If neither true nor false, return an exception.
 func booleanGetBoolean(params []interface{}) interface{} {
-
 	// Get the property name and validate it.
 	obj, ok := params[0].(*object.Object)
-	if !ok || obj == nil {
-		errMsg := fmt.Sprintf("booleanGetBoolean: Boolean parameter is neither nil or an invalid object: {%T, %v}",
-			params[0], params[0])
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	if !ok || obj == nil || !object.IsStringObject(obj) {
+		return types.JavaBoolFalse
 	}
-	fld, ok := obj.FieldTable["value"]
-	if !ok {
-		errMsg := "booleanGetBoolean: Missing the \"value\" field"
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	var propName string
-	switch fld.Fvalue.(type) {
-	case []byte:
-		propName = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		propName = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
-	default:
-		errMsg := fmt.Sprintf("booleanGetBoolean: The \"value\" field has invalid type: %T", fld.Ftype)
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+
+	propName := object.GoStringFromStringObject(obj)
+	if propName == "" {
+		return types.JavaBoolFalse
 	}
 
 	// Call systemGetProperty() to get the property value.
-	var sysParams []interface{}
-	sysParams = append(sysParams, object.StringObjectFromGoString(propName))
-	propObj := systemGetProperty(sysParams).(*object.Object)
-	propStr := object.GoStringFromStringObject(propObj)
-	switch propStr {
-	case "true":
-		return types.JavaBoolTrue
-	case "false":
+	propValue := globals.GetSystemProperty(propName)
+	if propValue == "" {
 		return types.JavaBoolFalse
 	}
 
-	// Neither true nor false ==> exception.
-	errMsg := fmt.Sprintf("booleanGetBoolean: systemGetProperty returned neither \"true\" nor \"false\": %v", propStr)
-	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	if strings.EqualFold(propValue, "true") {
+		return types.JavaBoolTrue
+	}
+
+	return types.JavaBoolFalse
 }
 
-// Returns a Boolean object instance, based on the parameter type: boolean or String.
+// Returns a Boolean object instance, based on the parameter: boolean.
 func booleanValueOf(params []interface{}) interface{} {
-
-	// Try for a String object.
-	inObj, ok := params[0].(*object.Object)
+	inBool, ok := params[0].(int64)
 	if !ok {
-		inBool, ok := params[0].(int64)
-		if !ok {
-			errMsg := fmt.Sprintf("booleanValueOf: The parameter is neither String nor boolean: %T", params[0])
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-		}
-		obj := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, inBool)
-		return obj
+		return getGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("booleanValueOf: expected int64 (boolean), got %T", params[0]))
 	}
-
-	// inObj should be a String object.
-	zz := _booleanStringParser(inObj)
-	switch zz {
-	case types.JavaBoolTrue, types.JavaBoolFalse:
-		return object.MakePrimitiveObject("java/lang/Boolean", types.Bool, zz)
-	}
-
-	// Return exception.
-	return zz
+	return object.MakePrimitiveObject("java/lang/Boolean", types.Bool, inBool)
 }
 
-// Given a Boolean object, return one of the following:
-// types.JavaBoolTrue
-// types.JavaBoolFalse
-// an exception
-func _booleanStringParser(obj *object.Object) interface{} {
-	// Get the String argument value.
-	fld, ok := obj.FieldTable["value"]
-	if !ok {
-		errMsg := "_booleanStringParser: Missing the \"value\" field"
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+// booleanValueOfString returns a Boolean object instance, based on the parameter: String.
+func booleanValueOfString(params []interface{}) interface{} {
+	strObj, ok := params[0].(*object.Object)
+	if !ok || !object.IsStringObject(strObj) {
+		return getGErrBlk(excNames.IllegalArgumentException, "booleanValueOfString: expected String object")
 	}
-	var strValue string
-	switch fld.Fvalue.(type) {
-	case []byte:
-		strValue = string(obj.FieldTable["value"].Fvalue.([]byte))
-	case []types.JavaByte:
-		strValue = object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
-	default:
-		errMsg := fmt.Sprintf("_booleanStringParser: The \"value\" field has invalid type: %T", fld.Ftype)
-		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+
+	strValue := object.GoStringFromStringObject(strObj)
+	if strings.EqualFold(strValue, "true") {
+		return object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
 	}
-	switch strValue {
-	case "true":
-		return types.JavaBoolTrue
-	case "false":
+
+	return object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
+}
+
+// booleanParseBoolean parses the string argument as a boolean.
+func booleanParseBoolean(params []interface{}) interface{} {
+	strObj, ok := params[0].(*object.Object)
+	if !ok || !object.IsStringObject(strObj) {
 		return types.JavaBoolFalse
 	}
 
-	// Neither true nor false ==> exception.
-	errMsg := fmt.Sprintf("_booleanStringParser: The \"value\" field is neither \"true\" nor \"false\": %v", strValue)
-	return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	strValue := object.GoStringFromStringObject(strObj)
+	if strings.EqualFold(strValue, "true") {
+		return types.JavaBoolTrue
+	}
+
+	return types.JavaBoolFalse
 }
 
-// Parse the string argument as a boolean and return true, false, or an exception.
-func booleanParseBoolean(params []interface{}) interface{} {
-	obj := params[0].(*object.Object)
-	return _booleanStringParser(obj)
+// booleanCompare compares two boolean values.
+func booleanCompare(params []interface{}) interface{} {
+	x := params[0].(int64)
+	y := params[1].(int64)
+
+	if x == y {
+		return int64(0)
+	}
+	if x == types.JavaBoolTrue {
+		return int64(1)
+	}
+	return int64(-1)
 }
 
-// Return a hash code for this Boolean object.
+// booleanCompareTo compares this Boolean instance with another.
+func booleanCompareTo(params []interface{}) interface{} {
+	thisObj := params[0].(*object.Object)
+	otherObj := params[1].(*object.Object)
+
+	thisVal := thisObj.FieldTable["value"].Fvalue.(int64)
+	otherVal := otherObj.FieldTable["value"].Fvalue.(int64)
+
+	return booleanCompare([]interface{}{thisVal, otherVal})
+}
+
+// booleanEquals returns true if the specified object is a Boolean and has the same value.
+func booleanEquals(params []interface{}) interface{} {
+	thisObj := params[0].(*object.Object)
+	otherObj, ok := params[1].(*object.Object)
+	if !ok || otherObj == nil {
+		return types.JavaBoolFalse
+	}
+
+	if object.GoStringFromStringPoolIndex(otherObj.KlassName) != "java/lang/Boolean" {
+		return types.JavaBoolFalse
+	}
+
+	thisVal := thisObj.FieldTable["value"].Fvalue.(int64)
+	otherVal := otherObj.FieldTable["value"].Fvalue.(int64)
+
+	if thisVal == otherVal {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// booleanHashCode returns a hash code for this Boolean object.
 func booleanHashCode(params []interface{}) interface{} {
-	var zz interface{}
-	if len(params) == 0 {
-		obj := params[0].(*object.Object)
-		zz = _booleanStringParser(obj)
-	} else {
-		zz = params[1].(int64)
-		switch zz {
-		case types.JavaBoolTrue, types.JavaBoolFalse:
-		default:
-			errMsg := fmt.Sprintf("booleanHashCode: The argument is neither \"true\" nor \"false\": %v", zz)
-			return getGErrBlk(excNames.IllegalArgumentException, errMsg)
-		}
-	}
-	switch zz {
-	case types.JavaBoolTrue:
-		return int64(1231)
-	case types.JavaBoolFalse:
-		return int64(1237)
-	}
+	obj := params[0].(*object.Object)
+	val := obj.FieldTable["value"].Fvalue.(int64)
+	return booleanHashCodeStatic([]interface{}{val})
+}
 
-	// Return exception from _booleanStringParser.
-	return zz
+// booleanHashCodeStatic returns a hash code for a boolean value.
+func booleanHashCodeStatic(params []interface{}) interface{} {
+	val := params[0].(int64)
+	if val == types.JavaBoolTrue {
+		return int64(1231)
+	}
+	return int64(1237)
+}
+
+// booleanLogicalAnd returns the result of applying the logical AND operator to the specified boolean operands.
+func booleanLogicalAnd(params []interface{}) interface{} {
+	a := params[0].(int64)
+	b := params[1].(int64)
+	if a == types.JavaBoolTrue && b == types.JavaBoolTrue {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// booleanLogicalOr returns the result of applying the logical OR operator to the specified boolean operands.
+func booleanLogicalOr(params []interface{}) interface{} {
+	a := params[0].(int64)
+	b := params[1].(int64)
+	if a == types.JavaBoolTrue || b == types.JavaBoolTrue {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// booleanLogicalXor returns the result of applying the logical XOR operator to the specified boolean operands.
+func booleanLogicalXor(params []interface{}) interface{} {
+	a := params[0].(int64)
+	b := params[1].(int64)
+	if a != b {
+		return types.JavaBoolTrue
+	}
+	return types.JavaBoolFalse
+}
+
+// booleanToString returns a String object representing this Boolean's value.
+func booleanToString(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	val := obj.FieldTable["value"].Fvalue.(int64)
+	return booleanToStringStatic([]interface{}{val})
+}
+
+// booleanToStringStatic returns a String object representing the specified boolean.
+func booleanToStringStatic(params []interface{}) interface{} {
+	val := params[0].(int64)
+	if val == types.JavaBoolTrue {
+		return object.StringObjectFromGoString("true")
+	}
+	return object.StringObjectFromGoString("false")
 }
