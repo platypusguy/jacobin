@@ -14,7 +14,7 @@ go test -covermode=count -coverprofile=cov_profile.out ./...
     • go test: The command to run tests.
     • -covermode=count: This is a key flag. It tracks the number of times each statement is executed, which is
       necessary for a detailed report.
-    • -coverprofile=coverage.out: This flag creates a file named coverage.out with the coverage data. You can
+    • -coverprofile=cov_profile.out: This flag creates a file named cov_profile.out with the coverage data. You can
        name this file anything you want.
     • ./...: This pattern tells the command to run tests for all packages in the current directory and its subdirectories.
 
@@ -24,7 +24,7 @@ Step 2: Display the Per-File Report
 Next, use the go tool cover command with the profile file you just created. The -func flag specifies that you
 want a function-level report, which includes the coverage for each file.
 
-go tool cover -func=coverage.out 2>&1 | tee cov_per_function.out
+go tool cover -func=cov_profile.out 2>&1 | tee cov_per_function.out
 
 This command will produce a table that lists each Go source file, the number of functions in it, and the
 percentage of those functions that were covered by tests. The output will look something like this:
@@ -40,8 +40,8 @@ Detailed HTML report
 --------------------
 A per-file, per-line HTML report is also available using:
 
-go test ./... -coverprofile=coverage.out -covermode=count
-go tool cover -html=coverage.out
+go test ./... -coverprofile=cov_profile.out -covermode=count
+go tool cover -html=cov_profile.out
 
 Using Goland's tools
 --------------------
