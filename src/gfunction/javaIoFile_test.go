@@ -2,15 +2,15 @@ package gfunction
 
 import (
 	"fmt"
+	"jacobin/src/excNames"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/types"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"testing"
-
-	"jacobin/src/globals"
-	"jacobin/src/object"
-	"jacobin/src/types"
 )
 
 // Helpers
@@ -151,6 +151,156 @@ func TestJavaIoFile_Init_And_Getters(t *testing.T) {
 	if object.GoStringFromStringObject(absP) != object.GoStringFromStringObject(canP) {
 		// On our minimal impl these are the same
 		t.Fatalf("absolute and canonical path differ: %q vs %q", object.GoStringFromStringObject(absP), object.GoStringFromStringObject(canP))
+	}
+}
+
+func TestJavaIoFile_AdditionalGetters(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.txt")
+	f := newFileObjFromPath(t, path)
+
+	// Test fileGetParentFile
+	parentFile := fileGetParentFile([]interface{}{f}).(*object.Object)
+	if parentFile == nil {
+		t.Fatalf("fileGetParentFile returned nil")
+	}
+	p, _ := fileGetPathString(parentFile)
+	if p != dir {
+		t.Fatalf("fileGetParentFile mismatch: want %s got %s", dir, p)
+	}
+
+	// Test fileGetFreeSpace
+	if fileGetFreeSpace([]interface{}{f}).(int64) != 0 {
+		t.Fatalf("fileGetFreeSpace expected 0")
+	}
+
+	// Test fileIsInvalid
+	if fileIsInvalid([]interface{}{f}).(int64) != 0 {
+		t.Fatalf("fileIsInvalid expected 0 (false)")
+	}
+	// Test invalid status
+	f.FieldTable[FileStatus] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
+	if fileIsInvalid([]interface{}{f}).(int64) != 1 {
+		t.Fatalf("fileIsInvalid expected 1 (true) for status 0")
+	}
+
+	// Test fileIsHidden (minimal)
+	if fileIsHidden([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		t.Fatalf("fileIsHidden expected false")
+	}
+	hiddenPath := filepath.Join(dir, ".hidden")
+	fHidden := newFileObjFromPath(t, hiddenPath)
+	if fileIsHidden([]interface{}{fHidden}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileIsHidden expected true for .hidden")
+	}
+}
+
+func TestJavaIoFile_FileStatusMethods(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.txt")
+	f := newFileObjFromPath(t, path)
+
+	// Initially does not exist
+	if fileIsFile([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		t.Fatalf("isFile expected false initially")
+	}
+
+	// Create file
+	fileCreateThenClose(t, []interface{}{f})
+	closeWithFIS(t, f)
+
+	if fileIsFile([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("isFile expected true after create")
+	}
+	if fileIsDirectory([]interface{}{f}).(int64) != types.JavaBoolFalse {
+		t.Fatalf("isDirectory expected false for file")
+	}
+
+	// Test fileLastModified
+	lm := fileLastModified([]interface{}{f}).(int64)
+	if lm == 0 {
+		t.Fatalf("fileLastModified returned 0")
+	}
+
+	// Test fileCanRead, fileCanWrite, fileCanExecute
+	if fileCanRead([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileCanRead expected true")
+	}
+	if fileCanWrite([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileCanWrite expected true")
+	}
+	if fileCanExecute([]interface{}{f}).(int64) != types.JavaBoolTrue {
+		t.Fatalf("fileCanExecute expected true")
+	}
+}
+
+func TestJavaIoFile_FilteredLists(t *testing.T) {
+	globals.InitStringPool()
+	dir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a"), 0664)
+	dirFile := newFileObjFromPath(t, dir)
+
+	// These are currently minimal/no-op implementations in javaIoFile.go
+	// fileListFiltered
+	arr := fileListFiltered([]interface{}{dirFile, object.Null}).(*object.Object)
+	names, _ := arr.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(names) == 0 {
+		t.Fatalf("fileListFiltered returned empty list")
+	}
+
+	// fileListFilesWithFileFilter
+	farr := fileListFilesWithFileFilter([]interface{}{dirFile, object.Null}).(*object.Object)
+	files, _ := farr.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(files) == 0 {
+		t.Fatalf("fileListFilesWithFileFilter returned empty list")
+	}
+
+	// fileListFilesWithFilenameFilter
+	farr2 := fileListFilesWithFilenameFilter([]interface{}{dirFile, object.Null}).(*object.Object)
+	files2, _ := farr2.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(files2) == 0 {
+		t.Fatalf("fileListFilesWithFilenameFilter returned empty list")
+	}
+}
+
+func TestJavaIoFile_StaticMethods(t *testing.T) {
+	globals.InitStringPool()
+	// Test fileListRoots
+	roots := fileListRoots(nil).(*object.Object)
+	arr, _ := roots.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(arr) == 0 {
+		t.Fatalf("fileListRoots returned empty list")
+	}
+}
+
+func TestJavaIoFile_ErrorPaths(t *testing.T) {
+	globals.InitStringPool()
+	obj := object.MakeEmptyObject()
+
+	// fileGetPath missing FilePath
+	ret := fileGetPath([]interface{}{obj})
+	if err, ok := ret.(*GErrBlk); !ok || err.ExceptionType != excNames.IOException {
+		t.Fatalf("fileGetPath: expected GErrBlk IOException, got %v", ret)
+	}
+
+	// fileIsInvalid missing FileStatus
+	ret = fileIsInvalid([]interface{}{obj})
+	if err, ok := ret.(*GErrBlk); !ok || err.ExceptionType != excNames.IOException {
+		t.Fatalf("fileIsInvalid: expected GErrBlk IOException, got %v", ret)
+	}
+
+	// fileDelete missing FilePath
+	ret = fileDelete([]interface{}{obj})
+	if err, ok := ret.(*GErrBlk); !ok || err.ExceptionType != excNames.IOException {
+		t.Fatalf("fileDelete: expected GErrBlk IOException, got %v", ret)
+	}
+
+	// fileCreate missing FilePath
+	ret = fileCreate([]interface{}{obj})
+	if err, ok := ret.(*GErrBlk); !ok || err.ExceptionType != excNames.IOException {
+		t.Fatalf("fileCreate: expected GErrBlk IOException, got %v", ret)
 	}
 }
 
@@ -491,5 +641,21 @@ func TestJavaIoFile_PermissionSetters(t *testing.T) {
 	// Ensure writable so that FileOutputStream can open on all platforms
 	if err := os.Chmod(goPath, 0o600); err != nil {
 		t.Fatalf("os.Chmod(goPath, 0o600) failed, err: %s", err.Error())
+	}
+}
+
+func TestJavaIoFile_CompareTo(t *testing.T) {
+	globals.InitStringPool()
+	f1 := newFileObjFromPath(t, "a.txt")
+	f2 := newFileObjFromPath(t, "b.txt")
+	// Test fileCompareTo
+	if fileCompareTo([]interface{}{f1, f2}).(int64) >= 0 {
+		t.Fatalf("fileCompareTo: a.txt should be less than b.txt")
+	}
+	if fileCompareTo([]interface{}{f1, f1}).(int64) != 0 {
+		t.Fatalf("fileCompareTo: a.txt should equal a.txt")
+	}
+	if fileCompareTo([]interface{}{f2, f1}).(int64) <= 0 {
+		t.Fatalf("fileCompareTo: b.txt should be greater than a.txt")
 	}
 }

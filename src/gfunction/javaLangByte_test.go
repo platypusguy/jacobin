@@ -218,3 +218,89 @@ func TestByte_AdditionalMethods(t *testing.T) {
 		t.Errorf("hashCodeStatic(42) expected 42, got %v", h)
 	}
 }
+
+func TestByteIntLongShortByteValue(t *testing.T) {
+	globals.InitGlobals("test")
+	b := Populator("java/lang/Byte", types.Byte, int64(42))
+
+	// byteValue
+	if v := byteIntLongShortByteValue([]interface{}{b}); v.(int64) != 42 {
+		t.Errorf("byteValue expected 42, got %v", v)
+	}
+
+	// intValue
+	if v := byteIntLongShortByteValue([]interface{}{b}); v.(int64) != 42 {
+		t.Errorf("intValue expected 42, got %v", v)
+	}
+
+	// longValue
+	if v := byteIntLongShortByteValue([]interface{}{b}); v.(int64) != 42 {
+		t.Errorf("longValue expected 42, got %v", v)
+	}
+
+	// shortValue
+	if v := byteIntLongShortByteValue([]interface{}{b}); v.(int64) != 42 {
+		t.Errorf("shortValue expected 42, got %v", v)
+	}
+}
+
+func TestByte_CoverageExt(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// byteDecode empty string
+	sEmpty := object.StringObjectFromGoString("")
+	if blk, ok := byteDecode([]interface{}{sEmpty}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteDecode('') expected NFE, got %T", blk)
+	}
+	sPlus := object.StringObjectFromGoString("+42")
+	if ret := byteDecode([]interface{}{sPlus}); ret.(*object.Object).FieldTable["value"].Fvalue.(int64) != 42 {
+		t.Errorf("byteDecode('+42') expected 42, got %v", ret)
+	}
+	sOutOfRange := object.StringObjectFromGoString("128")
+	if blk, ok := byteDecode([]interface{}{sOutOfRange}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteDecode('128') expected NFE, got %T", blk)
+	}
+
+	// byteCompareUnsigned branches
+	if res := byteCompareUnsigned([]interface{}{int64(1), int64(1)}).(int64); res != 0 {
+		t.Errorf("byteCompareUnsigned(1, 1) expected 0, got %d", res)
+	}
+	if res := byteCompareUnsigned([]interface{}{int64(1), int64(2)}).(int64); res != -1 {
+		t.Errorf("byteCompareUnsigned(1, 2) expected -1, got %d", res)
+	}
+
+	// byteEquals branches
+	b1 := byteValueOf([]interface{}{int64(42)}).(*object.Object)
+	if res := byteEquals([]interface{}{b1, object.Null}); res != types.JavaBoolFalse {
+		t.Errorf("byteEquals(b1, null) expected false, got %v", res)
+	}
+	otherClass := "java/lang/Integer"
+	otherObj := object.MakeEmptyObjectWithClassName(&otherClass)
+	if res := byteEquals([]interface{}{b1, otherObj}); res != types.JavaBoolFalse {
+		t.Errorf("byteEquals(b1, Integer) expected false, got %v", res)
+	}
+
+	// byteParseByte error
+	sInvalid := object.StringObjectFromGoString("abc")
+	if blk, ok := byteParseByte([]interface{}{sInvalid}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteParseByte('abc') expected NFE, got %T", blk)
+	}
+
+	// byteParseByteRadix error & invalid radix
+	if blk, ok := byteParseByteRadix([]interface{}{sInvalid, int64(16)}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteParseByteRadix('abc', 16) expected NFE, got %T", blk)
+	}
+	if blk, ok := byteParseByteRadix([]interface{}{sInvalid, int64(1)}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteParseByteRadix(..., 1) expected NFE, got %T", blk)
+	}
+
+	// byteValueOfString with radix and error
+	sVal := object.StringObjectFromGoString("123")
+	vobj := byteValueOfString([]interface{}{sVal, int64(10)}).(*object.Object)
+	if v := vobj.FieldTable["value"].Fvalue.(int64); v != 123 {
+		t.Errorf("byteValueOfString('123', 10) expected 123, got %v", v)
+	}
+	if blk, ok := byteValueOfString([]interface{}{sInvalid, int64(10)}).(*GErrBlk); !ok || blk.ExceptionType != excNames.NumberFormatException {
+		t.Errorf("byteValueOfString('abc', 10) expected NFE, got %T", blk)
+	}
+}

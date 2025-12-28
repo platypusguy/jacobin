@@ -359,7 +359,7 @@ func doubleEquals(params []interface{}) interface{} {
 	}
 
 	other, ok := params[1].(*object.Object)
-	if !ok {
+	if !ok || object.IsNull(other) {
 		return types.JavaBoolFalse
 	}
 

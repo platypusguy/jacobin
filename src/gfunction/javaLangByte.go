@@ -245,7 +245,7 @@ func byteCompareUnsigned(params []interface{}) interface{} {
 func byteEquals(params []interface{}) interface{} {
 	byteObj, ok1 := params[0].(*object.Object)
 	otherObj, ok2 := params[1].(*object.Object)
-	if !ok1 || !ok2 {
+	if !ok1 || !ok2 || object.IsNull(otherObj) {
 		return types.JavaBoolFalse
 	}
 
