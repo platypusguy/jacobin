@@ -78,26 +78,25 @@ func Load_Io_FileInputStream() {
 		}
 
 	// ----------------------------------------------------------
-	// initIDs clinitGeneric
 	// These are private functiona that calls C native functions.
 	// ----------------------------------------------------------
 
 	MethodSignatures["java/io/FileInputStream.initIDs()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/io/UnixFileSystem.initIDs()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  justReturn,
 		}
 
 	MethodSignatures["java/io/WinNTFileSystem.initIDs()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  justReturn,
 		}
 
 	// -----------------------------------------
