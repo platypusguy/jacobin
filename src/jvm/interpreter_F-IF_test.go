@@ -14,6 +14,7 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
 	"jacobin/src/statics"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"math"
 	"os"
@@ -680,6 +681,286 @@ func TestNewGetFieldWithLong(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("GETFIELD: Expected no remaining value op stack, got TOS: %d", f.TOS)
+	}
+}
+
+// GETFIELD: Invalid object reference type -> IllegalArgumentException
+func TestGetFieldInvalidRefType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	// push an invalid ref type (string instead of *object.Object)
+	push(&f, "not an object")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	// restore stderr
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out)
+	if !strings.Contains(errMsg, "GETFIELD: Invalid type of object ref") {
+		t.Errorf("GETFIELD invalid ref: unexpected error message: %s", errMsg)
+	}
+}
+
+// GETFIELD: Null object reference -> NullPointerException
+func TestGetFieldNullRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	push(&f, object.Null)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out)
+	if !strings.Contains(errMsg, "GETFIELD: Null object reference") {
+		t.Errorf("GETFIELD null ref: unexpected error message: %s", errMsg)
+	}
+}
+
+// GETFIELD: Missing field in FieldTable -> IllegalArgumentException
+func TestGetFieldMissingField(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	// object without the requested field
+	obj := object.MakeEmptyObject()
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out)
+	if !strings.Contains(errMsg, "GETFIELD") || !strings.Contains(errMsg, "Missing field (value) in FieldTable") {
+		t.Errorf("GETFIELD missing field: unexpected error message: %s", errMsg)
+	}
+}
+
+// GETFIELD: Field type StringIndex -> returns *string from string pool
+func TestGetFieldStringIndex(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	s := "pool-string"
+	idx := stringPool.GetStringIndex(&s)
+
+	obj := object.MakeEmptyObject()
+	obj.FieldTable["value"] = object.Field{Ftype: types.StringIndex, Fvalue: idx}
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	ret := pop(&f).(*string)
+	if ret == nil || *ret != s {
+		t.Errorf("GETFIELD StringIndex: expected %q, got %#v", s, ret)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD StringIndex: expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETFIELD: Field type StringClassRef with []byte -> returns a String object
+func TestGetFieldStringClassRefBytes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	// StringClassRef with []byte payload
+	obj := object.MakeEmptyObject()
+	obj.FieldTable["value"] = object.Field{Ftype: types.StringClassRef, Fvalue: []byte{'h', 'i'}}
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	ret := pop(&f).(*object.Object)
+	if object.GoStringFromStringObject(ret) != "hi" {
+		t.Errorf("GETFIELD StringClassRef([]byte): expected 'hi', got %q", object.GoStringFromStringObject(ret))
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD StringClassRef([]byte): expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETFIELD: Field type StringClassRef with []types.JavaByte -> returns a String object
+func TestGetFieldStringClassRefJavaBytes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	jb := []types.JavaByte{types.JavaByte('b'), types.JavaByte('y'), types.JavaByte('e')}
+	obj := object.MakeEmptyObject()
+	obj.FieldTable["value"] = object.Field{Ftype: types.StringClassRef, Fvalue: jb}
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	ret := pop(&f).(*object.Object)
+	if object.GoStringFromStringObject(ret) != "bye" {
+		t.Errorf("GETFIELD StringClassRef(JavaByte[]): expected 'bye', got %q", object.GoStringFromStringObject(ret))
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD StringClassRef(JavaByte[]): expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETFIELD: Non-string array field -> wraps into an Object with field "value"
+func TestGetFieldArrayWrap(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	arr := []int64{10, 20, 30}
+	obj := object.MakeEmptyObject()
+	obj.FieldTable["value"] = object.Field{Ftype: types.IntArray, Fvalue: arr}
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	ret := pop(&f).(*object.Object)
+	fv, ok := ret.FieldTable["value"]
+	if !ok || fv.Ftype != types.IntArray {
+		t.Fatalf("GETFIELD array wrap: expected wrapped array field type %q, got %#v", types.IntArray, fv)
+	}
+	if got := fv.Fvalue.([]int64); len(got) != 3 || got[0] != 10 || got[1] != 20 || got[2] != 30 {
+		t.Errorf("GETFIELD array wrap: unexpected wrapped values: %#v", fv.Fvalue)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD array wrap: expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETFIELD: Ljava/lang/Object; with array/slice value -> wrap and infer element type
+func TestGetFieldObjectWrapsArray(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETFIELD)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: 9, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{FldName: "value"}
+	f.CP = &CP
+
+	payload := []int64{1, 2}
+	obj := object.MakeEmptyObject()
+	// Field type is Object, but value is an int64 slice. doGetfield should wrap this
+	// into an Object whose field("value").Ftype is inferred to an array descriptor
+	obj.FieldTable["value"] = object.Field{Ftype: "Ljava/lang/Object;", Fvalue: payload}
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	ret := pop(&f).(*object.Object)
+	fv, ok := ret.FieldTable["value"]
+	if !ok || fv.Ftype != types.IntArray {
+		t.Fatalf("GETFIELD Object-wrap: expected inferred array type %q, got %#v", types.IntArray, fv)
+	}
+	got := fv.Fvalue.([]int64)
+	if len(got) != 2 || got[0] != 1 || got[1] != 2 {
+		t.Errorf("GETFIELD Object-wrap: unexpected wrapped values: %#v", got)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETFIELD Object-wrap: expected empty stack, TOS=%d", f.TOS)
 	}
 }
 

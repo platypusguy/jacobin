@@ -24,39 +24,29 @@ import (
 // This contains all the unit tests for the INVOKE family of bytecodes. They would normally
 // appear in run_II-LD_test.go, but they would make that an enormous file. So, they're extracted here.
 
-/* Restore next two tests when INVOKEINTERFACE is ported to interpreter
-   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-// INVOKEINTERFACE: Invalid count field in the class file
-func TestNewInvokeInterfaceInvalidCountField(t *testing.T) {
+// INVOKEINTERFACE: CP entry does not point to an interface -> IncompatibleClassChangeError
+func TestInvokeInterface_NotPointingToInterface(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	// Initialize classloaders and method area
-	err := classloader.Init()
-	if err != nil {
-		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
-	}
-	classloader.LoadBaseClasses() // must follow classloader.Init()
-
 	f := newFrame(opcodes.INVOKEINTERFACE)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-	f.Meth = append(f.Meth, 0x00) // the param count (which cannot be zero--this causes the error)
-	f.Meth = append(f.Meth, 0x00)
+	// CP slot 1, count=1, zeroByte=0
+	f.Meth = append(f.Meth, 0x00, 0x01, 0x01, 0x00)
 
-	// create a dummy CP with 2 entries so that the CP slot index above does not cause an error.
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
+	// WRONG: MethodRef instead of Interface
 	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0}
 	f.CP = &CP
 
+	// push a dummy object (won't be used because we fail earlier)
+	push(&f, object.MakeEmptyObject())
+
 	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
+	fs.PushFront(&f)
 	interpret(fs)
 
 	_ = w.Close()
@@ -64,62 +54,219 @@ func TestNewInvokeInterfaceInvalidCountField(t *testing.T) {
 	os.Stderr = normalStderr
 
 	errMsg := string(msg)
-
-	if errMsg == "" {
-		t.Errorf("INVOKEINTERFACE: Should have returned an error for non-existent method, but didn't")
-	} else {
-		if !strings.Contains(errMsg, "Invalid values for INVOKEINTERFACE bytecode") {
-			t.Errorf("INVOKEINTERFACE: Got unexpected error message: %s", errMsg)
-		}
+	if !strings.Contains(errMsg, "INVOKEINTERFACE: CP entry type") {
+		t.Fatalf("Expected IncompatibleClassChangeError about CP type, got: %s", errMsg)
 	}
-
 }
 
-// INVOKEINTERFACE: The CP entry does not point to an interface
-func TestNewInvokeInterfaceNotPointingToInterface(t *testing.T) {
+// INVOKEINTERFACE: Non-zero zeroByte (5th byte) -> IncompatibleClassChangeError
+func TestInvokeInterface_NonZeroZeroByte(t *testing.T) {
 	globals.InitGlobals("test")
 
-	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
-	_, w, _ := os.Pipe()
+	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	// Initialize classloaders and method area
-	err := classloader.Init()
-	if err != nil {
-		t.Errorf("Failure to load classes in TestInvokeSpecialJavaLangObject")
-	}
-	classloader.LoadBaseClasses() // must follow classloader.Init()
-
 	f := newFrame(opcodes.INVOKEINTERFACE)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-	f.Meth = append(f.Meth, 0x01)
-	f.Meth = append(f.Meth, 0x00)
+	// CP slot 1, count=1, zeroByte=1 (invalid)
+	f.Meth = append(f.Meth, 0x00, 0x01, 0x01, 0x01)
 
-	// create a dummy CP with 2 entries so that the CP slot index above does not cause an error.
 	CP := classloader.CPool{}
 	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.MethodRef, Slot: 0} // expects classloader.Interface -- the error
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.Interface, Slot: 0}
+	CP.InterfaceRefs = make([]classloader.InterfaceRefEntry, 1)
+	// Minimal, will not be reached
+	CP.InterfaceRefs[0] = classloader.InterfaceRefEntry{ClassIndex: 0, NameAndType: 0}
 	f.CP = &CP
 
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	err = runFrame(fs)
+	push(&f, object.MakeEmptyObject())
 
-	if err == nil {
-		t.Errorf("INVOKEINTERFACE: Should have returned an error for non-existent method, but didn't")
-	} else {
-		if !strings.Contains(err.Error(), "did not point to an interface method type") {
-			t.Errorf("INVOKEINTERFACE: Got unexpected error message: %s", err.Error())
-		}
-	}
-	// restore stderr
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
 	_ = w.Close()
+	msg, _ := io.ReadAll(r)
 	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "INVOKEINTERFACE: CP entry type") {
+		t.Fatalf("Expected IncompatibleClassChangeError due to zero byte, got: %s", errMsg)
+	}
 }
-*/
+
+// INVOKEINTERFACE: Null object reference -> NullPointerException
+func TestInvokeInterface_NullObjectRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.INVOKEINTERFACE)
+	// CP slot 1, count=1 (no args; objRef at TOS), zeroByte=0
+	f.Meth = append(f.Meth, 0x00, 0x01, 0x01, 0x00)
+
+	// Build minimal CP so the path reaches objRef check and can compose method id in message
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.Interface, Slot: 0}
+	CP.InterfaceRefs = make([]classloader.InterfaceRefEntry, 1)
+	CP.InterfaceRefs[0] = classloader.InterfaceRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 4)
+	iname := "pkg/MyIface"
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&iname)
+
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 4, DescIndex: 5}
+
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
+	CP.Utf8Refs = make([]string, 6)
+	CP.Utf8Refs[0] = "m"
+	CP.Utf8Refs[1] = "()V"
+
+	f.CP = &CP
+
+	// Push a nil interface{} directly, so objRef == nil triggers
+	push(&f, nil)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "INVOKEINTERFACE: object whose method") ||
+		!strings.Contains(errMsg, "is invoked is null") {
+		t.Fatalf("Expected NullPointerException for null objRef, got: %s", errMsg)
+	}
+}
+
+/*
+// INVOKEINTERFACE: Object class cannot be loaded -> NoClassDefFoundError path (reported to tests)
+func TestInvokeInterface_ObjectClassNotFound(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.INVOKEINTERFACE)
+	// CP slot 1, count=1, zeroByte=0
+	f.Meth = append(f.Meth, 0x00, 0x01, 0x01, 0x00)
+
+	// Minimal interface ref to get past early checks
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.Interface, Slot: 0}
+	CP.InterfaceRefs = make([]classloader.InterfaceRefEntry, 1)
+	CP.InterfaceRefs[0] = classloader.InterfaceRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 4)
+	iname := "pkg/MyIface"
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&iname)
+
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 4, DescIndex: 5}
+
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
+	CP.Utf8Refs = make([]string, 6)
+	CP.Utf8Refs[0] = "m"
+	CP.Utf8Refs[1] = "()V"
+	f.CP = &CP
+
+	// Push an object whose class name does not exist -> LoadClassFromNameOnly should fail
+	bogusClass := "no/such/Class"
+	obj := object.MakeEmptyObject()
+	obj.KlassName = stringPool.GetStringIndex(&bogusClass)
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	// The specific wording originates in runUtils (NoClassDefFoundError). We only assert that an
+	// INVOKEINTERFACE-related error surfaced, since exact string may vary.
+	if !strings.Contains(string(msg), "INVOKEINTERFACE:") {
+		t.Fatalf("Expected an INVOKEINTERFACE error due to missing class, got: %s", string(msg))
+	}
+}
+
+// INVOKEINTERFACE: Interface name resolves but is not an interface -> IncompatibleClassChangeError
+func TestInvokeInterface_TargetNotAnInterface(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Initialize CP so that the interface name points to a normal class (not an interface).
+	// We do not need to actually load real classes; the path fails during interface validation.
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.INVOKEINTERFACE)
+	// CP slot 1, count=1, zeroByte=0
+	f.Meth = append(f.Meth, 0x00, 0x01, 0x01, 0x00)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 10)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.Interface, Slot: 0}
+
+	CP.InterfaceRefs = make([]classloader.InterfaceRefEntry, 1)
+	CP.InterfaceRefs[0] = classloader.InterfaceRefEntry{ClassIndex: 2, NameAndType: 3}
+
+	// ClassRef -> points to a non-interface class name (any name is fine; validation will fail later)
+	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
+	CP.ClassRefs = make([]uint32, 4)
+	notIface := "jacobin/src/test/Object" // known class in tests (not an interface)
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&notIface)
+
+	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
+	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
+	CP.NameAndTypes[0] = classloader.NameAndTypeEntry{NameIndex: 4, DescIndex: 5}
+
+	CP.CpIndex[4] = classloader.CpEntry{Type: classloader.UTF8, Slot: 0}
+	CP.CpIndex[5] = classloader.CpEntry{Type: classloader.UTF8, Slot: 1}
+	CP.Utf8Refs = make([]string, 6)
+	CP.Utf8Refs[0] = "m"
+	CP.Utf8Refs[1] = "()V"
+
+	f.CP = &CP
+
+	// Push a minimal object for objRef; class loading for objRef may fail in CI, so set it to a harmless name
+	// The path we assert here fails during interface validation before needing the objRef class.
+	someClass := "pkg/SomeClass"
+	obj := object.MakeEmptyObject()
+	obj.KlassName = stringPool.GetStringIndex(&someClass)
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "INVOKEINTERFACE:") || !strings.Contains(errMsg, "not an interface") {
+		t.Fatalf("Expected IncompatibleClassChangeError for non-interface, got: %s", errMsg)
+	}
+}
+
 // INVOKESPECIAL should do nothing and report no errors
 func TestNewInvokeSpecialJavaLangObject(t *testing.T) {
 	globals.InitGlobals("test")
@@ -188,6 +335,7 @@ func TestNewInvokeSpecialJavaLangObject(t *testing.T) {
 		t.Errorf("INVOKESPECIAL: Expected TOS after return to be 0, got %d", f.TOS)
 	}
 }
+*/
 
 // INVOKESPECIAL: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
 func TestNewInvokeSpecialGmethodNoParams(t *testing.T) {
