@@ -489,6 +489,114 @@ func TestMonitorEnter(t *testing.T) {
 	}
 }
 
+// MONITORENTER: Stack underflow -> InternalException
+func TestMonitorEnter_StackUnderflow(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// no operand pushed -> TOS stays -1
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITORENTRY: stack underflow") {
+		t.Fatalf("MONITORENTER stack-underflow: unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: Invalid operand type -> InvalidTypeException
+func TestMonitorEnter_InvalidRefType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// push a non-object (string) to trigger type assertion failure
+	push(&f, "not-an-object")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// message comes from doMonitorEnter() type assertion error path
+	if !strings.Contains(msg, "MONITORENTRY: expected a non-object") {
+		t.Fatalf("MONITORENTER invalid-ref: unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: ObjLock fails (GC-marked object) -> InternalException
+func TestMonitorEnter_ObjLockError_GCMarked(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// give the frame some method identity (for message formatting)
+	f.ClName = "LTest;"
+	f.MethName = "m"
+	f.MethType = "()V"
+
+	// Create an object and force GC-marked lock state so ObjLock returns an error
+	obj := object.MakeEmptyObject()
+	object.SetLockState(obj, 0b11) // lockStateGCMarked
+
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// doMonitorEnter formats: "MONITORENTRY: <err> in <class>.<meth><type>"
+	if !strings.Contains(msg, "MONITORENTRY: ObjLock: object in GC-marked state") {
+		t.Fatalf("MONITORENTER ObjLock error (GC-marked): unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: Simple success -> returns, stack empty, object becomes locked
+func TestMonitorEnter_Success_LocksObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.MONITORENTER)
+	obj := object.MakeEmptyObject()
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.TOS != -1 {
+		t.Fatalf("MONITORENTER success: expected empty stack, TOS=%d", f.TOS)
+	}
+	if !object.IsObjectLocked(obj) {
+		t.Fatalf("MONITORENTER success: expected object to be locked")
+	}
+}
+
 // MONITOREXIT: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorExit(t *testing.T) {
 	f := newFrame(opcodes.MONITOREXIT)
