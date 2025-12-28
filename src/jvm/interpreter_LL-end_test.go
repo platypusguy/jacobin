@@ -489,6 +489,114 @@ func TestMonitorEnter(t *testing.T) {
 	}
 }
 
+// MONITORENTER: Stack underflow -> InternalException
+func TestMonitorEnter_StackUnderflow(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// no operand pushed -> TOS stays -1
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITORENTRY: stack underflow") {
+		t.Fatalf("MONITORENTER stack-underflow: unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: Invalid operand type -> InvalidTypeException
+func TestMonitorEnter_InvalidRefType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// push a non-object (string) to trigger type assertion failure
+	push(&f, "not-an-object")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// message comes from doMonitorEnter() type assertion error path
+	if !strings.Contains(msg, "MONITORENTRY: expected a non-object") {
+		t.Fatalf("MONITORENTER invalid-ref: unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: ObjLock fails (GC-marked object) -> InternalException
+func TestMonitorEnter_ObjLockError_GCMarked(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITORENTER)
+	// give the frame some method identity (for message formatting)
+	f.ClName = "LTest;"
+	f.MethName = "m"
+	f.MethType = "()V"
+
+	// Create an object and force GC-marked lock state so ObjLock returns an error
+	obj := object.MakeEmptyObject()
+	object.SetLockState(obj, 0b11) // lockStateGCMarked
+
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// doMonitorEnter formats: "MONITORENTRY: <err> in <class>.<meth><type>"
+	if !strings.Contains(msg, "MONITORENTRY: ObjLock: object in GC-marked state") {
+		t.Fatalf("MONITORENTER ObjLock error (GC-marked): unexpected error: %s", msg)
+	}
+}
+
+// MONITORENTER: Simple success -> returns, stack empty, object becomes locked
+func TestMonitorEnter_Success_LocksObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.MONITORENTER)
+	obj := object.MakeEmptyObject()
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.TOS != -1 {
+		t.Fatalf("MONITORENTER success: expected empty stack, TOS=%d", f.TOS)
+	}
+	if !object.IsObjectLocked(obj) {
+		t.Fatalf("MONITORENTER success: expected object to be locked")
+	}
+}
+
 // MONITOREXIT: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorExit(t *testing.T) {
 	f := newFrame(opcodes.MONITOREXIT)
@@ -500,6 +608,147 @@ func TestMonitorExit(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("MONITOREXIT: Expected an empty stack, but got a tos of: %d", f.TOS)
+	}
+}
+
+// MONITOREXIT: Stack underflow -> InternalException
+func TestMonitorExit_StackUnderflow(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITOREXIT)
+	// nothing pushed; TOS remains -1
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITOREXIT: stack underflow") {
+		t.Fatalf("MONITOREXIT stack-underflow: unexpected error: %s", msg)
+	}
+}
+
+// MONITOREXIT: Invalid operand type -> InvalidTypeException
+func TestMonitorExit_InvalidRefType(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITOREXIT)
+	// push a non-object (string) to trigger type assertion failure
+	push(&f, "not-an-object")
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITOREXIT: expected a non-object") { // message starts with this
+		t.Fatalf("MONITOREXIT invalid-ref: unexpected error: %s", msg)
+	}
+}
+
+// MONITOREXIT: Simple success -> pops ref and unlocks object
+func TestMonitorExit_Success_UnlocksObject(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Prepare object locked by this thread
+	f := newFrame(opcodes.MONITOREXIT)
+	f.Thread = 7
+	obj := object.MakeEmptyObject()
+	if err := obj.ObjLock(int32(f.Thread)); err != nil {
+		t.Fatalf("setup: ObjLock failed: %v", err)
+	}
+
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.TOS != -1 {
+		t.Fatalf("MONITOREXIT success: expected empty stack, TOS=%d", f.TOS)
+	}
+	if object.IsObjectLocked(obj) {
+		t.Fatalf("MONITOREXIT success: expected object to be unlocked")
+	}
+}
+
+// MONITOREXIT: Object already unlocked -> InternalException
+func TestMonitorExit_AlreadyUnlocked(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITOREXIT)
+	f.ClName = "LTest;"
+	f.MethName = "m"
+	f.MethType = "()V"
+
+	obj := object.MakeEmptyObject() // unlocked by default
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITOREXIT:") || !strings.Contains(msg, "object is already unlocked") {
+		t.Fatalf("MONITOREXIT unlocked: expected error about already unlocked, got: %s", msg)
+	}
+}
+
+// MONITOREXIT: Fat-locked state but monitor is nil -> InternalException
+func TestMonitorExit_FatLocked_MonitorNil(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.MONITOREXIT)
+	f.Thread = 3
+	f.ClName = "LTest;"
+	f.MethName = "m"
+	f.MethType = "()V"
+
+	obj := object.MakeEmptyObject()
+	// Force header to fat-locked but leave Monitor nil to trigger error path
+	object.SetObjectFatLocked(obj)
+
+	push(&f, obj)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "MONITOREXIT:") || !strings.Contains(msg, "fat lock exists but monitor is nil") {
+		t.Fatalf("MONITOREXIT fat-locked/monitor-nil: expected error, got: %s", msg)
 	}
 }
 
