@@ -10,7 +10,7 @@ Step 1: Generate a Code Coverage Profile
 First, run your tests and generate a coverage profile file. The -coverprofile flag tells the go test command to
 write the coverage data to a file.
 
-go test -covermode=count -coverprofile=coverage.out ./...
+go test -covermode=count -coverprofile=cov_profile.out ./...
     • go test: The command to run tests.
     • -covermode=count: This is a key flag. It tracks the number of times each statement is executed, which is
       necessary for a detailed report.
@@ -24,7 +24,7 @@ Step 2: Display the Per-File Report
 Next, use the go tool cover command with the profile file you just created. The -func flag specifies that you
 want a function-level report, which includes the coverage for each file.
 
-go tool cover -func=coverage.out
+go tool cover -func=coverage.out 2>&1 | tee cov_per_function.out
 
 This command will produce a table that lists each Go source file, the number of functions in it, and the
 percentage of those functions that were covered by tests. The output will look something like this:
