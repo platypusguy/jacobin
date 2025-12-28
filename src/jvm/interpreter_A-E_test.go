@@ -13,6 +13,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
+	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math"
@@ -287,6 +288,152 @@ func TestNewAstore3(t *testing.T) {
 	}
 	if f.TOS != -1 {
 		t.Errorf("ASTORE_3: Expecting an empty stack, but tos points to item: %d", f.TOS)
+	}
+}
+
+// ATHROW: Null exception reference -> NullPointerException
+func TestAthrow_NullRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.ATHROW)
+	// Push a typed null *object.Object
+	push(&f, object.Null)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out)
+	if !strings.Contains(errMsg, "ATHROW: Invalid (null) reference to an exception/error class to throw") {
+		t.Fatalf("ATHROW null ref: unexpected error message: %s", errMsg)
+	}
+}
+
+// helper: make a minimal StackTraceElement-like object used by doAthrow printing
+func makeSTE(declCls, meth, file, line string) *object.Object {
+	ste := object.MakeEmptyObject()
+	ste.FieldTable["declaringClass"] = object.Field{Ftype: types.StringClassName, Fvalue: declCls}
+	ste.FieldTable["methodName"] = object.Field{Ftype: types.StringClassName, Fvalue: meth}
+	ste.FieldTable["fileName"] = object.Field{Ftype: types.StringClassName, Fvalue: file}
+	ste.FieldTable["sourceLine"] = object.Field{Ftype: types.StringClassName, Fvalue: line}
+	return ste
+}
+
+// helper: wrap []*object.Object as the stackTrace field object expected by doAthrow
+func makeStackTraceArray(elems []*object.Object) *object.Object {
+	arrObj := object.MakeEmptyObject()
+	arrObj.FieldTable["value"] = object.Field{Ftype: "[Ljava/lang/Object;", Fvalue: elems}
+	return arrObj
+}
+
+// ATHROW: Uncaught exception with detailMessage as []types.JavaByte
+func TestAthrow_Uncaught_WithJavaByteMessage(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.ATHROW)
+	f.Thread = 1 // so header prints as thread "main"
+
+	// Build exception object: class java/lang/RuntimeException
+	exClass := "java/lang/RuntimeException"
+	ex := object.MakeEmptyObject()
+	ex.KlassName = stringPool.GetStringIndex(&exClass)
+
+	// detailMessage = []types.JavaByte("boom!")
+	jb := []types.JavaByte{'b', 'o', 'o', 'm', '!'}
+	ex.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: jb}
+
+	// stackTrace = object with field "value" holding []*object.Object
+	ste1 := makeSTE("pkg/Clazz", "m", "File.java", "123") // with line
+	ste2 := makeSTE("pkg/Clazz2", "n", "Other.java", "")  // without line
+	// include a filtered entry to ensure it is not printed
+	steFiltered := makeSTE("java/lang/Throwable", "x", "T.java", "1")
+	ex.FieldTable["stackTrace"] = object.Field{
+		Ftype:  "[Ljava/lang/Object;",
+		Fvalue: makeStackTraceArray([]*object.Object{ste1, steFiltered, ste2}),
+	}
+
+	push(&f, ex)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// Header and message
+	if !strings.Contains(msg, "Exception in thread \"main\" java.lang.RuntimeException: boom!") {
+		t.Fatalf("ATHROW uncaught header/message missing; got:\n%s", msg)
+	}
+	// First STE with line
+	if !strings.Contains(msg, "\tat pkg.Clazz.m(File.java:123)") {
+		t.Errorf("ATHROW uncaught: expected first STE with line, got:\n%s", msg)
+	}
+	// Second STE without line
+	if !strings.Contains(msg, "\tat pkg.Clazz2.n(Other.java)") {
+		t.Errorf("ATHROW uncaught: expected second STE without line, got:\n%s", msg)
+	}
+	// Ensure filtered class not shown
+	if strings.Contains(msg, "java.lang.Throwable") {
+		t.Errorf("ATHROW uncaught: filtered Throwable frames should not appear; got:\n%s", msg)
+	}
+}
+
+// ATHROW: Uncaught exception with detailMessage as a String-like object (value is []byte)
+func TestAthrow_Uncaught_WithStringObjectMessageBytes(t *testing.T) {
+	globals.InitGlobals("test")
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.ATHROW)
+	f.Thread = 1
+
+	exClass := "java/lang/RuntimeException"
+	ex := object.MakeEmptyObject()
+	ex.KlassName = stringPool.GetStringIndex(&exClass)
+
+	// detailMessage = object with field "value" = []byte("hello")
+	msgObj := object.MakeEmptyObject()
+	msgObj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: []byte("hello")}
+	ex.FieldTable["detailMessage"] = object.Field{Ftype: types.StringClassName, Fvalue: msgObj}
+
+	// stackTrace
+	ste := makeSTE("pkg/Clazz", "run", "Main.java", "42")
+	ex.FieldTable["stackTrace"] = object.Field{Ftype: "[Ljava/lang/Object;", Fvalue: makeStackTraceArray([]*object.Object{ste})}
+
+	push(&f, ex)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "Exception in thread \"main\" java.lang.RuntimeException: hello") {
+		t.Fatalf("ATHROW uncaught header/message (bytes) missing; got:\n%s", msg)
+	}
+	if !strings.Contains(msg, "\tat pkg.Clazz.run(Main.java:42)") {
+		t.Errorf("ATHROW uncaught (bytes): expected STE line, got:\n%s", msg)
 	}
 }
 
