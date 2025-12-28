@@ -56,9 +56,81 @@ func Load_Io_FileReader() {
 			GFunction:  trapFunction,
 		}
 
+	MethodSignatures["java/io/FileReader.close()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.getEncoding()Ljava/lang/String;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.mark(I)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.markSupported()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.read()I"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.read([C)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.read([CII)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.read(Ljava/nio/CharBuffer;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.ready()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.reset()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.skip(J)J"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/io/FileReader.transferTo(Ljava/io/Writer;)J"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 }
 
-// "java/io/FileReader.<init>(Ljava/io/File;])V"
+// "java/io/FileReader.<init>(Ljava/io/File;)V"
 func initFileReader(params []interface{}) interface{} {
 	fld1, ok := params[1].(*object.Object).FieldTable[FilePath]
 	if !ok {
@@ -83,7 +155,7 @@ func initFileReader(params []interface{}) interface{} {
 	return nil
 }
 
-// "java/io/FileReader.<init>(Ljava/lang/String;])V"
+// "java/io/FileReader.<init>(Ljava/lang/String;)V"
 func initFileReaderString(params []interface{}) interface{} {
 	pathStr := object.GoStringFromStringObject(params[1].(*object.Object))
 	osFile, err := os.Open(pathStr)
