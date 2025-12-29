@@ -369,6 +369,87 @@ func TestNewIreturn(t *testing.T) {
 	}
 }
 
+// IREM: divide by zero (StrictJDK=false) -> ArithmeticException with Jacobin message
+func TestIrem_DivideByZero_DefaultMessage(t *testing.T) {
+	globals.InitGlobals("test")
+	g := globals.GetGlobalRef()
+	g.StrictJDK = false
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.IREM)
+	// dividend % divisor; here divisor = 0 to trigger error
+	push(&f, int64(10)) // dividend
+	push(&f, int64(0))  // divisor
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// Implementation builds message including "IREM or LREM: division by zero" when StrictJDK=false
+	if !strings.Contains(msg, "IREM or LREM: division by zero") {
+		t.Fatalf("IREM divide-by-zero (default msg): unexpected stderr: %s", msg)
+	}
+}
+
+// IREM: divide by zero (StrictJDK=true) -> ArithmeticException with HotSpot "/ by zero" message
+func TestIrem_DivideByZero_StrictJDK(t *testing.T) {
+	globals.InitGlobals("test")
+	g := globals.GetGlobalRef()
+	g.StrictJDK = true
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.IREM)
+	push(&f, int64(5)) // dividend
+	push(&f, int64(0)) // divisor
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "/ by zero") {
+		t.Fatalf("IREM divide-by-zero (StrictJDK): expected '/ by zero', got: %s", msg)
+	}
+}
+
+// IREM: negative dividend semantics (Java int modulo sign behavior)
+func TestIrem_NegativeDividend(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.IREM)
+	push(&f, int64(-7)) // dividend
+	push(&f, int64(3))  // divisor
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	// result should be -1 per Java semantics (and the implementation casts to int32 before %)
+	got := pop(&f).(int64)
+	if got != -1 {
+		t.Fatalf("IREM negative dividend: want -1, got %d", got)
+	}
+	if f.TOS != -1 {
+		t.Fatalf("IREM negative dividend: expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
 // ISHL: Left shift of long
 func TestNewIshl(t *testing.T) {
 	f := newFrame(opcodes.ISHL)
