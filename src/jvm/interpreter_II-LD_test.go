@@ -1327,4 +1327,96 @@ func TestNewLdiv(t *testing.T) {
 	}
 }
 
-// LDIV: with divide by zero error. This is handled in the wholeClassTests package
+// LDIV: divide by zero (StrictJDK=false) -> ArithmeticException with Jacobin message
+func TestLdiv_DivideByZero_DefaultMessage(t *testing.T) {
+	globals.InitGlobals("test")
+	g := globals.GetGlobalRef()
+	g.StrictJDK = false
+
+	// capture stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.LDIV)
+	// dividend / divisor; here divisor = 0 to trigger error
+	push(&f, int64(10)) // dividend
+	push(&f, int64(0))  // divisor
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	// Implementation builds message including "IDIV or LDIV: division by zero" when StrictJDK=false
+	if !strings.Contains(msg, "IDIV or LDIV: division by zero") {
+		t.Fatalf("LDIV divide-by-zero (default msg): unexpected stderr: %s", msg)
+	}
+}
+
+// LDIV: divide by zero (StrictJDK=true) -> ArithmeticException with HotSpot "/ by zero" message
+func TestLdiv_DivideByZero_StrictJDK(t *testing.T) {
+	globals.InitGlobals("test")
+	g := globals.GetGlobalRef()
+	g.StrictJDK = true
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.LDIV)
+	push(&f, int64(5)) // dividend
+	push(&f, int64(0)) // divisor
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out)
+	if !strings.Contains(msg, "/ by zero") {
+		t.Fatalf("LDIV divide-by-zero (StrictJDK): expected '/ by zero', got: %s", msg)
+	}
+}
+
+// LDIV: negative dividend/divisor semantics (truncate toward zero like Java long division)
+func TestLdiv_NegativeOperands(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// Case 1: negative dividend
+	f1 := newFrame(opcodes.LDIV)
+	push(&f1, int64(-7)) // dividend
+	push(&f1, int64(3))  // divisor
+	fs1 := frames.CreateFrameStack()
+	fs1.PushFront(&f1)
+	interpret(fs1)
+	got1 := pop(&f1).(int64)
+	if got1 != -2 { // -7/3 truncates toward 0
+		t.Fatalf("LDIV negative dividend: want -2, got %d", got1)
+	}
+	if f1.TOS != -1 {
+		t.Fatalf("LDIV negative dividend: expected empty stack, TOS=%d", f1.TOS)
+	}
+
+	// Case 2: negative divisor
+	f2 := newFrame(opcodes.LDIV)
+	push(&f2, int64(7))  // dividend
+	push(&f2, int64(-3)) // divisor
+	fs2 := frames.CreateFrameStack()
+	fs2.PushFront(&f2)
+	interpret(fs2)
+	got2 := pop(&f2).(int64)
+	if got2 != -2 { // 7/(-3) truncates toward 0
+		t.Fatalf("LDIV negative divisor: want -2, got %d", got2)
+	}
+	if f2.TOS != -1 {
+		t.Fatalf("LDIV negative divisor: expected empty stack, TOS=%d", f2.TOS)
+	}
+}
