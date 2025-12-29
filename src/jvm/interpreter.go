@@ -2011,10 +2011,8 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 
 	var value interface{}
 	switch prevLoaded.Type {
+	// We want all forms normalized to int64
 	case types.Bool:
-		// a boolean, which might
-		// be stored as a boolean, a byte (in an array), or int64
-		// We want all forms normalized to int64
 		value = pop(fr).(int64) & 0x01
 		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
@@ -2027,19 +2025,19 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 			Value: value,
 		})
 	case types.Byte:
-		var val types.JavaByte
+		var value int64
 		v := pop(fr)
 		switch v.(type) { // could be passed a byte or an integral type for a value
 		case int64:
-			val = types.JavaByte(v.(int64))
+			value = v.(int64)
 		case uint8:
-			val = types.JavaByte(v.(uint8))
+			value = int64(v.(uint8))
 		case types.JavaByte:
-			val = v.(types.JavaByte)
+			value = int64(v.(types.JavaByte))
 		}
 		statics.AddStatic(fieldName, statics.Static{
 			Type:  prevLoaded.Type,
-			Value: val,
+			Value: value,
 		})
 	case types.Float, types.Double:
 		value = pop(fr).(float64)

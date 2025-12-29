@@ -22,6 +22,12 @@ func Load_Io_FileOutputStream() {
 			GFunction:  clinitGeneric,
 		}
 
+	MethodSignatures["java/io/FileOutputStream.<init>(Ljava/io/FileDescriptor;)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/io/FileOutputStream.<init>(Ljava/io/File;)V"] =
 		GMeth{
 			ParamSlots: 1,
@@ -68,12 +74,6 @@ func Load_Io_FileOutputStream() {
 		GMeth{
 			ParamSlots: 3,
 			GFunction:  fosWriteByteArrayOffset,
-		}
-
-	MethodSignatures["java/io/FileOutputStream.<init>(Ljava/io/FileDescriptor;)V"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/io/FileOutputStream.getFD()Ljava/io/FileDescriptor;"] =

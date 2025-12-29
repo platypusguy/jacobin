@@ -75,6 +75,11 @@ func Load_Io_File() {
 			ParamSlots: 0,
 			GFunction:  fileDelete,
 		}
+	MethodSignatures["java/io/File.deleteOnExit()V"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
 	MethodSignatures["java/io/File.equals(Ljava/lang/Object;)Z"] =
 		GMeth{
 			ParamSlots: 1,
@@ -85,10 +90,20 @@ func Load_Io_File() {
 			ParamSlots: 0,
 			GFunction:  fileExists,
 		}
+	MethodSignatures["java/io/File.getAbsoluteFile()Ljava/io/File;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
 	MethodSignatures["java/io/File.getAbsolutePath()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  fileGetAbsolutePath,
+		}
+	MethodSignatures["java/io/File.getCanonicalFile()Ljava/io/File;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 	MethodSignatures["java/io/File.getCanonicalPath()Ljava/lang/String;"] =
 		GMeth{
@@ -115,6 +130,16 @@ func Load_Io_File() {
 			ParamSlots: 0,
 			GFunction:  fileGetPath,
 		}
+	MethodSignatures["java/io/File.getTotalSpace()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
+	MethodSignatures["java/io/File.getUsableSpace()J"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
+		}
 	MethodSignatures["java/io/File.getFreeSpace()J"] =
 		GMeth{
 			ParamSlots: 0,
@@ -129,6 +154,11 @@ func Load_Io_File() {
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  fileIsAbsolute,
+		}
+	MethodSignatures["java/io/File.isInvalid()Z"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  fileIsInvalid,
 		}
 	MethodSignatures["java/io/File.isDirectory()Z"] =
 		GMeth{
@@ -204,6 +234,11 @@ func Load_Io_File() {
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  fileSetExecutable2,
+		}
+	MethodSignatures["java/io/File.setLastModified(J)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
 		}
 	MethodSignatures["java/io/File.setReadable(Z)Z"] =
 		GMeth{

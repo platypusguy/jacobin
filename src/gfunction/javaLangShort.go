@@ -24,7 +24,7 @@ func Load_Lang_Short() {
 	MethodSignatures["java/lang/Short.byteValue()B"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortIntLongShortByteValue,
+			GFunction:  shortByteValue,
 		}
 
 	MethodSignatures["java/lang/Short.compare(SS)I"] =
@@ -42,7 +42,7 @@ func Load_Lang_Short() {
 	MethodSignatures["java/lang/Short.doubleValue()D"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortFloatDoubleValue,
+			GFunction:  shortDoubleValue,
 		}
 
 	MethodSignatures["java/lang/Short.equals(Ljava/lang/Object;)Z"] =
@@ -54,19 +54,19 @@ func Load_Lang_Short() {
 	MethodSignatures["java/lang/Short.floatValue()F"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortFloatDoubleValue,
+			GFunction:  shortFloatValue,
 		}
 
 	MethodSignatures["java/lang/Short.intValue()I"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortIntLongShortByteValue,
+			GFunction:  shortIntValue,
 		}
 
 	MethodSignatures["java/lang/Short.longValue()J"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortIntLongShortByteValue,
+			GFunction:  shortLongValue,
 		}
 
 	MethodSignatures["java/lang/Short.parseShort(Ljava/lang/String;)S"] =
@@ -90,7 +90,7 @@ func Load_Lang_Short() {
 	MethodSignatures["java/lang/Short.shortValue()S"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  shortIntLongShortByteValue,
+			GFunction:  shortShortValue,
 		}
 
 	MethodSignatures["java/lang/Short.toString()Ljava/lang/String;"] =
@@ -126,13 +126,31 @@ func Load_Lang_Short() {
 }
 
 // "java/lang/Short.byteValue()B"
+func shortByteValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	ii := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int8(ii))
+}
+
 // "java/lang/Short.intValue()I"
+func shortIntValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	ii := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int32(ii))
+}
+
 // "java/lang/Short.longValue()J"
-// "java/lang/Short.shortValue()S"
-func shortIntLongShortByteValue(params []interface{}) interface{} {
+func shortLongValue(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	ii := parmObj.FieldTable["value"].Fvalue.(int64)
 	return ii
+}
+
+// "java/lang/Short.shortValue()S"
+func shortShortValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	ii := parmObj.FieldTable["value"].Fvalue.(int64)
+	return int64(int16(ii))
 }
 
 // "java/lang/Short.equals(Ljava/lang/Object;)Z"
@@ -156,9 +174,15 @@ func shortEquals(params []interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
-// "java/lang/Short.doubleValue()D"
 // "java/lang/Short.floatValue()F"
-func shortFloatDoubleValue(params []interface{}) interface{} {
+func shortFloatValue(params []interface{}) interface{} {
+	parmObj := params[0].(*object.Object)
+	ii := parmObj.FieldTable["value"].Fvalue.(int64)
+	return float64(ii)
+}
+
+// "java/lang/Short.doubleValue()D"
+func shortDoubleValue(params []interface{}) interface{} {
 	parmObj := params[0].(*object.Object)
 	ii := parmObj.FieldTable["value"].Fvalue.(int64)
 	return float64(ii)
@@ -166,21 +190,16 @@ func shortFloatDoubleValue(params []interface{}) interface{} {
 
 // "java/lang/Short.compare(SS)I"
 func shortCompare(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[1].(int64)
-	return x - y
+	x := int16(params[0].(int64)) // interpret as signed short
+	y := int16(params[1].(int64))
+	return int64(int32(x) - int32(y)) // return difference exactly like HotSpot
 }
 
 // "java/lang/Short.compareUnsigned(SS)I"
 func shortCompareUnsigned(params []interface{}) interface{} {
-	x := uint16(params[0].(int64))
+	x := uint16(params[0].(int64)) // interpret as unsigned short
 	y := uint16(params[1].(int64))
-	if x < y {
-		return int64(-1)
-	} else if x > y {
-		return int64(1)
-	}
-	return int64(0)
+	return int64(int32(x) - int32(y))
 }
 
 // "java/lang/Short.parseShort(Ljava/lang/String;)S"

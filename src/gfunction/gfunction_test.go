@@ -7,11 +7,15 @@
 package gfunction
 
 import (
+	"io"
 	"jacobin/src/classloader"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/trace"
 	"jacobin/src/types"
+	"math/big"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -94,64 +98,220 @@ func TestCheckKey(t *testing.T) {
 	}
 }
 
-
 func TestPopulator_PrimitivesAndString(t *testing.T) {
-    globals.InitGlobals("test")
-    globals.InitStringPool()
+	globals.InitGlobals("test")
+	globals.InitStringPool()
 
-    // Integer primitive object
-    iobj := Populator("java/lang/Integer", "I", int64(42))
-    if iobj == nil {
-        t.Fatalf("Populator returned nil for Integer")
-    }
-    fld, ok := iobj.FieldTable["value"]
-    if !ok || fld.Ftype != "I" {
-        t.Fatalf("Integer value field missing or wrong type: %#v", iobj.FieldTable["value"])
-    }
-    if v, ok := fld.Fvalue.(int64); !ok || v != 42 {
-        t.Fatalf("Integer value mismatch: %v", fld.Fvalue)
-    }
+	// Integer primitive object
+	iobj := Populator("java/lang/Integer", "I", int64(42))
+	if iobj == nil {
+		t.Fatalf("Populator returned nil for Integer")
+	}
+	fld, ok := iobj.FieldTable["value"]
+	if !ok || fld.Ftype != "I" {
+		t.Fatalf("Integer value field missing or wrong type: %#v", iobj.FieldTable["value"])
+	}
+	if v, ok := fld.Fvalue.(int64); !ok || v != 42 {
+		t.Fatalf("Integer value mismatch: %v", fld.Fvalue)
+	}
 
-    // String via StringIndex path returns a proper String object
-    sobj := Populator("java/lang/String", "T", "hello")
-    if sobj == nil {
-        t.Fatalf("Populator returned nil for String")
-    }
-    if !object.IsStringObject(sobj) {
-        t.Fatalf("Populator did not create a String object")
-    }
-    if s := object.GoStringFromStringObject(sobj); s != "hello" {
-        t.Fatalf("String content mismatch: %q", s)
-    }
+	// String via StringIndex path returns a proper String object
+	sobj := Populator("java/lang/String", "T", "hello")
+	if sobj == nil {
+		t.Fatalf("Populator returned nil for String")
+	}
+	if !object.IsStringObject(sobj) {
+		t.Fatalf("Populator did not create a String object")
+	}
+	if s := object.GoStringFromStringObject(sobj); s != "hello" {
+		t.Fatalf("String content mismatch: %q", s)
+	}
 }
 
 func TestReturnNullTrueFalse(t *testing.T) {
-    if v := returnNull(nil); v != object.Null {
-        t.Fatalf("returnNull did not return object.Null: %v", v)
-    }
-    if v := returnTrue(nil); v != types.JavaBoolTrue {
-        t.Fatalf("returnTrue != true: %v", v)
-    }
-    if v := returnFalse(nil); v != types.JavaBoolFalse {
-        t.Fatalf("returnFalse != false: %v", v)
-    }
+	if v := returnNull(nil); v != object.Null {
+		t.Fatalf("returnNull did not return object.Null: %v", v)
+	}
+	if v := returnTrue(nil); v != types.JavaBoolTrue {
+		t.Fatalf("returnTrue != true: %v", v)
+	}
+	if v := returnFalse(nil); v != types.JavaBoolFalse {
+		t.Fatalf("returnFalse != false: %v", v)
+	}
 }
 
 func TestEOFSetGet(t *testing.T) {
-    obj := object.MakeEmptyObject()
-    eofSet(obj, true)
-    if !eofGet(obj) {
-        t.Fatalf("eofGet expected true")
-    }
-    eofSet(obj, false)
-    if eofGet(obj) {
-        t.Fatalf("eofGet expected false")
-    }
+	obj := object.MakeEmptyObject()
+	eofSet(obj, true)
+	if !eofGet(obj) {
+		t.Fatalf("eofGet expected true")
+	}
+	eofSet(obj, false)
+	if eofGet(obj) {
+		t.Fatalf("eofGet expected false")
+	}
 }
 
 func TestReturnRandomLong_Type(t *testing.T) {
-    v := returnRandomLong(nil)
-    if _, ok := v.(int64); !ok {
-        t.Fatalf("returnRandomLong did not return int64, got %T", v)
-    }
+	v := returnRandomLong(nil)
+	if _, ok := v.(int64); !ok {
+		t.Fatalf("returnRandomLong did not return int64, got %T", v)
+	}
+}
+
+func TestGetGErrBlk(t *testing.T) {
+	errBlk := getGErrBlk(123, "test error")
+	if errBlk.ExceptionType != 123 {
+		t.Errorf("Expected ExceptionType 123, got %d", errBlk.ExceptionType)
+	}
+	if errBlk.ErrMsg != "test error" {
+		t.Errorf("Expected ErrMsg 'test error', got '%s'", errBlk.ErrMsg)
+	}
+}
+
+func TestSimpleReturnFunctions(t *testing.T) {
+	if clinitGeneric(nil) != nil {
+		t.Error("clinitGeneric should return nil")
+	}
+	if justReturn(nil) != nil {
+		t.Error("justReturn should return nil")
+	}
+	if returnNullObject(nil) != object.Null {
+		t.Error("returnNullObject should return object.Null")
+	}
+}
+
+func TestReturnCharsetName(t *testing.T) {
+	globals.InitGlobals("test")
+	res := returnCharsetName(nil)
+	obj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("returnCharsetName should return *object.Object, got %T", res)
+	}
+	if !object.IsStringObject(obj) {
+		t.Error("returnCharsetName should return a String object")
+	}
+	charset := object.GoStringFromStringObject(obj)
+	if charset != globals.GetCharsetName() {
+		t.Errorf("Expected charset %s, got %s", globals.GetCharsetName(), charset)
+	}
+}
+
+func TestInitBigIntegerField(t *testing.T) {
+	cases := []struct {
+		val  int64
+		sign int64
+	}{
+		{100, 1},
+		{0, 0},
+		{-100, -1},
+	}
+
+	for _, c := range cases {
+		obj := object.MakeEmptyObject()
+		InitBigIntegerField(obj, c.val)
+
+		fldVal, ok := obj.FieldTable["value"]
+		if !ok {
+			t.Errorf("value field missing for %d", c.val)
+			continue
+		}
+		bigInt, ok := fldVal.Fvalue.(*big.Int)
+		if !ok || bigInt.Int64() != c.val {
+			t.Errorf("value field mismatch for %d: got %v", c.val, fldVal.Fvalue)
+		}
+
+		fldSign, ok := obj.FieldTable["signum"]
+		if !ok {
+			t.Errorf("signum field missing for %d", c.val)
+			continue
+		}
+		if fldSign.Fvalue.(int64) != c.sign {
+			t.Errorf("signum mismatch for %d: expected %d, got %d", c.val, c.sign, fldSign.Fvalue)
+		}
+	}
+}
+
+func TestClassClinitIsh(t *testing.T) {
+	globals.InitGlobals("test")
+	globals.InitStringPool()
+	unnamedModule = object.Null // Reset before test
+	classClinitIsh()
+	if unnamedModule == object.Null {
+		t.Error("unnamedModule should not be Null after classClinitIsh")
+	}
+	obj := unnamedModule
+	name := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if name != "java/lang/Module" {
+		t.Errorf("Expected KlassName java/lang/Module, got '%s'", name)
+	}
+}
+
+func TestInvoke(t *testing.T) {
+	MethodSignatures["test/Invoke()V"] = GMeth{
+		ParamSlots: 0,
+		GFunction: func(p []interface{}) interface{} {
+			return "invoked"
+		},
+	}
+	res := Invoke("test/Invoke()V", nil)
+	if res != "invoked" {
+		t.Errorf("Expected 'invoked', got %v", res)
+	}
+
+	// Test NoSuchMethodException
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Invoke should have panicked with NoSuchMethodException")
+		}
+	}()
+	Invoke("non/Existent", nil)
+}
+
+func TestGetDefaultSecurityProvider(t *testing.T) {
+	globals.InitGlobals("test")
+	p1 := GetDefaultSecurityProvider()
+	if p1 == nil {
+		t.Fatal("GetDefaultSecurityProvider returned nil")
+	}
+	p2 := GetDefaultSecurityProvider()
+	if p1 != p2 {
+		t.Error("GetDefaultSecurityProvider should return a singleton")
+	}
+}
+
+func TestLoadTestGfunctions(t *testing.T) {
+	mt := make(classloader.MT)
+	LoadTestGfunctions(&mt)
+	if !TestGfunctionsLoaded {
+		t.Error("TestGfunctionsLoaded should be true after LoadTestGfunctions")
+	}
+	// Verify some test function is loaded.
+	// Based on testGfunctions.go if available, but we can check if mt is not empty.
+	if len(mt) == 0 {
+		t.Error("MTable should not be empty after LoadTestGfunctions")
+	}
+}
+
+func TestLoadlib_InvalidKey(t *testing.T) {
+	globals.InitGlobals("test")
+	// to inspect log messages, redirect stderr
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	libMeths := make(map[string]GMeth)
+	libMeths["invalidKey"] = GMeth{ParamSlots: 0, GFunction: f1}
+	mtbl := make(classloader.MT)
+	loadlib(&mtbl, libMeths)
+
+	// restore stderr to what it was before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	msg := string(out[:])
+	if !strings.Contains(msg, "loadlib: at least one key was invalid") {
+		t.Errorf("Expected error message about invalid key, got: %s", msg)
+	}
 }

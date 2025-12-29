@@ -255,9 +255,9 @@ func floatCompare(params []interface{}) interface{} {
 		return int64(0)
 	}
 	if f1bits < f2bits {
-		return int64(-1)
+		return int64(1)
 	}
-	return int64(1)
+	return int64(-1)
 }
 
 // Method: compareTo (Ljava/lang/Float;)I
@@ -326,7 +326,7 @@ func floatEquals(params []interface{}) interface{} {
 	}
 
 	other, ok := params[1].(*object.Object)
-	if !ok {
+	if !ok || object.IsNull(other) {
 		return types.JavaBoolFalse
 	}
 
@@ -451,10 +451,7 @@ func floatMax(params []interface{}) interface{} {
 	if !ok1 || !ok2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatMax: Invalid argument types")
 	}
-	if a > b {
-		return a
-	}
-	return b
+	return math.Max(a, b)
 }
 
 // Method: min (FF)F
@@ -467,10 +464,7 @@ func floatMin(params []interface{}) interface{} {
 	if !ok1 || !ok2 {
 		return getGErrBlk(excNames.IllegalArgumentException, "floatMin: Invalid argument types")
 	}
-	if a < b {
-		return a
-	}
-	return b
+	return math.Min(a, b)
 }
 
 // Method: parseFloat (Ljava/lang/String;)F

@@ -180,6 +180,123 @@ func TestPrintStreamPrintf(t *testing.T) {
 	}
 }
 
+func TestPrintStreamPrintObject(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	// Case 1: Print(String object) - should use _printObject
+	buf.Reset()
+	gfunction.PrintObject([]interface{}{buf, makeStringObject("test object string")})
+	if got := buf.String(); got != "test object string" {
+		t.Errorf("PrintObject(String) = %q; want 'test object string'", got)
+	}
+
+	// Case 2: Println(String object)
+	buf.Reset()
+	gfunction.PrintlnObject([]interface{}{buf, makeStringObject("hello object")})
+	if got := buf.String(); got != "hello object\n" {
+		t.Errorf("PrintlnObject(String) = %q; want 'hello object\\n'", got)
+	}
+
+	// Case 3: Print normal object with fields
+	buf.Reset()
+	globals.InitStringPool()
+	className := "MyClass"
+	obj := object.MakeEmptyObjectWithClassName(&className)
+	obj.FieldTable = map[string]object.Field{
+		"field1": {Ftype: types.Int, Fvalue: int64(123)},
+		"field2": {Ftype: types.Int, Fvalue: int64(456)},
+	}
+	// className suffix will be "MyClass"
+	gfunction.PrintObject([]interface{}{buf, obj})
+	got := buf.String()
+	// field order in map is random, so we check for components
+	if !(got == "MyClass{field1=123, field2=456}" || got == "MyClass{field2=456, field1=123}") {
+		t.Errorf("PrintObject(Object) = %q; unexpected format", got)
+	}
+
+	// Case 4: Println normal object
+	buf.Reset()
+	gfunction.PrintlnObject([]interface{}{buf, obj})
+	got = buf.String()
+	if !(got == "MyClass{field1=123, field2=456}\n" || got == "MyClass{field2=456, field1=123}\n") {
+		t.Errorf("PrintlnObject(Object) = %q; unexpected format", got)
+	}
+
+	// Case 5: Error - non-io.Writer
+	ret := gfunction.PrintObject([]interface{}{"not-a-writer", obj})
+	if _, ok := ret.(*gfunction.GErrBlk); !ok {
+		t.Errorf("PrintObject with invalid writer did not return GErrBlk, got %T", ret)
+	}
+
+	// Case 6: Print Object that is actually a String
+	buf.Reset()
+	strObj := makeStringObject("internal string")
+	gfunction.PrintObject([]interface{}{buf, strObj})
+	if got := buf.String(); got != "internal string" {
+		t.Errorf("PrintObject(StringObj) = %q; want 'internal string'", got)
+	}
+}
+
+func TestPrintStreamPrintLinkedList(t *testing.T) {
+	buf := new(bytes.Buffer)
+	globals.InitStringPool()
+
+	// Load the necessary gfunctions
+	gfunction.Load_Util_LinkedList()
+
+	classNameLinkedList := "java/util/LinkedList"
+
+	// Create a LinkedList object
+	llObj := object.MakeEmptyObjectWithClassName(&classNameLinkedList)
+	llObj.FieldTable = make(map[string]object.Field)
+
+	// Case 1: Empty LinkedList
+	// If we don't put a "value" field, _printLinkedList should return an error
+	ret := gfunction.PrintObject([]interface{}{buf, llObj})
+	if _, ok := ret.(*gfunction.GErrBlk); !ok {
+		t.Errorf("PrintObject(Empty LL without value field) should return GErrBlk, got %T", ret)
+	}
+
+	// Correctly initialize LinkedList
+	gfunction.Invoke("java/util/LinkedList.<init>()V", []interface{}{llObj})
+
+	// Case 2: LinkedList with elements
+	gfunction.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []interface{}{llObj, makeStringObject("A")})
+	gfunction.Invoke("java/util/LinkedList.add(Ljava/lang/Object;)Z", []interface{}{llObj, makeStringObject("B")})
+
+	buf.Reset()
+	gfunction.PrintObject([]interface{}{buf, llObj})
+	if got := buf.String(); got != "[A, B]" {
+		t.Errorf("PrintObject(LinkedList) = %q; want '[A, B]'", got)
+	}
+
+	buf.Reset()
+	gfunction.PrintlnObject([]interface{}{buf, llObj})
+	if got := buf.String(); got != "[A, B]\n" {
+		t.Errorf("PrintlnObject(LinkedList) = %q; want '[A, B]\\n'", got)
+	}
+
+	// Case 3: LinkedList error cases
+	// non-io.Writer (already covered by PrintObject/PrintlnObject initial check, but _printLinkedList has its own check)
+	// Actually PrintObject checks writer if params[1] is null, but if not null, it passes it to _printObject or _printLinkedList.
+	// _printLinkedList checks writer too.
+
+	ret = gfunction.PrintObject([]interface{}{"not-a-writer", llObj})
+	if _, ok := ret.(*gfunction.GErrBlk); !ok {
+		t.Errorf("_printLinkedList with invalid writer did not return GErrBlk")
+	}
+
+	// Case 4: null LinkedList
+	buf.Reset()
+	// To trigger null branch in _printLinkedList, we need params[1] to be *object.Object but representing Null
+	gfunction.PrintObject([]interface{}{buf, object.Null})
+	// Actually PrintObject/PrintlnObject check object.IsNull(params[1]) and handle it themselves.
+	// So they only call _printLinkedList if it is NOT null and matches classNameLinkedList.
+	// This means the null branch in _printLinkedList might be unreachable via PrintObject/PrintlnObject.
+	// But we can test it if we call _printLinkedList directly from another gfunction file (if it was exported).
+	// Since it's not exported, we can only reach it if someone else calls it.
+}
+
 func TestPrintStreamPrintObjectNull(t *testing.T) {
 	buf := new(bytes.Buffer)
 
