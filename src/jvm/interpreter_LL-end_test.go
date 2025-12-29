@@ -176,6 +176,136 @@ func TestLneg(t *testing.T) {
 	}
 }
 
+func TestLookupswitch_MatchCase(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.LOOKUPSWITCH)
+	// key to match
+	push(&f, int64(10))
+
+	// Align: with PC==0 for the opcode, padding is 3 bytes (so PC+1 becomes 4)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// default jump (4 bytes)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // 100
+	// npairs (4 bytes)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02) // 2 pairs
+
+	// pair #1: key=5,  offset=20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05) // key 5
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // 20
+	// pair #2: key=10, offset=30
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0A) // key 10
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x1E) // 30
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 30 {
+		t.Errorf("LOOKUPSWITCH: expected jump offset 30 for key 10, got: %d", f.PC)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LOOKUPSWITCH: expected empty stack after jump, TOS=%d", f.TOS)
+	}
+}
+
+// LOOKUPSWITCH: no matching pair -> default jump
+func TestLookupswitch_DefaultNoMatch(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.LOOKUPSWITCH)
+	// key that does not match any pair
+	push(&f, int64(99))
+
+	// padding
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// default jump (4 bytes)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x64) // 100
+	// npairs (4 bytes)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02) // 2 pairs
+
+	// pair #1: key=5,  offset=20
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x05)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14)
+	// pair #2: key=10, offset=30
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0A)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x1E)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 100 {
+		t.Errorf("LOOKUPSWITCH: expected default jump 100 for no match, got: %d", f.PC)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LOOKUPSWITCH: expected empty stack after jump, TOS=%d", f.TOS)
+	}
+}
+
+// LOOKUPSWITCH: zero pairs (npairs=0) -> must take default
+func TestLookupswitch_ZeroPairs_Default(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.LOOKUPSWITCH)
+	push(&f, int64(12345)) // any key; there are zero pairs
+
+	// padding
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// default jump
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x2A) // 42
+	// npairs = 0
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x00)
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != 42 {
+		t.Errorf("LOOKUPSWITCH: expected default jump 42 with zero pairs, got: %d", f.PC)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LOOKUPSWITCH: expected empty stack after jump, TOS=%d", f.TOS)
+	}
+}
+
+// LOOKUPSWITCH: match a case with a negative jump offset (backward jump)
+func TestLookupswitch_NegativeJump(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.LOOKUPSWITCH)
+	push(&f, int64(1)) // match key 1
+
+	// padding
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00)
+
+	// default jump
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x14) // 20
+	// npairs = 2
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02)
+
+	// pair #1: key=1, offset=-5 (0xFFFFFFFB)
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x01) // key 1
+	f.Meth = append(f.Meth, 0xFF, 0xFF, 0xFF, 0xFB) // -5
+	// pair #2: key=2, offset=15
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02) // key 2
+	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0F) // 15
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	if f.PC != -5 {
+		t.Errorf("LOOKUPSWITCH: expected jump offset -5 for key 1, got: %d", f.PC)
+	}
+	if f.TOS != -1 {
+		t.Errorf("LOOKUPSWITCH: expected empty stack after jump, TOS=%d", f.TOS)
+	}
+}
+
 // LOR: Logical OR of two longs
 func TestLor(t *testing.T) {
 	f := newFrame(opcodes.LOR)
