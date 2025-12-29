@@ -16,6 +16,7 @@ const (
 	Unknown = iota
 
 	// runtime exceptions
+	AbstractMethodError
 	AccessDeniedException
 	AnnotationTypeMismatchException
 	ArithmeticException
@@ -238,7 +239,8 @@ const (
 // the same way.
 // All three lists must be kept strictly in sync.
 var JVMexceptionNamesJacobin = []string{
-	"",                                    // no exception (present because list of consts begins at 1)
+	"", // no exception (present because list of consts begins at 1)
+	"java.lang.AbstractMethodError",
 	"java.nio.file.AccessDeniedException", // VERIFIED
 	"java.lang.annotation.AnnotationTypeMismatchException",   // VERIFIED
 	"java.lang.ArithmeticException",                          // VERIFIED
@@ -263,12 +265,12 @@ var JVMexceptionNamesJacobin = []string{
 	"java.util.EmptyStackException",                          // VERIFIED
 	"java.lang.EnumConstantNotPresentException",              // VERIFIED
 	"org.w3c.dom.events.EventException",                      // VERIFIED
-	"java.io.FileNotFoundException",                          // VERiFIED
+	"java.io.FileNotFoundException",                          // VERIFIED
 	"java.nio.file.FileSystemAlreadyExistsException",         // VERIFIED
 	"java.nio.file.FileSystemNotFoundException",              // VERIFIED
 	"java.lang.module.FindException",                         // VERIFIED
 	"java.util.FormatFlagsConversionMismatchException",       // VERIFIED
-	"java.util.FormatterClosedException",                     // VERIFIED
+	"java.util.FormatterClosedException",                     // VERIFIED ----------------
 	"java.lang.IllegalAccessException",                       // VERIFIED
 	"java.lang.IllegalArgumentException",                     // VERIFIED
 	"java.lang.IllegalCallerException",                       // VERIFIED
@@ -460,7 +462,8 @@ var JVMexceptionNamesJacobin = []string{
 // entries in the preceding lists of constants in *exactly* the same way.
 // All three lists must be kept strictly in sync.
 var JVMexceptionNames = []string{
-	"",                                    // no exception (present because list of consts begins at 1)
+	"", // no exception (present because list of consts begins at 1)
+	"java.lang.AbstractMethodError",
 	"java.nio.file.AccessDeniedException", // VERIFIED
 	"java.lang.annotation.AnnotationTypeMismatchException",   // VERIFIED
 	"java.lang.ArithmeticException",                          // VERIFIED
