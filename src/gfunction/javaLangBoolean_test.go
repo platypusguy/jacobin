@@ -27,7 +27,7 @@ func TestLoad_Lang_Boolean_RegistersMethods(t *testing.T) {
 		slots int
 		fn    func([]interface{}) interface{}
 	}{
-		{"java/lang/Boolean.<clinit>()V", 0, clinitGeneric},
+		{"java/lang/Boolean.<clinit>()V", 0, booleanClinit},
 		{"java/lang/Boolean.<init>(Z)V", 1, trapDeprecated},
 		{"java/lang/Boolean.<init>(Ljava/lang/String;)V", 1, trapDeprecated},
 		{"java/lang/Boolean.booleanValue()Z", 0, booleanBooleanValue},

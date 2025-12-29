@@ -145,6 +145,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 		Load_Lang_Integer()
 		Load_Lang_Long()
 		Load_Lang_Math()
+		Load_Lang_Number()
 		Load_Lang_Object()
 		Load_Lang_Process()
 		Load_Lang_Process_Builder()

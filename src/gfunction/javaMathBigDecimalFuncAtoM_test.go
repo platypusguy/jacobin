@@ -17,7 +17,6 @@ import (
 	"jacobin/src/types"
 )
 
-
 // Required initialisation for BigDecimal unit tests.
 func bdutInit() {
 	// Initialise globals, string pool, etc.
@@ -26,7 +25,7 @@ func bdutInit() {
 	// Make sure that globals FuncThrowException has a defined value.
 	gl.FuncThrowException = exceptions.ThrowExNil
 	// Load all the static constants for BigDouble.
-	loadStaticsBigDouble()
+	loadStaticsBigDecimal()
 }
 
 // Helper inside tests: assert GErrBlk with expected exception id
@@ -622,8 +621,6 @@ func Test_BigDecimal_Divide_RMode_FromValueOfDoubles(t *testing.T) {
 	}
 }
 
-
-
 func Test_BigDecimal_Subtract_AlignsScales(t *testing.T) {
 	bdutInit()
 	onePoint000 := bigDecimalObjectFromBigInt(big.NewInt(1000), 4, 3) // 1.000
@@ -647,14 +644,18 @@ func Test_BigDecimal_Chain_Divide_Subtract_Divide_And_Multiply(t *testing.T) {
 	answer2 := bigdecimalValueOfDouble([]interface{}{float64(-7.615)}).(*object.Object)
 
 	// v = 100/100 (scale=3, HALF_UP) -> 1.000
-	v1 := bigdecimalDivideScaleRoundingMode([]interface{}{startingValue, startingValue, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")} )})
-	if _, isBlk := v1.(*GErrBlk); isBlk { t.Fatalf("unexpected error in first divide") }
+	v1 := bigdecimalDivideScaleRoundingMode([]interface{}{startingValue, startingValue, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})})
+	if _, isBlk := v1.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error in first divide")
+	}
 	v1bd := v1.(*object.Object)
 
 	// subtract path: (1.000 - 100) / 13 @ scale=3 HALF_UP -> -7.615
 	sub := bigdecimalSubtract([]interface{}{v1bd, startingValue}).(*object.Object)
-	v2 := bigdecimalDivideScaleRoundingMode([]interface{}{sub, thirteen, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")} )})
-	if _, isBlk := v2.(*GErrBlk); isBlk { t.Fatalf("unexpected error in second divide") }
+	v2 := bigdecimalDivideScaleRoundingMode([]interface{}{sub, thirteen, scale, rmodeValueOfString([]interface{}{object.StringObjectFromGoString("HALF_UP")})})
+	if _, isBlk := v2.(*GErrBlk); isBlk {
+		t.Fatalf("unexpected error in second divide")
+	}
 	u2, s2 := extractBigDecimalComponents(t, v2.(*object.Object))
 	if s2 != 3 || u2.Cmp(big.NewInt(-7615)) != 0 {
 		t.Fatalf("expected -7.615, got unscaled=%s scale=%d", u2.String(), s2)
@@ -673,12 +674,11 @@ func Test_BigDecimal_Chain_Divide_Subtract_Divide_And_Multiply(t *testing.T) {
 	}
 }
 
-
 func Test_BigDecimal_CompareTo_ConsidersScale(t *testing.T) {
 	bdutInit()
 	// 0.005 vs 0.01 -> -1
-	bdA := bigDecimalObjectFromBigInt(big.NewInt(5), 1, 3)  // 0.005
-	bdB := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 2)  // 0.01
+	bdA := bigDecimalObjectFromBigInt(big.NewInt(5), 1, 3) // 0.005
+	bdB := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 2) // 0.01
 	res := bigdecimalCompareTo([]interface{}{bdA, bdB}).(int64)
 	if res >= 0 {
 		t.Fatalf("compareTo(0.005, 0.01) expected < 0, got %d", res)
@@ -690,7 +690,7 @@ func Test_BigDecimal_CompareTo_ConsidersScale(t *testing.T) {
 
 	// 1.0 vs 1 -> compareTo == 0, but equals() is false by spec
 	onePointZero := bigDecimalObjectFromBigInt(big.NewInt(10), 2, 1) // 1.0
-	one := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 0)          // 1
+	one := bigDecimalObjectFromBigInt(big.NewInt(1), 1, 0)           // 1
 	cmp := bigdecimalCompareTo([]interface{}{onePointZero, one}).(int64)
 	if cmp != 0 {
 		t.Fatalf("compareTo(1.0, 1) expected 0, got %d", cmp)

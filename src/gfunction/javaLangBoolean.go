@@ -11,6 +11,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/statics"
 	"jacobin/src/types"
 	"strings"
 )
@@ -20,7 +21,7 @@ func Load_Lang_Boolean() {
 	MethodSignatures["java/lang/Boolean.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  booleanClinit,
 		}
 
 	MethodSignatures["java/lang/Boolean.<init>(Z)V"] =
@@ -133,6 +134,15 @@ func Load_Lang_Boolean() {
 
 }
 
+func booleanClinit([]interface{}) interface{} {
+	className := "java/lang/Boolean"
+	obj := object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolFalse)
+	_ = statics.AddStatic("java/lang/Boolean.FALSE", statics.Static{Type: types.Ref, Value: obj})
+	obj = object.MakeOneFieldObject(className, "value", types.Bool, types.JavaBoolTrue)
+	_ = statics.AddStatic("java/lang/Boolean.TRUE", statics.Static{Type: types.Ref, Value: obj})
+	return nil
+}
+
 // Return the value of this Boolean object as a boolean primitive.
 func booleanBooleanValue(params []interface{}) interface{} {
 	// Try for a Boolean object.
@@ -239,8 +249,8 @@ func booleanParseBoolean(params []interface{}) interface{} {
 
 // booleanCompare compares two boolean values.
 func booleanCompare(params []interface{}) interface{} {
-	x := params[0].(int64)
-	y := params[1].(int64)
+	x := params[0].(types.JavaBool)
+	y := params[1].(types.JavaBool)
 
 	if x == y {
 		return int64(0)
@@ -253,8 +263,14 @@ func booleanCompare(params []interface{}) interface{} {
 
 // booleanCompareTo compares this Boolean instance with another.
 func booleanCompareTo(params []interface{}) interface{} {
-	thisObj := params[0].(*object.Object)
-	otherObj := params[1].(*object.Object)
+	thisObj, ok1 := params[0].(*object.Object)
+	if !ok1 || object.IsNull(thisObj) {
+		return getGErrBlk(excNames.NullPointerException, "booleanCompareTo: expected non-nil this-object")
+	}
+	otherObj, ok2 := params[1].(*object.Object)
+	if !ok2 || object.IsNull(otherObj) {
+		return getGErrBlk(excNames.NullPointerException, "booleanCompareTo: expected non-nil that-object")
+	}
 
 	thisVal := thisObj.FieldTable["value"].Fvalue.(int64)
 	otherVal := otherObj.FieldTable["value"].Fvalue.(int64)
@@ -264,9 +280,12 @@ func booleanCompareTo(params []interface{}) interface{} {
 
 // booleanEquals returns true if the specified object is a Boolean and has the same value.
 func booleanEquals(params []interface{}) interface{} {
-	thisObj := params[0].(*object.Object)
+	thisObj, ok1 := params[0].(*object.Object)
+	if !ok1 || object.IsNull(thisObj) {
+		return getGErrBlk(excNames.NullPointerException, "booleanEquals: expected non-nil this-object")
+	}
 	otherObj, ok := params[1].(*object.Object)
-	if !ok || otherObj == nil {
+	if !ok || object.IsNull(otherObj) {
 		return types.JavaBoolFalse
 	}
 
