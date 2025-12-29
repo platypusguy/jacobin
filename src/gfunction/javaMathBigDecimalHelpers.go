@@ -52,8 +52,8 @@ func precisionFromBigInt(arg *big.Int) int64 {
 	return int64(len((new(big.Int).Abs(arg)).Text(10)))
 }
 
-// loadStaticsBigDouble: Load the static fields for BigDouble.
-func loadStaticsBigDouble() {
+// loadStaticsBigDecimal: Load the static fields for BigDouble.
+func loadStaticsBigDecimal() {
 	INFLATED := int64(-9223372036854775808)
 	_ = statics.AddStatic(classNameBigDecimal+".INFLATED", statics.Static{Type: types.Long, Value: INFLATED})
 	addStaticBigDecimal("ZERO", int64(0))

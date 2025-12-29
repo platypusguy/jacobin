@@ -360,7 +360,7 @@ func Load_Math_Big_Decimal() {
 			GFunction:  bigdecimalSetScale,
 		}
 
- MethodSignatures[classNameBigDecimal+".setScale(II)Ljava/math/BigDecimal;"] =
+	MethodSignatures[classNameBigDecimal+".setScale(II)Ljava/math/BigDecimal;"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  trapDeprecated,
@@ -469,5 +469,5 @@ func Load_Math_Big_Decimal() {
 		}
 
 	// Avoiding a cycle issue by doing this here and not in package statics.
-	loadStaticsBigDouble()
+	loadStaticsBigDecimal()
 }
