@@ -9,11 +9,9 @@ package gfunction
 import (
 	"crypto/rand"
 	"fmt"
-	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/statics"
-	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math/big"
 	"math/bits"
@@ -415,19 +413,10 @@ func addStaticBigInteger(argName string, argValue int64) {
 
 // "java/math/BigInteger.<clinit>()V"
 func bigIntegerClinit([]interface{}) interface{} {
-	klass := classloader.MethAreaFetch(classNameBigInteger)
-	if klass == nil || klass.Data == nil {
-		errMsg := fmt.Sprintf("bigIntegerClinit: Expected %s to be in the MethodArea, but it was not", classNameBigInteger)
-		trace.Error(errMsg)
-		return getGErrBlk(excNames.ClassNotLoadedException, errMsg)
-	}
-	if klass.Data.ClInit != types.ClInitRun {
-		addStaticBigInteger("ONE", int64(1))
-		addStaticBigInteger("TEN", int64(10))
-		addStaticBigInteger("TWO", int64(2))
-		addStaticBigInteger("ZERO", int64(0))
-		klass.Data.ClInit = types.ClInitRun
-	}
+	addStaticBigInteger("ONE", int64(1))
+	addStaticBigInteger("TEN", int64(10))
+	addStaticBigInteger("TWO", int64(2))
+	addStaticBigInteger("ZERO", int64(0))
 	return nil
 }
 
@@ -644,9 +633,15 @@ func bigIntegerAdd(params []interface{}) interface{} {
 	// params[1]: argument object (yy)
 	// zz = xx + yy
 
-	objBase := params[0].(*object.Object)
-	objArg := params[1].(*object.Object)
-	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
+	objThis, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(objThis) {
+		return getGErrBlk(excNames.NullPointerException, "bigIntegerAdd: this-object is null")
+	}
+	objArg, ok := params[1].(*object.Object)
+	if !ok || object.IsNull(objThis) {
+		return getGErrBlk(excNames.NullPointerException, "bigIntegerAdd: arg-object is null")
+	}
+	xx := objThis.FieldTable["value"].Fvalue.(*big.Int)
 	yy := objArg.FieldTable["value"].Fvalue.(*big.Int)
 
 	// BigInteger operation
@@ -1206,7 +1201,10 @@ func bigIntegerPow(params []interface{}) interface{} {
 	// params[1] = int64 power (pow)
 	// zz = xx ** pow
 
-	objBase := params[0].(*object.Object)
+	objBase, ok := params[0].(*object.Object)
+	if !ok || object.IsNull(objBase) {
+		return getGErrBlk(excNames.NullPointerException, "bigIntegerPow: this-object is null")
+	}
 	xx := objBase.FieldTable["value"].Fvalue.(*big.Int)
 	pow := params[1].(int64)
 	if pow < 0 {
