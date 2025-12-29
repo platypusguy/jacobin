@@ -666,7 +666,7 @@ func TestMonitorEnter_InvalidRefType(t *testing.T) {
 	os.Stderr = normalStderr
 
 	msg := string(out)
-	// message comes from doMonitorEnter() type assertion error path
+	// message comes from doMonitorenter() type assertion error path
 	if !strings.Contains(msg, "MONITORENTRY: expected a non-object") {
 		t.Fatalf("MONITORENTER invalid-ref: unexpected error: %s", msg)
 	}
@@ -701,7 +701,7 @@ func TestMonitorEnter_ObjLockError_GCMarked(t *testing.T) {
 	os.Stderr = normalStderr
 
 	msg := string(out)
-	// doMonitorEnter formats: "MONITORENTRY: <err> in <class>.<meth><type>"
+	// doMonitorenter formats: "MONITORENTRY: <err> in <class>.<meth><type>"
 	if !strings.Contains(msg, "MONITORENTRY: ObjLock: object in GC-marked state") {
 		t.Fatalf("MONITORENTER ObjLock error (GC-marked): unexpected error: %s", msg)
 	}

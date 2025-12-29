@@ -238,8 +238,8 @@ var DispatchTable = [203]BytecodeFunc{
 	doAthrow,          // ATHROW          0xBF
 	doCheckcast,       // CHECKCAST       0xC0
 	doInstanceof,      // INSTANCEOF      0xC1
-	doMonitorEnter,    // MONITORENTER    0xC2
-	doMonitorExit,     // MONITOREXIT     0xC3
+	doMonitorenter,    // MONITORENTER    0xC2
+	doMonitorexit,     // MONITOREXIT     0xC3
 	doWide,            // WIDE            0xC4
 	doMultinewarray,   // MULTIANEWARRAY  0xC5
 	doIfnull,          // IFNULL          0xC6
@@ -3364,7 +3364,7 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 // 0xC2 MONITORENTER: Lock an object.
 var mtrdebug = false
 
-func doMonitorEnter(fr *frames.Frame, _ int64) int {
+func doMonitorenter(fr *frames.Frame, _ int64) int {
 	// Check stack size.
 	if fr.TOS < 0 {
 		errMsg := fmt.Sprintf("MONITORENTRY: stack underflow in %s.%s",
@@ -3433,7 +3433,7 @@ func doMonitorEnter(fr *frames.Frame, _ int64) int {
 }
 
 // 0xC3 MONITOREXIT: Release an object.
-func doMonitorExit(fr *frames.Frame, _ int64) int {
+func doMonitorexit(fr *frames.Frame, _ int64) int {
 	// Check stack size.
 	if fr.TOS < 0 {
 		errMsg := fmt.Sprintf("MONITOREXIT: stack underflow in %s.%s",

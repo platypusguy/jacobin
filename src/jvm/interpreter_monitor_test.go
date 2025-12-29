@@ -9,7 +9,7 @@ import (
 	"jacobin/src/object"
 )
 
-// Test doMonitorEnter and doMonitorExit with 8 independent threads (frames)
+// Test doMonitorenter and doMonitorexit with 8 independent threads (frames)
 // competing for the same object monitor. Thread 1 acquires first and holds
 // briefly; threads 2..8 must block until release, then each should acquire
 // and release successfully exactly once.
@@ -38,8 +38,8 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 	// Thread 1 (holder) acquires and holds briefly
 	holder := framesArr[0]
 	push(holder, obj)
-	if got := doMonitorEnter(holder, 0); got != 1 {
-		t.Fatalf("holder thread: doMonitorEnter returned %d, want 1", got)
+	if got := doMonitorenter(holder, 0); got != 1 {
+		t.Fatalf("holder thread: doMonitorenter returned %d, want 1", got)
 	}
 
 	// Start contenders: threads 2..8 (after holder has acquired)
@@ -51,9 +51,9 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 			<-startCh
 			// Push object reference and attempt to enter
 			push(framesArr[idx], obj)
-			got := doMonitorEnter(framesArr[idx], 0)
+			got := doMonitorenter(framesArr[idx], 0)
 			if got != 1 {
-				t.Fatalf("thread %d: doMonitorEnter returned %d, want 1", framesArr[idx].Thread, got)
+				t.Fatalf("thread %d: doMonitorenter returned %d, want 1", framesArr[idx].Thread, got)
 			}
 			t.Logf("thread %d acquired object-lock, will sleep 0.5s", framesArr[idx].Thread)
 			time.Sleep(500 * time.Millisecond)
@@ -62,9 +62,9 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 
 			// Now exit: push object again (enter popped it) and call exit
 			push(framesArr[idx], obj)
-			got = doMonitorExit(framesArr[idx], 0)
+			got = doMonitorexit(framesArr[idx], 0)
 			if got != 1 {
-				t.Fatalf("thread %d: doMonitorExit returned %d, want 1", framesArr[idx].Thread, got)
+				t.Fatalf("thread %d: doMonitorexit returned %d, want 1", framesArr[idx].Thread, got)
 			}
 			t.Logf("thread %d released object-lock", framesArr[idx].Thread)
 		}()
@@ -85,8 +85,8 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 	// Short sleep to widen the window ensuring contenders are already waiting
 	time.Sleep(50 * time.Millisecond)
 	push(holder, obj)
-	if got := doMonitorExit(holder, 0); got != 1 {
-		t.Fatalf("holder thread: doMonitorExit returned %d, want 1", got)
+	if got := doMonitorexit(holder, 0); got != 1 {
+		t.Fatalf("holder thread: doMonitorexit returned %d, want 1", got)
 	}
 
 	// Expect all 7 contenders to acquire eventually
@@ -132,8 +132,8 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 
 	// Enter once (simulating the outer synchronized block)
 	push(fr, obj)
-	if got := doMonitorEnter(fr, 0); got != 1 {
-		t.Fatalf("first doMonitorEnter returned %d, want 1", got)
+	if got := doMonitorenter(fr, 0); got != 1 {
+		t.Fatalf("first doMonitorenter returned %d, want 1", got)
 	}
 	if obj.Monitor == nil || obj.Monitor.Owner != int32(fr.Thread) || obj.Monitor.Recursion != 1 {
 		t.Fatalf("after first enter: owner=%v rec=%v (want owner=%d rec=1)",
@@ -154,8 +154,8 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 
 	// Enter again (nested synchronized on the same lock)
 	push(fr, obj)
-	if got := doMonitorEnter(fr, 0); got != 1 {
-		t.Fatalf("second doMonitorEnter returned %d, want 1", got)
+	if got := doMonitorenter(fr, 0); got != 1 {
+		t.Fatalf("second doMonitorenter returned %d, want 1", got)
 	}
 	if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
 		t.Fatalf("after second enter: expected recursion=2, got monitor=%v rec=%d", obj.Monitor, func() int32 {
@@ -168,8 +168,8 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 
 	// Now unwind like exiting nested synchronized blocks: three exits total
 	push(fr, obj)
-	if got := doMonitorExit(fr, 0); got != 1 {
-		t.Fatalf("first doMonitorExit returned %d, want 1", got)
+	if got := doMonitorexit(fr, 0); got != 1 {
+		t.Fatalf("first doMonitorexit returned %d, want 1", got)
 	}
 	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
 		t.Fatalf("after first exit: expected recursion=1, got monitor=%v rec=%d", obj.Monitor, func() int32 {
@@ -181,8 +181,8 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 	}
 
 	push(fr, obj)
-	if got := doMonitorExit(fr, 0); got != 1 {
-		t.Fatalf("second doMonitorExit returned %d, want 1", got)
+	if got := doMonitorexit(fr, 0); got != 1 {
+		t.Fatalf("second doMonitorexit returned %d, want 1", got)
 	}
 	if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
 		t.Fatalf("after second exit: expected recursion=0, got monitor=%v rec=%d", obj.Monitor, func() int32 {
@@ -195,8 +195,8 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 
 	// Final exit should drop the monitor and fully unlock
 	push(fr, obj)
-	if got := doMonitorExit(fr, 0); got != 1 {
-		t.Fatalf("final doMonitorExit returned %d, want 1", got)
+	if got := doMonitorexit(fr, 0); got != 1 {
+		t.Fatalf("final doMonitorexit returned %d, want 1", got)
 	}
 	if obj.Monitor != nil {
 		t.Fatalf("expected monitor to be cleared after final exit")
