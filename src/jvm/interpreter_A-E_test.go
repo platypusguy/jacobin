@@ -213,6 +213,27 @@ func TestNewAstore(t *testing.T) {
 	}
 }
 
+// ASTORE: Test when WIDE is in effect
+func TestAstoreWide(t *testing.T) {
+	f := newFrame(0x00)
+	f.Meth = []byte{0x0, 0x0, 0x2}
+	f.PC = 0
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.Locals = append(f.Locals, zero)
+	f.WideInEffect = true
+	push(&f, int64(0x1111))
+
+	ret := doAstore(&f, int64(0))
+	if ret != 3 {
+		t.Errorf("ASTORE: Expecting f.PC increment of 3, got: %d", ret)
+	}
+
+	if f.Locals[2] != int64(0x1111) {
+		t.Errorf("ASTORE: Expecting 0x1111 on stack, got: 0x%x", f.Locals[2])
+	}
+}
+
 // ASTORE_0: test store of reference from stack into locals[0]
 func TestNewAstore0(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_0)
@@ -232,7 +253,7 @@ func TestNewAstore0(t *testing.T) {
 }
 
 // ASTORE_1: test store of reference from stack into locals[1]
-func TestNewAstore1(t *testing.T) {
+func TestAstore1(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_1)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -251,7 +272,7 @@ func TestNewAstore1(t *testing.T) {
 }
 
 // ASTORE_2: test store of reference from stack into locals[2]
-func TestNewAstore2(t *testing.T) {
+func TestAstore2(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_2)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
@@ -271,7 +292,7 @@ func TestNewAstore2(t *testing.T) {
 }
 
 // ASTORE3: store of reference from stack into locals[3]
-func TestNewAstore3(t *testing.T) {
+func TestAstore3(t *testing.T) {
 	f := newFrame(opcodes.ASTORE_3)
 	f.Locals = append(f.Locals, zero)
 	f.Locals = append(f.Locals, zero)
