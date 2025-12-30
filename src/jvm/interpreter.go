@@ -36,6 +36,8 @@ import (
 	"strings"
 )
 
+var mtrdebug = false // set to true to enable debug output for MONITORENTER and EXIT
+
 // set up a DispatchTable with 203 slots that correspond to the bytecodes
 // each slot being a pointer to a function that accepts a pointer to the
 // current frame and an int parameter. It returns an int that indicates
@@ -3362,7 +3364,7 @@ func doInstanceof(fr *frames.Frame, _ int64) int {
 }
 
 // 0xC2 MONITORENTER: Lock an object.
-var mtrdebug = false
+// note: set mtrdebug to true to enable tracing/debugging
 
 func doMonitorenter(fr *frames.Frame, _ int64) int {
 	// Check stack size.
@@ -3433,6 +3435,7 @@ func doMonitorenter(fr *frames.Frame, _ int64) int {
 }
 
 // 0xC3 MONITOREXIT: Release an object.
+// note: set mtrdebug to true to enable tracing/debugging
 func doMonitorexit(fr *frames.Frame, _ int64) int {
 	// Check stack size.
 	if fr.TOS < 0 {
