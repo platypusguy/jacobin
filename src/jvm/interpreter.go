@@ -715,7 +715,7 @@ func doFstore(fr *frames.Frame, _ int64) int {
 	return PCadvance + 1
 }
 
-// 0x3A ASTORE store popped TOS ref into localc[index]
+// 0x3A ASTORE store popped TOS ref into locals[index]
 func doAstore(fr *frames.Frame, _ int64) int {
 	var index int
 	var PCadvance int    // how much to advance fr.PC, the program counter
