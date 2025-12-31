@@ -2403,7 +2403,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				// In this case, flag it as an AbstractMethodError.
 				if len(m.Code) == 0 {
 					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: J class method is empty: " + fqn
+					errMsg := "INVOKEVIRTUAL: J class method code is empty: " + fqn
 					status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
 					if status != exceptions.Caught {
 						return ERROR_OCCURRED // applies only if in test
