@@ -1827,7 +1827,7 @@ func TestNewFastore(t *testing.T) {
 }
 
 // FASTORE: Test error conditions: invalid array address
-func TestNewFastoreInvalid1(t *testing.T) {
+func TestFastoreInvalidArrayAddress(t *testing.T) {
 	f := newFrame(opcodes.FASTORE)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array
@@ -1863,7 +1863,7 @@ func TestNewFastoreInvalid1(t *testing.T) {
 }
 
 // FASTORE: Test error conditions: wrong type of array (not [I)
-func TestNewFastoreInvalid2(t *testing.T) {
+func TestFastoreInvalidArrayType(t *testing.T) {
 	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.INT, 10)
 	f := newFrame(opcodes.FASTORE)
@@ -1900,7 +1900,7 @@ func TestNewFastoreInvalid2(t *testing.T) {
 }
 
 // FASTORE: Test error conditions: index out of range
-func TestNewFastoreInvalid3(t *testing.T) {
+func TestFastoreInvalidIndexOutOfRange(t *testing.T) {
 	globals.InitGlobals("test")
 	o := object.Make1DimArray(object.FLOAT, 10)
 	f := newFrame(opcodes.FASTORE)
@@ -1933,6 +1933,25 @@ func TestNewFastoreInvalid3(t *testing.T) {
 
 	if !strings.Contains(errMsg, " but array index is") {
 		t.Errorf("FASTORE: Did not get expected error msg, got: %s", errMsg)
+	}
+}
+
+// FASTORE with raw float array
+func TestFastoreWithRawFloatArray(t *testing.T) {
+	f := newFrame(opcodes.FASTORE)
+	fArray := []float64{1.0, 2.0, 3.0, 4.0, 50.}
+	push(&f, fArray)   // push the reference to the array, here a raw byte array
+	push(&f, int64(2)) // in array[2]
+	push(&f, 100.0)    // the value we're storing
+
+	ret := doFastore(&f, 0)
+
+	if fArray[2] != 100.0 {
+		t.Errorf("FASTORE: Expected array[2] to be 100.0, got: %f", fArray[2])
+	}
+
+	if ret != 1 {
+		t.Errorf("FASTORE: Expected error return of 1, got %d", ret)
 	}
 }
 
@@ -2071,6 +2090,7 @@ func TestNewIaloadInvalidSubscript(t *testing.T) {
 	}
 }
 
+// IALOAD
 func TestIaLoadWhenNotAValidArray(t *testing.T) {
 	f := newFrame(opcodes.IALOAD)
 	badArray := []byte{1, 2, 3, 4, 5}
