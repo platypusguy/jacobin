@@ -265,7 +265,6 @@ func initializeDispatchTable() {
 const ( // result values from bytecode interpretation
 	ERROR_OCCURRED = math.MaxInt32
 	RESUME_HERE    = math.MaxInt32 - 1
-	RETURN_NOW     = math.MaxInt32 - 2
 	// all special result values must be greater than SPECIAL_CASE,
 	// which is the value tested against in interpret()'s principal
 	// loop to identify special cases
@@ -2390,48 +2389,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// then follow the JVM spec and push the objectRef and the parameters to the function
 	// as parameters. Consult:
 	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
-	if mtEntry.MType == 'G' { // so we have a native golang function
-		// get the parameters/args off the stack
-		// mtEntry.Meth = *mtEntry.Meth.(*gfunction.GMeth) // JACOBIN-575
-		gmethData := mtEntry.Meth.(gfunction.GMeth)
-		paramCount := gmethData.ParamSlots
-		var params []interface{}
-		for i := 0; i < paramCount; i++ {
-			params = append(params, pop(fr))
-		}
-
-		// now get the objectRef (the object whose method we're invoking) or a *os.File (stream I/O)
-		popped := pop(fr)
-		params = append(params, popped)
-
-		if globals.TraceInst {
-			infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
-			trace.Trace(infoMsg)
-		}
-
-		ret := gfunction.RunGfunction(
-			mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
-		if ret != nil {
-			switch ret.(type) {
-			case error: // only occurs in testing
-				if globals.GetGlobalRef().JacobinName == "test" {
-					return ERROR_OCCURRED
-				}
-				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					// return 3 // 2 for CP slot + 1 for next bytecode
-					// per JACOBIN-59x, we return RESUME_HERE telling
-					// the interpreter that the fr.PC has been set to a new position
-					// from which processing should continue. This is used primarily
-					// when a frame has caught an exception and we're pointing the
-					// interpreter to the first bytecode in the exception handler.
-					return RESUME_HERE // caught
-				}
-			default: // if it's not an error, then it's a legitimate return value, which we simply push
-				push(fr, ret)
-			}
-			// any exception will already have been handled.
-		}
-		return 3 // 2 for CP slot + 1 for next bytecode
+	if mtEntry.MType == 'G' { // so we have a golang function
+		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 	}
 
 	if mtEntry.MType == 'J' { // it's a Java function
@@ -2449,7 +2408,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 		if len(m.Code) == 0 {
 			// empty code attribute, so check if it's abstract (which it should be)
-			if m.AccessFlags&0x0400 > 0 {
+			if m.AccessFlags&classloader.ACC_ABSTRACT > 0 {
 				cl := peek(fr).(*object.Object)
 				clNameIdx := cl.KlassName
 				mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
@@ -2463,7 +2422,11 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					return RESUME_HERE // caught
 				}
 				className = *(stringPool.GetStringPointer(clNameIdx))
+				if mtEntry.MType == 'G' {
+					return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
+				}
 				m = mtEntry.Meth.(classloader.JmEntry)
+
 			} else {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + fqn
@@ -2491,6 +2454,57 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		return 0
 	}
 	return ERROR_OCCURRED // in theory, unreachable
+}
+
+func invokeVirtualGfunction(fr *frames.Frame,
+	mtEntry classloader.MTentry,
+	className, methodName, methodType string) int {
+
+	// Parameter array for G function.
+	var params []interface{}
+
+	// Append the parameters/args off the stack to params.
+	gmethData := mtEntry.Meth.(gfunction.GMeth)
+	paramCount := gmethData.ParamSlots
+	for i := 0; i < paramCount; i++ {
+		params = append(params, pop(fr))
+	}
+
+	// now get the objectRef (the object whose method we're invoking) or a *os.File (stream I/O)
+	popped := pop(fr)
+	params = append(params, popped)
+
+	if globals.TraceInst {
+		infoMsg := fmt.Sprintf("G-function: class=%s, meth=%s%s", className, methodName, methodType)
+		trace.Trace(infoMsg)
+	}
+
+	// Execute the G function.
+	ret := gfunction.RunGfunction(
+		mtEntry, fr.FrameStack, className, methodName, methodType, &params, true, globals.TraceInst)
+	if ret != nil {
+		switch ret.(type) {
+		case error: // only occurs in testing
+			if globals.GetGlobalRef().JacobinName == "test" {
+				return ERROR_OCCURRED
+			}
+			if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
+				// return 3 // 2 for CP slot + 1 for next bytecode
+				// per JACOBIN-59x, we return RESUME_HERE telling
+				// the interpreter that the fr.PC has been set to a new position
+				// from which processing should continue. This is used primarily
+				// when a frame has caught an exception and we're pointing the
+				// interpreter to the first bytecode in the exception handler.
+				return RESUME_HERE // caught
+			}
+		default: // if it's not an error, then it's a legitimate return value, which we simply push
+			push(fr, ret)
+		}
+		// any exception will already have been handled.
+	}
+
+	return 3 // 2 for CP slot + 1 for next bytecode
+
 }
 
 // OxB7 INVOKESPECIAL
@@ -2572,7 +2586,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 	if mtEntry.MType == 'J' {
 		// The arguments are correctly handled in createAndInitNewFrame()
 		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&0x0100 > 0 {
+		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKESPECIAL: Native method requested: " + fqn
@@ -2674,7 +2688,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		// any exception will already have been handled.
 	} else if mtEntry.MType == 'J' {
 		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&0x0100 > 0 {
+		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKESTATIC: Native method requested: " + className + "." + methodName + methodType
