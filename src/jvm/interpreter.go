@@ -2317,39 +2317,6 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	className, methodName, methodType, fqn :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-	/* // JACOBIN-575 reactivate this code when ready to complete this task
-	k := classloader.MethAreaFetch(className) // we know the class is already loaded
-	methListEntry, ok := k.Data.MethodList[methodName+methodType]
-	if !ok { // if it's not in the GMT, then it's likely being called explicitly, so test for this.
-		methFQN := className + "." + methodName + methodType
-		_, ok = classloader.GMT[methFQN]
-		if !ok {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Method not found in methodList: " + methodName + methodType +
-				" for class: " + className
-			status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-		} else {
-			methListEntry = methFQN
-		}
-	}
-
-	gmtEntry, ok := classloader.GMT[methListEntry]
-	if !ok {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "INVOKEVIRTUAL: Method not found in GMT: " + methodName + methodType + "for class: " + className
-		status := exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-	}
-
-	mtEntry := classloader.MTentry{
-		Meth: gmtEntry.MethData.(classloader.MData), MType: gmtEntry.MType,
-	}
-	*/
 
 	mtEntry := classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
@@ -2422,10 +2389,27 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 					return RESUME_HERE // caught
 				}
 				className = *(stringPool.GetStringPointer(clNameIdx))
+
+				// Resolve to a G function?
 				if mtEntry.MType == 'G' {
 					return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 				}
+
+				// It's a J function. Get its MTentry.
 				m = mtEntry.Meth.(classloader.JmEntry)
+				fqn = className + "." + methodName + methodType
+
+				// If an empty code segment, that's an error. Its probably abstract or an interface.
+				// In this case, flag it as an AbstractMethodError.
+				if len(m.Code) == 0 {
+					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+					errMsg := "INVOKEVIRTUAL: J class method is empty: " + fqn
+					status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
+					if status != exceptions.Caught {
+						return ERROR_OCCURRED // applies only if in test
+					}
+					return RESUME_HERE // caught
+				}
 
 			} else {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
