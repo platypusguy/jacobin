@@ -40,7 +40,7 @@ func Load_Lang_Character() {
 	MethodSignatures["java/lang/Character.charCount(I)I"] =
 		GMeth{
 			ParamSlots: 1,
-			GFunction:  trapUnicode,
+			GFunction:  charCount,
 		}
 
 	MethodSignatures["java/lang/Character.charValue()C"] =
@@ -276,6 +276,11 @@ func Load_Lang_Character() {
 			ParamSlots: 1,
 			GFunction:  characterValueOf,
 		}
+}
+
+func charCount([]interface{}) interface{} {
+	// TODO: We only support UTF-8.
+	return int64(1)
 }
 
 // "java/lang/Character.compare(CC)I"
