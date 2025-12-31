@@ -18,16 +18,77 @@ var classNameCharacter = "java/lang/Character"
 
 func Load_Lang_Character() {
 
+	// ---- class initialization ----
+
 	MethodSignatures["java/lang/Character.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
 			GFunction:  clinitGeneric,
 		}
 
+	// ---- constructors ----
+
+	// Deprecated since Java 9
+	MethodSignatures["java/lang/Character.<init>(C)V"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapDeprecated,
+		}
+
+	// ---- methods (alphabetical by FQN) ----
+
+	MethodSignatures["java/lang/Character.charCount(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.charValue()C"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  charValue,
+		}
+
+	MethodSignatures["java/lang/Character.codePointAt([CI)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.codePointBefore([CI)I"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.codePointCount([CII)I"] =
+		GMeth{
+			ParamSlots: 3,
+			GFunction:  trapUnicode,
+		}
+
 	MethodSignatures["java/lang/Character.compare(CC)I"] =
 		GMeth{
 			ParamSlots: 2,
 			GFunction:  charCompare,
+		}
+
+	MethodSignatures["java/lang/Character.compareTo(Ljava/lang/Character;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.compareTo(Ljava/lang/Object;)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.describeConstable()Ljava/util/Optional;"] =
+		GMeth{
+			ParamSlots: 0,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Character.digit(CI)I"] =
@@ -48,6 +109,18 @@ func Load_Lang_Character() {
 			GFunction:  charForDigit,
 		}
 
+	MethodSignatures["java/lang/Character.getNumericValue(C)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.getType(C)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
 	MethodSignatures["java/lang/Character.hashCode()I"] =
 		GMeth{
 			ParamSlots: 0,
@@ -60,10 +133,40 @@ func Load_Lang_Character() {
 			GFunction:  charHashCodeStatic,
 		}
 
+	MethodSignatures["java/lang/Character.isAlphabetic(I)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
 	MethodSignatures["java/lang/Character.isDigit(C)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  charIsDigit,
+		}
+
+	MethodSignatures["java/lang/Character.isDigit(I)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.isHighSurrogate(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.isJavaIdentifierPart(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.isJavaIdentifierStart(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Character.isLetter(C)Z"] =
@@ -72,10 +175,46 @@ func Load_Lang_Character() {
 			GFunction:  charIsLetter,
 		}
 
+	MethodSignatures["java/lang/Character.isLetter(I)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.isLetterOrDigit(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.isLetterOrDigit(I)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
 	MethodSignatures["java/lang/Character.isLowerCase(C)Z"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  charIsLowerCase,
+		}
+
+	MethodSignatures["java/lang/Character.isLowSurrogate(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.isSpaceChar(C)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapFunction,
+		}
+
+	MethodSignatures["java/lang/Character.isSurrogatePair(CC)Z"] =
+		GMeth{
+			ParamSlots: 2,
+			GFunction:  trapFunction,
 		}
 
 	MethodSignatures["java/lang/Character.isUpperCase(C)Z"] =
@@ -90,6 +229,24 @@ func Load_Lang_Character() {
 			GFunction:  charIsWhitespace,
 		}
 
+	MethodSignatures["java/lang/Character.isWhitespace(I)Z"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
+	MethodSignatures["java/lang/Character.toLowerCase(C)C"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  charToLowerCase,
+		}
+
+	MethodSignatures["java/lang/Character.toLowerCase(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
+		}
+
 	MethodSignatures["java/lang/Character.toString()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
@@ -102,22 +259,16 @@ func Load_Lang_Character() {
 			GFunction:  charToStringStatic,
 		}
 
-	MethodSignatures["java/lang/Character.charValue()C"] =
-		GMeth{
-			ParamSlots: 0,
-			GFunction:  charValue,
-		}
-
-	MethodSignatures["java/lang/Character.toLowerCase(C)C"] =
-		GMeth{
-			ParamSlots: 1,
-			GFunction:  charToLowerCase,
-		}
-
 	MethodSignatures["java/lang/Character.toUpperCase(C)C"] =
 		GMeth{
 			ParamSlots: 1,
 			GFunction:  charToUpperCase,
+		}
+
+	MethodSignatures["java/lang/Character.toUpperCase(I)I"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapUnicode,
 		}
 
 	MethodSignatures["java/lang/Character.valueOf(C)Ljava/lang/Character;"] =
@@ -125,7 +276,6 @@ func Load_Lang_Character() {
 			ParamSlots: 1,
 			GFunction:  characterValueOf,
 		}
-
 }
 
 // "java/lang/Character.compare(CC)I"
