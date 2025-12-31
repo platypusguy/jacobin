@@ -1955,6 +1955,39 @@ func TestFastoreWithRawFloatArray(t *testing.T) {
 	}
 }
 
+// FASTORE with non-array
+func TestFastoreWithRawNonArray(t *testing.T) {
+	globals.InitGlobals("test")
+
+	trace.Init()
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f := newFrame(opcodes.FASTORE)
+	fArray := "non-array string"
+	push(&f, fArray)   // push the reference to the array, here a raw byte array
+	push(&f, int64(2)) // in array[2]
+	push(&f, 100.0)    // the value we're storing
+
+	ret := doFastore(&f, 0)
+
+	// restore stderr and stdout to what they were before
+	_ = w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(out[:])
+
+	if !strings.Contains(errMsg, "D/FASTORE: unexpected reference type") {
+		t.Errorf("FASTORE: Expecteddifferent error message, got: %s", errMsg)
+	}
+
+	if ret != ERROR_OCCURRED {
+		t.Errorf("FASTORE: Expected error return of ERROR_OCCURRED, got %d", ret)
+	}
+}
+
 // IALOAD: Test fetching and pushing the value of an element in an int array
 func TestNewIaload(t *testing.T) {
 	f := newFrame(opcodes.NEWARRAY)
