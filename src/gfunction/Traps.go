@@ -127,3 +127,10 @@ func trapProtected([]interface{}) interface{} {
 	errMsg := "TRAP: The requested function is protected"
 	return getGErrBlk(excNames.UnsupportedOperationException, errMsg)
 }
+
+func trapUnicode([]interface{}) interface{} {
+	return getGErrBlk(
+		excNames.UnsupportedOperationException,
+		"Character Unicode method not yet implemented",
+	)
+}
