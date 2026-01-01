@@ -2109,6 +2109,313 @@ func TestPutStaticInvalid(t *testing.T) {
 	}
 }
 
+// Helper: sets up a frame and constant pool so bytecodes 0..2 form: PUTSTATIC, 0x00, 0x01
+// CP[1] -> FieldRef slot 0 with (className,fldName,fldSig)
+func setupPutStaticFrame(className, fldName, fldSig string) (frames.Frame, *classloader.CPool) {
+	f := newFrame(opcodes.PUTSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	cp := &classloader.CPool{}
+	cp.CpIndex = make([]classloader.CpEntry, 2)
+	cp.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	cp.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	cp.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		AccessFlags: 0,
+		IsStatic:    true,
+		IsFinal:     false,
+		ClName:      className,
+		FldName:     fldName,
+		FldType:     fldSig,
+	}
+	f.CP = cp
+	return f, cp
+}
+
+// PUTSTATIC: store boolean (normalize to int64 0/1)
+func TestPutStaticStoreBoolean_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cbool", "b"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Bool, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Bool)
+	push(&f, int64(3)) // doPutStatic will mask with & 0x01
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Bool {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(int64); v != 1 {
+		t.Fatalf("expected 1, got %v", v)
+	}
+}
+
+// PUTSTATIC: store Char as int64
+func TestPutStaticStoreChar_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cchar", "x"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Char, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Char)
+	push(&f, int64(65))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Char {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(int64); v != 65 {
+		t.Fatalf("expected 65, got %d", v)
+	}
+}
+
+// PUTSTATIC: store Short as int64
+func TestPutStaticStoreShort_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cshort", "x"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Short, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Short)
+	push(&f, int64(-123))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Short {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(int64); v != -123 {
+		t.Fatalf("expected -123, got %d", v)
+	}
+}
+
+// PUTSTATIC: store Int as int64
+func TestPutStaticStoreInt_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cint", "x"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Int, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Int)
+	push(&f, int64(42))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Int {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(int64); v != 42 {
+		t.Fatalf("expected 42, got %d", v)
+	}
+}
+
+// PUTSTATIC: store Long as int64
+func TestPutStaticStoreLong_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Clong", "x"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Long, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Long)
+	push(&f, int64(9876543210))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Long {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(int64); v != 9876543210 {
+		t.Fatalf("expected 9876543210, got %d", v)
+	}
+}
+
+// PUTSTATIC: store byte from int64
+func TestPutStaticStoreByteFromInt64_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cbyte", "b"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Byte, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Byte)
+	push(&f, int64(-7))
+	_ = doPutStatic(&f, 0)
+	if v := statics.Statics[key].Value.(int64); v != -7 {
+		t.Fatalf("expected -7, got %d", v)
+	}
+}
+
+// PUTSTATIC: store byte from uint8
+func TestPutStaticStoreByteFromUint8_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cbyte", "b"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Byte, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Byte)
+	push(&f, uint8(250))
+	_ = doPutStatic(&f, 0)
+	if v := statics.Statics[key].Value.(int64); v != 250 {
+		t.Fatalf("expected 250, got %d", v)
+	}
+}
+
+// PUTSTATIC: store byte from types.JavaByte
+func TestPutStaticStoreByteFromJavaByte_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cbyte", "b"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Byte, Value: int64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Byte)
+	push(&f, types.JavaByte(-120))
+	_ = doPutStatic(&f, 0)
+	if v := statics.Statics[key].Value.(int64); v != -120 {
+		t.Fatalf("expected -120, got %d", v)
+	}
+}
+
+// PUTSTATIC: store Float as float64
+func TestPutStaticStoreFloat_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cfp", "y"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Float, Value: float64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Float)
+	push(&f, float64(3.5))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Float {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(float64); v != 3.5 {
+		t.Fatalf("expected 3.5, got %v", v)
+	}
+}
+
+// PUTSTATIC: store Double as float64
+func TestPutStaticStoreDouble_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "Cdp", "y"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Double, Value: float64(0)})
+
+	f, _ := setupPutStaticFrame(cls, fld, types.Double)
+	push(&f, float64(-42.25))
+	ret := doPutStatic(&f, 0)
+	if ret != 3 {
+		t.Fatalf("expected ret=3, got %d", ret)
+	}
+	st := statics.Statics[key]
+	if st.Type != types.Double {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if v := st.Value.(float64); v != -42.25 {
+		t.Fatalf("expected -42.25, got %v", v)
+	}
+}
+
+// PUTSTATIC: default branch (references) — nil coerces to object.Null
+func TestPutStaticStoreRefNil_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "CrefN", "r"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Ref, Value: object.Null})
+
+	f, _ := setupPutStaticFrame(cls, fld, "Ljava/lang/Object;")
+	push(&f, nil)
+	_ = doPutStatic(&f, 0)
+	st := statics.Statics[key]
+	if st.Type != types.Ref {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if st.Value != object.Null {
+		t.Fatalf("expected object.Null, got %v", st.Value)
+	}
+}
+
+// PUTSTATIC: default branch (references) — *object.Object stored as-is
+func TestPutStaticStoreRefObject_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	statics.Statics = make(map[string]statics.Static)
+
+	cls, fld := "CrefO", "o"
+	key := cls + "." + fld
+	statics.AddStatic(key, statics.Static{Type: types.Ref, Value: object.Null})
+
+	f, _ := setupPutStaticFrame(cls, fld, "Ljava/lang/Object;")
+	obj := &object.Object{}
+	push(&f, obj)
+	_ = doPutStatic(&f, 0)
+	st := statics.Statics[key]
+	if st.Type != types.Ref {
+		t.Fatalf("type mismatch: %v", st.Type)
+	}
+	if st.Value != obj {
+		t.Fatalf("expected same object pointer, got %v", st.Value)
+	}
+}
+
+// PUTSTATIC: instantiate fails (ClassNotFound) path — direct doPutStatic call
+func TestPutStaticClassNotFound_NoTable_NoTypesType(t *testing.T) {
+	globals.InitGlobals("test")
+	classloader.InitMethodArea()
+	statics.Statics = make(map[string]statics.Static)
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	f, _ := setupPutStaticFrame("no/such/Class", "x", types.Int)
+	push(&f, int64(1))
+	ret := doPutStatic(&f, 0)
+
+	_ = w.Close()
+	_, _ = io.ReadAll(r) // drain
+	os.Stderr = normalStderr
+
+	if ret != exceptions.ERROR_OCCURRED {
+		t.Fatalf("expected ERROR_OCCURRED, got %d", ret)
+	}
+}
+
 // RET: the complement to JSR. The wide version of RET is tested farther below with
 // the other WIDE bytecodes
 func TestRET(t *testing.T) {
