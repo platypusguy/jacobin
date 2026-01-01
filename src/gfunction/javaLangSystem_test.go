@@ -209,18 +209,13 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 	globals.InitGlobals("test")
 
 	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	dest := object.CloneObject(src)
 
-	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
-	for i := 0; i < 10; i++ {
-		rawSrcArray[i] = int64(1)
-	}
+	objType := "invalid object"
+	src.KlassName = stringPool.GetStringIndex(&objType)
 
 	params := make([]interface{}, 5)
-	o := object.MakeEmptyObject()
-	objType := "invalid object"
-	o.KlassName = stringPool.GetStringIndex(&objType)
-	params[0] = o
+	params[0] = src
 	params[1] = int64(2)
 	params[2] = dest
 	params[3] = int64(0)
@@ -233,8 +228,8 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 	}
 
 	errMsg := err.(*GErrBlk).ErrMsg
-	if !strings.Contains(errMsg, "null src") {
-		t.Errorf("Expected error re invalid array type, got %s", errMsg)
+	if !strings.Contains(errMsg, "wrong srcType") {
+		t.Errorf("Expected error re wrong srcType, got %s", errMsg)
 	}
 }
 

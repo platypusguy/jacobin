@@ -14,6 +14,7 @@ import (
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"os"
 	"runtime"
@@ -249,9 +250,11 @@ func SystemClinit([]interface{}) interface{} {
 }
 ***/
 
+const debugging = false
+
 // systemArrayCopy copies an array or subarray from one array to another, both of which must exist.
 // It is a complex native function in the JDK. Javadoc here:
-// docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
+// docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int)
 func systemArrayCopy(params []interface{}) interface{} {
 	if len(params) != 5 {
 		errMsg := fmt.Sprintf("systemArrayCopy: Expected 5 parameters, got %d", len(params))
@@ -278,10 +281,16 @@ func systemArrayCopy(params []interface{}) interface{} {
 	srcType := *(stringPool.GetStringPointer(src.KlassName))
 	destType := *(stringPool.GetStringPointer(dest.KlassName))
 
-	// If src is not an array at all, treat it as a null src per tests' expectations.
+	if debugging {
+		debugMsg := fmt.Sprintf("DEBUG systemArrayCopy src:%s(%d), dest:%s(%d), len:%d\n",
+			srcType, src.KlassName, destType, dest.KlassName, length)
+		trace.Warning(debugMsg)
+	}
+
+	// If src is not an array at all, treat it as a wrong type per tests' expectations.
 	if !strings.HasPrefix(srcType, types.Array) {
-		errMsg := fmt.Sprintf("systemArrayCopy: null src")
-		return getGErrBlk(excNames.NullPointerException, errMsg)
+		errMsg := fmt.Sprintf("systemArrayCopy: wrong srcType: %s", srcType)
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
 	// Validate that both src and dest are arrays of the same type BEFORE accessing their lengths.
@@ -301,7 +310,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 	s := srcPos
 	d := destPos
 
-	if (src != dest) || ((src == dest) && (srcPos+length < destPos)) {
+	if (src != dest) || (srcPos+length <= destPos) || (destPos+length <= srcPos) {
 		// non-overlapping copy of identical items
 		switch srcType {
 		case types.ByteArray:
@@ -359,15 +368,30 @@ func systemArrayCopy(params []interface{}) interface{} {
 
 		switch srcType {
 		case types.ByteArray:
-			sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
-			dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
-			for i := int64(0); i < length; i++ {
-				tempArray[i] = sArr[s]
-				s += 1
-			}
-			for i := int64(0); i < length; i++ {
-				dArr[d] = tempArray[i].(types.JavaByte)
-				d += 1
+			switch src.FieldTable["value"].Fvalue.(type) {
+			case []types.JavaByte:
+				sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
+				dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
+				for i := int64(0); i < length; i++ {
+					tempArray[i] = sArr[s]
+					s += 1
+				}
+				for i := int64(0); i < length; i++ {
+					dArr[d] = tempArray[i].(types.JavaByte)
+					d += 1
+				}
+
+			case []byte:
+				sArr := src.FieldTable["value"].Fvalue.([]byte)
+				dArr := dest.FieldTable["value"].Fvalue.([]byte)
+				for i := int64(0); i < length; i++ {
+					tempArray[i] = sArr[s]
+					s += 1
+				}
+				for i := int64(0); i < length; i++ {
+					dArr[d] = tempArray[i].(byte)
+					d += 1
+				}
 			}
 
 		case types.FloatArray, types.DoubleArray:
@@ -559,7 +583,7 @@ func systemGetProperties([]interface{}) interface{} {
 }
 
 // systemGetSecurityManager
-func systemGetSecurityManager(params []interface{}) interface{} {
+func systemGetSecurityManager([]interface{}) interface{} {
 	return object.MakeEmptyObjectWithClassName(&classNameSecurityManager)
 }
 
