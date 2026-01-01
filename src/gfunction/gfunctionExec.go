@@ -131,19 +131,18 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test
-		} else {
-			// if the exception was caught, tell calling function to execute the catching logic
-			return CaughtGfunctionException
 		}
+
+		// if the exception was caught, tell calling function to execute the catching logic
+		return CaughtGfunctionException
 
 	case error:
 		errMsg := (ret.(error)).Error()
 		status := exceptions.ThrowEx(excNames.NativeMethodException, errMsg, f)
 		if status != exceptions.Caught {
 			return ret.(error) // applies only if in test
-		} else {
-			return nil // return nothing if the error was caught
 		}
+		return nil // return nothing if the error was caught
 	}
 
 	// if return is not an errBlk or an error, then it's a legitimate
