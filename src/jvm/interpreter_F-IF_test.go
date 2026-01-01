@@ -10,11 +10,13 @@ import (
 	"io"
 	"jacobin/src/classloader"
 	"jacobin/src/frames"
+	"jacobin/src/gfunction"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
 	"jacobin/src/statics"
 	"jacobin/src/stringPool"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"math"
 	"os"
@@ -1054,6 +1056,203 @@ func TestGetStaticInt(t *testing.T) {
 
 	if f.TOS != -1 {
 		t.Errorf("doGetstatic: expected empty stack, got TOS %d", f.TOS)
+	}
+}
+
+// GETSTATIC: value is a boolean -> normalized to Java boolean (int64 0/1)
+func TestGetStaticBoolNormalization(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01) // CP index 1
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 2)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:   "TestClass",
+		FldName:  "boolField",
+		FldType:  "Z",
+		IsStatic: true,
+	}
+	f.CP = &CP
+
+	// Preload static with Go bool so doGetStatic hits the bool type path
+	_ = statics.AddStatic("TestClass.boolField", statics.Static{Type: types.Bool, Value: true})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	v := pop(&f).(int64)
+	if v != 1 {
+		t.Fatalf("GETSTATIC bool normalization: expected 1, got %d", v)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETSTATIC bool normalization: expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETSTATIC: value is a byte -> promoted to int64
+func TestGetStaticBytePromotion(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 2)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:   "TestClass",
+		FldName:  "byteField",
+		FldType:  "B",
+		IsStatic: true,
+	}
+	f.CP = &CP
+
+	_ = statics.AddStatic("TestClass.byteField", statics.Static{Type: types.Byte, Value: byte(7)})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	v := pop(&f).(int64)
+	if v != 7 {
+		t.Fatalf("GETSTATIC byte promotion: expected 7, got %d", v)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETSTATIC byte promotion: expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETSTATIC: default path in type switch (e.g., already int64 value)
+func TestGetStaticDefaultPathInt64(t *testing.T) {
+	globals.InitGlobals("test")
+
+	f := newFrame(opcodes.GETSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 2)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:   "TestClass",
+		FldName:  "i64Field",
+		FldType:  "J",
+		IsStatic: true,
+	}
+	f.CP = &CP
+
+	_ = statics.AddStatic("TestClass.i64Field", statics.Static{Type: types.Long, Value: int64(99)})
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	v := pop(&f).(int64)
+	if v != 99 {
+		t.Fatalf("GETSTATIC default path (int64): expected 99, got %d", v)
+	}
+	if f.TOS != -1 {
+		t.Errorf("GETSTATIC default path (int64): expected empty stack, TOS=%d", f.TOS)
+	}
+}
+
+// GETSTATIC: class not found during instantiation path -> ClassNotFoundException
+func TestGetStaticClassNotFound(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+
+	// Silence stderr noise and capture error text
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// Minimal runtime init similar to instantiate tests
+	classloader.InitMethodArea()
+	classloader.MTable = make(map[string]classloader.MTentry)
+	_ = classloader.Init()
+	classloader.LoadBaseClasses()
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	statics.PreloadStatics()
+
+	f := newFrame(opcodes.GETSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 2)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:   "$nosuchclass",
+		FldName:  "anyField",
+		FldType:  "I",
+		IsStatic: true,
+	}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "GETSTATIC: could not load class") {
+		t.Fatalf("GETSTATIC ClassNotFound: expected error about class load failure, got: %s", errMsg)
+	}
+}
+
+// GETSTATIC: after successful instantiation the static field is still missing -> NoSuchFieldException
+func TestGetStaticMissingFieldAfterInstantiate(t *testing.T) {
+	globals.InitGlobals("test")
+	trace.Init()
+
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	classloader.InitMethodArea()
+	classloader.MTable = make(map[string]classloader.MTentry)
+	if err := classloader.Init(); err != nil {
+		t.Fatalf("classloader.Init failed: %v", err)
+	}
+	classloader.LoadBaseClasses()
+	gfunction.MTableLoadGFunctions(&classloader.MTable)
+	statics.PreloadStatics()
+
+	f := newFrame(opcodes.GETSTATIC)
+	f.Meth = append(f.Meth, 0x00, 0x01)
+
+	CP := classloader.CPool{}
+	CP.CpIndex = make([]classloader.CpEntry, 2)
+	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.FieldRef, Slot: 0}
+	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1)
+	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{
+		ClName:   "java/lang/Object", // instantiation should succeed
+		FldName:  "noSuchField",      // but there is no such static field
+		FldType:  "I",
+		IsStatic: true,
+	}
+	f.CP = &CP
+
+	fs := frames.CreateFrameStack()
+	fs.PushFront(&f)
+	interpret(fs)
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+	if !strings.Contains(errMsg, "GETSTATIC: could not find static field") {
+		t.Fatalf("GETSTATIC missing field after instantiate: expected NoSuchField error, got: %s", errMsg)
 	}
 }
 
