@@ -41,7 +41,7 @@ func linkedlistRemove(params []interface{}) interface{} {
 // linkedlistRemoveAtIndex removes the element at the specified position in this list.
 func linkedlistRemoveAtIndex(args []interface{}) interface{} {
 	// The argument should be the index of the element to remove
-	index, ok := args[0].(int64)
+	index, ok := args[1].(int64)
 	if !ok {
 		errMsg := "linkedlistRemoveAtIndex: argument is not an int64 index"
 		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
