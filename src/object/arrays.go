@@ -123,9 +123,13 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 
 	// JACOBIN-457: Converted to exclusive use of o.FieldTable and o.Fields
 	// contain the actual value rather than a pointer to the value. 2024-02
+
+	// Note that the elements of boolean and byte array types are of type JavaByte.
+	// Reference: JVM spec.
+
 	switch arrType {
 	case T_BOOLEAN:
-		barArr := make([]types.JavaBool, size)
+		barArr := make([]types.JavaByte, size)
 		of = Field{Ftype: types.BoolArray, Fvalue: barArr}
 	case T_BYTE:
 		barArr := make([]types.JavaByte, size)
@@ -242,11 +246,10 @@ func ArrayLength(arrayRef *Object) int64 {
 	o := arrayRef.FieldTable["value"]
 	arrayType := o.Ftype
 	switch arrayType {
-	case types.ByteArray:
+	case types.ByteArray, types.BoolArray:
+		// Note that the elements of boolean and byte array types are of type JavaByte.
+		// Reference: JVM spec.
 		array := o.Fvalue.([]types.JavaByte)
-		size = int64(len(array))
-	case types.BoolArray:
-		array := o.Fvalue.([]types.JavaBool)
 		size = int64(len(array))
 	case types.RefArray:
 		array := o.Fvalue.([]*Object)

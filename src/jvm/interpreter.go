@@ -628,7 +628,6 @@ func doBaload(fr *frames.Frame, _ int64) int {
 
 	var bAref *object.Object
 	var byteArray []types.JavaByte
-	var boolArray []types.JavaBool
 	var pushValue int64
 
 	switch ref.(type) {
@@ -645,7 +644,11 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			pushValue = int64(value)
 		} else {
 			switch bAref.FieldTable["value"].Fvalue.(type) {
-			case []types.JavaByte:
+			case []types.JavaByte, []types.JavaBool:
+				// Get byte array from the field.
+				// It's the same process for booleans and bytes because
+				// the elements of both array types are of type JavaByte.
+				// Reference: JVM spec.
 				byteArray = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
 				size := int64(len(byteArray))
 				ret := doBaload_index_vs_size(fr, index, size)
@@ -654,16 +657,7 @@ func doBaload(fr *frames.Frame, _ int64) int {
 				}
 				value := byteArray[index]
 				pushValue = int64(value)
-			case []types.JavaBool:
-				boolArray = bAref.FieldTable["value"].Fvalue.([]types.JavaBool)
-				size := int64(len(boolArray))
-				ret := doBaload_index_vs_size(fr, index, size)
-				if ret != 0 {
-					return ret
-				}
-				value := boolArray[index]
-				pushValue = int64(value)
-			case []byte: // if a Go byte array, convert it for the nonce to a JavaByte array
+			case []byte: // TODO: Go byte array? Convert it to a JavaByte array
 				byteArray =
 					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
 				size := int64(len(byteArray))
@@ -675,8 +669,8 @@ func doBaload(fr *frames.Frame, _ int64) int {
 				pushValue = int64(value)
 			}
 		}
-	case []int8:
-		arr := ref.([]int8)
+	case []int8: // TODO: Raw JavaByte arrays?
+		arr := ref.([]types.JavaByte)
 		size := int64(len(arr))
 		ret := doBaload_index_vs_size(fr, index, size)
 		if ret != 0 {
@@ -993,7 +987,6 @@ func doAastore(fr *frames.Frame, _ int64) int {
 // 0x54 BASTORE store a boolean or byte in a bool or byte array
 func doBastore(fr *frames.Frame, _ int64) int {
 	var rawByteArray []types.JavaByte
-	var rawBoolArray []types.JavaBool
 	var size int64
 
 	// Pop off value to be stored.
@@ -1018,7 +1011,10 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+
+		// Get array field.
 		fld := obj.FieldTable["value"]
+
 		if fld.Ftype != types.ByteArray && fld.Ftype != types.BoolArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected boolean or byte, observed=%s",
@@ -1030,23 +1026,17 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		if fld.Ftype == types.ByteArray {
-			rawByteArray = fld.Fvalue.([]types.JavaByte)
-			size = int64(len(rawByteArray))
-			ret := doBastore_index_vs_size(fr, index, size)
-			if ret != 0 {
-				return ret
-			}
-			rawByteArray[index] = value
-		} else { // Here, we know that it is a types.BoolArray.
-			rawBoolArray = fld.Fvalue.([]types.JavaBool)
-			size = int64(len(rawBoolArray))
-			ret := doBastore_index_vs_size(fr, index, size)
-			if ret != 0 {
-				return ret
-			}
-			rawBoolArray[index] = int64(value)
+		// Get byte array from the field.
+		// It's the same process for booleans and bytes because
+		// the elements of both array types are of type JavaByte.
+		// Reference: JVM spec.
+		rawByteArray = fld.Fvalue.([]types.JavaByte)
+		size = int64(len(rawByteArray))
+		ret := doBastore_index_vs_size(fr, index, size)
+		if ret != 0 {
+			return ret
 		}
+		rawByteArray[index] = value
 
 	case []types.JavaByte: // Raw JavaByte array: TODO: Do non-wrapped arrays still happen?
 		int8Array := arrayRef.([]types.JavaByte)
