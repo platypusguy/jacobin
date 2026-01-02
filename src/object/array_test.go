@@ -19,28 +19,6 @@ import (
 // This file tests array primitives. Array bytecodes are tested in
 // jvm.arrayByetcodes.go
 
-func TestArrayTypeConversions(t *testing.T) {
-	if JdkArrayTypeToJacobinType(T_BOOLEAN) != BYTE {
-		t.Errorf("did not get expected Jacobin type BOOLEAN")
-	}
-
-	if JdkArrayTypeToJacobinType(T_LONG) != INT {
-		t.Errorf("did not get expected Jacobin type for LONG")
-	}
-
-	if JdkArrayTypeToJacobinType(T_DOUBLE) != FLOAT {
-		t.Errorf("did not get expected Jacobin type for DOUBLE")
-	}
-
-	if JdkArrayTypeToJacobinType(T_REF) != REF {
-		t.Errorf("did not get expected Jacobin type for REF")
-	}
-
-	if JdkArrayTypeToJacobinType(99) != 0 {
-		t.Errorf("did not get expected Jacobin type for invalid value")
-	}
-}
-
 func TestGetArrayType(t *testing.T) {
 	retVal := GetArrayType("[[B")
 	if retVal != "B" {
@@ -65,7 +43,7 @@ func TestGetArrayType(t *testing.T) {
 
 func TestMakde1DimByteArray(t *testing.T) {
 	globals.InitGlobals("test")
-	bArr := Make1DimArray(BYTE, 10)
+	bArr := Make1DimArray(T_BYTE, 10)
 	bArrType := stringPool.GetStringPointer(bArr.KlassName)
 	if *bArrType != "[B" {
 		t.Errorf("did not get expected Jacobin type for byte array, got %s", *bArrType)
@@ -83,7 +61,7 @@ func TestMakde1DimByteArray(t *testing.T) {
 
 func TestMakde1DimRefArray(t *testing.T) {
 	globals.InitGlobals("test")
-	rArr := Make1DimArray(REF, 10)
+	rArr := Make1DimArray(T_REF, 10)
 	rArrType := stringPool.GetStringPointer(rArr.KlassName)
 	if *rArrType != "[L" {
 		t.Errorf("did not get expected Jacobin type for ref array, got %s", *rArrType)
@@ -101,7 +79,7 @@ func TestMakde1DimRefArray(t *testing.T) {
 
 func TestMakde1DimIntArray(t *testing.T) {
 	globals.InitGlobals("test")
-	iArr := Make1DimArray(INT, 10)
+	iArr := Make1DimArray(T_INT, 10)
 	iArrType := stringPool.GetStringPointer(iArr.KlassName)
 	if *iArrType != "[I" {
 		t.Errorf("did not get expected Jacobin type for int array, got %s", *iArrType)
@@ -128,7 +106,7 @@ func TestMake1DimRefArray(t *testing.T) {
 
 func TestMake2DimByteArray(t *testing.T) {
 	globals.InitGlobals("test")
-	b2arr, ok := Make2DimArray(10, 15, BYTE)
+	b2arr, ok := Make2DimArray(10, 15, T_BYTE)
 	if ok != nil {
 		t.Errorf("Unexpected error in Make2DimArray: %s", ok.Error())
 	}
@@ -219,25 +197,25 @@ func announceError(_ int, _ string) bool {
 
 func TestArrayLength(t *testing.T) {
 	globals.InitGlobals("test")
-	iArr := Make1DimArray(INT, 256)
+	iArr := Make1DimArray(T_INT, 256)
 	length := ArrayLength(iArr)
 	if length != 256 {
 		t.Errorf("Expecting 256 elements in int array, got %d", length)
 	}
 
-	bArr := Make1DimArray(BYTE, 200)
+	bArr := Make1DimArray(T_BYTE, 200)
 	length = ArrayLength(bArr)
 	if length != 200 {
 		t.Errorf("Expecting 200 elements in byte array, got %d", length)
 	}
 
-	fArr := Make1DimArray(FLOAT, 222)
+	fArr := Make1DimArray(T_FLOAT, 222)
 	length = ArrayLength(fArr)
 	if length != 222 {
 		t.Errorf("Expecting 222 elements in float array, got %d", length)
 	}
 
-	rArr := Make1DimArray(REF, 256)
+	rArr := Make1DimArray(T_REF, 256)
 	length = ArrayLength(rArr)
 	if length != 256 {
 		t.Errorf("Expecting 256 elements in ref array, got %d", length)

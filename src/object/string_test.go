@@ -284,7 +284,7 @@ func TestIsStringObject(t *testing.T) {
 		t.Errorf("expected IsStringObject(valid string object) to be true, got false")
 	}
 
-	emptyObj := Make1DimArray(BYTE, 10)
+	emptyObj := Make1DimArray(T_BYTE, 10)
 	if IsStringObject(emptyObj) {
 		t.Errorf("expected IsStringObject(emptyObj) to be false, got true")
 	}
@@ -310,7 +310,7 @@ func TestObjectFieldToStringForIntArray(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	obj := Make1DimArray(INT, 10)
+	obj := Make1DimArray(T_INT, 10)
 	ret := ObjectFieldToString(obj, "value")
 
 	if !strings.Contains(ret, " 0") {

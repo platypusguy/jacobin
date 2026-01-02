@@ -253,7 +253,7 @@ func TestCheckCastArray1(t *testing.T) {
 	}
 	classloader.LoadBaseClasses()
 
-	array := object.Make1DimArray(object.INT, 10)
+	array := object.Make1DimArray(object.T_INT, 10)
 
 	ret := checkcastArray(array, "java/lang/Object")
 	if !ret {
@@ -278,8 +278,8 @@ func TestCheckCastArray2(t *testing.T) {
 	}
 	classloader.LoadBaseClasses()
 
-	array1 := object.Make1DimArray(object.INT, 10)
-	array2 := object.Make1DimArray(object.INT, 10)
+	array1 := object.Make1DimArray(object.T_INT, 10)
+	array2 := object.Make1DimArray(object.T_INT, 10)
 
 	ret := checkcastArray(array1, *(stringPool.GetStringPointer(array2.KlassName)))
 	if !ret {

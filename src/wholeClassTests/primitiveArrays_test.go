@@ -129,32 +129,33 @@ func TestRunPrimitiveArrays(t *testing.T) {
 	// Here begin the actual tests on the output to stderr and stdout
 	slurp, _ := io.ReadAll(stderr)
 	if len(slurp) != 0 {
-		t.Errorf("Got unexpected output to stderr: %s", string(slurp))
+		t.Errorf("Got unexpected output to stderr:\n%s", string(slurp))
 	}
 
 	slurp, _ = io.ReadAll(stdout)
+	str := string(slurp)
 
-	if !strings.Contains(string(slurp), "intArray: 600") {
-		t.Errorf("Did not get expected output for intArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "intArray: 600") {
+		t.Errorf("Did not get expected output for intArray. Got:\n%s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "floatArray: 400") {
-		t.Errorf("Did not get expected output for floatArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "floatArray: 400") {
+		t.Errorf("Did not get expected output for floatArray. Got:\n%s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "longArray: 5000") {
-		t.Errorf("Did not get expected output for longArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "longArray: 5000") {
+		t.Errorf("Did not get expected output for longArray. Got:\n%s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "doubleArray: 1.000003") {
-		t.Errorf("Did not get expected output for doubleArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "doubleArray: 1.000003") {
+		t.Errorf("Did not get expected output for doubleArray. Got:\n%s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "booleanArray: 3") {
-		t.Errorf("Did not get expected output for booleanArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "booleanArray: 3") {
+		t.Errorf("Did not get expected output for booleanArray. Got:\n%s", string(slurp))
 	}
 
-	if !strings.Contains(string(slurp), "byteArray: 9") {
-		t.Errorf("Did not get expected output for byteArray. Got: %s", string(slurp))
+	if !strings.Contains(str, "byteArray: 9") {
+		t.Errorf("Did not get expected output for byteArray. Got:\n%s", string(slurp))
 	}
 }

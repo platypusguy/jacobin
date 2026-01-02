@@ -9,6 +9,7 @@ package jvm
 import (
 	"io"
 	"jacobin/src/classloader"
+	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
 	"jacobin/src/object"
@@ -25,29 +26,6 @@ import (
 
 // This file contains unit tests for the array bytecodes. Array operation primitives
 // are tested in object.arrays_test.go
-
-func TestNewNewJdkArrayTypeToJacobinType(t *testing.T) {
-
-	a := object.JdkArrayTypeToJacobinType(object.T_BOOLEAN)
-	if a != object.BYTE {
-		t.Errorf("Expected Jacobin type of %d, got: %d", object.BYTE, a)
-	}
-
-	b := object.JdkArrayTypeToJacobinType(object.T_CHAR)
-	if b != object.INT {
-		t.Errorf("Expected Jacobin type of %d, got: %d", object.INT, b)
-	}
-
-	c := object.JdkArrayTypeToJacobinType(object.T_DOUBLE)
-	if c != object.FLOAT {
-		t.Errorf("Expected Jacobin type of %d, got: %d", object.FLOAT, c)
-	}
-
-	d := object.JdkArrayTypeToJacobinType(999)
-	if d != object.ERROR {
-		t.Errorf("Expected Jacobin type of %d, got: %d", object.ERROR, d)
-	}
-}
 
 // AALOAD: Test fetching and pushing the value of an element in a reference array
 // The logic here is effectively identical to IALOAD. This code also tests AASTORE.
@@ -245,7 +223,7 @@ func TestNewAastore(t *testing.T) {
 func TestNewAastoreInvalid1(t *testing.T) {
 	globals.InitStringPool()
 	f := newFrame(opcodes.AASTORE)
-	obj := object.Make1DimArray(object.REF, 10)
+	obj := object.Make1DimArray(object.T_REF, 10)
 	push(&f, (*object.Object)(nil)) // this should point to an array, will here cause the error
 	push(&f, int64(30))             // the index into the array
 	push(&f, obj)                   // the value to insert
@@ -282,7 +260,7 @@ func TestNewAastoreInvalid1(t *testing.T) {
 // AASTORE: Test error conditions: wrong type of array (not [I)
 func TestNewAastoreInvalid2(t *testing.T) {
 
-	o := object.Make1DimArray(object.INT, 10)
+	o := object.Make1DimArray(object.T_INT, 10)
 	f := newFrame(opcodes.AASTORE)
 	push(&f, o)        // this should point to an array of refs, not ints, will here cause the error
 	push(&f, int64(5)) // the index into the array
@@ -837,7 +815,7 @@ func TestNewBaload(t *testing.T) {
 	globals.InitGlobals("test")
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	interpret(fs)
+	interpret(fs)    // NEWARRAY
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
@@ -854,18 +832,18 @@ func TestNewBaload(t *testing.T) {
 
 	f = newFrame(opcodes.BASTORE)
 	push(&f, ptr)       // push the reference to the array
-	push(&f, int64(20)) // in array[20]
+	push(&f, int64(20)) // in array[20] (smaller than the original which was [30])
 	push(&f, byte(100)) // the value we're storing
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	interpret(fs)    // execute the bytecode
+	interpret(fs)    // execute BASTORE
 
 	f = newFrame(opcodes.BALOAD) // now fetch the value in array[20]
 	push(&f, ptr)                // push the reference to the array
 	push(&f, int64(20))          // get contents in array[20]
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	interpret(fs)    // execute the bytecode
+	interpret(fs)    // execute BALOAD
 
 	res := pop(&f).(int64)
 	if res != 100 {
@@ -920,7 +898,7 @@ func TestNewBaloadInvalidSubscript(t *testing.T) {
 	trace.Init()
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	interpret(fs)
+	interpret(fs)    // NEWARRAY
 	if f.TOS != 0 {
 		t.Errorf("Top of stack, expected 0, got: %d", f.TOS)
 	}
@@ -929,11 +907,14 @@ func TestNewBaloadInvalidSubscript(t *testing.T) {
 	ptr := pop(&f).(*object.Object)
 
 	f = newFrame(opcodes.BALOAD) // now fetch the value
-	push(&f, ptr)                // push the reference to the array
-	push(&f, int64(200))         // get contents in array[200] which is invalid
+	f.ClName = "foo"
+	f.MethName = "bar"
+	f.MethType = "()V"
+	push(&f, ptr)        // push the reference to the array
+	push(&f, int64(200)) // get contents in array[200] which is invalid
 	fs = frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
-	interpret(fs)    // execute the bytecode
+	interpret(fs)    // execute BALOAD
 
 	// restore stderr to what they were before
 	_ = w.Close()
@@ -942,8 +923,8 @@ func TestNewBaloadInvalidSubscript(t *testing.T) {
 
 	errMsg := string(out[:])
 
-	if !strings.Contains(errMsg, "Invalid array subscript") {
-		t.Errorf("BALOAD: Did not get expected err msg for invalid subscript, got: %s",
+	if !strings.Contains(errMsg, "but array index is") {
+		t.Errorf("BALOAD: Did not get expected err msg for invalid subscript, got:\n%s",
 			errMsg)
 	}
 }
@@ -1139,7 +1120,7 @@ func TestNewBastoreInvalid1(t *testing.T) {
 func TestNewBastoreInvalid2(t *testing.T) {
 	globals.InitGlobals("test")
 	f := newFrame(opcodes.BASTORE)
-	o := object.Make1DimArray(object.FLOAT, 10)
+	o := object.Make1DimArray(object.T_FLOAT, 10)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
 	push(&f, int64(30)) // the index into the array
 	push(&f, int64(20)) // the value to insert
@@ -1168,7 +1149,7 @@ func TestNewBastoreInvalid2(t *testing.T) {
 	_ = wout.Close()
 	os.Stdout = normalStdout
 
-	if !strings.Contains(errMsg, "field type expected=[B") {
+	if !strings.Contains(errMsg, "field type expected") {
 		t.Errorf("BASTORE: Did not get expected error msg, got: %s", errMsg)
 	}
 }
@@ -1177,7 +1158,7 @@ func TestNewBastoreInvalid2(t *testing.T) {
 func TestNewBastoreInvalid3(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.BYTE, 10)
+	o := object.Make1DimArray(object.T_BYTE, 10)
 	f := newFrame(opcodes.BASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
@@ -1538,7 +1519,7 @@ func TestNewDastoreInvalid1(t *testing.T) {
 // DASTORE: Test error conditions: wrong type of array (not [I)
 func TestNewDastoreInvalid2(t *testing.T) {
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.INT, 10)
+	o := object.Make1DimArray(object.T_INT, 10)
 	f := newFrame(opcodes.DASTORE)
 	push(&f, o)             // this should point to an array of floats, not ints, will here cause the error
 	push(&f, int64(30))     // the index into the array
@@ -1576,7 +1557,7 @@ func TestNewDastoreInvalid2(t *testing.T) {
 func TestNewDastoreInvalid3(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.FLOAT, 10)
+	o := object.Make1DimArray(object.T_FLOAT, 10)
 	f := newFrame(opcodes.DASTORE)
 	push(&f, o)             // an array of 10 ints, not floats
 	push(&f, int64(30))     // the index into the array: it's too big, causing error
@@ -1865,7 +1846,7 @@ func TestFastoreInvalidArrayAddress(t *testing.T) {
 // FASTORE: Test error conditions: wrong type of array (not [I)
 func TestFastoreInvalidArrayType(t *testing.T) {
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.INT, 10)
+	o := object.Make1DimArray(object.T_INT, 10)
 	f := newFrame(opcodes.FASTORE)
 	push(&f, o)             // this should point to an array of floats, not ints, will here cause the error
 	push(&f, int64(30))     // the index into the array
@@ -1902,7 +1883,7 @@ func TestFastoreInvalidArrayType(t *testing.T) {
 // FASTORE: Test error conditions: index out of range
 func TestFastoreInvalidIndexOutOfRange(t *testing.T) {
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.FLOAT, 10)
+	o := object.Make1DimArray(object.T_FLOAT, 10)
 	f := newFrame(opcodes.FASTORE)
 	push(&f, o)             // an array of 10 ints, not floats
 	push(&f, int64(30))     // the index into the array: it's too big, causing error
@@ -2238,7 +2219,7 @@ func TestNewIastoreInvalid1(t *testing.T) {
 func TestNewIastoreInvalid2(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.FLOAT, 10)
+	o := object.Make1DimArray(object.T_FLOAT, 10)
 	f := newFrame(opcodes.IASTORE)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
 	push(&f, int64(30)) // the index into the array
@@ -2276,7 +2257,7 @@ func TestNewIastoreInvalid2(t *testing.T) {
 func TestNewIastoreInvalid3(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.INT, 10)
+	o := object.Make1DimArray(object.T_INT, 10)
 	f := newFrame(opcodes.IASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
@@ -2586,7 +2567,7 @@ func TestNewLastoreInvalid1(t *testing.T) {
 func TestNewLastoreInvalid2(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.FLOAT, 10)
+	o := object.Make1DimArray(object.T_FLOAT, 10)
 	f := newFrame(opcodes.LASTORE)
 	push(&f, o)         // this should point to an array of ints, not floats, will here cause the error
 	push(&f, int64(30)) // the index into the array
@@ -2624,7 +2605,7 @@ func TestNewLastoreInvalid2(t *testing.T) {
 func TestNewLastoreInvalid3(t *testing.T) {
 
 	globals.InitGlobals("test")
-	o := object.Make1DimArray(object.INT, 10)
+	o := object.Make1DimArray(object.T_INT, 10)
 	f := newFrame(opcodes.LASTORE)
 	push(&f, o)         // an array of 10 ints, not floats
 	push(&f, int64(30)) // the index into the array: it's too big, causing error
@@ -2661,7 +2642,7 @@ func TestNewLastoreInvalid3(t *testing.T) {
 // MULTIANEWARRAY: test creation of a two-dimensional byte array
 func TestNew2DimArray1(t *testing.T) {
 	globals.InitGlobals("test")
-	arr, err := object.Make2DimArray(3, 4, object.BYTE)
+	arr, err := object.Make2DimArray(3, 4, object.T_BYTE)
 	if err != nil {
 		t.Error("Error creating 2-dimensional array")
 	}
@@ -2684,7 +2665,7 @@ func TestNew2DimArray1(t *testing.T) {
 // MULTIANEWARRAY: test creation of a two-dimensional byte array and its Klass field
 func TestNew2DimArrayKlassField(t *testing.T) {
 	globals.InitGlobals("test")
-	arr, err := object.Make2DimArray(3, 4, object.BYTE)
+	arr, err := object.Make2DimArray(3, 4, object.T_BYTE)
 	if err != nil {
 		t.Error("Error creating 2-dimensional array")
 	}
@@ -2784,8 +2765,7 @@ func TestNew3DimArray1(t *testing.T) {
 // size of the second dimension should result in an single-dimension
 // array of int64s
 func TestNew3DimArray2(t *testing.T) {
-	g := globals.InitGlobals("test")
-	g.JacobinName = "test" // prevents a shutdown when the exception hits.
+	globals.InitGlobals("test")
 
 	normalStderr := os.Stderr
 	_, w, _ := os.Pipe()
@@ -2946,13 +2926,14 @@ func TestNewNewrrayInvalidTypeError(t *testing.T) {
 	os.Stderr = w
 
 	f := newFrame(opcodes.NEWARRAY)
-	push(&f, int64(13))                   // size
-	f.Meth = append(f.Meth, object.ERROR) // invalid type
+	push(&f, int64(13))                     // size
+	f.Meth = append(f.Meth, object.T_ERROR) // invalid type
 
 	globals.InitGlobals("test")
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
+	globals.GetGlobalRef().FuncThrowException = exceptions.ThrowExNil
 	interpret(fs)
 
 	_ = w.Close()
@@ -2965,8 +2946,8 @@ func TestNewNewrrayInvalidTypeError(t *testing.T) {
 		t.Errorf("TestNewrrayInvalidTypeError: Expected an error message, but got none")
 	}
 
-	if !strings.Contains(errMsg, "Invalid array type specified") {
-		t.Errorf("TestNewrrayInvalidTypeError: Got unexpected error message: %s", errMsg)
+	if !strings.Contains(errMsg, "Make1DimArray() was passed") {
+		t.Errorf("TestNewrrayInvalidTypeError: Got unexpected error message:\n%s", errMsg)
 	}
 }
 
@@ -2978,13 +2959,12 @@ func TestNewNewrrayInvalidTypeRef(t *testing.T) {
 	os.Stderr = w
 
 	f := newFrame(opcodes.NEWARRAY)
-	push(&f, int64(13))                   // size
-	f.Meth = append(f.Meth, object.T_REF) // invalid type
-
-	globals.InitGlobals("test")
+	push(&f, int64(13))         // size
+	f.Meth = append(f.Meth, 86) // invalid type
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
+	globals.GetGlobalRef().FuncThrowException = exceptions.ThrowExNil
 	interpret(fs)
 
 	_ = w.Close()
@@ -2998,8 +2978,8 @@ func TestNewNewrrayInvalidTypeRef(t *testing.T) {
 		return
 	}
 
-	if !strings.Contains(errMsg, "Invalid array type specified") {
-		t.Errorf("TestNewrrayInvalidTypeRef: Got unexpected error message: %s", errMsg)
+	if !strings.Contains(errMsg, "was passed an unsupported array type") {
+		t.Errorf("TestNewrrayInvalidTypeRef: Got unexpected error message:\n%s", errMsg)
 	}
 }
 

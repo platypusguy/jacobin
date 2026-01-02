@@ -67,7 +67,6 @@ type GMeth struct {
 	ParamSlots   int
 	GFunction    func([]interface{}) interface{}
 	NeedsContext bool
-	ThreadSafe   bool
 }
 
 // G function error block.
@@ -260,7 +259,6 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 		gme.ParamSlots = val.ParamSlots
 		gme.GFunction = val.GFunction
 		gme.NeedsContext = val.NeedsContext
-		gme.ThreadSafe = val.ThreadSafe
 
 		tableEntry := classloader.MTentry{
 			MType: 'G',
@@ -312,17 +310,17 @@ func eofGet(obj *object.Object) bool {
 }
 
 // Return a null object.
-func returnNullObject(params []interface{}) interface{} {
+func returnNullObject([]interface{}) interface{} {
 	return object.Null
 }
 
 // Return false.
-func returnFalse(params []interface{}) interface{} {
+func returnFalse([]interface{}) interface{} {
 	return types.JavaBoolFalse
 }
 
 // Return true.
-func returnTrue(params []interface{}) interface{} {
+func returnTrue([]interface{}) interface{} {
 	return types.JavaBoolTrue
 }
 
