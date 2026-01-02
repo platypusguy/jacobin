@@ -313,9 +313,9 @@ func systemArrayCopy(params []interface{}) interface{} {
 	if (src != dest) || (srcPos+length <= destPos) || (destPos+length <= srcPos) {
 		// non-overlapping copy of identical items
 		switch srcType {
-		case types.ByteArray:
+		case types.ByteArray, types.BoolArray:
 			switch src.FieldTable["value"].Fvalue.(type) {
-			case []types.JavaByte:
+			case []types.JavaByte: // byte and bool arrays
 				sArr := src.FieldTable["value"].Fvalue.([]types.JavaByte)
 				dArr := dest.FieldTable["value"].Fvalue.([]types.JavaByte)
 				for i := int64(0); i < length; i++ {
@@ -341,7 +341,7 @@ func systemArrayCopy(params []interface{}) interface{} {
 				d += 1
 				s += 1
 			}
-		case types.BoolArray, types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
+		case types.CharArray, types.IntArray, types.LongArray, types.ShortArray:
 			sArr := src.FieldTable["value"].Fvalue.([]int64)
 			dArr := dest.FieldTable["value"].Fvalue.([]int64)
 			for i := int64(0); i < length; i++ {
