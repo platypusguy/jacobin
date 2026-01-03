@@ -11,7 +11,7 @@ import "strconv"
 // v 0.6.000 begun 31 Aug 24 at 3,012 GitHub commits (end of year 3 of the project)
 // v 0.6.100 made   5 Nov 24 at 3,280 GitHub commits - last version with the original intepreter
 // v 0.6.200 made   6 Nov 24 - first version with the new interpreter
-// v 0.7.000 made  28 Feb 24 at 3,733 GitHub commits (technically, this file updated on 2 Mar 24)
+// v 0.7.000 made  28 Feb 25 at 3,733 GitHub commits (technically, this file updated on 2 Mar 24)
 // v 0.8.000 made  31 Aug 25 at 4,245 GitHub commits (end of year 4 of the project)
 
 var JacobinVersion = "0.8.108"
