@@ -294,12 +294,18 @@ func TestLookupswitch_NegativeJump(t *testing.T) {
 	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x02) // key 2
 	f.Meth = append(f.Meth, 0x00, 0x00, 0x00, 0x0F) // 15
 
+	f.ClName = "foo"
+	f.MethName = "bar"
+	f.MethType = "()V"
+
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f)
+
+	t.Log("Expected exception: \"LOOKUPSWITCH ... impossible jump\"")
 	interpret(fs)
 
-	if f.PC != -5 {
-		t.Errorf("LOOKUPSWITCH: expected jump offset -5 for key 1, got: %d", f.PC)
+	if f.PC != 0 {
+		t.Errorf("LOOKUPSWITCH: expected jump offset 0 (unchanged due to exception) for key 1, got: %d", f.PC)
 	}
 	if f.TOS != -1 {
 		t.Errorf("LOOKUPSWITCH: expected empty stack after jump, TOS=%d", f.TOS)

@@ -615,7 +615,7 @@ func doAaload(fr *frames.Frame, _ int64) int {
 func doBaload(fr *frames.Frame, _ int64) int {
 	index := pop(fr).(int64)
 	ref := pop(fr) // the array object
-	if ref == nil || ref == object.Null {
+	if object.IsNull(ref) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid (null) reference to an array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -627,28 +627,57 @@ func doBaload(fr *frames.Frame, _ int64) int {
 	}
 
 	var bAref *object.Object
-	var array []types.JavaByte
+	var byteArray []types.JavaByte
 	var pushValue int64
-	var pushValueReady = false
+
 	switch ref.(type) {
 	case *object.Object:
 		bAref = ref.(*object.Object)
 		if object.IsNull(bAref) {
-			array = make([]types.JavaByte, 0)
+			byteArray = make([]types.JavaByte, 0)
+			size := int64(len(byteArray))
+			ret := doBaload_index_vs_size(fr, index, size)
+			if ret != 0 {
+				return ret
+			}
+			value := byteArray[index]
+			pushValue = int64(value)
 		} else {
 			switch bAref.FieldTable["value"].Fvalue.(type) {
-			case []types.JavaByte:
-				array = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
-			case []byte: // if a Go byte array, convert it for the nonce to a JavaByte array
-				array =
+			case []types.JavaByte, []types.JavaBool:
+				// Get byte array from the field.
+				// It's the same process for booleans and bytes because
+				// the elements of both array types are of type JavaByte.
+				// Reference: JVM spec.
+				byteArray = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
+				size := int64(len(byteArray))
+				ret := doBaload_index_vs_size(fr, index, size)
+				if ret != 0 {
+					return ret
+				}
+				value := byteArray[index]
+				pushValue = int64(value)
+			case []byte: // TODO: Go byte array? Convert it to a JavaByte array
+				byteArray =
 					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
+				size := int64(len(byteArray))
+				ret := doBaload_index_vs_size(fr, index, size)
+				if ret != 0 {
+					return ret
+				}
+				value := byteArray[index]
+				pushValue = int64(value)
 			}
 		}
-	case []int8:
-		arr := ref.([]int8)
+	case []int8: // TODO: Raw JavaByte arrays?
+		arr := ref.([]types.JavaByte)
+		size := int64(len(arr))
+		ret := doBaload_index_vs_size(fr, index, size)
+		if ret != 0 {
+			return ret
+		}
 		val := arr[index]
 		pushValue = int64(val)
-		pushValueReady = true
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid  type of object ref: %T",
@@ -660,24 +689,22 @@ func doBaload(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	if !pushValueReady { // if pushValue was already set up due to []int8 being handled, skip this
-		size := int64(len(array))
-		if index >= size {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("in %s.%s, BALOAD: Invalid array subscript: %d",
-				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, index)
-			status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-		var value = array[index]
-		pushValue = int64(value)
-	}
-
 	push(fr, pushValue)
 	return 1
+}
+
+func doBaload_index_vs_size(fr *frames.Frame, index, size int64) int {
+	if index >= size {
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("in %s.%s, BALOAD: array size is %d but array index is %d",
+			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
+		status := exceptions.ThrowEx(excNames.ArrayIndexOutOfBoundsException, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
+	}
+	return 0
 }
 
 // 0x36, 0x37 ISTORE/LSTORE store TOS int into a local
@@ -957,14 +984,22 @@ func doAastore(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x54 BASTORE store a boolean or byte in byte array
+// 0x54 BASTORE store a boolean or byte in a bool or byte array
 func doBastore(fr *frames.Frame, _ int64) int {
+	var rawByteArray []types.JavaByte
+	var size int64
+
+	// Pop off value to be stored.
 	value := convertInterfaceToByte(pop(fr))
+
+	// Pop off index.
 	index := pop(fr).(int64)
-	var rawArray []types.JavaByte
+
+	// Pop off array reference.
 	arrayRef := pop(fr)
+
 	switch arrayRef.(type) {
-	case *object.Object:
+	case *object.Object: // Arrays should be wrapped in a Jacobin object.
 		obj := arrayRef.(*object.Object)
 		if object.IsNull(obj) {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -976,24 +1011,43 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+
+		// Get array field.
 		fld := obj.FieldTable["value"]
-		if fld.Ftype != types.ByteArray {
+
+		if fld.Ftype != types.ByteArray && fld.Ftype != types.BoolArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected=%s, observed=%s",
-				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, types.ByteArray, fld.Ftype)
+			errMsg := fmt.Sprintf("in %s.%s, BASTORE: field type expected boolean or byte, observed=%s",
+				util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fld.Ftype)
 			status := exceptions.ThrowEx(excNames.ArrayStoreException, errMsg, fr)
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
 			}
 			return RESUME_HERE // caught
 		}
-		rawArray = fld.Fvalue.([]types.JavaByte)
-	// case []byte:
-	// 	rawArray = arrayRef.([]byte)
-	case []types.JavaByte: // JavaByte is an alias for int8
+
+		// Get byte array from the field.
+		// It's the same process for booleans and bytes because
+		// the elements of both array types are of type JavaByte.
+		// Reference: JVM spec.
+		rawByteArray = fld.Fvalue.([]types.JavaByte)
+		size = int64(len(rawByteArray))
+		ret := doBastore_index_vs_size(fr, index, size)
+		if ret != 0 {
+			return ret
+		}
+		rawByteArray[index] = value
+
+	case []types.JavaByte: // Raw JavaByte array: TODO: Do non-wrapped arrays still happen?
 		int8Array := arrayRef.([]types.JavaByte)
-		int8Array[index] = types.JavaByte(value)
+		size = int64(len(int8Array))
+		ret := doBastore_index_vs_size(fr, index, size)
+		if ret != 0 {
+			return ret
+		}
+		int8Array[index] = value
 		return 1
+
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BASTORE: unexpected reference type: %T",
@@ -1003,9 +1057,13 @@ func doBastore(fr *frames.Frame, _ int64) int {
 			return ERROR_OCCURRED // applies only if in test
 		}
 		return RESUME_HERE // caught
+
 	}
 
-	size := int64(len(rawArray))
+	return 1
+}
+
+func doBastore_index_vs_size(fr *frames.Frame, index, size int64) int {
 	if index >= size {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, BASTORE: array size is %d but array index is %d",
@@ -1016,8 +1074,7 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		}
 		return RESUME_HERE // caught
 	}
-	rawArray[index] = value
-	return 1
+	return 0
 }
 
 // 0x57 POP pop 1 item off op stack
@@ -1846,6 +1903,18 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 	key := pop(fr).(int64)
 	jumpDistance, present := jumpTable[key]
 	if present {
+		// Validate jumpDistance.
+		// Do not return a jump distance that would crash the main line interpreter.
+		if fr.PC+jumpDistance < 0 {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			fqn := fr.ClName + "." + fr.MethName + fr.MethType
+			errMsg := fmt.Sprintf("LOOKUPSWITCH: In %s, impossible jump, fr.PC=%d, jumpDistance=%d", fqn, fr.PC, jumpDistance)
+			status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
 		return jumpDistance
 	} else {
 		return int(defaultJump)
@@ -2900,18 +2969,7 @@ func doNewarray(fr *frames.Frame, _ int64) int {
 
 	arrayType := int(fr.Meth[fr.PC+1])
 
-	actualType := object.JdkArrayTypeToJacobinType(arrayType)
-	if actualType == object.ERROR || actualType == object.REF {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := "NEWARRAY: Invalid array type specified"
-		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
-
-	arrayPtr := object.Make1DimArray(uint8(actualType), size)
+	arrayPtr := object.Make1DimArray(uint8(arrayType), size)
 	g := globals.GetGlobalRef()
 	g.ArrayAddressList.PushFront(arrayPtr)
 	push(fr, arrayPtr)
@@ -3004,6 +3062,25 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "ARRAYLENGTH: Invalid (null) value for *object.Object"
 			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
+		field, ok := r.FieldTable["value"]
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "ARRAYLENGTH: Value field missing for *object.Object"
+			status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
+		if !strings.HasPrefix(field.Ftype, types.Array) {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("ARRAYLENGTH: Value field for *object.Object is not an array, got: %s", field.Ftype)
+			status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
 			if status != exceptions.Caught {
 				return ERROR_OCCURRED // applies only if in test
 			}
@@ -3523,14 +3600,32 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	}
 
 	switch rawArrayType {
-	case 'B', 'Z':
-		arrayType = object.BYTE
-	case 'F', 'D':
-		arrayType = object.FLOAT
+	case 'Z':
+		arrayType = object.T_BOOLEAN
+	case 'B':
+		arrayType = object.T_BYTE
+	case 'C':
+		arrayType = object.T_CHAR
+	case 'D':
+		arrayType = object.T_DOUBLE
+	case 'F':
+		arrayType = object.T_FLOAT
+	case 'I':
+		arrayType = object.T_INT
+	case 'J':
+		arrayType = object.T_LONG
+	case 'S':
+		arrayType = object.T_SHORT
 	case 'L':
-		arrayType = object.REF
+		arrayType = object.T_REF
 	default:
-		arrayType = object.INT
+		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+		errMsg := fmt.Sprintf("MULTIANEWARRAY: Unexpected raw array type: %T", rawArrayType)
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
+		if status != exceptions.Caught {
+			return ERROR_OCCURRED // applies only if in test
+		}
+		return RESUME_HERE // caught
 	}
 
 	// get the number of dimensions, then pop off the operand
@@ -3544,7 +3639,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	if dimensionCount > 3 { // TODO: explore arrays of > 5-255 dimensions
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := "MULTIANEWARRAY: Jacobin supports arrays only up to three dimensions"
-		status := exceptions.ThrowEx(excNames.InternalException, errMsg, fr)
+		status := exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
@@ -3577,7 +3672,7 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// affecting the valid number of dimensions, dimensionCount
 	// can no longer be considered reliable. Use len(dimSizes).
 	if len(dimSizes) == 3 {
-		multiArr := object.Make1DimArray(object.REF, dimSizes[0])
+		multiArr := object.Make1DimArray(object.T_REF, dimSizes[0])
 		actualArray := multiArr.FieldTable["value"].Fvalue.([]*object.Object)
 		for i := 0; i < len(actualArray); i++ {
 			actualArray[i], _ = object.Make2DimArray(dimSizes[1],

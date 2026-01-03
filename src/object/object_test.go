@@ -29,7 +29,7 @@ func TestIsNull(t *testing.T) {
 func TestIsNullForArrays(t *testing.T) {
 	stringPool.EmptyStringPool()
 	stringPool.PreloadArrayClassesToStringPool()
-	arrayObj := Make1DimArray(REF, 10)
+	arrayObj := Make1DimArray(T_REF, 10)
 	if IsNull(arrayObj.FieldTable["value"].Fvalue.([]*Object)) {
 		t.Errorf("arrayObj should not be null")
 	}

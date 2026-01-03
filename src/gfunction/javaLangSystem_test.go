@@ -40,8 +40,8 @@ func TestSystemClinit(t *testing.T) {
 func TestArrayCopyNonOverlapping(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
+	dest := object.Make1DimArray(object.T_INT, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
 	for i := 0; i < 10; i++ {
@@ -81,7 +81,7 @@ func TestArrayCopyNonOverlapping(t *testing.T) {
 func TestArrayCopyOverlappingSameArray(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.BYTE, 10)
+	src := object.Make1DimArray(object.T_BYTE, 10)
 	// dest := object.Make1DimArray(object.BYTE, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]types.JavaByte)
@@ -118,8 +118,8 @@ func TestArrayCopyOverlappingSameArray(t *testing.T) {
 func TestArrayInvalidParmCount(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
+	dest := object.Make1DimArray(object.T_INT, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
 	for i := 0; i < 10; i++ {
@@ -148,8 +148,8 @@ func TestArrayInvalidParmCount(t *testing.T) {
 func TestArrayCopyInvalidPos(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
+	dest := object.Make1DimArray(object.T_INT, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
 	for i := 0; i < 10; i++ {
@@ -178,8 +178,8 @@ func TestArrayCopyInvalidPos(t *testing.T) {
 func TestArrayCopyNullArray(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
+	dest := object.Make1DimArray(object.T_INT, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
 	for i := 0; i < 10; i++ {
@@ -208,7 +208,7 @@ func TestArrayCopyNullArray(t *testing.T) {
 func TestArrayCopyInvalidObject(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
 	dest := object.CloneObject(src)
 
 	objType := "invalid object"
@@ -236,8 +236,8 @@ func TestArrayCopyInvalidObject(t *testing.T) {
 func TestArrayCopyInvalidLength(t *testing.T) {
 	globals.InitGlobals("test")
 
-	src := object.Make1DimArray(object.INT, 10)
-	dest := object.Make1DimArray(object.INT, 10)
+	src := object.Make1DimArray(object.T_INT, 10)
+	dest := object.Make1DimArray(object.T_INT, 10)
 
 	rawSrcArray := src.FieldTable["value"].Fvalue.([]int64)
 	for i := 0; i < 10; i++ {

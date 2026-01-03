@@ -37,17 +37,18 @@ import (
     even though it uses more RAM.
 */
 
-const ( // the ArrayTypes
-	ERROR = 0
-	FLOAT = 1
-	INT   = 2
-	BYTE  = 3
-	REF   = 4 // arrays of object references
-)
+//const ( // the ArrayTypes
+//	ERROR = 0
+//	FLOAT = 1
+//	INT   = 2
+//	BYTE  = 3
+//	REF   = 4 // arrays of object references
+//)
 
 // the primitive types as specified in the
 // JVM instructions for arrays
 const (
+	T_ERROR   = 86
 	T_BOOLEAN = 4
 	T_CHAR    = 5
 	T_FLOAT   = 6
@@ -56,28 +57,27 @@ const (
 	T_SHORT   = 9
 	T_INT     = 10
 	T_LONG    = 11
+	T_REF     = 12
 )
-
-const T_REF = 12 // used only in Jacobin
 
 // converts one the of the JDK values indicating the primitive
 // used in the elements of an array into one of the values used
 // by Jacobin in array creation. Returns zero on error.
-func JdkArrayTypeToJacobinType(jdkType int) int {
-	switch jdkType {
-	case T_BOOLEAN, T_BYTE:
-		return BYTE
-	case T_CHAR, T_SHORT, T_INT, T_LONG:
-		return INT
-	case T_FLOAT, T_DOUBLE:
-		return FLOAT
-	case T_REF:
-		return REF // technically not one of the JDK categories
-		// but needed for our purposes.
-	default: // this would indicate an error
-		return 0
-	}
-}
+//func JdkArrayTypeToJacobinType(jdkType int) int {
+//	switch jdkType {
+//	case T_BOOLEAN, T_BYTE:
+//		return BYTE
+//	case T_CHAR, T_SHORT, T_INT, T_LONG:
+//		return INT
+//	case T_FLOAT, T_DOUBLE:
+//		return FLOAT
+//	case T_REF:
+//		return REF // technically not one of the JDK categories
+//		// but needed for our purposes.
+//	default: // this would indicate an error
+//		return 0
+//	}
+//}
 
 // identifies the type of entry that the array is made up of
 // i.e., primitives or specific references. Note if the array is a
@@ -123,24 +123,44 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 
 	// JACOBIN-457: Converted to exclusive use of o.FieldTable and o.Fields
 	// contain the actual value rather than a pointer to the value. 2024-02
+
+	// Note that the elements of boolean and byte array types are of type JavaByte.
+	// Reference: JVM spec.
+
 	switch arrType {
-	case BYTE:
+	case T_BOOLEAN:
+		barArr := make([]types.JavaByte, size)
+		of = Field{Ftype: types.BoolArray, Fvalue: barArr}
+	case T_BYTE:
 		barArr := make([]types.JavaByte, size)
 		of = Field{Ftype: types.ByteArray, Fvalue: barArr}
-		o.FieldTable["value"] = of
-	case FLOAT: // case 'F', 'D': // float arrays
+	case T_CHAR: // integer arrays
+		farArr := make([]int64, size)
+		of = Field{Ftype: types.CharArray, Fvalue: farArr}
+	case T_DOUBLE: // double arrays
+		farArr := make([]float64, size)
+		of = Field{Ftype: types.DoubleArray, Fvalue: farArr}
+	case T_FLOAT: // float arrays
 		farArr := make([]float64, size)
 		of = Field{Ftype: types.FloatArray, Fvalue: farArr}
-		o.FieldTable["value"] = of
-	case REF: // reference/pointer arrays
+	case T_INT: // integer arrays
+		farArr := make([]int64, size)
+		of = Field{Ftype: types.IntArray, Fvalue: farArr}
+	case T_LONG: // long arrays
+		farArr := make([]int64, size)
+		of = Field{Ftype: types.LongArray, Fvalue: farArr}
+	case T_SHORT: // short arrays
+		farArr := make([]int64, size)
+		of = Field{Ftype: types.ShortArray, Fvalue: farArr}
+	case T_REF: // reference/pointer arrays
 		rarArr := make([]*Object, size)
 		of = Field{Ftype: types.RefArray, Fvalue: rarArr}
-		o.FieldTable["value"] = of
-	default: // all the integer types
-		iarArr := make([]int64, size)
-		of = Field{Ftype: types.IntArray, Fvalue: iarArr}
-		o.FieldTable["value"] = of
+	default:
+		errMsg := fmt.Sprintf("object.Make1DimArray() was passed an unsupported array type: %d", arrType)
+		globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
+		return nil
 	}
+	o.FieldTable["value"] = of
 	value := o.FieldTable["value"]
 	o.KlassName = stringPool.GetStringIndex(&value.Ftype) // in arrays, Klass field is a pointer to the array type string
 	return o
@@ -156,7 +176,6 @@ func Make1DimRefArray(objType string, size int64) *Object {
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
 	o.FieldTable["value"] = of
 	o.KlassName = stringPool.GetStringIndex(&of.Ftype)
-	// o.Klass = &of.Ftype
 	return o
 }
 
@@ -218,7 +237,6 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 
 	errMsg := fmt.Sprintf("object.MakeArrayFromRawArray() was passed an unsupported type: %T", rawArray)
 	globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
-	// trace.Warning(errMsg)
 	return nil
 }
 
@@ -228,7 +246,9 @@ func ArrayLength(arrayRef *Object) int64 {
 	o := arrayRef.FieldTable["value"]
 	arrayType := o.Ftype
 	switch arrayType {
-	case types.ByteArray:
+	case types.ByteArray, types.BoolArray:
+		// Note that the elements of boolean and byte array types are of type JavaByte.
+		// Reference: JVM spec.
 		array := o.Fvalue.([]types.JavaByte)
 		size = int64(len(array))
 	case types.RefArray:

@@ -13,7 +13,6 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
-	"jacobin/src/object"
 	"testing"
 )
 
@@ -127,45 +126,27 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 	params := []interface{}{}
 	ret := RunGfunction(mt, fs, "X/Y", "z", "()V", &params, false, false)
 
-	if err, ok := ret.(error); !ok {
-		t.Fatalf("expected error return for GErrBlk in test mode, got %T: %v", ret, ret)
-	} else {
-		// The error message should contain our method FQN and original message
+	switch ret.(type) {
+	case *GErrBlk:
+		t.Fatalf("Unexpected GErrBlk: %v", ret)
+	case error:
+		err := ret.(error)
 		if !contains(err.Error(), "array oob") || !contains(err.Error(), "X/Y.z()V") {
 			t.Fatalf("error message missing expected content: %q", err.Error())
 		}
+	default:
+		t.Fatalf("Unexpected normal return (type %T): %v", ret, ret)
 	}
-}
 
-func TestRunGfunction_ThreadSafe_WithObjRef(t *testing.T) {
-	globals.InitGlobals("test")
+	/*
+		if err, ok := ret.(error); !ok {
+			t.Fatalf("expected error return for GErrBlk in test mode, got %T: %v", ret, ret)
+		}
+		// The error message should contain our method FQN and original message
+		if !contains(err.Error(), "array oob") || !contains(err.Error(), "X/Y.z()V") {
+			t.Fatalf("error message missing expected content: %q", err.Error())
+		}*/
 
-	fs := makeFrameStack()
-
-	// The thread-safe function will simply return a constant
-	gm := GMeth{
-		ThreadSafe: true,
-		GFunction: func(in []interface{}) interface{} {
-			// First param must be the object reference
-			if len(in) == 0 {
-				t.Fatalf("expected at least one param for thread-safe call")
-			}
-			if _, ok := in[0].(*object.Object); !ok {
-				t.Fatalf("first parameter to thread-safe GFunction not an *object.Object: %T", in[0])
-			}
-			return "ok"
-		},
-	}
-	mt := classloader.MTentry{Meth: gm, MType: 'G'}
-
-	obj := object.MakeEmptyObject()
-	params := []interface{}{obj}
-
-	ret := RunGfunction(mt, fs, "TS/C", "m", "()V", &params, true, false)
-
-	if s, ok := ret.(string); !ok || s != "ok" {
-		t.Fatalf("expected \"ok\" return from thread-safe GFunction, got %v (%T)", ret, ret)
-	}
 }
 
 // contains is a tiny helper to avoid importing strings just for Contains

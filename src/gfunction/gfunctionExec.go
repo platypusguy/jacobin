@@ -14,18 +14,11 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
-	"jacobin/src/globals"
-	"jacobin/src/object"
 	"jacobin/src/trace"
 	"slices"
-	"sync"
-	"time"
 )
 
 var CaughtGfunctionException = errors.New("caught gfunction exception")
-
-var thSafeMap sync.Map
-var dummy uint8
 
 // Execution of gfunctions (that is, Java functions ported to golang).
 // As part of JACOBIN-519, this code seeks to replace the previous set of
@@ -49,7 +42,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	f := fs.Front().Value.(*frames.Frame)
 
 	// If the method needs context (i.e., if mt.Meth.NeedsContext == true),
-	// then add pointer to the JVM frame stack to the parameter list here.
+	// then add the pointer to the JVM frame stack to the parameter list here.
 	entry := mt.Meth.(GMeth)
 	if entry.NeedsContext {
 		*params = append(*params, fs)
@@ -72,7 +65,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		// TODO jvm.LogTraceStack(f)
 	}
 
-	// Reverse the parameter order. Last appended will be fetched first.
+	// Reverse the parameter order. The last appended will be fetched first.
 	if paramCount > 1 {
 		slices.Reverse(*params)
 	}
@@ -81,38 +74,12 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	// No matter what, ret = the result from the G function.
 	var ret any
 	gmeth := mt.Meth.(GMeth)
-	if gmeth.ThreadSafe {
-		var loaded = true
-		// Make sure that an object reference is the first parameter.
-		if !objRef {
-			errMsg := "Thread-safe G function requested but no object reference was supplied"
-			exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, f)
-		}
-		// Get key = object pointer.
-		key := (*(params))[0].(*object.Object)
-		// Lock the key.
-	lockloop:
-		_, loaded = thSafeMap.LoadOrStore(key, dummy)
-		if loaded {
-			time.Sleep(globals.SleepMsecs * time.Millisecond) // sleep awhile
-			goto lockloop
-		}
-		// The key is locked to me.
-		// Call the G function, passing it a pointer to the slice of arguments.
-		if paramCount == 0 {
-			ret = gmeth.GFunction(nil)
-		} else {
-			ret = gmeth.GFunction(*params)
-		}
-		// Unlock thw key.
-		thSafeMap.Delete(key)
+
+	// Call the G function, passing it a pointer to the slice of arguments.
+	if paramCount == 0 {
+		ret = gmeth.GFunction(nil)
 	} else {
-		// Call the function, passing it a pointer to the slice of arguments.
-		if paramCount == 0 {
-			ret = gmeth.GFunction(nil)
-		} else {
-			ret = gmeth.GFunction(*params)
-		}
+		ret = gmeth.GFunction(*params)
 	}
 
 	// if an error occured
