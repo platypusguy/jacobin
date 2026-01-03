@@ -418,7 +418,7 @@ var CheckTable = [203]BytecodeFunc{
 	Return3,              // GETSTATIC       0xB2
 	Return3,              // PUTSTATIC       0xB3
 	CheckGetfield,        // GETFIELD        0xB4
-	Return3,              // PUTFIELD        0xB5
+	CheckPutfield,        // PUTFIELD        0xB5
 	CheckInvokevirtual,   // INVOKEVIRTUAL   0xB6
 	checkInvokespecial,   // INVOKESPECIAL   0xB7
 	checkInvokestatic,    // INVOKESTATIC    0xB8
@@ -834,6 +834,24 @@ func CheckPop() int {
 func CheckPop2() int {
 	StackEntries -= 2
 	return 1
+}
+
+// PUTFIELD 0xB5 Put field
+func CheckPutfield() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf("%s:\n PUTFIELD at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	return 3
 }
 
 // TABLESWITCH 0xAA

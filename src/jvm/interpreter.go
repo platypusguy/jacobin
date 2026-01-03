@@ -2287,6 +2287,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 	fieldEntry := CP.CpIndex[CPslot]
+	/* // Checked for in codeCheck.go Delete after Feb 1, 2026
 	if fieldEntry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("PUTFIELD: Expected a field ref, but got %d in"+
@@ -2296,7 +2297,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
 		}
-	}
+	} */
 
 	value := pop(fr) // the value we're placing in the field
 	ref := pop(fr)   // reference to the object we're updating

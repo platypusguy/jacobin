@@ -1541,39 +1541,7 @@ func TestPutFieldDouble(t *testing.T) {
 }
 
 // PUTFIELD: Update a field in an object -- error doesn't point to a field
-func TestPutFieldNonFieldCPentry(t *testing.T) {
-	globals.InitGlobals("test")
-
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	f := newFrame(opcodes.PUTFIELD)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: 8, Slot: 0} // point to non-fieldRef
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{}
-	f.CP = &CP
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	interpret(fs)
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(msg)
-
-	if !strings.Contains(errMsg, "PUTFIELD: Expected a field ref, but") {
-		t.Errorf("PUTFIELD: Did not get expected error msg: %s", msg)
-	}
-}
+// This test deleted b/c this error is caught in codeCheck.go
 
 // PUTFIELD: Error: attempt to update a static field (which should be done by PUTSTATIC, not PUTFIELD)
 func TestPutFieldErrorUpdatingStatic(t *testing.T) {

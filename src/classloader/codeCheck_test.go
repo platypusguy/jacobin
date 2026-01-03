@@ -1109,6 +1109,7 @@ func TestPushIntRet3_StackIncrement(t *testing.T) {
 	}
 }
 
+// LOOKUPSWITCH
 // Test checkLookupswitch with zero padding (PC+1 is already 4-byte aligned)
 func TestLookupswitch_ZeroPadding(t *testing.T) {
 	globals.InitGlobals("test")
@@ -1439,6 +1440,82 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 	}
 	if StackEntries != 1 {
 		t.Errorf("Expected StackEntries to decrease by 2, got: %d", StackEntries)
+	}
+}
+
+// PUTFIELD
+
+func TestCheckPutfield_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD with CP index 1
+	cp := createCPWithEntry(1, int(FieldRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+
+		t.Errorf("CheckCodeValidity failed: %v", err)
+	}
+}
+
+func TestCheckPutfield_ValidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	cp := createCPWithEntry(1, FieldRef)
+	CP = &cp
+	Code = []byte{opcodes.PUTFIELD, 0x00, 0x01}
+	PC = 0
+
+	result := CheckGetfield()
+
+	if result != 3 {
+		t.Errorf("Expected return value 3, got: %d", result)
+	}
+}
+
+func TestCheckPutfield_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0xFF} // PUTFIELD with invalid CP index
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid PUTFIELD CP slot, but got none")
+	}
+}
+
+func TestCodeCheckPutfield(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD pointing to slot 1
+	CP = &CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, CP, 5, af)
+	if err == nil {
+		t.Errorf("PUTFIELD: Expected error but did not get one.")
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
+		t.Errorf("PUTFIELD: Did not get expected error message, got: %s", errMsg)
 	}
 }
 
