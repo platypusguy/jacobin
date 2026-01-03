@@ -400,7 +400,7 @@ func (obj *Object) ObjUnlock(threadID int32) error {
 }
 
 // Tree View Object (TVO) provides a comprehensive debug view of an Object
-// for GoLand debugger.
+// for the GoLand debugger.
 //
 // Call from "Evaluate Expression": obj.TVObject()
 // Displays:
@@ -488,4 +488,12 @@ func (obj *Object) TVO() string {
 	}
 
 	return sb.String()
+}
+
+// STR provides a string view of a Java byte array ([]types.JavaByte)
+// for the GoLand debugger.
+//
+// Call from "Evaluate Expression": object.STR(array)
+func STR(array []types.JavaByte) string {
+	return GoStringFromJavaByteArray(array)
 }
