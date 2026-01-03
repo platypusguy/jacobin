@@ -388,9 +388,7 @@ func TestDup2_RegularOperation(t *testing.T) {
 	}
 }
 
-// DUP2_X1
-
-// test when the preceding bytecode is for long or double
+// DUP2_X1 test when the preceding bytecode is for long or double
 func TestDup2_X1_Preceding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -414,7 +412,7 @@ func TestDup2_X1_Preceding(t *testing.T) {
 	}
 }
 
-// test when the following bytecode is for long or double
+// DUP2_X1 test when the following bytecode is for long or double
 func TestDup2_X1_Following(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -438,9 +436,7 @@ func TestDup2_X1_Following(t *testing.T) {
 	}
 }
 
-// DUP2_X2
-
-// test when the preceding bytecode is for long or double
+// DUP2_X2 test when the preceding bytecode is for long or double
 func TestDup2_X2_Preceding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -464,7 +460,7 @@ func TestDup2_X2_Preceding(t *testing.T) {
 	}
 }
 
-// test when the following bytecode is for long or double
+// DUP2_X2 test when the following bytecode is for long or double
 func TestDup2_X2_Following(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -489,7 +485,6 @@ func TestDup2_X2_Following(t *testing.T) {
 }
 
 // FCONST_0
-
 func TestPushFloat0_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -504,7 +499,6 @@ func TestPushFloat0_HighLevel(t *testing.T) {
 }
 
 // FLOAD
-
 func TestPushFloatRet2_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -525,7 +519,6 @@ func TestPushFloatRet2_StackIncrement(t *testing.T) {
 }
 
 // FSTORE
-
 func TestStore_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -546,7 +539,6 @@ func TestStore_HighLevel(t *testing.T) {
 }
 
 // FSTORE_0
-
 func TestStore0_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -567,7 +559,6 @@ func TestStore0_HighLevel(t *testing.T) {
 }
 
 // GETFIELD
-
 func TestCheckGetfield_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -581,6 +572,7 @@ func TestCheckGetfield_HighLevel(t *testing.T) {
 	}
 }
 
+// GETFIELD: valid field ref
 func TestCheckGetfield_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -596,6 +588,7 @@ func TestCheckGetfield_ValidFieldRef(t *testing.T) {
 	}
 }
 
+// GETFIELD: invalid CP slot
 func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -609,6 +602,8 @@ func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
 	}
 }
 
+// GETFIELD: invalid field ref (points to method ref)
+func TestCheckGetfield_InvalidFieldRef(t *testing.T) {}
 func TestCodeCheckGetfield(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -642,7 +637,6 @@ func TestCodeCheckGetfield(t *testing.T) {
 }
 
 // GOTO
-
 func TestCheckGoto_ValidJump(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -656,6 +650,7 @@ func TestCheckGoto_ValidJump(t *testing.T) {
 	}
 }
 
+// GOTO
 func TestCheckGoto_InvalidJumpNegative(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -669,6 +664,7 @@ func TestCheckGoto_InvalidJumpNegative(t *testing.T) {
 	}
 }
 
+// GOTO
 func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -682,9 +678,7 @@ func TestCheckGoto_InvalidJumpOutOfBounds(t *testing.T) {
 	}
 }
 
-// GOTO_W
-
-// Test CheckGotow via GOTO_W bytecode with valid jump
+// GOTO_W valid jump
 func TestCheckGotow_ValidJump(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -704,7 +698,7 @@ func TestCheckGotow_ValidJump(t *testing.T) {
 	}
 }
 
-// Test CheckGotow via GOTO_W bytecode with invalid jump
+// GOTO_W: invalid jump
 func TestCheckGotow_InvalidJumpFOrward(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -733,7 +727,7 @@ func TestCheckGotow_InvalidJumpFOrward(t *testing.T) {
 	}
 }
 
-// Test CheckGotow via GOTO_W bytecode with invalid jump
+// GOTO_W with invalid jump
 func TestCheckGotow_InvalidJumpNegative(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -763,7 +757,6 @@ func TestCheckGotow_InvalidJumpNegative(t *testing.T) {
 }
 
 // ICONST_0
-
 func TestIconst0_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -778,7 +771,6 @@ func TestIconst0_HighLevel(t *testing.T) {
 }
 
 // IF_ACMPEQ
-
 func TestCheckIfAcmpeq_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -793,7 +785,6 @@ func TestCheckIfAcmpeq_HighLevel(t *testing.T) {
 }
 
 // IFEQ
-
 func TestCheckIfeq_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -808,7 +799,6 @@ func TestCheckIfeq_HighLevel(t *testing.T) {
 }
 
 // INVOKEINTERFACE
-
 func TestCheckInvokeinterface_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -822,6 +812,7 @@ func TestCheckInvokeinterface_HighLevel(t *testing.T) {
 	}
 }
 
+// INVOKEINTERFACE: valid interface
 func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -837,6 +828,8 @@ func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 	}
 }
 
+// INVOKEINTERFACE: invalid interface
+func TestCheckInvokeinterface_InvalidInterface(t *testing.T) {}
 func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -850,6 +843,7 @@ func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
 	}
 }
 
+// INVOKEINTERFACE: invalid count byte
 func TestCheckInvokeinterface_ZeroCountByte(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -863,6 +857,7 @@ func TestCheckInvokeinterface_ZeroCountByte(t *testing.T) {
 	}
 }
 
+// INVOKEINTERFACE: invalid zero byte
 func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -876,9 +871,7 @@ func TestCheckInvokeinterface_NonZeroZeroByte(t *testing.T) {
 	}
 }
 
-// INVOKESPECIAL
-
-// Test checkInvokespecial via INVOKESPECIAL bytecode with valid method ref
+// INVOKESPECIAL bytecode with valid method ref
 func TestCheckInvokespecial_ValidMethodRef(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -899,7 +892,7 @@ func TestCheckInvokespecial_ValidMethodRef(t *testing.T) {
 	}
 }
 
-// Test checkInvokespecial via INVOKESPECIAL bytecode with invalid CP slot
+// INVOKESPECIAL bytecode with invalid CP slot
 func TestCheckInvokespecial_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -929,9 +922,7 @@ func TestCheckInvokespecial_InvalidCPSlot(t *testing.T) {
 	}
 }
 
-// INVOKESTATIC
-
-// Test checkInvokestatic via INVOKESTATIC bytecode with valid method ref
+// INVOKESTATIC with valid method ref
 func TestCheckInvokestatic_ValidMethodRef(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -952,8 +943,7 @@ func TestCheckInvokestatic_ValidMethodRef(t *testing.T) {
 	}
 }
 
-// Test checkInvokestatic via INVOKESTATIC bytecode with invalid CP slot
-
+// INVOKESTATIC bytecode with invalid CP slot
 func TestCheckInvokestatic_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -982,7 +972,6 @@ func TestCheckInvokestatic_InvalidCPSlot(t *testing.T) {
 }
 
 // INVOKEVIRTUAL
-
 func TestCheckInvokevirtual_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1052,7 +1041,6 @@ func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
 }
 
 // ISTORE
-
 func TestIstore_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1069,7 +1057,6 @@ func TestIstore_HighLevel(t *testing.T) {
 }
 
 // ISTORE_0
-
 func TestIstore0_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1086,7 +1073,6 @@ func TestIstore0_HighLevel(t *testing.T) {
 }
 
 // LDC_W
-
 func TestPushIntRet3_StackIncrement(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1109,8 +1095,7 @@ func TestPushIntRet3_StackIncrement(t *testing.T) {
 	}
 }
 
-// LOOKUPSWITCH
-// Test checkLookupswitch with zero padding (PC+1 is already 4-byte aligned)
+// LOOKUPSWITCH with zero padding (PC+1 is already 4-byte aligned)
 func TestLookupswitch_ZeroPadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1137,7 +1122,7 @@ func TestLookupswitch_ZeroPadding(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with 1-byte padding
+// Lookupswitch with 1-byte padding
 func TestLookupswitch_OneBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1162,7 +1147,7 @@ func TestLookupswitch_OneBytePadding(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with 2-byte padding
+// Lookupswitch with 2-byte padding
 func TestLookupswitch_TwoBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1188,7 +1173,7 @@ func TestLookupswitch_TwoBytePadding(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with 3-byte padding
+// Lookupswitch with 3-byte padding
 func TestLookupswitch_ThreeBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1214,7 +1199,7 @@ func TestLookupswitch_ThreeBytePadding(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with zero pairs (npairs = 0)
+// Lookupswitch with zero pairs (npairs = 0)
 func TestLookupswitch_ZeroPairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1238,7 +1223,7 @@ func TestLookupswitch_ZeroPairs(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with multiple pairs (npairs > 1)
+// Lookupswitch with multiple pairs (npairs > 1)
 func TestLookupswitch_MultiplePairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1267,7 +1252,7 @@ func TestLookupswitch_MultiplePairs(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch with large npairs value
+// Lookupswitch with large npairs value
 func TestLookupswitch_LargePairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1301,7 +1286,7 @@ func TestLookupswitch_LargePairs(t *testing.T) {
 	}
 }
 
-// Test checkLookupswitch edge case where the calculated length exceeds available code
+// Lookupswitch edge case where the calculated length exceeds available code
 func TestLookupswitch_CalculatedLengthExceedsCode(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1328,7 +1313,6 @@ func TestLookupswitch_CalculatedLengthExceedsCode(t *testing.T) {
 }
 
 // MULTIANEWARRAY
-
 func TestCheckMultianewarray_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1342,6 +1326,7 @@ func TestCheckMultianewarray_HighLevel(t *testing.T) {
 	}
 }
 
+// MULTIANEWARRAY
 func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1357,6 +1342,7 @@ func TestCheckMultianewarray_ValidClassRef(t *testing.T) {
 	}
 }
 
+// MULTIANEWARRAY
 func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1371,7 +1357,6 @@ func TestCheckMultianewarray_ZeroDimensions(t *testing.T) {
 }
 
 // NOP
-
 func TestNop(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1386,7 +1371,6 @@ func TestNop(t *testing.T) {
 }
 
 // POP
-
 func TestCheckPop_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1400,6 +1384,7 @@ func TestCheckPop_HighLevel(t *testing.T) {
 	}
 }
 
+// POP
 func TestCheckPop_StackDecrement(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1415,7 +1400,6 @@ func TestCheckPop_StackDecrement(t *testing.T) {
 }
 
 // POP2
-
 func TestCheckPop2_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1444,7 +1428,6 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 }
 
 // PUTFIELD
-
 func TestCheckPutfield_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1520,7 +1503,6 @@ func TestCodeCheckPutfield(t *testing.T) {
 }
 
 // SIPUSH
-
 func TestCheckSipush_ValidLength(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1565,7 +1547,6 @@ func TestCheckSipush_InsufficientLength(t *testing.T) {
 }
 
 // TABLESWITCH
-
 func TestCheckTableswitch_ValidRange(t *testing.T) {
 	globals.InitGlobals("test")
 
