@@ -68,9 +68,11 @@ func JVMrun() int {
 	// Enable select functions via a global function variable. (This avoids circularity issues.)
 	InitGlobalFunctionPointers()
 
-	// Force the method retention for the Goland debugger
-	// (never executes in practice)
-	// Use runtime check that compiler cannot optimize away
+	/*
+	This odd-looking code is there to force the Go compiler to include object.TVO() and object.STR() in the executable. 
+	The compiler excludes any functions that have no references (calls). 
+	If they are not included, then one cannot use them in the GoLand debugger.
+	*/
 	if os.Getenv("Revenge_is_best_served_cold!") == "Well, maybe?" {
 		dummyObj := object.MakeEmptyObject()
 		dummyArray := []int8{int8(1)}
