@@ -2432,7 +2432,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&0x0100 > 0 {
+		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
