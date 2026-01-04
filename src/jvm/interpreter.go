@@ -2432,7 +2432,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
-		if m.AccessFlags&0x0100 > 0 {
+		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
 			// Native code
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "INVOKEVIRTUAL: Native method requested: " + fqn
@@ -2443,52 +2443,42 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		if len(m.Code) == 0 {
-			// empty code attribute, so check if it's abstract (which it should be)
-			if m.AccessFlags&classloader.ACC_ABSTRACT > 0 {
-				cl := peek(fr).(*object.Object)
-				clNameIdx := cl.KlassName
-				mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
-				if err != nil || mtEntry.Meth == nil {
-					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-					status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-					if status != exceptions.Caught {
-						return ERROR_OCCURRED // applies only if in test
-					}
-					return RESUME_HERE // caught
-				}
-				className = *(stringPool.GetStringPointer(clNameIdx))
-
-				// Resolve to a G function?
-				if mtEntry.MType == 'G' {
-					return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
-				}
-
-				// It's a J function. Get its MTentry.
-				m = mtEntry.Meth.(classloader.JmEntry)
-				fqn = className + "." + methodName + methodType
-
-				// If an empty code segment, that's an error. Its probably abstract or an interface.
-				// In this case, flag it as an AbstractMethodError.
-				if len(m.Code) == 0 {
-					globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-					errMsg := "INVOKEVIRTUAL: J class method code is empty: " + fqn
-					status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
-					if status != exceptions.Caught {
-						return ERROR_OCCURRED // applies only if in test
-					}
-					return RESUME_HERE // caught
-				}
-
-			} else {
+		if m.AccessFlags&classloader.ACC_ABSTRACT > 0 {
+			// The run-time class object is on the stack.
+			cl := peek(fr).(*object.Object)
+			clNameIdx := cl.KlassName
+			mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
+			if err != nil || mtEntry.Meth == nil {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Empty code attribute in non-abstract method: " + fqn
-				status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
+				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
+				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
 				if status != exceptions.Caught {
 					return ERROR_OCCURRED // applies only if in test
 				}
+				return RESUME_HERE // caught
 			}
+			className = *(stringPool.GetStringPointer(clNameIdx))
+		}
+
+		// Resolve to a G function?
+		if mtEntry.MType == 'G' {
+			return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
+		}
+
+		// It's a J function. Get its MTentry.
+		m = mtEntry.Meth.(classloader.JmEntry)
+		fqn = className + "." + methodName + methodType
+
+		// If an empty code segment, that's an error. Its probably abstract or an interface.
+		// In this case, flag it as an AbstractMethodError.
+		if len(m.Code) == 0 {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: J class method code is empty: " + fqn
+			status := exceptions.ThrowEx(excNames.AbstractMethodError, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
 		}
 
 		fram, err := createAndInitNewFrame(
