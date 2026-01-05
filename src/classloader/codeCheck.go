@@ -433,7 +433,7 @@ var CheckTable = [203]BytecodeFunc{
 	Return3,              // INSTANCEOF      0xC1
 	Return1,              // MONITORENTER    0xC2
 	Return1,              // MONITOREXIT     0xC3
-	Return1,              // WIDE            0xC4
+	CheckWide,            // WIDE            0xC4
 	CheckMultianewarray,  // MULTIANEWARRAY  0xC5
 	Return3,              // IFNULL          0xC6
 	Return3,              // IFNONNULL       0xC7
@@ -448,6 +448,7 @@ var CP *CPool
 var Code []byte
 var StackEntries int
 var MaxStack int
+var wideInEffect bool
 
 func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags) error {
 	if codePtr == nil {
@@ -481,6 +482,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 	PrevPC = -1 // -1 means no previous PC
 	MaxStack = maxStack
 	StackEntries = 0
+	wideInEffect = false
 
 	for PC < len(code) {
 		opcode := code[PC]
@@ -946,6 +948,12 @@ func CheckSipush() int {
 	} else {
 		return ERROR_OCCURRED
 	}
+}
+
+// WIDE
+func CheckWide() int {
+	wideInEffect = true
+	return 1
 }
 
 // === utility functions ===
