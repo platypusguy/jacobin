@@ -2443,21 +2443,24 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		if m.AccessFlags&classloader.ACC_ABSTRACT > 0 {
-			// The run-time class object is on the stack.
-			cl := peek(fr).(*object.Object)
-			clNameIdx := cl.KlassName
-			mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
-			if err != nil || mtEntry.Meth == nil {
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
+		// The run-time class object is on the stack, not necessarily at the top.
+		// Get the number of arguments for the function.
+		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
+		// Extract the reference object from the stack.
+		refObj := fr.OpStack[fr.TOS-nslots].(*object.Object)
+		// Get the reference object class name.
+		clNameIdx := refObj.KlassName
+		className = *(stringPool.GetStringPointer(clNameIdx))
+		// TODO: Complete: Find and load the method from the superclass chain.
+		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+		if err != nil || mtEntry.Meth == nil {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
+			status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
 			}
-			className = *(stringPool.GetStringPointer(clNameIdx))
+			return RESUME_HERE // caught
 		}
 
 		// Resolve to a G function?
