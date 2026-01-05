@@ -1427,11 +1427,11 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 	}
 }
 
-// PUTFIELD
-func TestCheckPutfield_HighLevel(t *testing.T) {
+// PUTSTATIC
+func TestCheckPutstatic_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD with CP index 1
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTFIELD with CP index 1
 	cp := createCPWithEntry(1, int(FieldRef))
 	af := AccessFlags{}
 
@@ -1442,34 +1442,37 @@ func TestCheckPutfield_HighLevel(t *testing.T) {
 	}
 }
 
-func TestCheckPutfield_ValidFieldRef(t *testing.T) {
+// PUTSTATIC with valid field ref
+func TestCheckPutstatic_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
 	cp := createCPWithEntry(1, FieldRef)
 	CP = &cp
-	Code = []byte{opcodes.PUTFIELD, 0x00, 0x01}
+	Code = []byte{opcodes.PUTSTATIC, 0x00, 0x01}
 	PC = 0
 
 	result := CheckGetfield()
 
 	if result != 3 {
-		t.Errorf("Expected return value 3, got: %d", result)
+		t.Errorf("Putstatic expected return value 3, got: %d", result)
 	}
 }
 
-func TestCheckPutfield_InvalidCPSlot(t *testing.T) {
+// PUTSTATIC with invalic CP slot
+func TestCheckPutstatic_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0xFF} // PUTFIELD with invalid CP index
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0xFF} // PUTSTATIC with invalid CP index
 	cp := createBasicCP()
 	af := AccessFlags{}
 
 	err := CheckCodeValidity(&code, &cp, 5, af)
 	if err == nil {
-		t.Errorf("Expected error for invalid PUTFIELD CP slot, but got none")
+		t.Errorf("Expected error for invalid PUTSTATIC CP slot, but got none")
 	}
 }
 
+// PUTSTATIC with invalid field ref
 func TestCodeCheckPutfield(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1478,7 +1481,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD pointing to slot 1
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTSTATIC pointing to slot 1
 	CP = &CPool{}
 	CP.CpIndex = make([]CpEntry, 10)
 	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
@@ -1488,7 +1491,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 
 	err := CheckCodeValidity(&code, CP, 5, af)
 	if err == nil {
-		t.Errorf("PUTFIELD: Expected error but did not get one.")
+		t.Errorf("PUTSTATIC: Expected error but did not get one.")
 	}
 
 	_ = w.Close()
@@ -1498,7 +1501,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 	errMsg := string(msg)
 
 	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
-		t.Errorf("PUTFIELD: Did not get expected error message, got: %s", errMsg)
+		t.Errorf("PUTSTATIC: Did not get expected error message, got: %s", errMsg)
 	}
 }
 
