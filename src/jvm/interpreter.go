@@ -2466,7 +2466,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		if err != nil || mtEntry.Meth == nil {
 			// Second, try for an interface default method.
 			var ret any
-			ret, mtEntry = searchForDirectInterfaceFunctionCP(CP, methodName, methodType)
+			ret, mtEntry = searchForDefaultInterfaceFunction(CP, methodName, methodType)
 			if ret == nil {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
@@ -2520,15 +2520,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 }
 
 // Given CP, method name & type, search for an interface with a matching method name and type.
-func searchForDirectInterfaceFunctionCP(CP *classloader.CPool, methodName, methodType string) (any, classloader.MTentry) {
+func searchForDefaultInterfaceFunction(CP *classloader.CPool, methodName, methodType string) (any, classloader.MTentry) {
 	var mtEntry classloader.MTentry
 
 	// Look through all the interface references.
 	for _, intfRef := range CP.ResolvedMethodRefs {
 		// Get the interface class name.
 		clix := intfRef.ClassIndex
-		clref := CP.ClassRefs[clix]
-		intfClassName := *(stringPool.GetStringPointer(clref))
+		intfClassName := *(stringPool.GetStringPointer(clix))
 		// Get its mtEntry if it exists.
 		mtEntry = classloader.GetMtableEntry(intfClassName + "." + methodName + methodType)
 		if mtEntry.Meth == nil {
