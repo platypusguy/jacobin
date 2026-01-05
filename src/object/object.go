@@ -8,7 +8,6 @@ package object
 
 import (
 	"errors"
-	"fmt"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"

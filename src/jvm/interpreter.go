@@ -2460,16 +2460,23 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// Get the reference object class name.
 		clNameIdx := refObj.KlassName
 		className = *(stringPool.GetStringPointer(clNameIdx))
-		// TODO: True method resolution.
+		// Method resolution.
+		// First, try superclass resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-			status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
+			// Second, try for an interface default method.
+			var ret any
+			ret, mtEntry = searchForDirectInterfaceFunctionCP(CP, methodName, methodType)
+			if ret == nil {
+				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
+				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+				if status != exceptions.Caught {
+					return ERROR_OCCURRED // applies only if in test
+				}
+				return RESUME_HERE // caught
 			}
-			return RESUME_HERE // caught
+			className = ret.(string)
 		}
 
 		// Resolve to a G function?
@@ -2512,6 +2519,34 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	return ERROR_OCCURRED // in theory, unreachable
 }
 
+// Given CP, method name & type, search for an interface with a matching method name and type.
+func searchForDirectInterfaceFunctionCP(CP *classloader.CPool, methodName, methodType string) (any, classloader.MTentry) {
+	var mtEntry classloader.MTentry
+
+	// Look through all the interface references.
+	for _, intfRef := range CP.ResolvedMethodRefs {
+		// Get the interface class name.
+		clix := intfRef.ClassIndex
+		clref := CP.ClassRefs[clix]
+		intfClassName := *(stringPool.GetStringPointer(clref))
+		// Get its mtEntry if it exists.
+		mtEntry = classloader.GetMtableEntry(intfClassName + "." + methodName + methodType)
+		if mtEntry.Meth == nil {
+			continue // not there
+		}
+		// Viable code segment?
+		m := mtEntry.Meth.(classloader.JmEntry)
+		if len(m.Code) < 1 {
+			continue
+		}
+		// Success!
+		return intfClassName, mtEntry
+	}
+	// No match found.
+	return nil, mtEntry
+}
+
+// Execute an INVOKEVIRTUAL G function.
 func invokeVirtualGfunction(fr *frames.Frame,
 	mtEntry classloader.MTentry,
 	className, methodName, methodType string) int {
