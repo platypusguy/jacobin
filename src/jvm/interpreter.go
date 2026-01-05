@@ -2447,11 +2447,20 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// Get the number of arguments for the function.
 		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
 		// Extract the reference object from the stack.
-		refObj := fr.OpStack[fr.TOS-nslots].(*object.Object)
+		refObj, ok := fr.OpStack[fr.TOS-nslots].(*object.Object)
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: Stack reference object is nil"
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
 		// Get the reference object class name.
 		clNameIdx := refObj.KlassName
 		className = *(stringPool.GetStringPointer(clNameIdx))
-		// TODO: Complete: Find and load the method from the superclass chain.
+		// TODO: True method resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
