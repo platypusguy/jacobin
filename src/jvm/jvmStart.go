@@ -9,7 +9,7 @@ package jvm
 import (
 	"fmt"
 	"jacobin/src/classloader"
-	"jacobin/src/debug"
+	"jacobin/src/bugged"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
@@ -35,7 +35,7 @@ var globPtr *globals.Globals
 func JVMrun() int {
 
 	trace.Init()
-	debug.DebugInit()
+	bugged.DebugInit()
 
 	// capture any panics and print diagnostic data
 	defer func() int {
