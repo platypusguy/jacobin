@@ -258,8 +258,8 @@ var CheckTable = [203]BytecodeFunc{
 	PushIntRet2,          // LDC             0x12
 	PushIntRet3,          // LDC_W           0x13
 	PushIntRet3,          // LDC2_W          0x14
-	PushIntRet2,          // ILOAD           0x15
-	PushIntRet2,          // LLOAD           0x16
+	CheckIload,           // ILOAD           0x15
+	CheckIload,           // LLOAD           0x16
 	PushFloatRet2,        // FLOAD           0x17
 	PushFloatRet2,        // DLOAD           0x18
 	PushIntRet2,          // ALOAD           0x19
@@ -582,7 +582,7 @@ dup2x1:
 	return 1
 }
 
-// CheckDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
+// DUP2_X2: *NOTE* CheckDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
 func CheckDup2x2() int {
 	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x2 // if so, we can safely use DUP2
@@ -631,6 +631,16 @@ func storeFloatRet2() int {
 func PushInt() int {
 	StackEntries += 1
 	return 1
+}
+
+// ILOAD and LLOAD
+func CheckIload() int {
+	StackEntries += 1
+	if wideInEffect {
+		wideInEffect = false
+		return 3
+	}
+	return 2
 }
 
 // ILOAD* and LLOAD* Push an int or long from local onto op stack
