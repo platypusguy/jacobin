@@ -415,7 +415,7 @@ var CheckTable = [203]BytecodeFunc{
 	Return1,              // DRETURN         0xAF
 	Return1,              // ARETURN         0xB0
 	Return1,              // RETURN          0xB1
-	Return3,              // GETSTATIC       0xB2
+	CheckGetstatic,       // GETSTATIC       0xB2
 	CheckPutstatic,       // PUTSTATIC       0xB3
 	CheckGetfield,        // GETFIELD        0xB4
 	CheckPutfield,        // PUTFIELD        0xB5
@@ -643,7 +643,7 @@ func PushIntRet3() int {
 	return 3
 }
 
-// GETFIELD 0xB4 Get field from object and push it onto the stack
+// GETFIELD 0xB4 Get non-static field from object and push it onto the stack
 func CheckGetfield() int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
@@ -659,6 +659,25 @@ func CheckGetfield() int {
 		return ERROR_OCCURRED
 	}
 
+	return 3
+}
+
+// GETSTATIC 0xB4 Get static field from object and push it onto the stack
+func CheckGetstatic() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf(
+			"%s in GETSTATIC at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
 	return 3
 }
 
