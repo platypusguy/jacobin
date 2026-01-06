@@ -2460,13 +2460,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// Get the reference object class name.
 		clNameIdx := refObj.KlassName
 		className = *(stringPool.GetStringPointer(clNameIdx))
-		// Method resolution.
+
+		// ====================== Method resolution==============================
 		// First, try superclass resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
-			// Second, try for an interface default method.
+			// That did not succeed. So, try for an interface default method.
 			var ret any
-			ret, mtEntry = searchForDefaultInterfaceFunction(CP, methodName, methodType)
+			ret, mtEntry = searchForDefaultInterfaceFunction(className, methodName, methodType)
 			if ret == nil {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
@@ -2519,29 +2520,102 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	return ERROR_OCCURRED // in theory, unreachable
 }
 
-// Given CP, method name & type, search for an interface with a matching method name and type.
-func searchForDefaultInterfaceFunction(CP *classloader.CPool, methodName, methodType string) (any, classloader.MTentry) {
+// searchForDefaultInterfaceFunction searches for a default method in all interfaces
+// implemented by className (and their superinterfaces), following JVM rules.
+//
+// JVM rules for default methods:
+// 1. Start with all interfaces directly implemented by the class.
+// 2. Recursively check superinterfaces.
+// 3. If multiple default methods are found with the same signature, throw
+//    IncompatibleClassChangeError (ambiguity).
+// 4. Otherwise, return the most-specific default method (closest to the class).
+//
+// Returns the interface name and mtEntry if a default method is found, or nil if not.
+func searchForDefaultInterfaceFunction(
+	className, methodName, methodType string,
+) (any, classloader.MTentry) {
+
 	var mtEntry classloader.MTentry
 
-	// Look through all the interface references.
-	for _, intfRef := range CP.ResolvedMethodRefs {
-		// Get the interface class name.
-		clix := intfRef.ClassIndex
-		intfClassName := *(stringPool.GetStringPointer(clix))
-		// Get its mtEntry if it exists.
-		mtEntry = classloader.GetMtableEntry(intfClassName + "." + methodName + methodType)
-		if mtEntry.Meth == nil {
-			continue // not there
-		}
-		// Viable code segment?
-		m := mtEntry.Meth.(classloader.JmEntry)
-		if len(m.Code) < 1 {
-			continue
-		}
-		// Success!
-		return intfClassName, mtEntry
+	// Fetch runtime class metadata
+	klass := classloader.MethAreaFetch(className)
+	if klass == nil || len(klass.Data.Interfaces) == 0 {
+		// Class does not implement any interfaces
+		return nil, mtEntry
 	}
-	// No match found.
+
+	// Track visited interfaces to prevent infinite loops
+	visited := make(map[string]bool)
+
+	// Recursive helper to search an interface and its superinterfaces
+	var searchInterface func(intfName string) (string, classloader.MTentry)
+	searchInterface = func(intfName string) (string, classloader.MTentry) {
+		if visited[intfName] {
+			return "", classloader.MTentry{}
+		}
+		visited[intfName] = true
+
+		intfClass := classloader.MethAreaFetch(intfName)
+		if intfClass == nil {
+			return "", classloader.MTentry{}
+		}
+
+		// Step 3a: Build fully qualified method name and check method table
+		fqn := intfName + "." + methodName + methodType
+		mtEntry = classloader.GetMtableEntry(fqn)
+		if mtEntry.Meth != nil {
+			m := mtEntry.Meth.(classloader.JmEntry)
+			if len(m.Code) > 0 {
+				// Found a non-abstract method → candidate default method
+				return intfName, mtEntry
+			}
+		}
+
+		// Step 3b: Recurse into superinterfaces
+		for _, idx := range intfClass.Data.Interfaces {
+			superIntfName := *stringPool.GetStringPointer(uint32(idx))
+			if resName, resMT := searchInterface(superIntfName); resName != "" {
+				return resName, resMT
+			}
+		}
+
+		return "", classloader.MTentry{}
+	}
+
+	// Track all candidates found
+	candidates := make([]struct {
+		intf string
+		mt   classloader.MTentry
+	}, 0)
+
+	// Search all interfaces directly implemented by this class
+	for _, idx := range klass.Data.Interfaces {
+		intfName := *stringPool.GetStringPointer(uint32(idx))
+		if resName, resMT := searchInterface(intfName); resName != "" {
+			candidates = append(candidates, struct {
+				intf string
+				mt   classloader.MTentry
+			}{resName, resMT})
+		}
+	}
+
+	// JVM rule: handle multiple candidates
+	if len(candidates) > 1 {
+		// Conflict detected: multiple default methods with same signature
+		errMsg := "INVOKEVIRTUAL: Ambiguous default method for " + className + "." + methodName + methodType
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, nil)
+		if status != exceptions.Caught {
+			// Only relevant in test; return empty
+			return nil, classloader.MTentry{}
+		}
+	}
+
+	// Return the most-specific default method (first found)
+	if len(candidates) == 1 {
+		return candidates[0].intf, candidates[0].mt
+	}
+
+	// No default method found
 	return nil, mtEntry
 }
 
