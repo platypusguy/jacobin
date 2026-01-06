@@ -2526,11 +2526,11 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 // implemented by className (and their superinterfaces), following JVM rules.
 //
 // JVM rules for default methods:
-// 1. Start with all interfaces directly implemented by the class.
-// 2. Recursively check superinterfaces.
-// 3. If multiple default methods are found with the same signature, throw
-//    IncompatibleClassChangeError (ambiguity).
-// 4. Otherwise, return the most-specific default method (closest to the class).
+//  1. Start with all interfaces directly implemented by the class.
+//  2. Recursively check superinterfaces.
+//  3. If multiple default methods are found with the same signature, throw
+//     IncompatibleClassChangeError (ambiguity).
+//  4. Otherwise, return the most-specific default method (closest to the class).
 //
 // Returns the interface name and mtEntry if a default method is found, or nil if not.
 func searchForDefaultInterfaceFunction(
@@ -3848,7 +3848,7 @@ func notImplemented(fr *frames.Frame, _ int64) int {
 	opcode := fr.Meth[fr.PC]
 	opcodeName := opcodes.BytecodeNames[opcode]
 	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
-	_ = exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+	_ = exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 	return ERROR_OCCURRED
 }
 
