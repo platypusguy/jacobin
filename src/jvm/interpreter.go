@@ -2473,7 +2473,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			if ret == nil {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+				status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
 				if status != exceptions.Caught {
 					return ERROR_OCCURRED // applies only if in test
 				}
@@ -2533,6 +2533,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 //  4. Otherwise, return the most-specific default method (closest to the class).
 //
 // Returns the interface name and mtEntry if a default method is found, or nil if not.
+//
+// Reference: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.3.4
 func searchForDefaultInterfaceFunction(
 	className, methodName, methodType string,
 ) (any, classloader.MTentry) {
