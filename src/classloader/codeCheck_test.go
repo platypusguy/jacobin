@@ -603,7 +603,6 @@ func TestCheckGetfield_InvalidCPSlot(t *testing.T) {
 }
 
 // GETFIELD: invalid field ref (points to method ref)
-func TestCheckGetfield_InvalidFieldRef(t *testing.T) {}
 func TestCodeCheckGetfield(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -633,6 +632,83 @@ func TestCodeCheckGetfield(t *testing.T) {
 
 	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
 		t.Errorf("GETFIELD: Did not get expected error message, got: %s", errMsg)
+	}
+}
+
+// GETSTATIC
+func TestCheckGetstatic_HighLevel(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GETSTATIC, 0x00, 0x01} // GETSTATIC with CP index 1
+	cp := createCPWithEntry(1, int(FieldRef))
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err != nil {
+		t.Errorf("GETSTATIC CheckCodeValidity failed: %v", err)
+	}
+}
+
+// GETSTATIC: valid field ref
+func TestCheckGetstatic_ValidFieldRef(t *testing.T) {
+	globals.InitGlobals("test")
+
+	cp := createCPWithEntry(1, FieldRef)
+	CP = &cp
+	Code = []byte{opcodes.GETSTATIC, 0x00, 0x01}
+	PC = 0
+
+	result := CheckGetfield()
+
+	if result != 3 {
+		t.Errorf("GETSTATIC: Expected return value 3, got: %d", result)
+	}
+}
+
+// GETSTATIC: invalid CP slot
+func TestCheckGetstatic_InvalidCPSlot(t *testing.T) {
+	globals.InitGlobals("test")
+
+	code := []byte{opcodes.GETSTATIC, 0x00, 0xFF} // GETSTATIC with invalid CP index
+	cp := createBasicCP()
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &cp, 5, af)
+	if err == nil {
+		t.Errorf("Expected error for invalid GETSTATIC CP slot, but got none")
+	}
+}
+
+// GETSTATIC: invalid field ref (points to method ref)
+func TestCodeCheckGetStatic(t *testing.T) {
+	globals.InitGlobals("test")
+
+	// redirect stderr so as not to pollute the test output with the expected error message
+	normalStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	code := []byte{opcodes.GETSTATIC, 0x00, 0x01} // GETSTATIC pointing to slot 1
+	CP := CPool{}
+	CP.CpIndex = make([]CpEntry, 10)
+	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
+	CP.CpIndex[1] = CpEntry{Type: MethodRef, Slot: 0} // should be a field ref
+
+	af := AccessFlags{}
+
+	err := CheckCodeValidity(&code, &CP, 5, af)
+	if err == nil {
+		t.Errorf("GETSTATIC: Expected error but did not get one.")
+	}
+
+	_ = w.Close()
+	msg, _ := io.ReadAll(r)
+	os.Stderr = normalStderr
+
+	errMsg := string(msg)
+
+	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
+		t.Errorf("GETSTATIC: Did not get expected error message, got: %s", errMsg)
 	}
 }
 
@@ -829,7 +905,6 @@ func TestCheckInvokeinterface_ValidInterface(t *testing.T) {
 }
 
 // INVOKEINTERFACE: invalid interface
-func TestCheckInvokeinterface_InvalidInterface(t *testing.T) {}
 func TestCheckInvokeinterface_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -985,6 +1060,7 @@ func TestCheckInvokevirtual_HighLevel(t *testing.T) {
 	}
 }
 
+// INVOKEVIRTUAL bytecode with invalid CP slot
 func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -998,6 +1074,8 @@ func TestCheckInvokevirtual_InvalidCPSlot(t *testing.T) {
 	}
 }
 
+// INVOKEVIRTUAL bytecode with valid method ref
+func TestCheckInvokevirtual_ValidMethodRef(t *testing.T) {}
 func TestNewInvokevirtualInvalidMethRef(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1122,7 +1200,7 @@ func TestLookupswitch_ZeroPadding(t *testing.T) {
 	}
 }
 
-// Lookupswitch with 1-byte padding
+// LOOKUPSWITCH with 1-byte padding
 func TestLookupswitch_OneBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1147,7 +1225,7 @@ func TestLookupswitch_OneBytePadding(t *testing.T) {
 	}
 }
 
-// Lookupswitch with 2-byte padding
+// LOOKUPSWITCH with 2-byte padding
 func TestLookupswitch_TwoBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1173,7 +1251,7 @@ func TestLookupswitch_TwoBytePadding(t *testing.T) {
 	}
 }
 
-// Lookupswitch with 3-byte padding
+// LOOKUPSWITCH with 3-byte padding
 func TestLookupswitch_ThreeBytePadding(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1199,7 +1277,7 @@ func TestLookupswitch_ThreeBytePadding(t *testing.T) {
 	}
 }
 
-// Lookupswitch with zero pairs (npairs = 0)
+// LOOKUPSWITCH with zero pairs (npairs = 0)
 func TestLookupswitch_ZeroPairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1223,7 +1301,7 @@ func TestLookupswitch_ZeroPairs(t *testing.T) {
 	}
 }
 
-// Lookupswitch with multiple pairs (npairs > 1)
+// LOOKUPSWITCH with multiple pairs (npairs > 1)
 func TestLookupswitch_MultiplePairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1252,7 +1330,7 @@ func TestLookupswitch_MultiplePairs(t *testing.T) {
 	}
 }
 
-// Lookupswitch with large npairs value
+// LOOKUPSWITCH with large npairs value
 func TestLookupswitch_LargePairs(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1427,11 +1505,11 @@ func TestCheckPop2_StackDecrement(t *testing.T) {
 	}
 }
 
-// PUTFIELD
-func TestCheckPutfield_HighLevel(t *testing.T) {
+// PUTSTATIC
+func TestCheckPutstatic_HighLevel(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD with CP index 1
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTFIELD with CP index 1
 	cp := createCPWithEntry(1, int(FieldRef))
 	af := AccessFlags{}
 
@@ -1442,34 +1520,37 @@ func TestCheckPutfield_HighLevel(t *testing.T) {
 	}
 }
 
-func TestCheckPutfield_ValidFieldRef(t *testing.T) {
+// PUTSTATIC with valid field ref
+func TestCheckPutstatic_ValidFieldRef(t *testing.T) {
 	globals.InitGlobals("test")
 
 	cp := createCPWithEntry(1, FieldRef)
 	CP = &cp
-	Code = []byte{opcodes.PUTFIELD, 0x00, 0x01}
+	Code = []byte{opcodes.PUTSTATIC, 0x00, 0x01}
 	PC = 0
 
 	result := CheckGetfield()
 
 	if result != 3 {
-		t.Errorf("Expected return value 3, got: %d", result)
+		t.Errorf("Putstatic expected return value 3, got: %d", result)
 	}
 }
 
-func TestCheckPutfield_InvalidCPSlot(t *testing.T) {
+// PUTSTATIC with invalic CP slot
+func TestCheckPutstatic_InvalidCPSlot(t *testing.T) {
 	globals.InitGlobals("test")
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0xFF} // PUTFIELD with invalid CP index
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0xFF} // PUTSTATIC with invalid CP index
 	cp := createBasicCP()
 	af := AccessFlags{}
 
 	err := CheckCodeValidity(&code, &cp, 5, af)
 	if err == nil {
-		t.Errorf("Expected error for invalid PUTFIELD CP slot, but got none")
+		t.Errorf("Expected error for invalid PUTSTATIC CP slot, but got none")
 	}
 }
 
+// PUTSTATIC with invalid field ref
 func TestCodeCheckPutfield(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -1478,7 +1559,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	code := []byte{opcodes.PUTFIELD, 0x00, 0x01} // PUTFIELD pointing to slot 1
+	code := []byte{opcodes.PUTSTATIC, 0x00, 0x01} // PUTSTATIC pointing to slot 1
 	CP = &CPool{}
 	CP.CpIndex = make([]CpEntry, 10)
 	CP.CpIndex[0] = CpEntry{Type: 0, Slot: 0}
@@ -1488,7 +1569,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 
 	err := CheckCodeValidity(&code, CP, 5, af)
 	if err == nil {
-		t.Errorf("PUTFIELD: Expected error but did not get one.")
+		t.Errorf("PUTSTATIC: Expected error but did not get one.")
 	}
 
 	_ = w.Close()
@@ -1498,7 +1579,7 @@ func TestCodeCheckPutfield(t *testing.T) {
 	errMsg := string(msg)
 
 	if !strings.Contains(errMsg, "java.lang.VerifyError") || !strings.Contains(errMsg, "not a field reference") {
-		t.Errorf("PUTFIELD: Did not get expected error message, got: %s", errMsg)
+		t.Errorf("PUTSTATIC: Did not get expected error message, got: %s", errMsg)
 	}
 }
 
