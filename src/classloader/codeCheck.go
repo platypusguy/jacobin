@@ -258,8 +258,8 @@ var CheckTable = [203]BytecodeFunc{
 	PushIntRet2,          // LDC             0x12
 	PushIntRet3,          // LDC_W           0x13
 	PushIntRet3,          // LDC2_W          0x14
-	PushIntRet2,          // ILOAD           0x15
-	PushIntRet2,          // LLOAD           0x16
+	CheckIload,           // ILOAD           0x15
+	CheckIload,           // LLOAD           0x16
 	PushFloatRet2,        // FLOAD           0x17
 	PushFloatRet2,        // DLOAD           0x18
 	PushIntRet2,          // ALOAD           0x19
@@ -415,8 +415,8 @@ var CheckTable = [203]BytecodeFunc{
 	Return1,              // DRETURN         0xAF
 	Return1,              // ARETURN         0xB0
 	Return1,              // RETURN          0xB1
-	Return3,              // GETSTATIC       0xB2
-	Return3,              // PUTSTATIC       0xB3
+	CheckGetstatic,       // GETSTATIC       0xB2
+	CheckPutstatic,       // PUTSTATIC       0xB3
 	CheckGetfield,        // GETFIELD        0xB4
 	CheckPutfield,        // PUTFIELD        0xB5
 	CheckInvokevirtual,   // INVOKEVIRTUAL   0xB6
@@ -433,7 +433,7 @@ var CheckTable = [203]BytecodeFunc{
 	Return3,              // INSTANCEOF      0xC1
 	Return1,              // MONITORENTER    0xC2
 	Return1,              // MONITOREXIT     0xC3
-	Return1,              // WIDE            0xC4
+	CheckWide,            // WIDE            0xC4
 	CheckMultianewarray,  // MULTIANEWARRAY  0xC5
 	Return3,              // IFNULL          0xC6
 	Return3,              // IFNONNULL       0xC7
@@ -448,6 +448,7 @@ var CP *CPool
 var Code []byte
 var StackEntries int
 var MaxStack int
+var wideInEffect bool
 
 func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFlags) error {
 	if codePtr == nil {
@@ -481,6 +482,7 @@ func CheckCodeValidity(codePtr *[]byte, cp *CPool, maxStack int, access AccessFl
 	PrevPC = -1 // -1 means no previous PC
 	MaxStack = maxStack
 	StackEntries = 0
+	wideInEffect = false
 
 	for PC < len(code) {
 		opcode := code[PC]
@@ -580,7 +582,7 @@ dup2x1:
 	return 1
 }
 
-// CheckDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
+// DUP2_X2: *NOTE* CheckDup2x2 converts DUP2_X2 to DUP_X2 when it detects that the bytecode is handling a 64-bit value.
 func CheckDup2x2() int {
 	if BytecodePushes32BitValue(Code[PrevPC]) { // check if the previous bytecode is a 32-bit load bytecode
 		goto dup2x2 // if so, we can safely use DUP2
@@ -631,6 +633,16 @@ func PushInt() int {
 	return 1
 }
 
+// ILOAD and LLOAD
+func CheckIload() int {
+	StackEntries += 1
+	if wideInEffect {
+		wideInEffect = false
+		return 3
+	}
+	return 2
+}
+
 // ILOAD* and LLOAD* Push an int or long from local onto op stack
 func PushIntRet2() int {
 	StackEntries += 1
@@ -643,7 +655,7 @@ func PushIntRet3() int {
 	return 3
 }
 
-// GETFIELD 0xB4 Get field from object and push it onto the stack
+// GETFIELD 0xB4 Get non-static field from object and push it onto the stack
 func CheckGetfield() int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
@@ -659,6 +671,25 @@ func CheckGetfield() int {
 		return ERROR_OCCURRED
 	}
 
+	return 3
+}
+
+// GETSTATIC 0xB4 Get static field from object and push it onto the stack
+func CheckGetstatic() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf(
+			"%s in GETSTATIC at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
 	return 3
 }
 
@@ -836,7 +867,7 @@ func CheckPop2() int {
 	return 1
 }
 
-// PUTFIELD 0xB5 Put field
+// PUTFIELD 0xB5 Put non-static field
 func CheckPutfield() int {
 	// check that the index points to a field reference in the CP
 	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
@@ -847,6 +878,24 @@ func CheckPutfield() int {
 	CPentry := CP.CpIndex[CPslot]
 	if CPentry.Type != FieldRef {
 		errMsg := fmt.Sprintf("%s:\n PUTFIELD at %d: CP entry (%d) is not a field reference",
+			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
+		trace.Error(errMsg)
+		return ERROR_OCCURRED
+	}
+	return 3
+}
+
+// PUTSTATIC 0xB3 Put static field
+func CheckPutstatic() int {
+	// check that the index points to a field reference in the CP
+	CPslot := (int(Code[PC+1]) * 256) + int(Code[PC+2]) // next 2 bytes point to CP entry
+	if CPslot < 1 || CPslot >= len(CP.CpIndex) {
+		return ERROR_OCCURRED
+	}
+
+	CPentry := CP.CpIndex[CPslot]
+	if CPentry.Type != FieldRef {
+		errMsg := fmt.Sprintf("%s:\n PUTSTATIC at %d: CP entry (%d) is not a field reference",
 			excNames.JVMexceptionNames[excNames.VerifyError], PC, CPentry.Type)
 		trace.Error(errMsg)
 		return ERROR_OCCURRED
@@ -909,6 +958,12 @@ func CheckSipush() int {
 	} else {
 		return ERROR_OCCURRED
 	}
+}
+
+// WIDE
+func CheckWide() int {
+	wideInEffect = true
+	return 1
 }
 
 // === utility functions ===

@@ -967,38 +967,7 @@ func TestGetFieldObjectWrapsArray(t *testing.T) {
 }
 
 // GETSTATIC: Get a static field's value (here, with error that it's not a fieldref)
-func TestNewGetStaticInvalidFieldEntry(t *testing.T) {
-	globals.InitGlobals("test")
-
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	f := newFrame(opcodes.GETSTATIC)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	// pointing to the next CP entry, which s/be a FieldRef but is a UTF8 record
-	CP.CpIndex[0] = classloader.CpEntry{Type: 1, Slot: 0}
-	f.CP = &CP
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-
-	interpret(fs)
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(msg)
-	if !strings.Contains(errMsg, "Expected a field ref, but got") {
-		t.Errorf("GETFIELD: Expected a different error, got: %s",
-			errMsg)
-	}
-}
+// This test removed b/c it's now handled in codeCheck.go
 
 // GETSTATIC: Get a static field's value (here, an int)
 func TestGetStaticInt(t *testing.T) {

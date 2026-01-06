@@ -2042,46 +2042,7 @@ func TestPutStaticInvalidNoSuchClass(t *testing.T) {
 }
 
 // PUTSTATIC: Update a static field -- invalid b/c does not point to a field ref in the CP
-func TestPutStaticInvalid(t *testing.T) {
-	globals.InitGlobals("test")
-
-	normalStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	f := newFrame(opcodes.PUTSTATIC)
-	f.Meth = append(f.Meth, 0x00)
-	f.Meth = append(f.Meth, 0x01) // Go to slot 0x0001 in the CP
-
-	CP := classloader.CPool{}
-	CP.CpIndex = make([]classloader.CpEntry, 10, 10)
-	CP.CpIndex[0] = classloader.CpEntry{Type: 0, Slot: 0}
-	CP.CpIndex[1] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0} // should be a field ref
-
-	// now create the pointed-to FieldRef
-	CP.FieldRefs = make([]classloader.ResolvedFieldEntry, 1, 1)
-	CP.FieldRefs[0] = classloader.ResolvedFieldEntry{}
-	f.CP = &CP
-
-	fs := frames.CreateFrameStack()
-	fs.PushFront(&f) // push the new frame
-	interpret(fs)
-
-	_ = w.Close()
-	msg, _ := io.ReadAll(r)
-	os.Stderr = normalStderr
-
-	errMsg := string(msg)
-
-	if errMsg == "" {
-		t.Errorf("TestPutStaticInvalidNoSuchClass: Expected error message but errMsg is \"\".")
-	} else {
-		expected := "Expected a field ref, but got"
-		if !strings.Contains(errMsg, expected) {
-			t.Errorf("TestPutStaticInvalidNoSuchClass: expected: %s, observed: %s", expected, errMsg)
-		}
-	}
-}
+// This test is now performed in codeCheck.go (and so, deleted here)
 
 // Helper: sets up a frame and constant pool so bytecodes 0..2 form: PUTSTATIC, 0x00, 0x01
 // CP[1] -> FieldRef slot 0 with (className,fldName,fldSig)
