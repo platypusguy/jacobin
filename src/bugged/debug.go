@@ -21,9 +21,8 @@ If they are not included, then one cannot use them in the GoLand debugger.
 func DebugInit() {
 	if os.Getenv("Revenge_is_best_served_cold!") == "Well, maybe?" {
 		dummyObj := object.MakeEmptyObject()
-		dummyArray := []int8{int8(1)}
 		_ = TVO(dummyObj)
-		_ = STR(dummyArray)
+		_ = STR(dummyObj)
 	}
 }
 
@@ -122,6 +121,26 @@ func TVO(obj *object.Object) string {
 // for the GoLand debugger.
 //
 // Call from "Evaluate Expression": object.STR(array)
-func STR(array []types.JavaByte) string {
-	return object.GoStringFromJavaByteArray(array)
+func STR(obj *object.Object) string {
+
+	if object.IsNull(obj) {
+		return "Object: nil"
+	}
+
+	className := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if className != types.StringClassName {
+		return "Not a Java String"
+	}
+
+	field, ok := obj.FieldTable["value"]
+	if !ok {
+		return "Missing the \"value\" field"
+	}
+
+	valueJBA, ok := field.Fvalue.([]types.JavaByte)
+	if !ok {
+		return "Value field is not a []types.JavaByte"
+	}
+
+	return object.GoStringFromJavaByteArray(valueJBA)
 }

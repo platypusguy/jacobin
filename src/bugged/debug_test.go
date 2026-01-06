@@ -33,3 +33,13 @@ func TestTVO(t *testing.T) {
 
 	t.Log(TVO(obj1))
 }
+
+func TestSTR(t *testing.T) {
+	globals.InitGlobals("test")
+	goString := "The rain in Spain falls mainly on the plain"
+	obj := object.StringObjectFromGoString(goString)
+	observed := STR(obj)
+	if observed != goString {
+		t.Errorf("STR returned %s, expected %s", observed, goString)
+	}
+}
