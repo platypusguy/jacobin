@@ -2968,13 +2968,19 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 
 	clData := *class.Data
 	if mtEntry.MType == 'J' {
+		var className string
 		entry := mtEntry.Meth.(classloader.JmEntry)
+		if entry.AccessFlags&classloader.ACC_PRIVATE > 0 {
+			className = interfaceName
+		} else {
+			className = clData.Name
+		}
 		// the args and the objRef are popped off the stack by following call
 		fram, err := createAndInitNewFrame(
-			clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, fr)
+			className, interfaceMethodName, interfaceMethodType, &entry, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+			errMsg := "INVOKEINTERFACE: Error creating frame in: " + className + "." +
 				interfaceMethodName + interfaceMethodType
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
