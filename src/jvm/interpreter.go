@@ -2428,10 +2428,18 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// then follow the JVM spec and push the objectRef and the parameters to the function
 	// as parameters. Consult:
 	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
+
 	if mtEntry.MType == 'G' { // so we have a golang function
 		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 	}
 
+	/*
+			To resolve a J method for invokevirtual:
+		    - If its JVM-native, Jacobin does not support them.
+		    - Get the reference object from the stack.
+			- Try searching the reference object class & its superclass chain.
+			- If the method is not found, try the reference object class interface hierarchy (JVM spec 5.4.3.4).
+	*/
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
@@ -2448,6 +2456,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// The run-time class object is on the stack, not necessarily at the top.
 		// Get the number of arguments for the function.
 		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
+
 		// Extract the reference object from the stack.
 		refObj, ok := fr.OpStack[fr.TOS-nslots].(*object.Object)
 		if !ok {
@@ -2459,6 +2468,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+
 		// Get the reference object class name.
 		clNameIdx := refObj.KlassName
 		className = *(stringPool.GetStringPointer(clNameIdx))
@@ -2467,6 +2477,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		// First, try superclass resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
+
 			// That did not succeed. So, try for an interface default method.
 			var ret any
 			ret, mtEntry = searchForDefaultInterfaceFunction(className, methodName, methodType)
@@ -2479,6 +2490,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				}
 				return RESUME_HERE // caught
 			}
+
+			// Found an interface default method.
 			className = ret.(string)
 		}
 
@@ -2487,7 +2500,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 		}
 
-		// It's a J function. Get its MTentry.
+		// It's a J function. Get its JmEntry.
 		m = mtEntry.Meth.(classloader.JmEntry)
 		fqn = className + "." + methodName + methodType
 
@@ -2503,6 +2516,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
+		// Create the next frame to execute.
 		fram, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
