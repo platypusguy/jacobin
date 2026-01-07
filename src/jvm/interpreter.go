@@ -2387,14 +2387,15 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
+	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
 	mtEntry := classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}
 
+	// Not found after a class-superclass search. Check the interfaces.
 	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
 		// When a class implements an interface and inherits default methods (or doesn't override them),
 		// the compiler generates INVOKEVIRTUAL
@@ -2405,11 +2406,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				interfaceName := *stringPool.GetStringPointer(index)
 				mtEntry, err = locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
 				if mtEntry.Meth != nil {
+					// =================== Found a match.
 					break
 				}
 			} // end of search of interfaces if method has any
 
-			if err != nil || mtEntry.Meth == nil { // method was not found in interfaces, so throw an exception
+			// Any matches in the interfaces?
+			if err != nil || mtEntry.Meth == nil {
+				// No. Method was not found in interfaces, so throw an exception
 				// TODO: search the classpath and retry
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
@@ -2517,7 +2521,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		}
 
 		// Create the next frame to execute.
-		fram, err := createAndInitNewFrame(
+		nextFrame, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -2529,8 +2533,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		fr.PC += 3                    // 2 for PC slot, move to next bytecode before exiting
-		fr.FrameStack.PushFront(fram) // push the new frame
+		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting
+		fr.FrameStack.PushFront(nextFrame) // push the new frame
 		return 0
 	}
 	return ERROR_OCCURRED // in theory, unreachable
