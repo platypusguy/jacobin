@@ -9,6 +9,7 @@ package jvm
 import (
 	"fmt"
 	"jacobin/src/classloader"
+	"jacobin/src/bugged"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
@@ -34,6 +35,7 @@ var globPtr *globals.Globals
 func JVMrun() int {
 
 	trace.Init()
+	bugged.DebugInit()
 
 	// capture any panics and print diagnostic data
 	defer func() int {
@@ -67,18 +69,6 @@ func JVMrun() int {
 
 	// Enable select functions via a global function variable. (This avoids circularity issues.)
 	InitGlobalFunctionPointers()
-
-	/*
-	This odd-looking code is there to force the Go compiler to include object.TVO() and object.STR() in the executable. 
-	The compiler excludes any functions that have no references (calls). 
-	If they are not included, then one cannot use them in the GoLand debugger.
-	*/
-	if os.Getenv("Revenge_is_best_served_cold!") == "Well, maybe?" {
-		dummyObj := object.MakeEmptyObject()
-		dummyArray := []int8{int8(1)}
-		_ = dummyObj.TVO()
-		_ = object.STR(dummyArray)
-	}
 
 	if globals.TraceInit {
 		trace.Trace("running program: " + globPtr.JacobinName)

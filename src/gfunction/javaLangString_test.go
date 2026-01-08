@@ -42,8 +42,6 @@ func TestStringClinit(t *testing.T) {
 
 func TestStringToUpperCase(t *testing.T) {
 	globals.InitGlobals("test")
-	dummyObj := object.MakeEmptyObject()
-	_ = dummyObj.TVO()
 	originalString := "He did the Monster Mash!"
 	originalObj := object.StringObjectFromGoString(originalString)
 	params := []interface{}{originalObj}

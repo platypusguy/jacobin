@@ -2387,14 +2387,15 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
 
+	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn :=
 		classloader.GetMethInfoFromCPmethref(CP, CPslot)
-
 	mtEntry := classloader.GetMtableEntry(className + "." + methodName + methodType)
 	if mtEntry.Meth == nil { // if the method is not in the method table, search classes or superclasses
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 	}
 
+	// Not found after a class-superclass search. Check the interfaces.
 	if err != nil || mtEntry.Meth == nil { // the method is not in the superclasses, so check interfaces.
 		// When a class implements an interface and inherits default methods (or doesn't override them),
 		// the compiler generates INVOKEVIRTUAL
@@ -2405,11 +2406,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				interfaceName := *stringPool.GetStringPointer(index)
 				mtEntry, err = locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
 				if mtEntry.Meth != nil {
+					// =================== Found a match.
 					break
 				}
 			} // end of search of interfaces if method has any
 
-			if err != nil || mtEntry.Meth == nil { // method was not found in interfaces, so throw an exception
+			// Any matches in the interfaces?
+			if err != nil || mtEntry.Meth == nil {
+				// No. Method was not found in interfaces, so throw an exception
 				// TODO: search the classpath and retry
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
@@ -2428,10 +2432,18 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// then follow the JVM spec and push the objectRef and the parameters to the function
 	// as parameters. Consult:
 	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
+
 	if mtEntry.MType == 'G' { // so we have a golang function
 		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 	}
 
+	/*
+			To resolve a J method for invokevirtual:
+		    - If its JVM-native, Jacobin does not support them.
+		    - Get the reference object from the stack.
+			- Try searching the reference object class & its superclass chain.
+			- If the method is not found, try the reference object class interface hierarchy (JVM spec 5.4.3.4).
+	*/
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
@@ -2445,21 +2457,46 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		if m.AccessFlags&classloader.ACC_ABSTRACT > 0 {
-			// The run-time class object is on the stack.
-			cl := peek(fr).(*object.Object)
-			clNameIdx := cl.KlassName
-			mtEntry, err = classloader.FetchMethodAndCP(*(stringPool.GetStringPointer(clNameIdx)), methodName, methodType)
-			if err != nil || mtEntry.Meth == nil {
+		// The run-time class object is on the stack, not necessarily at the top.
+		// Get the number of arguments for the function.
+		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
+
+		// Extract the reference object from the stack.
+		refObj, ok := fr.OpStack[fr.TOS-nslots].(*object.Object)
+		if !ok {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := "INVOKEVIRTUAL: Stack reference object is nil"
+			status := exceptions.ThrowEx(excNames.NullPointerException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
+
+		// Get the reference object class name.
+		clNameIdx := refObj.KlassName
+		className = *(stringPool.GetStringPointer(clNameIdx))
+
+		// ====================== Method resolution==============================
+		// First, try superclass resolution.
+		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
+		if err != nil || mtEntry.Meth == nil {
+
+			// That did not succeed. So, try for an interface default method.
+			var ret any
+			ret, mtEntry = searchForDefaultInterfaceFunction(className, methodName, methodType)
+			if ret == nil {
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Concreted class method not found: " + fqn
-				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
+				status := exceptions.ThrowEx(excNames.NoSuchMethodError, errMsg, fr)
 				if status != exceptions.Caught {
 					return ERROR_OCCURRED // applies only if in test
 				}
 				return RESUME_HERE // caught
 			}
-			className = *(stringPool.GetStringPointer(clNameIdx))
+
+			// Found an interface default method.
+			className = ret.(string)
 		}
 
 		// Resolve to a G function?
@@ -2467,7 +2504,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 		}
 
-		// It's a J function. Get its MTentry.
+		// It's a J function. Get its JmEntry.
 		m = mtEntry.Meth.(classloader.JmEntry)
 		fqn = className + "." + methodName + methodType
 
@@ -2483,7 +2520,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		fram, err := createAndInitNewFrame(
+		// Create the next frame to execute.
+		nextFrame, err := createAndInitNewFrame(
 			className, methodName, methodType, &m, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -2495,13 +2533,115 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		fr.PC += 3                    // 2 for PC slot, move to next bytecode before exiting
-		fr.FrameStack.PushFront(fram) // push the new frame
+		fr.PC += 3                         // 2 for PC slot, move to next bytecode before exiting
+		fr.FrameStack.PushFront(nextFrame) // push the new frame
 		return 0
 	}
 	return ERROR_OCCURRED // in theory, unreachable
 }
 
+// searchForDefaultInterfaceFunction searches for a default method in all interfaces
+// implemented by className (and their superinterfaces), following JVM rules.
+//
+// JVM rules for default methods:
+//  1. Start with all interfaces directly implemented by the class.
+//  2. Recursively check superinterfaces.
+//  3. If multiple default methods are found with the same signature, throw
+//     IncompatibleClassChangeError (ambiguity).
+//  4. Otherwise, return the most-specific default method (closest to the class).
+//
+// Returns the interface name and mtEntry if a default method is found, or nil if not.
+//
+// Reference: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.3.4
+func searchForDefaultInterfaceFunction(
+	className, methodName, methodType string,
+) (any, classloader.MTentry) {
+
+	var mtEntry classloader.MTentry
+
+	// Fetch runtime class metadata
+	klass := classloader.MethAreaFetch(className)
+	if klass == nil || len(klass.Data.Interfaces) == 0 {
+		// Class does not implement any interfaces
+		return nil, mtEntry
+	}
+
+	// Track visited interfaces to prevent infinite loops
+	visited := make(map[string]bool)
+
+	// Recursive helper to search an interface and its superinterfaces
+	var searchInterface func(intfName string) (string, classloader.MTentry)
+	searchInterface = func(intfName string) (string, classloader.MTentry) {
+		if visited[intfName] {
+			return "", classloader.MTentry{}
+		}
+		visited[intfName] = true
+
+		intfClass := classloader.MethAreaFetch(intfName)
+		if intfClass == nil {
+			return "", classloader.MTentry{}
+		}
+
+		// Step 3a: Build fully qualified method name and check method table
+		fqn := intfName + "." + methodName + methodType
+		mtEntry = classloader.GetMtableEntry(fqn)
+		if mtEntry.Meth != nil {
+			m := mtEntry.Meth.(classloader.JmEntry)
+			if len(m.Code) > 0 {
+				// Found a non-abstract method → candidate default method
+				return intfName, mtEntry
+			}
+		}
+
+		// Step 3b: Recurse into superinterfaces
+		for _, idx := range intfClass.Data.Interfaces {
+			superIntfName := *stringPool.GetStringPointer(uint32(idx))
+			if resName, resMT := searchInterface(superIntfName); resName != "" {
+				return resName, resMT
+			}
+		}
+
+		return "", classloader.MTentry{}
+	}
+
+	// Track all candidates found
+	candidates := make([]struct {
+		intf string
+		mt   classloader.MTentry
+	}, 0)
+
+	// Search all interfaces directly implemented by this class
+	for _, idx := range klass.Data.Interfaces {
+		intfName := *stringPool.GetStringPointer(uint32(idx))
+		if resName, resMT := searchInterface(intfName); resName != "" {
+			candidates = append(candidates, struct {
+				intf string
+				mt   classloader.MTentry
+			}{resName, resMT})
+		}
+	}
+
+	// JVM rule: handle multiple candidates
+	if len(candidates) > 1 {
+		// Conflict detected: multiple default methods with same signature
+		errMsg := "INVOKEVIRTUAL: Ambiguous default method for " + className + "." + methodName + methodType
+		status := exceptions.ThrowEx(excNames.IncompatibleClassChangeError, errMsg, nil)
+		if status != exceptions.Caught {
+			// Only relevant in test; return empty
+			return nil, classloader.MTentry{}
+		}
+	}
+
+	// Return the most-specific default method (first found)
+	if len(candidates) == 1 {
+		return candidates[0].intf, candidates[0].mt
+	}
+
+	// No default method found
+	return nil, mtEntry
+}
+
+// Execute an INVOKEVIRTUAL G function.
 func invokeVirtualGfunction(fr *frames.Frame,
 	mtEntry classloader.MTentry,
 	className, methodName, methodType string) int {
@@ -2848,13 +2988,19 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 
 	clData := *class.Data
 	if mtEntry.MType == 'J' {
+		var className string
 		entry := mtEntry.Meth.(classloader.JmEntry)
+		if entry.AccessFlags&classloader.ACC_PRIVATE > 0 {
+			className = interfaceName
+		} else {
+			className = clData.Name
+		}
 		// the args and the objRef are popped off the stack by following call
 		fram, err := createAndInitNewFrame(
-			clData.Name, interfaceMethodName, interfaceMethodType, &entry, true, fr)
+			className, interfaceMethodName, interfaceMethodType, &entry, true, fr)
 		if err != nil {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := "INVOKEINTERFACE: Error creating frame in: " + clData.Name + "." +
+			errMsg := "INVOKEINTERFACE: Error creating frame in: " + className + "." +
 				interfaceMethodName + interfaceMethodType
 			status := exceptions.ThrowEx(excNames.InvalidStackFrameException, errMsg, fr)
 			if status != exceptions.Caught {
@@ -3728,7 +3874,7 @@ func notImplemented(fr *frames.Frame, _ int64) int {
 	opcode := fr.Meth[fr.PC]
 	opcodeName := opcodes.BytecodeNames[opcode]
 	errMsg := fmt.Sprintf("bytecode %s not implemented at present", opcodeName)
-	_ = exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
+	_ = exceptions.ThrowEx(excNames.UnsupportedOperationException, errMsg, fr)
 	return ERROR_OCCURRED
 }
 
