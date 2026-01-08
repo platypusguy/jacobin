@@ -2758,8 +2758,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 					return ERROR_OCCURRED
 				}
 				if errors.Is(ret.(error), gfunction.CaughtGfunctionException) {
-					fr.PC += 1 // point to the next executable bytecode
-					return 3   // 2 for CP slot + 1 for next bytecode
+					return RESUME_HERE // resume at the present PC, which points to the exception code
 				}
 			default: // if it's not an error, then it's a legitimate return value, which we simply push
 				push(fr, ret)

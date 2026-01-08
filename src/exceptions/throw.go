@@ -109,7 +109,7 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 		// 2. pushing the objRef on the op stack of the frame
 		// 3. setting the PC to point to the catch code (which expects the objRef at TOS)
 		if globals.TraceVerbose {
-			infoMsg := fmt.Sprintf("[ThrowEx] caught %s, FQN: %s, msg: %s", exceptionCPname, frames.FormatFQN(f), msg)
+			infoMsg := fmt.Sprintf("[ThrowEx] caught %s, catch-PC: %d, FQN: %s, msg: %s", exceptionCPname, catchPC, frames.FormatFQN(f), msg)
 			trace.Trace(infoMsg)
 		}
 
