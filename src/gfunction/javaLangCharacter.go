@@ -478,5 +478,5 @@ func charToUpperCase(params []interface{}) interface{} {
 // "java/lang/Character.valueOf(C)Ljava/lang/Character;"
 func characterValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return Populator("java/lang/Character", types.Char, int64Value)
+	return object.MakePrimitiveObject("java/lang/Character", types.Char, int64Value)
 }

@@ -11,8 +11,10 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
+	"jacobin/src/trace"
 	"jacobin/src/types"
 	"reflect"
+	"strings"
 )
 
 /*  This file contains some data structures and some primitive
@@ -240,29 +242,58 @@ func MakeArrayFromRawArray(rawArray interface{}) *Object {
 	return nil
 }
 
-// ArrayLength returns the length of an array object, when passed a pointer to it
+// ArrayLength returns the length of the underlying array in field "value".
 func ArrayLength(arrayRef *Object) int64 {
-	var size int64
-	o := arrayRef.FieldTable["value"]
-	arrayType := o.Ftype
+	fld := arrayRef.FieldTable["value"]
+	arrayType := fld.Ftype
+
 	switch arrayType {
 	case types.ByteArray, types.BoolArray:
-		// Note that the elements of boolean and byte array types are of type JavaByte.
-		// Reference: JVM spec.
-		array := o.Fvalue.([]types.JavaByte)
-		size = int64(len(array))
-	case types.RefArray:
-		array := o.Fvalue.([]*Object)
-		size = int64(len(array))
+		if array, ok := fld.Fvalue.([]types.JavaByte); ok {
+			return int64(len(array))
+		} else {
+			globals.GetGlobalRef().FuncThrowException(
+				excNames.IllegalArgumentException,
+				fmt.Sprintf("ArrayLength: expected []JavaByte, got %T", fld.Fvalue))
+		}
+
 	case types.FloatArray, types.DoubleArray:
-		array := o.Fvalue.([]float64)
-		size = int64(len(array))
+		if array, ok := fld.Fvalue.([]float64); ok {
+			return int64(len(array))
+		} else {
+			globals.GetGlobalRef().FuncThrowException(
+				excNames.IllegalArgumentException,
+				fmt.Sprintf("ArrayLength: expected []float64, got %T", fld.Fvalue))
+		}
+
 	case types.IntArray, types.LongArray, types.ShortArray, types.CharArray:
-		array := o.Fvalue.([]int64)
-		size = int64(len(array))
+		if array, ok := fld.Fvalue.([]int64); ok {
+			return int64(len(array))
+		} else {
+			globals.GetGlobalRef().FuncThrowException(
+				excNames.IllegalArgumentException,
+				fmt.Sprintf("ArrayLength: expected []int64, got %T", fld.Fvalue))
+		}
+
 	default:
-		array := o.Fvalue.([]*Object)
-		size = int64(len(array))
+		if strings.HasPrefix(arrayType, types.Array) {
+			switch slice := fld.Fvalue.(type) {
+			case []*Object:
+				return int64(len(slice))
+			case []interface{}:
+				trace.Warning("ArrayLength: unexpected array as type []interface{}")
+				return int64(len(slice))
+			default:
+				globals.GetGlobalRef().FuncThrowException(
+					excNames.IllegalArgumentException,
+					fmt.Sprintf("ArrayLength: unexpected array type: %T", fld.Fvalue))
+			}
+		}
 	}
-	return size
+
+	// fallback if arrayType didn't match anything
+	globals.GetGlobalRef().FuncThrowException(
+		excNames.IllegalArgumentException,
+		fmt.Sprintf("ArrayLength: unexpected array type: %v", arrayType))
+	return -1
 }

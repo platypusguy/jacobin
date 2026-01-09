@@ -65,7 +65,7 @@ func TestDouble_Coverage(t *testing.T) {
 	}
 
 	classNameInt := "java/lang/Integer"
-	intObj := Populator(classNameInt, types.Int, int64(42))
+	intObj := object.MakePrimitiveObject(classNameInt, types.Int, int64(42))
 	if doubleEquals([]interface{}{d1, intObj}) != types.JavaBoolFalse {
 		t.Errorf("doubleEquals(Double, Integer) expected false")
 	}

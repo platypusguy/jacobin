@@ -201,7 +201,7 @@ func byteDecode(params []interface{}) interface{} {
 	}
 
 	// Create Byte object.
-	return Populator(classNameByte, types.Byte, int64Value)
+	return object.MakePrimitiveObject(classNameByte, types.Byte, int64Value)
 }
 
 // "java/lang/Byte.doubleValue()D"
@@ -331,7 +331,7 @@ func byteToUnsignedLong(params []interface{}) interface{} {
 // "java/lang/Byte.valueOf(B)Ljava/lang/Byte;"
 func byteValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return Populator(classNameByte, types.Byte, int64Value)
+	return object.MakePrimitiveObject(classNameByte, types.Byte, int64Value)
 }
 
 // "java/lang/Byte.valueOf(Ljava/lang/String;)Ljava/lang/Byte;"
@@ -347,5 +347,5 @@ func byteValueOfString(params []interface{}) interface{} {
 	if err != nil {
 		return getGErrBlk(excNames.NumberFormatException, fmt.Sprintf("byteValueOfString: %v", err))
 	}
-	return Populator(classNameByte, types.Byte, val)
+	return object.MakePrimitiveObject(classNameByte, types.Byte, val)
 }

@@ -351,26 +351,56 @@ func getSuperclasses(classNameIndex uint32) []uint32 {
 	return retval
 }
 
-func checkcastNonArrayObject(obj *object.Object, className string) bool {
+func checkcastNonArrayObject(srcObj *object.Object, targetClassName string) bool {
 	// the object being checked is a class
 	// glob := globals.GetGlobalRef()
-	classPtr := classloader.MethAreaFetch(className)
+	classPtr := classloader.MethAreaFetch(targetClassName)
 	if classPtr == nil { // class wasn't loaded, so load it now
-		if classloader.LoadClassFromNameOnly(className) != nil {
+		if classloader.LoadClassFromNameOnly(targetClassName) != nil {
 			// glob.ErrorGoStack = string(debug.Stack())
 			// return errors.New("CHECKCAST: Could not load class: "
 			// + className)
 			return false
 		}
-		classPtr = classloader.MethAreaFetch(className)
+		classPtr = classloader.MethAreaFetch(targetClassName)
 	}
 
 	// if classPtr does not point to the entry for the same class, then examine superclasses
-	if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(obj.KlassName))) {
+	if classPtr == classloader.MethAreaFetch(*(stringPool.GetStringPointer(srcObj.KlassName))) {
 		return true
-	} else if isClassAaSublclassOfB(obj.KlassName, stringPool.GetStringIndex(&className)) {
+	} else if isClassAaSublclassOfB(srcObj.KlassName, stringPool.GetStringIndex(&targetClassName)) {
+		return true
+	} else {
+		// Casting from a java/lang/Object containing a Java byte array to a java/lang/String?
+		if isObjectBytesToString(srcObj, targetClassName) {
+			return true
+		}
+	}
+	// None of the above
+	return false
+}
+
+// Allow a cast from src:java/lang/Object to dest:java/lang/String if src.value is a Java byte array.
+func isObjectBytesToString(srcObj *object.Object, destClassName string) bool {
+	// Destination object is of type java/lang/String?
+	if destClassName != types.StringClassName {
+		return false
+	}
+	// Source object is of type java/lang/Object?
+	srcClassName := *stringPool.GetStringPointer(srcObj.KlassName)
+	if srcClassName != types.ObjectClassName {
+		return false
+	}
+	// Source object value field contains an array of Java bytes?
+	srcField, ok := srcObj.FieldTable["value"]
+	if !ok {
+		return false
+	}
+	switch srcField.Fvalue.(type) {
+	case []types.JavaByte:
 		return true
 	}
+	// None of the above.
 	return false
 }
 
@@ -389,7 +419,7 @@ func checkcastNonArrayObject(obj *object.Object, className string) bool {
 // >          TC and SC are the same primitive type.
 // >          TC and SC are reference types, and type SC can be cast to TC by
 // >             recursive application of these rules.
-func checkcastArray(obj *object.Object, className string) bool {
+func checkcastArray(obj *object.Object, targetClassName string) bool {
 	if obj.KlassName == types.InvalidStringIndex {
 		errMsg := "CHECKCAST: expected to verify class or interface, but got none"
 		status := exceptions.ThrowExNil(excNames.InvalidTypeException, errMsg)
@@ -400,14 +430,14 @@ func checkcastArray(obj *object.Object, className string) bool {
 
 	sptr := stringPool.GetStringPointer(obj.KlassName)
 	// if they're both the same type of arrays, we're good
-	if *sptr == className || strings.HasPrefix(className, *sptr) {
+	if *sptr == targetClassName {
 		return true
 	}
 
 	// If S (obj) is an array type SC[], that is, an array of components of type SC,
 	// then: If T (className) is a class type, then T must be Object.
-	if !strings.HasPrefix(className, types.Array) {
-		return className == "java/lang/Object"
+	if !strings.HasPrefix(targetClassName, types.Array) {
+		return targetClassName == "java/lang/Object"
 	}
 
 	// If S (obj) is an array type SC[], that is, an array of components of type SC,
@@ -415,7 +445,7 @@ func checkcastArray(obj *object.Object, className string) bool {
 	// then one of the following must be true:
 	// >          TC and SC are the same primitive type.
 	objArrayType := object.GetArrayType(*sptr)
-	classArrayType := object.GetArrayType(className)
+	classArrayType := object.GetArrayType(targetClassName)
 	if !strings.HasPrefix(objArrayType, "L") && // if both array types are primitives
 		!strings.HasPrefix(classArrayType, "L") {
 		if objArrayType == classArrayType { // are they the same primitive?
@@ -431,16 +461,27 @@ func checkcastArray(obj *object.Object, className string) bool {
 	rawObjArrayType = strings.TrimSuffix(rawObjArrayType, ";")
 	rawClassArrayType, _ := strings.CutPrefix(classArrayType, "L")
 	rawClassArrayType = strings.TrimSuffix(rawClassArrayType, ";")
-	if rawObjArrayType == classArrayType || rawClassArrayType == "java/lang/Object" {
+
+	// String output test.
+
+	// Subclass test
+	if rawObjArrayType == rawClassArrayType {
 		return true
-	} else {
-		return isClassAaSublclassOfB(
-			stringPool.GetStringIndex(&rawObjArrayType),
-			stringPool.GetStringIndex(&rawClassArrayType))
 	}
+	if rawClassArrayType == types.ObjectClassName {
+		return true
+	}
+	if isClassAaSublclassOfB(
+		stringPool.GetStringIndex(&rawObjArrayType),
+		stringPool.GetStringIndex(&rawClassArrayType)) {
+		return true
+	}
+
+	// None of the above
+	return false
 }
 
-func checkcastInterface(obj *object.Object, className string) bool {
+func checkcastInterface(obj *object.Object, targetClassName string) bool {
 	return false // TODO: fill this in
 }
 

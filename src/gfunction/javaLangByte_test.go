@@ -128,7 +128,7 @@ func TestByteDecode_Various(t *testing.T) {
 func TestByteDoubleValue_ToString_ValueOf(t *testing.T) {
 	globals.InitGlobals("test")
 
-	b := Populator("java/lang/Byte", types.Byte, int64(127))
+	b := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64(127))
 
 	// doubleValue
 	if v := byteFloatDoubleValue([]interface{}{b}); v.(float64) != float64(127) {
@@ -221,7 +221,7 @@ func TestByte_AdditionalMethods(t *testing.T) {
 
 func TestByteIntLongShortByteValue(t *testing.T) {
 	globals.InitGlobals("test")
-	b := Populator("java/lang/Byte", types.Byte, int64(42))
+	b := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64(42))
 
 	// byteValue
 	if v := byteIntLongShortByteValue([]interface{}{b}); v.(int64) != 42 {

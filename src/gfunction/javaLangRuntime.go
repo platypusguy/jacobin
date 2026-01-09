@@ -218,5 +218,5 @@ func totalMemory([]interface{}) interface{} {
 func runtimeVersion([]interface{}) interface{} {
 	// For now, we return a version object that represents Java 17.
 	// In a real implementation, this would be more complex.
-	return Populator("java/lang/Runtime$Version", types.Ref, nil)
+	return object.MakePrimitiveObject("java/lang/Runtime$Version", types.Ref, nil)
 }

@@ -10,7 +10,7 @@ import (
 
 // helper to create a java/lang/Double object with a given value
 func makeDouble(val float64) *object.Object {
-	return Populator("java/lang/Double", types.Double, val)
+	return object.MakePrimitiveObject("java/lang/Double", types.Double, val)
 }
 
 func TestDouble_ValueOf_And_DoubleValue(t *testing.T) {

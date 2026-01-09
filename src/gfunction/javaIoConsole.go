@@ -194,7 +194,7 @@ func consoleReadPassword([]interface{}) interface{} {
 	for _, bb := range password {
 		iArray = append(iArray, int64(bb))
 	}
-	return Populator("[C", types.IntArray, iArray)
+	return object.MakePrimitiveObject("[C", types.IntArray, iArray)
 }
 
 // Provides a formatted prompt, then reads a password or passphrase from the console.

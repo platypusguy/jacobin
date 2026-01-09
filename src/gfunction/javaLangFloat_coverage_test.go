@@ -86,7 +86,7 @@ func TestFloat_Coverage(t *testing.T) {
 	if floatEquals([]interface{}{f1, (*object.Object)(nil)}) != types.JavaBoolFalse {
 		t.Errorf("floatEquals(obj, nil) expected false")
 	}
-	intObj := Populator("java/lang/Integer", types.Int, int64(42))
+	intObj := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
 	if floatEquals([]interface{}{f1, intObj}) != types.JavaBoolFalse {
 		t.Errorf("floatEquals(Float, Integer) expected false")
 	}

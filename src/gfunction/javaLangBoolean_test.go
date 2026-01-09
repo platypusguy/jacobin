@@ -68,7 +68,7 @@ func TestLoad_Lang_Boolean_RegistersMethods(t *testing.T) {
 func TestBooleanBooleanValue_ValidAndInvalid(t *testing.T) {
 	globals.InitGlobals("test")
 
-	btrue := Populator("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
+	btrue := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
 	ret := booleanBooleanValue([]interface{}{btrue})
 	if v, ok := ret.(int64); !ok || v != types.JavaBoolTrue {
 		t.Fatalf("booleanBooleanValue(true) got %v (%T)", ret, ret)
@@ -192,7 +192,7 @@ func TestBooleanHashCode_And_Compare(t *testing.T) {
 		t.Fatalf("hashCode(false) expected 1237, got %v", v)
 	}
 
-	bTrue := Populator("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
+	bTrue := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
 	if v := booleanHashCode([]interface{}{bTrue}); v.(int64) != 1231 {
 		t.Fatalf("hashCode(obj true) expected 1231")
 	}
@@ -209,7 +209,7 @@ func TestBooleanHashCode_And_Compare(t *testing.T) {
 	}
 
 	// compareTo
-	bFalse := Populator("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
+	bFalse := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
 	if v := booleanCompareTo([]interface{}{bTrue, bFalse}).(int64); v <= 0 {
 		t.Fail()
 	}
@@ -235,18 +235,18 @@ func TestBooleanLogical_And_ToString_Equals(t *testing.T) {
 		t.Fail()
 	}
 
-	bFalse := Populator("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
+	bFalse := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
 	sObj2 := booleanToString([]interface{}{bFalse}).(*object.Object)
 	if object.GoStringFromStringObject(sObj2) != "false" {
 		t.Fail()
 	}
 
 	// equals
-	bFalse2 := Populator("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
+	bFalse2 := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolFalse)
 	if v := booleanEquals([]interface{}{bFalse, bFalse2}); v != types.JavaBoolTrue {
 		t.Fail()
 	}
-	bTrue := Populator("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
+	bTrue := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, types.JavaBoolTrue)
 	if v := booleanEquals([]interface{}{bFalse, bTrue}); v != types.JavaBoolFalse {
 		t.Fail()
 	}
