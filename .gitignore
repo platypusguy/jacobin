@@ -27,5 +27,5 @@ docs/
 *.sh
 
 # Dependency directories (remove the comment below to include it)
-
-
+/mytestdata/
+/myNotes
