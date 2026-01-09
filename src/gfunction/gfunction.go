@@ -272,18 +272,6 @@ func loadlib(tbl *classloader.MT, libMeths map[string]GMeth) {
 	}
 }
 
-// Populate an object for a primitive type (Byte, Character, Double, Float, Integer, Long, Short, String).
-func Populator(classname string, fldtype string, fldvalue interface{}) *object.Object {
-	var objPtr *object.Object
-	if fldtype == types.StringIndex {
-		objPtr = object.StringObjectFromGoString(fldvalue.(string))
-	} else {
-		objPtr = object.MakePrimitiveObject(classname, fldtype, fldvalue)
-		(*objPtr).FieldTable["value"] = object.Field{fldtype, fldvalue}
-	}
-	return objPtr
-}
-
 // Invoke invokes a G function without setting up a frame. It is used primarily for
 // calling constructors on libraries that are loaded as gfunctions.
 func Invoke(whichFunc string, params []interface{}) interface{} {

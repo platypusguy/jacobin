@@ -98,14 +98,14 @@ func TestCheckKey(t *testing.T) {
 	}
 }
 
-func TestPopulator_PrimitivesAndString(t *testing.T) {
+func TestPopulate_PrimitivesAndString(t *testing.T) {
 	globals.InitGlobals("test")
 	globals.InitStringPool()
 
 	// Integer primitive object
-	iobj := Populator("java/lang/Integer", "I", int64(42))
+	iobj := object.MakePrimitiveObject("java/lang/Integer", "I", int64(42))
 	if iobj == nil {
-		t.Fatalf("Populator returned nil for Integer")
+		t.Fatalf("object.MakePrimitiveObject returned nil for Integer")
 	}
 	fld, ok := iobj.FieldTable["value"]
 	if !ok || fld.Ftype != "I" {
@@ -116,12 +116,12 @@ func TestPopulator_PrimitivesAndString(t *testing.T) {
 	}
 
 	// String via StringIndex path returns a proper String object
-	sobj := Populator("java/lang/String", "T", "hello")
+	sobj := object.MakePrimitiveObject("java/lang/String", "T", "hello")
 	if sobj == nil {
-		t.Fatalf("Populator returned nil for String")
+		t.Fatalf("object.MakePrimitiveObject returned nil for String")
 	}
 	if !object.IsStringObject(sobj) {
-		t.Fatalf("Populator did not create a String object")
+		t.Fatalf("object.MakePrimitiveObject did not create a String object")
 	}
 	if s := object.GoStringFromStringObject(sobj); s != "hello" {
 		t.Fatalf("String content mismatch: %q", s)

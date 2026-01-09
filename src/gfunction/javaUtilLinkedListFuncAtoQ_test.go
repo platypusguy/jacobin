@@ -180,7 +180,7 @@ func TestLinkedList_Contains_For_Strings_And_Ints(t *testing.T) {
 	assertJavaBoolLL(t, linkedlistContains([]interface{}{ll, int64(42)}), types.JavaBoolTrue, "contains 42")
 
 	// Non-String object should raise UnsupportedOperationException in comparator/equality
-	nonStringObj := Populator("java/lang/Integer", types.Int, int64(7))
+	nonStringObj := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(7))
 	if err := linkedlistContains([]interface{}{ll, nonStringObj}); err == nil {
 		t.Fatalf("expected error for non-String object contains check")
 	} else if geb, ok := err.(*GErrBlk); ok {

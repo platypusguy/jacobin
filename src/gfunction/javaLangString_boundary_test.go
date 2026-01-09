@@ -330,9 +330,9 @@ func TestStringToCharArray(t *testing.T) {
 		t.Errorf("Expected CharArray type, got %s", res.FieldTable["value"].Ftype)
 	}
 
-	// Since we can't easily inspect the array object contents without knowing Populator internals
+	// Since we can't easily inspect the array object contents without knowing object.MakePrimitiveObject internals
 	// or using other G-functions, we'll assume it's correct if it didn't panic and returned the right type.
-	// Actually, Populator for CharArray should store []int64 in Fvalue of the value field.
+	// Actually, object.MakePrimitiveObject for CharArray should store []int64 in Fvalue of the value field.
 }
 
 func TestStringSplit(t *testing.T) {
@@ -388,7 +388,7 @@ func TestStringGetChars(t *testing.T) {
 
 	// Create a char array [10]
 	iArray := make([]int64, 10)
-	charArrayObj := Populator("[C", types.CharArray, iArray)
+	charArrayObj := object.MakePrimitiveObject("[C", types.CharArray, iArray)
 
 	// Copy "ell" to charArray at index 2
 	// getChars(srcBegin, srcEnd, dst[], dstBegin)
@@ -426,7 +426,7 @@ func TestStringConstructor_Boundary(t *testing.T) {
 
 	// newStringFromBytes(byte[] bytes)
 	bytes := []types.JavaByte{types.JavaByte('a'), types.JavaByte('b'), types.JavaByte('c')}
-	bytesObj := Populator("[B", types.ByteArray, bytes)
+	bytesObj := object.MakePrimitiveObject("[B", types.ByteArray, bytes)
 	res := newStringFromBytes([]interface{}{thisObj, bytesObj})
 	if res != nil {
 		t.Fatalf("newStringFromBytes returned error: %v", res)
@@ -437,7 +437,7 @@ func TestStringConstructor_Boundary(t *testing.T) {
 
 	// Boundary: newStringFromBytes with empty array
 	emptyBytes := []types.JavaByte{}
-	emptyBytesObj := Populator("[B", types.ByteArray, emptyBytes)
+	emptyBytesObj := object.MakePrimitiveObject("[B", types.ByteArray, emptyBytes)
 	res = newStringFromBytes([]interface{}{thisObj, emptyBytesObj})
 	if object.GoStringFromStringObject(thisObj) != "" {
 		t.Errorf("newStringFromBytes(empty) expected '', got %s", object.GoStringFromStringObject(thisObj))

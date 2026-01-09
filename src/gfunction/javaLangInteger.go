@@ -379,7 +379,7 @@ func integerDecode(params []interface{}) interface{} {
 	}
 
 	// Create Integer object.
-	return Populator("java/lang/Integer", types.Int, int64Value)
+	return object.MakePrimitiveObject("java/lang/Integer", types.Int, int64Value)
 }
 
 // "java/lang/Integer.doubleValue()D"
@@ -1072,7 +1072,7 @@ func integerToUnsignedLong(params []interface{}) interface{} {
 // "java/lang/Integer.valueOf(I)Ljava/lang/Integer;"
 func integerValueOfInt(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return Populator("java/lang/Integer", types.Int, int64Value)
+	return object.MakePrimitiveObject("java/lang/Integer", types.Int, int64Value)
 }
 
 // integerValueOf returns an Integer object for the specified string,

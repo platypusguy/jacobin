@@ -252,7 +252,7 @@ func sdfParse(params []interface{}) interface{} {
 	}
 
 	// Create new Date object
-	return Populator("java/util/Date", types.Long, t.UnixMilli())
+	return object.MakePrimitiveObject("java/util/Date", types.Long, t.UnixMilli())
 }
 
 func javaToGoDateFormat(javaPattern string) string {

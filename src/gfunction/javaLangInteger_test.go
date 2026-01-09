@@ -23,7 +23,7 @@ func checkIntegerErrType(t *testing.T, res interface{}, expected int) {
 func TestIntegerByteValue(t *testing.T) {
 	globals.InitStringPool()
 	// Create an Integer object with value 127
-	intObj := Populator("java/lang/Integer", types.Int, int64(127))
+	intObj := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(127))
 	params := []interface{}{intObj}
 
 	res := integerByteValue(params)
@@ -32,7 +32,7 @@ func TestIntegerByteValue(t *testing.T) {
 	}
 
 	// Test with value that will be truncated
-	intObj = Populator("java/lang/Integer", types.Int, int64(257))
+	intObj = object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(257))
 	params = []interface{}{intObj}
 
 	res = integerByteValue(params)
@@ -119,7 +119,7 @@ func TestIntegerToString(t *testing.T) {
 	globals.InitStringPool()
 
 	// Create an Integer object with value 123
-	intObj := Populator("java/lang/Integer", "I", int64(123))
+	intObj := object.MakePrimitiveObject("java/lang/Integer", "I", int64(123))
 	params := []interface{}{intObj}
 
 	res := integerToString(params)

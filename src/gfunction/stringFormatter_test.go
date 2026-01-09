@@ -20,7 +20,7 @@ func TestStringFormatter_Newline_And_Boolean(t *testing.T) {
 	// format with %n and %b on a non-boolean arg (should be true)
 	fmtObj := object.StringObjectFromGoString("Line1%nLine2 %b")
 	// one integer argument
-	intObj := Populator("java/lang/Integer", types.Int, int64(1))
+	intObj := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(1))
 	argsArr := makeObjectRefArray(intObj)
 
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
@@ -65,7 +65,7 @@ func TestStringFormatter_Hash_For_String(t *testing.T) {
 func TestStringFormatter_Object_ToString_Like(t *testing.T) {
 	globals.InitStringPool()
 	fmtObj := object.StringObjectFromGoString("obj=%s")
- o := object.MakeEmptyObject()
+	o := object.MakeEmptyObject()
 	o.KlassName = object.StringPoolIndexFromGoString("com/example/Dummy")
 	// ensure non-null per Jacobin's IsNull (requires at least one field)
 	o.FieldTable["_marker"] = object.Field{Ftype: types.Int, Fvalue: int64(0)}
@@ -80,7 +80,7 @@ func TestStringFormatter_Object_ToString_Like(t *testing.T) {
 
 func TestStringFormatter_Numeric_Passthrough(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%04x")
-	i := Populator("java/lang/Integer", types.Int, int64(26))
+	i := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(26))
 	argsArr := makeObjectRefArray(i)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -91,7 +91,7 @@ func TestStringFormatter_Numeric_Passthrough(t *testing.T) {
 
 func TestStringFormatter_FloatZeroPad(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%020.12f")
-	d := Populator("java/lang/Double", types.Double, float64(123.4567))
+	d := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(123.4567))
 	argsArr := makeObjectRefArray(d)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -103,7 +103,7 @@ func TestStringFormatter_FloatZeroPad(t *testing.T) {
 
 func TestStringFormatter_HexNegativeInt_ZeroPad(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%08x")
-	i := Populator("java/lang/Integer", types.Int, int64(-64))
+	i := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(-64))
 	argsArr := makeObjectRefArray(i)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -115,7 +115,7 @@ func TestStringFormatter_HexNegativeInt_ZeroPad(t *testing.T) {
 
 func TestStringFormatter_HexByte_Negative_TwoDigits(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%02x")
-	b := Populator("java/lang/Byte", types.Byte, int64(-1))
+	b := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64(-1))
 	argsArr := makeObjectRefArray(b)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -132,8 +132,8 @@ func TestStringFormatter_FixedWidthNoZeroPad(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtStr := "%18.6e %18.6e%n%18.6f %18.6f%n"
 	fmtObj := object.StringObjectFromGoString(fmtStr)
-	d1 := Populator("java/lang/Double", types.Double, float64(22))
-	d2 := Populator("java/lang/Double", types.Double, float64(33))
+	d1 := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(22))
+	d2 := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(33))
 	argsArr := makeObjectRefArray(d1, d2, d1, d2)
 
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
@@ -163,8 +163,8 @@ func TestStringFormatter_LiteralPercent(t *testing.T) {
 
 func TestStringFormatter_Decimal_Padding(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%05d %-6d")
-	i1 := Populator("java/lang/Integer", types.Int, int64(42))
-	i2 := Populator("java/lang/Integer", types.Int, int64(7))
+	i1 := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(42))
+	i2 := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(7))
 	argsArr := makeObjectRefArray(i1, i2)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -176,7 +176,7 @@ func TestStringFormatter_Decimal_Padding(t *testing.T) {
 
 func TestStringFormatter_Octal_Padding(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%06o")
-	b := Populator("java/lang/Byte", types.Byte, int64(255)) // 0xff -> octal 377
+	b := object.MakePrimitiveObject("java/lang/Byte", types.Byte, int64(255)) // 0xff -> octal 377
 	argsArr := makeObjectRefArray(b)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -189,7 +189,7 @@ func TestStringFormatter_Octal_Padding(t *testing.T) {
 
 func TestStringFormatter_UpperHex_Padding(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%08X")
-	i := Populator("java/lang/Integer", types.Int, int64(26))
+	i := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(26))
 	argsArr := makeObjectRefArray(i)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -201,7 +201,7 @@ func TestStringFormatter_UpperHex_Padding(t *testing.T) {
 
 func TestStringFormatter_Scientific_Uppercase(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%12.3E")
-	d := Populator("java/lang/Double", types.Double, float64(1234.56))
+	d := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(1234.56))
 	argsArr := makeObjectRefArray(d)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -215,8 +215,8 @@ func TestStringFormatter_Scientific_Uppercase(t *testing.T) {
 
 func TestStringFormatter_General_gG(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%g %G")
-	d1 := Populator("java/lang/Double", types.Double, float64(12345.0))
-	d2 := Populator("java/lang/Double", types.Double, float64(0.0012345))
+	d1 := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(12345.0))
+	d2 := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(0.0012345))
 	argsArr := makeObjectRefArray(d1, d2)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -236,8 +236,8 @@ func TestStringFormatter_General_gG(t *testing.T) {
 
 func TestStringFormatter_Char_From_Char_And_Int(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%c %c")
-	ch := Populator("java/lang/Character", types.Char, int64('a'))
-	code := Populator("java/lang/Integer", types.Int, int64(66)) // 'B'
+	ch := object.MakePrimitiveObject("java/lang/Character", types.Char, int64('a'))
+	code := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(66)) // 'B'
 	argsArr := makeObjectRefArray(ch, code)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -249,7 +249,7 @@ func TestStringFormatter_Char_From_Char_And_Int(t *testing.T) {
 
 func TestStringFormatter_ArgumentIndex_And_Reuse(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%2$s-%1$d %2$s %<S")
-	i := Populator("java/lang/Integer", types.Int, int64(3))
+	i := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(3))
 	s := object.StringObjectFromGoString("id")
 	argsArr := makeObjectRefArray(i, s)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
@@ -275,8 +275,8 @@ func TestStringFormatter_StringPaddingAndPrecision(t *testing.T) {
 
 func TestStringFormatter_SignFlags_For_Decimal(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%+d % d")
-	p := Populator("java/lang/Integer", types.Int, int64(5))
-	n := Populator("java/lang/Integer", types.Int, int64(-5))
+	p := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(5))
+	n := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64(-5))
 	argsArr := makeObjectRefArray(p, n)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -304,7 +304,7 @@ func TestStringFormatter_Boolean_Uppercase(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%2B %2B")
 	// First arg: non-boolean non-null -> true; Second arg: nil -> false
-	i := Populator("java/lang/Boolean", types.Bool, int64(1))
+	i := object.MakePrimitiveObject("java/lang/Boolean", types.Bool, int64(1))
 	argsArr := makeObjectRefArray(i, nil)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -317,7 +317,7 @@ func TestStringFormatter_Boolean_Uppercase(t *testing.T) {
 func TestStringFormatter_Hash_For_Double(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%h")
-	d := Populator("java/lang/Double", types.Double, float64(123.45))
+	d := object.MakePrimitiveObject("java/lang/Double", types.Double, float64(123.45))
 	argsArr := makeObjectRefArray(d)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -330,7 +330,7 @@ func TestStringFormatter_Hash_For_Double(t *testing.T) {
 func TestStringFormatter_Hash_For_Float_Positive(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%h")
-	f := Populator("java/lang/Float", types.Float, float64(123.45))
+	f := object.MakePrimitiveObject("java/lang/Float", types.Float, float64(123.45))
 	argsArr := makeObjectRefArray(f)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -343,7 +343,7 @@ func TestStringFormatter_Hash_For_Float_Positive(t *testing.T) {
 func TestStringFormatter_Hash_For_Float_Negative_Upper(t *testing.T) {
 	globals.InitGlobals("test")
 	fmtObj := object.StringObjectFromGoString("%H")
-	f := Populator("java/lang/Float", types.Float, float64(-123.45))
+	f := object.MakePrimitiveObject("java/lang/Float", types.Float, float64(-123.45))
 	argsArr := makeObjectRefArray(f)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))
@@ -355,8 +355,8 @@ func TestStringFormatter_Hash_For_Float_Negative_Upper(t *testing.T) {
 
 func TestStringFormatter_Char_Uppercase_C(t *testing.T) {
 	fmtObj := object.StringObjectFromGoString("%C %C")
-	ch := Populator("java/lang/Character", types.Char, int64('a'))
-	code := Populator("java/lang/Integer", types.Int, int64('b'))
+	ch := object.MakePrimitiveObject("java/lang/Character", types.Char, int64('a'))
+	code := object.MakePrimitiveObject("java/lang/Integer", types.Int, int64('b'))
 	argsArr := makeObjectRefArray(ch, code)
 	out := StringFormatter([]interface{}{fmtObj, argsArr})
 	got := object.GoStringFromStringObject(out.(*object.Object))

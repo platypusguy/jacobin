@@ -219,7 +219,7 @@ func TestSimpleDateFormat_Format(t *testing.T) {
 	// unix milli for 2023-10-27 10:20:30 UTC
 	tm := time.Date(2023, 10, 27, 10, 20, 30, 0, time.UTC)
 	millis := tm.UnixMilli()
-	dateObj := Populator("java/util/Date", types.Long, millis)
+	dateObj := object.MakePrimitiveObject("java/util/Date", types.Long, millis)
 
 	ret := sdfFormat([]interface{}{obj, dateObj})
 	so, ok := ret.(*object.Object)

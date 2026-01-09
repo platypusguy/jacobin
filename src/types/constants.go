@@ -19,6 +19,7 @@ const InvalidStringIndex uint32 = 0xffffffff
 
 // ---- default superclass ----
 var ObjectClassName = "java/lang/Object"
+var ObjectArrayClassName = "[java/lang/Object"
 var PtrToJavaLangObject = &ObjectClassName
 var StringPoolObjectIndex = uint32(2) // points to the string pool slice for "java/lang/Object"
 

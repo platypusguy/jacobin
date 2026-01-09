@@ -3427,15 +3427,19 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 			objName, targetClassName))
 	}
 
+	// Derive objClassType, the reference object type.
 	var objClassType = types.Error
-	if strings.HasPrefix(objName, "[") {
+	if strings.HasPrefix(objName, types.Array) {
+		// The reference object  is an array.
 		objClassType = types.Array
 	} else {
+		// The reference object  is not an array.
 		objData := classloader.MethAreaFetch(objName)
 		if objData == nil || objData.Data == nil {
 			_ = classloader.LoadClassFromNameOnly(objName)
 			objData = classloader.MethAreaFetch(objName)
 		}
+		// Interface or a non-array object?
 		if objData.Data.Access.ClassIsInterface {
 			objClassType = types.Interface
 		} else {
@@ -3443,6 +3447,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		}
 	}
 
+	// Depending on objClassType, execute one of the cast checks.
 	var checkcastStatus bool
 	switch objClassType {
 	case types.NonArrayObject:
@@ -3452,7 +3457,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 	case types.Interface:
 		checkcastStatus = checkcastInterface(obj, targetClassName)
 	default:
-		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got none")
+		errMsg := fmt.Sprintf("CHECKCAST: expected to verify class or interface, but got: %s", objClassType)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
@@ -3460,6 +3465,7 @@ func doCheckcast(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
+	// If false (failure) return, throw an exception.
 	if checkcastStatus == false {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("CHECKCAST: %s is not castable with respect to %s",

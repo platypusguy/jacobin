@@ -21,7 +21,9 @@ func hmInit(t *testing.T, hm *object.Object) {
 }
 
 func strKey(s string) *object.Object { return object.StringObjectFromGoString(s) }
-func intKey(v int64) *object.Object  { return Populator("java/lang/Integer", types.Int, v) }
+func intKey(v int64) *object.Object {
+	return object.MakePrimitiveObject("java/lang/Integer", types.Int, v)
+}
 
 func TestHashMap_Put_Get_Size_Contains_Remove_StringKeys(t *testing.T) {
 	globals.InitStringPool()
@@ -112,7 +114,7 @@ func TestHashMap_IntKeys_And_MixedValues(t *testing.T) {
 	hmInit(t, hm)
 
 	k1 := intKey(42)
-	v1 := Populator("java/lang/Long", types.Long, int64(9001))
+	v1 := object.MakePrimitiveObject("java/lang/Long", types.Long, int64(9001))
 
 	// put and get with int key
 	_ = hashmapPut([]interface{}{hm, k1, v1})

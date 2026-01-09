@@ -17,7 +17,7 @@ func TestShortFloatDoubleValue(t *testing.T) {
 
 	cases := []int64{0, 1, -1, 42, 127, -128, 32767, -32768}
 	for _, v := range cases {
-		shortObj := Populator("java/lang/Short", types.Short, v)
+		shortObj := object.MakePrimitiveObject("java/lang/Short", types.Short, v)
 
 		// Test floatValue
 		resF := shortFloatValue([]interface{}{shortObj})
@@ -122,7 +122,7 @@ func TestShort_AdditionalMethods(t *testing.T) {
 	}
 
 	// byteValue
-	shortObj := Populator("java/lang/Short", types.Short, int64(12345))
+	shortObj := object.MakePrimitiveObject("java/lang/Short", types.Short, int64(12345))
 	if res := shortByteValue([]interface{}{shortObj}).(int64); res != 57 {
 		t.Errorf("byteValue(12345) expected 57, got %d", res)
 	}

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/object"
+	"jacobin/src/stringPool"
 	"jacobin/src/types"
 )
 
@@ -534,7 +535,15 @@ func arraylistToArray(params []interface{}) interface{} {
 		return err
 	}
 
-	return Populator("[Ljava/lang/Object;", types.RefArray, list)
+	// get the target array from params[1] if supplied (the T[] argument)
+	if len(params) > 1 && !object.IsNull(params[1]) {
+		targetArray := params[1].(*object.Object)
+		targetClassName := *stringPool.GetStringPointer(targetArray.KlassName)
+		return object.MakePrimitiveObject(targetClassName, targetClassName, list)
+	}
+
+	// fallback for no array passed in, default to Object[]
+	return object.MakePrimitiveObject(types.ObjectArrayClassName, types.ObjectArrayClassName, list)
 }
 
 func arraylistToArrayTyped(params []interface{}) interface{} {

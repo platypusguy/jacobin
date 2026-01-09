@@ -262,5 +262,5 @@ func shortToUnsignedLong(params []interface{}) interface{} {
 // "java/lang/Short.valueOf(S)Ljava/lang/Short;"
 func shortValueOf(params []interface{}) interface{} {
 	int64Value := params[0].(int64)
-	return Populator("java/lang/Short", types.Short, int64Value)
+	return object.MakePrimitiveObject("java/lang/Short", types.Short, int64Value)
 }
