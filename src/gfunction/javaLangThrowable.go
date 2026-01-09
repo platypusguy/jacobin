@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"jacobin/src/excNames"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/statics"
@@ -80,7 +81,7 @@ func Load_Lang_Throwable() {
 	MethodSignatures["java/lang/Throwable.getMessage()Ljava/lang/String;"] =
 		GMeth{
 			ParamSlots: 0,
-			GFunction:  trapFunction,
+			GFunction:  throwableGetMessage,
 		}
 
 	MethodSignatures["java/lang/Throwable.getOurStackTrace:()[Ljava/lang/StackTraceElement;"] =
@@ -477,4 +478,19 @@ func GetStackTraces(params []interface{}) *object.Object {
 	args := []interface{}{throwable, int64(depth)}
 	retVal := of(args) // this is javaLangStackTraceElement.of()
 	return retVal.(*object.Object)
+}
+
+func throwableGetMessage(params []interface{}) interface{} {
+	thisObj, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("throwableGetMessage: Expected params[0] to be a Throwable object, saw: %v (type %T)", params[0], params[0])
+		return getGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	field, ok := thisObj.FieldTable["detailMessage"]
+	if !ok {
+		return object.Null
+	}
+
+	return field.Fvalue.(*object.Object)
 }
