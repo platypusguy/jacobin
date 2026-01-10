@@ -1,4 +1,9 @@
-package bugged
+/*
+ * Jacobin VM - A Java virtual machine
+ * Copyright (c) 2025 by the Jacobin Authors. All rights reserved.
+ * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
+ */
+package debug
 
 import (
 	"fmt"
@@ -9,15 +14,18 @@ import (
 	"strings"
 )
 
+// Routines that enhance debugging in the GoLand debugger
+
 type DebugObject struct {
 	*object.Object
 }
 
-/*
-This odd-looking code is there to force the Go compiler to include object.TVO() and object.STR() in the executable.
-The compiler excludes any functions that have no references (calls).
-If they are not included, then one cannot use them in the GoLand debugger.
-*/
+// This odd-looking code is there to force the Go compiler to include object.TVO()
+// and object.STR() in the executable. It's needed to use thse functions in the
+// GoLand debugger.
+// The compiler excludes any functions that have no references (calls).
+// If they are not included, then you cannot use them in the GoLand debugger.
+
 func DebugInit() {
 	if os.Getenv("Revenge_is_best_served_cold!") == "Well, maybe?" {
 		dummyObj := object.MakeEmptyObject()

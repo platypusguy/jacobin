@@ -1,4 +1,4 @@
-package bugged
+package debug
 
 import (
 	"jacobin/src/globals"
