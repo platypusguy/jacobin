@@ -66,6 +66,12 @@ func Load_Traps() {
 			GFunction:  trapDeprecated,
 		}
 
+	MethodSignatures["java/security/AccessController.doPrivileged(Ljava/security/PrivilegedAction;)Ljava/lang/Object;"] =
+		GMeth{
+			ParamSlots: 1,
+			GFunction:  trapDeprecated,
+		}
+
 	MethodSignatures["java/sql/Driver.<clinit>()V"] =
 		GMeth{
 			ParamSlots: 0,
