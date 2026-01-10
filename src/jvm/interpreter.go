@@ -2385,7 +2385,7 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	var err error
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
-	CP := fr.CP.(*classloader.CPool)
+	CP := fr.CP.(*classloader.CPool)                                // codeCheck.go ensures that CPslot is a valid index to a methodRef
 
 	// Get the method table entry for the FQN indicated in CP.
 	className, methodName, methodType, fqn :=
@@ -2406,15 +2406,14 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 				interfaceName := *stringPool.GetStringPointer(index)
 				mtEntry, err = locateInterfaceMeth(klass, fr, className, interfaceName, methodName, methodType)
 				if mtEntry.Meth != nil {
-					// =================== Found a match.
+					// found a match.
 					break
 				}
 			} // end of search of interfaces if method has any
 
 			// Any matches in the interfaces?
 			if err != nil || mtEntry.Meth == nil {
-				// No. Method was not found in interfaces, so throw an exception
-				// TODO: search the classpath and retry
+				// method was not found in interfaces, so throw an exception
 				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 				errMsg := "INVOKEVIRTUAL: Class method not found: " + fqn
 				status := exceptions.ThrowEx(excNames.NoSuchMethodException, errMsg, fr)
@@ -2431,19 +2430,17 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 	// if we have a native function (here, one implemented in golang, rather than Java),
 	// then follow the JVM spec and push the objectRef and the parameters to the function
 	// as parameters. Consult:
-	// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html#jvms-6.5.invokevirtual
+	// https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-6.html#jvms-6.5.invokevirtual
 
 	if mtEntry.MType == 'G' { // so we have a golang function
 		return invokeVirtualGfunction(fr, mtEntry, className, methodName, methodType)
 	}
 
-	/*
-			To resolve a J method for invokevirtual:
-		    - If its JVM-native, Jacobin does not support them.
-		    - Get the reference object from the stack.
-			- Try searching the reference object class & its superclass chain.
-			- If the method is not found, try the reference object class interface hierarchy (JVM spec 5.4.3.4).
-	*/
+	// 	To resolve a J method (i.e., a Java method) for invokevirtual:
+	//  - If it's a native Java function (written in C/C++), Jacobin does not support it.
+	//  - Get the reference object from the stack.
+	// 	- Try searching the reference object class and its superclass chain.
+	// 	- If the method is not found, try the reference object class interface hierarchy (JVM spec 5.4.3.4).
 	if mtEntry.MType == 'J' { // it's a Java function
 		m := mtEntry.Meth.(classloader.JmEntry)
 		if m.AccessFlags&classloader.ACC_NATIVE > 0 {
@@ -2457,8 +2454,8 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 
-		// The run-time class object is on the stack, not necessarily at the top.
-		// Get the number of arguments for the function.
+		// The run-time class object is on the stack, below the method arguments.
+		// To locate it, get the number of arguments for the method.
 		nslots := len(util.ParseIncomingParamsFromMethTypeString(methodType))
 
 		// Extract the reference object from the stack.
@@ -2477,7 +2474,7 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 		clNameIdx := refObj.KlassName
 		className = *(stringPool.GetStringPointer(clNameIdx))
 
-		// ====================== Method resolution==============================
+		// === Method resolution ===
 		// First, try superclass resolution.
 		mtEntry, err = classloader.FetchMethodAndCP(className, methodName, methodType)
 		if err != nil || mtEntry.Meth == nil {
@@ -2553,6 +2550,9 @@ func doInvokeVirtual(fr *frames.Frame, _ int64) int {
 // Returns the interface name and mtEntry if a default method is found, or nil if not.
 //
 // Reference: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-5.html#jvms-5.4.3.4
+//
+// Note: this function is similar in many aspects to locateInterfaceMeth() in run.go.
+// The two functions might eventually be integrated into one.
 func searchForDefaultInterfaceFunction(
 	className, methodName, methodType string,
 ) (any, classloader.MTentry) {

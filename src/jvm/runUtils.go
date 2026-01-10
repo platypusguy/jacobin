@@ -488,6 +488,9 @@ func checkcastInterface(obj *object.Object, targetClassName string) bool {
 // the function that finds the interface method to execute (and returns it).
 // This is a two-part process: first, we verify the signature of the method,
 // then we locate the concrete implementation.
+//
+// Note: this function is similar in many aspects to searchForDefaultInterfaceFunction()
+// in interpreter.go. The two functions might eventually be integrated into one.
 func locateInterfaceMeth(
 	class *classloader.Klass, // the objRef class
 	f *frames.Frame,
