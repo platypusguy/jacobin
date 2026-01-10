@@ -9,6 +9,7 @@ package gfunction
 import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"jacobin/src/types"
 )
@@ -27,14 +28,14 @@ func Load_TestGfunctions() {
 
 	// ==== accepting no params ====
 
-	TestMethodSignatures["jacobin/src/test/Object.test()D"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test()D"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  vd,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test()Ljava/lang/Object;"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test()Ljava/lang/Object;"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
 			GFunction:  vl,
 		}
@@ -42,67 +43,67 @@ func Load_TestGfunctions() {
 	// ==== accepting params ====
 
 	// === returning void
-	TestMethodSignatures["jacobin/src/test/Object.test(I)V"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(I)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  iv,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(D)V"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(D)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  dv,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)V"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  lv,
 		}
 
 	// === returning int or double
 
-	TestMethodSignatures["jacobin/src/test/Object.test(I)I"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(I)I"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ii,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(I)D"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(I)D"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  id,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(I)Ljava/lang/Object;"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(I)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  il,
 		}
 
 	// === accepting reference to java/lang/Object and returning something
 
-	TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)I"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)I"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  li,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ll,
 		}
 
-	TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)D"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(Ljava/lang/Object;)D"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ld,
 		}
 
 	// === return error block ===
-	TestMethodSignatures["jacobin/src/test/Object.test(D)E"] =
-		GMeth{
+	ghelpers.TestMethodSignatures["jacobin/src/test/Object.test(D)E"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
 			GFunction:  ie,
 		}
@@ -159,7 +160,7 @@ func ld(params []any) any {
 }
 
 func ie(params []any) any {
-	geb := GErrBlk{excNames.InternalException, "intended return of test error"}
+	geb := ghelpers.GErrBlk{excNames.InternalException, "intended return of test error"}
 	return &geb
 }
 

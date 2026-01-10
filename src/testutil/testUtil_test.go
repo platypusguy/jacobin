@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
 	"math"
 	"testing"
@@ -61,8 +61,8 @@ func TestMathSqrt_D_D(t *testing.T) {
 		if !float64CloseEnough(result.(float64), 2.0) {
 			t.Errorf("TestMathSqrt_D_D: Expected sqrt(4)=2, observed: %f", result.(float64))
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestMathSqrt_D_D: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestMathSqrt_D_D: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestMathSqrt_D_D: Expected result of type float64, observed: %T", result)
 	}
@@ -77,8 +77,8 @@ func TestStrictMathCbrt_D_D(t *testing.T) {
 		if !float64CloseEnough(result.(float64), 3.0) {
 			t.Errorf("TestStrictMathCbrt_D_D: Expected cbrt(27)=3, observed: %f", result.(float64))
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestStrictMathCbrt_D_D: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestStrictMathCbrt_D_D: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestStrictMathCbrt_D_D: Expected result of type float64, observed: %T", result)
 	}
@@ -93,8 +93,8 @@ func TestStringLength(t *testing.T) {
 		if result.(int64) != 6 {
 			t.Errorf("TestStringLength: Expected length(\"ABCDEF\")=6, observed: %d", result.(int64))
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestStringLength: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestStringLength: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestStringLength: Expected result of type int64, observed: %T", result)
 	}
@@ -112,8 +112,8 @@ func TestStringRepeater(t *testing.T) {
 		if observed != expected {
 			t.Errorf("TestStringRepeater: Expected: \"%s\", observed: \"%s\"", expected, observed)
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestStringRepeater: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestStringRepeater: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestStringRepeater: Expected result of type String object, observed: %T", result)
 	}
@@ -143,8 +143,8 @@ func TestStringToCharArray(t *testing.T) {
 		if observed != expected {
 			t.Errorf("TestStringToCharArray: Expected: \"%s\", observed: \"%s\"", expected, observed)
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestStringToCharArray: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestStringToCharArray: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestStringToCharArray: Expected result of type [C object, observed: %T", result)
 	}
@@ -161,7 +161,7 @@ func TestBigInteger(t *testing.T) {
 
 	// Initialise the base object.
 	obj := object.MakeEmptyObjectWithClassName(&biClassName)
-	gfunction.InitBigIntegerField(obj, int64(0))
+	ghelpers.InitBigIntegerField(obj, int64(0))
 
 	// Add the String value to params.
 	params = append(params, object.StringObjectFromGoString("42"))
@@ -180,8 +180,8 @@ func TestBigInteger(t *testing.T) {
 		if result.(int64) != expected {
 			t.Errorf("TestStringToCharArray: Expected: \"%d\", observed: \"%d\"", expected, result.(int64))
 		}
-	case gfunction.GErrBlk:
-		t.Errorf("TestStringToCharArray: gfunction.GErrBlk.ErrMsg: %s", result.(gfunction.GErrBlk).ErrMsg)
+	case ghelpers.GErrBlk:
+		t.Errorf("TestStringToCharArray: ghelpers.GErrBlk.ErrMsg: %s", result.(ghelpers.GErrBlk).ErrMsg)
 	default:
 		t.Errorf("TestStringToCharArray: Expected result of type [C object, observed: %T", result)
 	}

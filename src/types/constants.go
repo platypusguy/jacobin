@@ -36,6 +36,11 @@ var NullString = "null"
 var ClassNameThread = "java/lang/Thread"
 var StringPoolThreadIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
+var ClassNameLinkedList = "java/util/LinkedList"
+var ClassNameProperties = "java/util/Properties"
+var FieldNameProperties = "map"
+var ClassNameOptional string = "java/util/Optional"
+var ClassNameBigDecimal = "java/math/BigDecimal"
 
 // Security-related
 const SecurityProviderName = "GoSecurityProvider"

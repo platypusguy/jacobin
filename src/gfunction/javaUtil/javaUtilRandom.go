@@ -1,0 +1,349 @@
+package javaUtil
+
+import (
+	"fmt"
+	"jacobin/src/excNames"
+	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/globals"
+	"jacobin/src/object"
+	"jacobin/src/types"
+	"math"
+	"math/rand"
+	"time"
+)
+
+func Load_Util_Random() {
+
+	ghelpers.MethodSignatures["java/util/Random.<clinit>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.ClinitGeneric,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.<init>()V"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomInitVoid,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.<init>(J)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  randomInitLong,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.doubles()Ljava/util/stream/DoubleStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.doubles(DD)Ljava/util/stream/DoubleStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.doubles(J)Ljava/util/stream/DoubleStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.doubles(JDD)Ljava/util/stream/DoubleStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.ints()Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.ints(II)Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.ints(J)Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.ints(JII)Ljava/util/stream/IntStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.longs()Ljava/util/stream/LongStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.longs(J)Ljava/util/stream/LongStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.longs(JJ)Ljava/util/stream/LongStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 2,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.longs(JJJ)Ljava/util/stream/LongStream;"] =
+		ghelpers.GMeth{
+			ParamSlots: 3,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.next(I)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextBoolean()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextBoolean,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextBytes([B)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  randomNextBytes,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextDouble()D"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextDouble,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextFloat()F"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextFloat,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextGaussian()D"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextGaussian,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextInt()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextInt,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextInt(I)I"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  randomNextIntBound,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.nextLong()J"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  randomNextLong,
+		}
+
+	ghelpers.MethodSignatures["java/util/Random.setSeed(J)V"] =
+		ghelpers.GMeth{
+			ParamSlots: 1,
+			GFunction:  randomSetSeed,
+		}
+
+}
+
+/*
+ChatGPT key Points:
+* Initialization: The NewRandom() function initializes a Random instance using the current time as a seed.
+* Seed Setting: The SetSeed(seed int64) method allows setting a specific seed for the random number generator.
+* Random Number Generation: Methods like NextInt(), NextIntBound(bound int), NextFloat32(), NextFloat64(),
+                                         NextBoolean(), and NextGaussian()
+                            mimic the behavior of their Java counterparts using Go's math/rand package.
+* Concurrency: A sync.Mutex is used to ensure thread safety when accessing shared state like haveNextNextGaussian
+               and nextNextGaussian in NextGaussian().
+
+* object.Object Ftype = types.Struct
+*/
+
+type Random struct {
+	rand                 *rand.Rand
+	nextNextGaussian     float64
+	haveNextNextGaussian bool
+}
+
+// Primitive to update a Random object with a Random struct.
+func UpdateRandomObjectFromStruct(objPtr *object.Object, argStruct Random) {
+	fld := object.Field{Ftype: types.Struct, Fvalue: argStruct}
+	objPtr.FieldTable["value"] = fld
+}
+
+// Primitive to fetch a Random struct from a Random object.
+func GetStructFromRandomObject(objPtr *object.Object) Random {
+	randStruct := objPtr.FieldTable["value"].Fvalue.(Random)
+	return randStruct
+}
+
+// "java/util/Random.<init>()V"
+// NewRandom creates a new Random instance initialized with the current time as seed.
+// chatGPT generated: func NewRandom() *Random
+func randomInitVoid(params []interface{}) interface{} {
+	source := rand.NewSource(time.Now().UnixNano())
+	randStruct := Random{
+		rand:                 rand.New(source),
+		nextNextGaussian:     0.0,
+		haveNextNextGaussian: false,
+	}
+	obj := params[0].(*object.Object)
+	UpdateRandomObjectFromStruct(obj, randStruct)
+	return nil
+}
+
+// "java/util/Random.<init>(J)V"
+// Same as randomInitVoid except a seed is supplied.
+func randomInitLong(params []interface{}) interface{} {
+	seed := params[1].(int64)
+	source := rand.NewSource(seed)
+	randStruct := Random{
+		rand:                 rand.New(source),
+		nextNextGaussian:     0.0,
+		haveNextNextGaussian: false,
+	}
+	obj := params[0].(*object.Object)
+	UpdateRandomObjectFromStruct(obj, randStruct)
+	return nil
+}
+
+// randomSetSeed sets the seed of the random number generator.
+// ChatGPT: func (r *Random) SetSeed(seed int64)
+func randomSetSeed(params []interface{}) interface{} {
+	global := globals.GetGlobalRef()
+	global.RandomLock.Lock() // <-------------------
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	seed := params[1].(int64)
+	r.rand.Seed(seed)
+	r.haveNextNextGaussian = false
+	UpdateRandomObjectFromStruct(obj, r)
+	global.RandomLock.Unlock() // <-------------------
+	return nil
+}
+
+// randomNextInt returns the next pseudorandom, uniformly distributed int31 value as an int64.
+func randomNextInt(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	output := int64(r.rand.Int31())
+	return output
+}
+
+// randomNextLong returns the next pseudorandom, uniformly distributed int63 value as an int64.
+func randomNextLong(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	output := r.rand.Int63()
+	return output
+}
+
+// randomNextIntBound returns a pseudorandom, uniformly distributed int value between 0 (inclusive) and bound (exclusive).
+// ChatGPT: func (r *Random) NextIntBound(bound int) int, error {
+func randomNextIntBound(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	bound := params[1].(int64)
+	if bound < 1 {
+		errMsg := fmt.Sprintf("randomNextIntBound: Bound must be positive, observed: %d", bound)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	output := int64(r.rand.Int31n(int32(bound)))
+	return output
+}
+
+// randomNextBoolean returns the next pseudorandom, uniformly distributed boolean value.
+// ChatGPT: func (r *Random) NextBoolean() bool
+func randomNextBoolean(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	if r.rand.Int63n(2) == 0 {
+		return int64(1)
+	} else {
+		return int64(0)
+	}
+}
+
+// Given an array of bytes, fill each element with a random number between 0 and 255.
+func randomNextBytes(params []interface{}) interface{} {
+	robj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(robj)
+	bobj := params[1].(*object.Object)
+	bytes := // convert to go bytes b/c that's what rand.Read expects
+		object.GoByteArrayFromJavaByteArray(bobj.FieldTable["value"].Fvalue.([]types.JavaByte))
+	r.rand.Read(bytes)
+	randBytes := object.JavaByteArrayFromGoByteArray(bytes) // convert back to Java bytes
+	bobj.FieldTable["value"] = object.Field{Ftype: types.ByteArray, Fvalue: randBytes}
+	return nil
+}
+
+// randomNextFloat returns the next pseudorandom, uniformly distributed float64 value between 0.0 (inclusive) and 1.0 (exclusive).
+// ChatGPT: func (r *Random) NextFloat32() float32
+func randomNextFloat(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	return r.rand.Float64()
+}
+
+// randomNextDouble is identical to randomNextFloat.
+// ChatGPT: func (r *Random) NextFloat64() float64
+func randomNextDouble(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+	return r.rand.Float64()
+}
+
+// NextGaussian returns the next pseudorandom, Gaussian ("normally") distributed float64 value with mean 0.0 and standard deviation 1.0.
+// ChatGPT: func (r *Random) NextGaussian() float64
+func randomNextGaussian(params []interface{}) interface{} {
+	global := globals.GetGlobalRef()
+	global.RandomLock.Lock() // <-------------------
+	obj := params[0].(*object.Object)
+	r := GetStructFromRandomObject(obj)
+
+	if r.haveNextNextGaussian {
+		r.haveNextNextGaussian = false
+		UpdateRandomObjectFromStruct(obj, r)
+		global.RandomLock.Unlock() // <-------------------
+		return r.nextNextGaussian
+	}
+
+	var v1, v2, s float64
+	for {
+		v1 = 2*r.rand.Float64() - 1 // between -1.0 and 1.0
+		v2 = 2*r.rand.Float64() - 1 // between -1.0 and 1.0
+		s = v1*v1 + v2*v2
+		if s < 1.0 && s != 0.0 {
+			break
+		}
+	}
+
+	multiplier := math.Sqrt(-2 * math.Log(s) / s)
+	r.nextNextGaussian = v2 * multiplier
+	r.haveNextNextGaussian = true
+	UpdateRandomObjectFromStruct(obj, r)
+
+	global.RandomLock.Unlock() // <-------------------
+
+	return v1 * multiplier
+}

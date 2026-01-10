@@ -12,7 +12,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
-	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -131,12 +131,12 @@ func RunJavaThread(args []any) {
 	}
 
 	// Mark the thread RUNNABLE and register it.
-	_, ret := gfunction.SetThreadState(t, gfunction.RUNNABLE)
+	_, ret := javaLang.SetThreadState(t, javaLang.RUNNABLE)
 	if ret != nil {
 		errMsg := "RunJavaThread: SetThreadState(RUNNABLE) failed"
 		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
 	}
-	gfunction.RegisterThread(t)
+	javaLang.RegisterThread(t)
 
 	if globals.TraceInst {
 		traceInfo := fmt.Sprintf("threadRun: class=%s, meth=%s%s, maxStack=%d, maxLocals=%d, code size=%d",
@@ -151,7 +151,7 @@ func RunJavaThread(args []any) {
 	}
 
 	// The End.
-	gfunction.SetThreadState(t, gfunction.TERMINATED)
+	javaLang.SetThreadState(t, javaLang.TERMINATED)
 	if ret != nil {
 		errMsg := "threadRun: SetThreadState(TERMINATED) failed"
 		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
