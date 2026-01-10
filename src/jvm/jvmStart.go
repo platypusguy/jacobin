@@ -9,7 +9,7 @@ package jvm
 import (
 	"fmt"
 	"jacobin/src/classloader"
-	"jacobin/src/bugged"
+	"jacobin/src/debug"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
@@ -35,7 +35,7 @@ var globPtr *globals.Globals
 func JVMrun() int {
 
 	trace.Init()
-	bugged.DebugInit()
+	debug.DebugInit()
 
 	// capture any panics and print diagnostic data
 	defer func() int {
@@ -61,7 +61,6 @@ func JVMrun() int {
 	// globals and log have been set in the testing function, likely to specific
 	// values, so, don't reset them here.
 	if globals.GetGlobalRef().JacobinName != "test" {
-		// Not a test!
 		_ = globals.InitGlobals(os.Args[0])
 		stringPool.PreloadArrayClassesToStringPool()
 	}
