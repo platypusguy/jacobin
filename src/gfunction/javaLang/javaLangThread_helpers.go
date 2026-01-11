@@ -22,6 +22,8 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 
 // Get the thread state and return it to caller.
 func GetThreadState(th *object.Object) int {
+	th.ThMutex.RLock()
+	defer th.ThMutex.RUnlock()
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
 	if !ok {
 		return UNDEFINED
