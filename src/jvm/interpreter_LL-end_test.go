@@ -12,6 +12,8 @@ import (
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
@@ -944,7 +946,7 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 
 	gl.FuncInstantiateClass = InstantiateClass
 	gl.FuncThrowException = exceptions.ThrowExNil
-	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
+	gl.FuncFillInStackTrace = javaLang.FillInStackTrace
 	gl.StrictJDK = false
 
 	stringPool.PreloadArrayClassesToStringPool()
@@ -964,13 +966,13 @@ func TestPeekWithStackUnderflow(t *testing.T) {
 
 	// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 	InitGlobalFunctionPointers()
-	gfunction.InitializeGlobalThreadGroups()
+	javaLang.InitializeGlobalThreadGroups()
 
-	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
-	gfunction.ThreadInitWithName(params)
-	gfunction.RegisterThread(thObj) // put into globals.Threads map
+	javaLang.ThreadInitWithName(params)
+	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f := frames.CreateFrame(1)
@@ -1029,7 +1031,7 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 
 	gl.FuncInstantiateClass = InstantiateClass
 	gl.FuncThrowException = exceptions.ThrowExNil
-	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
+	gl.FuncFillInStackTrace = javaLang.FillInStackTrace
 	gl.StrictJDK = true
 
 	stringPool.PreloadArrayClassesToStringPool()
@@ -1049,12 +1051,12 @@ func TestPeekWithStackUnderflowStrictJDK(t *testing.T) {
 
 	// Create a Java-level Thread object (no use of jvmThread.go ExecThread)
 	InitGlobalFunctionPointers()
-	gfunction.InitializeGlobalThreadGroups()
-	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	javaLang.InitializeGlobalThreadGroups()
+	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
-	gfunction.ThreadInitWithName(params)
-	gfunction.RegisterThread(thObj) // put into globals.Threads map
+	javaLang.ThreadInitWithName(params)
+	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f := frames.CreateFrame(1)
@@ -1157,13 +1159,13 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("testWithoutShutdown")
-	gfunction.InitializeGlobalThreadGroups()
+	javaLang.InitializeGlobalThreadGroups()
 	gl := globals.GetGlobalRef()
 
 	gl.FuncInstantiateClass = InstantiateClass
 	gl.FuncThrowException = exceptions.ThrowExNil
-	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-	gl.FuncInvokeGFunction = gfunction.Invoke
+	gl.FuncFillInStackTrace = javaLang.FillInStackTrace
+	gl.FuncInvokeGFunction = ghelpers.Invoke
 	gl.FuncMinimalAbort = exceptions.MinimalAbort
 	gl.FuncRunThread = RunJavaThread
 
@@ -1185,12 +1187,12 @@ func TestPopWithStackUnderflow(t *testing.T) {
 
 	var f *frames.Frame
 	globals.InitGlobals("test")
-	gfunction.InitializeGlobalThreadGroups()
-	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	javaLang.InitializeGlobalThreadGroups()
+	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
-	gfunction.ThreadInitWithName(params)
-	gfunction.RegisterThread(thObj) // put into globals.Threads map
+	javaLang.ThreadInitWithName(params)
+	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
 	f = frames.CreateFrame(1)
@@ -1347,14 +1349,14 @@ func TestPushWithStackOverflow(t *testing.T) {
 	os.Stdout = wout
 
 	globals.InitGlobals("testWithoutShutdown")
-	gfunction.InitializeGlobalThreadGroups()
+	javaLang.InitializeGlobalThreadGroups()
 
 	gl := globals.GetGlobalRef()
 
 	gl.FuncInstantiateClass = InstantiateClass
 	gl.FuncThrowException = exceptions.ThrowExNil
-	gl.FuncFillInStackTrace = gfunction.FillInStackTrace
-	gl.FuncInvokeGFunction = gfunction.Invoke
+	gl.FuncFillInStackTrace = javaLang.FillInStackTrace
+	gl.FuncInvokeGFunction = ghelpers.Invoke
 	gl.FuncMinimalAbort = exceptions.MinimalAbort
 	gl.FuncRunThread = RunJavaThread
 
@@ -1375,11 +1377,11 @@ func TestPushWithStackOverflow(t *testing.T) {
 	classloader.FetchMethodAndCP("java/lang/Object", "wait", "(JI)V")
 
 	var f *frames.Frame
-	thObj := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	thObj := javaLang.ThreadCreateNoarg(nil).(*object.Object)
 	main := object.StringObjectFromGoString("main")
 	params := []any{thObj, main}
-	gfunction.ThreadInitWithName(params)
-	gfunction.RegisterThread(thObj) // put into globals.Threads map
+	javaLang.ThreadInitWithName(params)
+	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 	f = frames.CreateFrame(1)
 	f.ClName = "java/lang/Object"

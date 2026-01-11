@@ -14,6 +14,8 @@ import (
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -186,7 +188,7 @@ func JVMrun() int {
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
 
 	// Initialize the initial global thread groups
-	gfunction.InitializeGlobalThreadGroups()
+	javaLang.InitializeGlobalThreadGroups()
 
 	// create the main thread
 	t := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
@@ -204,7 +206,7 @@ func JVMrun() int {
 
 	methName := "main"
 	methType := "([Ljava/lang/String;)V"
-	runnable := gfunction.NewRunnable(
+	runnable := javaLang.NewRunnable(
 		object.JavaByteArrayFromGoString(clName),
 		object.JavaByteArrayFromGoString(methName),
 		object.JavaByteArrayFromGoString(methType))
@@ -233,9 +235,9 @@ func JVMrun() int {
 func InitGlobalFunctionPointers() {
 	globalPtr := globals.GetGlobalRef()
 	globalPtr.FuncInstantiateClass = InstantiateClass
-	globalPtr.FuncInvokeGFunction = gfunction.Invoke
+	globalPtr.FuncInvokeGFunction = ghelpers.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort
 	globalPtr.FuncRunThread = RunJavaThread
 	globalPtr.FuncThrowException = exceptions.ThrowExNil
-	globalPtr.FuncFillInStackTrace = gfunction.FillInStackTrace
+	globalPtr.FuncFillInStackTrace = javaLang.FillInStackTrace
 }

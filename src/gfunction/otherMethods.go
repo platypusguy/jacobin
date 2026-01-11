@@ -6,186 +6,190 @@
 
 package gfunction
 
-func Load_Other_methods() {
+import (
+	"jacobin/src/gfunction/ghelpers"
+)
 
-	MethodSignatures["java/awt/Color.initIDs()V"] =
-		GMeth{
+func Load_Other_Methods() {
+
+	ghelpers.MethodSignatures["java/awt/Color.initIDs()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["java/awt/Toolkit.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/awt/Toolkit.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/awt/Toolkit.loadLibraries()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/awt/Toolkit.loadLibraries()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/io/FileDescriptor.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/io/BufferedInputStream.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/io/ByteArrayInputStream.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/lang/AbstractStringBuilder.ensureCapacityInternal(I)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["java/lang/CharacterDataLatin1.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/lang/CharacterDataLatin1.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/lang/ThreadLocal.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/lang/ThreadLocal.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/lang/ThreadLocal.<init>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/lang/ThreadLocal.<init>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["java/math/MathContext.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/math/MathContext.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/nio/charset/Charset.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/nio/charset/Charset.defaultCharset()Ljava/nio/charset/Charset;"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnCharsetName,
+			GFunction:  ghelpers.ReturnCharsetName,
 		}
 
-	MethodSignatures["java/nio/charset/Charset.name()Ljava/lang/String;"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/nio/charset/Charset.name()Ljava/lang/String;"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnCharsetName,
+			GFunction:  ghelpers.ReturnCharsetName,
 		}
 
-	MethodSignatures["java/security/AccessController.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/security/AccessController.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/util/Locale$Category.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/util/Locale$Category.<init>(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 7,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["java/util/Regex.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["java/util/Regex.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/access/SharedSecrets.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["jdk/internal/misc/VM.initialize()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/VM.initialize()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["jdk/internal/misc/CDS.getRandomSeedForDumping()J"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/CDS.getRandomSeedForDumping()J"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnRandomLong,
+			GFunction:  ghelpers.ReturnRandomLong,
 		}
 
-	MethodSignatures["jdk/internal/misc/CDS.initializeFromArchive(Ljava/lang/Class;)V"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/CDS.initializeFromArchive(Ljava/lang/Class;)V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  justReturn,
+			GFunction:  ghelpers.JustReturn,
 		}
 
-	MethodSignatures["jdk/internal/misc/CDS.isDumpingArchive0()Z"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/CDS.isDumpingArchive0()Z"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnFalse,
+			GFunction:  ghelpers.ReturnFalse,
 		}
 
-	MethodSignatures["jdk/internal/misc/CDS.isDumpingClassList0()Z"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/CDS.isDumpingClassList0()Z"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnFalse,
+			GFunction:  ghelpers.ReturnFalse,
 		}
 
-	MethodSignatures["jdk/internal/misc/CDS.isSharingEnabled0()Z"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/misc/CDS.isSharingEnabled0()Z"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  returnFalse,
+			GFunction:  ghelpers.ReturnFalse,
 		}
 
-	MethodSignatures["jdk/internal/util/ArraysSupport.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["jdk/internal/util/ArraysSupport.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["sun/nio/ch/SocketDispatcher.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["sun/nio/ch/SocketDispatcher.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["sun/security/util/Debug.<clinit>()V"] =
-		GMeth{
+	ghelpers.MethodSignatures["sun/security/util/Debug.<clinit>()V"] =
+		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  clinitGeneric,
+			GFunction:  ghelpers.ClinitGeneric,
 		}
 
-	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
-		GMeth{
+	ghelpers.MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;)Lsun/security/util/Debug;"] =
+		ghelpers.GMeth{
 			ParamSlots: 1,
-			GFunction:  returnNull,
+			GFunction:  ghelpers.ReturnNull,
 		}
 
-	MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
-		GMeth{
+	ghelpers.MethodSignatures["sun/security/util/Debug.getInstance(Ljava/lang/String;Ljava/lang/String;)Lsun/security/util/Debug;"] =
+		ghelpers.GMeth{
 			ParamSlots: 2,
-			GFunction:  returnNull,
+			GFunction:  ghelpers.ReturnNull,
 		}
 
 }

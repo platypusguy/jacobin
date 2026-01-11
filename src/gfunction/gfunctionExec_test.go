@@ -12,6 +12,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/frames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"testing"
 )
@@ -35,7 +36,7 @@ func TestRunGfunction_ParamOrderAndContext(t *testing.T) {
 
 	// Capture the received params in the GFunction
 	var received []interface{}
-	gm := GMeth{
+	gm := ghelpers.GMeth{
 		ParamSlots:   2,
 		NeedsContext: true,
 		GFunction: func(in []interface{}) interface{} {
@@ -74,7 +75,7 @@ func TestRunGfunction_ReturnsValue_NonThreadSafe(t *testing.T) {
 
 	fs := makeFrameStack()
 
-	gm := GMeth{
+	gm := ghelpers.GMeth{
 		ParamSlots: 1,
 		GFunction: func(in []interface{}) interface{} {
 			if len(in) != 1 || in[0] != "x" {
@@ -98,7 +99,7 @@ func TestRunGfunction_ReturnsError_PassesThrough(t *testing.T) {
 
 	fs := makeFrameStack()
 
-	gm := GMeth{GFunction: func([]interface{}) interface{} {
+	gm := ghelpers.GMeth{GFunction: func([]interface{}) interface{} {
 		return errors.New("native boom")
 	}}
 	mt := classloader.MTentry{Meth: gm, MType: 'G'}
@@ -118,8 +119,8 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 
 	fs := makeFrameStack()
 
-	gm := GMeth{GFunction: func([]interface{}) interface{} {
-		return &GErrBlk{ExceptionType: excNames.ArrayIndexOutOfBoundsException, ErrMsg: "array oob"}
+	gm := ghelpers.GMeth{GFunction: func([]interface{}) interface{} {
+		return &ghelpers.GErrBlk{ExceptionType: excNames.ArrayIndexOutOfBoundsException, ErrMsg: "array oob"}
 	}}
 	mt := classloader.MTentry{Meth: gm, MType: 'G'}
 
@@ -127,8 +128,8 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 	ret := RunGfunction(mt, fs, "X/Y", "z", "()V", &params, false, false)
 
 	switch ret.(type) {
-	case *GErrBlk:
-		t.Fatalf("Unexpected GErrBlk: %v", ret)
+	case *ghelpers.GErrBlk:
+		t.Fatalf("Unexpected ghelpers.GErrBlk: %v", ret)
 	case error:
 		err := ret.(error)
 		if !contains(err.Error(), "array oob") || !contains(err.Error(), "X/Y.z()V") {
@@ -140,7 +141,7 @@ func TestRunGfunction_GErrBlk_ReturnsErrorInTestMode(t *testing.T) {
 
 	/*
 		if err, ok := ret.(error); !ok {
-			t.Fatalf("expected error return for GErrBlk in test mode, got %T: %v", ret, ret)
+			t.Fatalf("expected error return for ghelpers.GErrBlk in test mode, got %T: %v", ret, ret)
 		}
 		// The error message should contain our method FQN and original message
 		if !contains(err.Error(), "array oob") || !contains(err.Error(), "X/Y.z()V") {

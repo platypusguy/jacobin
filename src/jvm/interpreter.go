@@ -20,6 +20,7 @@ import (
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
 	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/opcodes"
@@ -2650,7 +2651,7 @@ func invokeVirtualGfunction(fr *frames.Frame,
 	var params []interface{}
 
 	// Append the parameters/args off the stack to params.
-	gmethData := mtEntry.Meth.(gfunction.GMeth)
+	gmethData := mtEntry.Meth.(ghelpers.GMeth)
 	paramCount := gmethData.ParamSlots
 	for i := 0; i < paramCount; i++ {
 		params = append(params, pop(fr))
@@ -2730,7 +2731,7 @@ func doInvokespecial(fr *frames.Frame, _ int64) int {
 
 	if mtEntry.MType == 'G' { // it's a golang method
 		// get the parameters/args, if any, off the stack
-		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
 		var params []interface{}
 		for i := 0; i < paramCount; i++ {
@@ -2844,7 +2845,7 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 	}
 
 	if mtEntry.MType == 'G' {
-		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
 		var params []interface{}
 		for i := 0; i < paramCount; i++ {
@@ -3010,7 +3011,7 @@ func doInvokeinterface(fr *frames.Frame, _ int64) int {
 		fr.FrameStack.PushFront(fram) // push the new frame
 		return 0                      // forcing execution of the new frame
 	} else if mtEntry.MType == 'G' { // it's a gfunction (i.e., a native function implemented in golang)
-		gmethData := mtEntry.Meth.(gfunction.GMeth)
+		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots
 		var params []interface{}
 		for i := 0; i < paramCount; i++ {

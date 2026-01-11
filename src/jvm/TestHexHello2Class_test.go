@@ -10,6 +10,7 @@ import (
 	"io"
 	"jacobin/src/classloader"
 	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/statics"
@@ -116,7 +117,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	classloader.LoadClassFromNameOnly("java/lang/ThreadGroup")
 	t.Logf("Loaded ThreadGroup ok\n")
 	InitGlobalFunctionPointers()
-	gfunction.InitializeGlobalThreadGroups()
+	javaLang.InitializeGlobalThreadGroups()
 	t.Logf("InitGlobalFunctionPointers ok\n")
 
 	// Show the map size and check it for java/lang/System
@@ -147,7 +148,7 @@ func TestHexHello2ValidClass(t *testing.T) {
 	// Run class Hello2
 	classloader.MTable = make(map[string]classloader.MTentry)
 	gfunction.MTableLoadGFunctions(&classloader.MTable)
-	th := gfunction.ThreadCreateNoarg(nil).(*object.Object)
+	th := javaLang.ThreadCreateNoarg(nil).(*object.Object)
 	className := "Hello2"
 	methName := "main"
 	methType := "([Ljava/lang/String;)V"

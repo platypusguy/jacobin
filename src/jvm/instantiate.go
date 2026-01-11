@@ -13,7 +13,7 @@ import (
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
-	"jacobin/src/gfunction"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
@@ -53,9 +53,9 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	case types.StringClassName:
 		return object.NewStringObject(), nil
 	case types.ClassNameThread:
-		return gfunction.ThreadCreateNoarg(nil), nil
+		return javaLang.ThreadCreateNoarg(nil), nil
 	case types.ClassNameThreadGroup:
-		return gfunction.MakeThreadGroup(), nil
+		return javaLang.MakeThreadGroup(), nil
 	}
 
 	// Look up the class in the method area.

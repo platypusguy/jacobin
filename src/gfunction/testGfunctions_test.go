@@ -7,20 +7,20 @@
 package gfunction
 
 import (
-	"reflect"
-	"testing"
-
 	"jacobin/src/classloader"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"reflect"
+	"testing"
 )
 
 func TestLoad_TestGfunctions_RegistersMethods(t *testing.T) {
-	// Save and restore TestMethodSignatures to avoid cross-test pollution
-	saved := TestMethodSignatures
-	defer func() { TestMethodSignatures = saved }()
-	TestMethodSignatures = make(map[string]GMeth)
+	// Save and restore ghelpers.TestMethodSignatures to avoid cross-test pollution
+	saved := ghelpers.TestMethodSignatures
+	defer func() { ghelpers.TestMethodSignatures = saved }()
+	ghelpers.TestMethodSignatures = make(map[string]ghelpers.GMeth)
 
 	Load_TestGfunctions()
 
@@ -44,9 +44,9 @@ func TestLoad_TestGfunctions_RegistersMethods(t *testing.T) {
 	}
 
 	for _, c := range checks {
-		got, ok := TestMethodSignatures[c.key]
+		got, ok := ghelpers.TestMethodSignatures[c.key]
 		if !ok {
-			t.Fatalf("missing TestMethodSignatures entry for %s", c.key)
+			t.Fatalf("missing ghelpers.TestMethodSignatures entry for %s", c.key)
 		}
 		if got.ParamSlots != c.slots {
 			t.Fatalf("%s ParamSlots expected %d, got %d", c.key, c.slots, got.ParamSlots)
@@ -64,11 +64,11 @@ func TestCheckTestGfunctionsLoaded_PopulatesMTable(t *testing.T) {
 	globals.InitGlobals("test")
 	classloader.InitMethodArea() // required by CheckTestGfunctionsLoaded -> MethAreaInsert
 
-	// clean MTable and TestMethodSignatures
+	// clean MTable and ghelpers.TestMethodSignatures
 	classloader.MTable = make(map[string]classloader.MTentry)
-	saved := TestMethodSignatures
-	defer func() { TestMethodSignatures = saved }()
-	TestMethodSignatures = make(map[string]GMeth)
+	saved := ghelpers.TestMethodSignatures
+	defer func() { ghelpers.TestMethodSignatures = saved }()
+	ghelpers.TestMethodSignatures = make(map[string]ghelpers.GMeth)
 
 	// Load test gfunctions into MTable
 	CheckTestGfunctionsLoaded()
@@ -88,10 +88,10 @@ func TestCheckTestGfunctionsLoaded_PopulatesMTable(t *testing.T) {
 		if mte.MType != 'G' {
 			t.Fatalf("MType for %s expected 'G', got %c", k, mte.MType)
 		}
-		// Sanity check: Meth must be a GMeth with a non-nil GFunction
-		gm, ok := mte.Meth.(GMeth)
+		// Sanity check: Meth must be a ghelpers.GMeth with a non-nil GFunction
+		gm, ok := mte.Meth.(ghelpers.GMeth)
 		if !ok {
-			t.Fatalf("MTable entry %s not a GMeth", k)
+			t.Fatalf("MTable entry %s not a ghelpers.GMeth", k)
 		}
 		if gm.GFunction == nil {
 			t.Fatalf("MTable entry %s has nil GFunction", k)

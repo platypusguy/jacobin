@@ -14,6 +14,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/exceptions"
 	"jacobin/src/frames"
+	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/trace"
 	"slices"
 )
@@ -43,7 +44,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 
 	// If the method needs context (i.e., if mt.Meth.NeedsContext == true),
 	// then add the pointer to the JVM frame stack to the parameter list here.
-	entry := mt.Meth.(GMeth)
+	entry := mt.Meth.(ghelpers.GMeth)
 	if entry.NeedsContext {
 		*params = append(*params, fs)
 	}
@@ -73,7 +74,7 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 	// Discern between thread-safe G functions and ordinary ones.
 	// No matter what, ret = the result from the G function.
 	var ret any
-	gmeth := mt.Meth.(GMeth)
+	gmeth := mt.Meth.(ghelpers.GMeth)
 
 	// Call the G function, passing it a pointer to the slice of arguments.
 	if paramCount == 0 {
@@ -84,9 +85,9 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 
 	// if an error occured
 	switch ret.(type) {
-	case *GErrBlk:
+	case *ghelpers.GErrBlk:
 		// var errorDetails string
-		errBlk := *ret.(*GErrBlk)
+		errBlk := *ret.(*ghelpers.GErrBlk)
 
 		var threadName string
 		if f.Thread == 1 {
