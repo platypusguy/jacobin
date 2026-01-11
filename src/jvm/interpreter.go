@@ -941,7 +941,7 @@ func doAastore(fr *frames.Frame, _ int64) int {
 	index := pop(fr).(int64) // index into the array
 
 	arrayRef, ok := pop(fr).(*object.Object) // ptr to the array object
-	if !ok || arrayRef == nil {
+	if !ok || object.IsNull(arrayRef) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s%s, AASTORE: Invalid (null) reference array",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, fr.MethType)
