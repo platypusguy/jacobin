@@ -15,6 +15,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"unsafe"
 )
@@ -42,7 +43,8 @@ type Object struct {
 	Mark       MarkWord
 	KlassName  uint32           // the index of the class name in the string pool
 	FieldTable map[string]Field // map mapping field name to field
-	Monitor    *ObjectMonitor   // needed if fat locking the object
+	Monitor    *ObjectMonitor   // synchronize use
+	ThMutex    *sync.RWMutex    // non-nil ONLY for thread state processing
 }
 
 // These mark word contains values for different purposes. Here,

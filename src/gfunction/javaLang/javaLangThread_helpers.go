@@ -22,6 +22,8 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 
 // Get the thread state and return it to caller.
 func GetThreadState(th *object.Object) int {
+	th.ThMutex.RLock()
+	defer th.ThMutex.RUnlock()
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
 	if !ok {
 		return UNDEFINED
@@ -78,6 +80,8 @@ func populateThreadObject(t *object.Object) {
 	frameStack := object.Field{Ftype: types.LinkedList, Fvalue: nil}
 	t.FieldTable["framestack"] = frameStack
 
+	t.ThMutex = &sync.RWMutex{}
+
 }
 
 // Add the specified thread to the global registry of threads.
@@ -111,31 +115,37 @@ func storeThreadRunnable(t *object.Object, fs *list.List) {
 //   - *ghelpers.GErrBlk (oops)
 func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) {
 	// Returns (previousState int, error interface{})
-	if err := th.ObjLock(0); err != nil {
-		return -1, ghelpers.GetGErrBlk(excNames.VirtualMachineError,
-			"SetThreadState: cannot lock thread object")
+
+	// ---- Thread invariant ----
+	if th.ThMutex == nil {
+		return -1, ghelpers.GetGErrBlk(
+			excNames.VirtualMachineError,
+			"SetThreadState: Thread object missing ThMutex",
+		)
 	}
-	defer th.ObjUnlock(0)
+
+	// ---- Exclusive lifecycle update ----
+	th.ThMutex.Lock()
+	defer th.ThMutex.Unlock()
 
 	// Retrieve the 'state' field
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
 	if !ok || thStateObj == nil {
-		// Create the new state object if missing.
-		stateField := object.Field{
+		// Create state object if missing (should normally not happen)
+		th.FieldTable["state"] = object.Field{
 			Ftype:  types.Ref,
 			Fvalue: threadStateCreateWithValue([]any{newState}),
 		}
-		th.FieldTable["state"] = stateField
-		return -1, nil // no previous state
+		return -1, nil
 	}
 
 	// Get previous state
 	prevVal, ok := thStateObj.FieldTable["value"].Fvalue.(int)
 	if !ok {
-		prevVal = -1 // unknown previous state
+		prevVal = -1
 	}
 
-	// Only update if different
+	// Update only if different
 	if prevVal != newState {
 		thStateObj.FieldTable["value"] = object.Field{
 			Ftype:  types.Int,
@@ -168,64 +178,50 @@ func ThreadCreateNoarg(_ []interface{}) any {
 var continueLoop = struct{}{}
 
 func waitForTermination(waitingThread, targetThread *object.Object, maxTime int64) interface{} {
+
+	if targetThread.ThMutex == nil {
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"waitForTermination: targetThread.ThMutex is nil",
+		)
+	}
+
 	if maxTime <= 0 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-			"joinThread: max wait time <= 0")
+		return ghelpers.GetGErrBlk(
+			excNames.IllegalArgumentException,
+			"waitForTermination: max wait time <= 0",
+		)
 	}
 
 	start := time.Now().UnixMilli()
-	targetThreadID := int32(targetThread.FieldTable["ID"].Fvalue.(int64))
 
 	for {
-		// Lock the target thread to safely access its state
-		if err := targetThread.ObjLock(targetThreadID); err != nil {
-			return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException,
-				"waitForTermination: unable to lock target thread object: "+err.Error())
+
+		targetThread.ThMutex.RLock()
+		stateFld := targetThread.FieldTable["state"]
+		stateObj := stateFld.Fvalue.(*object.Object)
+		stateVal := stateObj.FieldTable["value"].Fvalue.(int)
+		targetThread.ThMutex.RUnlock()
+
+		// TERMINATED -> normal return
+		if stateVal == TERMINATED {
+			return nil
 		}
 
-		// Locked the target thread object.
-		result := func() interface{} {
-
-			defer targetThread.ObjUnlock(targetThreadID)
-
-			// .Get the target thread state value.
-			stateObj, ok := targetThread.FieldTable["state"].Fvalue.(*object.Object)
-			if !ok {
-				return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-					"waitForTermination: field state is not an object")
-			}
-			stateVal, ok := stateObj.FieldTable["value"].Fvalue.(int)
-			if !ok {
-				return ghelpers.GetGErrBlk(excNames.IllegalArgumentException,
-					"waitForTermination: state object is missing a value field")
-			}
-
-			// Terminated --> normal return
-			if stateVal == TERMINATED {
-				return nil
-			}
-
-			// Did anyone interrupt me?
-			if isInterrupted(waitingThread) {
-				return ghelpers.GetGErrBlk(excNames.InterruptedException,
-					"waitForTermination: waiting thread was interrupted")
-			}
-
-			return continueLoop
-
-		}()
-
-		if result != continueLoop {
-			return result
+		// Interrupted?
+		if isInterrupted(waitingThread) {
+			return ghelpers.GetGErrBlk(
+				excNames.InterruptedException,
+				"waitForTermination: waiting thread was interrupted",
+			)
 		}
 
-		// Continue waiting.
-		// Yield to allow the target thread to run.
+		// Yield to allow target thread to run
 		runtime.Gosched()
 
-		// Timeout check.
+		// Timeout -> normal Java behavior
 		if time.Now().UnixMilli()-start >= maxTime {
-			return nil // In Java, timeout is NORMAL!
+			return nil
 		}
 	}
 }

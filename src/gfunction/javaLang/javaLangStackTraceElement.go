@@ -18,11 +18,13 @@ import (
 	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/trace"
+	"jacobin/src/types"
 	"jacobin/src/util"
 	"sort"
+	"strconv"
 )
 
-// StackTraceElement is a class that is primarily used by Throwable to gather data about the
+// StackTraceElement is a class primarily used by Throwable to gather data about the
 // entries in the JVM stack. Because this data is so tightly bound to the specific implementation
 // of the JVM, the methods of this class are fairly faithfully reproduced in the golang-native
 // methods in this file. Consult:
@@ -30,11 +32,58 @@ import (
 
 func Load_Lang_StackTraceELement() {
 
-	ghelpers.MethodSignatures["java/lang/StackTraceElement.of(Ljava/lang/Throwable;I)[Ljava/lang/StackTraceElement;"] =
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.equals(Ljava/lang/Object;)Z"] =
 		ghelpers.GMeth{
-			ParamSlots:   2,
-			GFunction:    of,
-			NeedsContext: true,
+			ParamSlots: 1,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getClassLoaderName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetClassName,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getClassName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetClassLoaderName,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getFileName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetFileName,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getLineNumber()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetLineNumber,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getMethodName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetMethodName,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getModuleName()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  steGetModuleName,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.getModuleVersion()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.hashCode()I"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
 		}
 
 	ghelpers.MethodSignatures["java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V"] =
@@ -43,6 +92,107 @@ func Load_Lang_StackTraceELement() {
 			GFunction:  initStackTraceElements,
 		}
 
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.isNative()Z"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.ReturnFalse,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.of(Ljava/lang/Throwable;I)[Ljava/lang/StackTraceElement;"] =
+		ghelpers.GMeth{
+			ParamSlots:   2,
+			GFunction:    of,
+			NeedsContext: true,
+		}
+
+	ghelpers.MethodSignatures["java/lang/StackTraceElement.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{
+			ParamSlots: 0,
+			GFunction:  ghelpers.TrapFunction,
+		}
+
+}
+
+func steGetClassLoaderName(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetClassLoaderName: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["classLoaderName"].Fvalue.(string)
+	if !ok {
+		return object.StringObjectFromGoString("<missing>")
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func steGetClassName(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetClassName: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["declaringClass"].Fvalue.(string)
+	if !ok {
+		return object.StringObjectFromGoString("<missing>")
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func steGetFileName(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetFileName: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["fileName"].Fvalue.(string)
+	if !ok {
+		return object.StringObjectFromGoString("<missing>")
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func steGetLineNumber(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetLineNumber: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["sourceLine"].Fvalue.(string)
+	if !ok {
+		return int64(-1)
+	}
+	lineNum, err := strconv.Atoi(str)
+	if err != nil {
+		return int64(-1)
+	}
+	return int64(lineNum)
+}
+
+func steGetMethodName(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetMethodName: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["methodName"].Fvalue.(string)
+	if !ok {
+		return object.StringObjectFromGoString("<missing>")
+	}
+	return object.StringObjectFromGoString(str)
+}
+
+func steGetModuleName(params []interface{}) interface{} {
+	this, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("steGetModuleName: params[0] not an object, saw: %T", this)
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	str, ok := this.FieldTable["moduleName"].Fvalue.(string)
+	if !ok || str == "" {
+		return object.StringObjectFromGoString("<missing>")
+	}
+	return object.StringObjectFromGoString(str)
 }
 
 /*
@@ -107,7 +257,6 @@ func initStackTraceElements(params []interface{}) interface{} {
 	arrayObjPtr := params[0].(*object.Object) // the array of stackTraceElements we'll fill in
 	arrayObj := *arrayObjPtr
 	rawSteArray := arrayObj.FieldTable["value"].Fvalue.([]*object.Object)
-	// rawSteArray := *rawSteArrayPtr
 
 	throwable := params[1].(*object.Object) // pointer to the Throwable object
 	jvmStack := throwable.FieldTable["frameStackRef"].Fvalue.(*list.List)
@@ -147,6 +296,7 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame, isFirstFrame b
 	addField := func(name, value string) {
 		fld := object.Field{}
 		fld.Fvalue = value
+		fld.Ftype = types.GolangString
 		stackTrace.FieldTable[name] = fld
 	}
 
@@ -154,7 +304,11 @@ func initStackTraceElement(ste *object.Object, frm *frames.Frame, isFirstFrame b
 	addField("methodName", frame.MethName)
 
 	methClass := classloader.MethAreaFetch(frame.ClName)
-
+	if methClass == nil {
+		errMsg := fmt.Sprintf("initStackTraceElement: MethAreaFetch(%s) returned nil",
+			util.ConvertInternalClassNameToUserFormat(frame.ClName))
+		_ = exceptions.ThrowEx(excNames.InternalException, errMsg, &frame)
+	}
 	addField("classLoaderName", methClass.Loader)
 	addField("fileName", methClass.Data.SourceFile)
 	addField("moduleName", methClass.Data.Module)
