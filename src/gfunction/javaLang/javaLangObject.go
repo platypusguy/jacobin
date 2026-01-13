@@ -22,80 +22,62 @@ import (
 
 func Load_Lang_Object() {
 
+	// --- Already implemented ---
 	ghelpers.MethodSignatures["java/lang/Object.<clinit>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
 
 	ghelpers.MethodSignatures["java/lang/Object.<init>()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.JustReturn,
-		}
-
-	// "java/lang/Object.clone(Ljava/lang/Object;)Ljava/lang/Object;" is PROTECTED
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
 
 	ghelpers.MethodSignatures["java/lang/Object.equals(Ljava/lang/Object;)Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  objectEquals,
-		}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: objectEquals}
 
 	ghelpers.MethodSignatures["java/lang/Object.finalize()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapDeprecated,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapDeprecated}
 
 	ghelpers.MethodSignatures["java/lang/Object.getClass()Ljava/lang/Class;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  objectGetClass,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction} // TODO: implement objectGetClass
+
+	ghelpers.MethodSignatures["java/lang/Object.getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Object.hashCode()I"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  objectHashCode,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectHashCode}
 
 	ghelpers.MethodSignatures["java/lang/Object.notify()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Object.notifyAll()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Object.toString()Ljava/lang/String;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  objectToString,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectToString}
 
-	ghelpers.MethodSignatures["java/lang/Object.wait()V"] = // wait until awakened, typically by being notified or interrupted
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.TrapFunction,
-		}
+	ghelpers.MethodSignatures["java/lang/Object.wait()V"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
-	ghelpers.MethodSignatures["java/lang/Object.wait(J)V"] = // wait(long timeoutMillis)
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  ghelpers.TrapFunction,
-		}
+	ghelpers.MethodSignatures["java/lang/Object.wait(J)V"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
-	ghelpers.MethodSignatures["java/lang/Object.wait(JI)V"] = // wait(long timeoutMillis, int nanos)
-		ghelpers.GMeth{
-			ParamSlots: 2,
-			GFunction:  ghelpers.TrapFunction,
-		}
+	ghelpers.MethodSignatures["java/lang/Object.wait(JI)V"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
+	// --- All other Object methods as traps (alphabetical) ---
+	addTrap := func(signature string, slots int) {
+		if _, exists := ghelpers.MethodSignatures[signature]; !exists {
+			ghelpers.MethodSignatures[signature] =
+				ghelpers.GMeth{ParamSlots: slots, GFunction: ghelpers.TrapFunction}
+		}
+	}
+
+	// Alphabetically sorted
+	trapMethods := map[string]int{
+		"java/lang/Object.clone()Ljava/lang/Object;": 0, // protected
+	}
+
+	for m, slots := range trapMethods {
+		addTrap(m, slots)
+	}
 }
 
 // === the internal representation of a java.lang.Class() instance ===

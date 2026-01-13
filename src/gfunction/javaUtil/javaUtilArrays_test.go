@@ -12,6 +12,7 @@ import (
 	"jacobin/src/globals"
 	"jacobin/src/object"
 	"jacobin/src/stringPool"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -101,5 +102,57 @@ func TestArraysAsList(t *testing.T) {
 
 	if al[0] != s1 || al[1] != s2 || al[2] != object.Null {
 		t.Errorf("elements mismatch")
+	}
+}
+
+func TestArraysEquals(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arr1 := object.Make1DimArray(object.T_INT, 3)
+	v1 := arr1.FieldTable["value"].Fvalue.([]int64)
+	v1[0], v1[1], v1[2] = 1, 2, 3
+
+	arr2 := object.Make1DimArray(object.T_INT, 3)
+	v2 := arr2.FieldTable["value"].Fvalue.([]int64)
+	v2[0], v2[1], v2[2] = 1, 2, 3
+
+	// Equal
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolTrue {
+		t.Errorf("Expected true for equal arrays")
+	}
+
+	// Not equal
+	v2[2] = 9
+	if utilArraysEquals([]interface{}{arr1, arr2}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for unequal arrays")
+	}
+
+	// Different types
+	arr3 := object.Make1DimArray(object.T_BYTE, 3)
+	if utilArraysEquals([]interface{}{arr1, arr3}) != types.JavaBoolFalse {
+		t.Errorf("Expected false for different array types")
+	}
+}
+
+func TestArraysToString(t *testing.T) {
+	globals.InitGlobals("test")
+	stringPool.PreloadArrayClassesToStringPool()
+
+	arrObj := object.Make1DimArray(object.T_INT, 3)
+	arr := arrObj.FieldTable["value"].Fvalue.([]int64)
+	arr[0], arr[1], arr[2] = 1, 2, 3
+
+	res := utilArraysToString([]interface{}{arrObj})
+	strObj := res.(*object.Object)
+	goStr := object.GoStringFromStringObject(strObj)
+	if goStr != "[1, 2, 3]" {
+		t.Errorf("Expected '[1, 2, 3]', got '%s'", goStr)
+	}
+
+	// Null
+	res = utilArraysToString([]interface{}{nil})
+	if object.GoStringFromStringObject(res.(*object.Object)) != "null" {
+		t.Errorf("Expected 'null'")
 	}
 }

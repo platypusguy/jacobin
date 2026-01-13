@@ -30,40 +30,70 @@ func Load_Util_Arrays() {
 		}
 
 	// binarySearch
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([B)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([B[B)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([B[BI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([BII)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([C)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([C[C)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([C[CI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([CI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([D)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([D[D)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([D[DI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([DI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([F)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([F[F)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([F[FI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([FI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([I)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([I[I)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([I[II)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([II)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([J)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([J[J)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([J[JI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([JI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([S)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([S[S)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([S[SI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([SI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Z)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Z[Z)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Z[ZI)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([ZI)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([BB)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([BIIB)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([CC)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([CIIC)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([DD)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([DIID)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([FF)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([FIIF)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([II)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([IIII)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([JJ)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([JIIJ)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([SS)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([SIIS)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Ljava/lang/Object;Ljava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Ljava/lang/Object;IILjava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Ljava/lang/Object;Ljava/lang/Object;Ljava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysBinarySearch}
+	ghelpers.MethodSignatures["java/util/Arrays.binarySearch([Ljava/lang/Object;IILjava/lang/Object;Ljava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 5, GFunction: utilArraysBinarySearch}
+
+	// compare
+	ghelpers.MethodSignatures["java/util/Arrays.compare([Z[Z)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([ZII[ZII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([B[B)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([BII[BII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([C[C)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([CII[CII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([D[D)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([DII[DII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([F[F)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([FII[FII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([I[I)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([III[III)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([J[J)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([JII[JII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([S[S)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([SII[SII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+
+	// compare (Object/Comparator)
+	ghelpers.MethodSignatures["java/util/Arrays.compare([Ljava/lang/Object;[Ljava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([Ljava/lang/Object;II[Ljava/lang/Object;II)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([Ljava/lang/Object;[Ljava/lang/Object;Ljava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.compare([Ljava/lang/Object;II[Ljava/lang/Object;IILjava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 7, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([Ljava/lang/Object;[Ljava/lang/Object;Ljava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([Ljava/lang/Object;II[Ljava/lang/Object;IILjava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 7, GFunction: ghelpers.TrapFunction}
+
+	// compareUnsigned
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([B[B)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([BII[BII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([I[I)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([III[III)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([J[J)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([JII[JII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([S[S)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysCompare}
+	ghelpers.MethodSignatures["java/util/Arrays.compareUnsigned([SII[SII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysCompare}
 
 	// copyOf
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([B I)[B"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([C I)[C"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([D I)[D"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([F I)[F"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([I I)[I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([J I)[J"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([S I)[S"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Z I)[Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/util/Arrays.copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;"] =
 		ghelpers.GMeth{
 			ParamSlots: 2,
@@ -82,20 +112,24 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.equals([Z[Z)Z"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysEquals}
 
 	// fill
-	ghelpers.MethodSignatures["java/util/Arrays.fill([BB)V"] = ghelpers.GMeth{
-		ParamSlots: 2,
-		GFunction:  utilArraysFillBytes,
-	}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([BBII)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([CC)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([DD)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([FF)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([II)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([JJ)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([SS)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([ZZ)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([Ljava/lang/Object;Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.fill([Ljava/lang/Object;IILjava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([BB)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([BBII)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([CC)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([CIIC)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([DD)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([DIID)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([FF)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([FIIF)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([II)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([IIII)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([JJ)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([JIIJ)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([SS)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([SIIS)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([ZZ)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([ZIIZ)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([Ljava/lang/Object;Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysFill}
+	ghelpers.MethodSignatures["java/util/Arrays.fill([Ljava/lang/Object;IILjava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysFill}
 
 	// hashCode
 	ghelpers.MethodSignatures["java/util/Arrays.hashCode([B)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
@@ -109,14 +143,26 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.hashCode([Z)I"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	// mismatch
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([B[B)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([C[C)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([D[D)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([F[F)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([I[I)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([J[J)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([S[S)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Z[Z)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([B[B)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([BII[BII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([C[C)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([CII[CII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([D[D)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([DII[DII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([F[F)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([FII[FII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([I[I)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([III[III)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([J[J)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([JII[JII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([S[S)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([SII[SII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Z[Z)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([ZII[ZII)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Ljava/lang/Object;[Ljava/lang/Object;)I"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Ljava/lang/Object;II[Ljava/lang/Object;II)I"] = ghelpers.GMeth{ParamSlots: 6, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Ljava/lang/Object;II[Ljava/lang/Object;IILjava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 7, GFunction: utilArraysMismatch}
+	ghelpers.MethodSignatures["java/util/Arrays.mismatch([Ljava/lang/Object;[Ljava/lang/Object;Ljava/util/Comparator;)I"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysMismatch}
 
 	// parallelPrefix
 	ghelpers.MethodSignatures["java/util/Arrays.parallelPrefix([DLjava/util/function/DoubleBinaryOperator;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
@@ -127,6 +173,7 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.parallelPrefix([IIILjava/util/function/IntBinaryOperator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/util/Arrays.parallelPrefix([JLjava/util/function/LongBinaryOperator;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/util/Arrays.parallelPrefix([JIILjava/util/function/LongBinaryOperator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelPrefix([Ljava/lang/Object;Ljava/util/function/BinaryOperator;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
 	// parallelSetAll
 	ghelpers.MethodSignatures["java/util/Arrays.parallelSetAll([DLjava/util/function/IntToDoubleFunction;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
@@ -136,17 +183,18 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.parallelSetAll([Ljava/lang/Object;Ljava/util/function/IntFunction;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
 	// parallelSort
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([D)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([DII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([F)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([FII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([I)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([III)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([J)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([JII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;II)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;IILjava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([D)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([DII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([F)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([FII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([I)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([III)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([J)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([JII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;II)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;IILjava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.parallelSort([Ljava/lang/Object;Ljava/util/function/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
 	// setAll
 	ghelpers.MethodSignatures["java/util/Arrays.setAll([DLjava/util/function/IntToDoubleFunction;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
@@ -156,17 +204,24 @@ func Load_Util_Arrays() {
 	ghelpers.MethodSignatures["java/util/Arrays.setAll([Ljava/lang/Object;Ljava/util/function/IntFunction;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
 	// sort
-	ghelpers.MethodSignatures["java/util/Arrays.sort([D)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([DII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([F)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([FII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([I)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([III)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([J)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([JII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;II)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
-	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;IILjava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([B)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([BII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([C)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([CII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([D)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([DII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([F)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([FII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([I)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([III)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([J)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([JII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([S)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([SII)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;)V"] = ghelpers.GMeth{ParamSlots: 1, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;II)V"] = ghelpers.GMeth{ParamSlots: 3, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;Ljava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 2, GFunction: utilArraysSort}
+	ghelpers.MethodSignatures["java/util/Arrays.sort([Ljava/lang/Object;IILjava/util/Comparator;)V"] = ghelpers.GMeth{ParamSlots: 4, GFunction: utilArraysSort}
 
 	// spliterator
 	ghelpers.MethodSignatures["java/util/Arrays.spliterator([D)Ljava/util/Spliterator$OfDouble;"] = ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
@@ -375,37 +430,6 @@ func utilArraysAsList(params []interface{}) interface{} {
 	// Return an ArrayList object
 	listObj := object.MakePrimitiveObject("java/util/ArrayList", types.ArrayList, ifaceElements)
 	return listObj
-}
-
-// Arrays.fill(byte[] a, byte val) -> void (also used for boolean[])
-func utilArraysFillBytes(params []interface{}) interface{} {
-	if len(params) < 2 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFillBytes: too few arguments")
-	}
-	if params[0] == nil {
-		return ghelpers.GetGErrBlk(excNames.NullPointerException, "utilArraysFillBytes: null array argument")
-	}
-	arrObj, ok := params[0].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFillBytes: first arg not an array object")
-	}
-	field, ok := arrObj.FieldTable["value"]
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFillBytes: missing array value field")
-	}
-	// Java byte value is passed as int64
-	val := types.JavaByte(params[1].(int64))
-	switch a := field.Fvalue.(type) {
-	case []types.JavaByte:
-		for i := range a {
-			a[i] = val
-		}
-		// write back (not strictly necessary as slice is by reference)
-		arrObj.FieldTable["value"] = field
-		return nil
-	default:
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "utilArraysFillBytes: unsupported array type")
-	}
 }
 
 // Arrays.toString for primitive and reference arrays
