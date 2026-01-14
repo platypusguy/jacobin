@@ -95,7 +95,11 @@ func RunGfunction(mt classloader.MTentry, fs *list.List,
 		} else {
 			threadName = fmt.Sprintf("%d", f.Thread)
 		}
-		errMsg := fmt.Sprintf("%s in thread: %s, G-function: %s", errBlk.ErrMsg, threadName, fullMethName)
+		if f.Thread == 0 {
+			errMsg := fmt.Sprintf("in main thread initialization, %s reported by G-function: %s", errBlk.ErrMsg, fullMethName)
+			exceptions.MinimalAbort(errBlk.ExceptionType, errMsg)
+		}
+		errMsg := fmt.Sprintf("in thread: %s, %s reported by G-function: %s", errBlk.ErrMsg, threadName, fullMethName)
 		status := exceptions.ThrowEx(errBlk.ExceptionType, errMsg, f)
 		if status != exceptions.Caught {
 			return errors.New(errMsg + " " + errBlk.ErrMsg) // applies only if in test

@@ -35,7 +35,6 @@ s not necessarily run in the same way as other classes."
 */
 
 // TODO: What is this?
-// Called from <clinit> of java/lang/Class
 func ClassClinitIsh() {
 	// Initialize the unnamedModule singleton.
 	if unnamedModule == nil {
@@ -61,68 +60,84 @@ func ClassClinitIsh() {
 
 func Load_Lang_Class() {
 
-	// There is no <clinit> for java/lang/Class.
-	// The <clinit> type of code is executed in gfunction.go classClinitIsh().
-
+	// Implemented methods
 	ghelpers.MethodSignatures["java/lang/Class.desiredAssertionStatus()Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classGetAssertionsEnabledStatus,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetAssertionsEnabledStatus}
 	ghelpers.MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classGetAssertionsEnabledStatus,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetAssertionsEnabledStatus}
 	ghelpers.MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  getComponentType,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: getComponentType}
 	ghelpers.MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classGetModule,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetModule}
 	ghelpers.MethodSignatures["java/lang/Class.getName()Ljava/lang/String;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classGetName,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetName}
 	ghelpers.MethodSignatures["java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;"] =
-		ghelpers.GMeth{
-			ParamSlots: 1,
-			GFunction:  getPrimitiveClass,
-		}
-
+		ghelpers.GMeth{ParamSlots: 1, GFunction: getPrimitiveClass}
 	ghelpers.MethodSignatures["java/lang/Class.isArray()Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classIsArray,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsArray}
 	ghelpers.MethodSignatures["java/lang/Class.isPrimitive()Z"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classIsPrimitive,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classIsPrimitive}
 	ghelpers.MethodSignatures["java/lang/Class.registerNatives()V"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  ghelpers.ClinitGeneric,
-		}
-
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
 	ghelpers.MethodSignatures["java/lang/Class.toString()Ljava/lang/String;"] =
-		ghelpers.GMeth{
-			ParamSlots: 0,
-			GFunction:  classToString,
-		}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classToString}
+
+	// --- Alphabetized trapped methods ---
+	addTrap := func(signature string, slots int) {
+		ghelpers.MethodSignatures[signature] =
+			ghelpers.GMeth{ParamSlots: slots, GFunction: ghelpers.TrapFunction}
+	}
+
+	addTrap("java/lang/Class.accessFlags()Ljava/util/Set;", 0)
+	addTrap("java/lang/Class.asSubclass(Ljava/lang/Class;)Ljava/lang/Class;", 1)
+	addTrap("java/lang/Class.cast(Ljava/lang/Object;)Ljava/lang/Object;", 1)
+	addTrap("java/lang/Class.componentType()Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.describeConstable()Ljava/util/Optional;", 0)
+	addTrap("java/lang/Class.descriptorString()Ljava/lang/String;", 0)
+	addTrap("java/lang/Class.forName(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;", 2)
+	addTrap("java/lang/Class.forName(Ljava/lang/String;)Ljava/lang/Class;", 1)
+	addTrap("java/lang/Class.forName(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", 3)
+	addTrap("java/lang/Class.getAnnotatedInterfaces()[Ljava/lang/reflect/AnnotatedType;", 0)
+	addTrap("java/lang/Class.getAnnotatedSuperclass()Ljava/lang/reflect/AnnotatedType;", 0)
+	addTrap("java/lang/Class.getAnnotation(Ljava/lang/Class;)Ljava/lang/annotation/Annotation;", 1)
+	addTrap("java/lang/Class.getAnnotations()[Ljava/lang/annotation/Annotation;", 0)
+	addTrap("java/lang/Class.getCanonicalName()Ljava/lang/String;", 0)
+	addTrap("java/lang/Class.getConstructor([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", 1)
+	addTrap("java/lang/Class.getConstructors()[Ljava/lang/reflect/Constructor;", 0)
+	addTrap("java/lang/Class.getDeclaredAnnotationsByType(Ljava/lang/Class;)[Ljava/lang/annotation/Annotation;", 1)
+	addTrap("java/lang/Class.getDeclaredClasses()[Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getDeclaredConstructor([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", 1)
+	addTrap("java/lang/Class.getDeclaredConstructors()[Ljava/lang/reflect/Constructor;", 0)
+	addTrap("java/lang/Class.getDeclaredField(Ljava/lang/String;)Ljava/lang/reflect/Field;", 1)
+	addTrap("java/lang/Class.getDeclaredFields()[Ljava/lang/reflect/Field;", 0)
+	addTrap("java/lang/Class.getDeclaredMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", 2)
+	addTrap("java/lang/Class.getDeclaredMethods()[Ljava/lang/reflect/Method;", 0)
+	addTrap("java/lang/Class.getDeclaringClass()Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getEnclosingClass()Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getEnclosingConstructor()Ljava/lang/reflect/Constructor;", 0)
+	addTrap("java/lang/Class.getEnclosingMethod()Ljava/lang/reflect/Method;", 0)
+	addTrap("java/lang/Class.getEnumConstants()[Ljava/lang/Object;", 0)
+	addTrap("java/lang/Class.getField(Ljava/lang/String;)Ljava/lang/reflect/Field;", 1)
+	addTrap("java/lang/Class.getFields()[Ljava/lang/reflect/Field;", 0)
+	addTrap("java/lang/Class.getGenericInterfaces()[Ljava/lang/reflect/Type;", 0)
+	addTrap("java/lang/Class.getGenericSuperclass()Ljava/lang/reflect/Type;", 0)
+	addTrap("java/lang/Class.getInterfaces()[Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getModifiers()I", 0)
+	addTrap("java/lang/Class.getNestHost()Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getNestMembers()[Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getPackage()Ljava/lang/Package;", 0)
+	addTrap("java/lang/Class.getPackageName()Ljava/lang/String;", 0)
+	addTrap("java/lang/Class.getPermittedSubclasses()[Ljava/lang/Class;", 0)
+	addTrap("java/lang/Class.getProtectionDomain()Ljava/security/ProtectionDomain;", 0)
+	addTrap("java/lang/Class.getRecordComponents()[Ljava/lang/reflect/RecordComponent;", 0)
+	addTrap("java/lang/Class.getSimpleName()Ljava/lang/String;", 0)
+	addTrap("java/lang/Class.getTypeName()Ljava/lang/String;", 0)
+	addTrap("java/lang/Class.isEnum()Z", 0)
+	addTrap("java/lang/Class.isInstance(Ljava/lang/Object;)Z", 1)
+	addTrap("java/lang/Class.isInterface()Z", 0)
+	addTrap("java/lang/Class.isNestmateOf(Ljava/lang/Class;)Z", 1)
+	addTrap("java/lang/Class.isSealed()Z", 0)
+	addTrap("java/lang/Class.isSynthetic()Z", 0)
 }
 
 // returns boolean indicating whether assertions are enabled or not.
@@ -228,9 +243,9 @@ func classGetModule([]interface{}) interface{} {
 
 // "java/lang/Class.classGetName()Ljava/lang/String;"
 func classGetName(params []interface{}) interface{} {
-	class := params[0].(*object.Object)
-	name := class.FieldTable["name"].Fvalue.(string)
-	return object.StringObjectFromGoString(name)
+	obj := params[0].(*object.Object)
+	name := object.StringObjectFromPoolIndex(obj.KlassName)
+	return name
 }
 
 // getPrimitiveClass() takes a one-word descriptor of a primitive and

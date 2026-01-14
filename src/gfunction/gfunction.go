@@ -111,6 +111,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaUtil.Load_Util_HexFormat()
 	javaUtil.Load_Util_LinkedList()
 	javaUtil.Load_Util_Locale()
+	javaUtil.Load_Util_Logging_Logger()
 	javaUtil.Load_Util_Properties()
 	javaUtil.Load_Util_Objects()
 	javaUtil.Load_Util_Optional()
