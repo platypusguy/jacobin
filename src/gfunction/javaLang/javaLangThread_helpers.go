@@ -20,12 +20,12 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 
 // Get the thread state and return it to caller.
 func GetThreadState(th *object.Object) int {
-	th.ThMutex.RLock()
-	defer th.ThMutex.RUnlock()
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
 	if !ok {
 		return -1
 	}
+	thStateObj.ThMutex.RLock()
+	defer thStateObj.ThMutex.RUnlock()
 	return thStateObj.FieldTable["value"].Fvalue.(int)
 }
 
@@ -36,19 +36,6 @@ func GetThreadState(th *object.Object) int {
 //   - nil (success)
 //   - *ghelpers.GErrBlk (oops)
 func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) {
-	// Returns (previousState int, error interface{})
-
-	// ---- Thread invariant ----
-	if th.ThMutex == nil {
-		return -1, ghelpers.GetGErrBlk(
-			excNames.VirtualMachineError,
-			"SetThreadState: Thread object missing ThMutex",
-		)
-	}
-
-	// ---- Exclusive lifecycle update ----
-	th.ThMutex.Lock()
-	defer th.ThMutex.Unlock()
 
 	// Retrieve the 'state' field
 	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
@@ -57,9 +44,16 @@ func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) 
 		ts := object.MakeEmptyObject()
 		ts.KlassName = object.StringPoolIndexFromGoString("java/lang/Thread$State")
 		ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: NEW}
+		ts.ThMutex = &sync.RWMutex{}
 		th.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: ts}
+
 		return -1, nil
 	}
+
+	// Going to update the existing thread state object.
+	// Lock it for writing.
+	thStateObj.ThMutex.Lock()
+	defer thStateObj.ThMutex.Unlock()
 
 	// Get previous state
 	prevVal, ok := thStateObj.FieldTable["value"].Fvalue.(int)
@@ -124,7 +118,6 @@ func populateThreadObject(t *object.Object) {
 	frameStack := object.Field{Ftype: types.LinkedList, Fvalue: nil}
 	t.FieldTable["framestack"] = frameStack
 
-	t.ThMutex = &sync.RWMutex{}
 	SetThreadState(t, NEW)
 
 }
@@ -161,13 +154,6 @@ func ThreadCreateNoarg(_ []interface{}) any {
 var continueLoop = struct{}{}
 
 func waitForTermination(waitingThread, targetThread *object.Object, maxTime int64) interface{} {
-
-	if targetThread.ThMutex == nil {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"waitForTermination: targetThread.ThMutex is nil",
-		)
-	}
 
 	if maxTime <= 0 {
 		return ghelpers.GetGErrBlk(

@@ -741,19 +741,3 @@ func TestThreadInitWithThreadGroupRunnable(t *testing.T) {
 		t.Errorf("target not set")
 	}
 }
-
-func TestSetThreadState_MissingMutex(t *testing.T) {
-	th := object.MakeEmptyObject()
-	th.ThMutex = nil
-	_, err := SetThreadState(th, RUNNABLE)
-	if err.(*ghelpers.GErrBlk).ExceptionType != excNames.VirtualMachineError {
-		t.Errorf("expected VirtualMachineError for missing ThMutex")
-	}
-}
-
-func TestPopulateThreadObject_MissingFields(t *testing.T) {
-	// populateThreadObject is not exported but ThreadCreateNoarg calls it.
-	// If we want to test its error paths, we might need it to be exported or
-	// test it via ThreadCreateNoarg if it can fail there.
-	// Actually ThreadCreateNoarg doesn't take parameters that can cause failure in populateThreadObject easily.
-}

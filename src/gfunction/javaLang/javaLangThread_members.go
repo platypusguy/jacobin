@@ -209,8 +209,6 @@ func threadGetState(params []interface{}) any {
 	}
 
 	// Return the state object (NOT the state value).
-	t.ThMutex.RLock()
-	defer t.ThMutex.RUnlock()
 	stateObj := t.FieldTable["state"].Fvalue.(*object.Object)
 	return stateObj
 }
