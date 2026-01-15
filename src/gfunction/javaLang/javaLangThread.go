@@ -7,7 +7,6 @@
 package javaLang
 
 import (
-	"container/list"
 	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
@@ -389,10 +388,6 @@ func threadInitNull(params []interface{}) any {
 	}
 	populateThreadObject(t)
 
-	// Store a runnable object in the target field of Thread.
-	frameStack := params[0].(*list.List)
-	storeThreadRunnable(t, frameStack)
-
 	return nil
 }
 
@@ -411,21 +406,13 @@ func ThreadInitWithName(params []interface{}) any {
 	}
 	populateThreadObject(t)
 
-	// xx Get the class name "java/lang/Thread" or the user's own subclass of Thread.
-	// frameStack := params[0].(*list.List)
-	// storeThreadClassName(t, frameStack)
-
+	// Get thread name.
 	name, ok := params[2].(*object.Object)
 	if !ok {
 		errMsg := "ThreadInitWithName: Expected name parameter to be a String"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
-
-	// Store a runnable object in the target field of Thread.
-	frameStack := params[0].(*list.List)
-	storeThreadRunnable(t, frameStack)
 
 	return nil
 }
@@ -532,10 +519,6 @@ func threadInitWithThreadGroupAndName(params []interface{}) any {
 
 	t.FieldTable["threadgroup"] = object.Field{Ftype: types.Ref, Fvalue: threadGroup}
 	t.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: name}
-
-	// Store a runnable object in the target field of Thread.
-	frameStack := params[0].(*list.List)
-	storeThreadRunnable(t, frameStack)
 
 	return nil
 }

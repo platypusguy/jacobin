@@ -105,8 +105,17 @@ func RunJavaThread(args []any) {
 		f.Locals[0] = strArrayObj
 	} else {
 		// Not the main thread.
-		// Initialize local 0 with the thread object so that it can be accessed within the interpreter (E.g. LOAD_0).
-		f.Locals[0] = t
+		// Try for a runnable object in the thread's field table.
+		fld, ok := t.FieldTable["target"]
+		if ok {
+			// Got a target field (runnable object).
+			// Initialize local 0 with the runnable object so that it can be accessed within the interpreter
+			f.Locals[0] = fld.Fvalue
+		} else {
+			// Not target field present.
+			// Initialize local 0 with the thread object so that it can be accessed within the interpreter
+			f.Locals[0] = t
+		}
 	}
 
 	// JACOBIN-824:

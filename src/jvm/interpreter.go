@@ -2200,7 +2200,7 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	}
 
 	// Extract field.
-	obj := *ref.(*object.Object)
+	obj := ref.(*object.Object)
 	var fieldType string
 	var fieldValue interface{}
 
