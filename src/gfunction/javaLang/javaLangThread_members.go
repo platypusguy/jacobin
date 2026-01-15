@@ -13,6 +13,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -208,9 +209,14 @@ func threadGetState(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Return the state object (NOT the state value).
-	stateObj := t.FieldTable["state"].Fvalue.(*object.Object)
-	return stateObj
+	// Return a copy of the state object.
+	stInt := GetThreadState(t)
+	ts := object.MakeEmptyObject()
+	ts.KlassName = object.StringPoolIndexFromGoString(types.ClassNameThreadState)
+	ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: stInt}
+	ts.ThMutex = &sync.RWMutex{}
+
+	return ts
 }
 
 // threadGetThreadGroup retrieves the thread group associated with the given thread object.

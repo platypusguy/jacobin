@@ -42,7 +42,7 @@ func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) 
 	if !ok || thStateObj == nil {
 		// Create state object if missing (should normally not happen)
 		ts := object.MakeEmptyObject()
-		ts.KlassName = object.StringPoolIndexFromGoString("java/lang/Thread$State")
+		ts.KlassName = object.StringPoolIndexFromGoString(types.ClassNameThreadState)
 		ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: NEW}
 		ts.ThMutex = &sync.RWMutex{}
 		th.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: ts}
