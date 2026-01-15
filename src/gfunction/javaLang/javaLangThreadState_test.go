@@ -23,78 +23,14 @@ func TestMain(m *testing.M) {
 
 // --- threadStateToString() tests ---
 
-func TestThreadStateToString_HappyPath(t *testing.T) {
-
-	EnsureTGInit()
-
-	// Create thread.
-	th := ThreadCreateNoarg(nil).(*object.Object)
-	stateField := object.Field{Ftype: types.Ref,
-		Fvalue: threadStateCreateWithValue([]any{RUNNABLE})}
-	th.FieldTable["state"] = stateField
-
-	// Get thread state.
-	thState, ok := th.FieldTable["state"].Fvalue.(*object.Object)
-	if !ok {
-		t.Errorf("state missing or is not an object")
-	}
-
-	// Convert thread state to a string.
-	res := threadStateToString([]interface{}{thState})
-	if !object.IsStringObject(res) {
-		t.Fatalf("expected String object, got %T", res)
-	}
-	got := object.GoStringFromStringObject(res.(*object.Object))
-	if got != "RUNNABLE" {
-		t.Errorf("toString() returned %q; want %q", got, "RUNNABLE")
-	}
-}
-
-func TestThreadStateToString_MissingParam(t *testing.T) {
-	res := threadStateToString([]interface{}{})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
-	}
-}
-
-func TestThreadStateToString_WrongTypeParam(t *testing.T) {
-	// Pass a non-int; code treats it as null type error
-	obj := object.MakePrimitiveObject("java/lang/Thread.State", types.GolangString, "not-an-int")
-	res := threadStateToString([]interface{}{obj})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.NullPointerException {
-		t.Errorf("expected NullPointerException, got %v", gerr.ExceptionType)
-	}
-}
-
-func TestThreadStateToString_InvalidState(t *testing.T) {
-	obj := object.MakePrimitiveObject("java/lang/Thread.State", types.Int, 42)
-	res := threadStateToString([]interface{}{obj})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
-	}
-}
-
-// --- threadStateValueOf() tests ---
-
 func TestThreadStateValueOf_HappyPath(t *testing.T) {
 	nameObj := object.StringObjectFromGoString("WAITING")
 	res := threadStateValueOf([]interface{}{nameObj})
-	val, ok := res.(int)
+	obj, ok := res.(*object.Object)
 	if !ok {
-		t.Fatalf("expected int state, got %T", res)
+		t.Fatalf("expected state object, got %T", res)
 	}
+	val := obj.FieldTable["value"].Fvalue.(int)
 	if val != WAITING {
 		t.Errorf("valueOf(\"WAITING\") = %d; want %d", val, WAITING)
 	}
@@ -160,32 +96,92 @@ func TestThreadStateValueOf_NoMatch(t *testing.T) {
 
 // --- threadStateValues() tests ---
 
-func TestThreadStateValues_ArrayContentAndOrder(t *testing.T) {
-	// Ensure non-zero size so returned array object is meaningful
-	threadStateInstances = make([]*object.Object, len(ThreadState))
-
-	res := threadStateValues([]interface{}{})
-	arrObj, ok := res.(*object.Object)
+func TestThreadStateValues(t *testing.T) {
+	res := threadStateValues(nil)
+	obj, ok := res.(*object.Object)
 	if !ok {
-		t.Fatalf("expected *object.Object array, got %T", res)
+		t.Fatalf("expected state object, got %T", res)
 	}
-
-	// Validate array field type and size
-	valueField := arrObj.FieldTable["value"]
-	if valueField.Ftype != types.RefArray+"Ljava/lang/Thread$State;" {
-		t.Errorf("unexpected array Ftype: %q", valueField.Ftype)
-	}
-
-	// The implementation stores the sorted keys slice in Fvalue
-	keys, ok := valueField.Fvalue.([]int)
+	arr, ok := obj.FieldTable["value"].Fvalue.([]*object.Object)
 	if !ok {
-		t.Fatalf("expected []int keys in array value, got %T", valueField.Fvalue)
+		t.Fatalf("expected []*object.Object, got %T", obj.FieldTable["value"].Fvalue)
 	}
-	if len(keys) != len(ThreadState) {
-		t.Fatalf("expected %d keys, got %d", len(ThreadState), len(keys))
+	if len(arr) != 6 {
+		t.Errorf("expected 6 states, got %d", len(arr))
 	}
-	// Verify ascending order 0..5 based on defined constants
-	if !(keys[0] == NEW && keys[1] == RUNNABLE && keys[2] == BLOCKED && keys[3] == WAITING && keys[4] == TIMED_WAITING && keys[5] == TERMINATED) {
-		t.Errorf("keys not in declaration order: %v", keys)
+	// Verify they are in order
+	expectedNames := []string{"NEW", "RUNNABLE", "BLOCKED", "WAITING", "TIMED_WAITING", "TERMINATED"}
+	for i, stateObj := range arr {
+		val := stateObj.FieldTable["value"].Fvalue.(int)
+		if val != i {
+			t.Errorf("state at index %d has value %d; want %d", i, val, i)
+		}
+		// Verify toString matches
+		strObj := threadStateToString([]interface{}{stateObj})
+		name := object.GoStringFromStringObject(strObj.(*object.Object))
+		if name != expectedNames[i] {
+			t.Errorf("state at index %d has name %s; want %s", i, name, expectedNames[i])
+		}
+	}
+}
+
+// --- threadStateToString() tests ---
+
+func TestThreadStateToString_HappyPath(t *testing.T) {
+	stateObj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, RUNNABLE)
+	res := threadStateToString([]interface{}{stateObj})
+	strObj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected *object.Object, got %T", res)
+	}
+	name := object.GoStringFromStringObject(strObj)
+	if name != "RUNNABLE" {
+		t.Errorf("toString(RUNNABLE) = %s; want \"RUNNABLE\"", name)
+	}
+}
+
+func TestThreadStateToString_MissingArg(t *testing.T) {
+	res := threadStateToString([]interface{}{})
+	gerr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
+	}
+	if gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
+	}
+}
+
+func TestThreadStateToString_NotAnObject(t *testing.T) {
+	res := threadStateToString([]interface{}{123})
+	gerr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
+	}
+	if gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
+	}
+}
+
+func TestThreadStateToString_MissingValueField(t *testing.T) {
+	stateObj := object.MakeEmptyObject()
+	res := threadStateToString([]interface{}{stateObj})
+	gerr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
+	}
+	if gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
+	}
+}
+
+func TestThreadStateToString_InvalidState(t *testing.T) {
+	stateObj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, 99)
+	res := threadStateToString([]interface{}{stateObj})
+	gerr, ok := res.(*ghelpers.GErrBlk)
+	if !ok {
+		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
+	}
+	if gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
 	}
 }

@@ -207,8 +207,12 @@ func threadGetState(params []interface{}) any {
 		errMsg := "threadGetState: Expected parameter to be a Thread object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	state := t.FieldTable["state"].Fvalue.(*object.Object)
-	return state
+
+	// Return the state object (NOT the state value).
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+	stateObj := t.FieldTable["state"].Fvalue.(*object.Object)
+	return stateObj
 }
 
 // threadGetThreadGroup retrieves the thread group associated with the given thread object.
