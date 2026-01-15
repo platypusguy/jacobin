@@ -429,51 +429,46 @@ func threadStart(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Get runnable object.
-	runnable, ok := t.FieldTable["target"].Fvalue.(*object.Object)
-	if !ok {
-		errMsg := "threadStart: Expected Runnable target field to be an object"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-
-	// Extract class name, method name, and method type from the runnable object.
 	var clName, methName, methType string
-	ftbl := runnable.FieldTable
-	fld, ok := ftbl["clName"]
-	if !ok {
-		errMsg := "threadStart: Missing the clName field in the runnable object"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
 
-	clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-	fld, ok = ftbl["methName"]
-	if !ok {
-		errMsg := "threadStart: Missing the methName field in the runnable object"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	// Assume no runnable object.
+	ftbl := t.FieldTable
+
+	// Try to get runnable object.
+	runnable, ok := t.FieldTable["target"].Fvalue.(*object.Object)
+	if ok {
+		// Replace t.FieldTable with that of the runnable object.
+		ftbl = runnable.FieldTable
+		// Extract class name, method name, and method type.
+		fld, ok := ftbl["clName"]
+		if !ok {
+			errMsg := "threadStart: Missing the clName field"
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		fld, ok = ftbl["methName"]
+		if !ok {
+			errMsg := "threadStart: Missing the methName field"
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		methName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+		fld, ok = ftbl["methType"]
+		if !ok {
+			errMsg := "threadStart: Missing the methType field"
+			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+		}
+		methType = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
+	} else {
+		// No runnable object, use thread object values.
+		clName = object.GoStringFromStringPoolIndex(t.KlassName)
+		methName = "run"
+		methType = "()V"
 	}
-	methName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
-	fld, ok = ftbl["methType"]
-	if !ok {
-		errMsg := "threadStart: Missing the methType field in the runnable object"
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
-	}
-	methType = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 
 	// Spawn RunJavaThread to interpret bytecode of run()
 	args := []interface{}{t, clName, methName, methType}
-	if clName == "main$CounterTask" && methName == "run" { // JACOBIN-824 experimentation
-		globals.GetGlobalRef().FuncRunThread(args)
-		return nil
-	} else {
-		go globals.GetGlobalRef().FuncRunThread(args)
-		runtime.Gosched()
-		return nil
-	}
-	//
-	// go globals.GetGlobalRef().FuncRunThread(args)
-	// runtime.Gosched()
-	//
-	// return nil
+	go globals.GetGlobalRef().FuncRunThread(args)
+	return nil
 }
 
 // threadYield allows the current goroutine to relinquish the processor, enabling other goroutines to run.
