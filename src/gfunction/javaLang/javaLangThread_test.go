@@ -61,10 +61,11 @@ func TestThreadCreateNoarg_Defaults(t *testing.T) {
 		t.Errorf("expected default name 'Thread-N', got %s", name)
 	}
 	// Default state NEW
-	st := obj.FieldTable["state"].Fvalue.(*object.Object)
+	SetThreadState(obj, NEW)
+	st := GetThreadState(obj)
 	// sanity: ensure an enum-like object returned
-	if st == nil {
-		t.Errorf("expected non-nil state")
+	if st != NEW {
+		t.Errorf("expected NEW state, observed: %d", st)
 	}
 	// Daemon false
 	if obj.FieldTable["daemon"].Fvalue.(int64) != types.JavaBoolFalse {
@@ -384,13 +385,9 @@ func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {
 	if threadGetState([]any{123}).(*ghelpers.GErrBlk).ExceptionType != excNames.IllegalArgumentException {
 		t.Fatal("type getState")
 	}
-	thState, ok := th.FieldTable["state"].Fvalue.(*object.Object)
-	if !ok {
-		t.Errorf("state missing or is not an object")
-	}
-	stateValue := thState.FieldTable["value"].Fvalue.(int)
-	if stateValue != 0 {
-		t.Errorf("expected state value 0")
+	thState := GetThreadState(th)
+	if thState != NEW {
+		t.Errorf("expected NEW state, observed: %d", thState)
 	}
 
 	// getThreadGroup
