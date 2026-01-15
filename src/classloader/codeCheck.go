@@ -616,7 +616,7 @@ func PushFloatRet2() int {
 	return 2
 }
 
-// FSORE* and DSTORE*
+// FSTORE* and DSTORE*
 func storeFloat() int {
 	StackEntries -= 1
 	return 1

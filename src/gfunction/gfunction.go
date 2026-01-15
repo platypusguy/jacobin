@@ -34,6 +34,7 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 
 	// java/io/*
 	javaIo.Load_Io_BufferedReader()
+	javaIo.Load_Io_BufferedWriter()
 	javaIo.Load_Io_Console()
 	javaIo.Load_Io_File()
 	javaIo.Load_Io_FileInputStream()
