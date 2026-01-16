@@ -134,10 +134,10 @@ func RunJavaThread(args []any) {
 	// }
 
 	// Add the initial frame and the frame stack to the thread's field table.
-	t.ThMutex.RLock()
+	t.ThMutex.Lock()
 	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}
 	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
-	t.ThMutex.RUnlock()
+	t.ThMutex.Unlock()
 
 	// Push the frame on the stack.
 	if frames.PushFrame(fs, f) != nil {
