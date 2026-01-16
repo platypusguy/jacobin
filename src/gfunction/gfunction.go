@@ -48,8 +48,13 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	javaIo.Load_Io_RandomAccessFile()
 
 	// java/nio/*
+	javaNio.Load_Nio_File_Files()
 	javaNio.Load_Nio_File_Path()
 	javaNio.Load_Nio_File_Paths()
+	// Load traps first, then override with our implementations for Files
+	// so any methods we implement replace trapped entries.
+	ghelpers.Load_Traps_Java_Nio()
+	javaNio.Load_Nio_File_Files()
 
 	// java/lang/*
 	javaLang.Load_Lang_Boolean()
@@ -138,7 +143,6 @@ func MTableLoadGFunctions(MTable *classloader.MT) {
 	// Load traps that lead to unconditional error returns.
 	ghelpers.Load_Traps()
 	ghelpers.Load_Traps_Java_Io()
-	ghelpers.Load_Traps_Java_Nio()
 
 	// Load diagnostic helper functions.
 	misc.Load_jj()

@@ -95,12 +95,16 @@ func Load_Io_BufferedWriter() {
 
 // "java/io/BufferedWriter.<init>(Ljava/io/Writer;)V"
 func bufferedWriterInit(params []interface{}) interface{} {
-	// Copy FilePath and FileHandle from the provided Writer to this BufferedWriter.
-	fldPath, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
-	if !ok {
-		errMsg := "bufferedWriterInit: Writer object lacks a ghelpers.FilePath field"
-		return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
-	}
+    // Copy FilePath and FileHandle from the provided Writer to this BufferedWriter.
+    // Ensure the target object's FieldTable map is initialized before assignment.
+    if params[0].(*object.Object).FieldTable == nil {
+        params[0].(*object.Object).FieldTable = make(map[string]object.Field)
+    }
+    fldPath, ok := params[1].(*object.Object).FieldTable[ghelpers.FilePath]
+    if !ok {
+        errMsg := "bufferedWriterInit: Writer object lacks a ghelpers.FilePath field"
+        return ghelpers.GetGErrBlk(excNames.IOException, errMsg)
+    }
 
 	fldHandle, ok := params[1].(*object.Object).FieldTable[ghelpers.FileHandle]
 	if !ok {
