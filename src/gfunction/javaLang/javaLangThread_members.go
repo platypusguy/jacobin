@@ -13,7 +13,6 @@ import (
 	"jacobin/src/types"
 	"os"
 	"runtime"
-	"sync"
 	"time"
 )
 
@@ -214,7 +213,6 @@ func threadGetState(params []interface{}) any {
 	ts := object.MakeEmptyObject()
 	ts.KlassName = object.StringPoolIndexFromGoString(types.ClassNameThreadState)
 	ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: stInt}
-	ts.ThMutex = &sync.RWMutex{}
 
 	return ts
 }
