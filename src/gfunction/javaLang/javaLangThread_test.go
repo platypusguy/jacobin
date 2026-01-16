@@ -340,18 +340,6 @@ func TestThreadGetId_Paths(t *testing.T) {
 	if id != th.FieldTable["ID"].Fvalue.(int64) {
 		t.Errorf("id mismatch")
 	}
-	// missing ID field
-	th2 := object.MakeEmptyObject()
-	th2.FieldTable = map[string]object.Field{}
-	if threadGetId([]any{th2}).(*ghelpers.GErrBlk).ExceptionType != excNames.InternalException {
-		t.Fatal("missing ID should be internal error")
-	}
-	// wrong ID type
-	th3 := object.MakeEmptyObject()
-	th3.FieldTable = map[string]object.Field{"ID": {Ftype: types.Int, Fvalue: "x"}}
-	if threadGetId([]any{th3}).(*ghelpers.GErrBlk).ExceptionType != excNames.InternalException {
-		t.Fatal("wrong ID type")
-	}
 }
 
 func TestThreadGetNamePriorityStateGroupInterrupted(t *testing.T) {

@@ -124,6 +124,9 @@ func threadGetId(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	// Extract the ID field and ensure it is int64
 	idField, ok := t.FieldTable["ID"]
 	if !ok {
@@ -152,6 +155,10 @@ func threadGetName(params []interface{}) any {
 		errMsg := "threadGetName: Expected parameter to be a Thread object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	return t.FieldTable["name"].Fvalue.(*object.Object)
 }
 
@@ -164,6 +171,10 @@ func threadGetPriority(params []interface{}) any {
 	}
 
 	t := params[0].(*object.Object)
+
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	return t.FieldTable["priority"].Fvalue.(int64)
 }
 
@@ -208,7 +219,7 @@ func threadGetState(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	// Return a copy of the state object.
+	// Return a thread state object.
 	stInt := GetThreadState(t)
 	ts := object.MakeEmptyObject()
 	ts.KlassName = object.StringPoolIndexFromGoString(types.ClassNameThreadState)
@@ -225,6 +236,10 @@ func threadGetThreadGroup(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 	t := params[0].(*object.Object)
+
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	threadGroup, ok := t.FieldTable["threadgroup"].Fvalue.(*object.Object)
 	if !ok {
 		errMsg := "threadGetThreadGroup: Expected threadgroup to be an object"
@@ -244,6 +259,7 @@ func threadIsAlive(params []interface{}) any {
 		errMsg := "threadIsAlive: Expected thread to be an object"
 		return ghelpers.GetGErrBlk(excNames.InternalException, errMsg)
 	}
+
 	state := GetThreadState(t)
 	if state > NEW && state < TERMINATED {
 		return types.JavaBoolTrue
@@ -262,6 +278,10 @@ func threadIsInterrupted(params []interface{}) any {
 		errMsg := "threadIsInterrupted: Expected thread to be an object"
 		return ghelpers.GetGErrBlk(excNames.InternalException, errMsg)
 	}
+
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	return t.FieldTable["interrupted"].Fvalue.(types.JavaBool)
 }
 
@@ -332,6 +352,9 @@ func threadRun(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	t.ThMutex.RLock()
+	defer t.ThMutex.RUnlock()
+
 	name := t.FieldTable["name"].Fvalue.(*object.Object)
 	id := t.FieldTable["ID"].Fvalue.(int64)
 	warnMsg := fmt.Sprintf("threadRun nil-function name: %s, ID: %d started", object.GoStringFromStringObject(name), id)
@@ -356,6 +379,9 @@ func threadSetName(params []interface{}) any {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
+	th.ThMutex.Lock()
+	defer th.ThMutex.Unlock()
+
 	// Validate the second parameter is the Java String object (non-null)
 	nameObj, ok := params[1].(*object.Object)
 	if !ok || object.IsNull(nameObj) {
@@ -373,6 +399,7 @@ func threadSetName(params []interface{}) any {
 // Accepts a slice of two parameters: a Thread object and an int64 priority value.
 // Raises IllegalArgumentException if parameters are invalid or priority is out of the valid range for threads.
 func threadSetPriority(params []interface{}) any {
+
 	// Expect exactly two parameters: the Thread object and the priority (int64)
 	if len(params) != 2 {
 		errMsg := fmt.Sprintf("threadSetPriority: Expected 2 parameters, got %d parameters", len(params))
@@ -385,6 +412,9 @@ func threadSetPriority(params []interface{}) any {
 		errMsg := "threadSetPriority: Expected first parameter to be a non-null Thread object"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
+
+	th.ThMutex.Lock()
+	defer th.ThMutex.Unlock()
 
 	// Extract and validate the second parameter (priority as int64)
 	priority, ok := params[1].(int64)
@@ -437,6 +467,9 @@ func threadStart(params []interface{}) any {
 
 	var clName, methName, methType string
 
+	// Temporarily, read-lock this thread.
+	t.ThMutex.Lock()
+
 	// Assume no runnable object.
 	ftbl := t.FieldTable
 
@@ -448,18 +481,21 @@ func threadStart(params []interface{}) any {
 		// Extract class name, method name, and method type.
 		fld, ok := ftbl["clName"]
 		if !ok {
+			t.ThMutex.Unlock() // UNLOCK THREAD
 			errMsg := "threadStart: Missing the clName field"
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 		clName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		fld, ok = ftbl["methName"]
 		if !ok {
+			t.ThMutex.Unlock() // UNLOCK THREAD
 			errMsg := "threadStart: Missing the methName field"
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
 		methName = object.GoStringFromJavaByteArray(fld.Fvalue.([]types.JavaByte))
 		fld, ok = ftbl["methType"]
 		if !ok {
+			t.ThMutex.Unlock() // UNLOCK THREAD
 			errMsg := "threadStart: Missing the methType field"
 			return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 		}
@@ -472,6 +508,7 @@ func threadStart(params []interface{}) any {
 	}
 
 	// Spawn RunJavaThread to interpret bytecode of run()
+	t.ThMutex.Unlock() // UNLOCK THREAD
 	args := []interface{}{t, clName, methName, methType}
 	go globals.GetGlobalRef().FuncRunThread(args)
 	return nil

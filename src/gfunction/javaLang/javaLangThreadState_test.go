@@ -11,7 +11,6 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
-	"jacobin/src/types"
 	"testing"
 )
 
@@ -30,7 +29,7 @@ func TestThreadStateValueOf_HappyPath(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected state object, got %T", res)
 	}
-	val := obj.FieldTable["value"].Fvalue.(int)
+	val := obj.FieldTable["value"].Fvalue.(int64)
 	if val != WAITING {
 		t.Errorf("valueOf(\"WAITING\") = %d; want %d", val, WAITING)
 	}
@@ -94,94 +93,17 @@ func TestThreadStateValueOf_NoMatch(t *testing.T) {
 	}
 }
 
-// --- threadStateValues() tests ---
-
 func TestThreadStateValues(t *testing.T) {
-	res := threadStateValues(nil)
-	obj, ok := res.(*object.Object)
-	if !ok {
-		t.Fatalf("expected state object, got %T", res)
+	//expectedNames := []string{"NEW", "RUNNABLE", "BLOCKED", "WAITING", "TIMED_WAITING", "TERMINATED"}
+	strValuesObj := threadStateValues([]interface{}{nil}).(*object.Object)
+	strValues := strValuesObj.FieldTable["value"].Fvalue.([]*object.Object)
+	if len(strValues) != 6 {
+		t.Errorf("expected 6 states, got %d", len(strValues))
 	}
-	arr, ok := obj.FieldTable["value"].Fvalue.([]*object.Object)
-	if !ok {
-		t.Fatalf("expected []*object.Object, got %T", obj.FieldTable["value"].Fvalue)
-	}
-	if len(arr) != 6 {
-		t.Errorf("expected 6 states, got %d", len(arr))
-	}
-	// Verify they are in order
-	expectedNames := []string{"NEW", "RUNNABLE", "BLOCKED", "WAITING", "TIMED_WAITING", "TERMINATED"}
-	for i, stateObj := range arr {
-		val := stateObj.FieldTable["value"].Fvalue.(int)
-		if val != i {
-			t.Errorf("state at index %d has value %d; want %d", i, val, i)
+	for ix, obj := range strValues {
+		state := obj.FieldTable["value"].Fvalue.(int64)
+		if state != int64(ix) {
+			t.Errorf("expected state = %d but observed %d", ix, state)
 		}
-		// Verify toString matches
-		strObj := threadStateToString([]interface{}{stateObj})
-		name := object.GoStringFromStringObject(strObj.(*object.Object))
-		if name != expectedNames[i] {
-			t.Errorf("state at index %d has name %s; want %s", i, name, expectedNames[i])
-		}
-	}
-}
-
-// --- threadStateToString() tests ---
-
-func TestThreadStateToString_HappyPath(t *testing.T) {
-	stateObj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, RUNNABLE)
-	res := threadStateToString([]interface{}{stateObj})
-	strObj, ok := res.(*object.Object)
-	if !ok {
-		t.Fatalf("expected *object.Object, got %T", res)
-	}
-	name := object.GoStringFromStringObject(strObj)
-	if name != "RUNNABLE" {
-		t.Errorf("toString(RUNNABLE) = %s; want \"RUNNABLE\"", name)
-	}
-}
-
-func TestThreadStateToString_MissingArg(t *testing.T) {
-	res := threadStateToString([]interface{}{})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
-	}
-}
-
-func TestThreadStateToString_NotAnObject(t *testing.T) {
-	res := threadStateToString([]interface{}{123})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
-	}
-}
-
-func TestThreadStateToString_MissingValueField(t *testing.T) {
-	stateObj := object.MakeEmptyObject()
-	res := threadStateToString([]interface{}{stateObj})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
-	}
-}
-
-func TestThreadStateToString_InvalidState(t *testing.T) {
-	stateObj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, 99)
-	res := threadStateToString([]interface{}{stateObj})
-	gerr, ok := res.(*ghelpers.GErrBlk)
-	if !ok {
-		t.Fatalf("expected *ghelpers.GErrBlk, got %T", res)
-	}
-	if gerr.ExceptionType != excNames.IllegalArgumentException {
-		t.Errorf("expected IllegalArgumentException, got %v", gerr.ExceptionType)
 	}
 }

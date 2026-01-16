@@ -7,7 +7,6 @@
 package javaLang
 
 import (
-	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -49,15 +48,15 @@ func Load_Lang_Thread_State() {
 }
 
 const (
-	NEW           = 0
-	RUNNABLE      = 1
-	BLOCKED       = 2
-	WAITING       = 3
-	TIMED_WAITING = 4
-	TERMINATED    = 5
+	NEW           = int64(0)
+	RUNNABLE      = int64(1)
+	BLOCKED       = int64(2)
+	WAITING       = int64(3)
+	TIMED_WAITING = int64(4)
+	TERMINATED    = int64(5)
 )
 
-var ThreadState = map[int]string{
+var ThreadState = map[int64]string{
 	NEW:           "NEW",
 	RUNNABLE:      "RUNNABLE",
 	BLOCKED:       "BLOCKED",
@@ -95,7 +94,7 @@ func threadStateValueOf(params []interface{}) interface{} {
 // threadStateValues implements Thread.State.values(): returns an array of all constants in decl order
 func threadStateValues([]interface{}) interface{} {
 	// Extract keys into a slice
-	keys := make([]int, 0, len(ThreadState))
+	keys := make([]int64, 0, len(ThreadState))
 	for key := range ThreadState {
 		keys = append(keys, key)
 	}
@@ -108,7 +107,7 @@ func threadStateValues([]interface{}) interface{} {
 	// Create the output array.
 	var objArray []*object.Object
 	for key := range keys {
-		obj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, key)
+		obj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, int64(key))
 		objArray = append(objArray, obj)
 	}
 	objObjArray := object.MakePrimitiveObject("java/lang/Thread$State", types.RefArray+"java/lang/Thread$State", objArray)
@@ -116,27 +115,25 @@ func threadStateValues([]interface{}) interface{} {
 	return objObjArray
 }
 
-// threadStateToString implements Thread.State.toString(): String
-// It expects an int value for the state and returns the corresponding string object
 func threadStateToString(params []interface{}) interface{} {
-	if len(params) < 1 {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing argument")
-	}
-	thStateObj, ok := params[0].(*object.Object)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): not an object")
-	}
-	state, ok := thStateObj.FieldTable["value"].Fvalue.(int)
-	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing/invalid field value")
-	}
-	if state > TERMINATED || state < NEW {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Thread$State.toString(): invalid state: %d", state))
+	if len(params) != 1 {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing object")
 	}
 
-	stateString, ok := ThreadState[state]
-	if ok {
-		return object.StringObjectFromGoString(stateString)
+	obj, ok := params[0].(*object.Object)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): argument is not a Thread$State object")
 	}
-	return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): invalid state")
+
+	state, ok := obj.FieldTable["value"].Fvalue.(int64)
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): Thread$State object missing the value field")
+	}
+
+	str, ok := ThreadState[state]
+	if !ok {
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): unknown Thread$State value")
+	}
+
+	return object.StringObjectFromGoString(str)
 }
