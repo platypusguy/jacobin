@@ -514,6 +514,25 @@ func threadStart(params []interface{}) any {
 	return nil
 }
 
+func ThreadToString(params []interface{}) interface{} {
+	th, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadToString: Expected an object"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	if th.KlassName != types.StringPoolThreadIndex {
+		errMsg := "threadToString: Expected a object to be a Thread"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	id := threadGetId([]interface{}{th}).(int64)
+	name := object.GoStringFromStringObject(threadGetName([]interface{}{th}).(*object.Object))
+	priority := threadGetPriority([]interface{}{th}).(int64)
+	stateObj := threadGetState([]interface{}{th}).(*object.Object)
+	stateStr := object.GoStringFromStringObject(ThreadStateToString([]interface{}{stateObj}).(*object.Object))
+	output := fmt.Sprintf("Thread[ID=%d, Name=%s, Priority=%d, State=%s]", id, name, priority, stateStr)
+	return object.StringObjectFromGoString(output)
+}
+
 // threadYield allows the current goroutine to relinquish the processor, enabling other goroutines to run.
 // It uses runtime.Gosched() to yield execution and returns nil.
 func threadYield([]interface{}) interface{} {

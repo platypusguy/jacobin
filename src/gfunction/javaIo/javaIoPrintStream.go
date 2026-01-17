@@ -11,6 +11,7 @@ import (
 	"io"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
 	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
@@ -549,6 +550,16 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 			}
 			if object.IsObjectClass(inObj, types.ClassNameBigInteger) {
 				strObj := javaMath.BigIntegerToString([]interface{}{inObj}).(*object.Object)
+				strBuffer = object.GoStringFromStringObject(strObj)
+				break
+			}
+			if object.IsObjectClass(inObj, types.ClassNameThread) {
+				strObj := javaLang.ThreadToString([]interface{}{inObj}).(*object.Object)
+				strBuffer = object.GoStringFromStringObject(strObj)
+				break
+			}
+			if object.IsObjectClass(inObj, types.ClassNameThreadState) {
+				strObj := javaLang.ThreadStateToString([]interface{}{inObj}).(*object.Object)
 				strBuffer = object.GoStringFromStringObject(strObj)
 				break
 			}
