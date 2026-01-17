@@ -524,11 +524,37 @@ func ThreadToString(params []interface{}) interface{} {
 		errMsg := "threadToString: Expected a object to be a Thread"
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
-	id := threadGetId([]interface{}{th}).(int64)
-	name := object.GoStringFromStringObject(threadGetName([]interface{}{th}).(*object.Object))
-	priority := threadGetPriority([]interface{}{th}).(int64)
-	stateObj := threadGetState([]interface{}{th}).(*object.Object)
-	stateStr := object.GoStringFromStringObject(ThreadStateToString([]interface{}{stateObj}).(*object.Object))
+
+	idVal := threadGetId([]interface{}{th})
+	if err, ok := idVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	id := idVal.(int64)
+
+	nameVal := threadGetName([]interface{}{th})
+	if err, ok := nameVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	name := object.GoStringFromStringObject(nameVal.(*object.Object))
+
+	priorityVal := threadGetPriority([]interface{}{th})
+	if err, ok := priorityVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	priority := priorityVal.(int64)
+
+	stateVal := threadGetState([]interface{}{th})
+	if err, ok := stateVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	stateObj := stateVal.(*object.Object)
+
+	stateStrVal := ThreadStateToString([]interface{}{stateObj})
+	if err, ok := stateStrVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	stateStr := object.GoStringFromStringObject(stateStrVal.(*object.Object))
+
 	output := fmt.Sprintf("Thread[ID=%d, Name=%s, Priority=%d, State=%s]", id, name, priority, stateStr)
 	return object.StringObjectFromGoString(output)
 }

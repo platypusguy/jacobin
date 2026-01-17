@@ -544,24 +544,36 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 				break
 			}
 			if object.IsObjectClass(inObj, types.ClassNameBigDecimal) {
-				strObj := javaMath.BigdecimalToString([]interface{}{inObj}).(*object.Object)
-				strBuffer = object.GoStringFromStringObject(strObj)
-				break
+				res := javaMath.BigdecimalToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameBigInteger) {
-				strObj := javaMath.BigIntegerToString([]interface{}{inObj}).(*object.Object)
-				strBuffer = object.GoStringFromStringObject(strObj)
-				break
+				res := javaMath.BigIntegerToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameThread) {
-				strObj := javaLang.ThreadToString([]interface{}{inObj}).(*object.Object)
-				strBuffer = object.GoStringFromStringObject(strObj)
-				break
+				res := javaLang.ThreadToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
 			}
 			if object.IsObjectClass(inObj, types.ClassNameThreadState) {
-				strObj := javaLang.ThreadStateToString([]interface{}{inObj}).(*object.Object)
-				strBuffer = object.GoStringFromStringObject(strObj)
-				break
+				res := javaLang.ThreadStateToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
 			}
 			classNameSuffix := object.GetClassNameSuffix(inObj, true)
 			strBuffer = classNameSuffix + "{"

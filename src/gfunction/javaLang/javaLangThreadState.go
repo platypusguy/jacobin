@@ -7,6 +7,7 @@
 package javaLang
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -132,7 +133,7 @@ func ThreadStateToString(params []interface{}) interface{} {
 
 	str, ok := ThreadState[state]
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): unknown Thread$State value")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Thread$State.toString(): unknown Thread$State value: %d", state))
 	}
 
 	return object.StringObjectFromGoString(str)

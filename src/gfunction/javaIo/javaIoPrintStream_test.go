@@ -3,11 +3,16 @@ package javaIo
 import (
 	"bytes"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
+	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/statics"
 	"jacobin/src/types"
 	"strconv"
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -317,5 +322,143 @@ func TestPrintStreamPrintObjectNull(t *testing.T) {
 	}
 	if got := buf.String(); got != "null\n" {
 		t.Errorf("PrintlnObject(nil) output = %q; want 'null\\n'", got)
+	}
+}
+
+func TestPrintStreamErrorCases(t *testing.T) {
+	invalidWriter := "not-a-writer"
+	obj := makeStringObject("test")
+
+	tests := []struct {
+		name string
+		f    func([]interface{}) interface{}
+		args []interface{}
+	}{
+		{"PrintlnV", PrintlnV, []interface{}{invalidWriter}},
+		{"PrintlnChar", PrintlnChar, []interface{}{invalidWriter, int64('A')}},
+		{"PrintlnBIS", PrintlnBIS, []interface{}{invalidWriter, int64(1)}},
+		{"PrintlnBoolean", PrintlnBoolean, []interface{}{invalidWriter, int64(1)}},
+		{"PrintlnLong", PrintlnLong, []interface{}{invalidWriter, int64(1)}},
+		{"PrintlnDouble", PrintlnDouble, []interface{}{invalidWriter, 1.0}},
+		{"PrintlnFloat", PrintlnFloat, []interface{}{invalidWriter, 1.0}},
+		{"PrintChar", PrintChar, []interface{}{invalidWriter, int64('A')}},
+		{"PrintBIS", PrintBIS, []interface{}{invalidWriter, int64(1)}},
+		{"PrintBoolean", PrintBoolean, []interface{}{invalidWriter, int64(1)}},
+		{"PrintLong", PrintLong, []interface{}{invalidWriter, int64(1)}},
+		{"PrintDouble", PrintDouble, []interface{}{invalidWriter, 1.0}},
+		{"PrintFloat", PrintFloat, []interface{}{invalidWriter, 1.0}},
+		{"Printf", Printf, []interface{}{invalidWriter, makeStringObject("%s"), nil}},
+		{"PrintString_Writer", PrintString, []interface{}{invalidWriter, obj}},
+		{"PrintString_Param", PrintString, []interface{}{new(bytes.Buffer), "not-an-object"}},
+		{"PrintObject_Writer", PrintObject, []interface{}{invalidWriter, obj}},
+		{"PrintlnObject_Writer", PrintlnObject, []interface{}{invalidWriter, obj}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ret := tt.f(tt.args)
+			if _, ok := ret.(*ghelpers.GErrBlk); !ok {
+				t.Errorf("%s did not return GErrBlk, got %T", tt.name, ret)
+			}
+		})
+	}
+}
+
+func TestPrintStreamBISInt8(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	// PrintlnBIS with int8
+	buf.Reset()
+	PrintlnBIS([]interface{}{buf, int8(42)})
+	if got := buf.String(); got != "42\n" {
+		t.Errorf("PrintlnBIS(int8(42)) = %q; want '42\\n'", got)
+	}
+
+	// PrintBIS with int8
+	buf.Reset()
+	PrintBIS([]interface{}{buf, int8(42)})
+	if got := buf.String(); got != "42" {
+		t.Errorf("PrintBIS(int8(42)) = %q; want '42'", got)
+	}
+}
+
+func TestPrintStreamSpecialObjects(t *testing.T) {
+	buf := new(bytes.Buffer)
+	globals.InitStringPool()
+
+	// 1. BigDecimal
+	javaMath.Load_Math_Big_Decimal()
+	bdObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
+	ghelpers.Invoke("java/math/BigDecimal.<init>(Ljava/lang/String;)V", []interface{}{bdObj, makeStringObject("123.45")})
+	buf.Reset()
+	PrintObject([]interface{}{buf, bdObj})
+	if got := buf.String(); got != "123.45" {
+		t.Errorf("PrintObject(BigDecimal) = %q; want '123.45'", got)
+	}
+
+	// 2. BigInteger
+	javaMath.Load_Math_Big_Integer()
+	biObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
+	ghelpers.Invoke("java/math/BigInteger.<init>(Ljava/lang/String;)V", []interface{}{biObj, makeStringObject("987654321")})
+	buf.Reset()
+	PrintObject([]interface{}{buf, biObj})
+	if got := buf.String(); got != "987654321" {
+		t.Errorf("PrintObject(BigInteger) = %q; want '987654321'", got)
+	}
+
+	// 4. ThreadState (needed for Thread)
+	javaLang.Load_Lang_Thread_State()
+	tsObj := object.MakeEmptyObjectWithClassName(&types.ClassNameThreadState)
+	tsObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: int64(1)} // RUNNABLE
+	// To make it look like a real Thread.State object that ThreadStateToString expects
+	tsObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: makeStringObject("RUNNABLE")}
+	// ThreadState is an enum, toString should return its name.
+	buf.Reset()
+	PrintObject([]interface{}{buf, tsObj})
+	if got := buf.String(); got != "RUNNABLE" {
+		t.Errorf("PrintObject(ThreadState) = %q; want 'RUNNABLE'", got)
+	}
+
+	// 3. Thread
+	javaLang.Load_Lang_Thread()
+	statics.AddStatic("java/lang/Thread.MIN_PRIORITY", statics.Static{Type: types.Int, Value: int64(1)})
+	statics.AddStatic("java/lang/Thread.MAX_PRIORITY", statics.Static{Type: types.Int, Value: int64(10)})
+	statics.AddStatic("java/lang/Thread.NORM_PRIORITY", statics.Static{Type: types.Int, Value: int64(5)})
+
+	threadObj := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
+	threadObj.KlassName = types.StringPoolThreadIndex
+	threadObj.ThMutex = new(sync.RWMutex)
+	threadObj.FieldTable["ID"] = object.Field{Ftype: types.Long, Fvalue: int64(1)}
+	threadObj.FieldTable["name"] = object.Field{Ftype: "Ljava/lang/String;", Fvalue: makeStringObject("TestThread")}
+	threadObj.FieldTable["priority"] = object.Field{Ftype: types.Int, Fvalue: int64(5)}
+	threadObj.FieldTable["state"] = object.Field{Ftype: types.Int, Fvalue: int64(1)} // RUNNABLE
+	threadObj.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: int64(0)} // Unused but might be checked
+
+	buf.Reset()
+	ret := PrintObject([]interface{}{buf, threadObj})
+	if errBlk, ok := ret.(*ghelpers.GErrBlk); ok {
+		t.Fatalf("PrintObject(Thread) returned error: %s", errBlk.ErrMsg)
+	}
+	got := buf.String()
+	if !strings.Contains(got, "Thread[ID=1, Name=TestThread, Priority=5, State=RUNNABLE]") {
+		t.Errorf("PrintObject(Thread) = %q; unexpected format", got)
+	}
+}
+
+func TestPrintStreamPrintStringNull(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	// PrintString with null object
+	buf.Reset()
+	PrintString([]interface{}{buf, object.Null})
+	if got := buf.String(); got != "null" {
+		t.Errorf("PrintString(null) = %q; want 'null'", got)
+	}
+
+	// PrintlnString with null object
+	buf.Reset()
+	PrintlnString([]interface{}{buf, object.Null})
+	if got := buf.String(); got != "null\n" {
+		t.Errorf("PrintlnString(null) = %q; want 'null\\n'", got)
 	}
 }
