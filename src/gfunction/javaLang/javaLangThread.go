@@ -49,15 +49,8 @@ func Load_Lang_Thread() {
 			GFunction:  threadClinit,
 		}
 
-	// -------------------------
-	// Constructors in invocation order
-	// -------------------------
-	// Note that all constructors having a Runnable parameter do not specify NeedsContext.
-	// This is because the FQN info is already available in the Runnable object.
-	// The other constructors specify NeedsContext to get the FQN from the current frame from the frame stack.
-	// Consistently, Thread construction, regardless of parameters,
-	// includes inserting a Runnable object in the field table of the Thread object.
-	// Thus, Thread.start() will always fetch the Runnable object for FQN info.
+	// ================================ Constructors
+
 	ghelpers.MethodSignatures["java/lang/Thread.<init>()V"] =
 		ghelpers.GMeth{ParamSlots: 0, NeedsContext: true, GFunction: threadInitNull}
 
@@ -79,7 +72,6 @@ func Load_Lang_Thread() {
 	ghelpers.MethodSignatures["java/lang/Thread.<init>(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: threadInitWithThreadGroupRunnableAndName}
 
-	// Long constructor
 	args := "(Ljava/lang/ThreadGroup;" +
 		"Ljava/lang/String;" +
 		"I" +
@@ -87,13 +79,10 @@ func Load_Lang_Thread() {
 		"J" +
 		"Ljava/Security/AccessControlContext;" +
 		")V"
-
 	ghelpers.MethodSignatures["java/lang/Thread.<init>"+args] =
 		ghelpers.GMeth{ParamSlots: 6, GFunction: threadInitFromPackageConstructor}
 
-	// -------------------------
-	// Methods in strict alphabetical order
-	// -------------------------
+	// ============================= Member functions
 
 	ghelpers.MethodSignatures["java/lang/Thread.activeCount()I"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadActiveCount}

@@ -69,7 +69,9 @@ func RunJavaThread(args []any) {
 
 	// Create the initial frame for this thread.
 	f := frames.CreateFrame(meth.MaxStack + types.StackInflator) // experiment with stack size. See JACOBIN-494
+	t.ThMutex.RLock()
 	tID := t.FieldTable["ID"].Fvalue.(int64)
+	t.ThMutex.RUnlock()
 	f.Thread = int(tID)
 	f.ClName = clName
 	f.MethName = methName
@@ -106,7 +108,9 @@ func RunJavaThread(args []any) {
 	} else {
 		// Not the main thread.
 		// Try for a runnable object in the thread's field table.
+		t.ThMutex.RLock()
 		fld, ok := t.FieldTable["target"]
+		t.ThMutex.RUnlock()
 		if ok {
 			// Got a target field (runnable object).
 			// Initialize local 0 with the runnable object so that it can be accessed within the interpreter
@@ -130,8 +134,10 @@ func RunJavaThread(args []any) {
 	// }
 
 	// Add the initial frame and the frame stack to the thread's field table.
+	t.ThMutex.Lock()
 	t.FieldTable["frame"] = object.Field{Ftype: types.Ref, Fvalue: f}
 	t.FieldTable["framestack"] = object.Field{Ftype: types.LinkedList, Fvalue: fs}
+	t.ThMutex.Unlock()
 
 	// Push the frame on the stack.
 	if frames.PushFrame(fs, f) != nil {
@@ -145,6 +151,8 @@ func RunJavaThread(args []any) {
 		errMsg := "RunJavaThread: SetThreadState(RUNNABLE) failed"
 		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
 	}
+
+	// Register this non-main thread.
 	javaLang.RegisterThread(t)
 
 	if globals.TraceInst {

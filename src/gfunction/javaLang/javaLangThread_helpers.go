@@ -19,14 +19,14 @@ func cloneNotSupportedException(_ []interface{}) interface{} {
 }
 
 // Get the thread state and return it to caller.
-func GetThreadState(th *object.Object) int {
+func GetThreadState(th *object.Object) int64 {
 	th.ThMutex.RLock()
 	defer th.ThMutex.RUnlock()
-	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
+	state, ok := th.FieldTable["state"].Fvalue.(int64)
 	if !ok {
 		return -1
 	}
-	return thStateObj.FieldTable["value"].Fvalue.(int)
+	return state
 }
 
 // Set the thread state to the supplied value unconditionally.
@@ -35,47 +35,27 @@ func GetThreadState(th *object.Object) int {
 // * Result
 //   - nil (success)
 //   - *ghelpers.GErrBlk (oops)
-func SetThreadState(th *object.Object, newState int) (interface{}, interface{}) {
-	// Returns (previousState int, error interface{})
-
-	// ---- Thread invariant ----
-	if th.ThMutex == nil {
-		return -1, ghelpers.GetGErrBlk(
-			excNames.VirtualMachineError,
-			"SetThreadState: Thread object missing ThMutex",
-		)
-	}
-
-	// ---- Exclusive lifecycle update ----
+func SetThreadState(th *object.Object, newState int64) (int64, interface{}) {
 	th.ThMutex.Lock()
 	defer th.ThMutex.Unlock()
 
-	// Retrieve the 'state' field
-	thStateObj, ok := th.FieldTable["state"].Fvalue.(*object.Object)
-	if !ok || thStateObj == nil {
-		// Create state object if missing (should normally not happen)
-		ts := object.MakeEmptyObject()
-		ts.KlassName = object.StringPoolIndexFromGoString("java/lang/Thread$State")
-		ts.FieldTable["value"] = object.Field{Ftype: types.Int, Fvalue: NEW}
-		th.FieldTable["state"] = object.Field{Ftype: types.Ref, Fvalue: ts}
+	// Retrieve the current 'state' field if it exists.
+	curVal, ok := th.FieldTable["state"].Fvalue.(int64)
+	if !ok {
+		// Create state field if missing (should normally not happen).
+		fld := object.Field{Ftype: types.Int, Fvalue: newState}
+		th.FieldTable["state"] = fld
+		// Return value of -1 indicates no previous value.
 		return -1, nil
 	}
 
-	// Get previous state
-	prevVal, ok := thStateObj.FieldTable["value"].Fvalue.(int)
-	if !ok {
-		prevVal = -1
-	}
-
 	// Update only if different
-	if prevVal != newState {
-		thStateObj.FieldTable["value"] = object.Field{
-			Ftype:  types.Int,
-			Fvalue: newState,
-		}
+	if curVal != newState {
+		fld := object.Field{Ftype: types.Int, Fvalue: newState}
+		th.FieldTable["state"] = fld
 	}
 
-	return prevVal, nil
+	return curVal, nil
 }
 
 // Has the given thread been interrupted?
@@ -91,6 +71,10 @@ func isInterrupted(th *object.Object) bool {
 // Populate the thread object with default values.
 // Note that the thread number is incremented in the call to threadNumberingNext().
 func populateThreadObject(t *object.Object) {
+
+	t.ThMutex = &sync.RWMutex{}
+	t.ThMutex.Lock()
+	defer t.ThMutex.Unlock()
 
 	idField := object.Field{Ftype: types.Int, Fvalue: threadNumberingNext(nil).(int64)}
 	t.FieldTable["ID"] = idField
@@ -124,26 +108,27 @@ func populateThreadObject(t *object.Object) {
 	frameStack := object.Field{Ftype: types.LinkedList, Fvalue: nil}
 	t.FieldTable["framestack"] = frameStack
 
-	t.ThMutex = &sync.RWMutex{}
-	SetThreadState(t, NEW)
+	fld := object.Field{Ftype: types.Int, Fvalue: NEW}
+	t.FieldTable["state"] = fld
 
 }
 
 // Add the specified thread to the global registry of threads.
-// TODO: Unused. Why?
-func RegisterThread(t *object.Object) {
+func RegisterThread(th *object.Object) {
+	th.ThMutex.RLock()
+	ID := int(th.FieldTable["ID"].Fvalue.(int64))
+	th.ThMutex.RUnlock()
 	glob := globals.GetGlobalRef()
-	ID := int(t.FieldTable["ID"].Fvalue.(int64))
 	glob.ThreadLock.Lock()
-	glob.Threads[ID] = t
+	glob.Threads[ID] = th
 	glob.ThreadLock.Unlock()
 }
 
 // Should we need to create a thread (as in tests), here is the instantiable implementation
 func ThreadCreateNoarg(_ []interface{}) any {
-	t := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
-	populateThreadObject(t)
-	return t
+	th := object.MakeEmptyObjectWithClassName(&types.ClassNameThread)
+	populateThreadObject(th)
+	return th
 }
 
 // Wait for a thread to be TERMINATED up to maxTime milliseconds.
@@ -161,13 +146,6 @@ func ThreadCreateNoarg(_ []interface{}) any {
 var continueLoop = struct{}{}
 
 func waitForTermination(waitingThread, targetThread *object.Object, maxTime int64) interface{} {
-
-	if targetThread.ThMutex == nil {
-		return ghelpers.GetGErrBlk(
-			excNames.IllegalArgumentException,
-			"waitForTermination: targetThread.ThMutex is nil",
-		)
-	}
 
 	if maxTime <= 0 {
 		return ghelpers.GetGErrBlk(
