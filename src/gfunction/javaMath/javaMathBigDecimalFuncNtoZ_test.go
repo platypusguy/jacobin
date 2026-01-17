@@ -210,7 +210,7 @@ func TestBigDecimalNtoZFunctions(t *testing.T) {
 	t.Run("bigdecimalToString", func(t *testing.T) {
 		bdutInit()
 		bd := makeBigDecimalFromString(t, "123.45")
-		strObj := bigdecimalToString([]interface{}{bd}).(*object.Object)
+		strObj := BigdecimalToString([]interface{}{bd}).(*object.Object)
 		str := object.GoStringFromStringObject(strObj)
 		if str != "123.45" {
 			t.Fatalf("expected string '123.45', got %q", str)

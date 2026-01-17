@@ -69,7 +69,7 @@ func loadStaticsBigDecimal() {
 // * Add a BigDecimal static field with the supplied argName whose value is the BigInteger object.
 func addStaticBigDecimal(argName string, argValue int64) {
 	bd := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
-	bi := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	bi := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	var params []interface{}
 	ghelpers.InitBigIntegerField(bi, argValue)
 	params = append(params, bd)
@@ -91,7 +91,7 @@ func setupBasicFields(self, bigIntObj *object.Object, precision, scale int64) {
 func bigDecimalObjectFromBigInt(bigInt *big.Int, precision, scale int64) *object.Object {
 	bdObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigDecimal)
 	// Create BigInteger object for field intVal.
-	bigIntObj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	bigIntObj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	setBigIntegerFields(bigIntObj, bigInt)
 
 	// Set fields into the BigDecimal object.
@@ -102,7 +102,7 @@ func bigDecimalObjectFromBigInt(bigInt *big.Int, precision, scale int64) *object
 
 // Make a BigInteger object from an int64.
 func BigIntegerFromInt64(arg int64) *object.Object {
-	obj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	obj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ghelpers.InitBigIntegerField(obj, arg)
 	return obj
 }
@@ -180,7 +180,7 @@ func setBigIntegerFields(obj *object.Object, bigInt *big.Int) {
 
 // makeBigIntegerFromBigInt: Given a *big.Int, make a BigInteger object.
 func makeBigIntegerFromBigInt(bigIntValue *big.Int) *object.Object {
-	biObj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, bigIntValue)
+	biObj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, bigIntValue)
 	fldSign := object.Field{Ftype: types.BigInteger, Fvalue: int64(bigIntValue.Sign())}
 	biObj.FieldTable["signum"] = fldSign
 	return biObj
@@ -196,7 +196,7 @@ func makeBigIntegerFromString(str string) (*object.Object, *ghelpers.GErrBlk) {
 	}
 
 	// Create BigInteger object with value set to zz.
-	obj := object.MakePrimitiveObject(classNameBigInteger, types.BigInteger, zz)
+	obj := object.MakePrimitiveObject(types.ClassNameBigInteger, types.BigInteger, zz)
 
 	// Set signum field to the sign.
 	signum := int64(zz.Sign())

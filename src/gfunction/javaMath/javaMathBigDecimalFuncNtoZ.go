@@ -468,7 +468,7 @@ func bigdecimalToBigIntegerExact(params []interface{}) interface{} {
 
 // bigdecimalToString returns a string representation of the BigDecimal,
 // properly inserting a decimal point based on the scale.
-func bigdecimalToString(params []interface{}) interface{} {
+func BigdecimalToString(params []interface{}) interface{} {
 	// Implements BigDecimal.toString()
 	bd := params[0].(*object.Object)
 

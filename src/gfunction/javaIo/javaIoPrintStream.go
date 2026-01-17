@@ -11,6 +11,8 @@ import (
 	"io"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
+	"jacobin/src/gfunction/javaLang"
+	"jacobin/src/gfunction/javaMath"
 	"jacobin/src/gfunction/misc"
 	"jacobin/src/object"
 	"jacobin/src/types"
@@ -537,11 +539,43 @@ func _printObject(params []interface{}, newLine bool) interface{} {
 		switch params[1].(type) {
 		case *object.Object:
 			inObj := params[1].(*object.Object)
-			classNameSuffix := object.GetClassNameSuffix(inObj, true)
-			if classNameSuffix == "String" {
+			if object.IsStringObject(inObj) {
 				strBuffer = object.GoStringFromStringObject(inObj)
 				break
 			}
+			if object.IsObjectClass(inObj, types.ClassNameBigDecimal) {
+				res := javaMath.BigdecimalToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
+			}
+			if object.IsObjectClass(inObj, types.ClassNameBigInteger) {
+				res := javaMath.BigIntegerToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
+			}
+			if object.IsObjectClass(inObj, types.ClassNameThread) {
+				res := javaLang.ThreadToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
+			}
+			if object.IsObjectClass(inObj, types.ClassNameThreadState) {
+				res := javaLang.ThreadStateToString([]interface{}{inObj})
+				if strObj, ok := res.(*object.Object); ok {
+					strBuffer = object.GoStringFromStringObject(strObj)
+					break
+				}
+				return res
+			}
+			classNameSuffix := object.GetClassNameSuffix(inObj, true)
 			strBuffer = classNameSuffix + "{"
 			for name, field := range inObj.FieldTable {
 				strBuffer += fmt.Sprintf("%s=%s, ", name, object.StringifyAnythingGo(field))

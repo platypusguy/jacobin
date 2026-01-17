@@ -7,6 +7,7 @@
 package javaLang
 
 import (
+	"fmt"
 	"jacobin/src/excNames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/object"
@@ -31,7 +32,7 @@ func Load_Lang_Thread_State() {
 	ghelpers.MethodSignatures["java/lang/Thread$State.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  threadStateToString,
+			GFunction:  ThreadStateToString,
 		}
 
 	ghelpers.MethodSignatures["java/lang/Thread$State.valueOf(Ljava/lang/String;)Ljava/lang/Thread$State;"] =
@@ -115,7 +116,7 @@ func threadStateValues([]interface{}) interface{} {
 	return objObjArray
 }
 
-func threadStateToString(params []interface{}) interface{} {
+func ThreadStateToString(params []interface{}) interface{} {
 	if len(params) != 1 {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): missing object")
 	}
@@ -132,7 +133,7 @@ func threadStateToString(params []interface{}) interface{} {
 
 	str, ok := ThreadState[state]
 	if !ok {
-		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, "Thread$State.toString(): unknown Thread$State value")
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, fmt.Sprintf("Thread$State.toString(): unknown Thread$State value: %d", state))
 	}
 
 	return object.StringObjectFromGoString(str)

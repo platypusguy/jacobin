@@ -27,21 +27,24 @@ var StringPoolObjectIndex = uint32(2) // points to the string pool slice for "ja
 var StringClassName = "java/lang/String"
 var StringArrayClassName = "[java/lang/String"
 var StringClassRef = "Ljava/lang/String;"
-var ModuleClassRef = "Ljava/lang/Module;"
 var StringPoolStringIndex = uint32(1) // points to the string pool slice for "java/lang/String"
+
+// Misc
+var ModuleClassRef = "Ljava/lang/Module;"
 var EmptyString = ""
 var NullString = "null"
 
 // Other class names
 var ClassNameThread = "java/lang/Thread"
-var StringPoolThreadIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameThreadGroup = "java/lang/ThreadGroup"
 var ClassNameThreadState = "java/lang/Thread$State"
+var StringPoolThreadIndex = uint32(3) // points to the string pool slice for "java/lang/Thread"
 var ClassNameLinkedList = "java/util/LinkedList"
 var ClassNameProperties = "java/util/Properties"
 var FieldNameProperties = "map"
 var ClassNameOptional string = "java/util/Optional"
 var ClassNameBigDecimal = "java/math/BigDecimal"
+var ClassNameBigInteger = "java/math/BigInteger"
 
 // Security-related
 const SecurityProviderName = "GoSecurityProvider"

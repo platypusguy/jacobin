@@ -249,6 +249,9 @@ func Load_Lang_Thread() {
 	ghelpers.MethodSignatures["java/lang/Thread.threadId()J"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadGetId}
 
+	ghelpers.MethodSignatures["java/lang/Thread.toString()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ThreadToString}
+
 	ghelpers.MethodSignatures["java/lang/Thread.yield()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadYield}
 

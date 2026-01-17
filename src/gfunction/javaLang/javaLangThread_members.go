@@ -514,6 +514,51 @@ func threadStart(params []interface{}) any {
 	return nil
 }
 
+func ThreadToString(params []interface{}) interface{} {
+	th, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadToString: Expected an object"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+	if th.KlassName != types.StringPoolThreadIndex {
+		errMsg := "threadToString: Expected a object to be a Thread"
+		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
+	}
+
+	idVal := threadGetId([]interface{}{th})
+	if err, ok := idVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	id := idVal.(int64)
+
+	nameVal := threadGetName([]interface{}{th})
+	if err, ok := nameVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	name := object.GoStringFromStringObject(nameVal.(*object.Object))
+
+	priorityVal := threadGetPriority([]interface{}{th})
+	if err, ok := priorityVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	priority := priorityVal.(int64)
+
+	stateVal := threadGetState([]interface{}{th})
+	if err, ok := stateVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	stateObj := stateVal.(*object.Object)
+
+	stateStrVal := ThreadStateToString([]interface{}{stateObj})
+	if err, ok := stateStrVal.(*ghelpers.GErrBlk); ok {
+		return err
+	}
+	stateStr := object.GoStringFromStringObject(stateStrVal.(*object.Object))
+
+	output := fmt.Sprintf("Thread[ID=%d, Name=%s, Priority=%d, State=%s]", id, name, priority, stateStr)
+	return object.StringObjectFromGoString(output)
+}
+
 // threadYield allows the current goroutine to relinquish the processor, enabling other goroutines to run.
 // It uses runtime.Gosched() to yield execution and returns nil.
 func threadYield([]interface{}) interface{} {

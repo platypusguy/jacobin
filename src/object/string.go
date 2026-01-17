@@ -194,6 +194,22 @@ func IsStringObject(unknown any) bool {
 	return o.KlassName == types.StringPoolStringIndex
 }
 
+// IsStringObject determines whether an object is a string object
+// (i.e., a Java string). It assumes that any object whose
+// KlassName refers to java/lang/String is an instance of a Java string
+func IsObjectClass(unknown any, className string) bool {
+	if unknown == nil {
+		return false
+	}
+
+	o, ok := unknown.(*Object)
+	if !ok {
+		return false
+	}
+
+	return GoStringFromStringPoolIndex(o.KlassName) == className
+}
+
 // With the specified object and field, return a string representing the field value.
 func ObjectFieldToString(obj *Object, fieldName string) string {
 	// If null, return types.NullString.
