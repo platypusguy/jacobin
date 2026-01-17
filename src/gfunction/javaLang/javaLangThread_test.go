@@ -630,6 +630,95 @@ func TestThreadYield(t *testing.T) {
 	}
 }
 
+func TestThreadToString_AllPaths(t *testing.T) {
+	EnsureTGInit()
+	// Wrong type
+	if gerr := ThreadToString([]any{123}).(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for wrong type")
+	}
+
+	// Not a thread
+	obj := object.MakeEmptyObject()
+	if gerr := ThreadToString([]any{obj}).(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for non-thread object")
+	}
+
+	// Success
+	th := ThreadCreateNoarg(nil).(*object.Object)
+	th.KlassName = types.StringPoolThreadIndex
+	th.FieldTable["ID"] = object.Field{Ftype: types.Int, Fvalue: int64(10)}
+	th.FieldTable["name"] = object.Field{Ftype: types.ByteArray, Fvalue: object.StringObjectFromGoString("Thread-10")}
+	th.FieldTable["priority"] = object.Field{Ftype: types.Int, Fvalue: int64(5)}
+	th.FieldTable["state"] = object.Field{Ftype: types.Int, Fvalue: RUNNABLE}
+
+	res := ThreadToString([]any{th})
+	strObj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected string object, got %T", res)
+	}
+	got := object.GoStringFromStringObject(strObj)
+	want := "Thread[ID=10, Name=Thread-10, Priority=5, State=RUNNABLE]"
+	if got != want {
+		t.Errorf("ThreadToString() = %q; want %q", got, want)
+	}
+}
+
+func TestThreadHelpers(t *testing.T) {
+	EnsureTGInit()
+	th := ThreadCreateNoarg(nil).(*object.Object)
+
+	// GetThreadState
+	if GetThreadState(th) != NEW {
+		t.Errorf("expected NEW state")
+	}
+
+	// SetThreadState
+	old, res := SetThreadState(th, RUNNABLE)
+	if res != nil {
+		t.Errorf("SetThreadState returned error: %v", res)
+	}
+	if old != NEW {
+		t.Errorf("expected old state NEW, got %d", old)
+	}
+	if GetThreadState(th) != RUNNABLE {
+		t.Errorf("expected state RUNNABLE")
+	}
+
+	// isInterrupted (helper)
+	if isInterrupted(th) {
+		t.Errorf("expected isInterrupted false")
+	}
+
+	// Set interrupted to true
+	// populateThreadObject sets it as:
+	// interruptedField := object.Field{Ftype: types.Int, Fvalue: types.JavaBoolFalse}
+	// But isInterrupted helper expects an object.Object with a "value" field.
+	// This seems to be a mismatch in the codebase itself or how it's initialized.
+	// Let's test the current implementation of isInterrupted:
+	intObj := object.MakePrimitiveObject("java/lang/Boolean", types.Int, int(1))
+	th.FieldTable["interrupted"] = object.Field{Ftype: types.Ref, Fvalue: intObj}
+	if !isInterrupted(th) {
+		t.Errorf("expected isInterrupted true")
+	}
+}
+
+func TestRegisterThread(t *testing.T) {
+	EnsureTGInit()
+	th := ThreadCreateNoarg(nil).(*object.Object)
+	th.FieldTable["ID"] = object.Field{Ftype: types.Int, Fvalue: int64(999)}
+
+	RegisterThread(th)
+
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	registered := gr.Threads[999]
+	gr.ThreadLock.RUnlock()
+
+	if registered != th {
+		t.Errorf("thread not registered correctly")
+	}
+}
+
 func TestThreadRun_Paths(t *testing.T) {
 	EnsureTGInit()
 	// Arity

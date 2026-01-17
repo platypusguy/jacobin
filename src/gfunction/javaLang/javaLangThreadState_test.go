@@ -11,6 +11,7 @@ import (
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/globals"
 	"jacobin/src/object"
+	"jacobin/src/types"
 	"testing"
 )
 
@@ -105,5 +106,46 @@ func TestThreadStateValues(t *testing.T) {
 		if state != int64(ix) {
 			t.Errorf("expected state = %d but observed %d", ix, state)
 		}
+	}
+}
+
+func TestThreadStateToString_HappyPath(t *testing.T) {
+	obj := object.MakePrimitiveObject("java/lang/Thread$State", types.Int, RUNNABLE)
+	res := ThreadStateToString([]interface{}{obj})
+	strObj, ok := res.(*object.Object)
+	if !ok {
+		t.Fatalf("expected string object, got %T", res)
+	}
+	got := object.GoStringFromStringObject(strObj)
+	if got != "RUNNABLE" {
+		t.Errorf("ThreadStateToString(RUNNABLE) = %q; want \"RUNNABLE\"", got)
+	}
+}
+
+func TestThreadStateToString_Errors(t *testing.T) {
+	// Missing object
+	res := ThreadStateToString([]interface{}{})
+	if gerr := res.(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for missing object")
+	}
+
+	// Wrong type
+	res = ThreadStateToString([]interface{}{123})
+	if gerr := res.(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for wrong type")
+	}
+
+	// Missing value field
+	obj := object.MakeEmptyObject()
+	res = ThreadStateToString([]interface{}{obj})
+	if gerr := res.(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for missing value field")
+	}
+
+	// Unknown state value
+	obj = object.MakePrimitiveObject("java/lang/Thread$State", types.Int, int64(999))
+	res = ThreadStateToString([]interface{}{obj})
+	if gerr := res.(*ghelpers.GErrBlk); gerr.ExceptionType != excNames.IllegalArgumentException {
+		t.Errorf("expected IllegalArgumentException for unknown state value")
 	}
 }
