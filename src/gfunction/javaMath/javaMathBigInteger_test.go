@@ -12,7 +12,7 @@ import (
 
 // Helpers
 func biFromInt64(v int64) *object.Object {
-	obj := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	obj := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ghelpers.InitBigIntegerField(obj, v)
 	return obj
 }
@@ -39,7 +39,7 @@ func TestBigInteger_ValueOf_And_ToString(t *testing.T) {
 	}
 
 	// toString
-	s := bigIntegerToString([]interface{}{bi}).(*object.Object)
+	s := BigIntegerToString([]interface{}{bi}).(*object.Object)
 	if asString(s) != "-12345" {
 		t.Fatalf("toString mismatch: expected -12345, got %q", asString(s))
 	}
@@ -49,7 +49,7 @@ func TestBigInteger_InitString_And_Radix(t *testing.T) {
 	globals.InitStringPool()
 
 	// valid base-10
-	base := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	base := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ret := bigIntegerInitString([]interface{}{base, object.StringObjectFromGoString("98765")})
 	if ret != nil {
 		t.Fatalf("unexpected error initializing from string: %v", ret)
@@ -59,14 +59,14 @@ func TestBigInteger_InitString_And_Radix(t *testing.T) {
 	}
 
 	// invalid base-10
-	base = object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	base = object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ret = bigIntegerInitString([]interface{}{base, object.StringObjectFromGoString("12AB")})
 	if ret == nil {
 		t.Fatalf("expected NumberFormatException for invalid decimal string")
 	}
 
 	// valid radix 16
-	base = object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	base = object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ret = bigIntegerInitStringRadix([]interface{}{base, object.StringObjectFromGoString("1a"), int64(16)})
 	if ret != nil {
 		t.Fatalf("unexpected error initializing from hex string: %v", ret)
@@ -76,7 +76,7 @@ func TestBigInteger_InitString_And_Radix(t *testing.T) {
 	}
 
 	// invalid radix parse
-	base = object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	base = object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	ret = bigIntegerInitStringRadix([]interface{}{base, object.StringObjectFromGoString("12Z"), int64(10)})
 	if ret == nil {
 		t.Fatalf("expected NumberFormatException for invalid radix parse")
@@ -327,7 +327,7 @@ func TestBigInteger_ByteArray_Construct_And_ToByteArray(t *testing.T) {
 	globals.InitStringPool()
 
 	// Construct from signed byte array representing -1 (0xFF)
-	base := object.MakeEmptyObjectWithClassName(&classNameBigInteger)
+	base := object.MakeEmptyObjectWithClassName(&types.ClassNameBigInteger)
 	jb := object.JavaByteArrayFromGoByteArray([]byte{0xFF})
 	byteArrObj := object.StringObjectFromJavaByteArray(jb)
 	ret := bigIntegerInitByteArray([]interface{}{base, byteArrObj})

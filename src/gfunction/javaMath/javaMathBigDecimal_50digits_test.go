@@ -27,7 +27,7 @@ func bdFromStr50(t *testing.T, s string) *object.Object {
 func bdToString(t *testing.T, bd *object.Object) string {
 	t.Helper()
 	params := []interface{}{bd}
-	return object.GoStringFromStringObject(bigdecimalToString(params).(*object.Object))
+	return object.GoStringFromStringObject(BigdecimalToString(params).(*object.Object))
 }
 
 func Test_BigDecimal_Add_50Digits(t *testing.T) {

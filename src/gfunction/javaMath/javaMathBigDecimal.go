@@ -426,19 +426,19 @@ func Load_Math_Big_Decimal() {
 	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".toEngineeringString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalToString,
+			GFunction:  BigdecimalToString,
 		}
 
 	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".toPlainString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalToString,
+			GFunction:  BigdecimalToString,
 		}
 
 	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{
 			ParamSlots: 0,
-			GFunction:  bigdecimalToString,
+			GFunction:  BigdecimalToString,
 		}
 
 	ghelpers.MethodSignatures[types.ClassNameBigDecimal+".ulp()Ljava/math/BigDecimal;"] =
