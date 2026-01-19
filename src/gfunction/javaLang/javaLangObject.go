@@ -14,6 +14,7 @@ import (
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/object"
 	"jacobin/src/types"
+	"jacobin/src/util"
 	"strings"
 	"unsafe"
 )
@@ -129,17 +130,25 @@ func objectGetClass(params []interface{}) interface{} {
 		return obj.Data.ClassObject
 	}
 
+	// create the empty java.lang.Class structure
 	jlc := object.MakeEmptyObject()
+
+	// points to the internal metaspace representation of the class (in methArea)
 	jlc.FieldTable = make(map[string]object.Field)
-	jlc.FieldTable["name"] = object.Field{
-		Ftype:  types.GolangString,
-		Fvalue: name,
+	jlc.FieldTable["_klass"] = object.Field{
+		Ftype:  types.RawGoPointer,
+		Fvalue: content,
 	}
 
-	// create the empty java.lang.Class structure
+	className := util.ConvertInternalClassNameToUserFormat(name) // FQN uses . not /
+	jlc.FieldTable["name"] = object.Field{
+		Ftype:  types.Ref,
+		Fvalue: object.StringObjectFromGoString(className),
+	}
+
 	jlc.FieldTable["classLoader"] = object.Field{
-		Ftype:  types.GolangString,
-		Fvalue: obj.Loader,
+		Ftype:  types.Ref,
+		Fvalue: object.StringObjectFromGoString(obj.Loader),
 	}
 
 	// fill in the jlc
@@ -162,11 +171,6 @@ func objectGetClass(params []interface{}) interface{} {
 	jlc.FieldTable["interfaces"] = object.Field{
 		Ftype:  types.Struct,
 		Fvalue: objData.Interfaces,
-	}
-
-	jlc.FieldTable["methods"] = object.Field{
-		Ftype:  types.Struct,
-		Fvalue: objData.MethodTable,
 	}
 
 	jlc.FieldTable["methods"] = object.Field{

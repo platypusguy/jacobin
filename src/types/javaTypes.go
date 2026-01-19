@@ -39,14 +39,13 @@ const ShortArray = "[S"
 const MultiArray = "[["
 
 // Jacobin-specific types
+const RawGoPointer = "p"
 const Interface = "i"
 const NonArrayObject = "n"
 
 const Static = "X"
 const StaticDouble = "XD"
 const StaticLong = "XJ"
-
-const GoMeth = "G" // a go mehod
 
 const Error = "0"  // if an error occurred in getting a type
 const Struct = "9" // used primarily in returning items from the CP or getting Cl.Data fields
