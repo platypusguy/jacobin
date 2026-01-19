@@ -36,7 +36,7 @@ func Load_Lang_Object() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapDeprecated}
 
 	ghelpers.MethodSignatures["java/lang/Object.getClass()Ljava/lang/Class;"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction} // TODO: implement objectGetClass
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectGetClass} // TODO: finish implementing objectGetClass
 
 	ghelpers.MethodSignatures["java/lang/Object.getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
@@ -107,13 +107,7 @@ func objectGetClass(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.IllegalArgumentException, errMsg)
 	}
 
-	jlc := object.MakeEmptyObject()
-	jlc.FieldTable = make(map[string]object.Field)
 	name := object.GoStringFromStringPoolIndex(objPtr.KlassName)
-	jlc.FieldTable["name"] = object.Field{
-		Ftype:  types.GolangString,
-		Fvalue: name,
-	}
 
 	if strings.HasPrefix(name, types.Array) { // arrays are handled differently
 		arrClass := arrayGetClass(objPtr, name)
@@ -129,6 +123,18 @@ func objectGetClass(params []interface{}) interface{} {
 
 	// syntactic sugar
 	obj := *content
+
+	// if we've previously created the Class object, return it
+	if obj.Data.ClassObject != nil {
+		return obj.Data.ClassObject
+	}
+
+	jlc := object.MakeEmptyObject()
+	jlc.FieldTable = make(map[string]object.Field)
+	jlc.FieldTable["name"] = object.Field{
+		Ftype:  types.GolangString,
+		Fvalue: name,
+	}
 
 	// create the empty java.lang.Class structure
 	jlc.FieldTable["classLoader"] = object.Field{

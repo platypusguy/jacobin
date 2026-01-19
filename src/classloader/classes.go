@@ -9,6 +9,7 @@ package classloader
 import (
 	"errors"
 	"fmt"
+	"jacobin/src/object"
 	"jacobin/src/shutdown"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -40,7 +41,8 @@ type ClData struct {
 	Bootstraps      []BootstrapMethod
 	CP              CPool
 	Access          AccessFlags
-	ClInit          byte // 0 = no clinit, 1 = clinit not run, 2 clinit run
+	ClInit          byte           // 0 = no clinit, 1 = clinit not run, 2 clinit
+	ClassObject     *object.Object // the java/lang/Class object for this class
 }
 
 // the CP of the loaded class (see above)
