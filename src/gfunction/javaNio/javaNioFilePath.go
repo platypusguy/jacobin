@@ -26,6 +26,8 @@ func Load_Nio_File_Path() {
 	ghelpers.MethodSignatures["java/nio/file/Path.<init>()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapProtected}
 
+	ghelpers.MethodSignatures["java/nio/file/Path.compareTo(Ljava/lang/Object;)I"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/nio/file/Path.compareTo(Ljava/nio/file/Path;)I"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filePathCompareTo}
 
@@ -63,6 +65,10 @@ func Load_Nio_File_Path() {
 
 	ghelpers.MethodSignatures["java/nio/file/Path.normalize()Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: filePathNormalize}
+	ghelpers.MethodSignatures["java/nio/file/Path.of(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Path.of(Ljava/net/URI;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/nio/file/Path.relativize(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filePathRelativize}
@@ -91,9 +97,10 @@ func Load_Nio_File_Path() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 	ghelpers.MethodSignatures["java/nio/file/Path.toRealPath([Ljava/nio/file/LinkOption;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filePathToRealPath}
-
 	ghelpers.MethodSignatures["java/nio/file/Path.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: filePathToString}
+	ghelpers.MethodSignatures["java/nio/file/Path.toUri()Ljava/net/URI;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
 
 	// leave register functions ghelpers.Trapped
 	ghelpers.MethodSignatures["java/nio/file/Path.register(Ljava/nio/file/WatchService;[Ljava/nio/file/WatchEvent$Kind;[Ljava/nio/file/WatchEvent$Modifier;)Ljava/nio/file/WatchKey;"] =

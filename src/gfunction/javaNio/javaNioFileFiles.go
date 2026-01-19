@@ -24,13 +24,70 @@ import (
 // - Stream-returning and complex attribute-view methods remain trapped.
 // - Where platform limitations apply, return UnsupportedOperationException.
 func Load_Nio_File_Files() {
+
+	// <clinit>
 	ghelpers.MethodSignatures["java/nio/file/Files.<clinit>()V"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.ClinitGeneric}
-	// Core boolean checks
+
+	// copy
+	ghelpers.MethodSignatures["java/nio/file/Files.copy(Ljava/io/InputStream;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)J"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.copy(Ljava/nio/file/Path;Ljava/io/OutputStream;)J"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.copy(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCopyPath}
+
+	// createDirectory / createDirectories
+	ghelpers.MethodSignatures["java/nio/file/Files.createDirectory(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateDirectory}
+	ghelpers.MethodSignatures["java/nio/file/Files.createDirectories(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateDirectories}
+
+	// createFile
+	ghelpers.MethodSignatures["java/nio/file/Files.createFile(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateFile}
+
+	// createLink / createSymbolicLink
+	ghelpers.MethodSignatures["java/nio/file/Files.createLink(Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateLink}
+	ghelpers.MethodSignatures["java/nio/file/Files.createSymbolicLink(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateSymbolicLink}
+
+	// createTempDirectory
+	ghelpers.MethodSignatures["java/nio/file/Files.createTempDirectory(Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateTempDirectory}
+	ghelpers.MethodSignatures["java/nio/file/Files.createTempDirectory(Ljava/nio/file/Path;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateTempDirectoryInDir}
+
+	// createTempFile
+	ghelpers.MethodSignatures["java/nio/file/Files.createTempFile(Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateTempFile}
+	ghelpers.MethodSignatures["java/nio/file/Files.createTempFile(Ljava/nio/file/Path;Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: filesCreateTempFileInDir}
+
+	// delete
+	ghelpers.MethodSignatures["java/nio/file/Files.delete(Ljava/nio/file/Path;)V"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: filesDelete}
+	ghelpers.MethodSignatures["java/nio/file/Files.deleteIfExists(Ljava/nio/file/Path;)Z"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: filesDeleteIfExists}
+
+	// exists / notExists
 	ghelpers.MethodSignatures["java/nio/file/Files.exists(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Z"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: filesExists}
 	ghelpers.MethodSignatures["java/nio/file/Files.notExists(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Z"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: filesNotExists}
+
+	// find
+	ghelpers.MethodSignatures["java/nio/file/Files.find(Ljava/nio/file/Path;ILjava/util/function/BiPredicate;[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+
+	// getAttribute / getFileAttributeView
+	ghelpers.MethodSignatures["java/nio/file/Files.getAttribute(Ljava/nio/file/Path;Ljava/lang/String;[Ljava/nio/file/LinkOption;)Ljava/lang/Object;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.getFileAttributeView(Ljava/nio/file/Path;Ljava/lang/Class;[Ljava/nio/file/LinkOption;)Ljava/nio/file/attribute/FileAttributeView;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+
+	// isDirectory / isRegularFile / isSameFile / isSymbolicLink
 	ghelpers.MethodSignatures["java/nio/file/Files.isDirectory(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Z"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: filesIsDirectory}
 	ghelpers.MethodSignatures["java/nio/file/Files.isRegularFile(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Z"] =
@@ -40,63 +97,65 @@ func Load_Nio_File_Files() {
 	ghelpers.MethodSignatures["java/nio/file/Files.isSymbolicLink(Ljava/nio/file/Path;)Z"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesIsSymbolicLink}
 
-	// Size
-	ghelpers.MethodSignatures["java/nio/file/Files.size(Ljava/nio/file/Path;)J"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: filesSize}
+	// lines
+	ghelpers.MethodSignatures["java/nio/file/Files.lines(Ljava/nio/file/Path;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.lines(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
 
-	// Create/Delete
-	ghelpers.MethodSignatures["java/nio/file/Files.createFile(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateFile}
-	ghelpers.MethodSignatures["java/nio/file/Files.createDirectory(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateDirectory}
-	ghelpers.MethodSignatures["java/nio/file/Files.createDirectories(Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateDirectories}
-	ghelpers.MethodSignatures["java/nio/file/Files.delete(Ljava/nio/file/Path;)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: filesDelete}
-	ghelpers.MethodSignatures["java/nio/file/Files.deleteIfExists(Ljava/nio/file/Path;)Z"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: filesDeleteIfExists}
+	// list
+	ghelpers.MethodSignatures["java/nio/file/Files.list(Ljava/nio/file/Path;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
-	// Copy/Move (Path, Path variants)
-	ghelpers.MethodSignatures["java/nio/file/Files.copy(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCopyPath}
+	// move
 	ghelpers.MethodSignatures["java/nio/file/Files.move(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/CopyOption;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 3, GFunction: filesMove}
 
-	// I/O streams
+	// newDirectoryStream
+	ghelpers.MethodSignatures["java/nio/file/Files.newDirectoryStream(Ljava/nio/file/Path;)Ljava/nio/file/DirectoryStream;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newDirectoryStream(Ljava/nio/file/Path;Ljava/lang/String;)Ljava/nio/file/DirectoryStream;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.newDirectoryStream(Ljava/nio/file/Path;Ljava/nio/file/DirectoryStream$Filter;)Ljava/nio/file/DirectoryStream;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// newInputStream / newOutputStream
 	ghelpers.MethodSignatures["java/nio/file/Files.newInputStream(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/InputStream;"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: filesNewInputStream}
 	ghelpers.MethodSignatures["java/nio/file/Files.newOutputStream(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/OutputStream;"] =
 		ghelpers.GMeth{ParamSlots: 2, GFunction: filesNewOutputStream}
 
-	// Bulk read/write utilities
+	// readAllBytes / readAllLines / readString
 	ghelpers.MethodSignatures["java/nio/file/Files.readAllBytes(Ljava/nio/file/Path;)[B"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadAllBytes}
-	ghelpers.MethodSignatures["java/nio/file/Files.write(Ljava/nio/file/Path;[B[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteBytes}
-	ghelpers.MethodSignatures["java/nio/file/Files.readString(Ljava/nio/file/Path;)Ljava/lang/String;"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadString}
-	ghelpers.MethodSignatures["java/nio/file/Files.writeString(Ljava/nio/file/Path;Ljava/lang/CharSequence;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteString}
 	ghelpers.MethodSignatures["java/nio/file/Files.readAllLines(Ljava/nio/file/Path;)Ljava/util/List;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadAllLines}
+	ghelpers.MethodSignatures["java/nio/file/Files.readString(Ljava/nio/file/Path;)Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadString}
 
-	// Links
+	// readSymbolicLink
 	ghelpers.MethodSignatures["java/nio/file/Files.readSymbolicLink(Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
 		ghelpers.GMeth{ParamSlots: 1, GFunction: filesReadSymbolicLink}
-	ghelpers.MethodSignatures["java/nio/file/Files.createSymbolicLink(Ljava/nio/file/Path;Ljava/nio/file/Path;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateSymbolicLink}
-	ghelpers.MethodSignatures["java/nio/file/Files.createLink(Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateLink}
 
-	// Temp utilities
-	ghelpers.MethodSignatures["java/nio/file/Files.createTempFile(Ljava/nio/file/Path;Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 4, GFunction: filesCreateTempFileInDir}
-	ghelpers.MethodSignatures["java/nio/file/Files.createTempFile(Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateTempFile}
-	ghelpers.MethodSignatures["java/nio/file/Files.createTempDirectory(Ljava/nio/file/Path;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 3, GFunction: filesCreateTempDirectoryInDir}
-	ghelpers.MethodSignatures["java/nio/file/Files.createTempDirectory(Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: filesCreateTempDirectory}
+	// size
+	ghelpers.MethodSignatures["java/nio/file/Files.size(Ljava/nio/file/Path;)J"] =
+		ghelpers.GMeth{ParamSlots: 1, GFunction: filesSize}
+
+	// walk / walkFileTree
+	ghelpers.MethodSignatures["java/nio/file/Files.walk(Ljava/nio/file/Path;[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.walk(Ljava/nio/file/Path;I[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.walkFileTree(Ljava/nio/file/Path;Ljava/util/Set;ILjava/nio/file/FileVisitor;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 4, GFunction: ghelpers.TrapFunction}
+	ghelpers.MethodSignatures["java/nio/file/Files.walkFileTree(Ljava/nio/file/Path;Ljava/nio/file/FileVisitor;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+
+	// write / writeString
+	ghelpers.MethodSignatures["java/nio/file/Files.write(Ljava/nio/file/Path;[B[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteBytes}
+	ghelpers.MethodSignatures["java/nio/file/Files.writeString(Ljava/nio/file/Path;Ljava/lang/CharSequence;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;"] =
+		ghelpers.GMeth{ParamSlots: 3, GFunction: filesWriteString}
 }
 
 // --- Helpers ---
