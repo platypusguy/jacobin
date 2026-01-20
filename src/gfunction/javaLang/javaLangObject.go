@@ -151,7 +151,6 @@ func objectGetClass(params []interface{}) interface{} {
 		Fvalue: object.StringObjectFromGoString(obj.Loader),
 	}
 
-	// fill in the jlc
 	objData := *obj.Data
 	jlc.FieldTable["constantPool"] = object.Field{
 		Ftype:  types.Struct,

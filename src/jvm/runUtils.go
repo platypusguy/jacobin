@@ -47,7 +47,7 @@ func byteToInt64(bite byte) int64 {
 	return int64(bite)
 }
 
-// converts an interface{} value to int8. Used for BASTORE
+// converts a golang interface{} value to int8. Used for BASTORE, among others.
 func convertInterfaceToByte(val interface{}) types.JavaByte {
 	switch t := val.(type) {
 	case byte:
@@ -62,7 +62,7 @@ func convertInterfaceToByte(val interface{}) types.JavaByte {
 	return 0
 }
 
-// converts an interface{} value on the op stack into a uint64
+// converts a golang interface{} value on the op stack into a uint64
 func convertInterfaceToUint64(val interface{}) uint64 {
 	// in theory, the only types passed to this function are those
 	// found on the operand stack: ints, floats, pointers
@@ -78,7 +78,7 @@ func convertInterfaceToUint64(val interface{}) uint64 {
 	return 0
 }
 
-// converts an interface{} value into int64
+// converts a golang interface{} value into int64
 // notes:
 //
 //   - an exception is thrown if function is passed a uint64
