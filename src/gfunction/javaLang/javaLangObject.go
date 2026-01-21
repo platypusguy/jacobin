@@ -134,6 +134,7 @@ func objectGetClass(params []interface{}) interface{} {
 	jlc := object.MakeEmptyObject()
 
 	// points to the internal metaspace representation of the class (in methArea)
+	// HotSpot uses a hidden field named _klass for this. So do we.
 	jlc.FieldTable = make(map[string]object.Field)
 	jlc.FieldTable["_klass"] = object.Field{
 		Ftype:  types.RawGoPointer,

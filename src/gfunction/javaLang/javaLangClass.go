@@ -65,6 +65,8 @@ func Load_Lang_Class() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetAssertionsEnabledStatus}
 	ghelpers.MethodSignatures["java/lang/Class.desiredAssertionStatus0()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetAssertionsEnabledStatus}
+	ghelpers.MethodSignatures["java/lang/Class.getCanonicalName()Ljava/lang/String;"] =
+		ghelpers.GMeth{ParamSlots: 0, GFunction: classGetCanonicalName}
 	ghelpers.MethodSignatures["java/lang/Class.getComponentType()Ljava/lang/Class;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: getComponentType}
 	ghelpers.MethodSignatures["java/lang/Class.getModule()Ljava/lang/Module;"] =
@@ -101,7 +103,6 @@ func Load_Lang_Class() {
 	addTrap("java/lang/Class.getAnnotatedSuperclass()Ljava/lang/reflect/AnnotatedType;", 0)
 	addTrap("java/lang/Class.getAnnotation(Ljava/lang/Class;)Ljava/lang/annotation/Annotation;", 1)
 	addTrap("java/lang/Class.getAnnotations()[Ljava/lang/annotation/Annotation;", 0)
-	addTrap("java/lang/Class.getCanonicalName()Ljava/lang/String;", 0)
 	addTrap("java/lang/Class.getConstructor([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", 1)
 	addTrap("java/lang/Class.getConstructors()[Ljava/lang/reflect/Constructor;", 0)
 	addTrap("java/lang/Class.getDeclaredAnnotationsByType(Ljava/lang/Class;)[Ljava/lang/annotation/Annotation;", 1)
@@ -156,6 +157,41 @@ func classGetAssertionsEnabledStatus([]interface{}) interface{} {
 	} else {
 		return types.JavaBoolTrue
 	}
+}
+
+// to distinguish name from canonical name, see comments before
+// classGetName()
+// java/lang/Class.getCanonicalName()Ljava/lang/String
+func classGetCanonicalName(params []interface{}) interface{} {
+	obj := params[0].(*object.Object)
+	rawName := object.GoStringFromStringPoolIndex(obj.KlassName)
+	if strings.HasPrefix(rawName, types.Array) {
+		switch rawName[1] {
+		case 'B':
+			return object.StringObjectFromGoString("byte[]")
+		case 'C':
+			return object.StringObjectFromGoString("char[]")
+		case 'D':
+			return object.StringObjectFromGoString("double[]")
+		case 'F':
+			return object.StringObjectFromGoString("float[]")
+		case 'I':
+			return object.StringObjectFromGoString("int[]")
+		case 'J':
+			return object.StringObjectFromGoString("long[]")
+		case 'S':
+			return object.StringObjectFromGoString("short[]")
+		case 'Z':
+			return object.StringObjectFromGoString("boolean[]")
+		case 'L':
+			arrayObject := rawName[2 : len(rawName)-1] // remove the leading '[L' and trailing ';'
+			return object.StringObjectFromGoString(arrayObject + "[]")
+		}
+	}
+
+	// TODO: handle anonymous and inner classes
+
+	return object.StringObjectFromGoString(rawName)
 }
 
 // getComponentType() returns a pointer to class of the type of an array.
@@ -241,6 +277,16 @@ func classGetModule([]interface{}) interface{} {
 	return unnamedModule
 }
 
+// The various names are defined differently:
+// Class type         getName()                getCanonicalName()
+// ----------------   ---------------------   ---------------------
+// Standard Class:    java.lang.String,        java.lang.String
+// Inner Class:       com.example.Outer$Inner  com.example.Outer.Inner
+// String Array:      [Ljava.lang.String;      java.lang.String[]
+// Primitive Array:   [I                       int[]
+// Anonymous Class:   com.example.Outer$1      null (Anonymous classes have no canonical name)
+// Local Class:       com.example.Outer$1Local null
+//
 // "java/lang/Class.classGetName()Ljava/lang/String;"
 func classGetName(params []interface{}) interface{} {
 	obj := params[0].(*object.Object)
