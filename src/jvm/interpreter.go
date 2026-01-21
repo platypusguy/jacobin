@@ -146,27 +146,27 @@ var DispatchTable = [203]BytecodeFunc{
 	doIadd,            // IADD            0x60
 	doLadd,            // LADD            0x61
 	doFadd,            // FADD            0x62
-	doFadd,            // DADD            0x63
+	doDadd,            // DADD            0x63
 	doIsub,            // ISUB            0x64
 	doLsub,            // LSUB            0x65
 	doFsub,            // FSUB            0x66
-	doFsub,            // DSUB            0x67
+	doDsub,            // DSUB            0x67
 	doImul,            // IMUL            0x68
 	doLmul,            // LMUL            0x69
 	doFmul,            // FMUL            0x6A
-	doFmul,            // DMUL            0x6B
+	doDmul,            // DMUL            0x6B
 	doIdiv,            // IDIV            0x6C
 	doLdiv,            // LDIV            0x6D
 	doFdiv,            // FDIV            0x6E
-	doFdiv,            // DDIV            0x6F
+	doDdiv,            // DDIV            0x6F
 	doIrem,            // IREM            0x70
 	doLrem,            // LREM            0x71
 	doFrem,            // FREM            0x72
-	doFrem,            // DREM            0x73
+	doDrem,            // DREM            0x73
 	doIneg,            // INEG            0x74
-	doIneg,            // LNEG            0x75
+	doLneg,            // LNEG            0x75
 	doFneg,            // FNEG            0x76
-	doFneg,            // DNEG            0x77
+	doDneg,            // DNEG            0x77
 	doIshl,            // ISHL            0x78
 	doLshl,            // LSHL            0x79
 	doIshr,            // ISHR            0x7A
@@ -182,24 +182,24 @@ var DispatchTable = [203]BytecodeFunc{
 	doIinc,            // IINC            0x84
 	doNothing,         // I2L             0x85
 	doI2f,             // I2F             0x86
-	doI2f,             // I2D             0x87
+	doI2d,             // I2D             0x87
 	doNothing,         // L2I             0x88
 	doL2f,             // L2F             0x89
-	doL2f,             // L2D             0x8A
+	doL2d,             // L2D             0x8A
 	doF2i,             // F2I             0x8B
-	doF2i,             // F2L             0x8C
-	doNothing,         // F2D             0x8D
+	doF2l,             // F2L             0x8C
+	doF2d,             // F2D             0x8D
 	doD2i,             // D2I             0x8E
-	doD2i,             // D2L             0x8F
-	doNothing,         // D2F             0x90
+	doD2l,             // D2L             0x8F
+	doD2f,             // D2F             0x90
 	doI2b,             // I2B             0x91
 	doI2c,             // I2C             0x92
 	doI2s,             // I2S             0x93
 	doLcmp,            // LCMP            0x94
 	doFcmpl,           // FCMPL           0x95
-	doFcmpl,           // FCMPG           0x96
-	doFcmpl,           // DCMPL           0x97
-	doFcmpl,           // DCMPG           0x98
+	doFcmpg,           // FCMPG           0x96
+	doDcmpl,           // DCMPL           0x97
+	doDcmpg,           // DCMPG           0x98
 	doIfeq,            // IFEQ            0x99
 	doIfne,            // IFNE            0x9A
 	doIflt,            // IFLT            0x9B
@@ -563,7 +563,7 @@ func doFaload(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	if index >= int64(len(array)) {
+	if index < 0 || index >= int64(len(array)) {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Invalid array subscript",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName)
@@ -575,7 +575,12 @@ func doFaload(fr *frames.Frame, _ int64) int {
 	}
 
 	var value = array[index]
-	push(fr, value)
+	opcode := fr.Meth[fr.PC]
+	if opcode == opcodes.FALOAD {
+		push(fr, float64(float32(value)))
+	} else {
+		push(fr, value)
+	}
 	return 1
 }
 
@@ -898,7 +903,7 @@ func doFastore(fr *frames.Frame, _ int64) int {
 	}
 
 	size := int64(len(array))
-	if index >= size {
+	if index < 0 || index >= size {
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: array size is %d but array index is %d",
 			util.ConvertInternalClassNameToUserFormat(fr.ClName), fr.MethName, size, index)
@@ -909,7 +914,12 @@ func doFastore(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	array[index] = value
+	opcode := fr.Meth[fr.PC]
+	if opcode == opcodes.FASTORE {
+		array[index] = float64(float32(value))
+	} else {
+		array[index] = value
+	}
 	return 1
 }
 
@@ -1189,11 +1199,19 @@ func doLadd(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x62, 0x63 FADD, DADD float addition, push result
+// 0x62 FADD float addition, push result
 func doFadd(fr *frames.Frame, _ int64) int {
-	lhs := float32(pop(fr).(float64))
 	rhs := float32(pop(fr).(float64))
+	lhs := float32(pop(fr).(float64))
 	push(fr, float64(lhs+rhs))
+	return 1
+}
+
+// 0x63 DADD double addition, push result
+func doDadd(fr *frames.Frame, _ int64) int {
+	rhs := pop(fr).(float64)
+	lhs := pop(fr).(float64)
+	push(fr, lhs+rhs)
 	return 1
 }
 
@@ -1215,12 +1233,19 @@ func doLsub(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x66, 0x67 FSUB, DSUB subtract TOS-1 from TOS
+// 0x66 FSUB subtract float at TOS from TOS-1
 func doFsub(fr *frames.Frame, _ int64) int {
+	rhs := float32(pop(fr).(float64))
+	lhs := float32(pop(fr).(float64))
+	push(fr, float64(lhs-rhs))
+	return 1
+}
+
+// 0x67 DSUB subtract double at TOS from TOS-1
+func doDsub(fr *frames.Frame, _ int64) int {
 	rhs := pop(fr).(float64)
 	lhs := pop(fr).(float64)
-	diff := lhs - rhs
-	push(fr, diff)
+	push(fr, lhs-rhs)
 	return 1
 }
 
@@ -1242,12 +1267,19 @@ func doLmul(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x6A, 0x6B FMUL, DMUL multiply floats/doubles
+// 0x6A FMUL multiply floats
 func doFmul(fr *frames.Frame, _ int64) int {
-	lhs := pop(fr).(float64)
+	rhs := float32(pop(fr).(float64))
+	lhs := float32(pop(fr).(float64))
+	push(fr, float64(lhs*rhs))
+	return 1
+}
+
+// 0x6B DMUL multiply doubles
+func doDmul(fr *frames.Frame, _ int64) int {
 	rhs := pop(fr).(float64)
-	product := lhs * rhs
-	push(fr, product)
+	lhs := pop(fr).(float64)
+	push(fr, lhs*rhs)
 	return 1
 }
 
@@ -1305,21 +1337,19 @@ func doLdiv(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x6E, 0x6F FDIV, DDIV floating-point division
+// 0x6E FDIV floating-point division
 func doFdiv(fr *frames.Frame, _ int64) int {
-	val1 := pop(fr).(float64)
-	val2 := pop(fr).(float64)
-	if val1 == 0.0 {
-		if val2 == 0.0 {
-			push(fr, math.NaN())
-		} else if math.Signbit(val1) { // this test for negative zero
-			push(fr, math.Inf(-1)) // but alas there is no -0 in golang (as of 1.20)
-		} else {
-			push(fr, math.Inf(1))
-		}
-	} else {
-		push(fr, val2/val1)
-	}
+	val1 := float32(pop(fr).(float64)) // divisor
+	val2 := float32(pop(fr).(float64)) // dividend
+	push(fr, float64(val2/val1))
+	return 1
+}
+
+// 0x6F DDIV double-precision floating-point division
+func doDdiv(fr *frames.Frame, _ int64) int {
+	val1 := pop(fr).(float64) // divisor
+	val2 := pop(fr).(float64) // dividend
+	push(fr, val2/val1)
 	return 1
 }
 
@@ -1378,23 +1408,45 @@ func doLrem(fr *frames.Frame, _ int64) int {
 	return 1
 }
 
-// 0x72, 0x73 FREM, DREM get remainder of floating-point division
+// 0x72 FREM get remainder of floating-point division
 func doFrem(fr *frames.Frame, _ int64) int {
-	val2 := pop(fr).(float64)
-	val1 := pop(fr).(float64)
-	push(fr, float64(float32(math.Remainder(val1, val2))))
+	val2 := float32(pop(fr).(float64))
+	val1 := float32(pop(fr).(float64))
+	push(fr, float64(float32(math.Mod(float64(val1), float64(val2)))))
 	return 1
 }
 
-// 0x74, 0x75 INEG, LNEG negate integer at TOS
+// 0x73 DREM get remainder of double-precision floating-point division
+func doDrem(fr *frames.Frame, _ int64) int {
+	val2 := pop(fr).(float64)
+	val1 := pop(fr).(float64)
+	push(fr, math.Mod(val1, val2))
+	return 1
+}
+
+// 0x74 INEG negate integer at TOS
 func doIneg(fr *frames.Frame, _ int64) int {
 	val := pop(fr).(int64)
 	push(fr, int64(-int32(val)))
 	return 1
 }
 
-// 0x76, 0x77 FNEG, DNEG negate floating-point at TOS
+// 0x75 LNEG negate long at TOS
+func doLneg(fr *frames.Frame, _ int64) int {
+	val := pop(fr).(int64)
+	push(fr, -val)
+	return 1
+}
+
+// 0x76 FNEG negate float at TOS
 func doFneg(fr *frames.Frame, _ int64) int {
+	val := float32(pop(fr).(float64))
+	push(fr, float64(-val))
+	return 1
+}
+
+// 0x77 DNEG negate double at TOS
+func doDneg(fr *frames.Frame, _ int64) int {
 	val := pop(fr).(float64)
 	push(fr, -val)
 	return 1
@@ -1521,31 +1573,113 @@ func doIinc(fr *frames.Frame, _ int64) int {
 	return PCtoSkip + 1
 }
 
-// 0x86, 0x87 I2L, I2F convert int to float/double
+// 0x86 I2F convert int to float
 func doI2f(fr *frames.Frame, _ int64) int {
 	intVal := pop(fr).(int64)
-	push(fr, float64(intVal))
+	push(fr, float64(float32(int32(intVal))))
 	return 1
 }
 
-// 0x89, 0x8A L2F, L2D long to float/double
+// 0x87 I2D convert int to double
+func doI2d(fr *frames.Frame, _ int64) int {
+	intVal := pop(fr).(int64)
+	push(fr, float64(int32(intVal)))
+	return 1
+}
+
+// 0x89 L2F convert long to float
 func doL2f(fr *frames.Frame, _ int64) int {
+	longVal := pop(fr).(int64)
+	push(fr, float64(float32(longVal)))
+	return 1
+}
+
+// 0x8A L2D convert long to double
+func doL2d(fr *frames.Frame, _ int64) int {
 	longVal := pop(fr).(int64)
 	push(fr, float64(longVal))
 	return 1
 }
 
-// 0x8B, 0x8C F2I, F2L convert float to int/long
+// 0x8B F2I convert float to int
 func doF2i(fr *frames.Frame, _ int64) int {
-	floatVal := pop(fr).(float64)
-	push(fr, int64(math.Trunc(floatVal)))
+	floatVal := float32(pop(fr).(float64))
+	var res int32
+	if math.IsNaN(float64(floatVal)) {
+		res = 0
+	} else if math.IsInf(float64(floatVal), 1) {
+		res = math.MaxInt32
+	} else if math.IsInf(float64(floatVal), -1) {
+		res = math.MinInt32
+	} else {
+		res = int32(floatVal)
+	}
+	push(fr, int64(res))
 	return 1
 }
 
-// 0x8E, 0x8F D2I, D2L double to int/long
+// 0x8C F2L convert float to long
+func doF2l(fr *frames.Frame, _ int64) int {
+	floatVal := float32(pop(fr).(float64))
+	var res int64
+	if math.IsNaN(float64(floatVal)) {
+		res = 0
+	} else if math.IsInf(float64(floatVal), 1) {
+		res = math.MaxInt64
+	} else if math.IsInf(float64(floatVal), -1) {
+		res = math.MinInt64
+	} else {
+		res = int64(floatVal)
+	}
+	push(fr, res)
+	return 1
+}
+
+// 0x8D F2D convert float to double
+func doF2d(fr *frames.Frame, _ int64) int {
+	floatVal := float32(pop(fr).(float64))
+	push(fr, float64(floatVal))
+	return 1
+}
+
+// 0x8E D2I convert double to int
 func doD2i(fr *frames.Frame, _ int64) int {
 	doubleVal := pop(fr).(float64)
-	push(fr, int64(math.Trunc(doubleVal)))
+	var res int32
+	if math.IsNaN(doubleVal) {
+		res = 0
+	} else if math.IsInf(doubleVal, 1) {
+		res = math.MaxInt32
+	} else if math.IsInf(doubleVal, -1) {
+		res = math.MinInt32
+	} else {
+		res = int32(doubleVal)
+	}
+	push(fr, int64(res))
+	return 1
+}
+
+// 0x8F D2L convert double to long
+func doD2l(fr *frames.Frame, _ int64) int {
+	doubleVal := pop(fr).(float64)
+	var res int64
+	if math.IsNaN(doubleVal) {
+		res = 0
+	} else if math.IsInf(doubleVal, 1) {
+		res = math.MaxInt64
+	} else if math.IsInf(doubleVal, -1) {
+		res = math.MinInt64
+	} else {
+		res = int64(doubleVal)
+	}
+	push(fr, res)
+	return 1
+}
+
+// 0x90 D2F convert double to float
+func doD2f(fr *frames.Frame, _ int64) int {
+	doubleVal := pop(fr).(float64)
+	push(fr, float64(float32(doubleVal)))
 	return 1
 }
 
@@ -1588,17 +1722,57 @@ func doLcmp(fr *frames.Frame, _ int64) int {
 }
 
 // 0x95, 0x96 FCMPL, FCMPG float comparison differing only in handling NaN
-// 0x97, 0x98 DCMPL, DCMPG double  "          "        "    "  "        "
 func doFcmpl(fr *frames.Frame, _ int64) int {
+	value2 := float32(pop(fr).(float64))
+	value1 := float32(pop(fr).(float64))
+	if math.IsNaN(float64(value1)) || math.IsNaN(float64(value2)) {
+		push(fr, int64(-1))
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else if value1 < value2 {
+		push(fr, int64(-1))
+	} else {
+		push(fr, int64(0))
+	}
+	return 1
+}
+
+func doFcmpg(fr *frames.Frame, _ int64) int {
+	value2 := float32(pop(fr).(float64))
+	value1 := float32(pop(fr).(float64))
+	if math.IsNaN(float64(value1)) || math.IsNaN(float64(value2)) {
+		push(fr, int64(1))
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else if value1 < value2 {
+		push(fr, int64(-1))
+	} else {
+		push(fr, int64(0))
+	}
+	return 1
+}
+
+// 0x97, 0x98 DCMPL, DCMPG double comparison differing only in handling NaN
+func doDcmpl(fr *frames.Frame, _ int64) int {
 	value2 := pop(fr).(float64)
 	value1 := pop(fr).(float64)
 	if math.IsNaN(value1) || math.IsNaN(value2) {
-		if fr.Meth[fr.PC] == opcodes.FCMPG ||
-			fr.Meth[fr.PC] == opcodes.DCMPG { // TODO: check this points to right byecode
-			push(fr, int64(1))
-		} else {
-			push(fr, int64(-1))
-		}
+		push(fr, int64(-1))
+	} else if value1 > value2 {
+		push(fr, int64(1))
+	} else if value1 < value2 {
+		push(fr, int64(-1))
+	} else {
+		push(fr, int64(0))
+	}
+	return 1
+}
+
+func doDcmpg(fr *frames.Frame, _ int64) int {
+	value2 := pop(fr).(float64)
+	value1 := pop(fr).(float64)
+	if math.IsNaN(value1) || math.IsNaN(value2) {
+		push(fr, int64(1))
 	} else if value1 > value2 {
 		push(fr, int64(1))
 	} else if value1 < value2 {
