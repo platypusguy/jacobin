@@ -263,7 +263,7 @@ func objectWait(params []interface{}) interface{} {
 	// Unlock object.
 	err := obj.ObjUnlock(thID)
 	if err != nil {
-		errMsg := fmt.Sprintf("objectWait: ObjUnlock failed, err: %s", err.Error())
+		errMsg := fmt.Sprintf("objectWait: %s", err.Error())
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 
@@ -286,7 +286,7 @@ func objectWait(params []interface{}) interface{} {
 	// Re-lock object.
 	err = obj.ObjLock(thID)
 	if err != nil {
-		errMsg := fmt.Sprintf("objectWait: ObjLock failed, err: %s", err.Error())
+		errMsg := fmt.Sprintf("objectWait: %s", err.Error())
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 

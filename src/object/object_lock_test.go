@@ -30,6 +30,42 @@ func TestObjLockUnlock_ThinLockCycle(t *testing.T) {
 	}
 }
 
+func TestObjLockUnlock2_ThinLockCycle(t *testing.T) {
+	obj := MakeEmptyObject()
+
+	// Ensure object starts unlocked
+	SetLockState(obj, lockStateUnlocked)
+
+	// Acquire thin lock
+	if err := obj.ObjLock(1); err != nil {
+		t.Fatalf("ObjLock returned error: %v", err)
+	}
+	if got := obj.Mark.Misc & lockStateMask; got != lockStateThinLocked {
+		t.Fatalf("expected thin locked state, got %b", got)
+	}
+
+	// Acquire SAME thin lock ---> fat lock.
+	if err := obj.ObjLock(1); err != nil {
+		t.Fatalf("ObjLock returned error: %v", err)
+	}
+	if got := obj.Mark.Misc & lockStateMask; got != lockStateFatLocked {
+		t.Fatalf("expected thin locked state, got %b", got)
+	}
+
+	// Release fat lock 2X
+	if err := obj.ObjUnlock(1); err != nil {
+		t.Fatalf("ObjUnlock returned error: %v", err)
+	}
+	if err := obj.ObjUnlock(1); err != nil {
+		t.Fatalf("ObjUnlock returned error: %v", err)
+	}
+
+	// Should be unlocked now.
+	if got := obj.Mark.Misc & lockStateMask; got != lockStateUnlocked {
+		t.Fatalf("expected unlocked state after unlock, got %b", got)
+	}
+}
+
 func TestObjUnlock_WhenAlreadyUnlocked_ReturnsError(t *testing.T) {
 	obj := MakeEmptyObject()
 	SetLockState(obj, lockStateUnlocked)

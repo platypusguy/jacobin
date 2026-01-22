@@ -44,7 +44,7 @@ type Object struct {
 	KlassName  uint32           // the index of the class name in the string pool
 	FieldTable map[string]Field // map mapping field name to field
 	Monitor    *ObjectMonitor   // synchronize use
-	ThMutex    *sync.RWMutex    // non-nil ONLY for thread state processing
+	ThMutex    *sync.RWMutex    // non-nil ONLY for thread FieldTable processing
 }
 
 // These mark word contains values for different purposes. Here,
@@ -341,7 +341,8 @@ func (obj *Object) ObjLock(threadID int32) error {
 	}
 }
 
-// Release the object lock from the specified thread.
+// Decrement the monitor count for the specified thread.
+// If now zero, release the object lock from the specified thread.
 func (obj *Object) ObjUnlock(threadID int32) error {
 	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
 

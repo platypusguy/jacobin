@@ -164,19 +164,20 @@ func getConstantPoolCount(bytes []byte, klass *ParsedClass) error {
 // in the class. FromTable 4.1-B in the spec:
 // https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.1-200-E.1
 const (
-	ACC_PUBLIC     = 0x0001
-	ACC_PRIVATE    = 0x0002
-	ACC_PROTECTED  = 0x0004
-	ACC_STATIC     = 0x0008
-	ACC_FINAL      = 0x0010
-	ACC_SUPER      = 0x0020
-	ACC_NATIVE     = 0x0100
-	ACC_INTERFACE  = 0x0200
-	ACC_ABSTRACT   = 0x0400
-	ACC_SYNTHETIC  = 0x1000
-	ACC_ANNOTATION = 0x2000
-	ACC_ENUM       = 0x4000
-	ACC_MODULE     = 0x8000
+	ACC_PUBLIC       = 0x0001
+	ACC_PRIVATE      = 0x0002
+	ACC_PROTECTED    = 0x0004
+	ACC_STATIC       = 0x0008
+	ACC_FINAL        = 0x0010
+	ACC_SYNCHRONIZED = 0x0020 // Method-level
+	ACC_SUPER        = 0x0020 // Class-level
+	ACC_NATIVE       = 0x0100
+	ACC_INTERFACE    = 0x0200
+	ACC_ABSTRACT     = 0x0400
+	ACC_SYNTHETIC    = 0x1000
+	ACC_ANNOTATION   = 0x2000
+	ACC_ENUM         = 0x4000
+	ACC_MODULE       = 0x8000
 )
 
 func parseAccessFlags(bytes []byte, loc int, klass *ParsedClass) (int, error) {
