@@ -7,15 +7,18 @@
 package javaLang
 
 import (
+	"container/list"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
+	"jacobin/src/frames"
 	"jacobin/src/gfunction/ghelpers"
 	"jacobin/src/gfunction/javaUtil"
 	"jacobin/src/object"
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -46,22 +49,22 @@ func Load_Lang_Object() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: objectHashCode}
 
 	ghelpers.MethodSignatures["java/lang/Object.notify()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
 
 	ghelpers.MethodSignatures["java/lang/Object.notifyAll()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
 
 	ghelpers.MethodSignatures["java/lang/Object.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: objectToString}
 
 	ghelpers.MethodSignatures["java/lang/Object.wait()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectWait, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/lang/Object.wait(J)V"] =
-		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 1, GFunction: objectWait, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/lang/Object.wait(JI)V"] =
-		ghelpers.GMeth{ParamSlots: 2, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 2, GFunction: objectWait, NeedsContext: true}
 
 	// --- All other Object methods as traps (alphabetical) ---
 	addTrap := func(signature string, slots int) {
@@ -235,6 +238,59 @@ func objectEquals(params []interface{}) interface{} {
 
 	// Not the same object.
 	return types.JavaBoolFalse
+}
+
+func objectWait(params []interface{}) interface{} {
+
+	// Get frame stack.
+	fs, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := fmt.Sprintf("objectWait: params[0] must be the frame stack, saw: %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// Get thread ID.
+	frame := *fs.Front().Value.(*frames.Frame)
+	thID := int32(frame.Thread)
+
+	// Get the object of the synchronized method.
+	obj, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("objectWait: params[1] must be an Object, saw: %T", params[1])
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// Unlock object.
+	err := obj.ObjUnlock(thID)
+	if err != nil {
+		errMsg := fmt.Sprintf("objectWait: ObjUnlock failed, err: %s", err.Error())
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// Set millis = sleep time in milliseconds.
+	millis := int64(1)
+	if len(params) > 2 {
+		millis = params[2].(int64)
+		nanos := int64(0)
+		if len(params) > 3 {
+			nanos = params[3].(int64)
+			if nanos > 0 {
+				millis += 1 // not precise
+			}
+		}
+	}
+
+	// ZZZzzzzzzzzzzzzzzzzzzz .....
+	time.Sleep(time.Duration(millis) * time.Millisecond)
+
+	// Re-lock object.
+	err = obj.ObjLock(thID)
+	if err != nil {
+		errMsg := fmt.Sprintf("objectWait: ObjLock failed, err: %s", err.Error())
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	return nil
 }
 
 // arrayGetClass creates a Class object for array types
