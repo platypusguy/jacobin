@@ -31,7 +31,7 @@ func TestCopyOfObjectPointers_NullArray(t *testing.T) {
 }
 
 func TestCopyOfObjectPointers_NegativeLength(t *testing.T) {
-	obj := &object.Object{}
+	obj := object.MakeEmptyObject()
 	result := *(utilArraysCopyOf([]interface{}{obj, int64(-1)}).(*ghelpers.GErrBlk))
 	if result.ExceptionType != excNames.NegativeArraySizeException || result.ErrMsg != "utilArraysCopyOf: negative array length" {
 		// if result != ghelpers.GetGErrBlk(excNames.NegativeArraySizeException, "copyOf: negative array length") {

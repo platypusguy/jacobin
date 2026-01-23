@@ -195,9 +195,10 @@ func TestLinkedList_ToArray_And_ToArrayTyped_Variants(t *testing.T) {
 	}
 
 	// toArrayTyped with object array (len >= listLen) populates and null-terminates
-	objArr := &object.Object{FieldTable: map[string]object.Field{
-		"value": {Ftype: "[Ljava/lang/Object;", Fvalue: make([]*object.Object, 3)},
-	}}
+	objArr := object.MakeEmptyObject()
+	objArr.FieldTable["value"] = object.Field{
+		Ftype: "[Ljava/lang/Object;", Fvalue: make([]*object.Object, 3),
+	}
 	ret1 := linkedlistToArrayTyped([]interface{}{ll, objArr}).(*object.Object)
 	out1 := ret1.FieldTable["value"].Fvalue.([]*object.Object)
 	if out1[0] != a || out1[1] != b || out1[2] != nil {
@@ -205,9 +206,10 @@ func TestLinkedList_ToArray_And_ToArrayTyped_Variants(t *testing.T) {
 	}
 
 	// toArrayTyped with object array (len < listLen) returns a new object
-	objArrSmall := &object.Object{FieldTable: map[string]object.Field{
-		"value": {Ftype: "[Ljava/lang/Object;", Fvalue: make([]*object.Object, 1)},
-	}}
+	objArrSmall := object.MakeEmptyObject()
+	objArrSmall.FieldTable["value"] = object.Field{
+		Ftype: "[Ljava/lang/Object;", Fvalue: make([]*object.Object, 1),
+	}
 	ret2 := linkedlistToArrayTyped([]interface{}{ll, objArrSmall}).(*object.Object)
 	out2 := ret2.FieldTable["value"].Fvalue.([]*object.Object)
 	if len(out2) != 2 || out2[0] != a || out2[1] != b {
@@ -221,9 +223,10 @@ func TestLinkedList_ToArray_And_ToArrayTyped_Variants(t *testing.T) {
 	_ = linkedlistAddLast([]interface{}{llNums, int64(30)})
 
 	// int64 array with sufficient length
-	intArr := &object.Object{FieldTable: map[string]object.Field{
-		"value": {Ftype: "[I", Fvalue: make([]int64, 4)},
-	}}
+	intArr := object.MakeEmptyObject()
+	intArr.FieldTable["value"] = object.Field{
+		Ftype: "[I", Fvalue: make([]int64, 4),
+	}
 	_ = linkedlistToArrayTyped([]interface{}{llNums, intArr}).(*object.Object)
 	ints := intArr.FieldTable["value"].Fvalue.([]int64)
 	if ints[0] != 10 || ints[1] != 20 || ints[2] != 30 || ints[3] != 0 {
@@ -231,9 +234,10 @@ func TestLinkedList_ToArray_And_ToArrayTyped_Variants(t *testing.T) {
 	}
 
 	// int64 array with insufficient length -> returns new object with exact length
-	intArrSmall := &object.Object{FieldTable: map[string]object.Field{
-		"value": {Ftype: "[I", Fvalue: make([]int64, 2)},
-	}}
+	intArrSmall := object.MakeEmptyObject()
+	intArrSmall.FieldTable["value"] = object.Field{
+		Ftype: "[I", Fvalue: make([]int64, 2),
+	}
 	ret3 := linkedlistToArrayTyped([]interface{}{llNums, intArrSmall}).(*object.Object)
 	ints2 := ret3.FieldTable["value"].Fvalue.([]int64)
 	if len(ints2) != 3 || ints2[0] != 10 || ints2[1] != 20 || ints2[2] != 30 {

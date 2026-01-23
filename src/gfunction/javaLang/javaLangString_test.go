@@ -284,7 +284,11 @@ func TestJavaLangStringContentEquals(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := javaLangStringContentEquals([]interface{}{&tt.obj1, &tt.obj2}); !reflect.DeepEqual(got, tt.want) {
+			obj1 := object.MakeEmptyObject()
+			obj1.FieldTable["value"] = object.Field{Fvalue: tt.obj1.FieldTable["value"].Fvalue}
+			obj2 := object.MakeEmptyObject()
+			obj2.FieldTable["value"] = object.Field{Fvalue: tt.obj2.FieldTable["value"].Fvalue}
+			if got := javaLangStringContentEquals([]interface{}{obj1, obj2}); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("javaLangStringContentEquals() = %v, want %v", got, tt.want)
 			}
 		})
