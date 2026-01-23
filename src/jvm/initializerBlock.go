@@ -98,6 +98,7 @@ func runJavaInitializer(m classloader.MData, k *classloader.Klass, fs *list.List
 	f.ClName = k.Data.Name
 	f.CP = meth.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
+	f.AccessFlags = meth.AccessFlags
 
 	// allocate the local variables
 	for j := 0; j < meth.MaxLocals; j++ {

@@ -7,6 +7,7 @@
 package jvm
 
 import (
+	"errors"
 	"fmt"
 	"jacobin/src/classloader"
 	"jacobin/src/excNames"
@@ -76,6 +77,7 @@ func RunJavaThread(args []any) {
 	f.ClName = clName
 	f.MethName = methName
 	f.MethType = methType
+	f.AccessFlags = meth.AccessFlags
 
 	f.CP = meth.Cp                        // add its pointer to the class CP
 	f.Meth = append(f.Meth, meth.Code...) // copy the bytecodes over
@@ -219,6 +221,7 @@ func createAndInitNewFrame(
 	fram.MethType = methodType
 	fram.CP = m.Cp                           // add its pointer to the class CP
 	fram.Meth = append(fram.Meth, m.Code...) // copy the method's bytecodes over
+	fram.AccessFlags = m.AccessFlags
 
 	// pop the parameters off the present stack and put them in
 	// the new frame's locals. This is done in reverse order so
@@ -325,6 +328,21 @@ func createAndInitNewFrame(
 		fram.Locals = append(fram.Locals, int64(0)) // add the slot taken up by objectRef
 		destLocal = 1                               // The first parameter starts at index 1
 		lenLocals++                                 // There is 1 more local needed
+		if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
+			obj := fram.Locals[0].(*object.Object)
+			fram.ObjSync = obj
+			err := obj.ObjLock(int32(fram.Thread))
+			if err != nil {
+				fqn := fram.ClName + "." + fram.MethName + fram.MethType
+				errMsg := fmt.Sprintf("createAndInitNewFrame: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+				return nil, errors.New(errMsg)
+			}
+			if globals.TraceInst {
+				traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: Locked object %s",
+					object.GoStringFromStringPoolIndex(obj.KlassName))
+				trace.Trace(traceInfo)
+			}
+		}
 	}
 
 	if globals.TraceVerbose {

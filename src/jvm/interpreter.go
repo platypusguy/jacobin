@@ -2101,6 +2101,15 @@ func doLookupswitch(fr *frames.Frame, _ int64) int {
 // This implementation pops off the current frame and tells the
 // interpreter loop to resume execution in the previous frame.
 func doIreturn(fr *frames.Frame, _ int64) int {
+	// If the current method is synchronized, unlock the object.
+	if fr.ObjSync != nil {
+		_ = fr.ObjSync.ObjUnlock(int32(fr.Thread))
+		if globals.TraceInst {
+			traceInfo := fmt.Sprintf("\tdoIreturn: Unlocked object %s",
+				object.GoStringFromStringPoolIndex(fr.ObjSync.KlassName))
+			trace.Trace(traceInfo)
+		}
+	}
 	valToReturn := pop(fr)
 	f := fr.FrameStack.Front().Next().Value.(*frames.Frame)
 	push(f, valToReturn)
@@ -2110,6 +2119,15 @@ func doIreturn(fr *frames.Frame, _ int64) int {
 
 // 0xB1 RETURN return from void method
 func doReturn(fr *frames.Frame, _ int64) int {
+	// If the current method is synchronized, unlock the object.
+	if fr.ObjSync != nil {
+		_ = fr.ObjSync.ObjUnlock(int32(fr.Thread))
+		if globals.TraceInst {
+			traceInfo := fmt.Sprintf("\tdoReturn: Unlocked object %s",
+				object.GoStringFromStringPoolIndex(fr.ObjSync.KlassName))
+			trace.Trace(traceInfo)
+		}
+	}
 	fr.FrameStack.Remove(fr.FrameStack.Front())
 	return 0
 }
@@ -3415,6 +3433,15 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 
 // 0xBF ATHROW throw an exception
 func doAthrow(fr *frames.Frame, _ int64) int {
+	// If the current method is synchronized, unlock the object.
+	if fr.ObjSync != nil {
+		_ = fr.ObjSync.ObjUnlock(int32(fr.Thread))
+		if globals.TraceInst {
+			traceInfo := fmt.Sprintf("\tdoAthrow: Unlocked object %s",
+				object.GoStringFromStringPoolIndex(fr.ObjSync.KlassName))
+			trace.Trace(traceInfo)
+		}
+	}
 	// objRef points to an instance of the error/exception class that's being thrown
 	objectRef := pop(fr).(*object.Object)
 	if object.IsNull(objectRef) {
