@@ -23,7 +23,6 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
-	"unsafe"
 )
 
 // instantiating an object is a two-part process (except for arrays, which are handled
@@ -74,10 +73,8 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 	}
 
 	// create the object whose instantiation we're doing
-	obj := object.Object{
-		KlassName:  stringPool.GetStringIndex(&classname),
-		FieldTable: make(map[string]object.Field),
-	}
+	obj := *object.MakeEmptyObject()
+	obj.KlassName = stringPool.GetStringIndex(&classname)
 
 	// go up the chain of superclasses until we hit java/lang/Object
 	superclasses := []string{}
@@ -101,12 +98,6 @@ func InstantiateClass(classname string, frameStack *list.List) (any, error) {
 		// now loop to see whether this superclass has a superclass
 		superclassNamePtr = stringPool.GetStringPointer(loadedSuperclass.Data.SuperclassIndex)
 	}
-
-	// the object's mark field contains the lower 32-bits of the object's
-	// address, which serves as the hash code for the object
-	uintp := uintptr(unsafe.Pointer(&obj))
-	obj.Mark.Hash = uint32(uintp)
-	object.SetObjectUnlocked(&obj)
 
 	// handle the fields. If the object has no superclass other than Object,
 	// the fields are in an array in the order they're declared in the CP.

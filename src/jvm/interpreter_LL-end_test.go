@@ -2318,7 +2318,7 @@ func TestPutStaticStoreRefObject_NoTable_NoTypesType(t *testing.T) {
 	statics.AddStatic(key, statics.Static{Type: types.Ref, Value: object.Null})
 
 	f, _ := setupPutStaticFrame(cls, fld, "Ljava/lang/Object;")
-	obj := &object.Object{}
+	obj := object.MakeEmptyObject()
 	push(&f, obj)
 	_ = doPutStatic(&f, 0)
 	st := statics.Statics[key]

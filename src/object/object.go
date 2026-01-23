@@ -77,6 +77,7 @@ func MakeEmptyObject() *Object {
 
 	// initialize the map of this object's fields
 	o.FieldTable = make(map[string]Field)
+	o.ThMutex = &sync.RWMutex{}
 	return &o
 }
 
@@ -90,6 +91,7 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 
 	// initialize the map of this object's fields
 	o.FieldTable = make(map[string]Field)
+	o.ThMutex = &sync.RWMutex{}
 	return &o
 }
 
@@ -98,7 +100,9 @@ func MakePrimitiveObject(classString string, ftype string, arg any) *Object {
 	objPtr := MakeEmptyObject()
 	(*objPtr).KlassName = stringPool.GetStringIndex(&classString)
 	field := Field{ftype, arg}
+	objPtr.ThMutex.Lock()
 	(*objPtr).FieldTable["value"] = field
+	objPtr.ThMutex.Unlock()
 	return objPtr
 }
 
@@ -107,7 +111,9 @@ func MakeOneFieldObject(classString string, fname string, ftype string, arg any)
 	objPtr := MakeEmptyObject()
 	(*objPtr).KlassName = stringPool.GetStringIndex(&classString)
 	field := Field{ftype, arg}
+	objPtr.ThMutex.Lock()
 	(*objPtr).FieldTable[fname] = field
+	objPtr.ThMutex.Unlock()
 	return objPtr
 }
 
@@ -120,7 +126,9 @@ func UpdateValueFieldFromJavaBytes(objPtr *Object, argBytes []types.JavaByte) {
 		return
 	}
 	fld := Field{Ftype: types.StringClassRef, Fvalue: argBytes}
+	objPtr.ThMutex.Lock()
 	objPtr.FieldTable["value"] = fld
+	objPtr.ThMutex.Unlock()
 }
 
 // Null is the Jacobin implementation of Java's null
@@ -145,11 +153,19 @@ func CloneObject(oldObject *Object) *Object {
 	newObject := MakeEmptyObject()
 	// Mimic the class.
 	newObject.KlassName = oldObject.KlassName
+
+	oldObject.ThMutex.RLock()
+	defer oldObject.ThMutex.RUnlock()
+
 	// Get a slice of keys from the old FieldTable.
 	keys := make([]string, 0, len(oldObject.FieldTable))
 	for key := range oldObject.FieldTable {
 		keys = append(keys, key)
 	}
+
+	newObject.ThMutex.Lock()
+	defer newObject.ThMutex.Unlock()
+
 	// For each key in the old FieldTable, copy that entry into the new FieldTable.
 	for _, key := range keys {
 		newObject.FieldTable[key] = oldObject.FieldTable[key]
@@ -159,7 +175,9 @@ func CloneObject(oldObject *Object) *Object {
 
 // Clear the field table of the given object.
 func ClearFieldTable(object *Object) {
+	object.ThMutex.Lock()
 	object.FieldTable = make(map[string]Field)
+	object.ThMutex.Unlock()
 }
 
 // Get a class name suffix (E.g. String from java/lang/String) from an object.
