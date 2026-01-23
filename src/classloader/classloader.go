@@ -558,9 +558,6 @@ func ParseAndPostClass(cl *Classloader, filename string, rawBytes []byte) (uint3
 // to uint16 and removing some fields we needed in parsing, but which are no longer required.
 // Returns: class data as it is posted to the method area.
 func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
-
-	// TODO: this function is getting quite long and badly needs commentary!
-
 	kd := ClData{}
 
 	kd.Name = fullyParsedClass.className // eventually to be deleted in favor of class index
@@ -611,8 +608,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	kd.MethodTable = make(map[string]*Method)
 	if len(fullyParsedClass.methods) > 0 {
 		for i := 0; i < len(fullyParsedClass.methods); i++ {
-			jmeth := JmEntry{}
-			jmeth.CodeAttr = CodeAttrib{}
 
 			kdm := Method{}
 			kdm.Name = uint16(fullyParsedClass.methods[i].name)
@@ -621,16 +616,12 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			methDesc := fullyParsedClass.utf8Refs[int(kdm.Desc)].content
 
 			kdm.AccessFlags = fullyParsedClass.methods[i].accessFlags
-			jmeth.AccessFlags = fullyParsedClass.methods[i].accessFlags
 
 			kdm.CodeAttr.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
-			jmeth.MaxStack = fullyParsedClass.methods[i].codeAttr.maxStack
 
 			kdm.CodeAttr.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
-			jmeth.MaxLocals = fullyParsedClass.methods[i].codeAttr.maxLocals
 
 			kdm.CodeAttr.Code = fullyParsedClass.methods[i].codeAttr.code
-			jmeth.Code = fullyParsedClass.methods[i].codeAttr.code
 
 			if len(fullyParsedClass.methods[i].codeAttr.exceptions) > 0 {
 				for j := 0; j < len(fullyParsedClass.methods[i].codeAttr.exceptions); j++ {
@@ -640,7 +631,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmce.HandlerPc = fullyParsedClass.methods[i].codeAttr.exceptions[j].handlerPc
 					kdmce.CatchType = uint16(fullyParsedClass.methods[i].codeAttr.exceptions[j].catchType)
 					kdm.CodeAttr.Exceptions = append(kdm.CodeAttr.Exceptions, kdmce)
-					jmeth.CodeAttr.Exceptions = append(jmeth.CodeAttr.Exceptions, kdmce)
 				}
 			}
 
@@ -651,13 +641,11 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 					kdmca.AttrSize = fullyParsedClass.methods[i].codeAttr.attributes[m].attrSize
 					kdmca.AttrContent = fullyParsedClass.methods[i].codeAttr.attributes[m].attrContent
 					kdm.CodeAttr.Attributes = append(kdm.CodeAttr.Attributes, kdmca)
-					jmeth.CodeAttr.Attributes = append(jmeth.CodeAttr.Attributes, kdmca)
 				}
 			}
 
 			if fullyParsedClass.methods[i].codeAttr.sourceLineTable != nil {
 				if len(*fullyParsedClass.methods[i].codeAttr.sourceLineTable) > 0 {
-					jmeth.CodeAttr.BytecodeSourceMap = *fullyParsedClass.methods[i].codeAttr.sourceLineTable
 				}
 			} else {
 				fullyParsedClass.methods[i].codeAttr.sourceLineTable = nil
@@ -671,7 +659,6 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 						AttrContent: fullyParsedClass.methods[i].attributes[n].attrContent,
 					}
 					kdm.Attributes = append(kdm.Attributes, kdma)
-					jmeth.Attribs = append(jmeth.Attribs, kdma)
 				}
 			}
 
@@ -692,11 +679,9 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 						AccessFlags: fullyParsedClass.methods[i].parameters[q].accessFlags,
 					}
 					kdm.Parameters = append(kdm.Parameters, kdmp)
-					jmeth.params = append(jmeth.params, kdmp)
 				}
 			}
 			kdm.Deprecated = fullyParsedClass.methods[i].deprecated
-			jmeth.deprecated = fullyParsedClass.methods[i].deprecated
 
 			methodTableKey := methName + methDesc
 			kd.MethodTable[methodTableKey] = &kdm
