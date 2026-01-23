@@ -30,13 +30,14 @@ import (
 
 // NewStringObject creates an empty string object (aka Java String)
 func NewStringObject() *Object {
-	s := new(Object)
+	s := MakeEmptyObject()
 	s.Mark.Hash = 0
 	SetObjectUnlocked(s)
 	s.KlassName = types.StringPoolStringIndex // =  java/lang/String
-	s.FieldTable = make(map[string]Field)
 
 	// ==== now the fields ====
+	s.ThMutex.Lock()
+	defer s.ThMutex.Unlock()
 
 	// value: the content of the string as array of runes or JavaBytes (int8)
 	// Note: Post JDK9, this field is an array of bytes, so as to
@@ -59,15 +60,6 @@ func NewStringObject() *Object {
 	hashIsZero := Field{Ftype: types.Byte, Fvalue: types.JavaByte(0)}
 	s.FieldTable["hashIsZero"] = hashIsZero
 
-	// The following static fields are preloaded in statics/LoadStaticsString()
-	//   COMPACT_STRINGS (always true for JDK >= 9)
-	//   UTF_8.INSTANCE ptr to encoder
-	//   ISO_8859_1.INSTANCE ptr to encoder
-	//   US_ASCII.INSTANCE ptr to encoder
-	//   CodingErrorAction.REPLACE
-	//   CASE_INSENSITIVE_ORDER
-	//   serialPersistentFields
-
 	return s
 }
 
@@ -75,7 +67,9 @@ func NewStringObject() *Object {
 func StringObjectFromGoString(str string) *Object {
 	newStr := NewStringObject()
 	jba := JavaByteArrayFromGoString(str)
+	newStr.ThMutex.Lock()
 	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: jba}
+	newStr.ThMutex.Unlock()
 	return newStr
 }
 
@@ -92,6 +86,10 @@ func StringObjectArrayFromGoStringArray(strArray []string) []*Object {
 func GoStringFromStringObject(obj *Object) string {
 	if IsNull(obj) {
 		return ""
+	}
+	if obj.ThMutex != nil {
+		obj.ThMutex.RLock()
+		defer obj.ThMutex.RUnlock()
 	}
 	fld, ok := obj.FieldTable["value"]
 	if !ok {
@@ -124,6 +122,10 @@ func GoStringArrayFromStringObjectArray(objArray []*Object) []string {
 // ByteArrayFromStringObject: convenience method to extract a go byte array from a String object (Java string)
 func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
+		if obj.ThMutex != nil {
+			obj.ThMutex.RLock()
+			defer obj.ThMutex.RUnlock()
+		}
 		return obj.FieldTable["value"].Fvalue.([]types.JavaByte)
 	} else {
 		return nil
@@ -133,7 +135,9 @@ func ByteArrayFromStringObject(obj *Object) []types.JavaByte {
 // StringObjectFromByteArray: convenience method to create a string object from a byte array
 func StringObjectFromByteArray(bytes []byte) *Object {
 	newStr := NewStringObject()
+	newStr.ThMutex.Lock()
 	newStr.FieldTable["value"] = Field{Ftype: types.ByteArray, Fvalue: bytes}
+	newStr.ThMutex.Unlock()
 	return newStr
 }
 
@@ -141,11 +145,19 @@ func StringObjectFromByteArray(bytes []byte) *Object {
 func StringPoolIndexFromStringObject(obj *Object) uint32 {
 	if obj != nil && obj.KlassName == types.StringPoolStringIndex {
 		var str string
-		switch obj.FieldTable["value"].Fvalue.(type) {
+		var fvalue any
+		if obj.ThMutex != nil {
+			obj.ThMutex.RLock()
+			fvalue = obj.FieldTable["value"].Fvalue
+			obj.ThMutex.RUnlock()
+		} else {
+			fvalue = obj.FieldTable["value"].Fvalue
+		}
+		switch fvalue.(type) {
 		case []byte:
-			str = string(obj.FieldTable["value"].Fvalue.([]byte))
+			str = string(fvalue.([]byte))
 		case []types.JavaByte:
-			str = GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte))
+			str = GoStringFromJavaByteArray(fvalue.([]types.JavaByte))
 		}
 		index := stringPool.GetStringIndex(&str)
 		return index
@@ -218,7 +230,15 @@ func ObjectFieldToString(obj *Object, fieldName string) string {
 	}
 
 	// If the field is missing, return types.NullString.
-	fld, ok := obj.FieldTable[fieldName]
+	var fld Field
+	var ok bool
+	if obj.ThMutex != nil {
+		obj.ThMutex.RLock()
+		fld, ok = obj.FieldTable[fieldName]
+		obj.ThMutex.RUnlock()
+	} else {
+		fld, ok = obj.FieldTable[fieldName]
+	}
 	if !ok {
 		return types.NullString
 	}

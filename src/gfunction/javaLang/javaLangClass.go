@@ -38,23 +38,22 @@ s not necessarily run in the same way as other classes."
 func ClassClinitIsh() {
 	// Initialize the unnamedModule singleton.
 	if unnamedModule == nil {
-		unnamedModule = &object.Object{
-			KlassName: object.StringPoolIndexFromGoString(classNameModule),
-			FieldTable: map[string]object.Field{
-				"name": {
-					Ftype:  types.StringClassRef,
-					Fvalue: nil,
-				},
-				"isNamed": {
-					Ftype:  types.Bool,
-					Fvalue: types.JavaBoolFalse,
-				},
-				"value": {
-					Ftype:  types.ModuleClassRef,
-					Fvalue: nil,
-				},
-			},
+		unnamedModule = object.MakeEmptyObject()
+		unnamedModule.KlassName = object.StringPoolIndexFromGoString(classNameModule)
+		unnamedModule.ThMutex.Lock()
+		unnamedModule.FieldTable["name"] = object.Field{
+			Ftype:  types.StringClassRef,
+			Fvalue: nil,
 		}
+		unnamedModule.FieldTable["isNamed"] = object.Field{
+			Ftype:  types.Bool,
+			Fvalue: types.JavaBoolFalse,
+		}
+		unnamedModule.FieldTable["value"] = object.Field{
+			Ftype:  types.ModuleClassRef,
+			Fvalue: nil,
+		}
+		unnamedModule.ThMutex.Unlock()
 	}
 }
 

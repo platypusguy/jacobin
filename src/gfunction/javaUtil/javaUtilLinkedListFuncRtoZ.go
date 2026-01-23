@@ -263,14 +263,11 @@ func linkedlistReversed(args []interface{}) interface{} {
 	}
 
 	// Wrap in a new object
-	reversedObj := &object.Object{
-		KlassName: origObj.KlassName,
-		FieldTable: map[string]object.Field{
-			"value": {
-				Ftype:  types.LinkedList,
-				Fvalue: newList,
-			},
-		},
+	reversedObj := object.MakeEmptyObject()
+	reversedObj.KlassName = origObj.KlassName
+	reversedObj.FieldTable["value"] = object.Field{
+		Ftype:  types.LinkedList,
+		Fvalue: newList,
 	}
 
 	return reversedObj
@@ -429,13 +426,10 @@ func linkedlistToArray(args []interface{}) interface{} {
 		result[i] = e.Value
 	}
 
-	arrayObj := &object.Object{
-		FieldTable: map[string]object.Field{
-			"value": {
-				Ftype:  "[Ljava/lang/Object;",
-				Fvalue: result,
-			},
-		},
+	arrayObj := object.MakeEmptyObject()
+	arrayObj.FieldTable["value"] = object.Field{
+		Ftype:  "[Ljava/lang/Object;",
+		Fvalue: result,
 	}
 
 	return arrayObj
@@ -501,17 +495,14 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 			for e := ll.Front(); e != nil; e, i = e.Next(), i+1 {
 				newArr[i] = e.Value
 			}
-			return &object.Object{
-				KlassName: klass,
-				FieldTable: map[string]object.Field{
-					"value": {
-						Ftype:  runtimeType,
-						Fvalue: newArr,
-					},
-				},
+			res := object.MakeEmptyObject()
+			res.KlassName = klass
+			res.FieldTable["value"] = object.Field{
+				Ftype:  runtimeType,
+				Fvalue: newArr,
 			}
+			return res
 		}
-
 	case []*object.Object:
 		if len(input) >= listLen {
 			i := 0
@@ -538,15 +529,13 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 				}
 				newArr[i] = obj
 			}
-			return &object.Object{
-				KlassName: klass,
-				FieldTable: map[string]object.Field{
-					"value": {
-						Ftype:  runtimeType,
-						Fvalue: newArr,
-					},
-				},
+			res := object.MakeEmptyObject()
+			res.KlassName = klass
+			res.FieldTable["value"] = object.Field{
+				Ftype:  runtimeType,
+				Fvalue: newArr,
 			}
+			return res
 		}
 
 	case []int64:
@@ -575,15 +564,13 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 				}
 				newArr[i] = val
 			}
-			return &object.Object{
-				KlassName: klass,
-				FieldTable: map[string]object.Field{
-					"value": {
-						Ftype:  runtimeType,
-						Fvalue: newArr,
-					},
-				},
+			res := object.MakeEmptyObject()
+			res.KlassName = klass
+			res.FieldTable["value"] = object.Field{
+				Ftype:  runtimeType,
+				Fvalue: newArr,
 			}
+			return res
 		}
 
 	case []float64:
@@ -612,15 +599,13 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 				}
 				newArr[i] = val
 			}
-			return &object.Object{
-				KlassName: klass,
-				FieldTable: map[string]object.Field{
-					"value": {
-						Ftype:  runtimeType,
-						Fvalue: newArr,
-					},
-				},
+			res := object.MakeEmptyObject()
+			res.KlassName = klass
+			res.FieldTable["value"] = object.Field{
+				Ftype:  runtimeType,
+				Fvalue: newArr,
 			}
+			return res
 		}
 
 	case []types.JavaByte:
@@ -649,15 +634,13 @@ func linkedlistToArrayTyped(args []interface{}) interface{} {
 				}
 				newArr[i] = val
 			}
-			return &object.Object{
-				KlassName: klass,
-				FieldTable: map[string]object.Field{
-					"value": {
-						Ftype:  runtimeType,
-						Fvalue: newArr,
-					},
-				},
+			res := object.MakeEmptyObject()
+			res.KlassName = klass
+			res.FieldTable["value"] = object.Field{
+				Ftype:  runtimeType,
+				Fvalue: newArr,
 			}
+			return res
 		}
 
 	default:

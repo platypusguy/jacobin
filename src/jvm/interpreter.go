@@ -490,7 +490,9 @@ func doIaload(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+		obj.ThMutex.RLock()
 		array = obj.FieldTable["value"].Fvalue.([]int64)
+		obj.ThMutex.RUnlock()
 	case []int64:
 		array = ref.([]int64)
 	default:
@@ -551,7 +553,9 @@ func doFaload(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+		obj.ThMutex.RLock()
 		array = (*obj).FieldTable["value"].Fvalue.([]float64)
+		obj.ThMutex.RUnlock()
 	default:
 		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 		errMsg := fmt.Sprintf("in %s.%s, D/FALOAD: Reference invalid type of array: %T",
@@ -598,7 +602,10 @@ func doAaload(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	fvalue := (rAref.(*object.Object)).FieldTable["value"].Fvalue
+	obj := rAref.(*object.Object)
+	obj.ThMutex.RLock()
+	fvalue := obj.FieldTable["value"].Fvalue
+	obj.ThMutex.RUnlock()
 	array := fvalue.([]*object.Object)
 
 	size := int64(len(array))
@@ -649,13 +656,16 @@ func doBaload(fr *frames.Frame, _ int64) int {
 			value := byteArray[index]
 			pushValue = int64(value)
 		} else {
-			switch bAref.FieldTable["value"].Fvalue.(type) {
+			bAref.ThMutex.RLock()
+			fvalue := bAref.FieldTable["value"].Fvalue
+			bAref.ThMutex.RUnlock()
+			switch fvalue.(type) {
 			case []types.JavaByte, []types.JavaBool:
 				// Get byte array from the field.
 				// It's the same process for booleans and bytes because
 				// the elements of both array types are of type JavaByte.
 				// Reference: JVM spec.
-				byteArray = bAref.FieldTable["value"].Fvalue.([]types.JavaByte)
+				byteArray = fvalue.([]types.JavaByte)
 				size := int64(len(byteArray))
 				ret := doBaload_index_vs_size(fr, index, size)
 				if ret != 0 {
@@ -665,7 +675,7 @@ func doBaload(fr *frames.Frame, _ int64) int {
 				pushValue = int64(value)
 			case []byte: // TODO: Go byte array? Convert it to a JavaByte array
 				byteArray =
-					object.JavaByteArrayFromGoByteArray(bAref.FieldTable["value"].Fvalue.([]byte))
+					object.JavaByteArrayFromGoByteArray(fvalue.([]byte))
 				size := int64(len(byteArray))
 				ret := doBaload_index_vs_size(fr, index, size)
 				if ret != 0 {
@@ -806,7 +816,9 @@ func doIastore(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+		obj.ThMutex.RLock()
 		fld := obj.FieldTable["value"]
+		obj.ThMutex.RUnlock()
 		if fld.Ftype != types.IntArray && fld.Ftype != types.LongArray && fld.Ftype != types.CharArray && fld.Ftype != types.ShortArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, I/J/C/S/LASTORE: field type expected=[I|J|C|S, observed=%s",
@@ -877,7 +889,9 @@ func doFastore(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+		obj.ThMutex.RLock()
 		fld := obj.FieldTable["value"]
+		obj.ThMutex.RUnlock()
 		if fld.Ftype != types.FloatArray && fld.Ftype != types.DoubleArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := fmt.Sprintf("in %s.%s, D/FASTORE: field type expected=[F, observed=%s",
@@ -962,8 +976,12 @@ func doAastore(fr *frames.Frame, _ int64) int {
 		return RESUME_HERE // caught
 	}
 
-	arrayObj := *arrayRef
-	rawArrayObj := arrayObj.FieldTable["value"]
+	arrayRef.ThMutex.RLock()
+	rawArrayObj, ok := arrayRef.FieldTable["value"]
+	arrayRef.ThMutex.RUnlock()
+	if !ok {
+		// Should probably throw an exception here if "value" is missing
+	}
 
 	if !strings.HasPrefix(rawArrayObj.Ftype, types.RefArray) &&
 		!strings.HasPrefix(rawArrayObj.Ftype, types.MultiArray) {
@@ -1024,7 +1042,9 @@ func doBastore(fr *frames.Frame, _ int64) int {
 		}
 
 		// Get array field.
+		obj.ThMutex.RLock()
 		fld := obj.FieldTable["value"]
+		obj.ThMutex.RUnlock()
 
 		if fld.Ftype != types.ByteArray && fld.Ftype != types.BoolArray {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
@@ -2336,7 +2356,9 @@ func doPutStatic(fr *frames.Frame, _ int64) int {
 				Fvalue: kPtr,
 			}
 
+			obj.ThMutex.Lock()
 			obj.FieldTable[fieldName] = objField
+			obj.ThMutex.Unlock()
 
 			statics.AddStatic(fieldName, statics.Static{
 				Type:  prevLoaded.Type,
@@ -2396,7 +2418,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 	var fieldType string
 	var fieldValue interface{}
 
+	obj.ThMutex.RLock()
 	objField, ok := obj.FieldTable[fieldName]
+	obj.ThMutex.RUnlock()
 	if !ok {
 		errMsg := fmt.Sprintf("GETFIELD PC=%d: Missing field (%s) in FieldTable", fr.PC, fieldName)
 		status := exceptions.ThrowEx(excNames.IllegalArgumentException, errMsg, fr)
@@ -2442,7 +2466,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 		// if the field type is an array, other than a string, convert it to an object
 		o := object.MakeEmptyObject()
 		of := object.Field{Ftype: fieldType, Fvalue: objField.Fvalue}
+		o.ThMutex.Lock()
 		o.FieldTable["value"] = of
+		o.ThMutex.Unlock()
 		o.KlassName = stringPool.GetStringIndex(&of.Ftype)
 		fieldValue = o
 	} else if fieldType == "Ljava/lang/Object;" {
@@ -2464,7 +2490,9 @@ func doGetfield(fr *frames.Frame, _ int64) int {
 			}
 			o := object.MakeEmptyObject()
 			of := object.Field{Ftype: newFieldType, Fvalue: objField.Fvalue}
+			o.ThMutex.Lock()
 			o.FieldTable["value"] = of
+			o.ThMutex.Unlock()
 			klassName := "[Ljava/lang/Object;"
 			o.KlassName = stringPool.GetStringIndex(&klassName) // "[Ljava/lang/Object;"
 			fieldValue = o
@@ -2512,30 +2540,39 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 	}
 
 	// Get Object struct.
-	obj := *(ref.(*object.Object))
+	obj := ref.(*object.Object)
 
 	// if the value we're inserting is a reference to an array object, we need to modify it
 	// to point directly to the array of primitives, rather than to the array object
 	switch value.(type) {
 	case *object.Object:
 		if !object.IsNull(value.(*object.Object)) {
-			v := *(value.(*object.Object))
+			v := value.(*object.Object)
+			v.ThMutex.RLock()
 			o, ok := v.FieldTable["value"]
+			v.ThMutex.RUnlock()
 			if ok && strings.HasPrefix(o.Ftype, types.Array) {
+				v.ThMutex.RLock()
 				value = v.FieldTable["value"].Fvalue
+				v.ThMutex.RUnlock()
 			}
 		}
 	}
 
 	// otherwise look up the field name in the CP and find it in the FieldTable, then do the update
-	if len(obj.FieldTable) != 0 {
+	obj.ThMutex.RLock()
+	fieldTableLen := len(obj.FieldTable)
+	obj.ThMutex.RUnlock()
+	if fieldTableLen != 0 {
 		fullFieldEntry := CP.FieldRefs[fieldEntry.Slot]
 		fieldName := fullFieldEntry.FldName
 		if globals.TraceVerbose {
 			EmitTraceFieldID("PUTFIELD", fieldName)
 		}
 
+		obj.ThMutex.RLock()
 		objField, ok := obj.FieldTable[fieldName]
+		obj.ThMutex.RUnlock()
 		if !ok {
 			errMsg := fmt.Sprintf("PUTFIELD: In trying for a superclass field, %s is not present in object of class %s",
 				fieldName, object.GoStringFromStringPoolIndex(obj.KlassName))
@@ -2569,7 +2606,9 @@ func doPutfield(fr *frames.Frame, _ int64) int {
 		default:
 			objField.Fvalue = value
 		}
+		obj.ThMutex.Lock()
 		obj.FieldTable[fieldName] = objField
+		obj.ThMutex.Unlock()
 	}
 	return 3 // 2 for CPslot + 1 for next bytecode
 }
@@ -3398,7 +3437,9 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 			}
 			return RESUME_HERE // caught
 		}
+		r.ThMutex.RLock()
 		field, ok := r.FieldTable["value"]
+		r.ThMutex.RUnlock()
 		if !ok {
 			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
 			errMsg := "ARRAYLENGTH: Value field missing for *object.Object"
@@ -3485,63 +3526,87 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 			errMsg = fmt.Sprintf("Exception in thread %d %s", fr.Thread, exceptionName)
 		}
 
-		appMsg := objectRef.FieldTable["detailMessage"].Fvalue
-		if appMsg != object.Null && appMsg != nil {
-			switch appMsg.(type) {
-			case []types.JavaByte:
-				jbarray := appMsg.([]types.JavaByte)
-				errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(jbarray))
-			case *object.Object:
-				var value any
-				obj := appMsg.(*object.Object)
-				fld, ok := obj.FieldTable["value"]
-				if !ok {
-					value = "<missing>"
-				} else {
-					value = fld.Fvalue
-				}
-				switch value.(type) {
-				case []byte:
-					errMsg += fmt.Sprintf(": %s", string(obj.FieldTable["value"].Fvalue.([]byte)))
+		objectRef.ThMutex.RLock()
+		appMsgFld, ok := objectRef.FieldTable["detailMessage"]
+		objectRef.ThMutex.RUnlock()
+		if ok {
+			appMsg := appMsgFld.Fvalue
+			if appMsg != object.Null && appMsg != nil {
+				switch appMsg.(type) {
 				case []types.JavaByte:
-					errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte)))
-				case uint32:
-					str := stringPool.GetStringPointer(value.(uint32))
-					errMsg += fmt.Sprintf(": %s", *str)
+					jbarray := appMsg.([]types.JavaByte)
+					errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(jbarray))
+				case *object.Object:
+					var value any
+					obj := appMsg.(*object.Object)
+					obj.ThMutex.RLock()
+					fld, ok := obj.FieldTable["value"]
+					obj.ThMutex.RUnlock()
+					if !ok {
+						value = "<missing>"
+					} else {
+						value = fld.Fvalue
+					}
+					switch value.(type) {
+					case []byte:
+						obj.ThMutex.RLock()
+						errMsg += fmt.Sprintf(": %s", string(obj.FieldTable["value"].Fvalue.([]byte)))
+						obj.ThMutex.RUnlock()
+					case []types.JavaByte:
+						obj.ThMutex.RLock()
+						errMsg += fmt.Sprintf(": %s", object.GoStringFromJavaByteArray(obj.FieldTable["value"].Fvalue.([]types.JavaByte)))
+						obj.ThMutex.RUnlock()
+					case uint32:
+						str := stringPool.GetStringPointer(value.(uint32))
+						errMsg += fmt.Sprintf(": %s", *str)
+					default:
+						errMsg += fmt.Sprintf(": <default value> %v", value)
+					}
 				default:
-					errMsg += fmt.Sprintf(": <default value> %v", value)
+					errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
 				}
-			default:
-				errMsg += ": objectRef.FieldTable[\"detailMessage\"] is object.Null"
 			}
 		}
 		trace.AsIs(errMsg)
 
-		steArrayPtr := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
-		rawSteArray := steArrayPtr.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
+		objectRef.ThMutex.RLock()
+		steArrayPtrObj := objectRef.FieldTable["stackTrace"].Fvalue.(*object.Object)
+		objectRef.ThMutex.RUnlock()
+
+		steArrayPtrObj.ThMutex.RLock()
+		rawSteArray := steArrayPtrObj.FieldTable["value"].Fvalue.([]*object.Object) // []*object.Object (each of which is an STE)
+		steArrayPtrObj.ThMutex.RUnlock()
+
 		for i := 0; i < len(rawSteArray); i++ {
 			ste := rawSteArray[i]
+			ste.ThMutex.RLock()
 			rawClassName := ste.FieldTable["declaringClass"].Fvalue.(string)
+			ste.ThMutex.RUnlock()
 			if rawClassName == "java/lang/Throwable" || // don't show Throwable methods
 				rawClassName == "java/lang/Error" || // don't show Error methods
 				rawClassName == "java/lang/AssertionError" { // don't show AssertionError methods
 				continue
 			}
+			ste.ThMutex.RLock()
 			methodName := ste.FieldTable["methodName"].Fvalue.(string)
+			ste.ThMutex.RUnlock()
 			if methodName == "<init>" { // don't show constructors
 				continue
 			}
 			className := strings.Replace(rawClassName, "/", ".", -1)
 
+			ste.ThMutex.RLock()
 			sourceLine := ste.FieldTable["sourceLine"].Fvalue.(string)
+			fileName := ste.FieldTable["fileName"].Fvalue
+			ste.ThMutex.RUnlock()
 
 			var errMsg string
 			if sourceLine != "" {
 				errMsg = fmt.Sprintf("\tat %s.%s(%s:%s)", className,
-					methodName, ste.FieldTable["fileName"].Fvalue, sourceLine)
+					methodName, fileName, sourceLine)
 			} else {
 				errMsg = fmt.Sprintf("\tat %s.%s(%s)", className,
-					methodName, ste.FieldTable["fileName"].Fvalue)
+					methodName, fileName)
 			}
 			trace.AsIs(errMsg)
 		}
@@ -4019,7 +4084,9 @@ func doMultinewarray(fr *frames.Frame, _ int64) int {
 	// can no longer be considered reliable. Use len(dimSizes).
 	if len(dimSizes) == 3 {
 		multiArr := object.Make1DimArray(object.T_REF, dimSizes[0])
+		multiArr.ThMutex.RLock()
 		actualArray := multiArr.FieldTable["value"].Fvalue.([]*object.Object)
+		multiArr.ThMutex.RUnlock()
 		for i := 0; i < len(actualArray); i++ {
 			actualArray[i], _ = object.Make2DimArray(dimSizes[1],
 				dimSizes[2], arrayType)

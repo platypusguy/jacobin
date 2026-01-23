@@ -55,16 +55,28 @@ func SetThreadState(th *object.Object, newState int64) (int64, interface{}) {
 		th.FieldTable["state"] = fld
 	}
 
+	// We're done, unless state is TERMINATED, in which case we remove it from the
+	// global registry of threads.
+	if newState == TERMINATED {
+		globals.GetGlobalRef().ThreadLock.Lock()
+		delete(globals.GetGlobalRef().Threads, int(th.FieldTable["ID"].Fvalue.(int64)))
+		globals.GetGlobalRef().ThreadLock.Unlock()
+	}
+
 	return curVal, nil
 }
 
 // Has the given thread been interrupted?
 func isInterrupted(th *object.Object) bool {
+	th.ThMutex.RLock()
 	interruptedObj, ok := th.FieldTable["interrupted"].Fvalue.(*object.Object)
+	th.ThMutex.RUnlock()
 	if !ok {
 		return false
 	}
+	interruptedObj.ThMutex.RLock()
 	interruptedVal, ok := interruptedObj.FieldTable["value"].Fvalue.(int)
+	interruptedObj.ThMutex.RUnlock()
 	return ok && interruptedVal != 0
 }
 
@@ -72,7 +84,6 @@ func isInterrupted(th *object.Object) bool {
 // Note that the thread number is incremented in the call to threadNumberingNext().
 func populateThreadObject(t *object.Object) {
 
-	t.ThMutex = &sync.RWMutex{}
 	t.ThMutex.Lock()
 	defer t.ThMutex.Unlock()
 

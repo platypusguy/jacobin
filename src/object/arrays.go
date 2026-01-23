@@ -162,8 +162,10 @@ func Make1DimArray(arrType uint8, size int64) *Object {
 		globals.GetGlobalRef().FuncThrowException(excNames.IllegalArgumentException, errMsg)
 		return nil
 	}
+	o.ThMutex.Lock()
 	o.FieldTable["value"] = of
-	value := o.FieldTable["value"]
+	o.ThMutex.Unlock()
+	value := of
 	o.KlassName = stringPool.GetStringIndex(&value.Ftype) // in arrays, Klass field is a pointer to the array type string
 	return o
 }
@@ -176,7 +178,9 @@ func Make1DimRefArray(objType string, size int64) *Object {
 	rarArr := make([]*Object, size)
 	arrayType := types.RefArray + objType
 	of := Field{Ftype: arrayType, Fvalue: rarArr}
+	o.ThMutex.Lock()
 	o.FieldTable["value"] = of
+	o.ThMutex.Unlock()
 	o.KlassName = stringPool.GetStringIndex(&of.Ftype)
 	return o
 }
