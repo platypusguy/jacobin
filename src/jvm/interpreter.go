@@ -3595,21 +3595,26 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 
 	} else { // perform the catch operation. We know the frame and the starting bytecode for the handler
-		for f := fr.FrameStack.Front(); f != nil; {
-			var frm = f.Value.(*frames.Frame)
-			if frm == catchFrame {
-				frm.TOS = -1
-				push(frm, objectRef)
-				frm.PC = handlerBytecode
+		for listElem := fr.FrameStack.Front(); listElem != nil; {
+			var wframe = listElem.Value.(*frames.Frame)
+			if wframe == catchFrame {
+				wframe.TOS = -1
+				push(wframe, objectRef)
+				wframe.PC = handlerBytecode
 				return 0
 			}
 			// if the frame we're about to pop is synchronized, unlock it
-			if frm.ObjSync != nil {
-				_ = frm.ObjSync.ObjUnlock(int32(frm.Thread))
+			if wframe.ObjSync != nil {
+				_ = wframe.ObjSync.ObjUnlock(int32(wframe.Thread))
+				if globals.TraceInst {
+					traceInfo := fmt.Sprintf("\tdoAthrow: Unlocked object %s",
+						object.GoStringFromStringPoolIndex(wframe.ObjSync.KlassName))
+					trace.Trace(traceInfo)
+				}
 			}
-			next := f.Next()
-			fr.FrameStack.Remove(f)
-			f = next
+			next := listElem.Next()
+			fr.FrameStack.Remove(listElem)
+			listElem = next
 		}
 	}
 	return 1 // should not be reached, in theory
