@@ -101,9 +101,6 @@ type ParsedClass struct {
 	classIsAnnotation bool
 	classIsEnum       bool
 	classIsModule     bool
-
-	// ---- other attributes ----
-
 }
 
 // the fields defined in the class
@@ -175,6 +172,13 @@ type bootstrapMethod struct {
 }
 
 var ClassesLock = sync.RWMutex{}
+
+// instances of java/lang/Class stored in global.JlcNap
+type Jlc struct {
+	lock    sync.Mutex
+	statics map[string]Field // all static fields
+	_klass  *Klass           // points back to the Klass structure in the method area
+}
 
 // cfe = class format error, which is the error thrown by the parser for most
 // of the errors arising from malformed bytecode. Prints out file and line# where

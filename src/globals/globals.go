@@ -55,8 +55,9 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
-	ClasspathRaw      string   // the raw classpath as passed in by the user
-	Classpath         []string // the classpath as a list of directories and JARs
+	ClasspathRaw      string         // the raw classpath as passed in by the user
+	Classpath         []string       // the classpath as a list of directories and JARs
+	JlcMap            map[string]any // map of FQN class names to their java/lang/Class instance
 
 	// ---- Java Home and Version ----
 	JavaHome        string
@@ -166,6 +167,7 @@ func InitGlobals(progName string) Globals {
 		JacobinHome:          "",
 		JacobinName:          progName,
 		JavaHome:             "",
+		JlcMap:               make(map[string]any, 1000), // map of FQN class name to its java/lang/Class instance
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
