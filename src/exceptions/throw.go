@@ -130,10 +130,14 @@ func ThrowEx(which int, msg string, f *frames.Frame) bool {
 
 		// remove the frames we examined that did not have the catch logic
 		for fs.Len() > 0 {
-			fr := fs.Front().Value
-			if fr == catchFrame {
+			frVal := fs.Front().Value
+			if frVal == catchFrame {
 				break
 			} else {
+				frToPop := frVal.(*frames.Frame)
+				if frToPop.ObjSync != nil {
+					_ = frToPop.ObjSync.ObjUnlock(int32(frToPop.Thread))
+				}
 				fs.Remove(fs.Front())
 			}
 		}

@@ -13,6 +13,7 @@ import (
 	"jacobin/src/excNames"
 	"jacobin/src/frames"
 	"jacobin/src/globals"
+	"jacobin/src/object"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
 	"jacobin/src/util"
@@ -53,14 +54,32 @@ func FindCatchFrame(fs *list.List, exceptName string, pc int) (*frames.Frame, in
 
 		excFrame, excPC = locateExceptionFrame(f, excName, searchPC)
 		if excFrame != nil {
+			// Found a catch frame.
+			// Wherever we found the catch block, end this search loop.
 			break
-		} else { // if the exception was not found in this frame, we delete the current frame
-			// unless it's the last frame
+		} else {
+			// The exception was not found in this frame.
+			// If we're executing a synchronized method, we need to unlock the object
+			// before popping the frame.
+			if f.ObjSync != nil {
+				_ = f.ObjSync.ObjUnlock(int32(f.Thread))
+				if globals.TraceInst {
+					traceInfo := fmt.Sprintf("\tFindCatchFrame: Unlocked object %s",
+						object.GoStringFromStringPoolIndex(f.ObjSync.KlassName))
+					trace.Trace(traceInfo)
+				}
+			}
+
+			// End of frame list?
 			if fr.Next() == nil {
 				return nil, -1
 			}
+			// No longer the first time through the frame stack.
 			firstTimeThrough = false
+			// Set the current frame = next frame.
 			fr = fr.Next()
+			// Delete current frame.
+			_ = frames.PopFrame(fs)
 		}
 	}
 	return excFrame, excPC
