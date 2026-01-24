@@ -55,9 +55,8 @@ type Globals struct {
 	MaxJavaVersion    int // the Java version as commonly known, i.e. Java 11
 	MaxJavaVersionRaw int // the Java version as it appears in bytecode i.e., 55 (= Java 11)
 	VerifyLevel       int
-	ClasspathRaw      string         // the raw classpath as passed in by the user
-	Classpath         []string       // the classpath as a list of directories and JARs
-	JlcMap            map[string]any // map of FQN class names to their java/lang/Class instance
+	ClasspathRaw      string   // the raw classpath as passed in by the user
+	Classpath         []string // the classpath as a list of directories and JARs
 
 	// ---- Java Home and Version ----
 	JavaHome        string
@@ -134,6 +133,9 @@ var StringPoolList []string
 var StringPoolNext uint32
 var StringPoolLock sync.RWMutex
 
+// ----- map of java/lang/Class instances for statics and instrospection
+var JlcMap map[string]any // map of FQN class names to their java/lang/Class instance
+
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
 
@@ -167,7 +169,6 @@ func InitGlobals(progName string) Globals {
 		JacobinHome:          "",
 		JacobinName:          progName,
 		JavaHome:             "",
-		JlcMap:               make(map[string]any, 1000), // map of FQN class name to its java/lang/Class instance
 		JmodBaseBytes:        nil,
 		JVMframeStack:        nil,
 		JvmFrameStackShown:   false,
@@ -182,6 +183,8 @@ func InitGlobals(progName string) Globals {
 		Version: config.GetJacobinVersion(), // gets version and build #
 		VmModel: "server",
 	}
+
+	JlcMap = make(map[string]any, 2000) // map of FQN class name to its java/lang/Class instance
 
 	// ----- G function alternative processing flag
 	Galt = false
