@@ -3453,15 +3453,6 @@ func doArraylength(fr *frames.Frame, _ int64) int {
 
 // 0xBF ATHROW throw an exception
 func doAthrow(fr *frames.Frame, _ int64) int {
-	// If the current method is synchronized, unlock the object.
-	if fr.ObjSync != nil {
-		_ = fr.ObjSync.ObjUnlock(int32(fr.Thread))
-		if globals.TraceInst {
-			traceInfo := fmt.Sprintf("\tdoAthrow: Unlocked object %s",
-				object.GoStringFromStringPoolIndex(fr.ObjSync.KlassName))
-			trace.Trace(traceInfo)
-		}
-	}
 	// objRef points to an instance of the error/exception class that's being thrown
 	objectRef := pop(fr).(*object.Object)
 	if object.IsNull(objectRef) {
@@ -3604,19 +3595,26 @@ func doAthrow(fr *frames.Frame, _ int64) int {
 		shutdown.Exit(shutdown.APP_EXCEPTION)
 
 	} else { // perform the catch operation. We know the frame and the starting bytecode for the handler
-		for f := fr.FrameStack.Front(); fr != nil; f = f.Next() {
-			var frm = f.Value.(*frames.Frame)
-			// f.ExceptionTable = &m.Exceptions
-			if frm == catchFrame {
-				// frm.Meth = f.Meth[handlerBytecode:]
-				frm.TOS = -1
-				push(frm, objectRef)
-				// frm.PC = 0
-				frm.PC = handlerBytecode
-				// make the frame with the catch block active
-				fr.FrameStack.Front().Value = frm
+		for listElem := fr.FrameStack.Front(); listElem != nil; {
+			var wframe = listElem.Value.(*frames.Frame)
+			if wframe == catchFrame {
+				wframe.TOS = -1
+				push(wframe, objectRef)
+				wframe.PC = handlerBytecode
 				return 0
 			}
+			// if the frame we're about to pop is synchronized, unlock it
+			if wframe.ObjSync != nil {
+				_ = wframe.ObjSync.ObjUnlock(int32(wframe.Thread))
+				if globals.TraceInst {
+					traceInfo := fmt.Sprintf("\tdoAthrow: Unlocked object %s",
+						object.GoStringFromStringPoolIndex(wframe.ObjSync.KlassName))
+					trace.Trace(traceInfo)
+				}
+			}
+			next := listElem.Next()
+			fr.FrameStack.Remove(listElem)
+			listElem = next
 		}
 	}
 	return 1 // should not be reached, in theory

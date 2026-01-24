@@ -135,6 +135,7 @@ var StringPoolLock sync.RWMutex
 
 // ----- map of java/lang/Class instances for statics and instrospection
 var JlcMap map[string]any // map of FQN class names to their java/lang/Class instance
+var JlcMapLock sync.RWMutex
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
 var LoaderWg sync.WaitGroup
