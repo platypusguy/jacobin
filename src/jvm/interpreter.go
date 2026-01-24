@@ -2156,19 +2156,7 @@ func doReturn(fr *frames.Frame, _ int64) int {
 func doGetStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2]) // next 2 bytes point to CP entry
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot]
-	/* // JACOBIN-847 Checked for in codeCheck.go Delete after Feb 1, 2026
-	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("GETSTATIC: Expected a field ref, but got %d in"+
-			"location %d in method %s of class %s\n",
-			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	} */
+	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
@@ -2236,16 +2224,7 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 func doPutStatic(fr *frames.Frame, _ int64) int {
 	CPslot := (int(fr.Meth[fr.PC+1]) * 256) + int(fr.Meth[fr.PC+2])
 	CP := fr.CP.(*classloader.CPool)
-	CPentry := CP.CpIndex[CPslot]
-	/* // Checked for in codeCheck.go Delete after Feb 1, 2026
-	if CPentry.Type != classloader.FieldRef { // the pointed-to CP entry must be a field reference
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("PUTSTATIC: Expected a field ref, but got %d in"+
-			"location %d in method %s of class %s\n",
-			CPentry.Type, fr.PC, fr.MethName, fr.ClName)
-		trace.Error(errMsg)
-		return ERROR_OCCURRED
-	} */
+	CPentry := CP.CpIndex[CPslot] // value is checked in codeCheck.go
 
 	// get the field entry
 	field := CP.FieldRefs[CPentry.Slot]
