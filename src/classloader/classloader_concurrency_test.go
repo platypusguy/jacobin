@@ -87,14 +87,17 @@ func TestJlcElementConcurrency(t *testing.T) {
 func TestJlcMapAndElementInteraction(t *testing.T) {
 	globals.InitGlobals("test")
 
-	const numClasses = 3
+	const numClasses = 16
 	const numFieldsPerClass = 3
-	classNames := []string{"ClassA", "ClassB", "ClassC"}
+	var classNames []string
+	for i := 0; i < numClasses; i++ {
+		classNames = append(classNames, fmt.Sprintf("Class%d", i))
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(numClasses)
 
-	// Phase 1: 3 goroutines each adding a class and filling 3 fields
+	// Phase 1: 16 goroutines each adding a class and filling 3 fields
 	for i := 0; i < numClasses; i++ {
 		go func(idx int) {
 			defer wg.Done()
@@ -123,7 +126,7 @@ func TestJlcMapAndElementInteraction(t *testing.T) {
 
 	wg.Wait()
 
-	// Phase 2: 3 more goroutines to read the fields
+	// Phase 2: 16 more goroutines to read the fields
 	wg.Add(numClasses)
 	for i := 0; i < numClasses; i++ {
 		go func(idx int) {
