@@ -191,7 +191,6 @@ func QueryStatic(className string, fieldName string) (Static, bool) {
 		return stentry, false // not present
 	}
 	return stentry, true
-
 }
 
 const SelectAll = int64(1)

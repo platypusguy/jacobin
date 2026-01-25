@@ -175,9 +175,10 @@ var ClassesLock = sync.RWMutex{}
 
 // instances of java/lang/Class stored in global.JlcNap
 type Jlc struct {
-	lock    sync.RWMutex
-	statics map[string]Field // all static fields
-	_klass  *ClData          // points back to the class's data in the method area
+	lock        sync.RWMutex
+	statics     map[string]Field // all static fields
+	_klass      *ClData          // points back to the class's data in the method area
+	initialized bool             // has the class been initialized?
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
@@ -576,9 +577,10 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	}
 
 	jlc := Jlc{
-		lock:    sync.RWMutex{},
-		statics: make(map[string]Field),
-		_klass:  nil,
+		lock:        sync.RWMutex{},
+		statics:     make(map[string]Field),
+		_klass:      nil,
+		initialized: false,
 	}
 
 	if len(fullyParsedClass.fields) > 0 {
