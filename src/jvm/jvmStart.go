@@ -234,6 +234,7 @@ func JVMrun() int {
 // so we use global function pointers.
 func InitGlobalFunctionPointers() {
 	globalPtr := globals.GetGlobalRef()
+	globalPtr.FuncGetStaticValue = statics.GetStaticValue
 	globalPtr.FuncInstantiateClass = InstantiateClass
 	globalPtr.FuncInvokeGFunction = ghelpers.Invoke
 	globalPtr.FuncMinimalAbort = exceptions.MinimalAbort

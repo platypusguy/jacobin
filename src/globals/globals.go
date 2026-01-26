@@ -107,6 +107,7 @@ type Globals struct {
 
 	// Get around the golang circular dependency. To be set up in jvmStart.go
 	// Enables gfunctions to call these functions through a global variable.
+	FuncGetStaticValue   func(string, string) any
 	FuncInstantiateClass func(string, *list.List) (any, error)
 	FuncInvokeGFunction  func(string, []any) any
 	FuncMinimalAbort     func(int, string)

@@ -1,6 +1,6 @@
 /*
  * Jacobin VM - A Java virtual machine
- * Copyright (c) 2024 by the Jacobin Authors. All rights reserved.
+ * Copyright (c) 2024-6 by the Jacobin Authors. All rights reserved.
  * Licensed under Mozilla Public License 2.0 (MPL 2.0)  Consult jacobin.org.
  */
 
@@ -9,7 +9,6 @@ package object
 import (
 	"fmt"
 	"jacobin/src/globals"
-	"jacobin/src/statics"
 	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"strings"
@@ -28,6 +27,7 @@ var SLICING = "_SLICING_"
 // * className: statics fields abd debugging
 // * fieldName: Key to the jacobin statics table.
 func fmtHelper(field Field, className string, fieldName string) string {
+	global := globals.GetGlobalRef()
 	ftype := field.Ftype
 	fvalue := field.Fvalue
 	if DEBUGGING {
@@ -41,7 +41,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	if ftype == types.StringClassRef {
 		// Special handling for String.
 		if flagStatic {
-			return fmt.Sprintf("%v", statics.GetStaticValue(className, fieldName))
+			return fmt.Sprintf("%v", global.FuncGetStaticValue(className, fieldName))
 		} else {
 			if fvalue != nil {
 				switch fvalue.(type) {
@@ -92,7 +92,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 	case types.Bool:
 		// Special handling for boolean.
 		if flagStatic {
-			return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
+			return fmt.Sprintf("%v [static]", global.FuncGetStaticValue(className, fieldName))
 		} else {
 			switch field.Fvalue.(type) {
 			case bool:
@@ -115,7 +115,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 		// Special handling for non-String byte array.
 		var bytes []byte
 		if flagStatic {
-			return fmt.Sprintf("% x [static]", statics.GetStaticValue(className, fieldName))
+			return fmt.Sprintf("% x [static]", global.FuncGetStaticValue(className, fieldName))
 		} else {
 			if field.Fvalue == nil {
 				return "<ERROR nil Fvalue>"
@@ -143,7 +143,7 @@ func fmtHelper(field Field, className string, fieldName string) string {
 
 	// Default action for anything else.
 	if flagStatic {
-		return fmt.Sprintf("%v [static]", statics.GetStaticValue(className, fieldName))
+		return fmt.Sprintf("%v [static]", global.FuncGetStaticValue(className, fieldName))
 	} else {
 		return fmt.Sprintf("%v", field.Fvalue)
 	}
