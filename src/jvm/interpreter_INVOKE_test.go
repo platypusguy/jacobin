@@ -18,6 +18,7 @@ import (
 	"jacobin/src/types"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -554,6 +555,7 @@ func TestNewInvokeSpecialGmethodErrorReturn(t *testing.T) {
 // INVOKESTATIC: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
 func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 	globals.InitGlobals("test")
+	className := "jacobin/src/test/Object"
 
 	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
@@ -603,7 +605,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 
 	// INVOKESTATIC needs a parsed/loaded object in the MethArea to function
 	clData := classloader.ClData{
-		Name:      "jacobin/src/test/Object",
+		Name:      className,
 		NameIndex: CP.ClassRefs[0],
 		// Superclass:      "java/lang/Object",
 		SuperclassIndex: types.StringPoolObjectIndex,
@@ -626,7 +628,13 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 		Data:   &clData,
 	}
 
-	classloader.MethAreaInsert("jacobin/src/test/Object", &k)
+	classloader.MethAreaInsert(className, &k)
+	jlc := classloader.Jlc{
+		Lock:     sync.RWMutex{},
+		Statics:  []string{},
+		KlassPtr: nil,
+	}
+	globals.JLCmap[className] = &jlc
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -650,6 +658,7 @@ func TestNewInvokeStaticGmethodNoParams(t *testing.T) {
 // INVOKESTATIC: verify that a call to a gmethod works correctly (passing in nothing, getting a link back)
 func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 	globals.InitGlobals("test")
+	className := "jacobin/src/test/Object"
 
 	// redirect stderr so as not to pollute the test output with the expected error message
 	normalStderr := os.Stderr
@@ -678,8 +687,7 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 
 	CP.CpIndex[2] = classloader.CpEntry{Type: classloader.ClassRef, Slot: 0}
 	CP.ClassRefs = make([]uint32, 4)
-	classname := "jacobin/src/test/Object"
-	CP.ClassRefs[0] = stringPool.GetStringIndex(&classname)
+	CP.ClassRefs[0] = stringPool.GetStringIndex(&className)
 
 	CP.CpIndex[3] = classloader.CpEntry{Type: classloader.NameAndType, Slot: 0}
 	CP.NameAndTypes = make([]classloader.NameAndTypeEntry, 4)
@@ -723,7 +731,14 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 		Data:   &clData,
 	}
 
-	classloader.MethAreaInsert("jacobin/src/test/Object", &k)
+	classloader.MethAreaInsert(className, &k)
+	classloader.MethAreaInsert(className, &k)
+	jlc := classloader.Jlc{
+		Lock:     sync.RWMutex{},
+		Statics:  []string{},
+		KlassPtr: nil,
+	}
+	globals.JLCmap[className] = &jlc
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
