@@ -8,6 +8,7 @@ package object
 
 import (
 	"jacobin/src/globals"
+	"jacobin/src/statics"
 	"jacobin/src/stringPool"
 	"jacobin/src/types"
 	"path/filepath"
@@ -167,6 +168,7 @@ func _formatCycleKiller(_ int, _ string) bool {
 func TestFmtHelper(t *testing.T) {
 	globals.InitGlobals("test")
 	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+	globals.GetGlobalRef().FuncGetStaticValue = statics.GetStaticValue
 	className := filepath.FromSlash("java/lang/madeUpClass")
 	fieldName := "Fred"
 
@@ -379,6 +381,7 @@ func TestFmtHelperStringWithNilValue(t *testing.T) {
 func TestFmtHelperStaticBoolean(t *testing.T) {
 	globals.InitGlobals("test")
 	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+	globals.GetGlobalRef().FuncGetStaticValue = statics.GetStaticValue
 
 	// Test static boolean field
 	field := Field{Ftype: types.Static + types.Bool, Fvalue: true}
@@ -428,6 +431,7 @@ func TestFmtHelperBooleanUnexpectedType(t *testing.T) {
 func TestFmtHelperStaticByteArray(t *testing.T) {
 	globals.InitGlobals("test")
 	globals.GetGlobalRef().FuncThrowException = _formatCycleKiller
+	globals.GetGlobalRef().FuncGetStaticValue = statics.GetStaticValue
 
 	field := Field{Ftype: types.Static + types.ByteArray, Fvalue: []byte{1, 2, 3}}
 	result := fmtHelper(field, "TestClass", "testField")

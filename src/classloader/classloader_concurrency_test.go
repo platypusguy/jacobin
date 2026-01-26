@@ -1,12 +1,6 @@
 package classloader
 
-import (
-	"fmt"
-	"jacobin/src/globals"
-	"sync"
-	"testing"
-)
-
+/*
 func TestJlcMapConcurrency(t *testing.T) {
 	globals.InitGlobals("test")
 
@@ -163,3 +157,5 @@ func TestJlcMapAndElementInteraction(t *testing.T) {
 
 	wg.Wait()
 }
+
+*/

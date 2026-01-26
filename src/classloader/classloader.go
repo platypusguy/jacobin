@@ -175,10 +175,15 @@ var ClassesLock = sync.RWMutex{}
 
 // instances of java/lang/Class stored in global.JlcNap
 type Jlc struct {
-	lock        sync.RWMutex
-	statics     map[string]Field // all static fields
-	_klass      *ClData          // points back to the class's data in the method area
-	initialized bool             // has the class been initialized?
+	Lock     sync.RWMutex
+	Statics  []string // list of all static fields
+	KlassPtr *ClData  // points back to the class's data in the method area
+}
+
+// the static field contains field metadata and the field's value
+type StaticField struct {
+	FieldMetaData Field
+	Value         any
 }
 
 // cfe = class format error, which is the error thrown by the parser for most
@@ -577,10 +582,9 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 	}
 
 	jlc := Jlc{
-		lock:        sync.RWMutex{},
-		statics:     make(map[string]Field),
-		_klass:      nil,
-		initialized: false,
+		Lock:     sync.RWMutex{},
+		Statics:  []string{},
+		KlassPtr: nil,
 	}
 
 	if len(fullyParsedClass.fields) > 0 {
@@ -604,11 +608,11 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 			kd.Fields = append(kd.Fields, kdf)
 
 			if kdf.IsStatic {
-				jlc.statics[kdf.NameStr+kdf.DescStr] = kdf
+				jlc.Statics = append(jlc.Statics, kdf.NameStr+kdf.DescStr)
 			}
 		}
 	}
-	jlc._klass = &kd
+	jlc.KlassPtr = &kd
 
 	// insert the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
 	globals.JlcMapLock.Lock()
