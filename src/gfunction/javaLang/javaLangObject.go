@@ -18,7 +18,6 @@ import (
 	"jacobin/src/types"
 	"jacobin/src/util"
 	"strings"
-	"time"
 	"unsafe"
 )
 
@@ -49,10 +48,10 @@ func Load_Lang_Object() {
 		ghelpers.GMeth{ParamSlots: 0, GFunction: objectHashCode}
 
 	ghelpers.MethodSignatures["java/lang/Object.notify()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectNotify, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/lang/Object.notifyAll()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.JustReturn}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: objectNotifyAll, NeedsContext: true}
 
 	ghelpers.MethodSignatures["java/lang/Object.toString()Ljava/lang/String;"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: objectToString}
@@ -260,15 +259,8 @@ func objectWait(params []interface{}) interface{} {
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 
-	// Unlock object.
-	err := obj.ObjUnlock(thID)
-	if err != nil {
-		errMsg := fmt.Sprintf("objectWait: %s", err.Error())
-		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
-	}
-
 	// Set millis = sleep time in milliseconds.
-	millis := int64(1)
+	millis := int64(0) // 0 means wait indefinitely
 	if len(params) > 2 {
 		millis = params[2].(int64)
 		nanos := int64(0)
@@ -280,14 +272,69 @@ func objectWait(params []interface{}) interface{} {
 		}
 	}
 
-	// ZZZzzzzzzzzzzzzzzzzzzz .....
-	time.Sleep(time.Duration(millis) * time.Millisecond)
-
-	// Re-lock object.
-	err = obj.ObjLock(thID)
+	err := obj.ObjectWait(thID, millis)
 	if err != nil {
-		errMsg := fmt.Sprintf("objectWait: %s", err.Error())
+		if strings.Contains(err.Error(), "thread does not own lock") {
+			return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
+		}
+		// In Java, wait() can throw InterruptedException.
+		// For now, let's map other errors to IllegalMonitorStateException
+		// unless we want to support InterruptedException specifically.
+		return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
+	}
+
+	return nil
+}
+
+func objectNotify(params []interface{}) interface{} {
+	// Get frame stack.
+	fs, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := fmt.Sprintf("objectNotify: params[0] must be the frame stack, saw: %T", params[0])
 		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// Get thread ID.
+	frame := *fs.Front().Value.(*frames.Frame)
+	thID := int32(frame.Thread)
+
+	// Get the object of the synchronized method.
+	obj, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("objectNotify: params[1] must be an Object, saw: %T", params[1])
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	err := obj.ObjectNotify(thID)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
+	}
+
+	return nil
+}
+
+func objectNotifyAll(params []interface{}) interface{} {
+	// Get frame stack.
+	fs, ok := params[0].(*list.List)
+	if !ok {
+		errMsg := fmt.Sprintf("objectNotifyAll: params[0] must be the frame stack, saw: %T", params[0])
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// Get thread ID.
+	frame := *fs.Front().Value.(*frames.Frame)
+	thID := int32(frame.Thread)
+
+	// Get the object of the synchronized method.
+	obj, ok := params[1].(*object.Object)
+	if !ok {
+		errMsg := fmt.Sprintf("objectNotifyAll: params[1] must be an Object, saw: %T", params[1])
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	err := obj.ObjectNotifyAll(thID)
+	if err != nil {
+		return ghelpers.GetGErrBlk(excNames.IllegalMonitorStateException, err.Error())
 	}
 
 	return nil

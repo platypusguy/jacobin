@@ -2,10 +2,12 @@ package jvm
 
 import (
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"jacobin/src/frames"
+	"jacobin/src/globals"
 	"jacobin/src/object"
 )
 
@@ -14,6 +16,11 @@ import (
 // briefly; threads 2..8 must block until release, then each should acquire
 // and release successfully exactly once.
 func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
+	// Set JacobinName to "test" so ThrowEx returns instead of aborting
+	oldName := globals.GetGlobalRef().JacobinName
+	globals.GetGlobalRef().JacobinName = "test"
+	defer func() { globals.GetGlobalRef().JacobinName = oldName }()
+
 	// Shared object to synchronize on
 	obj := object.MakeEmptyObject()
 
@@ -53,7 +60,9 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 			push(framesArr[idx], obj)
 			got := doMonitorenter(framesArr[idx], 0)
 			if got != 1 {
-				t.Fatalf("thread %d: doMonitorenter returned %d, want 1", framesArr[idx].Thread, got)
+				// Don't use t.Fatalf in a goroutine
+				t.Errorf("thread %d: doMonitorenter returned %d, want 1", framesArr[idx].Thread, got)
+				return
 			}
 			t.Logf("thread %d acquired object-lock, will sleep 0.5s", framesArr[idx].Thread)
 			time.Sleep(500 * time.Millisecond)
@@ -64,7 +73,7 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 			push(framesArr[idx], obj)
 			got = doMonitorexit(framesArr[idx], 0)
 			if got != 1 {
-				t.Fatalf("thread %d: doMonitorexit returned %d, want 1", framesArr[idx].Thread, got)
+				t.Errorf("thread %d: doMonitorexit returned %d, want 1", framesArr[idx].Thread, got)
 			}
 			t.Logf("thread %d released object-lock", framesArr[idx].Thread)
 		}()
@@ -86,6 +95,8 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	push(holder, obj)
 	if got := doMonitorexit(holder, 0); got != 1 {
+		monitor := (*object.ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+		t.Logf("holder thread: doMonitorexit failed. monitor=%+v", monitor)
 		t.Fatalf("holder thread: doMonitorexit returned %d, want 1", got)
 	}
 
@@ -116,40 +127,39 @@ func TestDoMonitorEnterExit_EightFrames_ContentionAndHandoff(t *testing.T) {
 // Using interpreter monitor enter/exit. We preconfigure the object as fat-locked
 // by the same thread to model reentrant locking (recursion increments on reenter).
 func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
+	// Set JacobinName to "test" so ThrowEx returns instead of aborting
+	oldName := globals.GetGlobalRef().JacobinName
+	globals.GetGlobalRef().JacobinName = "test"
+	defer func() { globals.GetGlobalRef().JacobinName = oldName }()
+
 	// Create a frame representing a single Java thread
 	fr := frames.CreateFrame(8)
-	fr.Thread = 77
+	fr.Thread = 1
 	fr.ClName = "LTest;"
 	fr.MethName = "nested"
 	fr.MethType = "()V"
 
-	// Create the shared lock object and pre-inflate to a fat lock owned by this thread
 	obj := object.MakeEmptyObject()
-	// Set monitor ownership and recursion
-	obj.Monitor = &object.ObjectMonitor{Owner: int32(fr.Thread), Recursion: 0}
-	// Force mark bits to fat-locked state (lockStateFatLocked == 0b10; mask is 0b11)
-	object.SetObjectFatLocked(obj)
 
 	// Enter once (simulating the outer synchronized block)
 	push(fr, obj)
 	if got := doMonitorenter(fr, 0); got != 1 {
 		t.Fatalf("first doMonitorenter returned %d, want 1", got)
 	}
-	if obj.Monitor == nil || obj.Monitor.Owner != int32(fr.Thread) || obj.Monitor.Recursion != 1 {
-		t.Fatalf("after first enter: owner=%v rec=%v (want owner=%d rec=1)",
+	monitor := (*object.ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+	if monitor == nil || monitor.Owner != int32(fr.Thread) {
+		t.Logf("monitor: %+v", monitor)
+		t.Fatalf("after first enter: owner=%v (want owner=%d)",
 			func() any {
-				if obj.Monitor != nil {
-					return obj.Monitor.Owner
-				}
-				return nil
-			}(),
-			func() any {
-				if obj.Monitor != nil {
-					return obj.Monitor.Recursion
+				if monitor != nil {
+					return monitor.Owner
 				}
 				return nil
 			}(),
 			fr.Thread)
+	}
+	if monitor.Recursion != 1 {
+		t.Fatalf("after first enter: expected recursion=1, got %d", monitor.Recursion)
 	}
 
 	// Enter again (nested synchronized on the same lock)
@@ -157,24 +167,26 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 	if got := doMonitorenter(fr, 0); got != 1 {
 		t.Fatalf("second doMonitorenter returned %d, want 1", got)
 	}
-	if obj.Monitor == nil || obj.Monitor.Recursion != 2 {
-		t.Fatalf("after second enter: expected recursion=2, got monitor=%v rec=%d", obj.Monitor, func() int32 {
-			if obj.Monitor != nil {
-				return obj.Monitor.Recursion
+	monitor = (*object.ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+	if monitor == nil || monitor.Recursion != 2 {
+		t.Fatalf("after second enter: expected recursion=2, got monitor=%v rec=%d", monitor, func() int32 {
+			if monitor != nil {
+				return monitor.Recursion
 			}
 			return -1
 		}())
 	}
 
-	// Now unwind like exiting nested synchronized blocks: three exits total
+	// Now unwind like exiting nested synchronized blocks: TWO exits total
 	push(fr, obj)
 	if got := doMonitorexit(fr, 0); got != 1 {
 		t.Fatalf("first doMonitorexit returned %d, want 1", got)
 	}
-	if obj.Monitor == nil || obj.Monitor.Recursion != 1 {
-		t.Fatalf("after first exit: expected recursion=1, got monitor=%v rec=%d", obj.Monitor, func() int32 {
-			if obj.Monitor != nil {
-				return obj.Monitor.Recursion
+	monitor = (*object.ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+	if monitor == nil || monitor.Recursion != 1 {
+		t.Fatalf("after first exit: expected recursion=1, got monitor=%v rec=%d", monitor, func() int32 {
+			if monitor != nil {
+				return monitor.Recursion
 			}
 			return -1
 		}())
@@ -184,21 +196,7 @@ func TestDoMonitorEnterExit_NestedSynchronized_Reentrant(t *testing.T) {
 	if got := doMonitorexit(fr, 0); got != 1 {
 		t.Fatalf("second doMonitorexit returned %d, want 1", got)
 	}
-	if obj.Monitor == nil || obj.Monitor.Recursion != 0 {
-		t.Fatalf("after second exit: expected recursion=0, got monitor=%v rec=%d", obj.Monitor, func() int32 {
-			if obj.Monitor != nil {
-				return obj.Monitor.Recursion
-			}
-			return -1
-		}())
-	}
-
-	// Final exit should drop the monitor and fully unlock
-	push(fr, obj)
-	if got := doMonitorexit(fr, 0); got != 1 {
-		t.Fatalf("final doMonitorexit returned %d, want 1", got)
-	}
-	if obj.Monitor != nil {
-		t.Fatalf("expected monitor to be cleared after final exit")
+	if object.IsObjectLocked(obj) {
+		t.Fatalf("expected object to be fully unlocked after 2 exits")
 	}
 }
