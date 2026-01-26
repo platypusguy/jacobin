@@ -2169,58 +2169,6 @@ func doGetStatic(fr *frames.Frame, _ int64) int {
 		EmitTraceFieldID("GETSTATIC", className+"."+fieldName)
 	}
 
-	/*
-		clStatics, present := globals.JlcMap[className].(classloader.Jlc)
-		if !present { // if the class has not been loaded, then load it now
-			_, err := InstantiateClass(className, fr.FrameStack)
-			if err == nil {
-				clStatics = globals.JlcMap[className].(classloader.Jlc)
-			} else {
-				globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-				errMsg := fmt.Sprintf("GETSTATIC: could not find or load class %s", className)
-				status := exceptions.ThrowEx(excNames.ClassNotFoundException, errMsg, fr)
-				if status != exceptions.Caught {
-					return ERROR_OCCURRED // applies only if in test
-				}
-				return RESUME_HERE // caught
-			}
-		}
-
-		clStatics.Lock.Lock()
-		staticFields := clStatics.Statics
-		clStatics.Lock.Unlock()
-
-		staticField, exists := staticFields[field.FldName+field.FldType]
-		if !exists {
-			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-			errMsg := fmt.Sprintf("GETSTATIC: could not find static field %s in class %s",
-				className+"."+fieldName, className)
-			status := exceptions.ThrowEx(excNames.NoSuchFieldException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-
-		switch staticField.Value.(type) {
-		case bool:
-			// a boolean, which might
-			// be stored as a boolean, a byte (in an array), or int64
-			// We want all forms normalized to int64
-			value := staticField.Value.(bool)
-			staticField.Value = types.ConvertGoBoolToJavaBool(value)
-			push(fr, staticField.Value)
-		case byte:
-			value := staticField.Value.(byte)
-			staticField.Value = int64(value)
-			push(fr, staticField.Value)
-		case int:
-			value := staticField.Value.(int)
-			push(fr, int64(value))
-		default:
-			push(fr, staticField.Value)
-		} */
-
 	// was this static field previously loaded? Is so, get its location and move on.
 	prevLoaded, ok := statics.QueryStatic(className, field.FldName)
 	if !ok { // if the field is not already loaded, then
@@ -3108,7 +3056,29 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 			return RESUME_HERE // caught
 		}
 	}
+	/*
+		// for the necessary lock-able object, we use java/lang/Class instances. cf. JACOBIN-827
+		jlc, found := globals.JLCmap[className]
+		if !found {
+			globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
+			errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
+			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
+			if status != exceptions.Caught {
+				return ERROR_OCCURRED // applies only if in test
+			}
+			return RESUME_HERE // caught
+		}
 
+		var obj *object.Object
+		switch jlc.(type) {
+		case *object.Object:
+			obj = jlc.(*object.Object)
+		case *classloader.Jlc:
+			jlc = jlc.(*classloader.Jlc)
+			obj = object.MakeOneFieldObject("java/lang/Class", "data", types.Ref, jlc)
+			globals.JLCmap[className] = obj
+		}
+	*/
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots

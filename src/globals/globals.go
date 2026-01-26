@@ -135,7 +135,7 @@ var StringPoolNext uint32
 var StringPoolLock sync.RWMutex
 
 // ----- map of java/lang/Class instances for statics and instrospection
-var JlcMap map[string]any // map of FQN class names to their java/lang/Class instance
+var JLCmap map[string]any // map of FQN class names to their java/lang/Class instance
 var JlcMapLock sync.RWMutex
 
 // LoaderWg is a wait group for various channels used for parallel loading of classes.
@@ -186,7 +186,7 @@ func InitGlobals(progName string) Globals {
 	}
 
 	// ----- map of java/lang/Class instances for statics and instrospection
-	JlcMap = make(map[string]any, 2000) // map of FQN class name to its java/lang/Class instance
+	JLCmap = make(map[string]any, 2000) // map of FQN class name to its java/lang/Class instance
 
 	// ----- G function alternative processing flag
 	Galt = false

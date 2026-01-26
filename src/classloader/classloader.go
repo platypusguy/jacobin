@@ -173,7 +173,7 @@ type bootstrapMethod struct {
 
 var ClassesLock = sync.RWMutex{}
 
-// instances of java/lang/Class stored in global.JlcNap
+// instances of java/lang/Class stored in global.JLCmap
 type Jlc struct {
 	Lock     sync.RWMutex
 	Statics  []string // list of all static fields
@@ -616,7 +616,7 @@ func convertToPostableClass(fullyParsedClass *ParsedClass) ClData {
 
 	// insert the java/lang/Class mirror object into the JLCMap (for static fields access and introspection)
 	globals.JlcMapLock.Lock()
-	globals.JlcMap[fullyParsedClass.className] = &jlc
+	globals.JLCmap[fullyParsedClass.className] = &jlc
 	globals.JlcMapLock.Unlock()
 
 	kd.MethodList = make(map[string]string)
