@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 )
 
@@ -31,8 +32,10 @@ ObjectMonitor is a simple structure that holds the owner thread ID and recursion
 * Unlocking decrements recursion and only releases when recursion hits zero.
 */
 type ObjectMonitor struct {
-	Owner     int32 // thread ID of owning thread
-	Recursion int32 // recursion depth
+	Owner     int32      // thread ID of owning thread
+	Recursion int32      // recursion depth
+	mutex     sync.Mutex // used for blocking when fat locked
+	cond      *sync.Cond // used for wait/notify
 }
 
 // With regard to the layout of a created object in Jacobin, note that
@@ -43,7 +46,7 @@ type Object struct {
 	Mark       MarkWord
 	KlassName  uint32           // the index of the class name in the string pool
 	FieldTable map[string]Field // map mapping field name to field
-	Monitor    *ObjectMonitor   // synchronize use
+	Monitor    unsafe.Pointer   // *ObjectMonitor, accessed atomically
 	ThMutex    *sync.RWMutex    // non-nil ONLY for thread FieldTable processing
 }
 
@@ -53,7 +56,7 @@ type Object struct {
 // Jacobin sense and does not match HotSpot.
 type MarkWord struct {
 	Hash uint32 // contains hash code which is the lower 32 bits of the address
-	Misc uint32 //
+	Misc uint32 // Misc represents auxiliary metadata such as lock information or GC states, encoded in the MarkWord structure.
 }
 
 // We need to know the type of the field only to tell whether
@@ -69,7 +72,12 @@ type Field struct {
 // MakeEmptyObject() creates an empty basis Object. It is expected that other
 // code will fill in the Klass header field and the data fields.
 func MakeEmptyObject() *Object {
-	o := Object{}
+	m := &ObjectMonitor{
+		Owner:     -1,
+		Recursion: 0,
+	}
+	m.cond = sync.NewCond(&m.mutex)
+	o := Object{Monitor: unsafe.Pointer(m)}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
 	SetLockState(&o, lockStateUnlocked)
@@ -83,7 +91,12 @@ func MakeEmptyObject() *Object {
 
 // MakeEmptyObjectWithClassName() creates an empty Object using the passed-in class name
 func MakeEmptyObjectWithClassName(className *string) *Object {
-	o := Object{}
+	m := &ObjectMonitor{
+		Owner:     -1,
+		Recursion: 0,
+	}
+	m.cond = sync.NewCond(&m.mutex)
+	o := Object{Monitor: unsafe.Pointer(m)}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
 	SetLockState(&o, lockStateUnlocked)
@@ -293,128 +306,296 @@ func IsObjectLocked(obj *Object) bool {
 	return (obj.Mark.Misc & lockStateMask) != lockStateUnlocked
 }
 
-// Lock the object to the specified thread.
+// GetMonitor safely loads the monitor pointer
+func (obj *Object) GetMonitor() *ObjectMonitor {
+	return (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+}
+
+// getMonitor safely loads the monitor pointer
+func (obj *Object) getMonitor() *ObjectMonitor {
+	return obj.GetMonitor()
+}
+
+func (obj *Object) GetMonitorOwner() int32 {
+	monitor := (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+	return monitor.Owner
+}
+
+func (obj *Object) GetMonitorRecursion() int32 {
+	monitor := (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
+	return monitor.Recursion
+}
+
+// inflateLock inflates from thin to fat lock for recursive acquisition
+func (obj *Object) inflateLock(miscPtr *uint32, oldVal uint32, monitor *ObjectMonitor, threadID int32) bool {
+	newVal := (oldVal &^ lockStateMask) | lockStateFatLocked
+	if atomic.CompareAndSwapUint32(miscPtr, oldVal, newVal) {
+		// Successfully inflated - increment recursion
+		atomic.AddInt32(&monitor.Recursion, 1)
+		// Mutex is already locked from thin lock
+		return true
+	}
+	return false
+}
+
+// inflateAndWait inflates to fat lock and waits to acquire
+func (obj *Object) inflateAndWait(miscPtr *uint32, oldVal uint32, monitor *ObjectMonitor, threadID int32) bool {
+	newVal := (oldVal &^ lockStateMask) | lockStateFatLocked
+	if atomic.CompareAndSwapUint32(miscPtr, oldVal, newVal) {
+		// Successfully inflated - now block on mutex
+		monitor.mutex.Lock()
+
+		// After acquiring mutex, we MUST ensure the state is FatLocked
+		// because the previous owner might have set it to Unlocked upon release.
+		for {
+			mVal := atomic.LoadUint32(miscPtr)
+			nVal := (mVal &^ lockStateMask) | lockStateFatLocked
+			if atomic.CompareAndSwapUint32(miscPtr, mVal, nVal) {
+				break
+			}
+		}
+
+		atomic.StoreInt32(&monitor.Owner, threadID)
+		atomic.StoreInt32(&monitor.Recursion, 1)
+		return true
+	}
+	return false
+}
+
+// ObjLock acquires the object lock for the given thread
 func (obj *Object) ObjLock(threadID int32) error {
+	if threadID < 0 {
+		return errors.New("ObjLock: invalid thread ID")
+	}
+
 	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+	spinCount := 0
+	const maxSpins = 1000 // Prevent indefinite spinning
 
 	for {
 		miscVal := atomic.LoadUint32(miscPtr)
 		state := miscVal & lockStateMask
+		monitor := obj.getMonitor()
+
+		if monitor == nil {
+			return errors.New("ObjLock: monitor is nil")
+		}
 
 		switch state {
-
 		case lockStateUnlocked:
-			// Fast path: object is unlocked --> try to acquire thin lock
+			// Fast path: try to acquire as thin lock
 			newVal := (miscVal &^ lockStateMask) | lockStateThinLocked
 			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
-				// Lock acquired successfully as thin; record owner for potential reentry inflation
-				obj.Monitor = &ObjectMonitor{Owner: threadID, Recursion: 0}
+				// Successfully acquired thin lock
+				monitor.mutex.Lock()
+				// After acquiring mutex, we MUST check if someone inflated the lock while we were waiting for the mutex
+				curMisc := atomic.LoadUint32(miscPtr)
+				if (curMisc & lockStateMask) != lockStateThinLocked {
+					// It was inflated! We hold the mutex now, so we can just take over the fat lock
+					newVal := (curMisc &^ lockStateMask) | lockStateFatLocked
+					atomic.StoreUint32(miscPtr, newVal)
+				}
+				atomic.StoreInt32(&monitor.Owner, threadID)
+				atomic.StoreInt32(&monitor.Recursion, 1)
 				return nil
 			}
-
-			// CAS failed --> retry in next for-loop iteration
+			// CAS failed, retry
 
 		case lockStateThinLocked:
-			// If the same thread re-enters while thin-locked, inflate to fat and
-			// treat as recursive acquisition.
-			monitor := obj.Monitor
-			if monitor != nil && monitor.Owner == threadID {
-				// Attempt to atomically flip thin -> fat in the header first.
-				newVal := (miscVal &^ lockStateMask) | lockStateFatLocked
-				if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
-					// Successful inflation. Increment recursion to account for reentry.
-					atomic.AddInt32(&monitor.Recursion, 1)
+			owner := atomic.LoadInt32(&monitor.Owner)
+			if owner == threadID {
+				// Recursive acquisition - inflate to fat lock
+				if obj.inflateLock(miscPtr, miscVal, monitor, threadID) {
 					return nil
 				}
-				// If CAS failed, loop and retry as state may have changed.
-				break
+				// Inflation failed, retry
+			} else {
+				// Different thread owns lock - spin or inflate
+				spinCount++
+				if spinCount > maxSpins {
+					// Too much contention, inflate to fat lock for blocking
+					if obj.inflateAndWait(miscPtr, miscVal, monitor, threadID) {
+						return nil
+					}
+					spinCount = 0 // Reset after inflation attempt
+				}
 			}
-			// Different thread (or unknown owner) --> spin until lock becomes free
 
 		case lockStateFatLocked:
-			monitor := obj.Monitor
-			if monitor == nil {
-				// Another thread may be in the middle of releasing the fat lock.
-				// Yield and retry until state or monitor becomes consistent.
-				runtime.Gosched()
-				break
-			}
-
-			if monitor.Owner == threadID {
-				// Recursive acquisition --> increment recursion count
+			owner := atomic.LoadInt32(&monitor.Owner)
+			if owner == threadID {
+				// Recursive acquisition on fat lock
 				atomic.AddInt32(&monitor.Recursion, 1)
 				return nil
 			}
-
-			// Another thread owns the monitor --> spin and retry
+			// Another thread owns it - block on mutex
+			monitor.mutex.Lock()
+			// After acquiring mutex, verify state and set ownership
+			miscVal = atomic.LoadUint32(miscPtr)
+			newVal := (miscVal &^ lockStateMask) | lockStateFatLocked
+			atomic.StoreUint32(miscPtr, newVal)
+			atomic.StoreInt32(&monitor.Owner, threadID)
+			atomic.StoreInt32(&monitor.Recursion, 1)
+			return nil
 
 		case lockStateGCMarked:
-			// GC-marked object --> cannot lock
 			return errors.New("ObjLock: object in GC-marked state")
 		}
 
-		// Let another thread run.
-		runtime.Gosched()
-
+		// Yield to other goroutines
+		if spinCount%100 == 0 {
+			runtime.Gosched()
+		}
 	}
 }
 
-// Decrement the monitor count for the specified thread.
-// If now zero, release the object lock from the specified thread.
 func (obj *Object) ObjUnlock(threadID int32) error {
+	return obj.objUnlockInternal(threadID, false)
+}
+
+// objUnlockInternal releases the object lock.
+// If isWait is true, it means we are unlocking for Object.wait(),
+// so we don't clear the owner until we actually exit the wait.
+// Actually, in Java, wait() releases the lock entirely, so owner becomes -1.
+func (obj *Object) objUnlockInternal(threadID int32, isWait bool) error {
+	if threadID < 0 {
+		return errors.New("ObjUnlock: invalid thread ID")
+	}
+
 	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
+	monitor := obj.getMonitor()
 
-	for {
-		miscVal := atomic.LoadUint32(miscPtr)
-		state := miscVal & lockStateMask
+	if monitor == nil {
+		return errors.New("ObjUnlock: monitor is nil")
+	}
 
-		switch state {
+	owner := atomic.LoadInt32(&monitor.Owner)
+	if owner != threadID {
+		return errors.New("ObjUnlock: thread does not own lock")
+	}
 
-		case lockStateThinLocked:
-			// Thin lock --> release by setting unlocked bits
+	recursion := atomic.LoadInt32(&monitor.Recursion)
+	if recursion <= 0 {
+		return errors.New("ObjUnlock: lock not held")
+	}
+
+	// Decrement recursion count
+	newRecursion := atomic.AddInt32(&monitor.Recursion, -1)
+
+	if newRecursion == 0 {
+		// Fully releasing the lock
+		for {
+			miscVal := atomic.LoadUint32(miscPtr)
+			// Release fat lock or thin lock
 			newVal := (miscVal &^ lockStateMask) | lockStateUnlocked
+
 			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
-				// Clear any thin-owner tracking to avoid stale ownership
-				obj.Monitor = nil
-				return nil
+				break
 			}
-			// CAS failed --> retry
-
-		case lockStateFatLocked:
-			monitor := obj.Monitor
-			if monitor == nil {
-				return errors.New("ObjUnlock: fat lock exists but monitor is nil")
-			}
-
-			if monitor.Owner != threadID {
-				return errors.New("ObjUnlock: current thread does not own the monitor")
-			}
-
-			rec := atomic.LoadInt32(&monitor.Recursion)
-			if rec > 0 {
-				// Recursive lock --> decrement recursion count
-				atomic.AddInt32(&monitor.Recursion, -1)
-				return nil
-			}
-
-			// Last unlock --> release fat lock.
-			// First flip state to unlocked so contenders won't observe fat+nil.
-			atomic.StoreUint32(miscPtr, (miscVal&^lockStateMask)|lockStateUnlocked)
-			// Then clear the monitor, but only if it hasn't been replaced by a contender
-			// that acquired the lock immediately after we marked it unlocked.
-			if obj.Monitor == monitor {
-				obj.Monitor = nil
-			}
-			return nil
-
-		case lockStateUnlocked:
-			return errors.New("ObjUnlock: object is already unlocked")
-
-		case lockStateGCMarked:
-			return errors.New("ObjUnlock: object in GC-marked state")
+			// If CAS failed, it might be because someone else inflated it or something.
+			// Retry until we successfully set it to Unlocked.
 		}
 
-		// Yield CPU and retry if CAS failed or lock not available
-		runtime.Gosched()
+		// MUST store -1 AFTER setting state to Unlocked, to avoid race in doMonitorexit checks
+		atomic.StoreInt32(&monitor.Owner, -1)
+		if !isWait {
+			monitor.mutex.Unlock() // Always unlock mutex on final release
+		}
 	}
+	// else: still recursively held, just decremented count
+
+	return nil
+}
+
+// ObjectWait implements java.lang.Object.wait()
+func (obj *Object) ObjectWait(threadID int32, millis int64) error {
+	monitor := obj.getMonitor()
+	if monitor == nil {
+		return errors.New("ObjectWait: monitor is nil")
+	}
+
+	owner := atomic.LoadInt32(&monitor.Owner)
+	if owner != threadID {
+		return errors.New("ObjectWait: thread does not own lock")
+	}
+
+	savedRecursion := atomic.LoadInt32(&monitor.Recursion)
+
+	// In Java, wait() fully releases the lock.
+	// We call objUnlockInternal enough times to reach recursion 0.
+	// The last call will keep the mutex locked if we pass isWait=true.
+	for i := int32(0); i < savedRecursion-1; i++ {
+		if err := obj.objUnlockInternal(threadID, false); err != nil {
+			return err
+		}
+	}
+	if err := obj.objUnlockInternal(threadID, true); err != nil {
+		return err
+	}
+
+	// Now we wait on the condition variable.
+	// monitor.mutex is STILL LOCKED here because of isWait=true.
+
+	if millis > 0 {
+		timeout := false
+		timer := time.AfterFunc(time.Duration(millis)*time.Millisecond, func() {
+			monitor.mutex.Lock()
+			timeout = true
+			monitor.cond.Broadcast() // Wake up to check timeout
+			monitor.mutex.Unlock()
+		})
+
+		for !timeout {
+			monitor.cond.Wait()
+			// If we are here, we were either signaled OR the timer fired.
+			if timer.Stop() {
+				// We were signaled before timeout.
+				break
+			}
+			// If Stop() returned false, timer already fired.
+			// timeout will be true next iteration.
+		}
+	} else {
+		monitor.cond.Wait()
+	}
+	monitor.mutex.Unlock()
+
+	// Re-acquire the lock with the same recursion level.
+	// We MUST re-acquire the first lock (which acquires the mutex)
+	// and then just increment recursion for the rest, because
+	// ObjLock(threadID) would try to lock the mutex again if we called it multiple times.
+	if err := obj.ObjLock(threadID); err != nil {
+		return err
+	}
+	for i := int32(1); i < savedRecursion; i++ {
+		atomic.AddInt32(&monitor.Recursion, 1)
+	}
+
+	return nil
+}
+
+// ObjectNotify implements java.lang.Object.notify()
+func (obj *Object) ObjectNotify(threadID int32) error {
+	monitor := obj.getMonitor()
+	if monitor == nil {
+		return errors.New("ObjectNotify: monitor is nil")
+	}
+	if atomic.LoadInt32(&monitor.Owner) != threadID {
+		return errors.New("ObjectNotify: thread does not own lock")
+	}
+	monitor.cond.Signal()
+	return nil
+}
+
+// ObjectNotifyAll implements java.lang.Object.notifyAll()
+func (obj *Object) ObjectNotifyAll(threadID int32) error {
+	monitor := obj.getMonitor()
+	if monitor == nil {
+		return errors.New("ObjectNotifyAll: monitor is nil")
+	}
+	if atomic.LoadInt32(&monitor.Owner) != threadID {
+		return errors.New("ObjectNotifyAll: thread does not own lock")
+	}
+	monitor.cond.Broadcast()
+	return nil
 }

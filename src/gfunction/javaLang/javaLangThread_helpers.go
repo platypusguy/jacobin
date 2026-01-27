@@ -166,9 +166,9 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 	}
 
 	start := time.Now().UnixMilli()
+	thID := int32(waitingThread.FieldTable["ID"].Fvalue.(int64))
 
 	for {
-
 		// Get current target thread state.
 		stateVal := GetThreadState(targetThread)
 
@@ -185,12 +185,33 @@ func waitForTermination(waitingThread, targetThread *object.Object, maxTime int6
 			)
 		}
 
-		// Yield to allow target thread to run
-		runtime.Gosched()
-
 		// Timeout -> normal Java behavior
-		if time.Now().UnixMilli()-start >= maxTime {
+		now := time.Now().UnixMilli()
+		if now-start >= maxTime {
 			return nil
+		}
+
+		// Use wait/notify for better efficiency.
+		// threadJoin calls wait() on the thread object itself.
+		// We lock targetThread and wait on it.
+		if err := targetThread.ObjLock(thID); err == nil {
+			// Double check state after acquiring lock to avoid race with TERMINATED and notifyAll
+			if GetThreadState(targetThread) == TERMINATED {
+				_ = targetThread.ObjUnlock(thID)
+				return nil
+			}
+
+			remaining := maxTime - (now - start)
+			if remaining < 0 {
+				remaining = 0
+			}
+			// ObjectWait(thID, 0) waits indefinitely, which is fine if maxTime is very large.
+			// But here we want to wait at most 'remaining'.
+			_ = targetThread.ObjectWait(thID, remaining)
+			_ = targetThread.ObjUnlock(thID)
+		} else {
+			// Fallback to polling if locking fails (shouldn't happen)
+			runtime.Gosched()
 		}
 	}
 }

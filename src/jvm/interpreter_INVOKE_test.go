@@ -732,7 +732,6 @@ func TestNewInvokeStaticGmethodErrorReturn(t *testing.T) {
 	}
 
 	classloader.MethAreaInsert(className, &k)
-	classloader.MethAreaInsert(className, &k)
 	jlc := classloader.Jlc{
 		Lock:     sync.RWMutex{},
 		Statics:  []string{},

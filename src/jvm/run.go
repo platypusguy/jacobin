@@ -171,11 +171,13 @@ func RunJavaThread(args []any) {
 
 	// The End.
 	javaLang.SetThreadState(t, javaLang.TERMINATED)
-	if ret != nil {
-		errMsg := "threadRun: SetThreadState(TERMINATED) failed"
-		exceptions.ThrowEx(excNames.VirtualMachineError, errMsg, nil)
-	}
 
+	// Notify all threads waiting for this thread to terminate (e.g., in Thread.join()).
+	// Per JVM spec, this is equivalent to t.notifyAll(), which requires holding the lock on t.
+	if err := t.ObjLock(int32(tID)); err == nil {
+		_ = t.ObjectNotifyAll(int32(tID))
+		_ = t.ObjUnlock(int32(tID))
+	}
 }
 
 // multiply two numbers
