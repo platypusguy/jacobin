@@ -615,8 +615,10 @@ func TestLxor(t *testing.T) {
 
 // MONITORENTER: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorEnter(t *testing.T) {
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.MONITORENTER)
-	push(&f, &f) // push any value and make sure it gets popped off
+	obj := object.MakeEmptyObject()
+	push(&f, obj) // push an object and make sure it gets popped off
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
@@ -737,8 +739,11 @@ func TestMonitorEnter_Success_LocksObject(t *testing.T) {
 
 // MONITOREXIT: The JDK JVM does not implement this, nor do we. So just pop the ref off stack
 func TestMonitorExit(t *testing.T) {
+	globals.InitGlobals("test")
 	f := newFrame(opcodes.MONITOREXIT)
-	push(&f, &f) // push any value and make sure it gets popped off
+	obj := object.MakeEmptyObject()
+	_ = obj.ObjLock(int32(f.Thread))
+	push(&f, obj) // push a locked object and make sure it gets popped off
 
 	fs := frames.CreateFrameStack()
 	fs.PushFront(&f) // push the new frame
