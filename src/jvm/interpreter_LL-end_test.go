@@ -1161,7 +1161,6 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	globals.InitGlobals("testWithoutShutdown")
 	javaLang.InitializeGlobalThreadGroups()
 	gl := globals.GetGlobalRef()
-
 	gl.FuncInstantiateClass = InstantiateClass
 	gl.FuncThrowException = exceptions.ThrowExNil
 	gl.FuncFillInStackTrace = javaLang.FillInStackTrace
@@ -1195,6 +1194,7 @@ func TestPopWithStackUnderflow(t *testing.T) {
 	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
 
+	globals.TraceVerbose = true // make sure we output the diagnostic message
 	f = frames.CreateFrame(1)
 	f.ClName = "java/lang/Object"
 	f.MethName = "wait"
@@ -1383,6 +1383,8 @@ func TestPushWithStackOverflow(t *testing.T) {
 	javaLang.ThreadInitWithName(params)
 	javaLang.RegisterThread(thObj) // put into globals.Threads map
 	thID := int(thObj.FieldTable["ID"].Fvalue.(int64))
+
+	globals.TraceVerbose = true // make sure we output the diagnostic message
 	f = frames.CreateFrame(1)
 	f.ClName = "java/lang/Object"
 	f.MethName = "wait"
