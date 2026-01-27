@@ -3057,58 +3057,6 @@ func doInvokestatic(fr *frames.Frame, _ int64) int {
 		}
 	}
 
-	// for the necessary lock-able object, we use java/lang/Class instances. cf. JACOBIN-827
-	globals.JlcMapLock.RLock()
-	jlc, found := globals.JLCmap[className]
-	globals.JlcMapLock.RUnlock()
-	if !found {
-		globals.GetGlobalRef().ErrorGoStack = string(debug.Stack())
-		errMsg := fmt.Sprintf("INVOKESTATIC: error running initializer block in %s", fqn)
-		status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
-		if status != exceptions.Caught {
-			return ERROR_OCCURRED // applies only if in test
-		}
-		return RESUME_HERE // caught
-	}
-
-	// Synchronized method?
-	if fr.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
-		var obj *object.Object
-		switch jlc.(type) {
-		case *object.Object:
-			// Not the first time for this class name.
-			// Fetch the lockable object.
-			obj = jlc.(*object.Object)
-		case *classloader.Jlc:
-			// First time for this class name.
-			// Convert JLCmap data to the lockable object.
-			jlc = jlc.(*classloader.Jlc)
-			obj = object.MakeOneFieldObject(className, "data", types.Ref, jlc)
-			globals.JlcMapLock.Lock()
-			globals.JLCmap[className] = obj
-			globals.JlcMapLock.Unlock()
-		}
-
-		// Lock the class-object.
-		err := obj.ObjLock(int32(fr.Thread))
-		if err != nil {
-			fqn := fr.ClName + "." + fr.MethName + fr.MethType
-			errMsg := fmt.Sprintf("INVOKESTATIC: ObjLock error, PC: %d, FQN: %s", fr.PC, fqn)
-			status := exceptions.ThrowEx(excNames.ClassNotLoadedException, errMsg, fr)
-			if status != exceptions.Caught {
-				return ERROR_OCCURRED // applies only if in test
-			}
-			return RESUME_HERE // caught
-		}
-		if globals.TraceInst {
-			traceInfo := fmt.Sprintf("\tINVOKESTATIC: Locked class-object %s", className)
-			trace.Trace(traceInfo)
-		}
-
-		// Save class-name object pointer in the frame for return and catch-frame processing.
-		fr.ObjSync = obj
-	}
-
 	if mtEntry.MType == 'G' {
 		gmethData := mtEntry.Meth.(ghelpers.GMeth)
 		paramCount := gmethData.ParamSlots

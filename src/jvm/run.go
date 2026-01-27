@@ -321,31 +321,40 @@ func createAndInitNewFrame(
 		fram.Locals = append(fram.Locals, int64(0))
 	}
 
-	// if includeObjectRef is true then objectRef != nil.
-	// Insert it in the local[0]
-	// This is used in invokevirtual, invokespecial, and invokeinterface.
 	destLocal := 0
 	if includeObjectRef {
-		fram.Locals[0] = pop(f)
+		// Since includeObjectRef is true, this is a non-static case: invokevirtual, invokespecial, and invokeinterface.
+		obj := pop(f).(*object.Object)
+		fram.Locals[0] = obj
 		fram.Locals = append(fram.Locals, int64(0)) // add the slot taken up by objectRef
 		destLocal = 1                               // The first parameter starts at index 1
 		lenLocals++                                 // There is 1 more local needed
-		if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
-			obj := fram.Locals[0].(*object.Object)
-			fram.ObjSync = obj
-			err := obj.ObjLock(int32(fram.Thread))
-			if err != nil {
-				fqn := fram.ClName + "." + fram.MethName + fram.MethType
-				errMsg := fmt.Sprintf("createAndInitNewFrame: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
-				return nil, errors.New(errMsg)
-			}
-			if globals.TraceInst {
-				traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: Locked object %s",
-					object.GoStringFromStringPoolIndex(obj.KlassName))
-				trace.Trace(traceInfo)
-			}
+
+		// Lock the instance-object.
+		err := obj.ObjLock(int32(fram.Thread))
+		if err != nil {
+			fqn := fram.ClName + "." + fram.MethName + fram.MethType
+			errMsg := fmt.Sprintf("createAndInitNewFrame: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+			return nil, errors.New(errMsg)
+		}
+		if globals.TraceInst {
+			traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: Locked class-object %s", fram.ClName)
+			trace.Trace(traceInfo)
+		}
+
+		// Save class-name object pointer in the frame for return and catch-frame processing.
+		fram.ObjSync = obj
+
+	} else {
+		// Since includeObjectRef is false, this is a static case: invokestatic.
+		// Check for synchronized method and lock the class object if so.
+		err := CkSyncStaticMeth(fram)
+		if err != nil {
+			return nil, err
 		}
 	}
+
+	// Both static and non-static cases meet here.
 
 	if globals.TraceVerbose {
 		traceInfo := fmt.Sprintf("\tcreateAndInitNewFrame: lenArgList=%d, lenLocals=%d, stackSize=%d",
@@ -368,4 +377,60 @@ func createAndInitNewFrame(
 	fram.TOS = -1
 
 	return fram, nil
+}
+
+// Check a synchronized method
+func CkSyncStaticMeth(fram *frames.Frame) error {
+
+	// Synchronized method?
+	if fram.AccessFlags&classloader.ACC_SYNCHRONIZED > 0 {
+
+		// Look for the synchronized static entry in the JLCmap.
+		globals.JlcMapLock.RLock()
+		jlc, found := globals.JLCmap[fram.ClName]
+		globals.JlcMapLock.RUnlock()
+		if !found {
+			fqn := fram.ClName + "." + fram.MethName + fram.MethType
+			errMsg := fmt.Sprintf("CkSyncStaticMeth: error running initializer block in %s", fqn)
+			return errors.New(errMsg)
+		}
+
+		// Do first-time processing if necessary.
+		var obj *object.Object
+		switch jlc.(type) {
+		case *object.Object:
+			// Not the first time for this class name.
+			// Fetch the lockable object.
+			globals.JlcMapLock.RLock()
+			obj = jlc.(*object.Object)
+			globals.JlcMapLock.RUnlock()
+		case *classloader.Jlc:
+			// First time for this class name.
+			// Convert JLCmap data to the lockable object.
+			jlc = jlc.(*classloader.Jlc)
+			obj = object.MakeOneFieldObject(fram.ClName, "data", types.Ref, jlc)
+			globals.JlcMapLock.Lock()
+			globals.JLCmap[fram.ClName] = obj
+			globals.JlcMapLock.Unlock()
+		}
+
+		// Lock the class-object.
+		err := obj.ObjLock(int32(fram.Thread))
+		if err != nil {
+			fqn := fram.ClName + "." + fram.MethName + fram.MethType
+			errMsg := fmt.Sprintf("CkSyncStaticMeth: ObjLock error, PC: %d, FQN: %s", fram.PC, fqn)
+			return errors.New(errMsg)
+		}
+		if globals.TraceInst {
+			traceInfo := fmt.Sprintf("\tCkSyncStaticMeth: Locked class-object %s", fram.ClName)
+			trace.Trace(traceInfo)
+		}
+
+		// Save class-name object pointer in the frame for return and catch-frame processing.
+		fram.ObjSync = obj
+	}
+
+	// Success.
+	return nil
+
 }

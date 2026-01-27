@@ -8,6 +8,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"jacobin/src/globals"
 	"jacobin/src/stringPool"
 	"jacobin/src/trace"
@@ -516,7 +517,7 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 
 	owner := atomic.LoadInt32(&monitor.Owner)
 	if owner != threadID {
-		return errors.New("ObjectWait: thread does not own lock")
+		return errors.New(fmt.Sprintf("ObjectWait: thread %d does not own lock, owner: %d", threadID, owner))
 	}
 
 	savedRecursion := atomic.LoadInt32(&monitor.Recursion)
@@ -580,8 +581,9 @@ func (obj *Object) ObjectNotify(threadID int32) error {
 	if monitor == nil {
 		return errors.New("ObjectNotify: monitor is nil")
 	}
-	if atomic.LoadInt32(&monitor.Owner) != threadID {
-		return errors.New("ObjectNotify: thread does not own lock")
+	owner := atomic.LoadInt32(&monitor.Owner)
+	if owner != threadID {
+		return errors.New(fmt.Sprintf("ObjectNotify: thread %d does not own lock, owner: %d", threadID, owner))
 	}
 	monitor.cond.Signal()
 	return nil
@@ -593,8 +595,9 @@ func (obj *Object) ObjectNotifyAll(threadID int32) error {
 	if monitor == nil {
 		return errors.New("ObjectNotifyAll: monitor is nil")
 	}
-	if atomic.LoadInt32(&monitor.Owner) != threadID {
-		return errors.New("ObjectNotifyAll: thread does not own lock")
+	owner := atomic.LoadInt32(&monitor.Owner)
+	if owner != threadID {
+		return errors.New(fmt.Sprintf("ObjectNotifyAll: thread %d does not own lock, owner: %d", threadID, owner))
 	}
 	monitor.cond.Broadcast()
 	return nil
