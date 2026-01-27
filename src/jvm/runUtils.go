@@ -122,76 +122,76 @@ func convertInterfaceToInt64(arg interface{}) int64 {
 
 // pop from the operand stack.
 func pop(f *frames.Frame) interface{} {
-	if globals.TraceVerbose {
-		var value interface{}
+	// if globals.TraceVerbose {
+	var value interface{}
 
-		if f.TOS == -1 {
-			errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s%s",
-				util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType)
-			status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
-			if status != exceptions.Caught {
-				return nil // applies only if in test
-			}
-		} else {
-			value = f.OpStack[f.TOS]
+	if f.TOS == -1 {
+		errMsg := fmt.Sprintf("stack underflow in pop() in %s.%s%s",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType)
+		status := exceptions.ThrowEx(excNames.InternalException, errMsg, f)
+		if status != exceptions.Caught {
+			return nil // applies only if in test
 		}
+	} else {
+		value = f.OpStack[f.TOS]
+	}
 
-		// we show trace info of the TOS *before* we change its value--
-		// all traces show TOS before the instruction is executed.
-		if globals.TraceVerbose {
-			var traceInfo string
-			if f.TOS == -1 {
-				traceInfo = fmt.Sprintf("%74s", "POP           TOS:  -")
+	// we show trace info of the TOS *before* we change its value--
+	// all traces show TOS before the instruction is executed.
+	if globals.TraceVerbose {
+		var traceInfo string
+		if f.TOS == -1 {
+			traceInfo = fmt.Sprintf("%74s", "POP           TOS:  -")
+			trace.Trace(traceInfo)
+		} else {
+			if value == nil {
+				traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+					fmt.Sprintf("%3d <nil>", f.TOS)
 				trace.Trace(traceInfo)
 			} else {
-				if value == nil {
+				switch value.(type) {
+				case *object.Object:
+					obj := value.(*object.Object)
+					TraceObject(f, "POP", obj)
+				case *[]uint8:
+					strPtr := value.(*[]byte)
+					str := string(*strPtr)
 					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-						fmt.Sprintf("%3d <nil>", f.TOS)
+						fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
 					trace.Trace(traceInfo)
-				} else {
-					switch value.(type) {
-					case *object.Object:
-						obj := value.(*object.Object)
-						TraceObject(f, "POP", obj)
-					case *[]uint8:
-						strPtr := value.(*[]byte)
-						str := string(*strPtr)
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
-						trace.Trace(traceInfo)
-					case []uint8:
-						bytes := value.([]byte)
-						str := string(bytes)
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
-						trace.Trace(traceInfo)
-					case []types.JavaByte:
-						bytes := value.([]types.JavaByte)
-						str := object.GoStringFromJavaByteArray(bytes)
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
-						trace.Trace(traceInfo)
-					default:
-						traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
-							fmt.Sprintf("%3d %T %v", f.TOS, value, value)
-						trace.Trace(traceInfo)
-					}
+				case []uint8:
+					bytes := value.([]byte)
+					str := string(bytes)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+					trace.Trace(traceInfo)
+				case []types.JavaByte:
+					bytes := value.([]types.JavaByte)
+					str := object.GoStringFromJavaByteArray(bytes)
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
+					trace.Trace(traceInfo)
+				default:
+					traceInfo = fmt.Sprintf("%74s", "POP           TOS:") +
+						fmt.Sprintf("%3d %T %v", f.TOS, value, value)
+					trace.Trace(traceInfo)
 				}
 			}
 		}
-
-		f.TOS -= 1 // adjust TOS
-		if globals.TraceVerbose {
-			LogTraceStack(f)
-		} // trace the resultant stack
-
-		// Return value to caller.
-		return value
-	} else {
-		value := f.OpStack[f.TOS]
-		f.TOS -= 1
-		return value
 	}
+
+	f.TOS -= 1 // adjust TOS
+	if globals.TraceVerbose {
+		LogTraceStack(f)
+	} // trace the resultant stack
+
+	// Return value to caller.
+	return value
+	// } else {
+	// 	value := f.OpStack[f.TOS]
+	// 	f.TOS -= 1
+	// 	return value
+	// }
 
 }
 
@@ -226,77 +226,77 @@ func peek(f *frames.Frame) interface{} {
 
 // push onto the operand stack
 func push(f *frames.Frame, x interface{}) {
-	if globals.TraceVerbose {
-		if f.TOS == len(f.OpStack)-1 {
-			errMsg := fmt.Sprintf("in %s.%s%s, exceeded op stack size of %d",
-				util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType, len(f.OpStack))
-			status := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
-			if status != exceptions.Caught {
-				return // applies only if in test
-			}
+	// if globals.TraceVerbose {
+	if f.TOS == len(f.OpStack)-1 {
+		errMsg := fmt.Sprintf("in %s.%s%s, exceeded op stack size of %d",
+			util.ConvertInternalClassNameToUserFormat(f.ClName), f.MethName, f.MethType, len(f.OpStack))
+		status := exceptions.ThrowEx(excNames.StackOverflowError, errMsg, f)
+		if status != exceptions.Caught {
+			return // applies only if in test
 		}
+	}
 
-		// we show trace info of the TOS *before* we change its value--
-		// all traces show TOS before the instruction is executed.
-		if globals.TraceVerbose {
-			var traceInfo string
+	// we show trace info of the TOS *before* we change its value--
+	// all traces show TOS before the instruction is executed.
+	if globals.TraceVerbose {
+		var traceInfo string
 
-			if f.TOS == -1 {
-				traceInfo = fmt.Sprintf("%77s", "PUSH          TOS:  -")
+		if f.TOS == -1 {
+			traceInfo = fmt.Sprintf("%77s", "PUSH          TOS:  -")
+			trace.Trace(traceInfo)
+		} else {
+			if x == nil {
+				traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+					fmt.Sprintf("%3d <nil>", f.TOS)
 				trace.Trace(traceInfo)
 			} else {
-				if x == nil {
+				if x == object.Null {
 					traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
-						fmt.Sprintf("%3d <nil>", f.TOS)
+						fmt.Sprintf("%3d null", f.TOS)
 					trace.Trace(traceInfo)
 				} else {
-					if x == object.Null {
+					switch x.(type) {
+					case *object.Object:
+						obj := x.(*object.Object)
+						TraceObject(f, "PUSH", obj)
+					case *[]uint8:
+						strPtr := x.(*[]byte)
+						str := string(*strPtr)
 						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
-							fmt.Sprintf("%3d null", f.TOS)
+							fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
 						trace.Trace(traceInfo)
-					} else {
-						switch x.(type) {
-						case *object.Object:
-							obj := x.(*object.Object)
-							TraceObject(f, "PUSH", obj)
-						case *[]uint8:
-							strPtr := x.(*[]byte)
-							str := string(*strPtr)
-							traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
-								fmt.Sprintf("%3d *[]byte: %-10s", f.TOS, str)
-							trace.Trace(traceInfo)
-						case []uint8:
-							bytes := x.([]byte)
-							str := string(bytes)
-							traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
-								fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
-							trace.Trace(traceInfo)
-						case []types.JavaByte:
-							bytes := x.([]types.JavaByte)
-							str := object.GoStringFromJavaByteArray(bytes)
-							traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
-								fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
-							trace.Trace(traceInfo)
-						default:
-							traceInfo = fmt.Sprintf("%56s", " ") +
-								fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
-							trace.Trace(traceInfo)
-						}
+					case []uint8:
+						bytes := x.([]byte)
+						str := string(bytes)
+						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+							fmt.Sprintf("%3d []byte: %-10s", f.TOS, str)
+						trace.Trace(traceInfo)
+					case []types.JavaByte:
+						bytes := x.([]types.JavaByte)
+						str := object.GoStringFromJavaByteArray(bytes)
+						traceInfo = fmt.Sprintf("%74s", "PUSH          TOS:") +
+							fmt.Sprintf("%3d []javaByte: %-10s", f.TOS, str)
+						trace.Trace(traceInfo)
+					default:
+						traceInfo = fmt.Sprintf("%56s", " ") +
+							fmt.Sprintf("PUSH          TOS:%3d %T %v", f.TOS, x, x)
+						trace.Trace(traceInfo)
 					}
 				}
 			}
 		}
-
-		// the actual push
-		f.TOS += 1
-		f.OpStack[f.TOS] = x
-		if globals.TraceVerbose {
-			LogTraceStack(f)
-		} // trace the resultant stack
-	} else { // no tracing and no checking of stack size -- fastest (and the default)
-		f.TOS += 1
-		f.OpStack[f.TOS] = x
 	}
+
+	// the actual push
+	f.TOS += 1
+	f.OpStack[f.TOS] = x
+	if globals.TraceVerbose {
+		LogTraceStack(f)
+	} // trace the resultant stack
+	// } else { // no tracing and no checking of stack size -- fastest (and the default)
+	// 	f.TOS += 1
+	// 	f.OpStack[f.TOS] = x
+	// }
 }
 
 // determines whether classA is a subset of classB, using the stringpool indices that point to the class names
