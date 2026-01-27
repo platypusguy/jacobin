@@ -32,6 +32,9 @@ ObjectMonitor is a simple structure that holds the owner thread ID and recursion
 * Fat lock tracks the owning thread and recursion count.
 * Unlocking decrements recursion and only releases when recursion hits zero.
 */
+
+const MONITOR_OWNER_NONE = -1
+
 type ObjectMonitor struct {
 	Owner     int32      // thread ID of owning thread
 	Recursion int32      // recursion depth
@@ -74,7 +77,7 @@ type Field struct {
 // code will fill in the Klass header field and the data fields.
 func MakeEmptyObject() *Object {
 	m := &ObjectMonitor{
-		Owner:     -1,
+		Owner:     MONITOR_OWNER_NONE,
 		Recursion: 0,
 	}
 	m.cond = sync.NewCond(&m.mutex)
@@ -93,7 +96,7 @@ func MakeEmptyObject() *Object {
 // MakeEmptyObjectWithClassName() creates an empty Object using the passed-in class name
 func MakeEmptyObjectWithClassName(className *string) *Object {
 	m := &ObjectMonitor{
-		Owner:     -1,
+		Owner:     MONITOR_OWNER_NONE,
 		Recursion: 0,
 	}
 	m.cond = sync.NewCond(&m.mutex)
@@ -303,25 +306,24 @@ func SetObjectFatLocked(obj *Object) {
 	SetLockState(obj, lockStateFatLocked)
 }
 
+// IsObjectLocked Return true is some thread currently has locked the object; else return false.
 func IsObjectLocked(obj *Object) bool {
 	return (obj.Mark.Misc & lockStateMask) != lockStateUnlocked
 }
 
-// GetMonitor safely loads the monitor pointer
+// GetMonitor return the monitor to caller
 func (obj *Object) GetMonitor() *ObjectMonitor {
 	return (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
 }
 
-// getMonitor safely loads the monitor pointer
-func (obj *Object) getMonitor() *ObjectMonitor {
-	return obj.GetMonitor()
-}
-
+// GetMonitorOwner retrieves the thread ID of the monitor owner for the object.
+// Returns MONITOR_OWNER_NONE if no thread owns the monitor.
 func (obj *Object) GetMonitorOwner() int32 {
 	monitor := (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
 	return monitor.Owner
 }
 
+// GetMonitorRecursion retrieves the recursion depth of the monitor associated with the object.
 func (obj *Object) GetMonitorRecursion() int32 {
 	monitor := (*ObjectMonitor)(atomic.LoadPointer(&obj.Monitor))
 	return monitor.Recursion
@@ -339,7 +341,7 @@ func (obj *Object) inflateLock(miscPtr *uint32, oldVal uint32, monitor *ObjectMo
 	return false
 }
 
-// inflateAndWait inflates to fat lock and waits to acquire
+// inflateAndWait attempts to transition the lock from thin to fat lock and waits until the monitor mutex is acquired.
 func (obj *Object) inflateAndWait(miscPtr *uint32, oldVal uint32, monitor *ObjectMonitor, threadID int32) bool {
 	newVal := (oldVal &^ lockStateMask) | lockStateFatLocked
 	if atomic.CompareAndSwapUint32(miscPtr, oldVal, newVal) {
@@ -356,10 +358,14 @@ func (obj *Object) inflateAndWait(miscPtr *uint32, oldVal uint32, monitor *Objec
 			}
 		}
 
+		//
 		atomic.StoreInt32(&monitor.Owner, threadID)
 		atomic.StoreInt32(&monitor.Recursion, 1)
+
 		return true
 	}
+
+	// Failed to inflate.
 	return false
 }
 
@@ -376,7 +382,7 @@ func (obj *Object) ObjLock(threadID int32) error {
 	for {
 		miscVal := atomic.LoadUint32(miscPtr)
 		state := miscVal & lockStateMask
-		monitor := obj.getMonitor()
+		monitor := obj.GetMonitor()
 
 		if monitor == nil {
 			return errors.New("ObjLock: monitor is nil")
@@ -457,14 +463,14 @@ func (obj *Object) ObjUnlock(threadID int32) error {
 // objUnlockInternal releases the object lock.
 // If isWait is true, it means we are unlocking for Object.wait(),
 // so we don't clear the owner until we actually exit the wait.
-// Actually, in Java, wait() releases the lock entirely, so owner becomes -1.
+// Actually, in Java, wait() releases the lock entirely, so owner becomes 0.
 func (obj *Object) objUnlockInternal(threadID int32, isWait bool) error {
 	if threadID < 0 {
 		return errors.New("ObjUnlock: invalid thread ID")
 	}
 
 	miscPtr := (*uint32)(unsafe.Pointer(&obj.Mark.Misc))
-	monitor := obj.getMonitor()
+	monitor := obj.GetMonitor()
 
 	if monitor == nil {
 		return errors.New("ObjUnlock: monitor is nil")
@@ -497,8 +503,8 @@ func (obj *Object) objUnlockInternal(threadID int32, isWait bool) error {
 			// Retry until we successfully set it to Unlocked.
 		}
 
-		// MUST store -1 AFTER setting state to Unlocked, to avoid race in doMonitorexit checks
-		atomic.StoreInt32(&monitor.Owner, -1)
+		// MUST store 0 AFTER setting state to Unlocked, to avoid race in doMonitorexit checks
+		atomic.StoreInt32(&monitor.Owner, MONITOR_OWNER_NONE)
 		if !isWait {
 			monitor.mutex.Unlock() // Always unlock mutex on final release
 		}
@@ -510,7 +516,7 @@ func (obj *Object) objUnlockInternal(threadID int32, isWait bool) error {
 
 // ObjectWait implements java.lang.Object.wait()
 func (obj *Object) ObjectWait(threadID int32, millis int64) error {
-	monitor := obj.getMonitor()
+	monitor := obj.GetMonitor()
 	if monitor == nil {
 		return errors.New("ObjectWait: monitor is nil")
 	}
@@ -577,7 +583,7 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 
 // ObjectNotify implements java.lang.Object.notify()
 func (obj *Object) ObjectNotify(threadID int32) error {
-	monitor := obj.getMonitor()
+	monitor := obj.GetMonitor()
 	if monitor == nil {
 		return errors.New("ObjectNotify: monitor is nil")
 	}
@@ -591,7 +597,7 @@ func (obj *Object) ObjectNotify(threadID int32) error {
 
 // ObjectNotifyAll implements java.lang.Object.notifyAll()
 func (obj *Object) ObjectNotifyAll(threadID int32) error {
-	monitor := obj.getMonitor()
+	monitor := obj.GetMonitor()
 	if monitor == nil {
 		return errors.New("ObjectNotifyAll: monitor is nil")
 	}
