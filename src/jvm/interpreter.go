@@ -3847,7 +3847,7 @@ func doMonitorenter(fr *frames.Frame, _ int64) int {
 	// Get object reference from stack.
 	obj, ok := pop(fr).(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("MONITORENTRY: expected a non-object but encountered: %v", obj)
+		errMsg := fmt.Sprintf("MONITORENTRY: expected an object but encountered: %v", obj)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
@@ -3921,7 +3921,7 @@ func doMonitorexit(fr *frames.Frame, _ int64) int {
 	// Get object reference from stack.
 	obj, ok := pop(fr).(*object.Object)
 	if !ok {
-		errMsg := fmt.Sprintf("MONITOREXIT: expected a non-object but encountered: %v", obj)
+		errMsg := fmt.Sprintf("MONITOREXIT: expected an object but encountered: %v", obj)
 		status := exceptions.ThrowEx(excNames.InvalidTypeException, errMsg, fr)
 		if status != exceptions.Caught {
 			return ERROR_OCCURRED // applies only if in test
@@ -4211,6 +4211,8 @@ func ldc(fr *frames.Frame, width int) int {
 	case classloader.IS_STRING_ADDR: // returns a string object whose "value" field is a byte array
 		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 		push(fr, stringAddr)
+	case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
+		push(fr, fr.ObjSync)
 	}
 
 	if width == 1 {

@@ -69,6 +69,7 @@ func TestInitOfClassloaders(t *testing.T) {
 }
 
 func TestWalkWithError(t *testing.T) {
+	globals.InitGlobals("test")
 	e := errors.New("test error")
 	err := walk("", nil, e)
 	if err != e {
@@ -82,6 +83,7 @@ func TestWalkWithError(t *testing.T) {
 // will be necessary. If it is, when it's invoked, it will be loaded
 // then and any errors in finding the file will be returned then.
 func TestJmodWalkWithInvalidDirAndFile(t *testing.T) {
+	globals.InitGlobals("test")
 	err := os.Mkdir("subdir", 0755)
 	defer os.RemoveAll("subdir")
 	_ = os.WriteFile("subdir/file1", []byte(""), 0644)
@@ -276,6 +278,7 @@ func TestMainClassFromInvalidJar(t *testing.T) {
 }
 
 func TestInvalidMagicNumberViaParseAndPostFunction(t *testing.T) {
+	globals.InitGlobals("test")
 
 	normalStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -596,6 +599,7 @@ func TestCfe_ErrorFormatting(t *testing.T) {
 
 func TestNormalizeClassReference_Array(t *testing.T) {
 	// Test array reference normalization
+	globals.InitGlobals("test")
 	result := normalizeClassReference(types.ByteArray)
 	if result != "" {
 		t.Fatalf("expected empty string for byte array, got: %s", result)
@@ -604,6 +608,7 @@ func TestNormalizeClassReference_Array(t *testing.T) {
 
 func TestNormalizeClassReference_RefArray(t *testing.T) {
 	// Test reference array normalization
+	globals.InitGlobals("test")
 	result := normalizeClassReference("[Ljava/lang/String;")
 	if result != "java/lang/String" {
 		t.Fatalf("expected 'java/lang/String', got: %s", result)
@@ -656,6 +661,7 @@ func TestLoadClassFromNameOnly_SuperclassRecursion(t *testing.T) {
 
 // Ensure getArchiveFile caches the opened archive within the classloader
 func TestGetArchiveFile_CachesArchive(t *testing.T) {
+	globals.InitGlobals("test")
 	// Build a simple jar with a manifest and a single class entry
 	jarPath, cleanup := makeTempJar(t, map[string]string{"Main-Class": "com.example.Main"}, map[string][]byte{
 		"com/example/Main.class": {0xCA, 0xFE, 0xBA, 0xBE},
@@ -691,6 +697,7 @@ func TestGetArchiveFile_CachesArchive(t *testing.T) {
 
 // GetMainClassFromJar should not error when the manifest lacks Main-Class; it should return ""
 func TestGetMainClassFromJar_NoMainClass_NoError(t *testing.T) {
+	globals.InitGlobals("test")
 	// Jar with a manifest but without Main-Class
 	jarPath, cleanup := makeTempJar(t, map[string]string{"Class-Path": "lib/a.jar lib/b.jar"}, map[string][]byte{})
 	defer cleanup()
@@ -740,6 +747,7 @@ func TestLoadClassFromArchive_Success(t *testing.T) {
 
 // Additional normalization edge cases beyond existing tests
 func TestNormalizeClassReference_MultiDimensionalAndMalformed(t *testing.T) {
+	globals.InitGlobals("test")
 	// Multi-dimensional reference array -> current behavior skips arrays (returns empty)
 	got := normalizeClassReference("[[[Ljava/util/List;")
 	if got != "" {

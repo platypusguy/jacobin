@@ -35,6 +35,7 @@ var IS_STRUCT_ADDR = 1
 var IS_FLOAT64 = 2
 var IS_INT64 = 3
 var IS_STRING_ADDR = 4
+var IS_CLASS_REF = 5
 
 // Utility routines for runtime operations
 
@@ -100,7 +101,7 @@ func FetchCPentry(cpp *CPool, index int) CpType {
 		}
 
 		return CpType{EntryType: int(entry.Type),
-			RetType: IS_STRING_ADDR, StringVal: &className}
+			RetType: IS_CLASS_REF, StringVal: &className}
 
 	case StringConst: // points to a CP entry, which is a UTF-8 string constant
 		e := cp.CpIndex[entry.Slot]
@@ -221,7 +222,7 @@ func GetMethInfoFromCPinterfaceRef(CP *CPool, cpIndex int) (string, string, stri
 // Returns an empty string if an error occurred
 func GetClassNameFromCPclassref(CP *CPool, cpIndex uint16) string {
 	entry := FetchCPentry(CP, int(cpIndex))
-	if entry.RetType != IS_STRING_ADDR {
+	if entry.RetType != IS_STRING_ADDR && entry.RetType != IS_CLASS_REF {
 		return ""
 	} else {
 		return *entry.StringVal
