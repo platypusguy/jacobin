@@ -677,7 +677,7 @@ func TestMonitorEnter_InvalidRefType(t *testing.T) {
 
 	msg := string(out)
 	// message comes from doMonitorenter() type assertion error path
-	if !strings.Contains(msg, "MONITORENTRY: expected a non-object") {
+	if !strings.Contains(msg, "MONITORENTRY: expected an object but encountered:") {
 		t.Fatalf("MONITORENTER invalid-ref: unexpected error: %s", msg)
 	}
 }
@@ -800,7 +800,7 @@ func TestMonitorExit_InvalidRefType(t *testing.T) {
 	os.Stderr = normalStderr
 
 	msg := string(out)
-	if !strings.Contains(msg, "MONITOREXIT: expected a non-object") { // message starts with this
+	if !strings.Contains(msg, "MONITOREXIT: expected an object but encountered:") { // message starts with this
 		t.Fatalf("MONITOREXIT invalid-ref: unexpected error: %s", msg)
 	}
 }

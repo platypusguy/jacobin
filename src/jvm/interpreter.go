@@ -4212,7 +4212,6 @@ func ldc(fr *frames.Frame, width int) int {
 		stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 		push(fr, stringAddr)
 	case classloader.IS_CLASS_REF: // push a class object in support of static synchronized methods
-		//stringAddr := object.StringObjectFromGoString(*CPe.StringVal)
 		push(fr, fr.ObjSync)
 	}
 
