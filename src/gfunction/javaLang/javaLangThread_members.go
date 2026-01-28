@@ -375,9 +375,8 @@ func threadJoin(params []interface{}) any {
 	return waitForTermination(currentThread, targetThread, millis)
 }
 
-// threadRun validates and processes a thread object passed as a single parameter and logs its start information.
-// Returns a custom error block if the parameter is missing, incorrect, or invalid.
-// Note: This function should never be called since the user should provide their own Thread.run() function.
+// threadRun is converted into a Thread.start()..
+// This function should never be called since the user should provide their own Thread.run() function.
 func threadRun(params []interface{}) interface{} {
 	if len(params) != 1 {
 		errMsg := fmt.Sprintf("threadRun: Expected only the thread object parameter, got %d parameters", len(params))
@@ -391,13 +390,14 @@ func threadRun(params []interface{}) interface{} {
 	}
 
 	t.ThMutex.RLock()
-	defer t.ThMutex.RUnlock()
-
 	name := t.FieldTable["name"].Fvalue.(*object.Object)
 	id := t.FieldTable["ID"].Fvalue.(int64)
-	warnMsg := fmt.Sprintf("threadRun nil-function name: %s, ID: %d started", object.GoStringFromStringObject(name), id)
+	t.ThMutex.RUnlock()
+	
+	warnMsg := fmt.Sprintf("threadRun Converting this call to threadStart for thread name: %s, ID: %d",
+		object.GoStringFromStringObject(name), id)
 	trace.Warning(warnMsg)
-	return nil
+	return threadStart(params)
 }
 
 // threadSetName sets the name of a thread to a specified Java String.
