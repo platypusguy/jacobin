@@ -243,9 +243,47 @@ func threadGetThreadGroup(params []interface{}) any {
 	threadGroup, ok := t.FieldTable["threadgroup"].Fvalue.(*object.Object)
 	if !ok {
 		errMsg := "threadGetThreadGroup: Expected threadgroup to be an object"
-		return ghelpers.GetGErrBlk(excNames.InternalException, errMsg)
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
 	}
 	return threadGroup
+}
+
+func threadInterrupt(params []interface{}) any {
+	thObj, ok := params[0].(*object.Object)
+	if !ok {
+		errMsg := "threadInterrupt: Expected thread to be an object"
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+	fld, ok := thObj.FieldTable["interrupted"]
+	if !ok {
+		errMsg := "threadInterrupt: Missing the \"interrupted\" field in the thread object"
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+	fld.Fvalue = types.JavaBoolTrue
+	thObj.FieldTable["interrupted"] = fld
+
+	thID, ok := thObj.FieldTable["ID"].Fvalue.(int)
+	if !ok {
+		errMsg := "threadInterrupt: Missing the \"ID\" field in the thread object"
+		return ghelpers.GetGErrBlk(excNames.VirtualMachineError, errMsg)
+	}
+
+	// IF the thread is waiting, wake it up
+	object.WaitingThreads.RLock()
+	defer object.WaitingThreads.RUnlock()
+	if obj := object.WaitingThreads.MapThToObj[uint32(thID)]; obj != nil {
+		// The interrupted thread is waiting on an object (obj).
+		monitor := obj.GetMonitor()
+		if monitor != nil || monitor.Owner == object.MONITOR_OWNER_NONE {
+			monitor.Cond.Broadcast()
+		}
+	}
+	// At this point, we either:
+	// * Interrupted a thread which was not waiting for anything ---> exception.
+	// * Interrupted a thread which was waiting for an object. Broadcasted to all threads waiting for this object.
+	//        because trying to "signal" one of them is complex.
+
+	return nil
 }
 
 // Is the specified thread alive?

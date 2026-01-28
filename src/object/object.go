@@ -35,12 +35,19 @@ ObjectMonitor is a simple structure that holds the owner thread ID and recursion
 
 const MONITOR_OWNER_NONE = -1
 
+// Definition for Object monitor
 type ObjectMonitor struct {
 	Owner     int32      // thread ID of owning thread
 	Recursion int32      // recursion depth
-	mutex     sync.Mutex // used for blocking when fat locked
-	cond      *sync.Cond // used for wait/notify
+	Mutex     sync.Mutex // used for blocking when fat locked
+	Cond      *sync.Cond // used for wait/notify
 }
+
+// Global map tracking which object each thread is waiting on (for interrupt support)
+var WaitingThreads = struct {
+	sync.RWMutex
+	MapThToObj map[uint32]*Object // Thread ID -> Object it's waiting on
+}{MapThToObj: make(map[uint32]*Object)}
 
 // With regard to the layout of a created object in Jacobin, note that
 // on some architectures, but not Jacobin, there is an additional field
@@ -80,7 +87,7 @@ func MakeEmptyObject() *Object {
 		Owner:     MONITOR_OWNER_NONE,
 		Recursion: 0,
 	}
-	m.cond = sync.NewCond(&m.mutex)
+	m.Cond = sync.NewCond(&m.Mutex)
 	o := Object{Monitor: unsafe.Pointer(m)}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
@@ -99,7 +106,7 @@ func MakeEmptyObjectWithClassName(className *string) *Object {
 		Owner:     MONITOR_OWNER_NONE,
 		Recursion: 0,
 	}
-	m.cond = sync.NewCond(&m.mutex)
+	m.Cond = sync.NewCond(&m.Mutex)
 	o := Object{Monitor: unsafe.Pointer(m)}
 	h := uintptr(unsafe.Pointer(&o))
 	o.Mark.Hash = uint32(h)
@@ -271,7 +278,7 @@ const (
        ◦ Returns error instead of panic for invalid operations
        ◦ Examples: unlocking unlocked object, unlocking a GC-marked object, or unlocking fat lock by non-owner
 
-TODO: Track the owner thread even in thin-locking (Hotspot). Then we can support the Thread.holdsLock() query.
+TODO: Track the owner thread even in thin-locking (Hotspot). Then we can support the Thread.holdsLock() query which is currently trapped.
 
 According to chatGPT on 12/3/2025:
 
@@ -341,14 +348,14 @@ func (obj *Object) inflateLock(miscPtr *uint32, oldVal uint32, monitor *ObjectMo
 	return false
 }
 
-// inflateAndWait attempts to transition the lock from thin to fat lock and waits until the monitor mutex is acquired.
+// inflateAndWait attempts to transition the lock from thin to fat lock and waits until the monitor Mutex is acquired.
 func (obj *Object) inflateAndWait(miscPtr *uint32, oldVal uint32, monitor *ObjectMonitor, threadID int32) bool {
 	newVal := (oldVal &^ lockStateMask) | lockStateFatLocked
 	if atomic.CompareAndSwapUint32(miscPtr, oldVal, newVal) {
-		// Successfully inflated - now block on mutex
-		monitor.mutex.Lock()
+		// Successfully inflated - now block on Mutex
+		monitor.Mutex.Lock()
 
-		// After acquiring mutex, we MUST ensure the state is FatLocked
+		// After acquiring Mutex, we MUST ensure the state is FatLocked
 		// because the previous owner might have set it to Unlocked upon release.
 		for {
 			mVal := atomic.LoadUint32(miscPtr)
@@ -394,11 +401,11 @@ func (obj *Object) ObjLock(threadID int32) error {
 			newVal := (miscVal &^ lockStateMask) | lockStateThinLocked
 			if atomic.CompareAndSwapUint32(miscPtr, miscVal, newVal) {
 				// Successfully acquired thin lock
-				monitor.mutex.Lock()
-				// After acquiring mutex, we MUST check if someone inflated the lock while we were waiting for the mutex
+				monitor.Mutex.Lock()
+				// After acquiring Mutex, we MUST check if someone inflated the lock while we were waiting for the Mutex
 				curMisc := atomic.LoadUint32(miscPtr)
 				if (curMisc & lockStateMask) != lockStateThinLocked {
-					// It was inflated! We hold the mutex now, so we can just take over the fat lock
+					// It was inflated! We hold the Mutex now, so we can just take over the fat lock
 					newVal := (curMisc &^ lockStateMask) | lockStateFatLocked
 					atomic.StoreUint32(miscPtr, newVal)
 				}
@@ -435,9 +442,9 @@ func (obj *Object) ObjLock(threadID int32) error {
 				atomic.AddInt32(&monitor.Recursion, 1)
 				return nil
 			}
-			// Another thread owns it - block on mutex
-			monitor.mutex.Lock()
-			// After acquiring mutex, verify state and set ownership
+			// Another thread owns it - block on Mutex
+			monitor.Mutex.Lock()
+			// After acquiring Mutex, verify state and set ownership
 			miscVal = atomic.LoadUint32(miscPtr)
 			newVal := (miscVal &^ lockStateMask) | lockStateFatLocked
 			atomic.StoreUint32(miscPtr, newVal)
@@ -506,7 +513,7 @@ func (obj *Object) objUnlockInternal(threadID int32, isWait bool) error {
 		// MUST store 0 AFTER setting state to Unlocked, to avoid race in doMonitorexit checks
 		atomic.StoreInt32(&monitor.Owner, MONITOR_OWNER_NONE)
 		if !isWait {
-			monitor.mutex.Unlock() // Always unlock mutex on final release
+			monitor.Mutex.Unlock() // Always unlock Mutex on final release
 		}
 	}
 	// else: still recursively held, just decremented count
@@ -526,11 +533,17 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 		return errors.New(fmt.Sprintf("ObjectWait: thread %d does not own lock, owner: %d", threadID, owner))
 	}
 
+	// Check if already interrupted before waiting
+	if isThreadInterrupted(uint32(threadID)) {
+		clearThreadInterrupted(uint32(threadID))
+		return errors.New("thread interrupted")
+	}
+
 	savedRecursion := atomic.LoadInt32(&monitor.Recursion)
 
 	// In Java, wait() fully releases the lock.
 	// We call objUnlockInternal enough times to reach recursion 0.
-	// The last call will keep the mutex locked if we pass isWait=true.
+	// The last call will keep the Mutex locked if we pass isWait=true.
 	for i := int32(0); i < savedRecursion-1; i++ {
 		if err := obj.objUnlockInternal(threadID, false); err != nil {
 			return err
@@ -540,37 +553,74 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 		return err
 	}
 
+	// Register that we're waiting on THIS object (for Thread.interrupt() support)
+	WaitingThreads.Lock()
+	WaitingThreads.MapThToObj[uint32(threadID)] = obj
+	WaitingThreads.Unlock()
+
 	// Now we wait on the condition variable.
-	// monitor.mutex is STILL LOCKED here because of isWait=true.
+	// monitor.Mutex is STILL LOCKED here because of isWait=true.
+	// Cond.Wait() will atomically unlock it, block, and relock when woken.
+
+	var interruptErr error
 
 	if millis > 0 {
-		timeout := false
+		// Timed wait implementation
+		done := make(chan bool, 1)
 		timer := time.AfterFunc(time.Duration(millis)*time.Millisecond, func() {
-			monitor.mutex.Lock()
-			timeout = true
-			monitor.cond.Broadcast() // Wake up to check timeout
-			monitor.mutex.Unlock()
+			select {
+			case done <- true:
+				monitor.Cond.Broadcast() // Wake up to handle timeout
+			default:
+				// Already notified, timer is irrelevant
+			}
 		})
 
-		for !timeout {
-			monitor.cond.Wait()
-			// If we are here, we were either signaled OR the timer fired.
-			if timer.Stop() {
-				// We were signaled before timeout.
-				break
+		monitor.Cond.Wait() // Atomically unlocks Mutex, waits, relocks on wakeup
+
+		// Check if we were woken by timeout or by notify
+		select {
+		case <-done:
+			// Timeout occurred - this is normal, not an error
+		default:
+			// Woken by notify/notifyAll, cancel the timer
+			timer.Stop()
+			// Drain the channel in case timer fired between Wait() and Stop()
+			select {
+			case <-done:
+			default:
 			}
-			// If Stop() returned false, timer already fired.
-			// timeout will be true next iteration.
 		}
+
+		// Check thread interruption status
+		if isThreadInterrupted(uint32(threadID)) {
+			clearThreadInterrupted(uint32(threadID))
+			interruptErr = errors.New("thread interrupted during wait")
+		}
+
 	} else {
-		monitor.cond.Wait()
+		// Indefinite wait
+		monitor.Cond.Wait() // Atomically unlocks Mutex, waits, relocks on wakeup
+
+		// Check thread interruption status
+		if isThreadInterrupted(uint32(threadID)) {
+			clearThreadInterrupted(uint32(threadID))
+			interruptErr = errors.New("thread interrupted during wait")
+		}
 	}
-	monitor.mutex.Unlock()
+
+	// Unregister - no longer waiting
+	WaitingThreads.Lock()
+	delete(WaitingThreads.MapThToObj, uint32(threadID))
+	WaitingThreads.Unlock()
+
+	// At this point, Cond.Wait() has returned and the Mutex is locked again
+	monitor.Mutex.Unlock()
 
 	// Re-acquire the lock with the same recursion level.
-	// We MUST re-acquire the first lock (which acquires the mutex)
+	// We MUST re-acquire the first lock (which acquires the Mutex)
 	// and then just increment recursion for the rest, because
-	// ObjLock(threadID) would try to lock the mutex again if we called it multiple times.
+	// ObjLock(threadID) would try to lock the Mutex again if we called it multiple times.
 	if err := obj.ObjLock(threadID); err != nil {
 		return err
 	}
@@ -578,7 +628,32 @@ func (obj *Object) ObjectWait(threadID int32, millis int64) error {
 		atomic.AddInt32(&monitor.Recursion, 1)
 	}
 
+	// Return interruption error AFTER re-acquiring the lock
+	// (Java semantics require the lock to be held when InterruptedException is thrown)
+	if interruptErr != nil {
+		return interruptErr
+	}
+
 	return nil
+}
+
+func isThreadInterrupted(thID uint32) bool {
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.RLock()
+	defer gr.ThreadLock.RUnlock()
+	thObj := gr.Threads[int(thID)].(*Object)
+	interrupted := thObj.FieldTable["interrupted"].Fvalue.(types.JavaBool)
+	return interrupted == types.JavaBoolTrue
+}
+
+func clearThreadInterrupted(thID uint32) {
+	gr := globals.GetGlobalRef()
+	gr.ThreadLock.Lock()
+	defer gr.ThreadLock.Unlock()
+	thObj := gr.Threads[int(thID)].(*Object)
+	fld := thObj.FieldTable["interrupted"]
+	fld.Fvalue = types.JavaBoolFalse
+	thObj.FieldTable["interrupted"] = fld
 }
 
 // ObjectNotify implements java.lang.Object.notify()
@@ -591,7 +666,7 @@ func (obj *Object) ObjectNotify(threadID int32) error {
 	if owner != threadID {
 		return errors.New(fmt.Sprintf("ObjectNotify: thread %d does not own lock, owner: %d", threadID, owner))
 	}
-	monitor.cond.Signal()
+	monitor.Cond.Signal()
 	return nil
 }
 
@@ -605,6 +680,6 @@ func (obj *Object) ObjectNotifyAll(threadID int32) error {
 	if owner != threadID {
 		return errors.New(fmt.Sprintf("ObjectNotifyAll: thread %d does not own lock, owner: %d", threadID, owner))
 	}
-	monitor.cond.Broadcast()
+	monitor.Cond.Broadcast()
 	return nil
 }

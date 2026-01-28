@@ -154,10 +154,10 @@ func Load_Lang_Thread() {
 		ghelpers.GMeth{ParamSlots: 1, GFunction: ghelpers.TrapFunction}
 
 	ghelpers.MethodSignatures["java/lang/Thread.interrupt()V"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: threadInterrupt}
 
 	ghelpers.MethodSignatures["java/lang/Thread.interrupted()Z"] =
-		ghelpers.GMeth{ParamSlots: 0, GFunction: ghelpers.TrapFunction}
+		ghelpers.GMeth{ParamSlots: 0, GFunction: threadIsInterrupted}
 
 	ghelpers.MethodSignatures["java/lang/Thread.isAlive()Z"] =
 		ghelpers.GMeth{ParamSlots: 0, GFunction: threadIsAlive}
